@@ -1,0 +1,73 @@
+{
+  "at": "2026-10-23T00:59:34.806713+00:00",
+  "env_mode": "0o600",
+  "checks": [
+    {
+      "check": "CUDA",
+      "command": [
+        ".venv/bin/python",
+        "-c",
+        "import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name())"
+      ],
+      "exit_code": 0,
+      "stdout": "2.5.1+cu124 True NVIDIA GeForce RTX 3090 Ti\n",
+      "stderr": ""
+    },
+    {
+      "check": "Memory snapshot",
+      "command": [
+        ".venv/bin/python",
+        "-c",
+        "import torch; torch.cuda.memory._record_memory_history(); x=torch.randn(1024,1024,device='cuda'); s=torch.cuda.memory._snapshot(); print(len(s['segments'])>0, 'device_traces' in s)"
+      ],
+      "exit_code": 0,
+      "stdout": "True True\n",
+      "stderr": ""
+    },
+    {
+      "check": "Git author name",
+      "command": [
+        "git",
+        "config",
+        "user.name"
+      ],
+      "exit_code": 0,
+      "stdout": "xiaodouzi666\n",
+      "stderr": ""
+    },
+    {
+      "check": "Git author email",
+      "command": [
+        "git",
+        "config",
+        "user.email"
+      ],
+      "exit_code": 0,
+      "stdout": "172074482@qq.com\n",
+      "stderr": ""
+    },
+    {
+      "check": "Secret ignore",
+      "command": [
+        "git",
+        "check-ignore",
+        ".env"
+      ],
+      "exit_code": 0,
+      "stdout": ".env\n",
+      "stderr": ""
+    },
+    {
+      "check": "Gitleaks history",
+      "command": [
+        ".tools/bin/gitleaks",
+        "detect",
+        "--redact",
+        "--no-banner"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "\u001b[90m2:59AM\u001b[0m \u001b[32mINF\u001b[0m \u001b[1m1 commits scanned.\u001b[0m\n\u001b[90m2:59AM\u001b[0m \u001b[32mINF\u001b[0m \u001b[1mscanned ~11357 bytes (11.36 KB) in 152ms\u001b[0m\n\u001b[90m2:59AM\u001b[0m \u001b[32mINF\u001b[0m \u001b[1mno leaks found\u001b[0m\n"
+    }
+  ]
+}

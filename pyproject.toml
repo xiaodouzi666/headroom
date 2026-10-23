@@ -1,0 +1,55 @@
+[project]
+name = "headroom"
+version = "0.1.0"
+description = "Autoresearch for GPU memory"
+authors = [
+    { name = "xiaodouzi666", email = "172074482@qq.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "gitpython>=3.2.1",
+    "httpx>=0.28.1",
+    "matplotlib>=3.11.2",
+    "openai>=3.37.0",
+    "pydantic>=2.14.1",
+    "python-dotenv>=1.2.4",
+    "rich>=15.0.0",
+    "sqlmodel>=0.0.48",
+    "tavily-python>=0.8.5",
+    "torch==2.5.1",
+    "typer>=0.27.3",
+    "unidiff>=1.0.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.scripts]
+headroom = "headroom.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["headroom"]
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu124" }
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = ["repos", "runs", ".cache", ".tools"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.7.0",
+    "pytest>=9.1.1",
+    "ruff>=0.17.2",
+]

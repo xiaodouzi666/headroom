@@ -1,0 +1,123 @@
+{
+  "conclusion": {
+    "DOCKER_GPU": "ok",
+    "NET": "ok",
+    "DISK_FREE_GB": 5694.85
+  },
+  "checks": [
+    {
+      "name": "GPU",
+      "command": [
+        "nvidia-smi"
+      ],
+      "exit_code": 0,
+      "stdout": "Fri Oct 23 02:45:16 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 595.99.02              Driver Version: 595.99.02      CUDA Version: 13.2     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 3090 Ti     Off |   00000000:01:00.0 Off |                  Off |\n|  0%   49C    P8             20W /  450W |   20684MiB /  24564MiB |      0%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A            2397      G   /usr/lib/xorg/Xorg                       21MiB |\n|    0   N/A  N/A            2722      G   /usr/bin/gnome-shell                     12MiB |\n|    0   N/A  N/A          398152      C   ./bin/llama-server                    20618MiB |\n+-----------------------------------------------------------------------------------------+\n",
+      "stderr": ""
+    },
+    {
+      "name": "OS",
+      "command": [
+        "lsb_release",
+        "-a"
+      ],
+      "exit_code": 0,
+      "stdout": "Distributor ID:\tUbuntu\nDescription:\tUbuntu 24.04.4 LTS\nRelease:\t24.04\nCodename:\tnoble\n",
+      "stderr": ""
+    },
+    {
+      "name": "Disk",
+      "command": [
+        "df",
+        "-h",
+        "/home/xiaodouzi/workspace/headroom"
+      ],
+      "exit_code": 0,
+      "stdout": "Filesystem      Size  Used Avail Use% Mounted on\n/dev/sda1        13T  6.5T  5.6T  54% /home\n",
+      "stderr": ""
+    },
+    {
+      "name": "Memory",
+      "command": [
+        "free",
+        "-g"
+      ],
+      "exit_code": 0,
+      "stdout": "               total        used        free      shared  buff/cache   available\nMem:              62           6          23           0          33          55\nSwap:              7           0           7\n",
+      "stderr": ""
+    },
+    {
+      "name": "Python",
+      "command": [
+        "python3",
+        "--version"
+      ],
+      "exit_code": 0,
+      "stdout": "Python 3.12.3\n",
+      "stderr": ""
+    },
+    {
+      "name": "Tools",
+      "command": [
+        "bash",
+        "-c",
+        "command -v uv; command -v docker; command -v git; command -v gitleaks"
+      ],
+      "exit_code": 1,
+      "stdout": "/usr/bin/docker\n/usr/bin/git\n",
+      "stderr": ""
+    },
+    {
+      "name": "Docker",
+      "command": [
+        "docker",
+        "info"
+      ],
+      "exit_code": 0,
+      "stdout": "Client: Docker Engine - Community\n Version:    29.7.2\n Context:    default\n Debug Mode: false\n Plugins:\n  buildx: Docker Buildx (Docker Inc.)\n    Version:  v0.36.1\n    Path:     /usr/libexec/docker/cli-plugins/docker-buildx\n  compose: Docker Compose (Docker Inc.)\n    Version:  v5.5.0\n    Path:     /usr/libexec/docker/cli-plugins/docker-compose\n  model: Docker Model Runner (Docker Inc.)\n    Version:  v1.2.6\n    Path:     /usr/libexec/docker/cli-plugins/docker-model\n\nServer:\n Containers: 30\n  Running: 21\n  Paused: 0\n  Stopped: 9\n Images: 157\n Server Version: 29.7.2\n Storage Driver: overlay2\n  Backing Filesystem: extfs\n  Supports d_type: true\n  Using metacopy: false\n  Native Overlay Diff: true\n  userxattr: false\n Logging Driver: json-file\n Cgroup Driver: systemd\n Cgroup Version: 2\n Plugins:\n  Volume: local\n  Network: bridge host ipvlan macvlan null overlay\n  Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog\n CDI spec directories:\n  /etc/cdi\n  /run/cdi\n Discovered Devices:\n  cdi: nvidia.com/gpu=0\n  cdi: nvidia.com/gpu=GPU-8eab4f3f-25c8-5465-45b3-c2b5c6fe2526\n  cdi: nvidia.com/gpu=all\n Swarm: inactive\n Runtimes: io.containerd.runc.v2 nvidia runc\n Default Runtime: runc\n Init Binary: docker-init\n containerd version: aad11006b869517fcd3009450b6f82da282e1a9b\n runc version: v1.4.3-0-gbb14dabe\n init version: de40ad0\n Security Options:\n  apparmor\n  seccomp\n   Profile: builtin\n  cgroupns\n Kernel Version: 7.0.0-38-generic\n Operating System: Ubuntu 24.04.4 LTS\n OSType: linux\n Architecture: x86_64\n CPUs: 12\n Total Memory: 62.72GiB\n Name: ubuntu\n ID: 473b080f-db4f-4571-959b-11d1a8252f6b\n Docker Root Dir: /var/lib/docker\n Debug Mode: false\n Experimental: false\n Insecure Registries:\n  ::1/128\n  127.0.0.0/8\n Live Restore Enabled: false\n Firewall Backend: iptables\n  EnableUserlandProxy: true\n  UserlandProxyPath: /usr/bin/docker-proxy\n\n",
+      "stderr": ""
+    },
+    {
+      "name": "Docker GPU",
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--gpus",
+        "all",
+        "--network",
+        "none",
+        "nvidia/cuda:12.4.1-base-ubuntu22.04",
+        "nvidia-smi"
+      ],
+      "exit_code": 0,
+      "stdout": "Fri Oct 23 00:45:17 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 595.99.02              Driver Version: 595.99.02      CUDA Version: 13.2     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 3090 Ti     Off |   00000000:01:00.0 Off |                  Off |\n|  0%   49C    P8             20W /  450W |   20684MiB /  24564MiB |      0%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|  No running processes found                                                             |\n+-----------------------------------------------------------------------------------------+\n",
+      "stderr": ""
+    },
+    {
+      "name": "Sudo",
+      "command": [
+        "sudo",
+        "-n",
+        "true"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "sudo: a password is required\n"
+    },
+    {
+      "name": "Network",
+      "command": [
+        "curl",
+        "-sSI",
+        "--connect-timeout",
+        "15",
+        "--max-time",
+        "30",
+        "https://huggingface.co"
+      ],
+      "exit_code": 0,
+      "stdout": "HTTP/2 200 \ncontent-type: text/html; charset=utf-8\ncontent-length: 182010\ndate: Fri, 23 Oct 2026 00:45:16 GMT\netag: W/\"2c6fa-oHH7xHsQ9QNynosz5Ezuulql8ys\"\nx-powered-by: huggingface-moon\nx-request-id: Root=1-6adaae1c-11712f1d4fa0ef264c897bf2\nratelimit: \"pages\";r=98;t=208\nratelimit-policy: \"fixed window\";\"pages\";q=100;w=300\ncross-origin-opener-policy: same-origin\nreferrer-policy: strict-origin-when-cross-origin\nlink: </.well-known/ai-catalog.json>; rel=\"ai-catalog\"; type=\"application/ai-catalog+json\"\nlink: </.well-known/api-catalog>; rel=\"api-catalog\"\nx-frame-options: DENY\nx-cache: Hit from cloudfront\nvia: 1.1 0f5a5feace742eb20ef71e34731fb1fa.cloudfront.net (CloudFront)\nx-amz-cf-pop: AMS58-P3\nalt-svc: h3=\":443\"; ma=86400\nx-amz-cf-id: 3gxzzcw5Mi_7K6pgP-_L1NwT1YSzn4YLMVnHEqClEoxKSQik_ZbxAw==\nage: 1\nstrict-transport-security: max-age=31536000\n\n",
+      "stderr": ""
+    }
+  ]
+}

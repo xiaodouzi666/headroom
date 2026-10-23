@@ -1,0 +1,19 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff
+        entry: .venv/bin/ruff check
+        language: system
+        types_or: [python, pyi]
+      - id: ruff-format
+        name: ruff-format
+        entry: .venv/bin/ruff format --check
+        language: system
+        types_or: [python, pyi]
+      - id: gitleaks
+        name: gitleaks
+        entry: .tools/bin/gitleaks protect --staged --redact --no-banner
+        language: system
+        pass_filenames: false
+        always_run: true

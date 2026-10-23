@@ -1,0 +1,11 @@
+# Source this file on azuki to keep every cache inside the project.
+export HEADROOM_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export PATH="$HEADROOM_ROOT/.tools/bin:$PATH"
+export UV_CACHE_DIR="$HEADROOM_ROOT/.cache/uv"
+export UV_PYTHON_INSTALL_DIR="$HEADROOM_ROOT/.tools/python"
+export PRE_COMMIT_HOME="$HEADROOM_ROOT/.cache/pre-commit"
+export HF_HOME="$HEADROOM_ROOT/.cache/huggingface"
+export XDG_CACHE_HOME="$HEADROOM_ROOT/.cache"
+export PIP_CACHE_DIR="$HEADROOM_ROOT/.cache/pip"
+export npm_config_cache="$HEADROOM_ROOT/.cache/npm"
+export TMPDIR="$HEADROOM_ROOT/.cache/tmp"
