@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "T0.6 full GPU baseline execution verified; later snapshot/repair criteria remain pending",
+  "status": "T0.6 current full GPU baselines verified from new s1 plus unchanged s2-s8; T1.1 Lab accepted separately; T1.2 and repair pending",
   "units": "memory bytes with explicit GiB conversion",
   "scenarios": [
     {
@@ -11,12 +11,29 @@
       "expected_mode": "oom",
       "expected_fixes": "gradient accumulation; activation checkpointing",
       "gpu_baseline_verified": true,
-      "cpu_tiny_smoke": "passed_20_steps",
-      "gpu_baseline_report": "reports/gpu-baseline-20261023T013238Z-a16fc6fb.json",
+      "cpu_tiny_smoke": "historical_20_steps_passed; tiny dimensions unchanged",
+      "gpu_baseline_report": "reports/gpu-baseline-20261023T022519Z-e164c187.json",
       "gpu_baseline_status": "cuda_oom",
-      "gpu_peak_allocated_bytes": 24845041664,
-      "gpu_peak_reserved_bytes": 24857542656,
-      "gpu_source_sha256": "bd685f1480a2d0d9a5a68af44eaf0f4b325d27f7a1f99ba56d217daae8dd2856"
+      "gpu_peak_allocated_bytes": 24725389312,
+      "gpu_peak_reserved_bytes": 24740102144,
+      "gpu_source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+      "gpu_baseline_history": [
+        {
+          "role": "historical fixture; not an optimization before/after",
+          "report": "reports/gpu-baseline-20261023T013238Z-a16fc6fb.json",
+          "source_sha256": "bd685f1480a2d0d9a5a68af44eaf0f4b325d27f7a1f99ba56d217daae8dd2856",
+          "width": 1024,
+          "depth": 12,
+          "parameter_count": 100749312
+        }
+      ],
+      "fixture": {
+        "width": 256,
+        "depth": 192,
+        "batch": 32,
+        "sequence_length": 2048,
+        "parameter_count": 101007360
+      }
     },
     {
       "id": "s2_fp32_adamw_1b",
@@ -124,5 +141,9 @@
       "gpu_source_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59"
     }
   ],
-  "real_repository": "repos/nanogpt.yaml"
+  "real_repository": "repos/nanogpt.yaml",
+  "gpu_baseline_source_reports": [
+    "reports/gpu-baseline-20261023T022519Z-e164c187.json",
+    "reports/gpu-baseline-20261023T013238Z-a16fc6fb.json"
+  ]
 }

@@ -69,7 +69,7 @@ def synchronize(device: torch.device) -> None:
 def main() -> None:
     args = arguments()
     device = setup(args)
-    width, depth, sequence = (32, 2, 8) if args.tiny else (1024, 12, 2048)
+    width, depth, sequence = (32, 2, 8) if args.tiny else (256, 192, 2048)
     batch = args.batch if args.batch is not None else (2 if args.tiny else 32)
     model = ResidualMLP(width, depth).to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)

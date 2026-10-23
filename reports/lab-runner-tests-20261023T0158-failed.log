@@ -1,0 +1,123 @@
+FFFFF                                                                    [100%]
+=================================== FAILURES ===================================
+____________ test_adamw_steps_and_all_three_seeds_are_deterministic ____________
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-4/test_adamw_steps_and_all_three0/input')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-4/test_adamw_steps_and_all_three0')
+
+    def test_adamw_steps_and_all_three_seeds_are_deterministic(source, tmp_path):
+        script = source / "train.py"
+        script.write_text(TRAINING)
+        runs = [
+            run_script(script, device="cpu", run_root=tmp_path / "runs", max_steps=20, seed=seed)
+            for seed in (1337, 1337, 1338)
+        ]
+        for result in runs:
+>           assert result["status"] == "completed", result
+E           AssertionError: {'protocol': 'headroom.lab.v1', 'schema_version': 1, 'capture_complete': True, 'execution_status': 'completed', ...}
+E           assert 'error' == 'completed'
+E             
+E             - completed
+E             + error
+
+tests/test_runner.py:43: AssertionError
+_______________ test_command_mode_captures_real_optimizer_steps ________________
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-4/test_command_mode_captures_rea0/input')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-4/test_command_mode_captures_rea0')
+
+    def test_command_mode_captures_real_optimizer_steps(source, tmp_path):
+        (source / "train.py").write_text(TRAINING)
+        result = run_command(
+            source, ["python", "train.py"], device="cpu", run_root=tmp_path / "runs", max_steps=7
+        )
+>       assert result["status"] == "completed", result
+E       AssertionError: {'protocol': 'headroom.lab.v1', 'schema_version': 1, 'capture_complete': True, 'execution_status': 'completed', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_runner.py:56: AssertionError
+____________________ test_keys_absent_and_source_read_only _____________________
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-4/test_keys_absent_and_source_re0/input')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-4/test_keys_absent_and_source_re0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x718d1c74fef0>
+
+    def test_keys_absent_and_source_read_only(source, tmp_path, monkeypatch):
+        for name in ("NEBIUS_API_KEY", "TAVILY_API_KEY", "HF_TOKEN", "UNRELATED_SECRET"):
+            monkeypatch.setenv(name, "canary-never-a-real-credential")
+        (source / ".env").write_text("ONLY_A_TEST_CANARY=do-not-copy\n")
+        script = source / "check.py"
+        script.write_text("""import json, os
+    from pathlib import Path
+    keys = {key: os.environ.get(key) for key in
+            ("NEBIUS_API_KEY", "TAVILY_API_KEY", "HF_TOKEN", "UNRELATED_SECRET")}
+    assert all(value is None for value in keys.values()), "environment leak"
+    assert not Path("/source/.env").exists(), "source secret copied"
+    assert not Path("/runtime/.env").exists(), "runtime root mounted"
+    try:
+        Path("/source/unexpected.txt").write_text("unsafe")
+    except OSError:
+        readonly = True
+    else:
+        readonly = False
+    assert readonly, "source writable"
+    Path("/out/boundary-check.json").write_text(json.dumps({"keys":keys,"readonly":readonly}))
+    """)
+        result = run_script(script, device="cpu", run_root=tmp_path / "runs")
+>       assert result["status"] == "completed", result
+E       AssertionError: {'protocol': 'headroom.lab.v1', 'schema_version': 1, 'capture_complete': True, 'execution_status': 'completed', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_runner.py:84: AssertionError
+______________________ test_cpu_out_of_memory_is_an_error ______________________
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-4/test_cpu_out_of_memory_is_an_e0/input')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-4/test_cpu_out_of_memory_is_an_e0')
+
+    def test_cpu_out_of_memory_is_an_error(source, tmp_path):
+        script = source / "cpu_oom.py"
+        script.write_text('import torch\nraise torch.OutOfMemoryError("CPU out of memory")\n')
+        result = run_script(script, device="cpu", run_root=tmp_path / "runs")
+        assert result["status"] == "error", result
+>       assert result["cleanup_verified"]
+E       assert False
+
+tests/test_runner.py:97: AssertionError
+_____ test_infinite_loop_timeout_30_seconds_cleans_container_and_children ______
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-4/test_infinite_loop_timeout_30_0/input')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-4/test_infinite_loop_timeout_30_0')
+
+    def test_infinite_loop_timeout_30_seconds_cleans_container_and_children(source, tmp_path):
+        script = source / "forever.py"
+        script.write_text("""import subprocess, sys, time
+    from pathlib import Path
+    child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(180)"])
+    Path("/out/child-started.txt").write_text(str(child.pid))
+    while True:
+        time.sleep(1)
+    """)
+        started = time.monotonic()
+        result = run_script(script, device="cpu", run_root=tmp_path / "runs", max_seconds=30)
+        elapsed = time.monotonic() - started
+>       assert result["status"] == "timeout", result
+E       AssertionError: {'protocol': 'headroom.lab.v1', 'schema_version': 1, 'capture_complete': True, 'execution_status': 'timeout', ...}
+E       assert 'error' == 'timeout'
+E         
+E         - timeout
+E         + error
+
+tests/test_runner.py:112: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_runner.py::test_adamw_steps_and_all_three_seeds_are_deterministic
+FAILED tests/test_runner.py::test_command_mode_captures_real_optimizer_steps
+FAILED tests/test_runner.py::test_keys_absent_and_source_read_only - Assertio...
+FAILED tests/test_runner.py::test_cpu_out_of_memory_is_an_error - assert False
+FAILED tests/test_runner.py::test_infinite_loop_timeout_30_seconds_cleans_container_and_children
+5 failed in 50.83s

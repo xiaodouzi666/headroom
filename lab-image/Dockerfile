@@ -1,5 +1,6 @@
 FROM ubuntu:24.04
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 libstdc++6 libgomp1 ca-certificates && rm -rf /var/lib/apt/lists/*
+# PyTorch full CUDA snapshot symbolization requires addr2line from binutils.
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 libstdc++6 libgomp1 ca-certificates binutils && rm -rf /var/lib/apt/lists/*
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /run
 USER 65534:65534

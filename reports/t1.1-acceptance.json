@@ -1,0 +1,315 @@
+{
+  "task": "T1.1",
+  "accepted": true,
+  "original_thresholds_unchanged": true,
+  "scope": "Original T1.1 Lab wrapper clauses only; no T1.2 evidence-pack or model/repair acceptance",
+  "source_gpu_report": "reports/lab-gpu-acceptance-20261023T022523Z.json",
+  "source_gpu_report_sha256": "82cedf6eb903d16ee17ae273c8d79613259ba26c8ea09d469b32d6a2b1242e64",
+  "source_cpu_test_log": "reports/lab-tests-20261023T0212.log",
+  "source_cpu_test_log_sha256": "a9cbc2b1e5e55dd4a5b27d12ee410029588a61e9068a9b0e1272eab50ad9b9f3",
+  "cpu_tests": {
+    "passed": 61,
+    "suite_seconds": 53.15,
+    "command": null,
+    "artifact_root": "runs/lab-test-history/20261023T0212-full",
+    "coverage": [
+      "real AdamW step truncation",
+      "Python/NumPy/Torch seeds and same-seed repeat",
+      "Python command capture",
+      "CPU OOM remains error",
+      "real 30-second timeout with child-process cleanup",
+      "credential and source-read-only boundary",
+      "full C++ symbolization without initializing CUDA"
+    ],
+    "command_provenance_note": "The retained 0212 log records 61 passed in 53.15s but not the invocation; the earlier three-file command was not verified and has been removed. Do not infer suite scope from this log alone. Named CPU fixtures are independently present under artifact_root."
+  },
+  "original_clause_checks": {
+    "s1_status_oom": true,
+    "s1_snapshot_pickle_exists": true,
+    "s1_device0_trace_events_gt_1000": true,
+    "s1_oom_requested_gb_positive": true,
+    "s1_traceback_contains_OutOfMemoryError": true,
+    "s3_status_completed": true,
+    "s3_steps_equal_20": true,
+    "s3_loss_count_at_least_20": true,
+    "infinite_loop_30s_TIMEOUT_and_no_owned_children_remain": true,
+    "NEBIUS_API_KEY_absent_in_subprocess": true,
+    "same_seed_first_5_losses_exactly_equal": true
+  },
+  "gpu_checks": {
+    "s1_cuda_oom": true,
+    "s1_snapshot_export_valid": true,
+    "s1_snapshot_pickle_exists": true,
+    "s1_device0_trace_events_gt_1000": true,
+    "s1_positive_requested_gb": true,
+    "s1_out_of_memory_traceback": true,
+    "s3_completed_20_steps_a": true,
+    "s3_completed_20_steps_b": true,
+    "s3_at_least_20_losses_a": true,
+    "s3_at_least_20_losses_b": true,
+    "s3_first_5_losses_identical": true,
+    "all_cleanup_verified": true,
+    "all_gpu_runs_unshared": true
+  },
+  "runs": {
+    "s1": {
+      "run_id": "48877b189d1040aba0cf39147f594f7f",
+      "run_dir": "runs/lab-acceptance/20261023T022523Z/48877b189d1040aba0cf39147f594f7f",
+      "image_id": "sha256:54accb9f005c435d13c018026781487600914cd99434a2d424136522dfed3661",
+      "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+      "source_manifest_sha256": "a70ca0f197c3c89ff1bf568a1b9a2ad9201214d2e4d88d7a6283f9eedc6ccd1c",
+      "status": "oom",
+      "steps": 0,
+      "loss_count": 0,
+      "first_5_losses": [],
+      "peak_allocated_bytes": 24750424064,
+      "peak_reserved_bytes": 24752685056,
+      "wall_seconds": 3.1930994719732553,
+      "device0_trace_events": 2050,
+      "snapshot_json_sha256": "efc2d5599ba6b4fe6b84ad9c57c9ad0418b9fe67aceaaef8110b70b8d919f666",
+      "snapshot_pickle_bytes": 577557,
+      "snapshot_pickle_sha256": "46ce64e608456bfb6094485a08d8b68225523e9413ae43842b7cdea5d1ff92c6",
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "shared_gpu_observed": false,
+      "gpu_observation_complete": true,
+      "seed": 1337,
+      "command": [
+        "/opt/venv/bin/python",
+        "-m",
+        "headroom.lab.run_target",
+        "--script",
+        "/source/train.py",
+        "--output",
+        "/out",
+        "--max-steps",
+        "20",
+        "--max-seconds",
+        "120",
+        "--seed",
+        "1337",
+        "--device",
+        "cuda",
+        "--",
+        "--seed",
+        "1337"
+      ],
+      "oom": {
+        "requested_bytes": 268435456,
+        "requested_gb": 0.268435456,
+        "free_bytes": 107872256,
+        "requested_source": "allocator_oom_event",
+        "free_source": "allocator_oom_event"
+      }
+    },
+    "s3_a": {
+      "run_id": "584cc1c4c2c04ba79954eaa22d471a0b",
+      "run_dir": "runs/lab-acceptance/20261023T022523Z/584cc1c4c2c04ba79954eaa22d471a0b",
+      "image_id": "sha256:54accb9f005c435d13c018026781487600914cd99434a2d424136522dfed3661",
+      "source_sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+      "source_manifest_sha256": "eb862e1aeaf73783647b510010026eb7c4e142646502766f1c914a170b1cc2b8",
+      "status": "completed",
+      "steps": 20,
+      "loss_count": 20,
+      "first_5_losses": [
+        1.0982863903045654,
+        1.0958553552627563,
+        1.0934312343597412,
+        1.0910136699676514,
+        1.0886027812957764
+      ],
+      "peak_allocated_bytes": 509994496,
+      "peak_reserved_bytes": 530579456,
+      "wall_seconds": 5.58919605682604,
+      "device0_trace_events": 13971,
+      "snapshot_json_sha256": "529e84f32b52146f2d79543ca2026fd75c839a7f85fb3148f1c010991de502cd",
+      "snapshot_pickle_bytes": 3125458,
+      "snapshot_pickle_sha256": "f464b899773cfee80ac3ab5b0e3f5ed41dc047cfa9eee99455948985e101263e",
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "shared_gpu_observed": false,
+      "gpu_observation_complete": true,
+      "seed": 1337,
+      "command": [
+        "/opt/venv/bin/python",
+        "-m",
+        "headroom.lab.run_target",
+        "--script",
+        "/source/train.py",
+        "--output",
+        "/out",
+        "--max-steps",
+        "20",
+        "--max-seconds",
+        "120",
+        "--seed",
+        "1337",
+        "--device",
+        "cuda",
+        "--",
+        "--batch",
+        "1",
+        "--steps",
+        "100",
+        "--seed",
+        "1337"
+      ]
+    },
+    "s3_b": {
+      "run_id": "e9b2840fda8044329e1a1104ca68aa02",
+      "run_dir": "runs/lab-acceptance/20261023T022523Z/e9b2840fda8044329e1a1104ca68aa02",
+      "image_id": "sha256:54accb9f005c435d13c018026781487600914cd99434a2d424136522dfed3661",
+      "source_sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+      "source_manifest_sha256": "eb862e1aeaf73783647b510010026eb7c4e142646502766f1c914a170b1cc2b8",
+      "status": "completed",
+      "steps": 20,
+      "loss_count": 20,
+      "first_5_losses": [
+        1.0982863903045654,
+        1.0958553552627563,
+        1.0934312343597412,
+        1.0910136699676514,
+        1.0886027812957764
+      ],
+      "peak_allocated_bytes": 509994496,
+      "peak_reserved_bytes": 530579456,
+      "wall_seconds": 5.424450910883024,
+      "device0_trace_events": 13971,
+      "snapshot_json_sha256": "bf3144169b3ea5c6065933bf3cf0caa91ecd9911171d254e9e0c3f6f54521d73",
+      "snapshot_pickle_bytes": 3125458,
+      "snapshot_pickle_sha256": "4f7e54559ddbf50c1d1856ec1289bbbf382fafd2f96a70cc966928e67bce8caa",
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "shared_gpu_observed": false,
+      "gpu_observation_complete": true,
+      "seed": 1337,
+      "command": [
+        "/opt/venv/bin/python",
+        "-m",
+        "headroom.lab.run_target",
+        "--script",
+        "/source/train.py",
+        "--output",
+        "/out",
+        "--max-steps",
+        "20",
+        "--max-seconds",
+        "120",
+        "--seed",
+        "1337",
+        "--device",
+        "cuda",
+        "--",
+        "--batch",
+        "1",
+        "--steps",
+        "100",
+        "--seed",
+        "1337"
+      ]
+    }
+  },
+  "timeout_evidence": {
+    "result_path": "runs/lab-test-history/20261023T0212-full/test_infinite_loop_timeout_30_0/runs/56642d7265064c0899dbeda692ae11c3/result.json",
+    "status": "timeout",
+    "expected_public_reason": "TIMEOUT",
+    "configured_max_seconds": 30,
+    "observed_wall_seconds": 30.001733819954097,
+    "cleanup_verified": true,
+    "test": "tests/test_runner.py::test_infinite_loop_timeout_30_seconds_cleans_container_and_children"
+  },
+  "credential_evidence": {
+    "path": "runs/lab-test-history/20261023T0212-full/test_keys_absent_and_source_re0/runs/c92f18aac7284aba8359d87845d29783/artifacts/boundary-check.json",
+    "keys": {
+      "NEBIUS_API_KEY": null,
+      "TAVILY_API_KEY": null,
+      "HF_TOKEN": null,
+      "UNRELATED_SECRET": null
+    },
+    "source_read_only": true,
+    "test": "tests/test_runner.py::test_keys_absent_and_source_read_only"
+  },
+  "symbolizer_fix": {
+    "dependency_added": "binutils / addr2line",
+    "official_source": "https://github.com/pytorch/pytorch/blob/v2.5.1/torch/csrc/profiler/unwind/unwind.cpp#L395-L414",
+    "minimal_probe": "CapturedTraceback.extract(cpp=True).format()",
+    "probe_scope": "CPU-only diagnostic: Docker probes had no GPU mount/network; host CUDA_VISIBLE_DEVICES empty; no target training; CUDA stayed uninitialized",
+    "independently_rechecked": {
+      "old": {
+        "image_id": "sha256:59d25199f7af74c53c6d24ba873eec4b0e76312a22dd3869dd873a51e4cbc804",
+        "exit_code": 0,
+        "probe": {
+          "ok": false,
+          "error_type": "ValueError",
+          "error": "stoi",
+          "cuda_initialized_before": false,
+          "cuda_initialized_after": false
+        },
+        "stderr_present": false,
+        "gpu_mounted": false,
+        "network": "none"
+      },
+      "new": {
+        "image_id": "sha256:54accb9f005c435d13c018026781487600914cd99434a2d424136522dfed3661",
+        "exit_code": 0,
+        "probe": {
+          "ok": true,
+          "frames": 17,
+          "cuda_initialized_before": false,
+          "cuda_initialized_after": false
+        },
+        "stderr_present": false,
+        "gpu_mounted": false,
+        "network": "none"
+      },
+      "host": {
+        "exit_code": 0,
+        "probe": {
+          "ok": true,
+          "frames": 17,
+          "cuda_initialized_before": false,
+          "cuda_initialized_after": false
+        },
+        "stderr_present": false
+      }
+    },
+    "frame_count_note": "Minimal direct probe produced 17 frames; separate wrapped test fixture produced 30 frames. Counts depend on call stack.",
+    "wrapped_fixture_path": "runs/lab-test-history/20261023T0212-full/test_full_cpp_symbolization_de0/runs/f0392b2642f14f34bf8a7d4279079195/artifacts/symbolizer.json"
+  },
+  "preserved_history": [
+    {
+      "path": "reports/lab-gpu-acceptance-20261023T020307Z-failed.json",
+      "outcome": "All three snapshot exports failed with stoi; capture errors are failures, not completed runs"
+    },
+    {
+      "path": "reports/lab-gpu-acceptance-20261023T020718Z.json",
+      "outcome": "Symbolizer fixed, but old s1 source had 268 device-0 events and failed original >1000 clause"
+    },
+    {
+      "path": "reports/s1-calibration-20261023T0210.json",
+      "outcome": "Current fixture calibration only; formal acceptance uses 022523 GPU report"
+    }
+  ],
+  "limits": [
+    "Raw GPU report task_accepted remains false because it covers GPU clauses only; this review adds passing CPU integration evidence.",
+    "GPU occupancy is sampled, not continuously proven exclusive.",
+    "Snapshot pickle presence/hash/size checked without host unpickling; event counts independently checked in JSON exported from the same capture.",
+    "New s1 fixture is a versioned baseline, not a repair or a before/after savings result.",
+    "T1.2 peak reconstruction, diagnosis, repairs, numerical equivalence, T2.1 and live model/API checks remain unaccepted."
+  ],
+  "latest_full_regression": {
+    "command": [
+      "uv",
+      "run",
+      "pytest",
+      "-q",
+      "--basetemp=runs/lab-test-history/20261023T025427Z-final"
+    ],
+    "log": "reports/tests-20261023T025427Z-final.log",
+    "exit_code": 0,
+    "started_utc": "20261023T025427Z",
+    "passed": 95,
+    "suite_seconds": 53.54,
+    "log_sha256": "7b8305fa4dcc186845dd50711ac0388259bc129e834a546f37d557bd013e8be9"
+  }
+}

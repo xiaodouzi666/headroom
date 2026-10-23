@@ -8,7 +8,7 @@ No acceptance or feature-scope changes. On 2026-10-23 Frank explicitly requested
 
 ## Current sequencing instruction
 
-After stopping the competing GPU service, Frank said to continue other work while he registers accounts. API-independent Lab implementation proceeds under that instruction. T0.1/T0.4/T0.5 remain pending; their live acceptance is not inferred from offline work. This does not authorize paid calls or any pending acceptance correction.
+After stopping the competing GPU service, Frank said to continue other work while he registers accounts. API-independent Lab and evidence-pack implementation proceeds under that instruction. T0.1/T0.4/T0.5 remain pending; their live acceptance is not inferred from offline work. This does not authorize paid calls or any pending acceptance correction.
 
 ## Explicit v4.2 precedence (already specified in the supplied plan)
 
@@ -25,3 +25,12 @@ After stopping the competing GPU service, Frank said to continue other work whil
 - Phase 2 maximum six rounds; precision-changing candidates only under an allowing policy.
 
 No pending proposal is treated as an approved change or as a passed acceptance check.
+
+## Implementation versus pending plan changes
+
+T1.2 reconstructs the true peak because existing section C.4 already requires
+blocks alive at the peak. Its high cache-gap flag is retained as required, with
+a separate limitation explaining that it does not prove harmful fragmentation.
+These implementation details do not approve the pending changes to numerical
+comparisons, loop acceptance or precision policies. T1.2's s2 >=40% gate remains
+unchanged and fails on the measured capture (39.8715009692%).

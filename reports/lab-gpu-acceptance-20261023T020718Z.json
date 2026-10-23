@@ -1,0 +1,847 @@
+{
+  "task": "T1.1",
+  "scope": "GPU clauses only; tests/test_runner.py provides CPU Docker boundary/timeout checks",
+  "gpu_checks_passed": false,
+  "task_accepted": false,
+  "original_thresholds_unchanged": true,
+  "s1_device0_trace_event_count": 268,
+  "checks": {
+    "s1_cuda_oom": true,
+    "s1_snapshot_export_valid": true,
+    "s1_snapshot_pickle_exists": true,
+    "s1_device0_trace_events_gt_1000": false,
+    "s1_positive_requested_gb": true,
+    "s1_out_of_memory_traceback": true,
+    "s3_completed_20_steps_a": true,
+    "s3_completed_20_steps_b": true,
+    "s3_at_least_20_losses_a": true,
+    "s3_at_least_20_losses_b": true,
+    "s3_first_5_losses_identical": true,
+    "all_cleanup_verified": true,
+    "all_gpu_runs_unshared": true
+  },
+  "runs": {
+    "s1": {
+      "protocol": "headroom.lab.v1",
+      "schema_version": 1,
+      "capture_complete": true,
+      "execution_status": "oom",
+      "status": "oom",
+      "termination_reason": "oom",
+      "pid": 1,
+      "is_primary": true,
+      "steps": 0,
+      "loss_series": [],
+      "step_records": [],
+      "peak_allocated_bytes": 24600592384,
+      "peak_reserved_bytes": 24601690112,
+      "peak_alloc_gb": 24.600592384,
+      "peak_reserved_gb": 24.601690112,
+      "step_ms_median": null,
+      "timing_note": "Intervals between completed optimizer updates; first includes target setup",
+      "wall_seconds": 1.787817153846845,
+      "snapshot": {
+        "available": true,
+        "trace_count": 268
+      },
+      "snapshot_trace_count": 268,
+      "oom": {
+        "requested_bytes": 268435456,
+        "free_bytes": 256770048,
+        "requested_source": "allocator_oom_event",
+        "free_source": "allocator_oom_event",
+        "requested_gb": 0.268435456,
+        "free_gb": 0.256770048,
+        "traceback": "Traceback (most recent call last):\n  File \"/runtime/headroom/lab/run_target.py\", line 45, in main\n    runpy.run_path(str(script), run_name=\"__main__\")\n  File \"<frozen runpy>\", line 286, in run_path\n  File \"<frozen runpy>\", line 98, in _run_module_code\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/source/train.py\", line 117, in <module>\n    main()\n  File \"/source/train.py\", line 99, in main\n    predictions = model(inputs)\n                  ^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1736, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1747, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/source/train.py\", line 29, in forward\n    hidden = block(hidden)\n             ^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1736, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1747, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/source/train.py\", line 18, in forward\n    return inputs + self.ff(self.norm(inputs))\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1736, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1747, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/container.py\", line 250, in forward\n    input = module(input)\n            ^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1736, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1747, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/linear.py\", line 125, in forward\n    return F.linear(input, self.weight, self.bias)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntorch.OutOfMemoryError: CUDA out of memory. Tried to allocate 256.00 MiB. GPU 0 has a total capacity of 23.55 GiB of which 244.88 MiB is free. Including non-PyTorch memory, this process has 23.24 GiB memory in use. Of the allocated memory 22.91 GiB is allocated by PyTorch, and 1.05 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)\n"
+      },
+      "shared_gpu": false,
+      "gpu": {
+        "before_cuda_initialization": {
+          "returncode": 0,
+          "stdout": "",
+          "stderr": "",
+          "processes": []
+        },
+        "device_query": {
+          "returncode": 0,
+          "stdout": "0, NVIDIA GeForce RTX 3090 Ti, 595.99.02, 24564, 24055\n",
+          "stderr": ""
+        },
+        "at_capture_end": {
+          "returncode": 0,
+          "stdout": "1, /opt/venv/bin/python, 23802\n",
+          "stderr": "",
+          "processes": [
+            {
+              "pid": "1",
+              "process_name": "/opt/venv/bin/python",
+              "used_memory_mib": "23802"
+            }
+          ]
+        },
+        "shared_gpu_basis": "compute processes before capture CUDA initialization"
+      },
+      "env": {
+        "pid": 1,
+        "is_primary": true,
+        "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4",
+        "device": "cuda",
+        "seed": 1337,
+        "max_steps": 20,
+        "max_seconds": 120.0,
+        "PYTORCH_CUDA_ALLOC_CONF": null,
+        "CUDA_VISIBLE_DEVICES": "0",
+        "seeded": {
+          "python": true,
+          "torch": true,
+          "numpy": true
+        },
+        "driver_query": {
+          "returncode": 0,
+          "stdout": "0, NVIDIA GeForce RTX 3090 Ti, 595.99.02, 24564, 24055\n",
+          "stderr": ""
+        },
+        "deterministic_algorithms": true,
+        "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+        "gpu_name": "NVIDIA GeForce RTX 3090 Ti",
+        "gpu_total_memory_bytes": 25283526656,
+        "cudnn": 90100
+      },
+      "errors": [],
+      "exception": {
+        "type": "OutOfMemoryError",
+        "message": "CUDA out of memory. Tried to allocate 256.00 MiB. GPU 0 has a total capacity of 23.55 GiB of which 244.88 MiB is free. Including non-PyTorch memory, this process has 23.24 GiB memory in use. Of the allocated memory 22.91 GiB is allocated by PyTorch, and 1.05 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)"
+      },
+      "run_id": "bfc4ac6f441d46d1a4ed1355526a265c",
+      "run_dir": "/home/xiaodouzi/workspace/headroom/runs/lab-acceptance/20261023T020718Z/bfc4ac6f441d46d1a4ed1355526a265c",
+      "artifact_dir": "/home/xiaodouzi/workspace/headroom/runs/lab-acceptance/20261023T020718Z/bfc4ac6f441d46d1a4ed1355526a265c/artifacts",
+      "container_name": "headroom-lab-bfc4ac6f441d46d1a4ed1355526a265c",
+      "cleanup_verified": true,
+      "gpu_observation_complete": true,
+      "started_at": "2026-10-23T02:07:18.086529+00:00",
+      "execution": {
+        "timed_out": false,
+        "returncode": 42,
+        "log_limit_bytes_per_stream": 8388608,
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 42,
+          "Error": "",
+          "StartedAt": "2026-10-23T02:07:18.16196324Z",
+          "FinishedAt": "2026-10-23T02:07:21.725016147Z"
+        },
+        "image_id": "sha256:54accb9f005c435d13c018026781487600914cd99434a2d424136522dfed3661",
+        "cleanup_verified": true,
+        "cleanup_attempts": [
+          {
+            "operation": "stop",
+            "returncode": 0,
+            "stderr": ""
+          },
+          {
+            "operation": "kill",
+            "returncode": 1,
+            "stderr": "Error response from daemon: cannot kill container: headroom-lab-bfc4ac6f441d46d1a4ed1355526a265c: container 276f08b14944f50a7c2c6977038b9e9ad951a4247718ae4443772087e76d9a16 is not running\n"
+          },
+          {
+            "operation": "rm",
+            "returncode": 0,
+            "stderr": ""
+          }
+        ],
+        "cleanup_inspect": {
+          "returncode": 1,
+          "stdout": "[]\n",
+          "stderr": "Error response from daemon: No such container: headroom-lab-bfc4ac6f441d46d1a4ed1355526a265c\n"
+        }
+      },
+      "gpu_before": {
+        "available": true,
+        "processes": [],
+        "devices_csv": "0, NVIDIA GeForce RTX 3090 Ti, 24564, 24055",
+        "error": ""
+      },
+      "image_id": "sha256:54accb9f005c435d13c018026781487600914cd99434a2d424136522dfed3661",
+      "gpu_after": {
+        "available": true,
+        "processes": [],
+        "devices_csv": "0, NVIDIA GeForce RTX 3090 Ti, 24564, 24055",
+        "error": ""
+      },
+      "gpu_observation_note": "Host before/after samples and the capture's sharing observation are combined; these samples do not establish continuous GPU exclusivity.",
+      "finished_at": "2026-10-23T02:07:21.833645+00:00"
+    },
+    "s3_a": {
+      "protocol": "headroom.lab.v1",
+      "schema_version": 1,
+      "capture_complete": true,
+      "execution_status": "completed",
+      "status": "completed",
+      "termination_reason": "step_limit",
+      "pid": 1,
+      "is_primary": true,
+      "steps": 20,
+      "loss_series": [
+        1.0982863903045654,
+        1.0958553552627563,
+        1.0934312343597412,
+        1.0910136699676514,
+        1.0886027812957764,
+        1.0861985683441162,
+        1.0838009119033813,
+        1.0814098119735718,
+        1.0790252685546875,
+        1.0766470432281494,
+        1.074275255203247,
+        1.0719099044799805,
+        1.06955087184906,
+        1.0671981573104858,
+        1.0648516416549683,
+        1.0625114440917969,
+        1.0601773262023926,
+        1.057849407196045,
+        1.0555274486541748,
+        1.0532116889953613
+      ],
+      "step_records": [
+        {
+          "step": 1,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 955.6528250686824,
+          "elapsed_ms": 955.6528250686824,
+          "peak_allocated_bytes": 386740224,
+          "peak_reserved_bytes": 446693376
+        },
+        {
+          "step": 2,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 14.29792889393866,
+          "elapsed_ms": 969.9507539626211,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 3,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.531038140878081,
+          "elapsed_ms": 982.4817921034992,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 4,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.53591082058847,
+          "elapsed_ms": 995.0177029240876,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 5,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.752348091453314,
+          "elapsed_ms": 1007.770051015541,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 6,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.731676921248436,
+          "elapsed_ms": 1020.5017279367894,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 7,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.389651034027338,
+          "elapsed_ms": 1032.8913789708167,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 8,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.673112098127604,
+          "elapsed_ms": 1045.5644910689443,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 9,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.793945847079158,
+          "elapsed_ms": 1058.3584369160235,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 10,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.710798997431993,
+          "elapsed_ms": 1071.0692359134555,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 11,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.737731216475368,
+          "elapsed_ms": 1083.8069671299309,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 12,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 13.259631814435124,
+          "elapsed_ms": 1097.066598944366,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 13,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.156825978308916,
+          "elapsed_ms": 1109.223424922675,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 14,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.827703030779958,
+          "elapsed_ms": 1122.0511279534549,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 15,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.868721038103104,
+          "elapsed_ms": 1134.919848991558,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 16,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 13.11082299798727,
+          "elapsed_ms": 1148.0306719895452,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 17,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 13.00772512331605,
+          "elapsed_ms": 1161.0383971128613,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 18,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 13.07250582613051,
+          "elapsed_ms": 1174.1109029389918,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 19,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 13.371807988733053,
+          "elapsed_ms": 1187.4827109277248,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 20,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 13.262563152238727,
+          "elapsed_ms": 1200.7452740799636,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        }
+      ],
+      "peak_allocated_bytes": 509994496,
+      "peak_reserved_bytes": 530579456,
+      "peak_alloc_gb": 0.509994496,
+      "peak_reserved_gb": 0.530579456,
+      "step_ms_median": 12.810824438929558,
+      "timing_note": "Intervals between completed optimizer updates; first includes target setup",
+      "wall_seconds": 5.3027305491268635,
+      "snapshot": {
+        "available": true,
+        "trace_count": 13971
+      },
+      "snapshot_trace_count": 13971,
+      "oom": null,
+      "shared_gpu": false,
+      "gpu": {
+        "before_cuda_initialization": {
+          "returncode": 0,
+          "stdout": "",
+          "stderr": "",
+          "processes": []
+        },
+        "device_query": {
+          "returncode": 0,
+          "stdout": "0, NVIDIA GeForce RTX 3090 Ti, 595.99.02, 24564, 24055\n",
+          "stderr": ""
+        },
+        "at_capture_end": {
+          "returncode": 0,
+          "stdout": "1, /opt/venv/bin/python, 878\n",
+          "stderr": "",
+          "processes": [
+            {
+              "pid": "1",
+              "process_name": "/opt/venv/bin/python",
+              "used_memory_mib": "878"
+            }
+          ]
+        },
+        "shared_gpu_basis": "compute processes before capture CUDA initialization"
+      },
+      "env": {
+        "pid": 1,
+        "is_primary": true,
+        "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4",
+        "device": "cuda",
+        "seed": 1337,
+        "max_steps": 20,
+        "max_seconds": 120.0,
+        "PYTORCH_CUDA_ALLOC_CONF": null,
+        "CUDA_VISIBLE_DEVICES": "0",
+        "seeded": {
+          "python": true,
+          "torch": true,
+          "numpy": true
+        },
+        "driver_query": {
+          "returncode": 0,
+          "stdout": "0, NVIDIA GeForce RTX 3090 Ti, 595.99.02, 24564, 24055\n",
+          "stderr": ""
+        },
+        "deterministic_algorithms": true,
+        "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+        "gpu_name": "NVIDIA GeForce RTX 3090 Ti",
+        "gpu_total_memory_bytes": 25283526656,
+        "cudnn": 90100
+      },
+      "errors": [],
+      "exception": {
+        "type": "StepLimitReached",
+        "message": "Reached 20 optimizer updates"
+      },
+      "run_id": "1e8932990c6743f4a3681ca4a32f130b",
+      "run_dir": "/home/xiaodouzi/workspace/headroom/runs/lab-acceptance/20261023T020718Z/1e8932990c6743f4a3681ca4a32f130b",
+      "artifact_dir": "/home/xiaodouzi/workspace/headroom/runs/lab-acceptance/20261023T020718Z/1e8932990c6743f4a3681ca4a32f130b/artifacts",
+      "container_name": "headroom-lab-1e8932990c6743f4a3681ca4a32f130b",
+      "cleanup_verified": true,
+      "gpu_observation_complete": true,
+      "started_at": "2026-10-23T02:07:21.834224+00:00",
+      "execution": {
+        "timed_out": false,
+        "returncode": 0,
+        "log_limit_bytes_per_stream": 8388608,
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-10-23T02:07:21.898121937Z",
+          "FinishedAt": "2026-10-23T02:07:28.933232389Z"
+        },
+        "image_id": "sha256:54accb9f005c435d13c018026781487600914cd99434a2d424136522dfed3661",
+        "cleanup_verified": true,
+        "cleanup_attempts": [
+          {
+            "operation": "stop",
+            "returncode": 0,
+            "stderr": ""
+          },
+          {
+            "operation": "kill",
+            "returncode": 1,
+            "stderr": "Error response from daemon: cannot kill container: headroom-lab-1e8932990c6743f4a3681ca4a32f130b: container 76fd97a07d736e172f479b418812346cb0e78af578c2f680cf190252e4d0dcb9 is not running\n"
+          },
+          {
+            "operation": "rm",
+            "returncode": 0,
+            "stderr": ""
+          }
+        ],
+        "cleanup_inspect": {
+          "returncode": 1,
+          "stdout": "[]\n",
+          "stderr": "Error response from daemon: No such container: headroom-lab-1e8932990c6743f4a3681ca4a32f130b\n"
+        }
+      },
+      "gpu_before": {
+        "available": true,
+        "processes": [],
+        "devices_csv": "0, NVIDIA GeForce RTX 3090 Ti, 24564, 24055",
+        "error": ""
+      },
+      "image_id": "sha256:54accb9f005c435d13c018026781487600914cd99434a2d424136522dfed3661",
+      "gpu_after": {
+        "available": true,
+        "processes": [],
+        "devices_csv": "0, NVIDIA GeForce RTX 3090 Ti, 24564, 24055",
+        "error": ""
+      },
+      "gpu_observation_note": "Host before/after samples and the capture's sharing observation are combined; these samples do not establish continuous GPU exclusivity.",
+      "finished_at": "2026-10-23T02:07:29.041385+00:00"
+    },
+    "s3_b": {
+      "protocol": "headroom.lab.v1",
+      "schema_version": 1,
+      "capture_complete": true,
+      "execution_status": "completed",
+      "status": "completed",
+      "termination_reason": "step_limit",
+      "pid": 1,
+      "is_primary": true,
+      "steps": 20,
+      "loss_series": [
+        1.0982863903045654,
+        1.0958553552627563,
+        1.0934312343597412,
+        1.0910136699676514,
+        1.0886027812957764,
+        1.0861985683441162,
+        1.0838009119033813,
+        1.0814098119735718,
+        1.0790252685546875,
+        1.0766470432281494,
+        1.074275255203247,
+        1.0719099044799805,
+        1.06955087184906,
+        1.0671981573104858,
+        1.0648516416549683,
+        1.0625114440917969,
+        1.0601773262023926,
+        1.057849407196045,
+        1.0555274486541748,
+        1.0532116889953613
+      ],
+      "step_records": [
+        {
+          "step": 1,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 947.9646109975874,
+          "elapsed_ms": 947.9646109975874,
+          "peak_allocated_bytes": 386740224,
+          "peak_reserved_bytes": 446693376
+        },
+        {
+          "step": 2,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 14.367145951837301,
+          "elapsed_ms": 962.3317569494247,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 3,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.565881945192814,
+          "elapsed_ms": 974.8976388946176,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 4,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.445799075067043,
+          "elapsed_ms": 987.3434379696846,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 5,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.502363882958889,
+          "elapsed_ms": 999.8458018526435,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 6,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.76466902345419,
+          "elapsed_ms": 1012.6104708760977,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 7,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 13.334681978449225,
+          "elapsed_ms": 1025.945152854547,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 8,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.752891052514315,
+          "elapsed_ms": 1038.6980439070612,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 9,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 13.131943996995687,
+          "elapsed_ms": 1051.829987904057,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 10,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.77615805156529,
+          "elapsed_ms": 1064.6061459556222,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 11,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.835904024541378,
+          "elapsed_ms": 1077.4420499801636,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 12,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 13.512759003788233,
+          "elapsed_ms": 1090.9548089839518,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 13,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.241733027622104,
+          "elapsed_ms": 1103.196542011574,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 14,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.811372987926006,
+          "elapsed_ms": 1116.0079149995,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 15,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 12.955923797562718,
+          "elapsed_ms": 1128.9638387970626,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 16,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 13.230529148131609,
+          "elapsed_ms": 1142.1943679451942,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 17,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 13.086230028420687,
+          "elapsed_ms": 1155.280597973615,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 18,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 13.193481834605336,
+          "elapsed_ms": 1168.4740798082203,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 19,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 13.472886057570577,
+          "elapsed_ms": 1181.9469658657908,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        },
+        {
+          "step": 20,
+          "optimizer": "torch.optim.sgd.SGD",
+          "step_ms": 13.283174019306898,
+          "elapsed_ms": 1195.2301398850977,
+          "peak_allocated_bytes": 509994496,
+          "peak_reserved_bytes": 530579456
+        }
+      ],
+      "peak_allocated_bytes": 509994496,
+      "peak_reserved_bytes": 530579456,
+      "peak_alloc_gb": 0.509994496,
+      "peak_reserved_gb": 0.530579456,
+      "step_ms_median": 13.021076912991703,
+      "timing_note": "Intervals between completed optimizer updates; first includes target setup",
+      "wall_seconds": 5.385568037861958,
+      "snapshot": {
+        "available": true,
+        "trace_count": 13971
+      },
+      "snapshot_trace_count": 13971,
+      "oom": null,
+      "shared_gpu": false,
+      "gpu": {
+        "before_cuda_initialization": {
+          "returncode": 0,
+          "stdout": "",
+          "stderr": "",
+          "processes": []
+        },
+        "device_query": {
+          "returncode": 0,
+          "stdout": "0, NVIDIA GeForce RTX 3090 Ti, 595.99.02, 24564, 24055\n",
+          "stderr": ""
+        },
+        "at_capture_end": {
+          "returncode": 0,
+          "stdout": "1, /opt/venv/bin/python, 878\n",
+          "stderr": "",
+          "processes": [
+            {
+              "pid": "1",
+              "process_name": "/opt/venv/bin/python",
+              "used_memory_mib": "878"
+            }
+          ]
+        },
+        "shared_gpu_basis": "compute processes before capture CUDA initialization"
+      },
+      "env": {
+        "pid": 1,
+        "is_primary": true,
+        "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4",
+        "device": "cuda",
+        "seed": 1337,
+        "max_steps": 20,
+        "max_seconds": 120.0,
+        "PYTORCH_CUDA_ALLOC_CONF": null,
+        "CUDA_VISIBLE_DEVICES": "0",
+        "seeded": {
+          "python": true,
+          "torch": true,
+          "numpy": true
+        },
+        "driver_query": {
+          "returncode": 0,
+          "stdout": "0, NVIDIA GeForce RTX 3090 Ti, 595.99.02, 24564, 24055\n",
+          "stderr": ""
+        },
+        "deterministic_algorithms": true,
+        "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+        "gpu_name": "NVIDIA GeForce RTX 3090 Ti",
+        "gpu_total_memory_bytes": 25283526656,
+        "cudnn": 90100
+      },
+      "errors": [],
+      "exception": {
+        "type": "StepLimitReached",
+        "message": "Reached 20 optimizer updates"
+      },
+      "run_id": "f4cdcf60074048c4a6963bafae241fb0",
+      "run_dir": "/home/xiaodouzi/workspace/headroom/runs/lab-acceptance/20261023T020718Z/f4cdcf60074048c4a6963bafae241fb0",
+      "artifact_dir": "/home/xiaodouzi/workspace/headroom/runs/lab-acceptance/20261023T020718Z/f4cdcf60074048c4a6963bafae241fb0/artifacts",
+      "container_name": "headroom-lab-f4cdcf60074048c4a6963bafae241fb0",
+      "cleanup_verified": true,
+      "gpu_observation_complete": true,
+      "started_at": "2026-10-23T02:07:29.052974+00:00",
+      "execution": {
+        "timed_out": false,
+        "returncode": 0,
+        "log_limit_bytes_per_stream": 8388608,
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-10-23T02:07:29.118241938Z",
+          "FinishedAt": "2026-10-23T02:07:36.218245474Z"
+        },
+        "image_id": "sha256:54accb9f005c435d13c018026781487600914cd99434a2d424136522dfed3661",
+        "cleanup_verified": true,
+        "cleanup_attempts": [
+          {
+            "operation": "stop",
+            "returncode": 0,
+            "stderr": ""
+          },
+          {
+            "operation": "kill",
+            "returncode": 1,
+            "stderr": "Error response from daemon: cannot kill container: headroom-lab-f4cdcf60074048c4a6963bafae241fb0: container 6340350957a7a4b644d8bc7a675bc22bab1857c059f7f8e9e2288910d1ee3a21 is not running\n"
+          },
+          {
+            "operation": "rm",
+            "returncode": 0,
+            "stderr": ""
+          }
+        ],
+        "cleanup_inspect": {
+          "returncode": 1,
+          "stdout": "[]\n",
+          "stderr": "Error response from daemon: No such container: headroom-lab-f4cdcf60074048c4a6963bafae241fb0\n"
+        }
+      },
+      "gpu_before": {
+        "available": true,
+        "processes": [],
+        "devices_csv": "0, NVIDIA GeForce RTX 3090 Ti, 24564, 24055",
+        "error": ""
+      },
+      "image_id": "sha256:54accb9f005c435d13c018026781487600914cd99434a2d424136522dfed3661",
+      "gpu_after": {
+        "available": true,
+        "processes": [],
+        "devices_csv": "0, NVIDIA GeForce RTX 3090 Ti, 24564, 24055",
+        "error": ""
+      },
+      "gpu_observation_note": "Host before/after samples and the capture's sharing observation are combined; these samples do not establish continuous GPU exclusivity.",
+      "finished_at": "2026-10-23T02:07:36.328751+00:00"
+    }
+  }
+}
