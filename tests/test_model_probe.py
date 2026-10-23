@@ -1,0 +1,709 @@
+"""No network, credentials or GPU access: every transport/tokenizer is a local fake."""
+
+import importlib.util
+import json
+import sys
+import threading
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+SPEC = importlib.util.spec_from_file_location(
+    "headroom_model_probe", Path(__file__).parents[1] / "scripts/probe_models.py"
+)
+probe = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = probe
+SPEC.loader.exec_module(probe)
+
+
+@pytest.fixture(autouse=True)
+def block_real_network(monkeypatch):
+    import socket
+
+    def denied(*args, **kwargs):
+        pytest.fail("Real network access is forbidden in model probe tests")
+
+    monkeypatch.setattr(socket, "getaddrinfo", denied)
+    monkeypatch.setattr(socket, "create_connection", denied)
+    monkeypatch.setattr(socket.socket, "connect", denied)
+    monkeypatch.setattr(socket.socket, "connect_ex", denied)
+
+
+def classify_known(spec, observation, metadata):
+    """Existing behavior fixtures explicitly identify their requested model."""
+    return probe.classify(spec, {"response_model": spec.model, **observation}, metadata)
+
+
+def price():
+    return probe.Price(Decimal(1), Decimal(3), 1_000_000, "max_tokens")
+
+
+def verified_prices():
+    return {
+        "verified": True,
+        "verified_at": "2026-10-24",
+        "source": "official account catalogue",
+        "output_caps_include_reasoning": True,
+        "models": {
+            model: {
+                "input_usd_per_million": "1",
+                "output_usd_per_million": "3",
+                "prompt_token_ceiling": 1_000_000,
+                "output_cap_field": "max_tokens",
+            }
+            for model in probe.MODELS.values()
+        },
+    }
+
+
+class FakeTransport:
+    def __init__(self, observations=None, available=True):
+        self.observations = list(observations or [])
+        self.calls = []
+        self.available = available
+
+    def catalogue(self, spec):
+        return {
+            "http_status": 200,
+            "models": [{"id": model} for model in probe.MODELS.values()] if self.available else [],
+        }
+
+    def chat(self, spec, payload):
+        self.calls.append((spec, payload))
+        if self.observations:
+            result = self.observations.pop(0)
+            if result.get("http_status") == 200:
+                result.setdefault("response_model", spec.model)
+            return result
+        return {
+            "http_status": 200,
+            "response_model": spec.model,
+            "_content": "headroom",
+            "finish_reason": "stop",
+            "usage": {"prompt_tokens": 10, "completion_tokens": 2},
+            "ttft_ms": 4,
+            "ttft_content_ms": 4,
+            "elapsed_ms": 8,
+        }
+
+
+class Encoder:
+    def encode(self, text):
+        return list(text.encode())
+
+    def decode(self, values):
+        return bytes(values).decode()
+
+
+def test_full_plan_covers_all_requested_matrix_and_two_catalogues():
+    plan = probe.build_plan()
+    assert len(plan) == 62
+    assert {p.endpoint for p in plan if p.method == "catalogue"} == set(probe.ENDPOINTS)
+    for role in probe.MODELS:
+        assert {p.method for p in plan if p.role == role and p.method in probe.METHODS} == set(
+            probe.METHODS
+        )
+    assert [p.approx_input_tokens for p in plan if p.method == "long_context"] == list(
+        probe.LONG_SIZES
+    )
+    assert len([p for p in plan if p.concurrency_group]) == 4
+
+
+def test_dry_run_does_not_read_key_prices_tokenizer_or_transport(monkeypatch, capsys):
+    monkeypatch.setattr(probe.Path, "read_text", lambda *a, **k: pytest.fail("file read"))
+    original_get = probe.os.environ.get
+
+    def guard_key(name, *args):
+        if name == "NEBIUS_API_KEY":
+            pytest.fail("key read")
+        return original_get(name, *args)
+
+    monkeypatch.setattr(probe.os.environ, "get", guard_key)
+    monkeypatch.setattr(probe.HTTPTransport, "__init__", lambda *a: pytest.fail("transport"))
+    assert probe.main(["--pricing-file", "/absent.json"]) == 0
+    output = json.loads(capsys.readouterr().out)
+    assert output["network_requests"] == 0 and output["accepted"] is False
+
+
+def test_execution_without_explicit_gates_never_touches_network(monkeypatch, capsys):
+    monkeypatch.setattr(probe.HTTPTransport, "__init__", lambda *a: pytest.fail("transport"))
+    assert probe.main(["--execute"]) == 2
+    assert json.loads(capsys.readouterr().out)["status"] == "refused"
+
+
+@pytest.mark.parametrize("value", ["NaN", "Infinity", "-0.01", "not money"])
+def test_prices_and_caps_reject_nonfinite_or_negative_values(value):
+    with pytest.raises(probe.Refused):
+        probe.money(value)
+
+
+def test_prices_fail_closed_for_missing_model_or_output_cap():
+    document = verified_prices()
+    document["models"].pop(probe.MODELS["ultra"])
+    with pytest.raises(probe.Refused):
+        probe.validate_prices(document, {"ultra"})
+    document = verified_prices()
+    document["output_caps_include_reasoning"] = False
+    with pytest.raises(probe.Refused):
+        probe.validate_prices(document, {"ultra"})
+
+
+def test_exact_reservation_before_dispatch_includes_all_retries():
+    transport = FakeTransport()
+    budget = probe.Budget(Decimal(2))
+    spec = probe.Probe("test", probe.ENDPOINTS[0], "ultra", "chat")
+    with pytest.raises(probe.Refused):
+        probe.probe_attempts(spec, price(), budget, transport, 256, retries=2)
+    assert transport.calls == [] and budget.outstanding == 0
+
+
+def test_unused_retry_reservations_release_after_accounted_success():
+    budget = probe.Budget(Decimal(5))
+    row = probe.probe_attempts(
+        probe.Probe("test", probe.ENDPOINTS[0], "ultra", "chat"),
+        price(),
+        budget,
+        FakeTransport(),
+        256,
+        retries=2,
+    )
+    assert row["reservation_usd"] == str(Decimal("1.000768") * 3)
+    assert budget.actual_known == Decimal("0.000016")
+    assert budget.charged == budget.actual_known and budget.outstanding == 0
+
+
+def test_unknown_usage_retains_full_upper_and_missing_usage_not_fabricated():
+    transport = FakeTransport(
+        [{"http_status": 200, "_content": "headroom", "finish_reason": "stop"}]
+    )
+    budget = probe.Budget(Decimal(3))
+    row = probe.probe_attempts(
+        probe.Probe("test", probe.ENDPOINTS[0], "ultra", "chat"),
+        price(),
+        budget,
+        transport,
+        256,
+        retries=0,
+    )
+    assert row["attempts"][0]["actual_cost_usd"] is None
+    assert row["attempts"][0]["cost_status"] == "unknown_reserved_upper_bound"
+    assert budget.charged == Decimal("1.000768") and budget.actual_known == 0
+
+
+def test_retry_429_reserves_unknown_attempt_and_backs_off():
+    transport = FakeTransport([{"http_status": 429, "error": "http_429"}])
+    sleeps = []
+    budget = probe.Budget(Decimal(5))
+    row = probe.probe_attempts(
+        probe.Probe("test", probe.ENDPOINTS[0], "ultra", "chat"),
+        price(),
+        budget,
+        transport,
+        256,
+        retries=2,
+        sleep=sleeps.append,
+    )
+    assert len(row["attempts"]) == 2 and sleeps == [1]
+    assert budget.charged == Decimal("1.000784")
+
+
+def test_usage_over_verified_bound_halts_future_dispatch():
+    transport = FakeTransport(
+        [
+            {
+                "http_status": 200,
+                "_content": "headroom",
+                "finish_reason": "stop",
+                "usage": {"prompt_tokens": 1_000_001, "completion_tokens": 2},
+            }
+        ]
+    )
+    budget = probe.Budget(Decimal(5))
+    row = probe.probe_attempts(
+        probe.Probe("test", probe.ENDPOINTS[0], "ultra", "chat"),
+        price(),
+        budget,
+        transport,
+        256,
+        retries=2,
+    )
+    assert row["detail"] == "provider_exceeded_verified_token_bound"
+    with pytest.raises(probe.Refused):
+        budget.reserve(Decimal("0.01"))
+
+
+@pytest.mark.parametrize("method", ["json_object", "json_schema", "fenced"])
+def test_all_json_candidates_and_fenced_tolerant_parser(method):
+    spec = probe.Probe("json", probe.ENDPOINTS[0], "super", method)
+    payload, _ = probe.make_payload(spec, price(), 128)
+    assert payload["stream"] and payload["stream_options"]["include_usage"]
+    content = '{"probe":"headroom","value":7}'
+    if method == "fenced":
+        content = "\x60\x60\x60json\n" + content + "\n\x60\x60\x60"
+    observation = {"http_status": 200, "_content": content}
+    assert classify_known(spec, observation, {})[0] == "ok"
+    assert classify_known(spec, {"http_status": 200, "_content": "{}"}, {})[0] == "fail"
+
+
+def test_tools_validate_actual_function_and_arguments():
+    spec = probe.Probe("tool", probe.ENDPOINTS[0], "super", "tools")
+    payload, _ = probe.make_payload(spec, price(), 128)
+    assert payload["tool_choice"]["function"]["name"] == "add"
+    observation = {
+        "http_status": 200,
+        "_tool_calls": [{"name": "add", "arguments": '{"a":2,"b":3}'}],
+    }
+    assert classify_known(spec, observation, {})[0] == "ok"
+
+
+@pytest.mark.parametrize(
+    "method",
+    [m for m in probe.METHODS if m.startswith(("template_", "prefix_", "effort_"))]
+    + ["reasoning_budget", "max_thinking_tokens"],
+)
+def test_reasoning_and_token_budget_200_still_unknown(method):
+    spec = probe.Probe("reason", probe.ENDPOINTS[0], "ultra", method)
+    payload, _ = probe.make_payload(spec, price(), 256)
+    assert payload["max_tokens"] == 256
+    assert (
+        classify_known(
+            spec, {"http_status": 200, "_content": "432", "reasoning_observed": True}, {}
+        )[0]
+        == "unknown"
+    )
+
+
+def test_long_input_reports_approximation_and_never_serializes_prompt_or_needle():
+    spec = probe.Probe("long", probe.ENDPOINTS[0], "ultra", "long_context", 64000)
+
+    class NeedleTransport(FakeTransport):
+        def chat(self, spec, payload):
+            import re
+
+            needle = re.search(
+                r"HEADROOM_NEEDLE_[a-f0-9]+", payload["messages"][0]["content"]
+            ).group()
+            return {
+                "http_status": 200,
+                "response_model": spec.model,
+                "_content": needle,
+                "finish_reason": "stop",
+                "usage": {"prompt_tokens": 12345, "completion_tokens": 12},
+            }
+
+    row = probe.probe_attempts(
+        spec, price(), probe.Budget(Decimal(2)), NeedleTransport(), 64, 0, encoder=Encoder()
+    )
+    serialized = json.dumps(row)
+    assert row["status"] == "ok"
+    assert row["measured_cl100k_tokens"] == 64000
+    assert row["token_count_kind"] == "approximation_not_model_tokenizer"
+    assert "HEADROOM_NEEDLE_" not in serialized and "Calibration passage" not in serialized
+
+
+def test_concurrent_four_requests_reserve_group_before_any_dispatch():
+    plan = probe.build_plan(["concurrency"])
+    transport = FakeTransport()
+    report = probe.execute_plan(
+        plan,
+        {"super": price()},
+        probe.Budget(Decimal(3)),
+        transport,
+        256,
+        0,
+    )
+    assert transport.calls == [] and len(report["probes"]) == 4
+    assert all(row["status"] == "refused" for row in report["probes"])
+
+
+def test_real_concurrency_uses_four_workers_and_still_never_accepts():
+    barrier = threading.Barrier(4)
+
+    class ConcurrentTransport(FakeTransport):
+        def chat(self, spec, payload):
+            barrier.wait(timeout=5)
+            return super().chat(spec, payload)
+
+    report = probe.execute_plan(
+        probe.build_plan(["concurrency"]),
+        {"super": price()},
+        probe.Budget(Decimal(5)),
+        ConcurrentTransport(),
+        256,
+        0,
+    )
+    assert len(report["probes"]) == 4
+    assert all(row["status"] == "ok" for row in report["probes"])
+    assert report["accepted"] is False and report["config_proposal"]["applied"] is False
+
+
+def test_catalogue_model_absence_prevents_paid_dispatch():
+    transport = FakeTransport(available=False)
+    report = probe.execute_plan(
+        probe.build_plan(["concurrency"]),
+        {"super": price()},
+        probe.Budget(Decimal(5)),
+        transport,
+        256,
+        0,
+    )
+    assert transport.calls == []
+    assert all(row["detail"] == "model_not_in_live_endpoint_catalogue" for row in report["probes"])
+
+
+def test_usage_rejects_boolean_and_preserves_selected_numeric_details():
+    assert probe.sanitized_usage({"prompt_tokens": True, "completion_tokens": 3}) is None
+    usage = probe.sanitized_usage(
+        {
+            "prompt_tokens": 10,
+            "completion_tokens": 4,
+            "completion_tokens_details": {"reasoning_tokens": 2, "secret": "fake secret"},
+        }
+    )
+    assert usage["completion_tokens_details"] == {"reasoning_tokens": 2}
+
+
+def test_nonofficial_endpoint_refused():
+    with pytest.raises(probe.Refused):
+        probe.build_plan(endpoint="https://other-provider.invalid/v1/")
+
+
+def test_unexpected_transport_failure_retains_charge_and_redacts_exception():
+    class BrokenTransport:
+        def chat(self, spec, payload):
+            raise RuntimeError("secret-must-not-appear")
+
+    budget = probe.Budget(Decimal(2))
+    row = probe.probe_attempts(
+        probe.Probe("test", probe.ENDPOINTS[0], "ultra", "chat"),
+        price(),
+        budget,
+        BrokenTransport(),
+        256,
+        0,
+    )
+    assert row["status"] == "fail"
+    assert "secret-must-not-appear" not in json.dumps(row)
+    assert budget.charged == Decimal("1.000768")
+    assert budget.outstanding == 0
+
+
+def test_http_transport_stream_usage_ttft_and_endpoint_without_network(monkeypatch):
+    import httpx
+
+    real_client = httpx.AsyncClient
+    requests = []
+
+    def handler(request):
+        requests.append(request)
+        payload = json.loads(request.content)
+        assert request.url.host == "api.tokenfactory.us-central1.nebius.com"
+        assert payload["max_tokens"] == 256
+        assert payload["stream_options"]["include_usage"] is True
+        chunks = [
+            {"choices": [{"delta": {"reasoning_content": "internal"}, "finish_reason": None}]},
+            {"choices": [{"delta": {"content": "headroom"}, "finish_reason": "stop"}]},
+            {"choices": [], "usage": {"prompt_tokens": 10, "completion_tokens": 3}},
+        ]
+        for chunk in chunks:
+            chunk["model"] = probe.MODELS["ultra"]
+        stream = (
+            "".join("data: " + json.dumps(chunk) + "\n\n" for chunk in chunks) + "data: [DONE]\n\n"
+        )
+        return httpx.Response(200, text=stream, headers={"content-type": "text/event-stream"})
+
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        lambda **kwargs: real_client(transport=httpx.MockTransport(handler), **kwargs),
+    )
+    spec = probe.Probe("chat", probe.ENDPOINTS[0], "ultra", "chat")
+    payload, _ = probe.make_payload(spec, price(), 256)
+    observed = probe.HTTPTransport("offline-placeholder").chat(spec, payload)
+    assert len(requests) == 1
+    assert observed["usage"] == {"prompt_tokens": 10, "completion_tokens": 3}
+    assert observed["reasoning_observed"]
+    assert observed["ttft_ms"] is not None
+    assert observed["ttft_content_ms"] >= observed["ttft_ms"]
+    assert observed["elapsed_ms"] >= observed["ttft_content_ms"]
+
+
+def test_http_transport_never_follows_redirect_or_reports_error_body(monkeypatch):
+    import httpx
+
+    real_client = httpx.AsyncClient
+    requests = []
+
+    def handler(request):
+        requests.append(request)
+        return httpx.Response(
+            302, headers={"location": "https://untrusted.invalid"}, text="secret-in-error-body"
+        )
+
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        lambda **kwargs: real_client(transport=httpx.MockTransport(handler), **kwargs),
+    )
+    spec = probe.Probe("chat", probe.ENDPOINTS[0], "ultra", "chat")
+    payload, _ = probe.make_payload(spec, price(), 256)
+    observed = probe.HTTPTransport("offline-placeholder").chat(spec, payload)
+    assert len(requests) == 1 and observed["http_status"] == 302
+    assert "secret-in-error-body" not in json.dumps(observed)
+
+
+def test_catalogue_verbose_query_and_actual_ids_without_network(monkeypatch):
+    import httpx
+
+    real_client = httpx.AsyncClient
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        assert request.url.params["verbose"] == "true"
+        return httpx.Response(
+            200, json={"data": [{"id": probe.MODELS["super"], "context_length": 256000}]}
+        )
+
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        lambda **kwargs: real_client(transport=httpx.MockTransport(handler), **kwargs),
+    )
+    observed = probe.HTTPTransport("offline-placeholder").catalogue(
+        probe.build_plan(["catalogue"])[0]
+    )
+    assert len(seen) == 1 and observed["models"][0]["id"] == probe.MODELS["super"]
+
+
+@pytest.mark.parametrize("method", ["json_object", "json_schema"])
+@pytest.mark.parametrize(
+    "content",
+    [
+        '\x60\x60\x60json\n{"probe":"headroom","value":7}\n\x60\x60\x60',
+        '{"probe":"headroom","value":7.0}',
+        '{"probe":"headroom","value":true}',
+    ],
+)
+def test_native_json_capability_rejects_fences_and_noninteger_values(method, content):
+    spec = probe.Probe("native-json", probe.ENDPOINTS[0], "super", method)
+    assert classify_known(spec, {"http_status": 200, "_content": content}, {})[0] == "fail"
+
+
+def test_peer_bound_violation_prevents_any_next_retry():
+    budget = probe.Budget(Decimal(5))
+
+    class PeerViolationTransport(FakeTransport):
+        def chat(self, spec, payload):
+            self.calls.append((spec, payload))
+            with budget.lock:
+                budget.violated = True
+            return {"http_status": 429, "error": "http_429"}
+
+    transport = PeerViolationTransport()
+    row = probe.probe_attempts(
+        probe.Probe("retry", probe.ENDPOINTS[0], "super", "chat"),
+        price(),
+        budget,
+        transport,
+        256,
+        1,
+        sleep=lambda _: None,
+    )
+    assert len(transport.calls) == 1
+    assert row["status"] == "refused" and row["detail"] == "shared_provider_bound_violation"
+    assert budget.charged == Decimal("1.000768")
+
+
+def test_transport_direct_entry_refuses_nonofficial_endpoint():
+    transport = probe.HTTPTransport("offline-placeholder")
+    spec = probe.Probe("bad", "https://untrusted.invalid/", "super", "chat")
+    with pytest.raises(probe.Refused):
+        transport.chat(spec, {})
+    with pytest.raises(probe.Refused):
+        transport.catalogue(spec)
+
+
+def test_absolute_deadline_stops_continuous_sse_heartbeats(monkeypatch):
+    import asyncio
+
+    import httpx
+
+    real_client = httpx.AsyncClient
+
+    class Heartbeats(httpx.AsyncByteStream):
+        async def __aiter__(self):
+            while True:
+                await asyncio.sleep(0.001)
+                yield b": heartbeat\n\n"
+
+    def handler(request):
+        return httpx.Response(
+            200, stream=Heartbeats(), headers={"content-type": "text/event-stream"}
+        )
+
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        lambda **kwargs: real_client(transport=httpx.MockTransport(handler), **kwargs),
+    )
+    monkeypatch.setattr(probe, "ULTRA_TIMEOUT", 0.02)
+    spec = probe.Probe("heartbeat", probe.ENDPOINTS[0], "ultra", "chat")
+    payload, _ = probe.make_payload(spec, price(), 256)
+    observed = probe.HTTPTransport("offline-placeholder").chat(spec, payload)
+    assert observed["error"] == "TimeoutError"
+    assert 10 <= observed["elapsed_ms"] < 1000
+    assert observed["usage"] is None
+
+
+@pytest.mark.parametrize(
+    "identity_fields, expected",
+    [
+        ({"response_model": None}, "missing"),
+        ({"response_model": probe.MODELS["super"]}, "mismatch"),
+        (
+            {
+                "response_model": probe.MODELS["ultra"],
+                "response_model_ids": [probe.MODELS["ultra"], probe.MODELS["super"]],
+            },
+            "conflicting",
+        ),
+        ({"response_model": probe.MODELS["ultra"], "response_model_missing_events": 1}, "missing"),
+    ],
+)
+def test_unverified_model_identity_never_prices_or_accepts_response(identity_fields, expected):
+    spec = probe.Probe("identity", probe.ENDPOINTS[0], "ultra", "json_object")
+    observation = {
+        "http_status": 200,
+        "_content": '{"probe":"headroom","value":7}',
+        "finish_reason": "stop",
+        "usage": {"prompt_tokens": 10, "completion_tokens": 2},
+        **identity_fields,
+    }
+    assert probe.classify(spec, observation, {}) == ("unknown", "response_model_" + expected)
+    budget = probe.Budget(Decimal(5))
+    row = probe.probe_attempts(spec, price(), budget, FakeTransport([observation]), 256, 2)
+    attempt = row["attempts"][0]
+    assert row["status"] == "unknown" and row["model_identity"] == expected
+    assert attempt["actual_cost_usd"] is None
+    assert attempt["cost_status"] == "unknown_model_identity_requested_reservation_retained"
+    assert attempt["billing_bound_verified_for_response"] is False
+    assert budget.actual_known == 0 and budget.charged == Decimal("1.000768")
+    assert budget.summary()["billing_bound_unresolved"] is True
+    assert budget.summary()["halt_reason"] == "response_model_identity_unverified"
+    with pytest.raises(probe.Refused):
+        budget.reserve(Decimal("0.001"))
+
+
+@pytest.mark.parametrize(
+    "models, expected, missing",
+    [
+        ([probe.MODELS["ultra"], probe.MODELS["ultra"]], "matched", 0),
+        ([None, None], "missing", 2),
+        ([probe.MODELS["ultra"], None], "missing", 1),
+        ([probe.MODELS["super"], probe.MODELS["super"]], "mismatch", 0),
+        ([probe.MODELS["ultra"], probe.MODELS["super"]], "conflicting", 0),
+    ],
+)
+def test_sse_model_identity_is_collected_and_consistent(monkeypatch, models, expected, missing):
+    import httpx
+
+    real_client = httpx.AsyncClient
+
+    def handler(request):
+        events = [
+            {"choices": [{"delta": {"content": "headroom"}, "finish_reason": "stop"}]},
+            {"choices": [], "usage": {"prompt_tokens": 10, "completion_tokens": 2}},
+        ]
+        for event, model in zip(events, models, strict=True):
+            if model is not None:
+                event["model"] = model
+        stream = (
+            "".join("data: " + json.dumps(event) + "\n\n" for event in events) + "data: [DONE]\n\n"
+        )
+        return httpx.Response(200, text=stream, headers={"content-type": "text/event-stream"})
+
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        lambda **kwargs: real_client(transport=httpx.MockTransport(handler), **kwargs),
+    )
+    spec = probe.Probe("identity", probe.ENDPOINTS[0], "ultra", "chat")
+    payload, _ = probe.make_payload(spec, price(), 256)
+    observation = probe.HTTPTransport("offline-placeholder").chat(spec, payload)
+    assert probe.response_identity(spec, observation) == expected
+    assert observation["response_model_missing_events"] == missing
+    assert observation["response_model_ids"] == list(
+        dict.fromkeys(model for model in models if model)
+    )
+    assert probe.classify(spec, observation, {})[0] == (
+        "ok" if expected == "matched" else "unknown"
+    )
+
+
+def test_identity_failure_blocks_later_paid_probes():
+    plan = probe.build_plan(["catalogue"]) + [
+        probe.Probe("first", probe.ENDPOINTS[0], "ultra", "chat"),
+        probe.Probe("second", probe.ENDPOINTS[0], "ultra", "chat"),
+    ]
+    transport = FakeTransport(
+        [
+            {
+                "http_status": 200,
+                "response_model": None,
+                "_content": "headroom",
+                "finish_reason": "stop",
+                "usage": {"prompt_tokens": 10, "completion_tokens": 2},
+            }
+        ]
+    )
+    report = probe.execute_plan(
+        plan, {"ultra": price()}, probe.Budget(Decimal(5)), transport, 256, 0
+    )
+    assert len(transport.calls) == 1
+    assert report["probes"][0]["status"] == "unknown"
+    assert report["probes"][1]["status"] == "refused"
+    assert report["budget"]["actual_known_usd"] == "0"
+    assert report["budget"]["billing_bound_unresolved"]
+    assert report["accepted"] is False
+
+
+def test_wrong_model_needle_does_not_inflate_long_context_success(monkeypatch):
+    import re
+
+    original_make_payload = probe.make_payload
+    monkeypatch.setattr(
+        probe,
+        "make_payload",
+        lambda spec, price, limit, encoder=None: original_make_payload(
+            spec, price, limit, Encoder()
+        ),
+    )
+
+    class WrongModelNeedle(FakeTransport):
+        def chat(self, spec, payload):
+            self.calls.append((spec, payload))
+            needle = re.search(
+                r"HEADROOM_NEEDLE_[a-f0-9]+", payload["messages"][0]["content"]
+            ).group()
+            return {
+                "http_status": 200,
+                "response_model": probe.MODELS["super"],
+                "_content": needle,
+                "finish_reason": "stop",
+                "usage": {"prompt_tokens": 64000, "completion_tokens": 12},
+            }
+
+    report = probe.execute_plan(
+        probe.build_plan(["long"], long_sizes=[64000]),
+        {"ultra": price()},
+        probe.Budget(Decimal(5)),
+        WrongModelNeedle(),
+        256,
+        0,
+    )
+    assert report["probes"][0]["status"] == "unknown"
+    assert report["config_proposal"]["largest_successful_cl100k_approximation"] is None
+    assert report["config_proposal"]["largest_successful_server_prompt_tokens"] is None
+    assert report["budget"]["actual_known_usd"] == "0"

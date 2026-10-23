@@ -34,3 +34,22 @@ a separate limitation explaining that it does not prove harmful fragmentation.
 These implementation details do not approve the pending changes to numerical
 comparisons, loop acceptance or precision policies. T1.2's s2 >=40% gate remains
 unchanged and fails on the measured capture (39.8715009692%).
+
+## 2026-10-24 continuation
+
+Frank asked to defer the Nebius registration/credit issue and start the previously
+account-dependent work. T0.4/T1.3 may be prepared and mock-tested; T1.4 schema and
+prompt checks may also be prepared. These are intermediate artifacts, not accepted
+live gates. The existing T1.2 >=40% failure and other deferred plan corrections
+remain unchanged. No alternative model provider or paid account action is implied.
+
+Tavily's authenticated Billing page shows the free Researcher plan, 0/1000 credits
+used, pay-as-you-go off, auto-upgrade off, and requests stopping at the plan limit.
+The requested four-operation probe can use those free credits once its existing
+key is configured on azuki; it must not enable a paid plan or auto-upgrade.
+
+Validation for the 2026-10-24 offline continuation is saved in
+reports/api-prep-20261023T222659Z.json (259 tests, Ruff/format, 62-item no-request
+dry-run). A corrected test-isolation incident is documented in docs/MODELS.md;
+no authenticated model or Tavily call is claimed. Original acceptance gates and
+the canonical PLAN.md bytes remain unchanged.

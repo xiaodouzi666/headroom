@@ -1,0 +1,90 @@
+{
+  "timestamp_utc": "20261023T222659Z",
+  "scope": "T0.4 and T1.3 offline implementation, T1.4 schema/prompt/evidence validation",
+  "live_acceptance": {
+    "T0.4": false,
+    "T0.5": false,
+    "T1.3": false,
+    "T1.4": false
+  },
+  "network_caveat": "Earlier probe refactor tests attempted three dummy-token transports; outcomes unknown. See docs/MODELS.md. This verification uses corrected mocks and test DNS/socket guards.",
+  "checks": [
+    {
+      "name": "pytest",
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--basetemp",
+        "runs/lab-test-history/20261023T222659Z-api-prep"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 54.92,
+      "log": "reports/api-prep-20261023T222659Z-pytest.log",
+      "output_tail": "........................................................................ [ 27%]\n........................................................................ [ 55%]\n........................................................................ [ 83%]\n...........................................                              [100%]\n259 passed in 53.97s\n"
+    },
+    {
+      "name": "ruff",
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "."
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.011,
+      "log": "reports/api-prep-20261023T222659Z-ruff.log",
+      "output_tail": "All checks passed!\n"
+    },
+    {
+      "name": "format",
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "."
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.009,
+      "log": "reports/api-prep-20261023T222659Z-format.log",
+      "output_tail": "80 files already formatted\n"
+    },
+    {
+      "name": "model_probe_dry_run",
+      "command": [
+        ".venv/bin/python",
+        "scripts/probe_models.py"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.073,
+      "log": "reports/api-prep-20261023T222659Z-model_probe_dry_run.json",
+      "network_requests": 0,
+      "accepted": false,
+      "planned_requests": 62
+    }
+  ],
+  "source_sha256": {
+    "docs/PLAN.md": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+    "scripts/probe_models.py": "6bc3b88ce35db6e524416c8f0d5ba7f2992142f7a585e6143ddcc289bf43b2da",
+    "headroom/config.py": "cd196237b0eb030922baf7b030f24f79bed1bc6948f9a146bd7076ea276a88e2",
+    "headroom/llm/client.py": "24163c289d8a01b315f728edcb5b985361dce522dcff38268dc291c167cac043",
+    "headroom/llm/router.py": "1c12c49c8e5d025271c3626cd30fbf73de02730a278b4713dfe8758a5e1b41b4",
+    "headroom/llm/cost.py": "46348bcebf40a264fd6549865a5664016b625d0140886526bedb7734d1ffb881",
+    "headroom/schemas.py": "b4d6f8c27a7047b46bd8d4b82f7a109f6f858c741b0c28385d4b3aa03df7a364",
+    "headroom/diagnose.py": "46965672b3c92ebdf0c5b0c024d60e5794dd74a2dbae5360d2c164cec743175b",
+    "headroom/prompts/diagnose.md": "21385cb56b385eb516c5b8b54b3e14abd461c5ce1bcef9b07c9759932680f408",
+    "tests/test_model_probe.py": "8b3eaff84b8ea32a98e359db93c0ee1bea89c19ca3504a4693f906538da12836",
+    "tests/test_diagnose_contract.py": "7f30632eaa6d93d62a2515de96d2d38648bda76206e1f9d0f746c6ad944ffd58",
+    "tests/test_diagnose_schema.py": "b13246218d9c3edd8a51a48e25960145c06cc6e3d771b104b3f3f001728b336d",
+    "tests/test_llm_client.py": "798d12e210a581813c7f7bb2d3476024b91277b4f8f52479ba07ecc7b7462287",
+    "tests/test_llm_router.py": "89fb12a4ce6ebfc56447ae1f6c6b381020cbef6e32969ebf715a9a556ba261c8",
+    "tests/test_llm_cost.py": "656b5a835c311f3f0e516b5216451529baa47a202a74c10f18b1c8ee434a7131",
+    "pyproject.toml": "d7277eaf39862af32330f6be726bc3f47cae2312a36079c87251560c7955fdd0",
+    "uv.lock": "ba1edc5044b993d252bc2fe63c23b5344eba9f9b7539bffb418c980094421c0f"
+  },
+  "checks_passed": true,
+  "pre_commit_all_files": "ruff, ruff-format, and staged gitleaks passed",
+  "history_secret_scan": "gitleaks detect: 6 commits scanned; no leaks found",
+  "staged_whitespace_check": "passed after removing one documentation trailing blank line; raw test logs unchanged",
+  "independent_review": "Confirmed fixes in diagnosis, LLM accounting/parsing/model identity, and probe JSON/budget/deadline/model identity with separate DNS/socket blocking; no outstanding review finding"
+}
