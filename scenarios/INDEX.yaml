@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "status": "8 tiny CPU smoke checks passed; full GPU baselines pending",
+  "units": "memory bytes with explicit GiB conversion",
+  "scenarios": [
+    {
+      "id": "s1_batch_too_big",
+      "script": "scenarios/s1_batch_too_big/train.py",
+      "readme": "scenarios/s1_batch_too_big/README.md",
+      "root_cause": "activations",
+      "expected_mode": "oom",
+      "expected_fixes": "gradient accumulation; activation checkpointing",
+      "gpu_baseline_verified": false,
+      "cpu_tiny_smoke": "passed_20_steps"
+    },
+    {
+      "id": "s2_fp32_adamw_1b",
+      "script": "scenarios/s2_fp32_adamw_1b/train.py",
+      "readme": "scenarios/s2_fp32_adamw_1b/README.md",
+      "root_cause": "optimizer_state",
+      "expected_mode": "reclaim",
+      "expected_fixes": "optimizer state/temporary-memory reduction; precision changes only when allowed",
+      "gpu_baseline_verified": false,
+      "cpu_tiny_smoke": "passed_20_steps"
+    },
+    {
+      "id": "s3_eval_no_grad_missing",
+      "script": "scenarios/s3_eval_no_grad_missing/train.py",
+      "readme": "scenarios/s3_eval_no_grad_missing/README.md",
+      "root_cause": "activations",
+      "expected_mode": "reclaim",
+      "expected_fixes": "disable autograd during evaluation",
+      "gpu_baseline_verified": false,
+      "cpu_tiny_smoke": "passed_20_steps"
+    },
+    {
+      "id": "s4_loss_accumulation_graph",
+      "script": "scenarios/s4_loss_accumulation_graph/train.py",
+      "readme": "scenarios/s4_loss_accumulation_graph/README.md",
+      "root_cause": "retained_graph",
+      "expected_mode": "oom_or_reclaim",
+      "expected_fixes": "detach loss accounting and release saved backward tensors",
+      "gpu_baseline_verified": false,
+      "cpu_tiny_smoke": "passed_20_steps"
+    },
+    {
+      "id": "s5_fragmentation_varlen",
+      "script": "scenarios/s5_fragmentation_varlen/train.py",
+      "readme": "scenarios/s5_fragmentation_varlen/README.md",
+      "root_cause": "fragmentation_candidate",
+      "expected_mode": "reclaim",
+      "expected_fixes": "sequence bucketing; test expandable segments against measured evidence",
+      "gpu_baseline_verified": false,
+      "cpu_tiny_smoke": "passed_20_steps"
+    },
+    {
+      "id": "s6_full_vocab_logits_fp32",
+      "script": "scenarios/s6_full_vocab_logits_fp32/train.py",
+      "readme": "scenarios/s6_full_vocab_logits_fp32/README.md",
+      "root_cause": "temporaries",
+      "expected_mode": "oom",
+      "expected_fixes": "avoid unnecessary fp32 logits materialization; chunked cross entropy",
+      "gpu_baseline_verified": false,
+      "cpu_tiny_smoke": "passed_20_steps"
+    },
+    {
+      "id": "s7_frozen_params_optimizer_state",
+      "script": "scenarios/s7_frozen_params_optimizer_state/train.py",
+      "readme": "scenarios/s7_frozen_params_optimizer_state/README.md",
+      "root_cause": "optimizer_state",
+      "expected_mode": "reclaim",
+      "expected_fixes": "actually freeze intended frozen parameters and rebuild optimizer",
+      "gpu_baseline_verified": false,
+      "cpu_tiny_smoke": "passed_20_steps"
+    },
+    {
+      "id": "s8_two_models_resident",
+      "script": "scenarios/s8_two_models_resident/train.py",
+      "readme": "scenarios/s8_two_models_resident/README.md",
+      "root_cause": "params",
+      "expected_mode": "reclaim",
+      "expected_fixes": "offload unused reference model; load on demand",
+      "gpu_baseline_verified": false,
+      "cpu_tiny_smoke": "passed_20_steps"
+    }
+  ],
+  "real_repository": "repos/nanogpt.yaml"
+}

@@ -10,10 +10,10 @@ All work, caches, runs, and media remain on azuki.
 |---|---|---|---|
 | T0.1 | 账号、额度、密钥、仓库（P0，Codex 主导，Frank 只补无法自动化的部分，~40min） | 进行中 | GitHub public Apache-2.0 verified; keys and balance pending |
 | T0.2 | 服务器环境勘察（P0，~30min） | 已验收 | docs/ENV.md; reports/env-preflight.json; Docker GPU ok, NET ok, 5694.85 GiB free; shared GPU and no sudo recorded |
-| T0.3 | 仓库骨架与工具链（P0，~40min） | 进行中 | Server-local uv and verified gitleaks binary; torch 2.5.1+cu124 installed; final CUDA/snapshot/lint checks running |
+| T0.3 | 仓库骨架与工具链（P0，~40min） | 已验收 | reports/toolchain-checks.json; reports/pre-commit-t0.3.log; commit ca6c86ad099c519b92d1ccb88219b08450aa8da6, Frank author/committer, pushed origin/main |
 | T0.4 | Token Factory 探测（P0，~1h） | 未开始 | — |
 | T0.5 | Tavily 探测（P1，~15min） | 未开始 | — |
-| T0.6 | 场景集 v0（P0，~2h） | 未开始 | — |
+| T0.6 | 场景集 v0（P0，~2h） | 进行中 | 8 sources and READMEs ready; 8/8 Docker CPU tiny tests completed 20 steps; nanoGPT pinned and CPU smoke passed; full GPU calibration awaits free GPU |
 | T1.1 | Lab 包装器：运行并抓证据（P0，~3h） | 未开始 | — |
 | T1.2 | 证据包生成（P0，~3h） | 未开始 | — |
 | T1.3 | LLM 客户端与路由（P0，~1.5h） | 未开始 | — |
@@ -55,6 +55,10 @@ All work, caches, runs, and media remain on azuki.
 
 ## Acceptance log
 
+- T0.6 partial only: eight source fixtures + README + INDEX prepared. `uv run python scripts/check_scenario_smoke.py` (two four-case batches) completed 20 CPU tiny steps in all 8 cases; evidence reports/scenario-cpu-smoke-summary.json and per-batch logs. This is not GPU baseline acceptance. nanoGPT pinned at 3adf61e154c3fe3fca428ad6bc3818b27a3b8291, deterministic synthetic inputs prepared, original upstream CPU tiny run exit 0 (upstream max_iters=20 emits iterations 0 through 20). No full-size GPU OOM traceback, peak measurement, live model call or repair result is claimed.
+
+- T0.3: `uv run python scripts/verify_toolchain.py` exit 0: torch 2.5.1+cu124, CUDA True, NVIDIA GeForce RTX 3090 Ti; snapshot True True; .env ignored and mode 600. `uv run pre-commit run --all-files`: all three hooks Passed. `gitleaks detect` and staged scan: 0 findings. Commit ca6c86ad099c519b92d1ccb88219b08450aa8da6 author and committer both match existing Frank identity; push origin/main succeeded.
+
 - T0.2: `python3 scripts/inspect_env.py` exit 0. All checks retain original stdout/stderr/exit code. DOCKER_GPU=ok; NET=ok; disk=5694.85 GiB. Existing other compute process is noted. sudo requires password; uv/gitleaks not initially installed.
 - T0.1: public https://github.com/xiaodouzi666/headroom created with Apache-2.0; server .env initialized with empty keys, permissions 600, gitignored. PLAN SHA-256 matches attachment e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56.
 
@@ -66,7 +70,7 @@ All work, caches, runs, and media remain on azuki.
 
 - 2026-10-23: Frank explicitly authorized stopping the current llama-server (PID 398152). Fresh identity check found owner chenchunlai; normal SIGTERM failed with PermissionError. GPU remains occupied (20618 MiB process, 3429 MiB free). Owner/admin action is required; no permission bypass attempted. Evidence: reports/gpu-release.json.
 
-- No paid API calls will run before available promotional credits and spending boundary are confirmed.
+- No paid API calls will run before available promotional credits and spending boundary are confirmed. Current official Token Factory billing documentation requires a bank card and allows negative balances/automatic charges; no account-level hard spending cap was verified. See docs/ACCOUNT_SETUP.md. Frank does not currently have a Token Factory account/key.
 
 ## Frank 待办
 

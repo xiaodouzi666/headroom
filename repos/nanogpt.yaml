@@ -1,0 +1,18 @@
+{
+  "id": "nanogpt",
+  "repository": "https://github.com/karpathy/nanoGPT.git",
+  "ref": "3adf61e154c3fe3fca428ad6bc3818b27a3b8291",
+  "source_cache": ".cache/upstream/nanoGPT",
+  "dataset_cache": ".cache/datasets/nanogpt/headroom_synthetic",
+  "prepare": "uv run python scripts/prepare_nanogpt.py",
+  "command": "python train.py --dataset=/input --batch_size=32 --block_size=1024 --n_layer=24 --n_head=16 --n_embd=1024 --gradient_accumulation_steps=1 --max_iters=20 --eval_iters=1 --eval_interval=1000 --compile=False --dtype=float32 --decay_lr=False --always_save_checkpoint=False --out_dir=/tmp/nanogpt-out",
+  "target": "fit:22GB",
+  "expected_baseline": "oom",
+  "baseline_verified": false,
+  "notes": [
+    "Original upstream train.py and model.py remain unmodified.",
+    "Random synthetic uint16 tokens; no pretrained weights or third-party dataset download.",
+    "No meta.pkl: upstream default vocabulary remains 50304.",
+    "Full GPU baseline awaits an available GPU. No traceback is fabricated."
+  ]
+}
