@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "8 tiny CPU smoke checks passed; full GPU baselines pending",
+  "status": "T0.6 full GPU baseline execution verified; later snapshot/repair criteria remain pending",
   "units": "memory bytes with explicit GiB conversion",
   "scenarios": [
     {
@@ -10,8 +10,13 @@
       "root_cause": "activations",
       "expected_mode": "oom",
       "expected_fixes": "gradient accumulation; activation checkpointing",
-      "gpu_baseline_verified": false,
-      "cpu_tiny_smoke": "passed_20_steps"
+      "gpu_baseline_verified": true,
+      "cpu_tiny_smoke": "passed_20_steps",
+      "gpu_baseline_report": "reports/gpu-baseline-20261023T013238Z-a16fc6fb.json",
+      "gpu_baseline_status": "cuda_oom",
+      "gpu_peak_allocated_bytes": 24845041664,
+      "gpu_peak_reserved_bytes": 24857542656,
+      "gpu_source_sha256": "bd685f1480a2d0d9a5a68af44eaf0f4b325d27f7a1f99ba56d217daae8dd2856"
     },
     {
       "id": "s2_fp32_adamw_1b",
@@ -20,8 +25,13 @@
       "root_cause": "optimizer_state",
       "expected_mode": "reclaim",
       "expected_fixes": "optimizer state/temporary-memory reduction; precision changes only when allowed",
-      "gpu_baseline_verified": false,
-      "cpu_tiny_smoke": "passed_20_steps"
+      "gpu_baseline_verified": true,
+      "cpu_tiny_smoke": "passed_20_steps",
+      "gpu_baseline_report": "reports/gpu-baseline-20261023T013238Z-a16fc6fb.json",
+      "gpu_baseline_status": "completed_20_steps",
+      "gpu_peak_allocated_bytes": 21503181312,
+      "gpu_peak_reserved_bytes": 22198353920,
+      "gpu_source_sha256": "bb1d12c69ce5525e6eab67e709740cb2d578c070afa8b094b5f4b6906648bc5b"
     },
     {
       "id": "s3_eval_no_grad_missing",
@@ -30,8 +40,13 @@
       "root_cause": "activations",
       "expected_mode": "reclaim",
       "expected_fixes": "disable autograd during evaluation",
-      "gpu_baseline_verified": false,
-      "cpu_tiny_smoke": "passed_20_steps"
+      "gpu_baseline_verified": true,
+      "cpu_tiny_smoke": "passed_20_steps",
+      "gpu_baseline_report": "reports/gpu-baseline-20261023T013238Z-a16fc6fb.json",
+      "gpu_baseline_status": "completed_20_steps",
+      "gpu_peak_allocated_bytes": 2385648128,
+      "gpu_peak_reserved_bytes": 2485125120,
+      "gpu_source_sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67"
     },
     {
       "id": "s4_loss_accumulation_graph",
@@ -40,8 +55,13 @@
       "root_cause": "retained_graph",
       "expected_mode": "oom_or_reclaim",
       "expected_fixes": "detach loss accounting and release saved backward tensors",
-      "gpu_baseline_verified": false,
-      "cpu_tiny_smoke": "passed_20_steps"
+      "gpu_baseline_verified": true,
+      "cpu_tiny_smoke": "passed_20_steps",
+      "gpu_baseline_report": "reports/gpu-baseline-20261023T013238Z-a16fc6fb.json",
+      "gpu_baseline_status": "cuda_oom",
+      "gpu_peak_allocated_bytes": 24853914624,
+      "gpu_peak_reserved_bytes": 24859639808,
+      "gpu_source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b"
     },
     {
       "id": "s5_fragmentation_varlen",
@@ -50,8 +70,13 @@
       "root_cause": "fragmentation_candidate",
       "expected_mode": "reclaim",
       "expected_fixes": "sequence bucketing; test expandable segments against measured evidence",
-      "gpu_baseline_verified": false,
-      "cpu_tiny_smoke": "passed_20_steps"
+      "gpu_baseline_verified": true,
+      "cpu_tiny_smoke": "passed_20_steps",
+      "gpu_baseline_report": "reports/gpu-baseline-20261023T013238Z-a16fc6fb.json",
+      "gpu_baseline_status": "completed_20_steps",
+      "gpu_peak_allocated_bytes": 4971688960,
+      "gpu_peak_reserved_bytes": 19778240512,
+      "gpu_source_sha256": "627d24ee9e62601455e37f29166df8abe73a43b9e82382a293feec3a6b558169"
     },
     {
       "id": "s6_full_vocab_logits_fp32",
@@ -60,8 +85,13 @@
       "root_cause": "temporaries",
       "expected_mode": "oom",
       "expected_fixes": "avoid unnecessary fp32 logits materialization; chunked cross entropy",
-      "gpu_baseline_verified": false,
-      "cpu_tiny_smoke": "passed_20_steps"
+      "gpu_baseline_verified": true,
+      "cpu_tiny_smoke": "passed_20_steps",
+      "gpu_baseline_report": "reports/gpu-baseline-20261023T013238Z-a16fc6fb.json",
+      "gpu_baseline_status": "cuda_oom",
+      "gpu_peak_allocated_bytes": 21563344896,
+      "gpu_peak_reserved_bytes": 21585985536,
+      "gpu_source_sha256": "4f5d7e0f4331a4efcda2039c8ac8a421b2a1923778379896e2658553619b1bba"
     },
     {
       "id": "s7_frozen_params_optimizer_state",
@@ -70,8 +100,13 @@
       "root_cause": "optimizer_state",
       "expected_mode": "reclaim",
       "expected_fixes": "actually freeze intended frozen parameters and rebuild optimizer",
-      "gpu_baseline_verified": false,
-      "cpu_tiny_smoke": "passed_20_steps"
+      "gpu_baseline_verified": true,
+      "cpu_tiny_smoke": "passed_20_steps",
+      "gpu_baseline_report": "reports/gpu-baseline-20261023T013238Z-a16fc6fb.json",
+      "gpu_baseline_status": "completed_20_steps",
+      "gpu_peak_allocated_bytes": 17769739264,
+      "gpu_peak_reserved_bytes": 17792237568,
+      "gpu_source_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191"
     },
     {
       "id": "s8_two_models_resident",
@@ -80,8 +115,13 @@
       "root_cause": "params",
       "expected_mode": "reclaim",
       "expected_fixes": "offload unused reference model; load on demand",
-      "gpu_baseline_verified": false,
-      "cpu_tiny_smoke": "passed_20_steps"
+      "gpu_baseline_verified": true,
+      "cpu_tiny_smoke": "passed_20_steps",
+      "gpu_baseline_report": "reports/gpu-baseline-20261023T013238Z-a16fc6fb.json",
+      "gpu_baseline_status": "completed_20_steps",
+      "gpu_peak_allocated_bytes": 3050072064,
+      "gpu_peak_reserved_bytes": 3061841920,
+      "gpu_source_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59"
     }
   ],
   "real_repository": "repos/nanogpt.yaml"

@@ -13,8 +13,8 @@ All work, caches, runs, and media remain on azuki.
 | T0.3 | 仓库骨架与工具链（P0，~40min） | 已验收 | reports/toolchain-checks.json; reports/pre-commit-t0.3.log; commit ca6c86ad099c519b92d1ccb88219b08450aa8da6, Frank author/committer, pushed origin/main |
 | T0.4 | Token Factory 探测（P0，~1h） | 未开始 | — |
 | T0.5 | Tavily 探测（P1，~15min） | 未开始 | — |
-| T0.6 | 场景集 v0（P0，~2h） | 进行中 | 8 sources and READMEs ready; 8/8 Docker CPU tiny tests completed 20 steps; nanoGPT pinned and CPU smoke passed; full GPU calibration awaits free GPU |
-| T1.1 | Lab 包装器：运行并抓证据（P0，~3h） | 未开始 | — |
+| T0.6 | 场景集 v0（P0，~2h） | 已验收 | reports/t0.6-acceptance.json; 3 synthetic CUDA OOM <7s, 5 reclaim completed20 steps with measured README peaks; pinned nanoGPT CUDA OOM11.489s; all cleanup verified |
+| T1.1 | Lab 包装器：运行并抓证据（P0，~3h） | 进行中 | API-independent implementation while Frank registers accounts; original acceptance unchanged |
 | T1.2 | 证据包生成（P0，~3h） | 未开始 | — |
 | T1.3 | LLM 客户端与路由（P0，~1.5h） | 未开始 | — |
 | T1.4 | Diagnose（Ultra）（P0，~2.5h） | 未开始 | — |
@@ -55,9 +55,15 @@ All work, caches, runs, and media remain on azuki.
 
 ## Acceptance log
 
-- T0.6 runner preparation: scripts/check_gpu_baselines.py and docs/GPU_BASELINES.md collect full-size default GPU baselines in Docker, distinguish CUDA OOM/host OOM/error/timeout, and retain raw evidence. Actual `--check-only` returned 78 with workloads_launched=0 while the known competing process remains. CPU-only Docker canaries: `uv run pytest -q tests/test_phase0_baseline_failures.py` passed 2/2 in 6.19s (reports/phase0-baseline-canaries.log): CPU OOM is rejected; timeout cleans up the owned container. Full GPU path is still unexecuted; no task acceptance promoted.
+- 2026-10-23: Frank reports the GPU service stopped and asks to continue other work while he registers accounts. Proceed with API-independent Lab implementation; T0.1/T0.4/T0.5 remain pending, and all original acceptance criteria remain unchanged. No paid call has been authorized by this sequencing instruction.
 
-- T0.6 partial only: eight source fixtures + README + INDEX prepared. `uv run python scripts/check_scenario_smoke.py` (two four-case batches) completed 20 CPU tiny steps in all 8 cases; evidence reports/scenario-cpu-smoke-summary.json and per-batch logs. This is not GPU baseline acceptance. nanoGPT pinned at 3adf61e154c3fe3fca428ad6bc3818b27a3b8291, deterministic synthetic inputs prepared, original upstream CPU tiny run exit 0 (upstream max_iters=20 emits iterations 0 through 20). No full-size GPU OOM traceback, peak measurement, live model call or repair result is claimed.
+- T0.6 accepted: `uv run python scripts/check_gpu_baselines.py` exit0, canonical run20261023T013238Z-a16fc6fb launched9 full GPU workloads. All source hashes and raw results independently checked. README allocated/reserved peaks recorded for all8; INDEX provenance updated; nanoGPT.oom.txt matches raw traceback. See reports/t0.6-acceptance.json. No later snapshot/repair criteria certified.
+
+- 2026-10-23T01:29Z: Frank stopped the competing service. Live check: no compute processes, 24055 MiB free, baseline guard ready=true. Full GPU T0.6 calibration resumed. First s1 run reproduced typed CUDA OOM in 5.235s with verified cleanup; its startup-only peak fields are invalidated by reports/gpu-baseline-013012-peak-correction.json. OOM terminal counter instrumentation added before the canonical rerun.
+
+- T0.6 runner preparation: scripts/check_gpu_baselines.py and docs/GPU_BASELINES.md collect full-size default GPU baselines in Docker, distinguish CUDA OOM/host OOM/error/timeout, and retain raw evidence. Actual `--check-only` returned 78 with workloads_launched=0 while the known competing process was still present (historical check). CPU-only Docker canaries: `uv run pytest -q tests/test_phase0_baseline_failures.py` passed 2/2 in 6.19s (reports/phase0-baseline-canaries.log): CPU OOM is rejected; timeout cleans up the owned container. At that preparation checkpoint the full GPU path was unexecuted; it was subsequently verified by the canonical run above.
+
+- T0.6 historical CPU preparation checkpoint: eight source fixtures + README + INDEX prepared. `uv run python scripts/check_scenario_smoke.py` (two four-case batches) completed 20 CPU tiny steps in all 8 cases; evidence reports/scenario-cpu-smoke-summary.json and per-batch logs. This is not GPU baseline acceptance. nanoGPT pinned at 3adf61e154c3fe3fca428ad6bc3818b27a3b8291, deterministic synthetic inputs prepared, original upstream CPU tiny run exit 0 (upstream max_iters=20 emits iterations 0 through 20). At that checkpoint no full-size GPU OOM trace or peak measurement existed; the later canonical run supplies both. Live model calls and repairs remain unverified.
 
 - T0.3: `uv run python scripts/verify_toolchain.py` exit 0: torch 2.5.1+cu124, CUDA True, NVIDIA GeForce RTX 3090 Ti; snapshot True True; .env ignored and mode 600. `uv run pre-commit run --all-files`: all three hooks Passed. `gitleaks detect` and staged scan: 0 findings. Commit ca6c86ad099c519b92d1ccb88219b08450aa8da6 author and committer both match existing Frank identity; push origin/main succeeded.
 
@@ -70,9 +76,9 @@ All work, caches, runs, and media remain on azuki.
 
 - 2026-10-23: Frank requests retaining the original plan; discuss audit proposals individually later. No acceptance threshold or scope change is approved.
 
-- 2026-10-23: Frank explicitly authorized stopping the current llama-server (PID 398152). Fresh identity check found owner chenchunlai; normal SIGTERM failed with PermissionError. GPU remains occupied (20618 MiB process, 3429 MiB free). Owner/admin action is required; no permission bypass attempted. Evidence: reports/gpu-release.json.
+- 2026-10-23: Frank explicitly authorized stopping the current llama-server (PID 398152). Fresh identity check found owner chenchunlai; normal SIGTERM failed with PermissionError. The initial permission denial was not bypassed. Frank subsequently stopped it; GPU availability and all T0.6 baselines were verified on 2026-10-23 at09:29–09:34 Beijing time. Evidence: reports/gpu-release.json.
 
-- No paid API calls will run before available promotional credits and spending boundary are confirmed. Current official Token Factory billing documentation requires a bank card and allows negative balances/automatic charges; no account-level hard spending cap was verified. See docs/ACCOUNT_SETUP.md. Frank does not currently have a Token Factory account/key.
+- No paid API calls will run before available promotional credits and spending boundary are confirmed. Current official Token Factory billing documentation requires a bank card and allows negative balances/automatic charges; no account-level hard spending cap was verified. See docs/ACCOUNT_SETUP.md. Frank is registering the required accounts; credentials and credits are not yet verified.
 
 ## Frank 待办
 

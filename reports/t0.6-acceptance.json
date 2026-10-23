@@ -1,0 +1,95 @@
+{
+  "task": "T0.6",
+  "accepted": true,
+  "scope": "8 full synthetic default GPU baselines + pinned nanoGPT OOM; measured reclaim peaks documented",
+  "source_report": "reports/gpu-baseline-20261023T013238Z-a16fc6fb.json",
+  "cases": [
+    {
+      "id": "s1_batch_too_big",
+      "status": "cuda_oom",
+      "runtime_s": 5.226648100884631,
+      "steps": 0,
+      "peak_allocated_bytes": 24845041664,
+      "peak_reserved_bytes": 24857542656,
+      "cleanup_verified": true
+    },
+    {
+      "id": "s2_fp32_adamw_1b",
+      "status": "completed_20_steps",
+      "runtime_s": 14.61518570384942,
+      "steps": 20,
+      "peak_allocated_bytes": 21503181312,
+      "peak_reserved_bytes": 22198353920,
+      "cleanup_verified": true
+    },
+    {
+      "id": "s3_eval_no_grad_missing",
+      "status": "completed_20_steps",
+      "runtime_s": 6.259160999208689,
+      "steps": 20,
+      "peak_allocated_bytes": 2385648128,
+      "peak_reserved_bytes": 2485125120,
+      "cleanup_verified": true
+    },
+    {
+      "id": "s4_loss_accumulation_graph",
+      "status": "cuda_oom",
+      "runtime_s": 6.260237352922559,
+      "steps": 12,
+      "peak_allocated_bytes": 24853914624,
+      "peak_reserved_bytes": 24859639808,
+      "cleanup_verified": true
+    },
+    {
+      "id": "s5_fragmentation_varlen",
+      "status": "completed_20_steps",
+      "runtime_s": 9.386764927068725,
+      "steps": 20,
+      "peak_allocated_bytes": 4971688960,
+      "peak_reserved_bytes": 19778240512,
+      "cleanup_verified": true
+    },
+    {
+      "id": "s6_full_vocab_logits_fp32",
+      "status": "cuda_oom",
+      "runtime_s": 5.217654663138092,
+      "steps": 0,
+      "peak_allocated_bytes": 21563344896,
+      "peak_reserved_bytes": 21585985536,
+      "cleanup_verified": true
+    },
+    {
+      "id": "s7_frozen_params_optimizer_state",
+      "status": "completed_20_steps",
+      "runtime_s": 7.3108165808953345,
+      "steps": 20,
+      "peak_allocated_bytes": 17769739264,
+      "peak_reserved_bytes": 17792237568,
+      "cleanup_verified": true
+    },
+    {
+      "id": "s8_two_models_resident",
+      "status": "completed_20_steps",
+      "runtime_s": 9.387964277993888,
+      "steps": 20,
+      "peak_allocated_bytes": 3050072064,
+      "peak_reserved_bytes": 3061841920,
+      "cleanup_verified": true
+    },
+    {
+      "id": "nanogpt",
+      "status": "cuda_oom",
+      "runtime_s": 11.489462610101327,
+      "steps": 0,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null,
+      "cleanup_verified": true
+    }
+  ],
+  "unresolved_later_requirements": [
+    "s2 baseline is already below22GB; T2.1 two-round fit22 acceptance still unresolved",
+    "s2 Adam moments / measured peak is about39.963%; T1.2>=40% not certified",
+    "s5 allocator reserve growth measured; harmful fragmentation not proven",
+    "T0.1/T0.4/T0.5 remain pending credentials and account confirmation"
+  ]
+}

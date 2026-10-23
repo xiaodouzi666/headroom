@@ -1,0 +1,14 @@
+{
+  "source_report": "reports/gpu-baseline-20261023T013012Z-466ebd63.json",
+  "scenario": "s1_batch_too_big",
+  "valid_evidence": [
+    "typed CUDA OOM traceback",
+    "workload duration",
+    "clean container shutdown"
+  ],
+  "invalid_peak_fields": [
+    "peak_allocated_bytes",
+    "peak_reserved_bytes"
+  ],
+  "reason": "Only scenario_start memory counters were emitted before OOM; these values do not measure the full run peak. Preserve this original record, but do not use those peak fields in results. A rerun with terminal OOM counters supersedes it."
+}

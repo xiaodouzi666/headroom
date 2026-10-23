@@ -4,7 +4,11 @@ Canonical plan: `docs/PLAN.md` is immutable and matches the supplied attachment.
 
 ## Approved changes
 
-None. On 2026-10-23 Frank explicitly requested retaining the original plan and discussing the proposed corrections individually later. No proposed correction is approved for implementation.
+No acceptance or feature-scope changes. On 2026-10-23 Frank explicitly requested retaining the original plan and discussing the proposed corrections individually later. No proposed acceptance correction is approved for implementation.
+
+## Current sequencing instruction
+
+After stopping the competing GPU service, Frank said to continue other work while he registers accounts. API-independent Lab implementation proceeds under that instruction. T0.1/T0.4/T0.5 remain pending; their live acceptance is not inferred from offline work. This does not authorize paid calls or any pending acceptance correction.
 
 ## Explicit v4.2 precedence (already specified in the supplied plan)
 

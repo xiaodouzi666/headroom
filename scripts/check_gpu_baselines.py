@@ -290,6 +290,9 @@ def run_case(case, directory, image):
         outcome = "completed_20_steps"
     else:
         outcome = "error_or_incomplete_evidence"
+    peak_complete = (
+        terminal.get("status") in {"oom", "completed"} or terminal.get("event") == "completed"
+    )
     expected = case.get("expected_mode", "oom")
     observed_ok = (
         outcome == "cuda_oom"
@@ -311,8 +314,10 @@ def run_case(case, directory, image):
         workload_seconds=workload_seconds,
         wall_seconds_including_cleanup=elapsed,
         step_events=len(steps),
-        peak_allocated_bytes=max(peaks) if peaks else None,
-        peak_reserved_bytes=max(reserved_peaks) if reserved_peaks else None,
+        peak_allocated_bytes=max(peaks) if peaks and peak_complete else None,
+        peak_reserved_bytes=max(reserved_peaks) if reserved_peaks and peak_complete else None,
+        peak_measurement_complete=peak_complete,
+        last_reported_peak_allocated_bytes=max(peaks) if peaks else None,
         stdout_path=str(folder / "stdout.txt"),
         stderr_path=str(folder / "stderr.txt"),
         after=after,

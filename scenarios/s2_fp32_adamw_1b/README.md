@@ -1,7 +1,8 @@
 # s2 — Full float32 model and AdamW state
 
-**Status: source prepared; GPU baseline, runtime and peak are unmeasured.**
-This is a reclaim candidate under T0.6, not a claim that a 1B model must OOM.
+**Status: full default GPU baseline measured on 2026-10-23; see the measurement below.**
+This default workload completed its T0.6 reclaim baseline; a 1B model does not
+necessarily OOM on this device.
 Run it only inside the isolated, network-disabled Lab.
 
 ## Workload and ground truth
@@ -23,13 +24,18 @@ For the default parameter count, the following are **arithmetic estimates**:
 - One additional parameter-sized foreach intermediate would give about
   20.0085 GiB before inputs, activations, other temporaries and allocator effects.
 
-Expected peak is roughly 18–22 GiB and intended default mode is **reclaim**, but
-this range is not a measured peak or a guaranteed bound. The 20-step completion,
-actual optimizer-state fraction and run duration still require GPU calibration.
-At a peak greater than 20.0085 GiB, the two moments alone are below 40% of peak;
-therefore the later T1.2 ≥40% requirement is explicitly **not certified** here.
-Likewise this configuration does not certify T2.1's two-round fit:22GB requirement.
-Those original acceptance requirements remain unchanged pending discussion.
+The earlier planning estimate was roughly 18–22 GiB for **reclaim** mode; this
+range was not a measurement or guarantee. The default run completed 20 steps
+in 14.615 s with an allocated peak of 21,503,181,312 bytes (20.026398 GiB).
+The runtime logs 8,593,605,376 optimizer-state bytes, including small scalar
+step counters. The two fp32 moments account for 8,593,604,608 bytes from the
+parameter count; divided by measured allocated peak, this is approximately
+**39.963%**.
+Thus the later T1.2 ≥40% peak-composition requirement is **not certified** by
+these counters; it still requires its specified snapshot evidence. The baseline
+is already below both 22 GB and 22 GiB, so it also cannot demonstrate T2.1's
+required two-round fit:22GB improvement. These original requirements remain
+unchanged and unresolved pending discussion; no baseline was inflated to meet them.
 
 ## Expected repair classes and constraints
 
@@ -57,4 +63,24 @@ python train.py --device cpu --tiny --steps 20
 uses width 32, two blocks, eight tokens and the same fp32 foreach AdamW mechanism;
 it cannot establish any GPU memory result. JSON lines include parameter count,
 measured optimizer state bytes, losses, step times and CUDA allocated/reserved/
-peak bytes. Errors and OOMs remain uncaught for the Lab's original traceback.
+peak bytes. OOMs emit terminal counters and are re-raised with their original
+traceback; other errors propagate to the Lab.
+
+## Measured default GPU baseline — 2026-10-23
+
+Run: `20261023T013238Z-a16fc6fb` on azuki RTX 3090 Ti, torch 2.5.1+cu124.
+Full default dimensions, CUDA, no tiny mode. Observed outcome: `completed_20_steps`;
+completed training steps: 20; runtime including container startup
+but excluding cleanup: 14.615 s.
+
+- Peak allocated: **20.026398 GiB** (21503181312 bytes).
+- Peak reserved: **20.673828 GiB** (22198353920 bytes).
+- Source SHA-256: `bb1d12c69ce5525e6eab67e709740cb2d578c070afa8b094b5f4b6906648bc5b`.
+- No competing GPU process observed; container cleanup verified.
+- Aggregate evidence: `reports/gpu-baseline-20261023T013238Z-a16fc6fb.json`; raw stdout/stderr: `runs/phase0-baselines/20261023T013238Z-a16fc6fb/s2_fp32_adamw_1b/`.
+
+These counters measure the historical maximum of successful allocations. For an
+OOM run, they do not include the failed allocation or estimate the total memory
+needed to finish. Earlier planning ranges in this document are estimates; use
+the measured values above for this source version. No repair or later-phase
+acceptance is certified by this baseline.

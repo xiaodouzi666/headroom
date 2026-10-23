@@ -127,4 +127,11 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except torch.OutOfMemoryError:
+        # Peak counters survive stack unwinding; startup/previous-step readings
+        # alone are not a measurement of the peak at failure.
+        if torch.cuda.is_initialized():
+            emit("summary", torch.device("cuda"), status="oom")
+        raise
