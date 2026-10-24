@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException
 
 from headroom.api.security import open_regular
 from headroom.budget import money
-from headroom.evaluation import CONDITIONS, SEARCH_MODES, campaign_tables
+from headroom.evaluation import CONDITIONS, SEARCH_MODES, campaign_tables, public_outcomes
 
 IDENTIFIER = re.compile(r"[a-z0-9][a-z0-9_-]{0,63}\Z")
 LABEL = re.compile(r"[A-Za-z0-9][A-Za-z0-9_. -]{0,99}\Z")
@@ -82,6 +82,7 @@ def _public_row(row, provenance):
     ):
         value = row.get(name)
         result[name] = value if isinstance(value, str) and value in allowed else None
+    result.update(public_outcomes(row))
     result["policy_name"] = result["policy_name"] or "default"
     result["status"] = result["status"] or "unknown"
     result["provenance"] = (

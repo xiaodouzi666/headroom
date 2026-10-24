@@ -23,6 +23,10 @@ const columns: [string, string][] = [
   ["ground_truth", "Authored cause"],
   ["first_cause_matches", "First cause matches"],
   ["target_met", "Target met"],
+  ["patch_applied", "Any patch/config applied"],
+  ["selected_round", "Selected round"],
+  ["selected_patch_applied", "Selected patch/config applied"],
+  ["selected_completed", "Selected completed"],
   ["peak_before_bytes", "Peak before"],
   ["peak_after_bytes", "Peak after"],
   ["peak_reduction_pct", "Reduction %"],
@@ -56,8 +60,72 @@ const numericalBasis = (basis: unknown) =>
       unavailable: "Comparison unavailable",
     }) as Record<string, string>
   )[String(basis)] ?? "Comparison basis not recorded";
+const outcomeKeys = new Set([
+  "patch_applied",
+  "selected_patch_applied",
+  "selected_completed",
+]);
+const outcomeValue = (v: unknown) =>
+  typeof v === "boolean" ? value(v) : "Unknown";
+const roundValue = (v: unknown) =>
+  typeof v === "number" && Number.isInteger(v) && v >= 1 && v <= 6
+    ? String(v)
+    : "Unknown";
+const outcomeSummary = (v: unknown) => {
+  const counts = record(v);
+  if (
+    !["true_count", "false_count", "unknown_count", "known_count"].every(
+      (key) =>
+        typeof counts[key] === "number" &&
+        Number.isInteger(counts[key]) &&
+        Number(counts[key]) >= 0,
+    )
+  )
+    return "Unknown";
+  return `${counts.true_count} Yes / ${counts.false_count} No; ${counts.unknown_count} Unknown`;
+};
 const metric = (key: string, v: unknown) =>
-  key.endsWith("_bytes") ? gb(v) : key === "cost_usd" ? usd(v) : value(v);
+  outcomeKeys.has(key)
+    ? outcomeValue(v)
+    : key === "selected_round"
+      ? roundValue(v)
+      : key.endsWith("_bytes")
+        ? gb(v)
+        : key === "cost_usd"
+          ? usd(v)
+          : value(v);
+
+function RoundOutcomes({ row }: { row: Dict }) {
+  const outcomes = rows(row.round_outcomes);
+  return (
+    <details className="evaluation-round-attempts">
+      <summary>Round attempts</summary>
+      {outcomes.length ? (
+        <ul className="plain-list">
+          {outcomes.map((attempt, index) => (
+            <li key={index}>
+              Round {roundValue(attempt.round)}: patch/config applied{" "}
+              {outcomeValue(attempt.patch_applied)}; candidate completed{" "}
+              {outcomeValue(attempt.candidate_completed)}; decision{" "}
+              {attempt.decision === "keep"
+                ? "Keep"
+                : attempt.decision === "revert"
+                  ? "Revert"
+                  : "Unknown"}
+              .
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="caption">Round attempts: Unknown.</p>
+      )}
+      <p className="caption">
+        Candidate completion describes that round only. It does not change the
+        selected configuration or the measurements shown.
+      </p>
+    </details>
+  );
+}
 
 export default function EvaluationView() {
   const [catalog, setCatalog] = useState<Dict[]>([]);
@@ -121,6 +189,37 @@ export default function EvaluationView() {
     ablation = record(document.ablation);
   const measured = record(summary.measured_metrics),
     comparable = record(measured.numerical_equivalence);
+  const outcomeCounts = record(summary.outcomes);
+  const summaryCells: Record<string, string> = {
+    scenario_id: "Summary (live only)",
+    condition: "all",
+    policy_name: "all",
+    provenance: "live",
+    status: value(summary.status),
+    ground_truth: "—",
+    first_cause_matches: `${value(summary.first_cause_correct)}/${value(summary.first_cause_scored_denominator)} scored; ${value(summary.first_cause_unknown_runs)} unknown`,
+    target_met: `${value(summary.target_met_count)}/${value(summary.target_measured_denominator)} known; ${value(summary.target_unknown_runs)} unknown`,
+    patch_applied: outcomeSummary(outcomeCounts.patch_applied),
+    selected_round: "—",
+    selected_patch_applied: outcomeSummary(
+      outcomeCounts.selected_patch_applied,
+    ),
+    selected_completed: outcomeSummary(outcomeCounts.selected_completed),
+    peak_before_bytes: "—",
+    peak_after_bytes: "—",
+    ...Object.fromEntries(
+      [
+        "peak_reduction_pct",
+        "throughput_change_pct",
+        "step_time_change_pct",
+      ].map((key) => [key, value(record(measured[key]).mean)]),
+    ),
+    loss_equivalence: `${value(comparable.equivalent)}/${value(comparable.comparable_count)} comparable`,
+    rounds: value(record(measured.rounds).mean),
+    cost_usd: usd(summary.total_cost_usd),
+    wall_seconds: value(record(measured.wall_seconds).mean),
+    run_id: "—",
+  };
   const pairs = rows(ablation.pairs),
     excluded = rows(ablation.excluded);
   const summaryRows = [
@@ -203,7 +302,11 @@ export default function EvaluationView() {
             Search mode: {searchModeLabel(document.search_mode)}. Only
             explicitly published evidence appears here. Unknown outcomes remain
             unknown. Throughput is a separate measurement, not inferred from
-            step time.
+            step time. Any patch/config applied records a successful application
+            attempt, including one later reverted. Selected fields describe the
+            final retained configuration. Peak before is the baseline; peak
+            after, reductions and timing changes compare that baseline with the
+            final selected configuration.
           </p>
           <a
             className="text-link"
@@ -212,12 +315,22 @@ export default function EvaluationView() {
           >
             Download published evaluation JSON
           </a>
-          <div className="table-wrap">
-            <table aria-label="Main evaluation results">
+          <div
+            className="table-wrap"
+            role="region"
+            aria-label="Scrollable evaluation results"
+            tabIndex={0}
+          >
+            <table
+              className="evaluation-main-table"
+              aria-label="Main evaluation results"
+            >
               <thead>
                 <tr>
                   {columns.map(([key, label]) => (
-                    <th key={key}>{label}</th>
+                    <th key={key} className={"evaluation-column-" + key}>
+                      {label}
+                    </th>
                   ))}
                 </tr>
               </thead>
@@ -225,8 +338,9 @@ export default function EvaluationView() {
                 {rows(document.rows).map((row, index) => (
                   <tr key={index}>
                     {columns.map(([key]) => (
-                      <td key={key}>
+                      <td key={key} className={"evaluation-column-" + key}>
                         {metric(key, row[key])}
+                        {key === "patch_applied" && <RoundOutcomes row={row} />}
                         {key === "status" && (
                           <small className="table-note">
                             {searchModeLabel(row.search_mode)} · Stop:{" "}
@@ -252,49 +366,32 @@ export default function EvaluationView() {
                   </tr>
                 ))}
                 <tr>
-                  <th>Summary (live only)</th>
-                  <td>all</td>
-                  <td>all</td>
-                  <td>live</td>
-                  <td>{value(summary.status)}</td>
-                  <td>—</td>
-                  <td>
-                    {value(summary.first_cause_correct)}/
-                    {value(summary.first_cause_scored_denominator)} scored;{" "}
-                    {value(summary.first_cause_unknown_runs)} unknown
-                  </td>
-                  <td>
-                    {value(summary.target_met_count)}/
-                    {value(summary.target_measured_denominator)} known;{" "}
-                    {value(summary.target_unknown_runs)} unknown
-                  </td>
-                  <td>—</td>
-                  <td>—</td>
-                  {[
-                    "peak_reduction_pct",
-                    "throughput_change_pct",
-                    "step_time_change_pct",
-                  ].map((key) => (
-                    <td key={key}>{value(record(measured[key]).mean)}</td>
-                  ))}
-                  <td>
-                    {value(comparable.equivalent)}/
-                    {value(comparable.comparable_count)} comparable
-                  </td>
-                  <td>{value(record(measured.rounds).mean)}</td>
-                  <td>{usd(summary.total_cost_usd)}</td>
-                  <td>{value(record(measured.wall_seconds).mean)}</td>
-                  <td>—</td>
+                  {columns.map(([key]) =>
+                    key === "scenario_id" ? (
+                      <th
+                        key={key}
+                        scope="row"
+                        className={"evaluation-column-" + key}
+                      >
+                        {summaryCells[key]}
+                      </th>
+                    ) : (
+                      <td key={key} className={"evaluation-column-" + key}>
+                        {summaryCells[key] ?? "Unknown"}
+                      </td>
+                    ),
+                  )}
                 </tr>
               </tbody>
             </table>
           </div>
           <p className="caption">
             The summary row uses measured live rows only; reductions, timings
-            and rounds are means over available measurements. Fixture rows
-            excluded: {value(summary.offline_fixture_rows_excluded)}. Known cost
-            subtotal: {usd(summary.known_cost_usd)}; total:{" "}
-            {usd(summary.total_cost_usd)}.
+            and rounds are means over available measurements. Applied and
+            completed counts are recorded facts, not additional acceptance
+            rates. Fixture rows excluded:{" "}
+            {value(summary.offline_fixture_rows_excluded)}. Known cost subtotal:{" "}
+            {usd(summary.known_cost_usd)}; total: {usd(summary.total_cost_usd)}.
           </p>
           <div className="table-wrap">
             <table aria-label="Evaluation summary">

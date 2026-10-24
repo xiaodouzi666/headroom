@@ -1,0 +1,94 @@
+{
+  "base_commit": "0e7a9d926093dcb9f594c221dda98df47dc2d316",
+  "recorded_at_utc": "2026-10-24T14:38:56.938302+00:00",
+  "status": "implemented_and_offline_verified_live_acceptance_pending",
+  "scope": [
+    "T1.12 actual application/selected completion/round evidence through JSON Markdown API and UI",
+    "T3.5 and Phase6 opt-in health webhook with durable delivery state"
+  ],
+  "component_receipts_verified": [
+    {
+      "receipt": "reports/evaluation-outcomes-20261024/backend/receipt-revision-1.json",
+      "hash_count": 5,
+      "all_current": true
+    },
+    {
+      "receipt": "reports/health-notifier-20261024/receipt.json",
+      "hash_count": 10,
+      "all_current": true
+    },
+    {
+      "receipt": "reports/evaluation-outcomes-20261024/frontend/receipt-layout-revision-1.json",
+      "hash_count": 21,
+      "all_current": true
+    }
+  ],
+  "browser": "reports/outcomes-monitoring-20261024/browser-review.json",
+  "template_verification": "reports/outcomes-monitoring-20261024/systemd-template-check.json",
+  "health_units": [
+    {
+      "args": [
+        "is-active",
+        "headroom-health.timer",
+        "headroom-health.service"
+      ],
+      "exit_code": 4,
+      "stdout": "inactive\ninactive",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "is-enabled",
+        "headroom-health.timer"
+      ],
+      "exit_code": 4,
+      "stdout": "not-found",
+      "stderr": ""
+    }
+  ],
+  "guarded_full_suite": "reports/continuation-full-tests-20261024T143431Z.json",
+  "frontend": {
+    "passed": 66,
+    "typecheck": true,
+    "build": true,
+    "source_frozen": true
+  },
+  "real_model_inference_calls": 0,
+  "real_tavily_calls": 0,
+  "new_gpu_workloads": 0,
+  "real_notification_dispatches": 0,
+  "new_known_model_cost_usd": "0",
+  "live_profile_enabled": false,
+  "plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "unchanged_or_open": [
+    "Original PLAN thresholds and retained runs",
+    "Live model/repair/accuracy/cost gates",
+    "s2 fraction and two-round/precision conflicts",
+    "Independent subprocess isolation",
+    "Public domain/tunnel and authorized notification destination",
+    "Owner design and real repair media/video/submission",
+    "Future Phase6 uptime records"
+  ],
+  "retained_review_history": [
+    "Original backend receipt and narrow identity/fallback correction receipt",
+    "Original frontend receipt and scoped readable-table revision",
+    "Health first/idempotent/logging test receipts",
+    "Initial compressed browser layout recorded in browser review"
+  ],
+  "overall_goal": "active, incomplete",
+  "verified_at_utc": "2026-10-24T14:43:16.949374+00:00",
+  "backend": {
+    "passed": 1583,
+    "pytest_seconds": 473.96,
+    "driver_seconds": 475.4757949979976,
+    "source_files_checked": 148,
+    "source_files_unchanged_during_run": true,
+    "source_files_current_after_run": true
+  },
+  "security": {
+    "staged_findings": 0,
+    "history_findings": 0,
+    "exact_source_digest_false_positive_review": "reports/outcomes-monitoring-20261024/secret-scan-review.json",
+    "default_rules_enabled": true
+  }
+}

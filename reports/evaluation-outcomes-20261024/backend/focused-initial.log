@@ -1,0 +1,233 @@
+.............................FFFF....................................... [ 53%]
+..............................................................           [100%]
+=================================== FAILURES ===================================
+_ test_real_run_fix_artifacts_flow_into_campaign_markdown_and_public_api[keep_revert] _
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-93/test_real_run_fix_artifacts_fl0')
+mode = 'keep_revert'
+
+    @pytest.mark.parametrize(
+        "mode", ["keep_revert", "all_revert", "budget_after_keep", "error_after_keep"]
+    )
+    def test_real_run_fix_artifacts_flow_into_campaign_markdown_and_public_api(tmp_path, mode):
+        first = {"before": "VALUE = 1\n", "after": "VALUE = 2\n", "peak": 25}
+        second = {
+            "before": "VALUE = 2\n",
+            "after": "VALUE = 3\n",
+            "peak": 20,
+            "loss": "changed",
+            "checks": {"loss_tolerance": False},
+            "verification_extra": {"completed": False},
+            "candidate_extra": {"status": "oom"},
+        }
+        options = {"max_rounds": 2}
+        if mode == "all_revert":
+            first.update(loss="changed", checks={"loss_tolerance": False})
+            plans = [first]
+            options["max_rounds"] = 1
+        elif mode == "budget_after_keep":
+            plans = [first]
+            options["budget_after"] = 1
+        elif mode == "error_after_keep":
+            plans = [first, second]
+            options["verify_error_at"] = 2
+        else:
+            plans = [first, second]
+>       result, store, requests, _, _ = search_run(tmp_path / "execution", plans, **options)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_evaluation_outcomes.py:273: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_orchestrator.py:300: in search_run
+    root = source(tmp_path)
+           ^^^^^^^^^^^^^^^^
+tests/test_orchestrator.py:36: in source
+    root.mkdir()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-93/test_real_run_fix_artifacts_fl0/execution/source')
+mode = 511, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-93/test_real_run_fix_artifacts_fl0/execution/source'
+
+/usr/lib/python3.12/pathlib.py:1313: FileNotFoundError
+_ test_real_run_fix_artifacts_flow_into_campaign_markdown_and_public_api[all_revert] _
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-93/test_real_run_fix_artifacts_fl1')
+mode = 'all_revert'
+
+    @pytest.mark.parametrize(
+        "mode", ["keep_revert", "all_revert", "budget_after_keep", "error_after_keep"]
+    )
+    def test_real_run_fix_artifacts_flow_into_campaign_markdown_and_public_api(tmp_path, mode):
+        first = {"before": "VALUE = 1\n", "after": "VALUE = 2\n", "peak": 25}
+        second = {
+            "before": "VALUE = 2\n",
+            "after": "VALUE = 3\n",
+            "peak": 20,
+            "loss": "changed",
+            "checks": {"loss_tolerance": False},
+            "verification_extra": {"completed": False},
+            "candidate_extra": {"status": "oom"},
+        }
+        options = {"max_rounds": 2}
+        if mode == "all_revert":
+            first.update(loss="changed", checks={"loss_tolerance": False})
+            plans = [first]
+            options["max_rounds"] = 1
+        elif mode == "budget_after_keep":
+            plans = [first]
+            options["budget_after"] = 1
+        elif mode == "error_after_keep":
+            plans = [first, second]
+            options["verify_error_at"] = 2
+        else:
+            plans = [first, second]
+>       result, store, requests, _, _ = search_run(tmp_path / "execution", plans, **options)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_evaluation_outcomes.py:273: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_orchestrator.py:300: in search_run
+    root = source(tmp_path)
+           ^^^^^^^^^^^^^^^^
+tests/test_orchestrator.py:36: in source
+    root.mkdir()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-93/test_real_run_fix_artifacts_fl1/execution/source')
+mode = 511, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-93/test_real_run_fix_artifacts_fl1/execution/source'
+
+/usr/lib/python3.12/pathlib.py:1313: FileNotFoundError
+_ test_real_run_fix_artifacts_flow_into_campaign_markdown_and_public_api[budget_after_keep] _
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-93/test_real_run_fix_artifacts_fl2')
+mode = 'budget_after_keep'
+
+    @pytest.mark.parametrize(
+        "mode", ["keep_revert", "all_revert", "budget_after_keep", "error_after_keep"]
+    )
+    def test_real_run_fix_artifacts_flow_into_campaign_markdown_and_public_api(tmp_path, mode):
+        first = {"before": "VALUE = 1\n", "after": "VALUE = 2\n", "peak": 25}
+        second = {
+            "before": "VALUE = 2\n",
+            "after": "VALUE = 3\n",
+            "peak": 20,
+            "loss": "changed",
+            "checks": {"loss_tolerance": False},
+            "verification_extra": {"completed": False},
+            "candidate_extra": {"status": "oom"},
+        }
+        options = {"max_rounds": 2}
+        if mode == "all_revert":
+            first.update(loss="changed", checks={"loss_tolerance": False})
+            plans = [first]
+            options["max_rounds"] = 1
+        elif mode == "budget_after_keep":
+            plans = [first]
+            options["budget_after"] = 1
+        elif mode == "error_after_keep":
+            plans = [first, second]
+            options["verify_error_at"] = 2
+        else:
+            plans = [first, second]
+>       result, store, requests, _, _ = search_run(tmp_path / "execution", plans, **options)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_evaluation_outcomes.py:273: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_orchestrator.py:300: in search_run
+    root = source(tmp_path)
+           ^^^^^^^^^^^^^^^^
+tests/test_orchestrator.py:36: in source
+    root.mkdir()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-93/test_real_run_fix_artifacts_fl2/execution/source')
+mode = 511, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-93/test_real_run_fix_artifacts_fl2/execution/source'
+
+/usr/lib/python3.12/pathlib.py:1313: FileNotFoundError
+_ test_real_run_fix_artifacts_flow_into_campaign_markdown_and_public_api[error_after_keep] _
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-93/test_real_run_fix_artifacts_fl3')
+mode = 'error_after_keep'
+
+    @pytest.mark.parametrize(
+        "mode", ["keep_revert", "all_revert", "budget_after_keep", "error_after_keep"]
+    )
+    def test_real_run_fix_artifacts_flow_into_campaign_markdown_and_public_api(tmp_path, mode):
+        first = {"before": "VALUE = 1\n", "after": "VALUE = 2\n", "peak": 25}
+        second = {
+            "before": "VALUE = 2\n",
+            "after": "VALUE = 3\n",
+            "peak": 20,
+            "loss": "changed",
+            "checks": {"loss_tolerance": False},
+            "verification_extra": {"completed": False},
+            "candidate_extra": {"status": "oom"},
+        }
+        options = {"max_rounds": 2}
+        if mode == "all_revert":
+            first.update(loss="changed", checks={"loss_tolerance": False})
+            plans = [first]
+            options["max_rounds"] = 1
+        elif mode == "budget_after_keep":
+            plans = [first]
+            options["budget_after"] = 1
+        elif mode == "error_after_keep":
+            plans = [first, second]
+            options["verify_error_at"] = 2
+        else:
+            plans = [first, second]
+>       result, store, requests, _, _ = search_run(tmp_path / "execution", plans, **options)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_evaluation_outcomes.py:273: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_orchestrator.py:300: in search_run
+    root = source(tmp_path)
+           ^^^^^^^^^^^^^^^^
+tests/test_orchestrator.py:36: in source
+    root.mkdir()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-93/test_real_run_fix_artifacts_fl3/execution/source')
+mode = 511, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-93/test_real_run_fix_artifacts_fl3/execution/source'
+
+/usr/lib/python3.12/pathlib.py:1313: FileNotFoundError
+=========================== short test summary info ============================
+FAILED tests/test_evaluation_outcomes.py::test_real_run_fix_artifacts_flow_into_campaign_markdown_and_public_api[keep_revert]
+FAILED tests/test_evaluation_outcomes.py::test_real_run_fix_artifacts_flow_into_campaign_markdown_and_public_api[all_revert]
+FAILED tests/test_evaluation_outcomes.py::test_real_run_fix_artifacts_flow_into_campaign_markdown_and_public_api[budget_after_keep]
+FAILED tests/test_evaluation_outcomes.py::test_real_run_fix_artifacts_flow_into_campaign_markdown_and_public_api[error_after_keep]
+4 failed, 130 passed in 2.32s

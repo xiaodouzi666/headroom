@@ -295,6 +295,18 @@ two-policy results, the at-most-three-round optimization study, and the original
 target_met >=75%, first-cause agreement >=75%, and USD 12 gates remain unmeasured. See [EVALUATION.md](EVALUATION.md).
 
 
+## Evaluation application and completion evidence
+
+The campaign table now preserves successful patch/configuration application
+separately from the final retained configuration. It reports the selected round,
+its verified completion, and per-round candidate outcomes, including reverted
+attempts. Missing historical facts stay unknown. Empty source diffs do not
+invalidate an applied argv/environment change.
+
+This is reporting functionality, not a new model benchmark. Offline fixtures and
+the manually authored GPU regressions above do not add live repair successes.
+The actual MVP, main evaluation and ablation results remain pending.
+
 ## First Token Factory connectivity measurements — not repair results
 
 Evidence: reports/tokenfactory-minimal-20261024.json, source commit269efd0.

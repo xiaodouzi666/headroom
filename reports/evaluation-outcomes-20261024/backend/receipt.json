@@ -1,0 +1,186 @@
+{
+  "scope": "Original PLAN T1.12 evaluation patch application and selected completion facts",
+  "base_head": "0e7a9d926093dcb9f594c221dda98df47dc2d316",
+  "source_frozen": true,
+  "files_sha256": {
+    "headroom/evaluation.py": "69bcc0ed33e3ecaa9a51ac06ee98883bc76955ae21a51b70db77f71869f64308",
+    "headroom/api/evaluations.py": "00150321edfc8b156fa1066841f29721044280a8c0ca2b8d6b1c12f0406a427d",
+    "tests/test_evaluation_outcomes.py": "6510b576e39a133b4ca2e3224ec577ddf11930e8f46cff23393168a6096d67c0",
+    "docs/EVALUATION.md": "806ee1d6a546aa8bb83de01a67210f3d2c61ea48ed2cddcc6f9615dc0cdb1810",
+    "docs/API.md": "0bee5be7ac85b1d09adb7694666f87a2db657ca1c18fa5d0e81caa8c70e5c805"
+  },
+  "validation": {
+    "result": "134 passed in 3.17s",
+    "log": "focused-final.log",
+    "focused_summary": {
+      "exit_code": 0,
+      "elapsed_seconds": 3.4264718708582222,
+      "source_unchanged": true,
+      "source_sha256": {
+        "headroom/evaluation.py": "69bcc0ed33e3ecaa9a51ac06ee98883bc76955ae21a51b70db77f71869f64308",
+        "headroom/api/evaluations.py": "00150321edfc8b156fa1066841f29721044280a8c0ca2b8d6b1c12f0406a427d",
+        "tests/test_evaluation_outcomes.py": "6510b576e39a133b4ca2e3224ec577ddf11930e8f46cff23393168a6096d67c0"
+      },
+      "blocked_external_attempts": [],
+      "actual_api_calls": 0,
+      "gpu_tasks": 0,
+      "real_env_read": false,
+      "live_profile_enabled": false
+    },
+    "ruff_check_exit": 0,
+    "ruff_format_exit": 0,
+    "integration": "real run_fix + SDK MockTransport + real patch apply/compile + synthetic Lab -> actual round artifacts -> result_row -> Markdown -> curated ASGI API",
+    "covered": [
+      "keep1/revert2",
+      "allrevert while applied",
+      "keep then budget/error",
+      "CLI-only empty diff",
+      "historical missing values",
+      "failed patch versus selected completion conflict",
+      "malformed enum values",
+      "invalid/missing artifact distinction",
+      "strict bounded public projection",
+      "offline fixture excluded from live counters",
+      "existing run artifacts unchanged"
+    ]
+  },
+  "preview": {
+    "provenance": "offline_fixture",
+    "description": "Actual orchestrator/SDK/patch files with synthetic Lab observations; not GPU or model acceptance",
+    "campaign": "/home/xiaodouzi/workspace/headroom/runs/validation/evaluation-outcomes-20261024/0953b61d4d0e4d94bec75e17c40bb923/campaign.json",
+    "public_campaign": "/home/xiaodouzi/workspace/headroom/runs/validation/evaluation-outcomes-20261024/0953b61d4d0e4d94bec75e17c40bb923/public-campaign.json",
+    "denied_attempts": [],
+    "actual_api_calls": 0,
+    "gpu_tasks": 0,
+    "rows": [
+      {
+        "scenario_id": "keep_revert",
+        "run_id": "a9e327ccf1864145b36285ce313ae38a",
+        "run_dir": "/home/xiaodouzi/workspace/headroom/runs/validation/evaluation-outcomes-20261024/0953b61d4d0e4d94bec75e17c40bb923/keep_revert/jobs/a9e327ccf1864145b36285ce313ae38a",
+        "patch_applied": true,
+        "patch_applied_rounds": [
+          1,
+          2
+        ],
+        "selected_round": 1,
+        "selected_patch_applied": true,
+        "selected_completed": true,
+        "round_outcomes": [
+          {
+            "round": 1,
+            "decision": "keep",
+            "patch_applied": true,
+            "candidate_completed": true
+          },
+          {
+            "round": 2,
+            "decision": "revert",
+            "patch_applied": true,
+            "candidate_completed": false
+          }
+        ]
+      },
+      {
+        "scenario_id": "all_revert",
+        "run_id": "60d83d156fe74281b7423ba3e68f6464",
+        "run_dir": "/home/xiaodouzi/workspace/headroom/runs/validation/evaluation-outcomes-20261024/0953b61d4d0e4d94bec75e17c40bb923/all_revert/jobs/60d83d156fe74281b7423ba3e68f6464",
+        "patch_applied": true,
+        "patch_applied_rounds": [
+          1
+        ],
+        "selected_round": null,
+        "selected_patch_applied": false,
+        "selected_completed": null,
+        "round_outcomes": [
+          {
+            "round": 1,
+            "decision": "revert",
+            "patch_applied": true,
+            "candidate_completed": true
+          }
+        ]
+      },
+      {
+        "scenario_id": "budget_after_keep",
+        "run_id": "95565aa81e7d4e449ae25709ea2ecdd4",
+        "run_dir": "/home/xiaodouzi/workspace/headroom/runs/validation/evaluation-outcomes-20261024/0953b61d4d0e4d94bec75e17c40bb923/budget_after_keep/jobs/95565aa81e7d4e449ae25709ea2ecdd4",
+        "patch_applied": true,
+        "patch_applied_rounds": [
+          1
+        ],
+        "selected_round": 1,
+        "selected_patch_applied": true,
+        "selected_completed": true,
+        "round_outcomes": [
+          {
+            "round": 1,
+            "decision": "keep",
+            "patch_applied": true,
+            "candidate_completed": true
+          },
+          {
+            "round": 2,
+            "decision": "revert",
+            "patch_applied": null,
+            "candidate_completed": null
+          }
+        ]
+      },
+      {
+        "scenario_id": "error_after_keep",
+        "run_id": "9fca2ac1ea04481ea63a7f2010cc768f",
+        "run_dir": "/home/xiaodouzi/workspace/headroom/runs/validation/evaluation-outcomes-20261024/0953b61d4d0e4d94bec75e17c40bb923/error_after_keep/jobs/9fca2ac1ea04481ea63a7f2010cc768f",
+        "patch_applied": true,
+        "patch_applied_rounds": [
+          1,
+          2
+        ],
+        "selected_round": 1,
+        "selected_patch_applied": true,
+        "selected_completed": true,
+        "round_outcomes": [
+          {
+            "round": 1,
+            "decision": "keep",
+            "patch_applied": true,
+            "candidate_completed": true
+          },
+          {
+            "round": 2,
+            "decision": "revert",
+            "patch_applied": true,
+            "candidate_completed": null
+          }
+        ]
+      }
+    ]
+  },
+  "contract": {
+    "row_fields": [
+      "patch_applied",
+      "patch_applied_rounds",
+      "selected_round",
+      "selected_patch_applied",
+      "selected_completed",
+      "round_outcomes",
+      "outcome_basis"
+    ],
+    "basis": "recorded_round_artifacts_v1",
+    "round_fields": [
+      "round",
+      "decision",
+      "patch_applied",
+      "candidate_completed"
+    ],
+    "summary": "outcomes.{patch_applied,selected_patch_applied,selected_completed}.{true_count,false_count,unknown_count,known_count}",
+    "meaning": "Any recorded accepted patch/config application remains true after search revert; selected completion uses the explicit retained round and matching verifier facts, never workflow status/target/empty diff"
+  },
+  "real_api_calls": 0,
+  "gpu_tasks": 0,
+  "real_env_or_profile_read": false,
+  "old_runs_rewritten": false,
+  "plan_or_threshold_changed": false,
+  "live_acceptance_claimed": false,
+  "preserved_initial_failure": "focused-initial.log: 4 fixture setup failures (missing execution parent), 130 passed; fixed fixture parent only before final guarded134 pass",
+  "frontend_owned_by": "payment_readiness; its receipt is ../frontend/receipt.json"
+}

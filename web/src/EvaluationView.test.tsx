@@ -134,6 +134,10 @@ describe("published evaluation results", () => {
     for (const heading of [
       "Authored cause",
       "First cause matches",
+      "Any patch/config applied",
+      "Selected round",
+      "Selected patch/config applied",
+      "Selected completed",
       "Reduction %",
       "Throughput change %",
       "Step-time change %",
@@ -212,4 +216,269 @@ it("keeps historical campaign search mode unrecorded", async () => {
   expect(
     await screen.findByText(/Search mode: Not recorded/),
   ).toBeInTheDocument();
+});
+
+function outcomeCell(table: HTMLElement, heading: string, rowIndex = 1) {
+  const headings = within(table).getAllByRole("columnheader");
+  const index = headings.findIndex((cell) => cell.textContent === heading);
+  expect(index).toBeGreaterThanOrEqual(0);
+  const row = within(table).getAllByRole("row")[rowIndex];
+  return row.children[index] as HTMLElement;
+}
+function displayedOutcome(table: HTMLElement, heading: string) {
+  return outcomeCell(table, heading).firstChild?.textContent;
+}
+
+describe("recorded patch and completion outcomes", () => {
+  it.each(["completed", "budget_exceeded", "error"])(
+    "keeps selected evidence apart from a later reverted candidate when search is %s",
+    async (status) => {
+      const document = fixture("live");
+      Object.assign(document.rows[0], {
+        status,
+        target_met: true,
+        patch_applied: true,
+        patch_applied_rounds: [1, 2],
+        selected_round: 1,
+        selected_patch_applied: true,
+        selected_completed: true,
+        outcome_basis: "recorded_round_artifacts_v1",
+        round_outcomes: [
+          {
+            round: 1,
+            decision: "keep",
+            patch_applied: true,
+            candidate_completed: true,
+          },
+          {
+            round: 2,
+            decision: "revert",
+            patch_applied: true,
+            candidate_completed: false,
+          },
+        ],
+      });
+      setup(document);
+      render(<App />);
+      const table = await screen.findByRole("table", {
+        name: "Main evaluation results",
+      });
+      expect(displayedOutcome(table, "Any patch/config applied")).toBe("Yes");
+      expect(displayedOutcome(table, "Selected round")).toBe("1");
+      expect(displayedOutcome(table, "Selected patch/config applied")).toBe(
+        "Yes",
+      );
+      expect(displayedOutcome(table, "Selected completed")).toBe("Yes");
+      expect(outcomeCell(table, "Peak after")).toHaveTextContent("8.00 GB");
+      const details = outcomeCell(
+        table,
+        "Any patch/config applied",
+      ).querySelector("details")!;
+      expect(details).not.toHaveAttribute("open");
+      expect(details).toHaveTextContent(
+        "Round 2: patch/config applied Yes; candidate completed No; decision Revert.",
+      );
+      expect(screen.getByText(/Selected fields describe/)).toHaveTextContent(
+        "Peak before is the baseline; peak after, reductions and timing changes compare that baseline with the final selected configuration.",
+      );
+    },
+  );
+
+  it("preserves an applied and completed attempt without presenting it as selected", async () => {
+    const document = fixture("live");
+    Object.assign(document.rows[0], {
+      status: "completed",
+      patch_applied: true,
+      selected_round: null,
+      selected_patch_applied: false,
+      selected_completed: null,
+      round_outcomes: [
+        {
+          round: 1,
+          decision: "revert",
+          patch_applied: true,
+          candidate_completed: true,
+        },
+      ],
+    });
+    setup(document);
+    render(<App />);
+    const table = await screen.findByRole("table", {
+      name: "Main evaluation results",
+    });
+    expect(displayedOutcome(table, "Any patch/config applied")).toBe("Yes");
+    expect(displayedOutcome(table, "Selected round")).toBe("Unknown");
+    expect(displayedOutcome(table, "Selected patch/config applied")).toBe("No");
+    expect(displayedOutcome(table, "Selected completed")).toBe("Unknown");
+    expect(outcomeCell(table, "Any patch/config applied")).toHaveTextContent(
+      "candidate completed Yes; decision Revert.",
+    );
+  });
+
+  it("uses recorded facts for a CLI-only application with an empty diff", async () => {
+    const document = fixture("live");
+    Object.assign(document.rows[0], {
+      patch_diff: "",
+      patch_applied: true,
+      selected_round: 1,
+      selected_patch_applied: true,
+      selected_completed: true,
+    });
+    setup(document);
+    render(<App />);
+    const table = await screen.findByRole("table", {
+      name: "Main evaluation results",
+    });
+    expect(displayedOutcome(table, "Any patch/config applied")).toBe("Yes");
+    expect(displayedOutcome(table, "Selected completed")).toBe("Yes");
+  });
+
+  it.each([undefined, null, "true", "false", 1, 0, {}])(
+    "keeps missing or malformed outcomes Unknown instead of deriving them from success (%j)",
+    async (outcome) => {
+      const document = fixture("live");
+      Object.assign(document.rows[0], {
+        status: "completed",
+        target_met: true,
+        patch_applied: outcome,
+        selected_patch_applied: outcome,
+        selected_completed: outcome,
+        round_outcomes: [
+          {
+            round: 1,
+            decision: "keep",
+            patch_applied: true,
+            candidate_completed: true,
+          },
+        ],
+      });
+      setup(document);
+      render(<App />);
+      const table = await screen.findByRole("table", {
+        name: "Main evaluation results",
+      });
+      for (const heading of [
+        "Any patch/config applied",
+        "Selected patch/config applied",
+        "Selected completed",
+      ]) {
+        expect(displayedOutcome(table, heading)).toBe("Unknown");
+      }
+      expect(displayedOutcome(table, "Selected round")).toBe("Unknown");
+    },
+  );
+
+  it("shows recorded No and Unknown separately in round attempts", async () => {
+    const document = fixture("live");
+    Object.assign(document.rows[0], {
+      patch_applied: false,
+      selected_patch_applied: false,
+      selected_completed: false,
+      round_outcomes: [
+        {
+          round: 1,
+          decision: "revert",
+          patch_applied: false,
+          candidate_completed: null,
+        },
+        {
+          round: "2",
+          decision: "invented",
+          patch_applied: "false",
+          candidate_completed: 1,
+        },
+      ],
+    });
+    setup(document);
+    render(<App />);
+    const table = await screen.findByRole("table", {
+      name: "Main evaluation results",
+    });
+    expect(displayedOutcome(table, "Any patch/config applied")).toBe("No");
+    expect(displayedOutcome(table, "Selected completed")).toBe("No");
+    expect(outcomeCell(table, "Any patch/config applied")).toHaveTextContent(
+      "Round 1: patch/config applied No; candidate completed Unknown; decision Revert.",
+    );
+    expect(outcomeCell(table, "Any patch/config applied")).toHaveTextContent(
+      "Round Unknown: patch/config applied Unknown; candidate completed Unknown; decision Unknown.",
+    );
+  });
+
+  it("aligns live-only outcome totals with their columns and keeps the wide table in its scroll region", async () => {
+    const document = fixture("live");
+    Object.assign(document.summary, {
+      outcomes: {
+        patch_applied: {
+          true_count: 2,
+          false_count: 1,
+          unknown_count: 3,
+          known_count: 3,
+        },
+        selected_patch_applied: {
+          true_count: 1,
+          false_count: 2,
+          unknown_count: 3,
+          known_count: 3,
+        },
+        selected_completed: {
+          true_count: 1,
+          false_count: 0,
+          unknown_count: 5,
+          known_count: 1,
+        },
+      },
+    });
+    setup(document);
+    render(<App />);
+    const table = await screen.findByRole("table", {
+      name: "Main evaluation results",
+    });
+    const allRows = within(table).getAllByRole("row");
+    const columnCount = within(table).getAllByRole("columnheader").length;
+    expect(columnCount).toBe(22);
+    for (const row of allRows) expect(row.children).toHaveLength(columnCount);
+    expect(outcomeCell(table, "Any patch/config applied", 2)).toHaveTextContent(
+      "2 Yes / 1 No; 3 Unknown",
+    );
+    expect(outcomeCell(table, "Selected round", 2)).toHaveTextContent("—");
+    expect(
+      outcomeCell(table, "Selected patch/config applied", 2),
+    ).toHaveTextContent("1 Yes / 2 No; 3 Unknown");
+    expect(outcomeCell(table, "Selected completed", 2)).toHaveTextContent(
+      "1 Yes / 0 No; 5 Unknown",
+    );
+    expect(outcomeCell(table, "Peak after", 2)).toHaveTextContent("—");
+    const region = screen.getByRole("region", {
+      name: "Scrollable evaluation results",
+    });
+    expect(region).toHaveClass("table-wrap");
+    expect(region).toHaveAttribute("tabindex", "0");
+    expect(region).toContainElement(table);
+    expect(table).toHaveClass("evaluation-main-table");
+    expect(outcomeCell(table, "State")).toHaveClass("evaluation-column-status");
+    expect(outcomeCell(table, "Any patch/config applied")).toHaveClass(
+      "evaluation-column-patch_applied",
+    );
+    expect(
+      outcomeCell(table, "Any patch/config applied").querySelector("details"),
+    ).toHaveClass("evaluation-round-attempts");
+  });
+
+  it("keeps historical missing summary outcomes and round details unknown", async () => {
+    setup(fixture("live"));
+    render(<App />);
+    const table = await screen.findByRole("table", {
+      name: "Main evaluation results",
+    });
+    for (const heading of [
+      "Any patch/config applied",
+      "Selected patch/config applied",
+      "Selected completed",
+    ]) {
+      expect(outcomeCell(table, heading, 2)).toHaveTextContent(/^Unknown$/);
+    }
+    expect(outcomeCell(table, "Any patch/config applied")).toHaveTextContent(
+      "Round attempts: Unknown.",
+    );
+  });
 });

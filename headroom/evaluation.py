@@ -19,6 +19,7 @@ from uuid import uuid4
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
+from headroom.api.security import open_regular
 from headroom.budget import money
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -600,6 +601,248 @@ def _first_diagnosis(directory):
     return causes[0].get("category") if isinstance(causes, list) and causes else None
 
 
+OUTCOME_BASIS = "recorded_round_artifacts_v1"
+OUTCOME_FIELDS = ("patch_applied", "selected_patch_applied", "selected_completed")
+
+
+def _unknown_outcomes():
+    return {
+        "outcome_basis": None,
+        "patch_applied": None,
+        "patch_applied_rounds": [],
+        "selected_round": None,
+        "selected_patch_applied": None,
+        "selected_completed": None,
+        "round_outcomes": [],
+    }
+
+
+def _round_number(value):
+    return value if type(value) is int and 1 <= value <= 6 else None
+
+
+def _boolean(value):
+    return value if type(value) is bool else None
+
+
+def _round_artifact(directory, number, filename):
+    if not directory:
+        return "missing", None
+    try:
+        with open_regular(directory, f"rounds/{number:02d}/{filename}", 1024 * 1024) as handle:
+            raw = handle.read(1024 * 1024 + 1)
+        if len(raw) > 1024 * 1024:
+            return "invalid", None
+        value = json.loads(raw)
+        return ("valid", value) if isinstance(value, dict) else ("invalid", None)
+    except FileNotFoundError:
+        return "missing", None
+    except (OSError, ValueError, TypeError, UnicodeError):
+        return "invalid", None
+
+
+def _decision(value):
+    return value if isinstance(value, str) and value in {"keep", "revert"} else None
+
+
+def _selection_identity(result, document):
+    """Only explicit selected identities; last candidate and target status are irrelevant."""
+    identities = []
+    for source in (result, _dict(document.get("run"))):
+        if "kept" in source:
+            kept = source["kept"]
+            if kept is None:
+                identities.append(None)
+            elif isinstance(kept, dict) and _round_number(kept.get("round")) is not None:
+                identities.append(kept["round"])
+            else:
+                return False, None
+    selected = _dict(document.get("selected_configuration"))
+    if "round" in selected:
+        if _round_number(selected["round"]) is None:
+            return False, None
+        identities.append(selected["round"])
+    if not identities or any(value != identities[0] for value in identities):
+        return False, None
+    return True, identities[0]
+
+
+def evaluation_outcomes(result):
+    """Read existing per-round facts without executing workloads or changing old runs."""
+    document = _dict(result.get("report"))
+    raw_rounds = document.get("rounds")
+    output = _unknown_outcomes()
+    if not isinstance(raw_rounds, list) or len(raw_rounds) > 6:
+        return output
+    numbers = [
+        _round_number(row.get("number", row.get("round"))) if isinstance(row, dict) else None
+        for row in raw_rounds
+    ]
+    if None in numbers or len(numbers) != len(set(numbers)):
+        return output
+    directory = result.get("run_dir")
+    verification_sources = {}
+    for number, row in zip(numbers, raw_rounds, strict=True):
+        _, patch = _round_artifact(directory, number, "patch-result.json")
+        status = patch.get("status") if patch else None
+        status = status if isinstance(status, str) else None
+        applied = (
+            True if status == "applied" else False if status in {"failed", "rejected"} else None
+        )
+        verification_state, verification = _round_artifact(directory, number, "verification.json")
+        inline = _dict(row.get("verification"))
+        completed = (
+            _boolean(verification.get("completed"))
+            if verification is not None
+            else _boolean(inline.get("completed"))
+            if verification_state == "missing"
+            else None
+        )
+        if (
+            verification is not None
+            and "completed" in inline
+            and _boolean(inline["completed"]) is not completed
+        ):
+            completed = None
+        verification_source = (
+            verification
+            if verification_state == "valid"
+            else inline
+            if verification_state == "missing"
+            else {}
+        )
+        verification_sources[number] = verification_source
+        raw_after_id = _dict((verification or {}).get("after")).get("run_id")
+        inline_after_id = _dict(inline.get("after")).get("run_id")
+        if (
+            verification_state == "valid"
+            and raw_after_id is not None
+            and inline_after_id is not None
+            and raw_after_id != inline_after_id
+        ):
+            completed = None
+        output["round_outcomes"].append(
+            {
+                "round": number,
+                "decision": _decision(row.get("decision")),
+                "patch_applied": applied,
+                "candidate_completed": completed,
+            }
+        )
+    positive = [row["round"] for row in output["round_outcomes"] if row["patch_applied"] is True]
+    output["patch_applied_rounds"] = positive
+    output["patch_applied"] = (
+        True
+        if positive
+        else False
+        if output["round_outcomes"]
+        and all(row["patch_applied"] is False for row in output["round_outcomes"])
+        else None
+    )
+    known_selection, selected = _selection_identity(result, document)
+    if known_selection and selected is None:
+        output["selected_patch_applied"] = False
+    elif known_selection:
+        chosen = next((row for row in output["round_outcomes"] if row["round"] == selected), None)
+        if chosen is None or chosen["decision"] != "revert":
+            output["selected_round"] = selected
+            if chosen is not None:
+                output["selected_patch_applied"] = chosen["patch_applied"]
+                completed = chosen["candidate_completed"]
+                final_verification = _dict(document.get("verification"))
+                if (
+                    "completed" in final_verification
+                    and _boolean(final_verification["completed"]) is not completed
+                ):
+                    completed = None
+                selected_verification = verification_sources[selected]
+                selected_after = _dict(selected_verification.get("after")).get("run_id")
+                reported_after = _dict(final_verification.get("after")).get("run_id")
+                if (
+                    selected_after is not None
+                    and reported_after is not None
+                    and selected_after != reported_after
+                ):
+                    completed = None
+                output["selected_completed"] = (
+                    completed if chosen["patch_applied"] is not False else None
+                )
+    if known_selection or any(
+        row["patch_applied"] is not None or row["candidate_completed"] is not None
+        for row in output["round_outcomes"]
+    ):
+        output["outcome_basis"] = OUTCOME_BASIS
+    return output
+
+
+def public_outcomes(row):
+    """Bounded projection of the versioned facts; paths and guessed historical values are excluded."""
+    output = _unknown_outcomes()
+    if row.get("outcome_basis") != OUTCOME_BASIS:
+        return output
+    rounds = row.get("round_outcomes")
+    if not isinstance(rounds, list) or len(rounds) > 6:
+        return output
+    numbers = [
+        _round_number(item.get("round")) if isinstance(item, dict) else None for item in rounds
+    ]
+    if None in numbers or len(numbers) != len(set(numbers)):
+        return output
+    output["round_outcomes"] = [
+        {
+            "round": number,
+            "decision": _decision(item.get("decision")),
+            "patch_applied": _boolean(item.get("patch_applied")),
+            "candidate_completed": _boolean(item.get("candidate_completed")),
+        }
+        for number, item in zip(numbers, rounds, strict=True)
+    ]
+    output["outcome_basis"] = OUTCOME_BASIS
+    output["patch_applied_rounds"] = [
+        item["round"] for item in output["round_outcomes"] if item["patch_applied"] is True
+    ]
+    output["patch_applied"] = (
+        True
+        if output["patch_applied_rounds"]
+        else False
+        if rounds and all(item["patch_applied"] is False for item in output["round_outcomes"])
+        else None
+    )
+    selected = _round_number(row.get("selected_round"))
+    if selected is not None:
+        chosen = next(
+            (item for item in output["round_outcomes"] if item["round"] == selected), None
+        )
+        if chosen is None or chosen["decision"] != "revert":
+            output["selected_round"] = selected
+            if chosen is not None:
+                output["selected_patch_applied"] = chosen["patch_applied"]
+                completed = _boolean(row.get("selected_completed"))
+                if (
+                    completed is chosen["candidate_completed"]
+                    and chosen["patch_applied"] is not False
+                ):
+                    output["selected_completed"] = (
+                        completed if chosen["patch_applied"] is not False else None
+                    )
+    elif row.get("selected_round") is None and row.get("selected_patch_applied") is False:
+        output["selected_patch_applied"] = False
+    return output
+
+
+def _outcome_summary(rows):
+    facts = [public_outcomes(row) for row in rows]
+    return {
+        key: {
+            "true_count": sum(row[key] is True for row in facts),
+            "false_count": sum(row[key] is False for row in facts),
+            "unknown_count": sum(row[key] is None for row in facts),
+            "known_count": sum(row[key] is not None for row in facts),
+        }
+        for key in OUTCOME_FIELDS
+    }
+
+
 def result_row(case, condition, result, usage, *, provenance):
     """Normalize measured results; no diagnosis/target/fee is inferred from empty artifacts."""
     document = _dict(result.get("report"))
@@ -618,6 +861,7 @@ def result_row(case, condition, result, usage, *, provenance):
         "group": case.group,
         "condition": condition,
         "provenance": provenance,
+        **evaluation_outcomes(result),
         "status": result.get("status", "unknown"),
         "search_mode": search.get("mode") if search.get("mode") in SEARCH_MODES else None,
         "search_stop_reason": search.get("stop_reason"),
@@ -706,6 +950,7 @@ def summarize(rows):
         "unknown_cost_runs": unresolved,
         "failed_or_partial_runs": sum(r.get("status") != "completed" for r in measured),
         "measured_metrics": _metric_summary(measured),
+        "outcomes": _outcome_summary(measured),
         "by_policy": {
             name: _policy_summary(
                 [row for row in measured if row.get("policy_name", "default") == name]
@@ -854,6 +1099,10 @@ CAMPAIGN_COLUMNS = (
     ("policy_name", "Policy"),
     ("provenance", "Evidence"),
     ("status", "State"),
+    ("patch_applied", "Any patch/config applied"),
+    ("selected_round", "Selected round"),
+    ("selected_patch_applied", "Selected patch/config applied"),
+    ("selected_completed", "Selected completed"),
     ("search_mode", "Search mode"),
     ("search_stop_reason", "Search stop reason"),
     ("ground_truth", "Authored cause"),
@@ -951,6 +1200,7 @@ def campaign_tables(document):
     # A fixture document cannot elevate individual rows into measured live evidence.
     if document["provenance"] == "offline_fixture":
         rows = [{**row, "provenance": "offline_fixture"} for row in rows]
+    rows = [{**row, **public_outcomes(row)} for row in rows]
     summary, ablation = summarize(rows), ablation_summary(rows)
     return {
         **document,
@@ -997,7 +1247,39 @@ def render_campaign(document):
         "cost_usd": summary["total_cost_usd"],
         "wall_seconds": metrics["wall_seconds"]["mean"],
     }
+    for key in OUTCOME_FIELDS:
+        counts = summary["outcomes"][key]
+        aggregate[key] = (
+            f"{counts['true_count']} true / {counts['false_count']} false / {counts['unknown_count']} unknown"
+        )
     lines.append("| " + " | ".join(_cell(aggregate.get(key)) for key, _ in CAMPAIGN_COLUMNS) + " |")
+    lines += [
+        "",
+        "## Attempted versus selected outcomes",
+        "",
+        "Applied means a recorded patch/config application passed its static checks, even if verification later reverted it.",
+        "Candidate completion is a per-round verifier fact. Selected completion belongs only to the explicitly retained round.",
+        "Missing artifacts and historical values remain unknown; workflow State, target success and an empty diff do not establish these facts.",
+        "",
+        "| Scenario | Condition | Policy | Round | Decision | Patch/config applied | Candidate completed | Selected |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for row in document["rows"]:
+        for attempt in row["round_outcomes"]:
+            values = [
+                row.get("scenario_id"),
+                row.get("condition"),
+                row.get("policy_name"),
+                attempt["round"],
+                attempt["decision"],
+                attempt["patch_applied"],
+                attempt["candidate_completed"],
+                attempt["round"] == row["selected_round"]
+                if row["selected_round"] is not None
+                else None,
+            ]
+            lines.append("| " + " | ".join(_cell(value) for value in values) + " |")
+
     lines += [
         "",
         "## Summary",

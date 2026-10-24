@@ -82,6 +82,29 @@ The input must be a bounded regular campaign JSON file with explicit provenance.
 The command reads that input and prints Markdown; it does not update RESULTS,
 change the original file, or enable live execution.
 
+## Application and completion facts
+
+Evaluation rows distinguish an observed application attempt from the configuration
+eventually selected by keep/revert search. The primary columns are:
+
+- **Any patch/config applied**: at least one recorded application succeeded.
+  A later revert does not erase that fact.
+- **Selected round** and **Selected patch/config applied**: the final retained
+  configuration, checked against that round's application evidence.
+- **Selected completed**: the corresponding verifier's explicit completion fact.
+  The before/after measurements refer to this selected configuration.
+
+The per-row round details retain each attempt's application result, candidate
+completion and keep/revert decision. A candidate that completed but failed
+numerical or policy validation can therefore remain visible even when it was
+reverted. A configuration with only allowed argv/environment changes can count
+as applied despite an empty source diff.
+
+Workflow status and target success do not imply workload completion or successful
+application. Missing historical artifacts remain unknown. Live-only summary
+counts retain true, false and unknown outcomes separately; offline fixture rows
+remain excluded from live scores.
+
 ## Per-round evidence in Run
 
 Every round displays its preserved verification values, checks, notes, decision

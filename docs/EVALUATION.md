@@ -241,3 +241,47 @@ is part of the diagnostic context. Different known modes, or a mix of known and
 unknown modes, are excluded as `search_mode_not_comparable`. All-unknown legacy
 pairs keep their pre-existing comparability rules, with `search_mode: null` in
 the pair; no historical default is invented.
+
+## Recorded patch and completion outcomes (T1.12)
+
+The original MVP table requires patch application and completion facts. A workflow
+state such as `completed`, a `target_met` flag, a retained round, or an empty diff
+does not establish either fact. New campaign rows carry the following separate
+fields, projected unchanged in meaning through the curated API and Markdown:
+
+| Field | Meaning |
+|---|---|
+| `patch_applied` | True when any recorded round has a successful patch/config application, including a candidate later reverted. False only when all recorded rounds have explicit failed/rejected patch results. Otherwise null. |
+| `patch_applied_rounds` | Round numbers with observed application success; an empty array alone does not prove no application happened. |
+| `selected_round` | The explicit retained round identity, never the last attempted candidate. Null when selection is absent, invalid or contradictory. |
+| `selected_patch_applied` | Application fact for that selected round. A modern explicit `kept: null` means false; historical missing selection remains null. |
+| `selected_completed` | The selected round's actual verifier `completed` Boolean. It does not mean target success. Missing, conflicting or rejected evidence remains null. |
+| `round_outcomes` | At most six records containing only `round`, `decision`, `patch_applied` and `candidate_completed`. These are attempted-candidate facts, separate from the selected before/after metrics. |
+| `outcome_basis` | `recorded_round_artifacts_v1` for this extraction contract; null for historical rows with no recorded outcome basis. |
+
+Application comes from `rounds/NN/patch-result.json` and the producer's
+`status=applied` contract (accepted application plus static checks). It covers
+valid CLI/environment-only changes with an empty code diff. Search keep/revert
+does not alter that historical application fact.
+
+Candidate completion comes from `rounds/NN/verification.json`. A genuinely
+missing file may use the actual saved inline round verification; a malformed,
+oversized, symlinked or otherwise rejected artifact cannot fall back to an inline
+success. A conflicting inline/file Boolean remains unknown. Selected completion
+requires an explicit consistent selected identity and corresponding round
+verification; a selected round explicitly marked reverted, a failed selected
+patch, a conflicting final verification Boolean, or a different final after-run
+ID cannot become selected completion success.
+
+A run that keeps round 1, then reverts round 2, reports both applications and both
+candidate outcomes while retaining round 1's completion and original selected
+after metrics. A later budget stop or error preserves those same selected facts.
+An all-reverted run can have `patch_applied=true` with no selected completed result.
+No artifact is rewritten to add these facts.
+
+`summary.outcomes` contains `patch_applied`, `selected_patch_applied`, and
+`selected_completed` counters, each with `true_count`, `false_count`,
+`unknown_count`, and `known_count`. Only attempted live rows enter these counts;
+fixtures are excluded. No new acceptance rate or relaxed original threshold is
+introduced. Historical absent fields remain unknown even if workflow status or
+target success was recorded.

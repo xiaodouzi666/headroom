@@ -1,0 +1,91 @@
+{
+  "task": "Original PLAN T3.5 / Phase 6 opt-in health notification delivery adapter",
+  "base_commit": "0e7a9d9",
+  "created_at": "2026-10-24T14:34:43.721315+00:00",
+  "status": "implementation_frozen_offline_checks_passed",
+  "provenance": "httpx_MockTransport_no_actual_receiver",
+  "defaults": {
+    "notifications_enabled": false,
+    "real_dotenv_read": false,
+    "installed_service_or_timer": false,
+    "configured_receiver": false
+  },
+  "contract": {
+    "continuous_observed_failure_seconds": 120,
+    "timer_nominal_interval_seconds": 30,
+    "timer_accuracy_seconds": 1,
+    "per_incident_attempts": 3,
+    "retry_backoff_seconds": [
+      60,
+      120
+    ],
+    "unknown_delivery_default": "no automatic retry",
+    "unknown_retry_requires": "Explicit private receiver idempotency contract; same key and identical persisted payload",
+    "definite_non_delivery_retry": "connection/pool setup failure or HTTP 429 only",
+    "http_success_meaning": "HTTP receiver accepted; not final channel delivery or human read",
+    "timeout_semantics": "HTTPX phase/inactivity limits; service template starts stop at20s then 2s stop grace/control-group",
+    "credential_source": "Explicit --notify plus owner-private regular .env mode0600; no ambient keys",
+    "state": "nonblocking flock held through probe/dispatch, fsynced atomic write and durable sending claim before POST",
+    "library_logs": "httpx records suppressed only for current sending thread during private request"
+  },
+  "tests": [
+    {
+      "log": "pytest-first.log",
+      "passed": 54,
+      "seconds": 0.58
+    },
+    {
+      "log": "pytest-final.log",
+      "passed": 56,
+      "seconds": 0.52
+    },
+    {
+      "log": "pytest-logging-final.log",
+      "passed": 57,
+      "seconds": 0.53
+    }
+  ],
+  "reproduce": ".venv/bin/python reports/health-notifier-20261024/offline_tests.py -q tests/test_health_monitoring.py tests/test_health_cli.py --basetemp runs/health-notifier-cpu-20261024-a7cf2e9b",
+  "guards": [
+    "Process-wide DNS denial",
+    "AF_INET/AF_INET6 creation denial",
+    "socket connection denial",
+    "actual project .env open denial",
+    "CUDA_VISIBLE_DEVICES empty"
+  ],
+  "static_checks": {
+    "scoped_ruff": "passed",
+    "git_diff_check": "passed",
+    "git_check_ignore_dotenv": "ignored"
+  },
+  "independent_review": {
+    "reviewer": "payment_readiness",
+    "finding": "Repeated idempotency key must retain byte-identical payload.",
+    "resolution": "Persist complete first-dispatch payload; subsequent attempts only update local metadata. Mock receiver with body conflict detection and request.content equality regression.",
+    "final_readonly_result": "No remaining blocking findings on fixed payload/state/retry path."
+  },
+  "limitations": [
+    "No actual HTTP receiver was contacted; mock URLs and placeholder tokens only.",
+    "No real .env read/write, real service stop, unit installation, timer enablement or public endpoint.",
+    "Configured receiver must support the documented generic JSON POST.",
+    "Local persistence cannot guarantee network exactly-once delivery across crashes.",
+    "T3.5 human receipt and Phase6 ongoing uptime checks remain pending."
+  ],
+  "sha256": {
+    "headroom/monitoring.py": "02bf394287fe83d51d4616a11898d02f73e60aeb1da315eb9a6feef47a3ee3aa",
+    "scripts/check_health.py": "5188898dfdf3004ca001b52eba71992a3735a521e29cbbf2b7e13838d910df18",
+    "tests/test_health_monitoring.py": "ba7b1c15d01fa8562ba6872d4a3bc9e99058760918c7dcae183702cf682dce54",
+    "tests/test_health_cli.py": "a23c77917b44cea9717e7fecda3d6c6684384b4a0183852114645f93e517d6b2",
+    "deploy/headroom-health.service": "f99e5f953e641a33b28c7813d5c605bb43f34d47ee9134eba2477c7e2a182ae6",
+    "deploy/headroom-health.timer": "390d4884e676bd71558e3d01669bc37aa645716041ba4fee12bcee29be566929",
+    "docs/DEPLOYMENT.md": "2abc938001ebfc4699c08b089a1e32bd0d87ac6a889d41d5d8c06400d703f2ca",
+    ".env.example": "a9ecd17192aed3c73ff7bbc5d5e315f034710b6c2e10de3165593b8421837c05",
+    "reports/health-notifier-20261024/offline_tests.py": "c212649dc139bbce94125ad39109e1a462450dbaeea35e2cc688742b586353d7",
+    "docs/PLAN.md": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56"
+  },
+  "log_sha256": {
+    "pytest-first.log": "5dae950acd58cd2151aadbf2ee6a018727254812f84157f46004678c71d1f868",
+    "pytest-final.log": "a35ecfe7592a7b2b5a582387352d689e316d1fb5c21aef5d68bdcf9b603c6638",
+    "pytest-logging-final.log": "5a8f31c1c1489105293b2ed4884c103d134bfb1ed1eb6115b2e988eac95ae908"
+  }
+}

@@ -306,3 +306,25 @@ directory and canonical or 32-hex unannotated filenames are accepted, with the
 existing nofollow regular-file checks. Explicit missing, invalid or unavailable
 records return no artifact rather than silently selecting a different file.
 Historical runs without this field retain their original fixed layout.
+
+### Evaluation outcome fields
+
+Curated `/api/evaluations/{id}` rows now retain the versioned T1.12 attempt and
+selection facts documented in `docs/EVALUATION.md`: `patch_applied`,
+`patch_applied_rounds`, `selected_round`, `selected_patch_applied`,
+`selected_completed`, `round_outcomes`, and `outcome_basis`.
+A successful application that is later reverted still counts as an application.
+Selected completion belongs to the explicit retained configuration used by the
+after metrics, never to the latest candidate.
+
+All outcome Booleans are strict Boolean-or-null. Round numbers are strict positive
+integers from 1 through 6; the nested list is bounded to six unique rounds and
+exposes no paths. Unknown historical basis, malformed lists, invalid values and
+contradictions are not promoted into success. Known `kept: null` can represent
+no selected patch; absence of historical selection evidence remains unknown.
+
+The API recomputes `summary.outcomes` from projected rows using live-only
+true/false/unknown/known counters for the three top-level Boolean outcomes.
+Offline fixture publications remain explicitly labelled and contribute no live
+outcome scores. Publication is still read-only and requires the existing explicit
+curation registry; no campaign becomes public automatically.

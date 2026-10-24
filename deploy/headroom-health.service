@@ -1,8 +1,12 @@
 [Unit]
-Description=Check Headroom health locally
+Description=Check Headroom health locally (webhook disabled by default)
 
 [Service]
 Type=oneshot
 WorkingDirectory=/home/xiaodouzi/workspace/headroom
+# Add --notify only after the owner configures the private HTTPS destination.
 ExecStart=/home/xiaodouzi/workspace/headroom/.venv/bin/python scripts/check_health.py
+TimeoutStartSec=20s
+TimeoutStopSec=2s
+KillMode=control-group
 UMask=0077
