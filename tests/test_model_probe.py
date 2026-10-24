@@ -707,3 +707,171 @@ def test_wrong_model_needle_does_not_inflate_long_context_success(monkeypatch):
     assert report["config_proposal"]["largest_successful_cl100k_approximation"] is None
     assert report["config_proposal"]["largest_successful_server_prompt_tokens"] is None
     assert report["budget"]["actual_known_usd"] == "0"
+
+
+EXACT_NANO = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+
+
+def test_explicit_model_override_preserves_default_matrix_and_other_roles():
+    defaults = dict(probe.MODELS)
+    plan = probe.build_plan(model_ids={"nano": EXACT_NANO})
+    assert len(plan) == 62 and probe.MODELS == defaults
+    assert all(p.model == EXACT_NANO for p in plan if p.role == "nano")
+    assert all(p.model == defaults[p.role] for p in plan if p.role and p.role != "nano")
+    assert probe.Probe("legacy", probe.ENDPOINTS[0], "nano", "chat").model == defaults["nano"]
+
+
+@pytest.mark.parametrize(
+    "entries",
+    [
+        ["typo=nvidia/example"],
+        ["Nano=nvidia/example"],
+        ["nano"],
+        ["nano="],
+        ["nano=other-provider/example"],
+        ["nano=nvidia/example with-space"],
+        ["nano=nvidia/example", "nano=nvidia/another"],
+    ],
+)
+def test_invalid_overrides_refuse_before_key_price_or_transport(entries, monkeypatch, capsys):
+    monkeypatch.setattr(probe.Path, "read_text", lambda *a, **k: pytest.fail("file read"))
+    original_get = probe.os.environ.get
+
+    def guard_key(name, *args):
+        if name == "NEBIUS_API_KEY":
+            pytest.fail("key read")
+        return original_get(name, *args)
+
+    monkeypatch.setattr(probe.os.environ, "get", guard_key)
+    monkeypatch.setattr(probe.HTTPTransport, "__init__", lambda *a: pytest.fail("transport"))
+    args = [item for entry in entries for item in ("--model-id", entry)]
+    assert probe.main(["--execute", *args]) == 2
+    assert json.loads(capsys.readouterr().out)["status"] == "refused"
+
+
+def test_model_override_dry_run_has_no_key_price_or_network(monkeypatch, capsys):
+    monkeypatch.setattr(probe.Path, "read_text", lambda *a, **k: pytest.fail("file read"))
+    original_get = probe.os.environ.get
+
+    def guard_key(name, *args):
+        if name == "NEBIUS_API_KEY":
+            pytest.fail("key read")
+        return original_get(name, *args)
+
+    monkeypatch.setattr(probe.os.environ, "get", guard_key)
+    monkeypatch.setattr(probe.HTTPTransport, "__init__", lambda *a: pytest.fail("transport"))
+    assert (
+        probe.main(
+            ["--suite", "capabilities", "--roles", "nano", "--model-id", "nano=" + EXACT_NANO]
+        )
+        == 0
+    )
+    report = json.loads(capsys.readouterr().out)
+    assert report["network_requests"] == 0 and report["accepted"] is False
+    assert report["model_overrides"] == {"nano": EXACT_NANO}
+    assert all(p["model"] == EXACT_NANO for p in report["plan"] if p["role"])
+    assert len(report["plan"]) == 15
+
+
+def test_model_override_does_not_bypass_execution_gates(monkeypatch, capsys):
+    monkeypatch.setattr(probe.HTTPTransport, "__init__", lambda *a: pytest.fail("transport"))
+    assert probe.main(["--execute", "--model-id", "nano=" + EXACT_NANO]) == 2
+    report = json.loads(capsys.readouterr().out)
+    assert report["status"] == "refused" and "confirmations" in report["detail"]
+
+
+def test_override_prices_use_exact_id_without_fallback():
+    document = verified_prices()
+    overrides = {"nano": EXACT_NANO}
+    with pytest.raises(probe.Refused, match="missing verified price"):
+        probe.validate_prices(document, {"nano"}, overrides)
+    document["models"][EXACT_NANO] = {
+        **document["models"][probe.MODELS["nano"]],
+        "input_usd_per_million": "7",
+        "prompt_token_ceiling": 1000,
+    }
+    prices = probe.validate_prices(document, {"nano"}, overrides)
+    assert prices["nano"].input_per_million == Decimal(7)
+    assert prices["nano"].prompt_token_ceiling == 1000
+
+
+class ExactNanoCatalogue(FakeTransport):
+    def __init__(self, model=EXACT_NANO, endpoint=None, observations=None):
+        super().__init__(observations)
+        self.catalogue_model, self.catalogue_endpoint = model, endpoint
+
+    def catalogue(self, spec):
+        return {
+            "http_status": 200,
+            "models": (
+                [{"id": self.catalogue_model}]
+                if self.catalogue_endpoint is None or spec.endpoint == self.catalogue_endpoint
+                else []
+            ),
+        }
+
+
+def nano_chat_plan():
+    return [
+        *probe.build_plan(["catalogue"]),
+        probe.Probe("nano-chat", probe.ENDPOINTS[0], "nano", "chat", model_id=EXACT_NANO),
+    ]
+
+
+@pytest.mark.parametrize(
+    "model,endpoint",
+    [
+        (EXACT_NANO.lower(), None),
+        ("nvidia/unknown-model", None),
+        (EXACT_NANO, probe.ENDPOINTS[1]),
+    ],
+)
+def test_override_requires_exact_id_in_selected_endpoint_catalogue(model, endpoint):
+    transport = ExactNanoCatalogue(model, endpoint)
+    budget = probe.Budget(Decimal(1))
+    report = probe.execute_plan(nano_chat_plan(), {"nano": price()}, budget, transport, 256, 0)
+    assert transport.calls == [] and budget.charged == 0 and budget.outstanding == 0
+    assert report["selected_models"] == {"nano": EXACT_NANO}
+    assert report["probes"][0] == {
+        "id": "nano-chat",
+        "role": "nano",
+        "model": EXACT_NANO,
+        "endpoint": probe.ENDPOINTS[0],
+        "status": "refused",
+        "detail": "model_not_in_live_endpoint_catalogue",
+    }
+
+
+def test_override_flows_through_payload_identity_and_budget():
+    transport = ExactNanoCatalogue()
+    price_for_actual_id = probe.Price(Decimal(7), Decimal(9), 1000, "max_tokens")
+    budget = probe.Budget(Decimal("0.01"))
+    report = probe.execute_plan(
+        nano_chat_plan(), {"nano": price_for_actual_id}, budget, transport, 256, 0
+    )
+    assert len(transport.calls) == 1
+    assert transport.calls[0][1]["model"] == EXACT_NANO
+    assert report["probes"][0]["status"] == "ok"
+    assert report["probes"][0]["model"] == EXACT_NANO
+    assert budget.actual_known == Decimal("0.000088")
+    assert report["accepted"] is False and report["config_proposal"]["applied"] is False
+
+
+def test_overridden_request_rejects_old_default_response_identity():
+    transport = ExactNanoCatalogue(
+        observations=[
+            {
+                "http_status": 200,
+                "response_model": probe.MODELS["nano"],
+                "_content": "headroom",
+                "finish_reason": "stop",
+                "usage": {"prompt_tokens": 10, "completion_tokens": 2},
+            }
+        ]
+    )
+    budget = probe.Budget(Decimal(2))
+    report = probe.execute_plan(nano_chat_plan(), {"nano": price()}, budget, transport, 256, 0)
+    assert len(transport.calls) == 1
+    assert report["probes"][0]["status"] == "unknown"
+    assert report["probes"][0]["detail"] == "response_model_mismatch"
+    assert budget.halt_reason == "response_model_identity_unverified"

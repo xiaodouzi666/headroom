@@ -63,6 +63,31 @@ def money(value: Any) -> Decimal:
     return result
 
 
+def resolved_model_ids(overrides: dict[str, str] | None = None) -> dict[str, str]:
+    """Explicit candidates only; selection never establishes catalogue access."""
+    if overrides is None:
+        return dict(MODELS)
+    if not isinstance(overrides, dict) or set(overrides) - set(MODELS):
+        raise Refused("model overrides require known Ultra/Super/Nano/Lightning roles")
+    for value in overrides.values():
+        if not isinstance(value, str) or not re.fullmatch(
+            r"nvidia/[A-Za-z0-9][A-Za-z0-9_.-]{0,191}", value
+        ):
+            raise Refused("model overrides require exact bounded nvidia/ model identifiers")
+    return {**MODELS, **overrides}
+
+
+def parse_model_overrides(entries: list[str] | None) -> dict[str, str]:
+    overrides = {}
+    for entry in entries or []:
+        role, separator, model_id = entry.partition("=")
+        if not separator or role in overrides:
+            raise Refused("use --model-id ROLE=EXACT_ID once per role")
+        overrides[role] = model_id
+    resolved_model_ids(overrides)
+    return overrides
+
+
 @dataclasses.dataclass(frozen=True)
 class Probe:
     id: str
@@ -71,10 +96,15 @@ class Probe:
     method: str
     approx_input_tokens: int | None = None
     concurrency_group: str | None = None
+    model_id: str | None = None
+
+    def __post_init__(self):
+        if self.model_id is not None:
+            resolved_model_ids({self.role: self.model_id})
 
     @property
     def model(self) -> str | None:
-        return MODELS.get(self.role)
+        return self.model_id if self.model_id is not None else MODELS.get(self.role)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -93,9 +123,12 @@ def build_plan(
     roles: list[str] | None = None,
     endpoint: str = ENDPOINTS[0],
     long_sizes: list[int] | None = None,
+    *,
+    model_ids: dict[str, str] | None = None,
 ) -> list[Probe]:
     if endpoint not in ENDPOINTS:
         raise Refused("endpoint is not an official allowlisted Token Factory endpoint")
+    selected_models = resolved_model_ids(model_ids)
     suites = suites or ["all"]
     roles = roles or list(MODELS)
     if set(roles) - set(MODELS) or set(suites) - {
@@ -129,10 +162,20 @@ def build_plan(
             )
             for i in range(4)
         )
-    return probes
+    return [
+        dataclasses.replace(p, model_id=selected_models[p.role])
+        if model_ids and p.role in model_ids
+        else p
+        for p in probes
+    ]
 
 
-def validate_prices(document: dict, roles: set[str]) -> dict[str, Price]:
+def validate_prices(
+    document: dict, roles: set[str], model_ids: dict[str, str] | None = None
+) -> dict[str, Price]:
+    selected_models = resolved_model_ids(model_ids)
+    if roles - set(selected_models):
+        raise Refused("unknown model role in reviewed pricing")
     if (
         document.get("verified") is not True
         or document.get("output_caps_include_reasoning") is not True
@@ -142,7 +185,7 @@ def validate_prices(document: dict, roles: set[str]) -> dict[str, Price]:
         raise Refused("pricing verification timestamp and source are required")
     output = {}
     for role in roles:
-        item = document.get("models", {}).get(MODELS[role])
+        item = document.get("models", {}).get(selected_models[role])
         if not isinstance(item, dict):
             raise Refused(f"missing verified price/ceiling for role {role}")
         ceiling = item.get("prompt_token_ceiling")
@@ -690,6 +733,7 @@ def execute_plan(
         "live": True,
         "timestamp_utc": dt.datetime.now(dt.UTC).isoformat(),
         "catalogues": [],
+        "selected_models": {p.role: p.model for p in plan if p.role},
         "probes": [],
         "config_proposal": {},
         "acceptance_pending": [
@@ -714,7 +758,14 @@ def execute_plan(
     for group in [[p] for p in sequential] + groups:
         if any(p.model not in models_available.get(p.endpoint, set()) for p in group):
             report["probes"].extend(
-                {"id": p.id, "status": "refused", "detail": "model_not_in_live_endpoint_catalogue"}
+                {
+                    "id": p.id,
+                    "role": p.role,
+                    "model": p.model,
+                    "endpoint": p.endpoint,
+                    "status": "refused",
+                    "detail": "model_not_in_live_endpoint_catalogue",
+                }
                 for p in group
             )
             continue
@@ -791,6 +842,12 @@ def parser() -> argparse.ArgumentParser:
         choices=["all", "catalogue", "capabilities", "long", "concurrency"],
     )
     p.add_argument("--roles", nargs="+", choices=list(MODELS))
+    p.add_argument(
+        "--model-id",
+        action="append",
+        metavar="ROLE=EXACT_ID",
+        help="Explicit case-sensitive candidate override; still requires live endpoint catalogue and matching reviewed pricing",
+    )
     p.add_argument("--base-url", choices=ENDPOINTS, default=ENDPOINTS[0])
     p.add_argument("--long-input-tokens", action="append", type=int, choices=LONG_SIZES)
     p.add_argument("--max-retries", type=int, choices=range(6), default=0)
@@ -801,7 +858,23 @@ def parser() -> argparse.ArgumentParser:
 
 def main(argv=None) -> int:
     args = parser().parse_args(argv)
-    plan = build_plan(args.suite, args.roles, args.base_url, args.long_input_tokens)
+    try:
+        model_ids = parse_model_overrides(args.model_id)
+        plan = build_plan(
+            args.suite, args.roles, args.base_url, args.long_input_tokens, model_ids=model_ids
+        )
+    except Refused as exc:
+        print(
+            json.dumps(
+                {
+                    "accepted": False,
+                    "status": "refused",
+                    "error": type(exc).__name__,
+                    "detail": str(exc),
+                }
+            )
+        )
+        return 2
     if not args.execute:
         print(
             json.dumps(
@@ -809,6 +882,7 @@ def main(argv=None) -> int:
                     "accepted": False,
                     "live": False,
                     "network_requests": 0,
+                    "model_overrides": model_ids,
                     "plan": [dataclasses.asdict(p) | {"model": p.model} for p in plan],
                     "notes": [
                         "No key, pricing file or tokenizer loaded in dry-run.",
@@ -832,7 +906,7 @@ def main(argv=None) -> int:
         if not 1 <= args.max_completion_tokens <= 16384:
             raise Refused("completion cap must be 1..16384 and include reasoning")
         roles = {p.role for p in plan if p.role}
-        prices = validate_prices(json.loads(args.pricing_file.read_text()), roles)
+        prices = validate_prices(json.loads(args.pricing_file.read_text()), roles, model_ids)
         key = os.environ.get("NEBIUS_API_KEY")
         if not key:
             raise Refused("NEBIUS_API_KEY is missing; .env is never loaded by this script")

@@ -1,0 +1,57 @@
+{
+  "timestamp": "20261024T032830Z",
+  "scope": "offline explicit model-ID override; no authenticated provider request, GPU work or credential access",
+  "tests": {
+    "command": "python -m pytest -q tests/test_model_probe.py",
+    "exit_code": 0,
+    "elapsed_seconds": 0.4246966759674251,
+    "output_tail": [
+      ".......................................................................  [100%]",
+      "71 passed in 0.21s"
+    ]
+  },
+  "prior_test_setup_failure": {
+    "failed": 9,
+    "passed": 62,
+    "reason": "Eight new tests initially blocked argparse/gettext locale environment reads; one expected fail where existing identity contract is unknown. Corrected test guards/expectation; implementation semantics were unchanged."
+  },
+  "dry_runs": [
+    {
+      "name": "default",
+      "exit_code": 0,
+      "plan_count": 62,
+      "network_requests": 0,
+      "model_overrides": {}
+    },
+    {
+      "name": "exact-nano",
+      "exit_code": 0,
+      "plan_count": 15,
+      "network_requests": 0,
+      "model_overrides": {
+        "nano": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+      }
+    }
+  ],
+  "checks": {
+    "default_matrix_62": true,
+    "nano_matrix_15": true,
+    "default_ids_unchanged": true,
+    "region_routing_unchanged": true,
+    "original_authorization_and_budget_gates_retained": true
+  },
+  "source_sha256": [
+    {
+      "path": "scripts/probe_models.py",
+      "sha256": "7fede6431c84d4f1549fd43ff7f40b902a20e72435b5b1f0f185458cb8bc79e7"
+    },
+    {
+      "path": "tests/test_model_probe.py",
+      "sha256": "ffea2815d950e82cfb0a10c5f73a4e6d0dc107871cbf9d0b8d1564fcdfb15773"
+    },
+    {
+      "path": "docs/MODELS.md",
+      "sha256": "56815b9cad61128c382321843a872e2e3b0c0b43e72c5d41fc9a35225e6fb723"
+    }
+  ]
+}

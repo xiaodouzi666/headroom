@@ -19,6 +19,21 @@ Both catalogue endpoints are included in every execution plan:
 
 Paid probes use the selected official --base-url (default us-central1). Redirects and non-allowlisted endpoints are refused. Catalogue absence prevents dispatch to that model. No other LLM provider is used.
 
+## Explicit model identifiers
+
+The default IDs remain historical plan candidates for backwards compatibility. An operator can explicitly select a case-sensitive candidate without editing source:
+
+~~~sh
+.venv/bin/python scripts/probe_models.py --suite capabilities --roles nano \
+  --model-id nano=nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B
+~~~
+
+This example is a dry-run only. The current public UI spelling above does not prove this account can invoke the model. Repeat `--model-id ROLE=EXACT_ID` for distinct roles; unknown roles, duplicate assignments, malformed IDs and non-NVIDIA identifiers are refused before credentials or pricing are read. Other roles and the original default62-item plan remain unchanged.
+
+Actual dispatch still requires the exact ID in the authenticated catalogue for the selected `--base-url`, verified prices keyed by that same ID, all original execution/credit/budget gates and matching response identity. There is no case folding, alias substitution, fallback to the old ID's prices or automatic endpoint change. Reports include the selected role/ID mapping and refused model/endpoint. A selected model is not an accepted model capability.
+
+Each probe invocation still uses one selected endpoint for its paid rows, and the application runtime still has a single global base URL. Different processing-region labels in the public UI do not establish different API URLs. Account-specific catalogue/access and any need for model-specific regional routing remain to be measured after key setup; no regional behavior was changed here.
+
 ## Offline plan and bounded execution
 
 From /home/xiaodouzi/workspace/headroom:
