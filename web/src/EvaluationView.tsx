@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import { getJSON } from "./api";
-import { record, rows, text, decimal, gb, usd, human, type Dict } from "./data";
+import {
+  record,
+  rows,
+  text,
+  decimal,
+  gb,
+  usd,
+  human,
+  searchModeLabel,
+  type Dict,
+} from "./data";
 import { Badge, Empty, Loading, Notice, Section } from "./components";
 
 const conditions = ["full_ultra", "traceback_ultra", "full_super"];
@@ -190,9 +200,10 @@ export default function EvaluationView() {
             <Badge>{human(document.status)}</Badge>
           </p>
           <p className="caption">
-            Only explicitly published evidence appears here. Unknown outcomes
-            remain unknown. Throughput is a separate measurement, not inferred
-            from step time.
+            Search mode: {searchModeLabel(document.search_mode)}. Only
+            explicitly published evidence appears here. Unknown outcomes remain
+            unknown. Throughput is a separate measurement, not inferred from
+            step time.
           </p>
           <a
             className="text-link"
@@ -216,6 +227,12 @@ export default function EvaluationView() {
                     {columns.map(([key]) => (
                       <td key={key}>
                         {metric(key, row[key])}
+                        {key === "status" && (
+                          <small className="table-note">
+                            {searchModeLabel(row.search_mode)} · Stop:{" "}
+                            {human(row.search_stop_reason)}
+                          </small>
+                        )}
                         {key === "loss_equivalence" && (
                           <>
                             <br />

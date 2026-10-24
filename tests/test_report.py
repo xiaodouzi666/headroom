@@ -518,3 +518,56 @@ def test_estimated_admission_warning_does_not_replace_actual_or_unknown_cost():
     assert "not a provider billing upper bound or an actual charge" in text
     assert doc["usage"]["total_cost_usd"] is None
     assert doc["usage"]["known_cost_usd"] == "0.02"
+
+
+@pytest.mark.parametrize("status", ["completed", "budget_exceeded", "failed", "needs_human"])
+def test_search_termination_preserves_selected_verified_target(status):
+    search = {
+        "mode": "bounded_pareto",
+        "baseline_target_met": False,
+        "first_target_met_round": 1,
+        "stop_reason": "budget_exceeded" if status == "budget_exceeded" else "max_rounds_reached",
+        "rounds_executed": 3,
+    }
+    doc = build_report(
+        {"status": status, "search": search},
+        verification={"after": {"status": "completed"}, "target_met": True},
+        artifacts={"patch": "tiers/round-1/patch.diff"},
+    )
+    assert doc["status"] == status
+    assert doc["summary"]["target_met"] is True
+    assert doc["search"] == search
+    assert doc["artifacts"]["patch"] == "tiers/round-1/patch.diff"
+    markdown = render_markdown(doc)
+    assert "target met: True" in markdown
+    assert "Rounds executed: 3; first verified target round: 1." in markdown
+    assert "A later exploration stop does not invalidate it" in markdown
+
+
+def test_search_history_and_malformed_metadata_are_not_inferred():
+    historical = build_report({"status": "completed", "target_met": True})
+    assert historical["search"] == {}
+    assert "Search mode: not recorded." in render_markdown(historical)
+    doc = build_report(
+        {
+            "search": {
+                "mode": "invented",
+                "rounds_executed": True,
+                "first_target_met_round": 0,
+                "baseline_target_met": "yes",
+                "stop_reason": "<script>bad</script>",
+            }
+        }
+    )
+    assert doc["search"]["mode"] is None
+    assert doc["search"]["rounds_executed"] is None
+    assert doc["search"]["first_target_met_round"] is None
+    assert doc["search"]["baseline_target_met"] is None
+    assert "<script>" not in render_markdown(doc)
+
+
+@pytest.mark.parametrize("mode", [[], {}, 1, True, None])
+def test_invalid_search_mode_does_not_break_historical_rendering(mode):
+    doc = build_report({"search": {"mode": mode}})
+    assert doc["search"]["mode"] is None
+    assert "Search mode: unknown." in render_markdown(doc)

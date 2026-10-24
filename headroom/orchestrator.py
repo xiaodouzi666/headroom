@@ -12,6 +12,7 @@ from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from decimal import Decimal
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -27,6 +28,7 @@ from headroom.report import generate_report
 from headroom.research.tavily_tool import ResearchSession
 from headroom.runtime import RuntimeNotReady, build_live_runtime, read_live_profile
 from headroom.search import (
+    baseline_target_met,
     decide_keep,
     pareto_point,
     peak_gb,
@@ -72,6 +74,7 @@ class FixRequest(BaseModel):
     allocator_conf: str | None = None
     runtime_profile: str | None = None
     max_rounds: int = Field(default=6, ge=1, le=6)
+    search_mode: Literal["until_target", "bounded_pareto"] = "until_target"
     source_profile: str | None = None
     research_enabled: bool = True
 
@@ -293,6 +296,13 @@ def run_fix(
         "kept": None,
         "pareto": {"points": [], "frontier": []},
         "research": {"status": "not_started"},
+        "search": {
+            "mode": request.search_mode,
+            "baseline_target_met": None,
+            "first_target_met_round": None,
+            "stop_reason": None,
+            "rounds_executed": 0,
+        },
     }
     if store.get_run(run_id) is None:
         store.create_run(run_id, data)
@@ -336,6 +346,8 @@ def run_fix(
             }
         )
         active_round = None
+        data["search"]["rounds_executed"] = len(history)
+        store.update_run(run_id, search=data["search"])
         emit("round.done", decision=row["decision"], round=row["number"], reason=row["reason"])
 
     previous_sigterm = None
@@ -392,7 +404,10 @@ def run_fix(
             **execution_options,
         )
         data["baseline"] = baseline
-        store.update_run(run_id, baseline=baseline)
+        data["search"]["baseline_target_met"] = baseline_target_met(
+            baseline, request.target, required_steps=request.max_steps
+        )
+        store.update_run(run_id, baseline=baseline, search=data["search"])
         if baseline.get("status") not in {"completed", "oom"}:
             raise RuntimeNotReady(
                 "Baseline did not complete or produce a valid CUDA OOM: "
@@ -466,6 +481,9 @@ def run_fix(
             prompt_evidence += "\n\nSEARCH STATE (trusted orchestration metadata):\n" + json.dumps(
                 {
                     "round": number,
+                    "search_mode": request.search_mode,
+                    "rounds_remaining": request.max_rounds - number + 1,
+                    "target_already_met": data["target_met"],
                     "previous_rounds": history,
                     "current_kept": data["kept"],
                     "original_numerics_and_parameter_baseline_is_fixed": True,
@@ -478,6 +496,8 @@ def run_fix(
                 **evidence_json,
                 "search_state": {
                     "round": number,
+                    "mode": request.search_mode,
+                    "target_already_met": data["target_met"],
                     "previous_rounds": [
                         {key: row.get(key) for key in ("number", "fix_id", "decision", "reason")}
                         for row in history
@@ -547,11 +567,13 @@ def run_fix(
                     }
                 )
                 if needs_information:
+                    data["search"]["stop_reason"] = "diagnosis_needs_more_info"
                     raise RuntimeNotReady(
                         "Diagnosis requests additional information; inspect diagnosis.json notes "
                         "before restarting with new evidence"
                     )
                 if checked.requires_supplement:
+                    data["search"]["stop_reason"] = "diagnosis_supplement_exhausted"
                     raise RuntimeNotReady(
                         "Diagnosis still lacks sufficient evidenced savings after the bounded "
                         "supplement; inspect diagnosis.json before restarting"
@@ -653,6 +675,8 @@ def run_fix(
             context = {
                 "diagnosis": diagnosis,
                 "goal": request.target,
+                "search_mode": request.search_mode,
+                "target_already_met": data["target_met"],
                 "previous_rounds": history,
                 "research": [
                     _research_patch_context(research_results[topic])
@@ -742,10 +766,18 @@ def run_fix(
                         budget=bundle.evidence_token_budget,
                         output_dir=round_dir / "evidence",
                     )
+                    if not isinstance(after_evidence, dict) or not all(
+                        isinstance(after_evidence.get(key), str)
+                        and Path(after_evidence[key]).is_file()
+                        for key in ("evidence_json", "evidence_md")
+                    ):
+                        raise ValueError("Fresh evidence files unavailable")
                     active_round["evidence"] = _artifact(
                         directory, after_evidence.get("evidence_json")
                     )
                 except (ValueError, OSError, TypeError) as error:
+                    after_evidence = None
+                    active_round["evidence_status"] = "unavailable"
                     candidate_verification.setdefault("notes", []).append(
                         "After evidence unavailable: " + type(error).__name__
                     )
@@ -755,6 +787,7 @@ def run_fix(
                 candidate_verification,
                 original_baseline=baseline,
                 policy=policy,
+                preserve_target=request.search_mode == "bounded_pareto" and data["target_met"],
             )
             active_round.update(asdict(decision))
             if decision.keep:
@@ -820,12 +853,20 @@ def run_fix(
                     kept=next_kept,
                     target_met=candidate_verification["target_met"] is True,
                 )
+                if data["target_met"] and data["search"]["first_target_met_round"] is None:
+                    data["search"]["first_target_met_round"] = number
                 verification = candidate_verification
                 current_source, current_result = Path(patch.candidate_dir), verified["candidate"]
                 current_args, current_allocator, current_numerics = (
                     tuple(patch.effective_cli),
                     allocator,
                     candidate_numerics,
+                )
+                # Evidence belongs to the selected configuration as a whole.
+                evidence.pop("after", None)
+                artifacts.pop("after_png", None)
+                data["after_evidence_status"] = (
+                    "available" if after_evidence is not None else "unavailable"
                 )
                 if after_evidence is not None:
                     evidence["after"] = after_evidence
@@ -850,30 +891,46 @@ def run_fix(
                     kept=data["kept"],
                     pareto=data["pareto"],
                     target_met=data["target_met"],
+                    after_evidence_status=data["after_evidence_status"],
+                    search=data["search"],
                 )
             finish_round(
                 {"decision": "keep" if decision.keep else "revert", "reason": decision.reason}
             )
-            if data["target_met"]:
-                emit("target.met", target=request.target, round=number)
-                break
-            if decision.keep and after_evidence is None:
+            if decision.keep and data["target_met"]:
+                if data["search"]["first_target_met_round"] == number:
+                    emit("target.met", target=request.target, round=number)
+                if request.search_mode == "until_target":
+                    data["search"]["stop_reason"] = "target_met"
+                    break
+            if (
+                decision.keep
+                and after_evidence is None
+                and (request.search_mode == "until_target" or number < request.max_rounds)
+            ):
+                data["search"]["stop_reason"] = "fresh_evidence_unavailable"
                 raise RuntimeNotReady(
                     "Kept configuration is saved, but fresh evidence is unavailable for the next round"
                 )
         status = "completed"
-        reason = None if data["target_met"] else "max_rounds_reached"
+        if data["search"]["stop_reason"] is None:
+            data["search"]["stop_reason"] = "max_rounds_reached"
+        reason = None if data["search"]["stop_reason"] == "target_met" else "max_rounds_reached"
     except RunCancelled:
         status, reason = "timeout", "Job wall-clock deadline reached"
+        data["search"]["stop_reason"] = "deadline"
         emit("run.failed", reason=reason)
     except BudgetExceeded as error:
         status, reason = "budget_exceeded", str(error)
+        data["search"]["stop_reason"] = "budget_exceeded"
         emit("budget.exceeded", reason=reason)
     except RuntimeNotReady as error:
         status, reason = "needs_human", str(error)
+        data["search"]["stop_reason"] = data["search"]["stop_reason"] or "runtime_not_ready"
         emit("needs_human", reason=reason)
     except (LLMError, OSError, ValueError, TypeError) as error:
         status, reason = "failed", "Pipeline failed: " + type(error).__name__
+        data["search"]["stop_reason"] = "pipeline_error"
         emit("run.failed", reason=reason)
     finally:
         if active_round is not None:
@@ -935,6 +992,7 @@ def run_fix(
             "report": document,
             "kept": data["kept"],
             "pareto": data["pareto"],
+            "search": data["search"],
         }
         if owned_store:
             store.close()

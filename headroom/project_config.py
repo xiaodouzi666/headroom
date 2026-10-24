@@ -43,6 +43,7 @@ class ProjectConfig(BaseModel):
     seed: int = Field(default=1337, ge=0, lt=2**32)
     device: Literal["cpu", "cuda"] = "cuda"
     max_rounds: int = Field(default=6, ge=1, le=6)
+    search_mode: Literal["until_target", "bounded_pareto"] = "until_target"
     batch: Annotated[int, Field(ge=1)] | BatchConfig | None = None
     batch_arg: BatchFlag | None = None
 

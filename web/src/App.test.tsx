@@ -203,3 +203,37 @@ describe("availability replay guidance", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+it.each(["until_target", "bounded_pareto"])(
+  "submits explicit search mode %s without expanding precision policy",
+  async (mode) => {
+    const existing = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation((input, init) =>
+      input === "/api/runs"
+        ? Promise.resolve(
+            new Response(
+              JSON.stringify({ detail: "Offline submission captured" }),
+              { status: 400 },
+            ),
+          )
+        : existing(input, init),
+    );
+    render(<App />);
+    const example = await screen.findByRole("button", {
+      name: /Activation memory/,
+    });
+    fireEvent.click(example);
+    const select = screen.getByRole("combobox", { name: "Search mode" });
+    expect(select).toHaveValue("until_target");
+    fireEvent.change(select, { target: { value: mode } });
+    fireEvent.click(screen.getByRole("button", { name: /Start analysis/ }));
+    await screen.findByText("Offline submission captured");
+    const posted = vi
+      .mocked(fetch)
+      .mock.calls.find(([path]) => path === "/api/runs")!;
+    const body = JSON.parse(String(posted[1]?.body));
+    expect(body.search_mode).toBe(mode);
+    expect(body.policy.allow_numerics_change).toBe(false);
+    expect(body.budget).toBe("0.60");
+  },
+);

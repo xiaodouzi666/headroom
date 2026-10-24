@@ -291,3 +291,99 @@ describe("estimated admission disclosure", () => {
     },
   );
 });
+
+it("shows a retained target success separately from exhausted exploration", async () => {
+  window.history.replaceState({}, "", `/runs/${id}`);
+  const reportPath = detailPath + "/report.json";
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((input: unknown) => {
+      const value =
+        input === detailPath
+          ? {
+              run_id: id,
+              status: "budget_exceeded",
+              target: "fit:22GB",
+              artifacts: {
+                "report.json": reportPath,
+                "patch.diff": detailPath + "/patch.diff",
+              },
+              usage: {},
+            }
+          : input === reportPath
+            ? {
+                summary: { target_met: true },
+                search: {
+                  mode: "bounded_pareto",
+                  stop_reason: "budget_exceeded",
+                  rounds_executed: 3,
+                  first_target_met_round: 1,
+                },
+              }
+            : null;
+      if (input === detailPath + "/patch.diff")
+        return Promise.resolve(new Response("retained patch"));
+      if (value) return Promise.resolve(new Response(JSON.stringify(value)));
+      return Promise.reject(new Error("Unexpected request"));
+    }),
+  );
+  vi.stubGlobal("EventSource", OfflineEvents);
+  render(<App />);
+  await screen.findByText("Explore more configurations");
+  const target = screen.getByText("Selected configuration meets target");
+  expect(target.nextElementSibling).toHaveTextContent("Yes");
+  expect(
+    screen.getByText("First verified target round").nextElementSibling,
+  ).toHaveTextContent("1");
+  expect(
+    screen.getByText("Exploration status").nextElementSibling,
+  ).toHaveTextContent("budget exceeded");
+  expect(
+    screen.getByText("Stopped because").nextElementSibling,
+  ).toHaveTextContent("budget exceeded");
+  expect(screen.getByRole("link", { name: "patch.diff" })).toHaveAttribute(
+    "href",
+    detailPath + "/patch.diff",
+  );
+});
+
+it("does not present historical baseline completion as successful exploration", async () => {
+  window.history.replaceState({}, "", `/runs/${id}?replay=1`);
+  const reportPath = detailPath + "/report.json";
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((input: unknown) => {
+      if (input === detailPath)
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              run_id: id,
+              status: "completed",
+              provenance: "recorded_baseline",
+              usage: {},
+              artifacts: { "report.json": reportPath },
+            }),
+          ),
+        );
+      if (input === reportPath)
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              summary: { target_met: false },
+              rounds: [],
+            }),
+          ),
+        );
+      return Promise.reject(new Error("Unexpected request"));
+    }),
+  );
+  vi.stubGlobal("EventSource", OfflineEvents);
+  render(<App />);
+  await screen.findByText("Search outcome");
+  expect(
+    screen.getByText("Exploration status").nextElementSibling,
+  ).toHaveTextContent("Not recorded");
+  expect(
+    screen.getByText("Selected configuration meets target").nextElementSibling,
+  ).toHaveTextContent("N/A — baseline only");
+});

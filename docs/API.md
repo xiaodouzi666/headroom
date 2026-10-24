@@ -26,9 +26,15 @@ not been run for these offline tests. Public deployment needs a reviewed hostnam
 HTTPS and authentication configuration.
 
 POST /api/runs accepts exactly one source form: script_text, example_id, or all
-three of repo/ref/cmd. It also accepts target, canonical policy and budget. Budget is a decimal string, default "0.6", positive
+three of repo/ref/cmd. It also accepts target, canonical policy, search_mode and budget. Budget is a decimal string, default "0.6", positive
 and at most 5 USD; the separate reviewed runtime/budget guard must still authorize
 any spending. Targets: fix-oom, reclaim, fit:22GB, or explicit fit:22GiB.
+`search_mode` accepts exactly `until_target` (default) or `bounded_pareto`; null,
+unknown strings and non-string values are HTTP 400 before admission. Bounded
+mode may continue after target achievement under the existing six-round,
+budget, timeout and policy limits; it does not enable precision changes or live
+model access. Each queued/failed/completed run records the actual requested mode.
+
 Policy keys are allow_numerics_change, allow_model_change,
 allow_batch_grad_accum and max_throughput_regression_pct.
 
@@ -69,7 +75,7 @@ The worker may start before the next status request.
 | GET /api/health | DB/queue, cached GPU activity, anonymous provider reachability and local budget |
 | GET /api/replays | Server-curated public_replay rows, count and provenance note |
 
-Summaries include status, target, policy, target_met, timestamps, reason,
+Summaries include status, target, search_mode (when recorded), policy, target_met, timestamps, reason,
 provenance, elapsed_seconds, api_worker_finished and api_cleanup_verified.
 The admission boundary is explicit in api_admitted_at, api_deadline_at and
 api_execution_limit_seconds; api_cleanup_grace_seconds is the worker's TERM
@@ -265,3 +271,13 @@ performed. A fake SQLite transaction delay plus wall-clock jump verifies that
 the published admission/deadline timestamps are sampled after successful
 admission, while the IP quota retains its original attempt timestamp.
 Earlier tests-a/b/c/d logs remain present.
+
+## Search provenance in published evaluation evidence
+
+`GET /api/evaluations/{id}` retains each row's validated `search_mode`,
+`search_stop_reason`, `search_rounds_executed`, `first_target_met_round`, and
+`baseline_target_met`, together with its existing terminal status. The campaign
+mode is also returned if explicitly recorded. No mode is inferred for older
+rows or campaigns. A target-met observation does not erase a later failed or
+budget-limited terminal status. The curated publication requirement and fixture
+exclusion remain unchanged.

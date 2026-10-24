@@ -37,6 +37,8 @@ import {
   text,
   usd,
   validateSubmission,
+  searchModeLabel,
+  type SearchMode,
   verificationRows,
   type Dict,
   type RunEvent,
@@ -132,6 +134,7 @@ function Home() {
     [target, setTarget] = useState("fix-oom"),
     [fit, setFit] = useState("22"),
     [budget, setBudget] = useState("0.60"),
+    [searchMode, setSearchMode] = useState<SearchMode>("until_target"),
     [precision, setPrecision] = useState(false),
     [batch, setBatch] = useState(true),
     [slowdown, setSlowdown] = useState("25"),
@@ -185,6 +188,7 @@ function Home() {
         : { script_text: script }),
       target: target === "fit" ? `fit:${fit}GB` : target,
       budget,
+      search_mode: searchMode,
       policy: {
         allow_numerics_change: precision,
         allow_model_change: false,
@@ -485,6 +489,24 @@ function Home() {
               </span>
             </label>
           </div>
+          <label className="field">
+            Search mode
+            <select
+              value={searchMode}
+              onChange={(e) => setSearchMode(e.target.value as SearchMode)}
+              aria-describedby="search-mode-note"
+            >
+              <option value="until_target">Stop when target is met</option>
+              <option value="bounded_pareto">
+                Explore more configurations
+              </option>
+            </select>
+          </label>
+          <p id="search-mode-note" className="caption">
+            Exploration can continue after a successful fix, up to six rounds
+            within the same time, budget and policy limits. Verified results are
+            kept if a later attempt stops.
+          </p>
           <p className="caption">
             Model structure stays unchanged. Costs and any unresolved charges
             appear in the run report.
@@ -685,7 +707,9 @@ function RunPage({ runId }: { runId: string }) {
     after = analysisOf(report, "after"),
     diagnosis = record(report.diagnosis),
     causes = rows(diagnosis.root_causes),
-    allocator = record(report.allocator);
+    allocator = record(report.allocator),
+    search = record(report.search),
+    summary = record(report.summary);
   const downloads = [
     "patch.diff",
     "report.md",
@@ -785,6 +809,57 @@ function RunPage({ runId }: { runId: string }) {
               note={`${numeric(usage.calls) ?? "Unknown"} calls · known subtotal ${usd(usage.known_cost_usd)}`}
             />
           </div>
+          <Section title="Search outcome">
+            <dl className="search-details">
+              <div>
+                <dt>Mode</dt>
+                <dd>{searchModeLabel(search.mode ?? run.search_mode)}</dd>
+              </div>
+              <div>
+                <dt>Baseline already meets target</dt>
+                <dd>
+                  {search.baseline_target_met === true
+                    ? "Yes — before repair"
+                    : search.baseline_target_met === false
+                      ? "No"
+                      : "Unknown"}
+                </dd>
+              </div>
+              <div>
+                <dt>Exploration status</dt>
+                <dd>{search.mode ? human(run.status) : "Not recorded"}</dd>
+              </div>
+              <div>
+                <dt>Stopped because</dt>
+                <dd>{human(search.stop_reason)}</dd>
+              </div>
+              <div>
+                <dt>Rounds executed</dt>
+                <dd>{numeric(search.rounds_executed) ?? "Unknown"}</dd>
+              </div>
+              <div>
+                <dt>Selected configuration meets target</dt>
+                <dd>
+                  {run.provenance === "recorded_baseline"
+                    ? "N/A — baseline only"
+                    : summary.target_met === true
+                      ? "Yes"
+                      : summary.target_met === false
+                        ? "No"
+                        : "Unknown"}
+                </dd>
+              </div>
+              <div>
+                <dt>First verified target round</dt>
+                <dd>{numeric(search.first_target_met_round) ?? "Unknown"}</dd>
+              </div>
+            </dl>
+            <p className="caption">
+              Target success and exploration status are separate. A later stop
+              keeps the selected verified configuration and its downloads.
+              Historical runs without search metadata remain unknown.
+            </p>
+          </Section>
           <div className="run-grid">
             <aside className="panel timeline-panel">
               <div className="section-heading">

@@ -1,0 +1,91 @@
+FFFFFFFFFFFF......................................................       [100%]
+=================================== FAILURES ===================================
+_________________ test_default_stops_at_first_verified_target __________________
+tests/test_bounded_search.py:56: in test_default_stops_at_first_verified_target
+    assert result["search"] == {
+E   AssertionError: assert {'mode': 'unt...reached', ...} == {'mode': 'unt...get_met', ...}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Differing items:
+E     {'rounds_executed': 6} != {'rounds_executed': 1}
+E     {'stop_reason': 'max_rounds_reached'} != {'stop_reason': 'target_met'}
+E     {'first_target_met_round': None} != {'first_target_met_round': 1}
+E     Use -v to get more diff
+_ test_bounded_continues_to_real_memory_latency_tradeoff_with_independent_patches _
+tests/test_bounded_search.py:76: in test_bounded_continues_to_real_memory_latency_tradeoff_with_independent_patches
+    assert result["search"]["first_target_met_round"] == 1
+E   assert None == 1
+___________ test_bounded_frontier_removes_genuinely_dominated_keeps ____________
+tests/test_bounded_search.py:100: in test_bounded_frontier_removes_genuinely_dominated_keeps
+    assert len(result["pareto"]["points"]) == 3
+E   assert 0 == 3
+E    +  where 0 = len([])
+_ test_interrupted_exploration_preserves_success_as_partial[budget-budget_exceeded-budget_exceeded] _
+tests/test_bounded_search.py:135: in test_interrupted_exploration_preserves_success_as_partial
+    assert result["search"]["first_target_met_round"] == 1
+E   assert None == 1
+_ test_interrupted_exploration_preserves_success_as_partial[deadline-deadline-timeout] _
+tests/test_bounded_search.py:135: in test_interrupted_exploration_preserves_success_as_partial
+    assert result["search"]["first_target_met_round"] == 1
+E   assert None == 1
+_ test_interrupted_exploration_preserves_success_as_partial[verify-pipeline_error-failed] _
+tests/test_bounded_search.py:133: in test_interrupted_exploration_preserves_success_as_partial
+    assert result["status"] == status
+E   AssertionError: assert 'completed' == 'failed'
+E     
+E     - failed
+E     + completed
+_ test_post_success_revert_preserves_selected_configuration[second0-verified_target_regression] _
+tests/test_bounded_search.py:158: in test_post_success_revert_preserves_selected_configuration
+    assert [r["decision"] for r in store.rounds(result["run_id"])] == ["keep", "revert"]
+E   AssertionError: assert ['revert', 'revert'] == ['keep', 'revert']
+E     
+E     At index 0 diff: 'revert' != 'keep'
+E     Use -v to get more diff
+_ test_post_success_revert_preserves_selected_configuration[second1-no_memory_improvement] _
+tests/test_bounded_search.py:158: in test_post_success_revert_preserves_selected_configuration
+    assert [r["decision"] for r in store.rounds(result["run_id"])] == ["keep", "revert"]
+E   AssertionError: assert ['revert', 'revert'] == ['keep', 'revert']
+E     
+E     At index 0 diff: 'revert' != 'keep'
+E     Use -v to get more diff
+_ test_post_success_revert_preserves_selected_configuration[second2-verification_hard_constraints_unmet] _
+tests/test_bounded_search.py:158: in test_post_success_revert_preserves_selected_configuration
+    assert [r["decision"] for r in store.rounds(result["run_id"])] == ["keep", "revert"]
+E   AssertionError: assert ['revert', 'revert'] == ['keep', 'revert']
+E     
+E     At index 0 diff: 'revert' != 'keep'
+E     Use -v to get more diff
+___________ test_needs_more_information_stops_after_verified_success ___________
+tests/test_bounded_search.py:174: in test_needs_more_information_stops_after_verified_success
+    assert result["status"] == "needs_human" and len(verifies) == 1
+E   AssertionError: assert ('needs_human' == 'needs_human'
+E     
+E       needs_human and 0 == 1)
+E    +  where 0 = len([])
+____________ test_selected_new_keep_cannot_reuse_old_after_evidence ____________
+tests/test_bounded_search.py:190: in test_selected_new_keep_cannot_reuse_old_after_evidence
+    assert result["status"] == "needs_human"
+E   AssertionError: assert 'completed' == 'needs_human'
+E     
+E     - needs_human
+E     + completed
+____________ test_last_bounded_round_needs_no_next_prompt_evidence _____________
+tests/test_bounded_search.py:213: in test_last_bounded_round_needs_no_next_prompt_evidence
+    assert store.get_run(result["run_id"])["after_evidence_status"] == "unavailable"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'after_evidence_status'
+=========================== short test summary info ============================
+FAILED tests/test_bounded_search.py::test_default_stops_at_first_verified_target
+FAILED tests/test_bounded_search.py::test_bounded_continues_to_real_memory_latency_tradeoff_with_independent_patches
+FAILED tests/test_bounded_search.py::test_bounded_frontier_removes_genuinely_dominated_keeps
+FAILED tests/test_bounded_search.py::test_interrupted_exploration_preserves_success_as_partial[budget-budget_exceeded-budget_exceeded]
+FAILED tests/test_bounded_search.py::test_interrupted_exploration_preserves_success_as_partial[deadline-deadline-timeout]
+FAILED tests/test_bounded_search.py::test_interrupted_exploration_preserves_success_as_partial[verify-pipeline_error-failed]
+FAILED tests/test_bounded_search.py::test_post_success_revert_preserves_selected_configuration[second0-verified_target_regression]
+FAILED tests/test_bounded_search.py::test_post_success_revert_preserves_selected_configuration[second1-no_memory_improvement]
+FAILED tests/test_bounded_search.py::test_post_success_revert_preserves_selected_configuration[second2-verification_hard_constraints_unmet]
+FAILED tests/test_bounded_search.py::test_needs_more_information_stops_after_verified_success
+FAILED tests/test_bounded_search.py::test_selected_new_keep_cannot_reuse_old_after_evidence
+FAILED tests/test_bounded_search.py::test_last_bounded_round_needs_no_next_prompt_evidence
+12 failed, 54 passed in 8.70s

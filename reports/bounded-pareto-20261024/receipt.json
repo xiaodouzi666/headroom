@@ -1,0 +1,63 @@
+{
+  "format_version": 1,
+  "base_commit": "3d68287a042290d5dad66c64bed84bda6bcb79e5",
+  "frozen_at_utc": "2026-10-24T12:41:23.892939+00:00",
+  "source_sha256": {
+    "headroom/orchestrator.py": "7508ea618623969756b439e4ae64dce56dadb7dc6eec248cb58f0c3beb6848a1",
+    "headroom/search.py": "205f04330677046425248601eb0ed0be3ece01ad9e64db7a54b01f6dbc6b8138",
+    "tests/test_orchestrator.py": "5e65804b51e4a8b4f69e351600e2c2484feaa82fcab3514096c958cf2c65dda6",
+    "tests/test_bounded_search.py": "25cf4f27cbc036d15c87822988bd1ef5b0fe15a472b15bf1784c7b92abffca4e",
+    "tests/test_search.py": "686a10a8f0a673acf941205f02eb8ba5653b98d30bd516725568d9c89ee8a37f",
+    "docs/SEARCH.md": "38f8ed4518cc1b5c684ec8c34198b5d519a509a77b39c4fb682fb8c9f35f3099",
+    "docs/PLAN.md": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56"
+  },
+  "scope": "Explicit bounded_pareto orchestration; original until_target and keep gates preserved",
+  "command": ".venv/bin/python reports/bounded-pareto-20261024/offline_tests.py -q tests/test_bounded_search.py tests/test_orchestrator.py tests/test_search.py --tb=short",
+  "verification": [
+    {
+      "log": "pytest-first.log",
+      "result": "12 failed, 54 passed in 8.70s",
+      "cause": "New test fixture accidentally encoded literal backslash-n; preserved failed log. No production gate weakened."
+    },
+    {
+      "log": "pytest-second.log",
+      "result": "66 passed in 8.30s"
+    },
+    {
+      "log": "pytest-final.log",
+      "result": "68 passed in 9.69s"
+    }
+  ],
+  "guards": [
+    "Independent DNS/socket denial installed before pytest import",
+    "Python audit hook forbids opening actual project .env",
+    "All responses use offline MockTransport; no paid provider, GPU or user target execution",
+    "Existing PatchEngine isolation retained; patch checks are existing no-network sandbox operations"
+  ],
+  "contracts": {
+    "search_fields": [
+      "mode",
+      "baseline_target_met",
+      "first_target_met_round",
+      "stop_reason",
+      "rounds_executed"
+    ],
+    "default": "until_target: first verified kept target ends search",
+    "bounded": "Continue original measured-memory improvement loop up to <=6 rounds, preserving all existing numerical and throughput constraints",
+    "selected": "Later target regression is reverted; budget/deadline/errors retain successful selected source/verification/artifacts with a partial run status",
+    "evidence": "New selected keep cannot display prior after evidence/image; unavailable fresh evidence stops another round",
+    "pareto": "Only retained verified configurations; original-source cumulative patches; true dominance filtering; no required tier count"
+  },
+  "examples": [],
+  "limitations": [
+    "Synthetic observations are implementation fixtures, not GPU/model acceptance.",
+    "Bounded completion means configured rounds were consumed, not exhaustive search or optimality.",
+    "No runtime authorization or live budget changed; no PLAN edit or commit."
+  ],
+  "report_sha256": {
+    "offline_tests.py": "11df05cc17c9bd1ce6bec45fa26adef9460b402518a9dc3cadeecf4df24164aa",
+    "pytest-final.log": "cbe86473f60d27a2d20a388c87bb7da12662fd971bf5b3c52c05cf959a3afaa3",
+    "pytest-first.log": "29654f1aaefd67f007b86ed5d2f25f9c334f0cdb3b6a8465a2495c796dfaf4fe",
+    "pytest-second.log": "f2a05440ed4232ac9998be2a1844d4b4ccec691c531837d13d9cebbf292a44bd"
+  }
+}

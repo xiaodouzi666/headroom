@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-24T12:42:04.529636+00:00",
+  "base_head": "3d68287a042290d5dad66c64bed84bda6bcb79e5",
+  "scope": "Explicit search_mode routing and evidence preservation across existing public interfaces",
+  "fields": {
+    "search_mode": [
+      "until_target",
+      "bounded_pareto"
+    ],
+    "default": "until_target",
+    "precedence": "explicit CLI/function argument > corresponding YAML > default",
+    "evaluation_mode_location": "top-level version-1 evaluation Manifest; not project headroom.yaml"
+  },
+  "source_sha256": [
+    {
+      "path": "headroom/cli.py",
+      "sha256": "e833e0ad18c83e916fa34ad8c3a31c4f1a200a72bed1cd5636ef18cecb603983"
+    },
+    {
+      "path": "headroom/project_config.py",
+      "sha256": "9bb4a49439f19688e63bac753a8c02a2d09b60e1c7f8a2ef980dbb9093534619"
+    },
+    {
+      "path": "headroom/api/app.py",
+      "sha256": "cfdc3ce6615e78f44d2a50abcf4f604b307c0afa039621d641b4b9dfcfc28e18"
+    },
+    {
+      "path": "headroom/api/queue.py",
+      "sha256": "9d3133d3d7d178a571355ebc64706b13953e3f836cda38d6fc27a5638846448e"
+    },
+    {
+      "path": "headroom/api/evaluations.py",
+      "sha256": "6bd6eadf19ee15168b7d5594f50fb6ac57d68f74668aa6eef5a5fb8a309d29c8"
+    },
+    {
+      "path": "headroom/evaluation.py",
+      "sha256": "488f739fba1e5245070c037caa2bcee90e23968d3ea1036fd778a23558dbef9c"
+    },
+    {
+      "path": "headroom/watch.py",
+      "sha256": "1f4fcdf150c20726ce9e6f4472b1b69636ea17893de826d7c86e620c5ff7a228"
+    },
+    {
+      "path": "tests/test_search_mode_interfaces.py",
+      "sha256": "154f184d160800f9e14906548edf43777da39216d031e83bfc3d3d91bc093599"
+    },
+    {
+      "path": "docs/CLI.md",
+      "sha256": "2db7b2638f8f87193734c2200ea32daf42528fafdfaba1591a4c5c8083153d1b"
+    },
+    {
+      "path": "docs/API.md",
+      "sha256": "b1c1f48b64fbf007bd5486085a7988ed2ddc4b81e2d3e356a02054b1247dc3ec"
+    },
+    {
+      "path": "docs/EVALUATION.md",
+      "sha256": "01e90da0310419683e75ecdb3397cc6b58bc9a6bd469c6f334ec88b4b2b806ef"
+    }
+  ],
+  "validation": [
+    {
+      "log": "regressions.txt",
+      "result": "291 passed in 35.13s",
+      "scope": "interfaces, CLI, project config, API, deadlines, evaluation, publication"
+    },
+    {
+      "log": "final-focused.txt",
+      "result": "169 passed, 12 deselected in 3.56s",
+      "scope": "ablation-mode revision and non-CPU Watch fixture chain"
+    },
+    {
+      "log": "final-revision-1.txt",
+      "result": "170 passed, 12 deselected in 2.97s",
+      "scope": "final actual-search fallback and fixture-campaign-to-public-API chain"
+    },
+    {
+      "log": "lint-final.txt",
+      "result": "All checks passed!"
+    },
+    {
+      "log": "planning-smoke.json",
+      "result": "Real CLI planning only; bounded_pareto; executed=false; unchanged campaign cap 0.6; authorization_expanded=false"
+    }
+  ],
+  "preserved_initial_evidence": {
+    "log": "focused-initial.txt",
+    "result": "5 failed, 42 passed",
+    "cause": "Test assertions treated escaped Markdown as unescaped text and watch.md as JSON; corrected tests to inspect escaped output and watch.json. No production correction required for these failures."
+  },
+  "coverage": [
+    "CLI fix including target=reclaim and Watch modes",
+    "CLI > YAML > default, including explicit default override",
+    "Invalid mode rejected before source preparation, Lab or live-profile access",
+    "API mode persists in queued run, api_source and actual FixRequest",
+    "New campaign plan/document/pending and terminal rows retain actual requested mode",
+    "Terminal failure after target achievement remains a failure with stop reason",
+    "Missing final report retains actual result.search; historical missing fields remain None",
+    "Published campaign and row projections retain validated mode and stop metadata",
+    "Ablation different-known/mixed-known-unknown modes excluded; all-unknown legacy comparisons retain None",
+    "CLI to actual Watch preflight validates whitelist and saves requested mode to watch.json"
+  ],
+  "limitations": [
+    "Watch YAML consumes only search_mode; unrelated Watch flags retain previous CLI/default semantics",
+    "Reclaim remains existing fix --target reclaim entrypoint; no new command alias",
+    "Explicit eval mode override is limited to plan-only/live; baseline/validation do not perform search",
+    "Mode selection does not guarantee two retained/non-dominated points or bf16 and does not close unresolved s2 acceptance gates",
+    "No historical modes were backfilled; no live evaluation results were generated"
+  ],
+  "guards": [
+    "Independent process DNS/socket outbound guard",
+    "Independent Python audit hook rejects real project .env access",
+    "Injected fixture runners and in-process ASGI TestClient only; no model HTTP dispatch"
+  ],
+  "boundaries": {
+    "gpu_executed": false,
+    "model_api_called": false,
+    "real_env_read": false,
+    "assets_downloaded": false,
+    "live_profile_enabled": false,
+    "plan_modified": false,
+    "committed": false
+  },
+  "review": "payment_readiness final read-only review found no outstanding P1/P2",
+  "frozen": true,
+  "integration": "root notified and owns final full suite",
+  "driver_format_revision": {
+    "scope": "Only the two ignored report drivers were Ruff-formatted after source/test freeze; original .py.raw copies retained. No implementation, tests or docs changed.",
+    "revalidation": "planning-smoke-format-revision.json exactly equals planning-smoke.json; scoped driver Ruff passes",
+    "sha256": {
+      "offline_tests.py": "fe5496c76341acd2dfc7a22d351a87184264be35a91b3a36fec8cc7bc7083069",
+      "planning_smoke.py": "1d32e8e1e17b65e7193e5fb9c8de35f6a5d6e95b67b66d19f91060871661d420"
+    }
+  }
+}

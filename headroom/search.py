@@ -8,10 +8,11 @@ import shlex
 import shutil
 import subprocess
 from dataclasses import dataclass
+from decimal import Decimal
 from pathlib import Path
 
 from headroom.lab.runner import copy_source
-from headroom.verify.compare import REQUIRED_CHECKS
+from headroom.verify.compare import REQUIRED_CHECKS, parse_target
 from headroom.verify.policy import safe_relative_path, validate_env_changes
 
 HARD_CHECKS = REQUIRED_CHECKS
@@ -46,6 +47,30 @@ def peak_gb(result):
     return finite(result.get("peak_alloc_gb"), positive=True)
 
 
+def baseline_target_met(result, target, *, required_steps):
+    """Observed baseline goal only; never a verified repair or Pareto point."""
+    if (
+        result.get("capture_complete") is not True
+        or result.get("cleanup_verified") is not True
+        or result.get("status") not in {"completed", "oom"}
+    ):
+        return None
+    kind, limit = parse_target(target)
+    if result["status"] == "oom":
+        return None if kind == "reclaim" else False
+    if result.get("steps") != required_steps:
+        return None
+    if kind == "fix-oom":
+        return True
+    peak_bytes = finite(result.get("peak_allocated_bytes"), positive=True)
+    peak = Decimal(str(peak_bytes)) if peak_bytes is not None else None
+    if peak is None and (fallback := peak_gb(result)) is not None:
+        peak = Decimal(str(fallback)) * 10**9
+    if peak is None:
+        return None
+    return peak <= limit if kind == "fit" else False
+
+
 def timing_trusted(result):
     return (
         result.get("shared_gpu") is False
@@ -65,7 +90,9 @@ class KeepDecision:
     notes: tuple[str, ...] = ()
 
 
-def decide_keep(current, candidate, verification, *, original_baseline, policy):
+def decide_keep(
+    current, candidate, verification, *, original_baseline, policy, preserve_target=False
+):
     """Require original-baseline scientific gates plus improvement over current kept state."""
     checks = verification.get("checks", {})
     if not isinstance(checks, dict) or any(checks.get(key) is not True for key in HARD_CHECKS):
@@ -98,6 +125,8 @@ def decide_keep(current, candidate, verification, *, original_baseline, policy):
         return KeepDecision(False, "numerics_not_verified")
     if equivalent and checks.get("loss_tolerance") is not True:
         return KeepDecision(False, "numerics_not_verified")
+    if preserve_target and verification.get("target_met") is not True:
+        return KeepDecision(False, "verified_target_regression")
     notes = []
     if no_reference_allowed:
         notes.append(

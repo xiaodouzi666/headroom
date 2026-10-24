@@ -228,7 +228,15 @@ export function verificationRows(
     })),
   ];
 }
+export type SearchMode = "until_target" | "bounded_pareto";
+export const searchModeLabel = (value: unknown) =>
+  value === "until_target"
+    ? "Stop when target is met"
+    : value === "bounded_pareto"
+      ? "Explore more configurations"
+      : "Not recorded";
 export interface Submission {
+  search_mode?: SearchMode;
   script_text?: string;
   example_id?: string;
   target: string;
@@ -248,6 +256,11 @@ export function validateSubmission(input: Submission): string | null {
     new TextEncoder().encode(input.script_text).length > 1024 * 1024
   )
     return "The script must be smaller than 1 MiB.";
+  if (
+    input.search_mode !== undefined &&
+    !["until_target", "bounded_pareto"].includes(input.search_mode)
+  )
+    return "Choose a valid search mode.";
   const budget = decimal(input.budget);
   if (budget === null || budget <= 0 || budget > 5)
     return "Enter a run budget greater than $0 and at most $5.";

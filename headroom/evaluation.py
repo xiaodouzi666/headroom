@@ -23,6 +23,7 @@ from headroom.budget import money
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CONDITIONS = ("full_ultra", "traceback_ultra", "full_super")
+SEARCH_MODES = ("until_target", "bounded_pareto")
 
 
 class Scenario(BaseModel):
@@ -47,6 +48,7 @@ class Scenario(BaseModel):
 class Manifest(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     version: Literal[1]
+    search_mode: Literal["until_target", "bounded_pareto"] = "until_target"
     scenarios: list[Scenario] = Field(min_length=1)
 
 
@@ -218,12 +220,16 @@ def campaign_plan(
     scenario_ids=None,
     conditions=("full_ultra",),
     policy_names=("default",),
+    search_mode=None,
     per_run_budget_usd="0.6",
     campaign_budget_usd="0.6",
     daily_budget_usd="12",
 ):
     """Pure planning: no credential, runtime-profile, target import, GPU or provider access."""
     manifest = load_manifest(manifest_path, project_root=project_root)
+    selected_mode = manifest.search_mode if search_mode is None else search_mode
+    if not isinstance(selected_mode, str) or selected_mode not in SEARCH_MODES:
+        raise ValueError("Select search_mode: until_target or bounded_pareto")
     cases = _campaign_cases(manifest, scenario_ids, conditions, policy_names)
     policies = resolve_policies(policy_names)
     per_run, cap, daily = (
@@ -247,6 +253,7 @@ def campaign_plan(
     ]
     return {
         "mode": "campaign_plan",
+        "search_mode": selected_mode,
         "executed": False,
         "scenarios": [case.id for case in cases],
         "targets": [
@@ -598,6 +605,7 @@ def result_row(case, condition, result, usage, *, provenance):
     document = _dict(result.get("report"))
     summary = _dict(document.get("summary"))
     measurements = _dict(document.get("measurements"))
+    search = _dict(result.get("search")) or _dict(document.get("search"))
     before, after = _dict(measurements.get("before")), _dict(measurements.get("after"))
     first = _first_diagnosis(result.get("run_dir"))
     target = summary.get("target_met")
@@ -611,6 +619,11 @@ def result_row(case, condition, result, usage, *, provenance):
         "condition": condition,
         "provenance": provenance,
         "status": result.get("status", "unknown"),
+        "search_mode": search.get("mode") if search.get("mode") in SEARCH_MODES else None,
+        "search_stop_reason": search.get("stop_reason"),
+        "search_rounds_executed": search.get("rounds_executed"),
+        "first_target_met_round": search.get("first_target_met_round"),
+        "baseline_target_met": search.get("baseline_target_met"),
         "run_id": result.get("run_id"),
         "report_json": result.get("report_json"),
         "run_dir": result.get("run_dir"),
@@ -748,6 +761,21 @@ def ablation_summary(rows):
                 }
             )
             continue
+        modes = [row.get("search_mode") for row in candidates]
+        # Preserve legacy all-unknown comparisons without inventing their mode.
+        # A recorded mode changes even the first-round diagnostic context.
+        if any(mode is not None for mode in modes) and (
+            any(mode not in SEARCH_MODES for mode in modes)
+            or any(mode != modes[0] for mode in modes)
+        ):
+            excluded.append(
+                {
+                    "scenario_id": scenario_id,
+                    "policy_name": policy_name,
+                    "reason": "search_mode_not_comparable",
+                }
+            )
+            continue
         hashes = {row.get("source_sha256") for row in candidates}
         if len(hashes) != 1 or None in hashes:
             excluded.append(
@@ -776,6 +804,7 @@ def ablation_summary(rows):
                 "scenario_id": scenario_id,
                 "policy_name": policy_name,
                 "policy": candidates[0].get("policy"),
+                "search_mode": modes[0],
                 "runs": {row["condition"]: row["run_id"] for row in candidates},
                 "correct": {row["condition"]: row["first_cause_matches"] for row in candidates},
             }
@@ -825,6 +854,8 @@ CAMPAIGN_COLUMNS = (
     ("policy_name", "Policy"),
     ("provenance", "Evidence"),
     ("status", "State"),
+    ("search_mode", "Search mode"),
+    ("search_stop_reason", "Search stop reason"),
     ("ground_truth", "Authored cause"),
     ("first_cause_matches", "First cause matches"),
     ("target_met", "Target met"),
@@ -941,6 +972,7 @@ def render_campaign(document):
         "",
         "Status: " + _cell(document.get("status")),
         "Evidence: " + _cell(document["provenance"]),
+        "Requested search mode: " + _cell(document.get("search_mode")),
         "Offline fixtures are excluded from live scores. Missing values remain unknown.",
         "Costs include failed and partial attempts. Throughput is not inferred from step time.",
         "",
@@ -1049,6 +1081,7 @@ def _campaign(
     scenario_ids,
     conditions,
     policy_names,
+    search_mode,
     per_run_budget_usd,
     campaign_budget_usd,
     daily_budget_usd,
@@ -1067,6 +1100,7 @@ def _campaign(
         scenario_ids=scenario_ids,
         conditions=conditions,
         policy_names=policy_names,
+        search_mode=search_mode,
         per_run_budget_usd=per_run_budget_usd,
         campaign_budget_usd=campaign_budget_usd,
         daily_budget_usd=daily_budget_usd,
@@ -1086,6 +1120,7 @@ def _campaign(
     )
     document = {
         "mode": "campaign",
+        "search_mode": plan["search_mode"],
         "provenance": provenance,
         "status": "running",
         "manifest_sha256": hashlib.sha256(Path(manifest_path).read_bytes()).hexdigest(),
@@ -1096,6 +1131,7 @@ def _campaign(
                 "scenario_id": case.id,
                 "condition": condition,
                 "policy_name": policy_name,
+                "search_mode": plan["search_mode"],
                 "policy": policy.model_dump(),
                 "status": "pending",
                 "provenance": provenance,
@@ -1145,6 +1181,7 @@ def _campaign(
                     execution_argv=execution["execution_argv"],
                     repository_mode=execution["repository_mode"],
                     target=case.target,
+                    search_mode=plan["search_mode"],
                     reclaim_reduction_pct=case.reclaim_reduction_pct,
                     policy=policy,
                     budget_usd=str(per_run),
@@ -1177,6 +1214,7 @@ def _campaign(
                     "usage": usage,
                     "cost_usd": _cost(usage),
                 }
+            row["search_mode"] = plan["search_mode"]
             row["target"] = case.target
             row["reclaim_reduction_pct"] = case.reclaim_reduction_pct
             row["policy_name"] = policy_name
@@ -1211,6 +1249,7 @@ def run_campaign(
     scenario_ids=None,
     conditions=("full_ultra",),
     policy_names=("default",),
+    search_mode=None,
     per_run_budget_usd="0.6",
     campaign_budget_usd="0.6",
     daily_budget_usd="12",
@@ -1226,6 +1265,18 @@ def run_campaign(
     from headroom.orchestrator import run_fix
     from headroom.runtime import read_live_profile
 
+    # Reject invalid selection before profile/credential access or campaign creation.
+    campaign_plan(
+        manifest_path,
+        project_root=project_root,
+        scenario_ids=scenario_ids,
+        conditions=conditions,
+        policy_names=policy_names,
+        search_mode=search_mode,
+        per_run_budget_usd=per_run_budget_usd,
+        campaign_budget_usd=campaign_budget_usd,
+        daily_budget_usd=daily_budget_usd,
+    )
     read_live_profile(runtime_profile)
     return _campaign(
         manifest_path,
@@ -1234,6 +1285,7 @@ def run_campaign(
         scenario_ids=scenario_ids,
         conditions=conditions,
         policy_names=policy_names,
+        search_mode=search_mode,
         per_run_budget_usd=per_run_budget_usd,
         campaign_budget_usd=campaign_budget_usd,
         daily_budget_usd=daily_budget_usd,
@@ -1255,6 +1307,7 @@ def run_fixture_campaign(
         scenario_ids=kwargs.get("scenario_ids"),
         conditions=kwargs.get("conditions", ("full_ultra",)),
         policy_names=kwargs.get("policy_names", ("default",)),
+        search_mode=kwargs.get("search_mode"),
         per_run_budget_usd=kwargs.get("per_run_budget_usd", "0.6"),
         campaign_budget_usd=kwargs.get("campaign_budget_usd", "5"),
         daily_budget_usd="12",

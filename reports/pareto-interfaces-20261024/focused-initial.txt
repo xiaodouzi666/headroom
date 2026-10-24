@@ -1,0 +1,348 @@
+................................FFF.........FF.                          [100%]
+=================================== FAILURES ===================================
+_ test_campaign_records_effective_mode_and_preserves_terminal_failure[None-None-until_target] _
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-44/test_campaign_records_effectiv0')
+configured = None, explicit = None, expected = 'until_target'
+
+    @pytest.mark.parametrize(
+        "configured, explicit, expected",
+        [
+            (None, None, "until_target"),
+            ("bounded_pareto", None, "bounded_pareto"),
+            ("bounded_pareto", "until_target", "until_target"),
+        ],
+    )
+    def test_campaign_records_effective_mode_and_preserves_terminal_failure(
+        tmp_path, configured, explicit, expected
+    ):
+        path = make_manifest(tmp_path, configured)
+        captured = []
+    
+        def runner(request, *, store, run_id, **kwargs):
+            captured.append(request)
+            store.create_run(run_id, {"status": "budget_exceeded", "provenance": "offline_fixture"})
+            store.add_llm_call(run_id, {"model": "offline", "role": "diagnose", "cost_usd": "0.1"})
+            return {
+                "run_id": run_id,
+                "status": "budget_exceeded",
+                "reason": "fixture_budget_stop",
+                "report": {
+                    "summary": {"target_met": True},
+                    "search": {
+                        "mode": request.search_mode,
+                        "stop_reason": "budget_exceeded",
+                        "rounds_executed": 2,
+                        "first_target_met_round": 1,
+                        "baseline_target_met": False,
+                    },
+                },
+            }
+    
+        result = run_fixture_campaign(
+            path,
+            project_root=tmp_path,
+            output_root=tmp_path / "out",
+            runner=runner,
+            services_factory=lambda *args: None,
+            search_mode=explicit,
+        )
+        assert result["search_mode"] == result["plan"]["search_mode"] == expected
+        assert captured[0].search_mode == expected
+        row = result["rows"][0]
+        assert row["search_mode"] == expected and row["search_stop_reason"] == "budget_exceeded"
+        assert row["status"] == "budget_exceeded" and row["target_met"] is True
+        assert row["reason"] == "fixture_budget_stop" and row["first_target_met_round"] == 1
+        assert row["baseline_target_met"] is False and row["search_rounds_executed"] == 2
+        assert result["summary"]["status"] == "pending"  # fixtures cannot become live scores
+        persisted = json.loads(Path(result["report_path"]).read_text())
+        assert persisted["rows"][0]["search_mode"] == expected
+        projected = _public_row(row, "offline_fixture")
+        assert projected["search_mode"] == expected
+        assert projected["search_stop_reason"] == "budget_exceeded"
+        markdown = render_campaign(result)
+        assert "Search mode" in markdown and "Search stop reason" in markdown
+>       assert expected in markdown and "budget_exceeded" in markdown
+E       AssertionError: assert ('until_target' in '# Evaluation campaign\n\nStatus: finished\nEvidence: offline\\_fixture\nRequested search mode: until\\_target\nOfflin...-condition ablation remains pending.\nOffline plumbing tests do not establish model diagnosis or repair performance.\n')
+
+tests/test_search_mode_interfaces.py:279: AssertionError
+_ test_campaign_records_effective_mode_and_preserves_terminal_failure[bounded_pareto-None-bounded_pareto] _
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-44/test_campaign_records_effectiv1')
+configured = 'bounded_pareto', explicit = None, expected = 'bounded_pareto'
+
+    @pytest.mark.parametrize(
+        "configured, explicit, expected",
+        [
+            (None, None, "until_target"),
+            ("bounded_pareto", None, "bounded_pareto"),
+            ("bounded_pareto", "until_target", "until_target"),
+        ],
+    )
+    def test_campaign_records_effective_mode_and_preserves_terminal_failure(
+        tmp_path, configured, explicit, expected
+    ):
+        path = make_manifest(tmp_path, configured)
+        captured = []
+    
+        def runner(request, *, store, run_id, **kwargs):
+            captured.append(request)
+            store.create_run(run_id, {"status": "budget_exceeded", "provenance": "offline_fixture"})
+            store.add_llm_call(run_id, {"model": "offline", "role": "diagnose", "cost_usd": "0.1"})
+            return {
+                "run_id": run_id,
+                "status": "budget_exceeded",
+                "reason": "fixture_budget_stop",
+                "report": {
+                    "summary": {"target_met": True},
+                    "search": {
+                        "mode": request.search_mode,
+                        "stop_reason": "budget_exceeded",
+                        "rounds_executed": 2,
+                        "first_target_met_round": 1,
+                        "baseline_target_met": False,
+                    },
+                },
+            }
+    
+        result = run_fixture_campaign(
+            path,
+            project_root=tmp_path,
+            output_root=tmp_path / "out",
+            runner=runner,
+            services_factory=lambda *args: None,
+            search_mode=explicit,
+        )
+        assert result["search_mode"] == result["plan"]["search_mode"] == expected
+        assert captured[0].search_mode == expected
+        row = result["rows"][0]
+        assert row["search_mode"] == expected and row["search_stop_reason"] == "budget_exceeded"
+        assert row["status"] == "budget_exceeded" and row["target_met"] is True
+        assert row["reason"] == "fixture_budget_stop" and row["first_target_met_round"] == 1
+        assert row["baseline_target_met"] is False and row["search_rounds_executed"] == 2
+        assert result["summary"]["status"] == "pending"  # fixtures cannot become live scores
+        persisted = json.loads(Path(result["report_path"]).read_text())
+        assert persisted["rows"][0]["search_mode"] == expected
+        projected = _public_row(row, "offline_fixture")
+        assert projected["search_mode"] == expected
+        assert projected["search_stop_reason"] == "budget_exceeded"
+        markdown = render_campaign(result)
+        assert "Search mode" in markdown and "Search stop reason" in markdown
+>       assert expected in markdown and "budget_exceeded" in markdown
+E       AssertionError: assert ('bounded_pareto' in '# Evaluation campaign\n\nStatus: finished\nEvidence: offline\\_fixture\nRequested search mode: bounded\\_pareto\nOffl...-condition ablation remains pending.\nOffline plumbing tests do not establish model diagnosis or repair performance.\n')
+
+tests/test_search_mode_interfaces.py:279: AssertionError
+_ test_campaign_records_effective_mode_and_preserves_terminal_failure[bounded_pareto-until_target-until_target] _
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-44/test_campaign_records_effectiv2')
+configured = 'bounded_pareto', explicit = 'until_target'
+expected = 'until_target'
+
+    @pytest.mark.parametrize(
+        "configured, explicit, expected",
+        [
+            (None, None, "until_target"),
+            ("bounded_pareto", None, "bounded_pareto"),
+            ("bounded_pareto", "until_target", "until_target"),
+        ],
+    )
+    def test_campaign_records_effective_mode_and_preserves_terminal_failure(
+        tmp_path, configured, explicit, expected
+    ):
+        path = make_manifest(tmp_path, configured)
+        captured = []
+    
+        def runner(request, *, store, run_id, **kwargs):
+            captured.append(request)
+            store.create_run(run_id, {"status": "budget_exceeded", "provenance": "offline_fixture"})
+            store.add_llm_call(run_id, {"model": "offline", "role": "diagnose", "cost_usd": "0.1"})
+            return {
+                "run_id": run_id,
+                "status": "budget_exceeded",
+                "reason": "fixture_budget_stop",
+                "report": {
+                    "summary": {"target_met": True},
+                    "search": {
+                        "mode": request.search_mode,
+                        "stop_reason": "budget_exceeded",
+                        "rounds_executed": 2,
+                        "first_target_met_round": 1,
+                        "baseline_target_met": False,
+                    },
+                },
+            }
+    
+        result = run_fixture_campaign(
+            path,
+            project_root=tmp_path,
+            output_root=tmp_path / "out",
+            runner=runner,
+            services_factory=lambda *args: None,
+            search_mode=explicit,
+        )
+        assert result["search_mode"] == result["plan"]["search_mode"] == expected
+        assert captured[0].search_mode == expected
+        row = result["rows"][0]
+        assert row["search_mode"] == expected and row["search_stop_reason"] == "budget_exceeded"
+        assert row["status"] == "budget_exceeded" and row["target_met"] is True
+        assert row["reason"] == "fixture_budget_stop" and row["first_target_met_round"] == 1
+        assert row["baseline_target_met"] is False and row["search_rounds_executed"] == 2
+        assert result["summary"]["status"] == "pending"  # fixtures cannot become live scores
+        persisted = json.loads(Path(result["report_path"]).read_text())
+        assert persisted["rows"][0]["search_mode"] == expected
+        projected = _public_row(row, "offline_fixture")
+        assert projected["search_mode"] == expected
+        assert projected["search_stop_reason"] == "budget_exceeded"
+        markdown = render_campaign(result)
+        assert "Search mode" in markdown and "Search stop reason" in markdown
+>       assert expected in markdown and "budget_exceeded" in markdown
+E       AssertionError: assert ('until_target' in '# Evaluation campaign\n\nStatus: finished\nEvidence: offline\\_fixture\nRequested search mode: until\\_target\nOfflin...-condition ablation remains pending.\nOffline plumbing tests do not establish model diagnosis or repair performance.\n')
+
+tests/test_search_mode_interfaces.py:279: AssertionError
+__________ test_cli_to_real_watch_preflight_and_saved_manifest[None] ___________
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-44/test_cli_to_real_watch_preflig0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d668e1ad1f0>
+mode = None
+
+    @pytest.mark.parametrize("mode", [None, "bounded_pareto"])
+    def test_cli_to_real_watch_preflight_and_saved_manifest(tmp_path, monkeypatch, mode):
+        import headroom.watch as watch_module
+    
+        source = tmp_path / "source"
+        source.mkdir()
+        (source / "train.py").write_text("print(1)\n")
+        original = watch_module.watch_command
+        seen = []
+    
+        def lab(*args, **kwargs):
+            seen.append(kwargs)
+            return {
+                "status": "completed",
+                "cleanup_verified": True,
+                "capture_complete": True,
+                "execution": {"state": {"ExitCode": 0}},
+            }
+    
+        def adapter(argv, **kwargs):
+            return original(argv, run_root=tmp_path / "watch", lab_runner=lab, **kwargs)
+    
+        monkeypatch.setattr(watch_module, "watch_command", adapter)
+        args = ["watch", "--source-root", str(source)]
+        if mode:
+            args += ["--search-mode", mode]
+        result = cli.invoke(app, [*args, "--", "python", "train.py"])
+        assert result.exit_code == 0, result.output
+        assert len(seen) == 1
+        output = json.loads(result.stdout)
+        assert output["search_mode"] == (mode or "until_target")
+>       saved = json.loads(Path(output["watch_report_path"]).read_text())
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_search_mode_interfaces.py:366: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.decoder.JSONDecoder object at 0x7d6692a105f0>
+s = '# Headroom Watch\n\nStatus: passthrough\n\nReason: none.\n\nOriginal exit: 0; Watch exit: 0. Repair triggered: False....us: completed. Cleanup verified: True.\n\nNo completed repair is claimed. See watch.json and the preserved Lab logs.\n'
+idx = 0
+
+    def raw_decode(self, s, idx=0):
+        """Decode a JSON document from ``s`` (a ``str`` beginning with
+        a JSON document) and return a 2-tuple of the Python
+        representation and the index in ``s`` where the document ended.
+    
+        This can be used to decode a JSON document from a string that may
+        have extraneous data at the end.
+    
+        """
+        try:
+            obj, end = self.scan_once(s, idx)
+        except StopIteration as err:
+>           raise JSONDecodeError("Expecting value", s, err.value) from None
+E           json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+/usr/lib/python3.12/json/decoder.py:355: JSONDecodeError
+_____ test_cli_to_real_watch_preflight_and_saved_manifest[bounded_pareto] ______
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-44/test_cli_to_real_watch_preflig1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d668c8a4410>
+mode = 'bounded_pareto'
+
+    @pytest.mark.parametrize("mode", [None, "bounded_pareto"])
+    def test_cli_to_real_watch_preflight_and_saved_manifest(tmp_path, monkeypatch, mode):
+        import headroom.watch as watch_module
+    
+        source = tmp_path / "source"
+        source.mkdir()
+        (source / "train.py").write_text("print(1)\n")
+        original = watch_module.watch_command
+        seen = []
+    
+        def lab(*args, **kwargs):
+            seen.append(kwargs)
+            return {
+                "status": "completed",
+                "cleanup_verified": True,
+                "capture_complete": True,
+                "execution": {"state": {"ExitCode": 0}},
+            }
+    
+        def adapter(argv, **kwargs):
+            return original(argv, run_root=tmp_path / "watch", lab_runner=lab, **kwargs)
+    
+        monkeypatch.setattr(watch_module, "watch_command", adapter)
+        args = ["watch", "--source-root", str(source)]
+        if mode:
+            args += ["--search-mode", mode]
+        result = cli.invoke(app, [*args, "--", "python", "train.py"])
+        assert result.exit_code == 0, result.output
+        assert len(seen) == 1
+        output = json.loads(result.stdout)
+        assert output["search_mode"] == (mode or "until_target")
+>       saved = json.loads(Path(output["watch_report_path"]).read_text())
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_search_mode_interfaces.py:366: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.decoder.JSONDecoder object at 0x7d6692a105f0>
+s = '# Headroom Watch\n\nStatus: passthrough\n\nReason: none.\n\nOriginal exit: 0; Watch exit: 0. Repair triggered: False....us: completed. Cleanup verified: True.\n\nNo completed repair is claimed. See watch.json and the preserved Lab logs.\n'
+idx = 0
+
+    def raw_decode(self, s, idx=0):
+        """Decode a JSON document from ``s`` (a ``str`` beginning with
+        a JSON document) and return a 2-tuple of the Python
+        representation and the index in ``s`` where the document ended.
+    
+        This can be used to decode a JSON document from a string that may
+        have extraneous data at the end.
+    
+        """
+        try:
+            obj, end = self.scan_once(s, idx)
+        except StopIteration as err:
+>           raise JSONDecodeError("Expecting value", s, err.value) from None
+E           json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+/usr/lib/python3.12/json/decoder.py:355: JSONDecodeError
+=========================== short test summary info ============================
+FAILED tests/test_search_mode_interfaces.py::test_campaign_records_effective_mode_and_preserves_terminal_failure[None-None-until_target]
+FAILED tests/test_search_mode_interfaces.py::test_campaign_records_effective_mode_and_preserves_terminal_failure[bounded_pareto-None-bounded_pareto]
+FAILED tests/test_search_mode_interfaces.py::test_campaign_records_effective_mode_and_preserves_terminal_failure[bounded_pareto-until_target-until_target]
+FAILED tests/test_search_mode_interfaces.py::test_cli_to_real_watch_preflight_and_saved_manifest[None]
+FAILED tests/test_search_mode_interfaces.py::test_cli_to_real_watch_preflight_and_saved_manifest[bounded_pareto]
+5 failed, 42 passed in 2.02s

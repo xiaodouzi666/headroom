@@ -200,3 +200,44 @@ The curated public API accepts their defined values only and preserves the n/a
 loss state. The Results table displays the observed-comparison basis beside its
 numerical state; a repository no-reference exception stays explicitly unverified.
 Older records without these fields show that the basis was not recorded.
+
+## Explicit search mode selection
+
+A version-1 evaluation manifest may set top-level `search_mode: until_target`
+(default) or `search_mode: bounded_pareto`. This one mode applies to every
+selected scenario/condition/policy in that campaign; it is not another implicit
+matrix multiplier. Existing manifests remain target-stop campaigns.
+
+```sh
+headroom eval --plan-only --manifest eval/scenario_set.yaml --search-mode bounded_pareto
+```
+
+`--search-mode` is accepted by `--plan-only` and the separately authorized
+`--live` path. `--validate-only` validates the manifest but does not search, and
+`--dry-run` captures baselines; both reject a CLI search override instead of
+silently ignoring it. Python `campaign_plan`/`run_campaign` accept
+`search_mode=None` to inherit the manifest, or an explicit supported string to
+override it. Precedence is explicit CLI/function argument > evaluation YAML >
+`until_target`. Invalid values fail before live profile access or workload
+dispatch. This does not consume the separate project `headroom.yaml`.
+
+`bounded_pareto` permits continued exploration after first target achievement
+within the existing maximum of six rounds, per-run/campaign/daily budget checks,
+timeouts and policy permissions. It cannot enable bf16, expand a spend cap, or
+guarantee multiple retained/non-dominated points. The original acceptance gates
+and unresolved s2 baseline/precision-policy conflicts remain unchanged.
+
+New plans, campaign documents and every pending/running/failed/completed row
+record the actual requested `search_mode`. Executed rows preserve the report's
+search stop reason, first-target round, baseline-target observation and executed
+round count. Terminal status and reason remain independent of target achievement,
+including a budget failure after an earlier successful configuration. Markdown
+tables and the curated public projection retain mode and stop reason. Historical
+artifacts with no recorded search evidence remain null/unknown; they are never
+backfilled from today's default. Offline fixtures remain excluded from live scores.
+
+Ablation pairing also requires consistent recorded search modes because the mode
+is part of the diagnostic context. Different known modes, or a mix of known and
+unknown modes, are excluded as `search_mode_not_comparable`. All-unknown legacy
+pairs keep their pre-existing comparability rules, with `search_mode: null` in
+the pair; no historical default is invented.

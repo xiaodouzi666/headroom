@@ -159,6 +159,28 @@ def _pareto_report(value):
     return value
 
 
+def _search_report(value):
+    """Preserve explicit search metadata; historical runs have no inferred mode."""
+    if not isinstance(value, dict):
+        return {}
+    result = {
+        "mode": value.get("mode")
+        if isinstance(value.get("mode"), str)
+        and value["mode"] in {"until_target", "bounded_pareto"}
+        else None,
+        "baseline_target_met": value.get("baseline_target_met")
+        if type(value.get("baseline_target_met")) is bool
+        else None,
+        "stop_reason": value.get("stop_reason")
+        if isinstance(value.get("stop_reason"), str)
+        else None,
+    }
+    for key, minimum in (("first_target_met_round", 1), ("rounds_executed", 0)):
+        number = value.get(key)
+        result[key] = number if type(number) is int and minimum <= number <= 6 else None
+    return result
+
+
 def numerical_basis_label(value):
     return {
         "original_plan_first_five_backward_scalars": "Observed first five backward losses (original plan)",
@@ -373,6 +395,7 @@ def build_report(
         "diagnosis": diagnosis,
         "rounds": rounds,
         "pareto": _pareto_report(run.get("pareto")),
+        "search": _search_report(run.get("search")),
         "verification": verification,
         "allocator": {
             "cached_free_bytes": header.get("cached_free_bytes"),
@@ -423,6 +446,28 @@ def render_markdown(report):
         "",
         "Diagnostic hypotheses and estimated sizes:",
     ]
+    search = report.get("search", {})
+    search_lines = [
+        "## Search",
+        "",
+        "Search mode: " + _text(search.get("mode", "not recorded")) + ".",
+        "Exploration status: "
+        + _text(report["status"])
+        + "; stop reason: "
+        + _text(search.get("stop_reason", "not recorded"))
+        + ".",
+        "Rounds executed: "
+        + _text(search.get("rounds_executed"))
+        + "; first verified target round: "
+        + _text(search.get("first_target_met_round"))
+        + ".",
+        "Baseline target met: " + _text(search.get("baseline_target_met")) + ".",
+        "Target success describes the selected verified configuration. A later exploration stop does not invalidate it.",
+        "Each retained configuration has its own verification and downloads below.",
+        "",
+    ]
+    root_index = lines.index("## Root causes")
+    lines[root_index:root_index] = search_lines
     causes = report["diagnosis"].get("root_causes", [])
     if not causes:
         lines.append("No diagnosis available.")

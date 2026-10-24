@@ -433,6 +433,7 @@ class RunQueue:
                 api_worker_finished=False,
                 api_source=request,
                 target=request.get("target"),
+                search_mode=request.get("search_mode"),
                 policy=request.get("policy", {}),
                 target_met=False,
                 run_dir=str(self.run_root / run_id),
@@ -470,7 +471,10 @@ class RunQueue:
                     self._finish_unstarted(run_id, reason="preparation_deadline_exceeded")
                     raise AdmissionError("Source preparation exceeded its admission deadline", 504)
                 self.store.update_run(
-                    run_id, target=prepared.target, policy=prepared.policy.model_dump()
+                    run_id,
+                    target=prepared.target,
+                    policy=prepared.policy.model_dump(),
+                    search_mode=prepared.search_mode,
                 )
                 self.store.add_event(run_id, "run.queued", {"position": len(self.pending) + 1})
                 self.pending.append((run_id, prepared, deadline))

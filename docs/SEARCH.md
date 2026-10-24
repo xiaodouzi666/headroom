@@ -8,7 +8,12 @@ acceptance.
 
 `FixRequest` now has `max_rounds=6` (strict integer, 1 through 6),
 `source_profile=None` and `research_enabled=True`. Setting `max_rounds=1`
-retains the bounded single-round behavior. A pinned repository profile is selected
+retains the bounded single-round behavior. The optional search_mode is either
+until_target (default) or bounded_pareto. The default stops at the first verified
+kept configuration meeting the target. The explicit bounded mode continues after
+that point, within the same 1–6 round limit, request/deadline bounds, budget and
+numerical/throughput policy. It does not enable paid calls or authorize a new
+runtime profile. A pinned repository profile is selected
 internally by repository preparation, never authorized by an arbitrary upload.
 
 `Services.research_factory` follows `ResearchSession.for_run`. The factory receives
@@ -53,12 +58,57 @@ Once the current kept state completes, its throughput comparison is mandatory.
 Additional Verify checks are preserved, including the OOM loss-decrease gate.
 Unknown numerical equivalence cannot become a pass.
 
-The loop stops on a kept configuration meeting the target, six rounds, missing
-required evidence/runtime state, deadline cancellation, or a budget exception.
+The default loop stops on a kept configuration meeting the target. Bounded
+mode may continue reducing measured memory within the same keep conditions;
+it does not accept increased memory merely for lower latency. Lower memory and
+slightly higher latency can yield two genuine nondominated configurations.
+No minimum point count or predetermined tier is required. Failed/dominated
+candidates are not fabricated as configurations to fill a frontier.
+
+Both modes stop at their configured round cap, missing required evidence/runtime
+state, deadline cancellation, or a budget exception. A candidate after a
+verified success must also satisfy the target; otherwise it is reverted with
+verified_target_regression. The selected source, after result, verification,
+arguments and downloadable patch therefore remain one consistent configuration.
+A later revert, budget rejection or error cannot erase an earlier verified
+success. Search completion and selected-configuration success are separate:
+a bounded run reaching its configured cap is completed with reason
+max_rounds_reached, not a proof of an exhaustive or optimal frontier. A budget,
+deadline, needs_human or pipeline failure retains its corresponding partial
+status even when a selected configuration has target_met=true.
+
+Fresh evidence belongs to the selected configuration. When a newly kept
+configuration lacks after evidence, the report clears the previous selected
+after evidence/image and records after_evidence_status=unavailable; prior round
+artifacts remain on disk. A further round stops with fresh_evidence_unavailable
+instead of diagnosing stale evidence. At the final bounded round there is no
+next prompt, so the search can end at its cap while explicitly reporting missing
+after evidence.
+
 Budget reservations and pending/settled billing remain in the existing runtime.
 SIGTERM retains the last committed kept state and writes a partial report.
 A round interrupted after a committed keep is recorded as kept; a configuration
 not yet committed is excluded from the final frontier. No run history is deleted.
+
+
+### Search outcome data
+
+The stored run data and run_fix return include the same search object:
+
+| Field | Meaning |
+|---|---|
+| mode | Explicit until_target or bounded_pareto request |
+| baseline_target_met | Observed baseline goal state, or null when unavailable; never a repair result |
+| first_target_met_round | First committed, verified successful repair round, or null |
+| stop_reason | Machine-readable reason below; null while running |
+| rounds_executed | Recorded attempted rounds, including an interrupted final round |
+
+Stop reasons are target_met, max_rounds_reached, diagnosis_needs_more_info,
+diagnosis_supplement_exhausted, fresh_evidence_unavailable, deadline,
+budget_exceeded, runtime_not_ready and pipeline_error. The human-readable run
+reason and individual round decision retain the concrete context. A baseline
+already fitting its target does not set repair target_met, does not create a
+Pareto point, and does not invent a patch or first successful repair round.
 
 ## Independent configurations and Pareto output
 
@@ -146,3 +196,14 @@ across eleven related Python test modules under an additional process-wide
 DNS/socket denial guard; scoped Ruff passed. The search/orchestrator/report
 subset has 67 cases. These are offline implementation checks, not live model,
 GPU repair or competition acceptance.
+
+
+Bounded-mode implementation checks are reproduced with:
+
+    .venv/bin/python reports/bounded-pareto-20261024/offline_tests.py -q tests/test_bounded_search.py tests/test_orchestrator.py tests/test_search.py
+
+The independent runner denies DNS/sockets and access to the real project .env
+before importing pytest. Tests use the real SDK/router with MockTransport,
+synthetic measurements and the existing isolated patch checks; no model API or
+GPU acceptance is claimed. The report directory preserves test logs and a
+source-hashed receipt.

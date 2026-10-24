@@ -284,6 +284,10 @@ def search_run(
     research_enabled=False,
     target="fit:22GB",
     reclaim_reduction_pct=30.0,
+    search_mode="until_target",
+    evidence_fail_at=None,
+    verify_error_at=None,
+    policy=None,
 ):
     import difflib
 
@@ -450,6 +454,8 @@ def search_run(
         return observed(path)
 
     def evidence(run, *, output_dir, **kwargs):
+        if evidence_fail_at is not None and run.name == f"candidate-{evidence_fail_at}":
+            raise ValueError("Synthetic fresh evidence unavailable")
         output_dir.mkdir(parents=True)
         data = {
             "sources": [{"path": "train.py"}],
@@ -468,6 +474,8 @@ def search_run(
 
     def verify(original, script, **kwargs):
         index = len(verifies)
+        if verify_error_at is not None and index + 1 == verify_error_at:
+            raise ValueError("Synthetic verification failure")
         plan = plans[index]
         assert Path(kwargs["baseline_script"]).read_text() == "VALUE = 1\n"
         assert original["peak_allocated_bytes"] == 30_000_000_000
@@ -508,7 +516,9 @@ def search_run(
             target=target,
             reclaim_reduction_pct=reclaim_reduction_pct,
             max_rounds=max_rounds,
+            search_mode=search_mode,
             research_enabled=research_enabled,
+            **({"policy": policy} if policy is not None else {}),
         ),
         store=store,
         run_root=tmp_path / "jobs",

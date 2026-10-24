@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation, localcontext
 from functools import partial
 from pathlib import Path
+from typing import Literal
 from urllib.parse import urlsplit
 from uuid import uuid4
 
@@ -95,6 +96,7 @@ class Submission(BaseModel):
     ref: str | None = Field(default=None, max_length=200)
     cmd: str | None = Field(default=None, max_length=2000)
     target: str = "fix-oom"
+    search_mode: Literal["until_target", "bounded_pareto"] = "until_target"
     policy: Policy = Field(default_factory=Policy)
     budget: str = "0.6"
 
@@ -139,6 +141,7 @@ def _public_run(row):
         "created_at",
         "updated_at",
         "target",
+        "search_mode",
         "policy",
         "target_met",
         "reason",
@@ -196,6 +199,7 @@ def _prepare_submission(settings, submission, source, run_id, *, deadline):
         execution_argv=execution_argv,
         repository_mode=repository_input,
         target=submission.target,
+        search_mode=submission.search_mode,
         policy=submission.policy,
         budget_usd=submission.budget,
         max_steps=20,
@@ -371,6 +375,7 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
                     else ("example" if submission.example_id else "upload"),
                     "example_id": submission.example_id,
                     "target": submission.target,
+                    "search_mode": submission.search_mode,
                     "policy": submission.policy.model_dump(),
                 },
                 request.state.owner,

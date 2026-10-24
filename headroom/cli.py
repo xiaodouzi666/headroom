@@ -1,6 +1,7 @@
 """Headroom command-line entry point."""
 
 import json
+from enum import Enum
 from pathlib import Path
 from typing import Annotated
 
@@ -8,6 +9,12 @@ import typer
 
 from headroom import __version__
 from headroom.lab.runner import run_script
+
+
+class SearchModeOption(str, Enum):
+    until_target = "until_target"
+    bounded_pareto = "bounded_pareto"
+
 
 app = typer.Typer(help="Autoresearch for GPU memory.", no_args_is_help=True)
 
@@ -127,6 +134,7 @@ def fix(
     ref: str | None = None,
     cmd: str | None = None,
     max_rounds: int = typer.Option(6, min=1, max=6),
+    search_mode: SearchModeOption = SearchModeOption.until_target,
     research: bool = True,
 ) -> None:
     """Run the complete repair pipeline; missing live prerequisites produce a partial report."""
@@ -218,6 +226,7 @@ def fix(
             runtime_profile=str(runtime_profile) if runtime_profile else None,
             source_profile=profile,
             max_rounds=selected("max_rounds", max_rounds),
+            search_mode=selected("search_mode", search_mode.value),
             research_enabled=research,
         )
         result = run_fix(
@@ -311,6 +320,8 @@ def watch(
     daily_budget: str = "12",
     runtime_profile: Path | None = None,
     allow_numerics_change: bool = False,
+    search_mode: SearchModeOption = SearchModeOption.until_target,
+    config: Annotated[Path | None, typer.Option(help="Project YAML search mode for Watch.")] = None,
 ) -> None:
     """Observe argv in Docker; confirmed CUDA OOM repairs mapped Python scripts.
 
@@ -318,9 +329,18 @@ def watch(
     the source mapping; ambiguous/multiple or source-free entries need human input.
     """
     from headroom.orchestrator import Policy
+    from headroom.project_config import find_project_config, load_project_config
     from headroom.watch import watch_command
 
     try:
+        config_path = find_project_config(config, script=None, source_root=source_root)
+        project = load_project_config(config_path) if config_path else None
+        mode = search_mode.value
+        if (
+            project is not None
+            and getattr(ctx.get_parameter_source("search_mode"), "name", None) != "COMMANDLINE"
+        ):
+            mode = project.search_mode
         result = watch_command(
             list(ctx.args),
             source_root=source_root or Path.cwd(),
@@ -330,6 +350,7 @@ def watch(
             seed=seed,
             fix_options={
                 "target": target,
+                "search_mode": mode,
                 "budget_usd": budget,
                 "daily_budget_usd": daily_budget,
                 "runtime_profile": str(runtime_profile) if runtime_profile else None,
@@ -354,6 +375,7 @@ def watch(
                 k: result.get(k)
                 for k in (
                     "status",
+                    "search_mode",
                     "triggered",
                     "capture_status",
                     "cuda_oom_confirmed",
@@ -384,6 +406,7 @@ def evaluate(
     scenario: Annotated[list[str] | None, typer.Option()] = None,
     conditions: str = "full_ultra",
     policies: str = "default",
+    search_mode: SearchModeOption | None = None,
     budget: str = "0.6",
     campaign_budget: str = "0.6",
     daily_budget: str = "12",
@@ -408,6 +431,8 @@ def evaluate(
         raise typer.BadParameter("Live campaigns use the reviewed 120-second Lab limit")
     if not (live or plan_only) and (conditions != "full_ultra" or policies != "default"):
         raise typer.BadParameter("--conditions/--policies apply only to --plan-only or --live")
+    if search_mode is not None and not (live or plan_only):
+        raise typer.BadParameter("--search-mode applies only to --plan-only or --live")
     path = manifest or PROJECT_ROOT / "eval/scenario_set.yaml"
     try:
         if validate_only:
@@ -418,6 +443,7 @@ def evaluate(
                 scenario_ids=scenario,
                 conditions=tuple(item.strip() for item in conditions.split(",")),
                 policy_names=tuple(item.strip() for item in policies.split(",")),
+                search_mode=search_mode.value if search_mode is not None else None,
                 per_run_budget_usd=budget,
                 campaign_budget_usd=campaign_budget,
                 daily_budget_usd=daily_budget,
@@ -435,6 +461,7 @@ def evaluate(
                 scenario_ids=scenario,
                 conditions=tuple(item.strip() for item in conditions.split(",")),
                 policy_names=tuple(item.strip() for item in policies.split(",")),
+                search_mode=search_mode.value if search_mode is not None else None,
                 per_run_budget_usd=budget,
                 campaign_budget_usd=campaign_budget,
                 daily_budget_usd=daily_budget,

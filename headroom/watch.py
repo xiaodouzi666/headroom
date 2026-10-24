@@ -19,6 +19,7 @@ FIX_OPTIONS = {
     "daily_budget_usd",
     "runtime_profile",
     "max_rounds",
+    "search_mode",
     "source_profile",
     "research_enabled",
     "allocator_conf",
@@ -120,6 +121,7 @@ def watch_command(
     exit_code = _exit_code(result)
     outcome = {
         "watch_id": directory.name,
+        "search_mode": request.search_mode,
         "run_dir": str(directory),
         "command": list(command),
         "command_details": asdict(parsed),

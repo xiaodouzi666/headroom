@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException
 
 from headroom.api.security import open_regular
 from headroom.budget import money
-from headroom.evaluation import CONDITIONS, campaign_tables
+from headroom.evaluation import CONDITIONS, SEARCH_MODES, campaign_tables
 
 IDENTIFIER = re.compile(r"[a-z0-9][a-z0-9_-]{0,63}\Z")
 LABEL = re.compile(r"[A-Za-z0-9][A-Za-z0-9_. -]{0,99}\Z")
@@ -63,6 +63,7 @@ def _public_row(row, provenance):
             "ground_truth",
             "truth_status",
             "first_cause",
+            "search_stop_reason",
         )
     }
     for name, allowed in (
@@ -77,6 +78,7 @@ def _public_row(row, provenance):
             },
         ),
         ("acceptance_scope", {"standard", "repository"}),
+        ("search_mode", set(SEARCH_MODES)),
     ):
         value = row.get(name)
         result[name] = value if isinstance(value, str) and value in allowed else None
@@ -90,7 +92,7 @@ def _public_row(row, provenance):
         else "unknown"
     )
     result["condition"] = row.get("condition") if row.get("condition") in CONDITIONS else None
-    for name in ("target_met", "first_cause_matches"):
+    for name in ("target_met", "first_cause_matches", "baseline_target_met"):
         result[name] = row.get(name) if type(row.get(name)) is bool else None
     for name in (
         "peak_before_bytes",
@@ -99,6 +101,8 @@ def _public_row(row, provenance):
         "throughput_change_pct",
         "step_time_change_pct",
         "rounds",
+        "search_rounds_executed",
+        "first_target_met_round",
         "wall_seconds",
     ):
         result[name] = (
@@ -180,6 +184,9 @@ def _campaign(root, entry):
     document = campaign_tables(
         {
             "mode": "campaign",
+            "search_mode": (
+                source.get("search_mode") if source.get("search_mode") in SEARCH_MODES else None
+            ),
             "provenance": provenance,
             "status": _label(source.get("status")) or "unknown",
             "rows": [_public_row(row, provenance) for row in rows],

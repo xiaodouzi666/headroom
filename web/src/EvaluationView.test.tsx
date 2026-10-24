@@ -205,3 +205,11 @@ describe("published evaluation results", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("unavailable");
   });
 });
+
+it("keeps historical campaign search mode unrecorded", async () => {
+  setup(fixture());
+  render(<App />);
+  expect(
+    await screen.findByText(/Search mode: Not recorded/),
+  ).toBeInTheDocument();
+});

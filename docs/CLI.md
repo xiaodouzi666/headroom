@@ -12,6 +12,7 @@ headroom fix ./train.py --target fix-oom \
   --max-throughput-regression-pct 0 --max-steps 20 -- --batch 8
 ```
 
+- `--search-mode until_target|bounded_pareto`: default `until_target`; explicit bounded exploration keeps the same maximum of six rounds and all existing budget, timeout and policy checks. It does not grant numerical-change permission.
 - `--reclaim-reduction-pct`: target reduction for `reclaim`, default 30; strictly greater than 0 and at most 100.
 - `--allow-numerics-change / --no-allow-numerics-change`: default false.
 - `--allow-batch-grad-accum / --no-allow-batch-grad-accum`: default true.
@@ -76,6 +77,7 @@ max_seconds: 120
 seed: 1337
 device: cuda
 max_rounds: 6
+search_mode: until_target
 batch:
   arg: --batch
   value: 8
@@ -108,6 +110,7 @@ Supported fields:
 | `seed` | integer 0–4294967295 |
 | `device` | `cuda` or `cpu` |
 | `max_rounds` | integer 1–6 |
+| `search_mode` | `until_target` (default) or `bounded_pareto` |
 | `batch`, `batch_arg` | existing static small-batch reference metadata |
 
 Legacy `batch: {arg: --batch_size, value: 32}` and
@@ -131,3 +134,36 @@ schema tests, legacy reference-discovery checks, and an in-process API
 repository-command test. These use offline fixtures and do not prove a paid
 model repair or CUDA acceptance. See the saved receipt under
 `reports/project-config-20261024/`.
+
+## Explicit bounded Pareto exploration
+
+```sh
+headroom fix ./train.py --search-mode bounded_pareto --max-rounds 6
+headroom fix ./train.py --target reclaim --search-mode bounded_pareto
+headroom watch --source-root ./my-project --search-mode bounded_pareto -- python train.py
+```
+
+Reclaim uses the existing `fix --target reclaim` entrypoint. `until_target` keeps
+the existing target-reached stop behavior. `bounded_pareto` can continue after
+first reaching the target, subject to the same run limits; it does not guarantee
+two rounds, two non-dominated configurations, or a bf16 candidate. A permission
+for numerical changes must still be supplied separately. Both modes retain
+first-target and stop evidence; a later budget/timeout/error is not rewritten as
+a successful terminal state merely because an earlier configuration met target.
+
+For `fix`, explicit `--search-mode` overrides `headroom.yaml`, including an
+explicit `until_target` override of YAML `bounded_pareto`. Missing configuration
+keeps `until_target`. Invalid values fail before source preparation or dispatch.
+
+`watch` also accepts `--config PATH`, otherwise checking the selected source
+root's `headroom.yaml` (the working directory when no root was supplied). It
+reads **only `search_mode`** from that project configuration; all other Watch
+options retain their existing CLI/default behavior. An explicit Watch
+`--search-mode` overrides YAML. The config is still validated as the same strict
+ProjectConfig schema. `watch.json` records the requested mode even if no OOM
+triggers repair. Historical reports without this field remain unknown.
+
+`headroom eval --plan-only --search-mode bounded_pareto` plans the campaign
+without executing it. Evaluation uses its own manifest's `search_mode`, not
+`headroom.yaml`; see [EVALUATION.md](EVALUATION.md). No mode selection enables a
+live profile or expands spending authorization.
