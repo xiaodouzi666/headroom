@@ -1,0 +1,660 @@
+{
+  "provenance": "cpu_fixture",
+  "not_cuda_acceptance": true,
+  "observations": {
+    "fp32": {
+      "provenance": "cpu_fixture",
+      "status": "completed",
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "steps": 3,
+      "device": "cpu",
+      "loss_series": [
+        1.0,
+        0.9604000449180603,
+        0.9223681688308716
+      ],
+      "precision_observation": {
+        "protocol": "headroom.precision.v1",
+        "source": "lab_runtime_precision_observer_v1",
+        "device": "cpu",
+        "precision": "fp32",
+        "complete": true,
+        "root_modes": {
+          "fp32": 3,
+          "bf16": 0,
+          "unknown": 0
+        },
+        "counts": {
+          "module_pre": 3,
+          "module_post": 3,
+          "root_forwards": 3,
+          "operation_calls": 15,
+          "tensor_metadata": 39,
+          "ignored_device_tensors": 0
+        },
+        "autocast": {
+          "disabled": 21,
+          "bfloat16": 0,
+          "unsupported": 0,
+          "unknown": 0
+        },
+        "dtypes": {
+          "parameter": {
+            "float32": 3,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "input": {
+            "float32": 3,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "output": {
+            "float32": 3,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "operation_input": {
+            "float32": 18,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "operation_output": {
+            "float32": 12,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          }
+        },
+        "errors": {},
+        "coverage": {
+          "module_hooks": "Every observed module pre/post forward; direct registered parameters",
+          "internal_autocast": "TorchFunctionMode samples autocast and tensor argument/output metadata during forwards",
+          "root_summary": "Mixed root forward modes, unknown/unsupported dtypes, errors or limits are unknown",
+          "tensor_data_access": false,
+          "gpu_synchronization": false,
+          "tensor_references_retained": false,
+          "all_operator_dtypes_proven": false,
+          "limitations": [
+            "TorchFunctionMode observes Python-dispatched torch functions; C++/compiled/custom operators may not expose internal autocast or every intermediate dtype.",
+            "Metadata records observed precision, not tensor values or full numerical equivalence.",
+            "Known compiled module wrappers and cross-thread module forwards remain unknown.",
+            "Metadata observation adds Python overhead; no tensor data or GPU synchronization is added.",
+            "Runtime hooks are not authentication against deliberate target tampering."
+          ]
+        }
+      },
+      "result_sha256": "b25606ea5a5a7c09aa28ebc6b3087c3ff9c17f167aa3b15d8c31dc3931891b27"
+    },
+    "bf16_before": {
+      "provenance": "cpu_fixture",
+      "status": "completed",
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "steps": 3,
+      "device": "cpu",
+      "loss_series": [
+        1.0,
+        0.9613189697265625,
+        0.9159088134765625
+      ],
+      "precision_observation": {
+        "protocol": "headroom.precision.v1",
+        "source": "lab_runtime_precision_observer_v1",
+        "device": "cpu",
+        "precision": "bf16",
+        "complete": true,
+        "root_modes": {
+          "fp32": 0,
+          "bf16": 3,
+          "unknown": 0
+        },
+        "counts": {
+          "module_pre": 3,
+          "module_post": 3,
+          "root_forwards": 3,
+          "operation_calls": 15,
+          "tensor_metadata": 39,
+          "ignored_device_tensors": 0
+        },
+        "autocast": {
+          "disabled": 18,
+          "bfloat16": 3,
+          "unsupported": 0,
+          "unknown": 0
+        },
+        "dtypes": {
+          "parameter": {
+            "float32": 3,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "input": {
+            "float32": 3,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "output": {
+            "float32": 3,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "operation_input": {
+            "float32": 15,
+            "bfloat16": 3,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "operation_output": {
+            "float32": 9,
+            "bfloat16": 3,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          }
+        },
+        "errors": {},
+        "coverage": {
+          "module_hooks": "Every observed module pre/post forward; direct registered parameters",
+          "internal_autocast": "TorchFunctionMode samples autocast and tensor argument/output metadata during forwards",
+          "root_summary": "Mixed root forward modes, unknown/unsupported dtypes, errors or limits are unknown",
+          "tensor_data_access": false,
+          "gpu_synchronization": false,
+          "tensor_references_retained": false,
+          "all_operator_dtypes_proven": false,
+          "limitations": [
+            "TorchFunctionMode observes Python-dispatched torch functions; C++/compiled/custom operators may not expose internal autocast or every intermediate dtype.",
+            "Metadata records observed precision, not tensor values or full numerical equivalence.",
+            "Known compiled module wrappers and cross-thread module forwards remain unknown.",
+            "Metadata observation adds Python overhead; no tensor data or GPU synchronization is added.",
+            "Runtime hooks are not authentication against deliberate target tampering."
+          ]
+        }
+      },
+      "result_sha256": "4fb3ea925636605508cf7f8fc2b180df657764e3054eeecf6f06656339ecb882"
+    },
+    "bf16_after": {
+      "provenance": "cpu_fixture",
+      "status": "completed",
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "steps": 3,
+      "device": "cpu",
+      "loss_series": [
+        1.0,
+        0.9613189697265625,
+        0.9159088134765625
+      ],
+      "precision_observation": {
+        "protocol": "headroom.precision.v1",
+        "source": "lab_runtime_precision_observer_v1",
+        "device": "cpu",
+        "precision": "bf16",
+        "complete": true,
+        "root_modes": {
+          "fp32": 0,
+          "bf16": 3,
+          "unknown": 0
+        },
+        "counts": {
+          "module_pre": 3,
+          "module_post": 3,
+          "root_forwards": 3,
+          "operation_calls": 15,
+          "tensor_metadata": 39,
+          "ignored_device_tensors": 0
+        },
+        "autocast": {
+          "disabled": 18,
+          "bfloat16": 3,
+          "unsupported": 0,
+          "unknown": 0
+        },
+        "dtypes": {
+          "parameter": {
+            "float32": 3,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "input": {
+            "float32": 3,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "output": {
+            "float32": 3,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "operation_input": {
+            "float32": 15,
+            "bfloat16": 3,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "operation_output": {
+            "float32": 9,
+            "bfloat16": 3,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          }
+        },
+        "errors": {},
+        "coverage": {
+          "module_hooks": "Every observed module pre/post forward; direct registered parameters",
+          "internal_autocast": "TorchFunctionMode samples autocast and tensor argument/output metadata during forwards",
+          "root_summary": "Mixed root forward modes, unknown/unsupported dtypes, errors or limits are unknown",
+          "tensor_data_access": false,
+          "gpu_synchronization": false,
+          "tensor_references_retained": false,
+          "all_operator_dtypes_proven": false,
+          "limitations": [
+            "TorchFunctionMode observes Python-dispatched torch functions; C++/compiled/custom operators may not expose internal autocast or every intermediate dtype.",
+            "Metadata records observed precision, not tensor values or full numerical equivalence.",
+            "Known compiled module wrappers and cross-thread module forwards remain unknown.",
+            "Metadata observation adds Python overhead; no tensor data or GPU synchronization is added.",
+            "Runtime hooks are not authentication against deliberate target tampering."
+          ]
+        }
+      },
+      "result_sha256": "237b49c01d4f6645940951f1b610b52ce9fbc85ddb8294e2b486358ad1ed05bb"
+    },
+    "unsupported": {
+      "provenance": "cpu_fixture",
+      "status": "completed",
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "steps": 3,
+      "device": "cpu",
+      "loss_series": [
+        1.0,
+        0.9603615999221802,
+        0.9224625825881958
+      ],
+      "precision_observation": {
+        "protocol": "headroom.precision.v1",
+        "source": "lab_runtime_precision_observer_v1",
+        "device": "cpu",
+        "precision": "unknown",
+        "complete": false,
+        "root_modes": {
+          "fp32": 0,
+          "bf16": 0,
+          "unknown": 3
+        },
+        "counts": {
+          "module_pre": 3,
+          "module_post": 3,
+          "root_forwards": 3,
+          "operation_calls": 15,
+          "tensor_metadata": 39,
+          "ignored_device_tensors": 0
+        },
+        "autocast": {
+          "disabled": 18,
+          "bfloat16": 0,
+          "unsupported": 3,
+          "unknown": 0
+        },
+        "dtypes": {
+          "parameter": {
+            "float32": 3,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "input": {
+            "float32": 3,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "output": {
+            "float32": 3,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "operation_input": {
+            "float32": 15,
+            "bfloat16": 0,
+            "float16": 3,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "operation_output": {
+            "float32": 9,
+            "bfloat16": 0,
+            "float16": 3,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          }
+        },
+        "errors": {},
+        "coverage": {
+          "module_hooks": "Every observed module pre/post forward; direct registered parameters",
+          "internal_autocast": "TorchFunctionMode samples autocast and tensor argument/output metadata during forwards",
+          "root_summary": "Mixed root forward modes, unknown/unsupported dtypes, errors or limits are unknown",
+          "tensor_data_access": false,
+          "gpu_synchronization": false,
+          "tensor_references_retained": false,
+          "all_operator_dtypes_proven": false,
+          "limitations": [
+            "TorchFunctionMode observes Python-dispatched torch functions; C++/compiled/custom operators may not expose internal autocast or every intermediate dtype.",
+            "Metadata records observed precision, not tensor values or full numerical equivalence.",
+            "Known compiled module wrappers and cross-thread module forwards remain unknown.",
+            "Metadata observation adds Python overhead; no tensor data or GPU synchronization is added.",
+            "Runtime hooks are not authentication against deliberate target tampering."
+          ]
+        }
+      },
+      "result_sha256": "a17f1384f11129fcb23b3ebe35a09d948c3527723f1f7f3222dacead54079bc0"
+    }
+  },
+  "compiled_training": [
+    {
+      "provenance": "cpu_fixture",
+      "status": "completed",
+      "steps": 3,
+      "loss_count": 3,
+      "cleanup_verified": true,
+      "precision_observation": {
+        "protocol": "headroom.precision.v1",
+        "source": "lab_runtime_precision_observer_v1",
+        "device": "cpu",
+        "precision": "unknown",
+        "complete": false,
+        "root_modes": {
+          "fp32": 0,
+          "bf16": 0,
+          "unknown": 3
+        },
+        "counts": {
+          "module_pre": 3,
+          "module_post": 3,
+          "root_forwards": 3,
+          "operation_calls": 0,
+          "tensor_metadata": 6,
+          "ignored_device_tensors": 0
+        },
+        "autocast": {
+          "disabled": 6,
+          "bfloat16": 0,
+          "unsupported": 0,
+          "unknown": 0
+        },
+        "dtypes": {
+          "parameter": {
+            "float32": 0,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "input": {
+            "float32": 3,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "output": {
+            "float32": 3,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "operation_input": {
+            "float32": 0,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "operation_output": {
+            "float32": 0,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          }
+        },
+        "errors": {
+          "operation_mode_missing": 3,
+          "compiled_module": 3
+        },
+        "coverage": {
+          "module_hooks": "Every observed module pre/post forward; direct registered parameters",
+          "internal_autocast": "TorchFunctionMode samples autocast and tensor argument/output metadata during forwards",
+          "root_summary": "Mixed root forward modes, unknown/unsupported dtypes, errors or limits are unknown",
+          "tensor_data_access": false,
+          "gpu_synchronization": false,
+          "tensor_references_retained": false,
+          "all_operator_dtypes_proven": false,
+          "limitations": [
+            "TorchFunctionMode observes Python-dispatched torch functions; C++/compiled/custom operators may not expose internal autocast or every intermediate dtype.",
+            "Metadata records observed precision, not tensor values or full numerical equivalence.",
+            "Known compiled module wrappers and cross-thread module forwards remain unknown.",
+            "Metadata observation adds Python overhead; no tensor data or GPU synchronization is added.",
+            "Runtime hooks are not authentication against deliberate target tampering."
+          ]
+        }
+      },
+      "result_sha256": "9b47b664c3d3722f30c7a1c4615de93df64aef99e101770e41fe83cc57f8ec42"
+    },
+    {
+      "provenance": "cpu_fixture",
+      "status": "completed",
+      "steps": 3,
+      "loss_count": 3,
+      "cleanup_verified": true,
+      "precision_observation": {
+        "protocol": "headroom.precision.v1",
+        "source": "lab_runtime_precision_observer_v1",
+        "device": "cpu",
+        "precision": "unknown",
+        "complete": false,
+        "root_modes": {
+          "fp32": 0,
+          "bf16": 0,
+          "unknown": 3
+        },
+        "counts": {
+          "module_pre": 3,
+          "module_post": 3,
+          "root_forwards": 3,
+          "operation_calls": 0,
+          "tensor_metadata": 9,
+          "ignored_device_tensors": 0
+        },
+        "autocast": {
+          "disabled": 6,
+          "bfloat16": 0,
+          "unsupported": 0,
+          "unknown": 0
+        },
+        "dtypes": {
+          "parameter": {
+            "float32": 3,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "input": {
+            "float32": 3,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "output": {
+            "float32": 3,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "operation_input": {
+            "float32": 0,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          },
+          "operation_output": {
+            "float32": 0,
+            "bfloat16": 0,
+            "float16": 0,
+            "float64": 0,
+            "complex": 0,
+            "other_floating": 0,
+            "non_floating": 0
+          }
+        },
+        "errors": {
+          "operation_mode_missing": 3,
+          "compiled_module": 3
+        },
+        "coverage": {
+          "module_hooks": "Every observed module pre/post forward; direct registered parameters",
+          "internal_autocast": "TorchFunctionMode samples autocast and tensor argument/output metadata during forwards",
+          "root_summary": "Mixed root forward modes, unknown/unsupported dtypes, errors or limits are unknown",
+          "tensor_data_access": false,
+          "gpu_synchronization": false,
+          "tensor_references_retained": false,
+          "all_operator_dtypes_proven": false,
+          "limitations": [
+            "TorchFunctionMode observes Python-dispatched torch functions; C++/compiled/custom operators may not expose internal autocast or every intermediate dtype.",
+            "Metadata records observed precision, not tensor values or full numerical equivalence.",
+            "Known compiled module wrappers and cross-thread module forwards remain unknown.",
+            "Metadata observation adds Python overhead; no tensor data or GPU synchronization is added.",
+            "Runtime hooks are not authentication against deliberate target tampering."
+          ]
+        }
+      },
+      "result_sha256": "606b35ac35f7b28fa77606e82ae9711f929cbab7608e2aa78d6e1585f9516643"
+    }
+  ],
+  "comparisons": {
+    "bf16_unchanged": {
+      "comparison_precision": "bf16",
+      "loss_tolerance": 0.02,
+      "observed_precision_change": false,
+      "loss_equivalence": "identical",
+      "target_met": false,
+      "numerics_policy": true
+    },
+    "fp32_to_bf16_denied": {
+      "comparison_precision": "bf16",
+      "loss_tolerance": 0.02,
+      "observed_precision_change": true,
+      "loss_equivalence": "changed",
+      "target_met": false,
+      "numerics_policy": false
+    },
+    "fp32_to_bf16_allowed": {
+      "comparison_precision": "bf16",
+      "loss_tolerance": 0.02,
+      "observed_precision_change": true,
+      "loss_equivalence": "changed",
+      "target_met": false,
+      "numerics_policy": true
+    },
+    "unsupported": {
+      "comparison_precision": "fp32",
+      "loss_tolerance": 0.001,
+      "observed_precision_change": null,
+      "loss_equivalence": "within_tol",
+      "target_met": false,
+      "numerics_policy": true
+    }
+  }
+}

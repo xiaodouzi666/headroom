@@ -30,6 +30,8 @@ from torch.nn.modules.module import (
 )
 from torch.optim.optimizer import register_optimizer_step_post_hook
 
+from headroom.lab.precision import PrecisionObserver
+
 
 class StepLimitReached(BaseException):
     """A completed optimizer update reached the configured capture boundary."""
@@ -188,14 +190,19 @@ class CaptureSession:
         self._parameter_refs: dict[int, Any] = {}
         self._parameter_samples: list[int] = []
         self._root_parameter_counts: list[int] = []
-        self._forward_depth = 0
+        self._forward_depth = threading.local()
+        self._precision_thread = threading.get_ident()
         self._original_backward: Any = None
         self._backward_wrapper: Any = None
+        self._backward_active = threading.local()
         self._previous_alarm_handler: Any = None
         self._previous_timer: tuple[float, float] | None = None
         self._result: dict[str, Any] | None = None
         self.pairing_capture: Any = None
         self._pairing_hash_excluded = False
+        self.precision_observer = PrecisionObserver(device)
+        self._precision_mode = None
+        self.entrypoint_capture = None
 
     def _error(self, stage: str, exc: BaseException) -> None:
         self.errors.append({"stage": stage, "type": type(exc).__name__, "message": str(exc)})
@@ -311,16 +318,31 @@ class CaptureSession:
         session = self
 
         def recorded_backward(tensor: torch.Tensor, *args: Any, **kwargs: Any) -> Any:
-            if os.getpid() == session.pid and session.pairing_capture is not None:
-                session.pairing_capture.backward(tensor, sys._getframe(1))
-            if os.getpid() == session.pid and tensor.numel() == 1:
-                scalar = float(tensor.detach().item())
-                if not math.isfinite(scalar):
-                    session._error("loss_nonfinite", ValueError(f"Scalar loss is {scalar}"))
-                    session.loss_series.append(None)
-                else:
-                    session.loss_series.append(scalar)
-            return session._original_backward(tensor, *args, **kwargs)
+            if os.getpid() != session.pid:
+                return session._original_backward(tensor, *args, **kwargs)
+            active = getattr(session._backward_active, "identities", None)
+            if active is None:
+                active = session._backward_active.identities = set()
+            identity = id(tensor)
+            # Tensor.backward can dispatch back to this wrapper through a
+            # TorchFunctionMode. Record that same in-flight Tensor only once;
+            # distinct nested losses and later calls remain observable.
+            if identity in active:
+                return session._original_backward(tensor, *args, **kwargs)
+            active.add(identity)
+            try:
+                if session.pairing_capture is not None:
+                    session.pairing_capture.backward(tensor, sys._getframe(1))
+                if tensor.numel() == 1:
+                    scalar = float(tensor.detach().item())
+                    if not math.isfinite(scalar):
+                        session._error("loss_nonfinite", ValueError(f"Scalar loss is {scalar}"))
+                        session.loss_series.append(None)
+                    else:
+                        session.loss_series.append(scalar)
+                return session._original_backward(tensor, *args, **kwargs)
+            finally:
+                active.remove(identity)
 
         self._backward_wrapper = recorded_backward
         torch.Tensor.backward = recorded_backward
@@ -403,7 +425,8 @@ class CaptureSession:
     def _forward_start(self, module: torch.nn.Module, args: Any) -> None:
         if os.getpid() != self.pid or self.finished:
             return
-        if self._forward_depth == 0:
+        depth = getattr(self._forward_depth, "value", 0)
+        if depth == 0:
             if self.pairing_capture is not None:
                 self.pairing_capture.forward(args)
             # Root .parameters() deduplicates tied parameters. Weak references also
@@ -414,11 +437,42 @@ class CaptureSession:
             if len(self._root_parameter_counts) < 10000:
                 self._root_parameter_counts.append(sum(p.numel() for p in parameters))
             self._sample_parameters()
-        self._forward_depth += 1
+            if (
+                threading.get_ident() == self._precision_thread
+                and self.precision_observer.operation_supported(module)
+            ):
+                try:
+                    self._precision_mode = self.precision_observer.operation_mode()
+                    self._precision_mode.__enter__()
+                except Exception as exc:  # noqa: BLE001 - optional metadata must not break training
+                    self._precision_mode = None
+                    self._error("precision_observation", exc)
+        self.precision_observer.observe_pre(module, args)
+        self._forward_depth.value = depth + 1
 
     def _forward_end(self, module: Any, args: Any, output: Any) -> None:
         if os.getpid() == self.pid and not self.finished:
-            self._forward_depth = max(0, self._forward_depth - 1)
+            try:
+                self.precision_observer.observe_post(module, args, output)
+            finally:
+                depth = max(0, getattr(self._forward_depth, "value", 0) - 1)
+                self._forward_depth.value = depth
+                if depth == 0 and threading.get_ident() == self._precision_thread:
+                    self._close_precision_mode()
+
+    def _close_precision_mode(self):
+        if self._precision_mode is not None:
+            if threading.get_ident() != self._precision_thread:
+                self._error(
+                    "precision_observation",
+                    RuntimeError("Precision mode cleanup must run on its owning thread"),
+                )
+                return
+            try:
+                self._precision_mode.__exit__(None, None, None)
+            except Exception as exc:  # noqa: BLE001 - preserve capture and mark precision unknown
+                self._error("precision_observation", exc)
+            self._precision_mode = None
 
     def _parameter_evidence(self) -> dict[str, Any]:
         stable = bool(self._parameter_samples) and len(set(self._parameter_samples)) == 1
@@ -500,11 +554,27 @@ class CaptureSession:
         for handle in self._parameter_handles:
             handle.remove()
         self._parameter_handles.clear()
+        self._close_precision_mode()
         if torch.Tensor.backward is self._backward_wrapper:
             torch.Tensor.backward = self._original_backward
         if _ACTIVE_SESSION is self:
             _ACTIVE_SESSION = None
         self.installed = False
+
+    def _precision_evidence(self):
+        evidence = self.precision_observer.snapshot()
+        if any(error["stage"] == "precision_observation" for error in self.errors):
+            evidence["complete"], evidence["precision"] = False, "unknown"
+        return evidence
+
+    def _entrypoint_evidence(self):
+        if self.entrypoint_capture is None:
+            return None
+        try:
+            return self.entrypoint_capture.finish()
+        except Exception as exc:  # noqa: BLE001 - failure of optional metadata cannot erase the capture
+            self._error("execution_entrypoint", exc)
+            return {"schema_version": 1, "complete": False, "reason": "ENTRYPOINT_CAPTURE_FAILED"}
 
     def finish(
         self,
@@ -587,6 +657,8 @@ class CaptureSession:
         self._result = {
             "protocol": "headroom.lab.v1",
             **self._parameter_evidence(),
+            "precision_observation": self._precision_evidence(),
+            "execution_entrypoint": self._entrypoint_evidence(),
             "pairing_capture": self.pairing_capture.evidence(len(self.step_records))
             if self.pairing_capture is not None
             else {"complete": False, "reason": "pairing requires a supported run_script target"},
@@ -608,7 +680,8 @@ class CaptureSession:
             if self.step_records
             else None,
             "timing_note": "Intervals between completed optimizer updates; first includes target setup; "
-            "pairing initialization hash time excluded, total wall time retains it",
+            "pairing initialization hash time excluded, total wall time retains it; "
+            "module/precision observation overhead remains in measured intervals",
             "wall_seconds": time.perf_counter() - self.started_at,
             "snapshot": {"available": snapshot is not None, "trace_count": trace_count},
             "snapshot_trace_count": trace_count,
@@ -639,6 +712,9 @@ def install_from_environment() -> CaptureSession:
         device=os.environ.get("HEADROOM_DEVICE", "cuda"),
     )
     try:
+        from headroom.lab.entrypoint import EntrypointCapture
+
+        session.entrypoint_capture = EntrypointCapture()
         session.start()
     except BaseException as exc:
         session.finish("error", exc, "setup_error")

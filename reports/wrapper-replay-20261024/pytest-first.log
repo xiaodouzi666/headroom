@@ -1,0 +1,26 @@
+.......FF.                                                               [100%]
+=================================== FAILURES ===================================
+_ test_real_cpu_wrapper_candidate_and_reference_apply_target_args_and_collect_sources _
+tests/test_wrapper_execution.py:200: in test_real_cpu_wrapper_candidate_and_reference_apply_target_args_and_collect_sources
+    (prepared.source_root / "sub/pkg/helper.py").write_text("VALUE = 23\n")
+/usr/lib/python3.12/pathlib.py:1049: in write_text
+    with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   PermissionError: [Errno 13] Permission denied: '/tmp/pytest-of-xiaodouzi/pytest-40/test_real_cpu_wrapper_candidat0/runs/5a56d409f7c64f8fbca7a1e1185423bf/source/sub/pkg/helper.py'
+___________ test_real_cpu_wrong_wrapper_target_fails_replay_matching ___________
+tests/test_wrapper_execution.py:237: in test_real_cpu_wrong_wrapper_target_fails_replay_matching
+    (prepared.source_root / "launch.sh").write_text(
+/usr/lib/python3.12/pathlib.py:1049: in write_text
+    with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   PermissionError: [Errno 13] Permission denied: '/tmp/pytest-of-xiaodouzi/pytest-40/test_real_cpu_wrong_wrapper_ta0/runs/efdb0e46b6644b4d980353ed7d457da6/source/launch.sh'
+=========================== short test summary info ============================
+FAILED tests/test_wrapper_execution.py::test_real_cpu_wrapper_candidate_and_reference_apply_target_args_and_collect_sources
+FAILED tests/test_wrapper_execution.py::test_real_cpu_wrong_wrapper_target_fails_replay_matching
+2 failed, 8 passed in 8.79s

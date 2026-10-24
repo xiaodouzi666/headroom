@@ -1,0 +1,68 @@
+{
+  "schema": "headroom.offline-verification.v1",
+  "revision": 2,
+  "recorded_at": "2026-10-24T11:54:31.545547+00:00",
+  "base_head": "7139306b2e47c02ed433e7924d8f75166a556846",
+  "scope": "Forward-only runtime precision mode; root hook/compare integration; 3-step/3-loss real CPU Docker and cross-thread mode restoration",
+  "provenance": "cpu_fixture",
+  "executed_gpu": false,
+  "executed_model_api": false,
+  "credentials_read": false,
+  "supersedes": "receipt.json",
+  "revision_reason": "The original global-capture mode interacted with wrapped backward dispatch and tests did not check backward cardinality. Revision 2 scopes mode to each root forward, skips known compiled subtrees, and verifies exactly one loss per backward plus cross-thread cleanup. Original records are retained.",
+  "commands": [
+    {
+      "argv": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/lab/precision.py",
+        "tests/test_precision.py",
+        "tests/test_precision_integration.py"
+      ],
+      "exit_code": 0,
+      "output": "reports/precision-observer-20261024/revision-2-check-1.txt"
+    },
+    {
+      "argv": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/lab/precision.py",
+        "tests/test_precision.py",
+        "tests/test_precision_integration.py"
+      ],
+      "exit_code": 0,
+      "output": "reports/precision-observer-20261024/revision-2-check-2.txt"
+    },
+    {
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_precision.py",
+        "tests/test_precision_integration.py",
+        "--basetemp",
+        ".cache/precision-observer-revision2-20261024",
+        "-q"
+      ],
+      "exit_code": 0,
+      "output": "reports/precision-observer-20261024/revision-2-check-3.txt"
+    }
+  ],
+  "thread_probe": "thread-probe-revision-2.json",
+  "cpu_evidence": "cpu-observations-revision-2.json",
+  "files": {
+    "headroom/lab/precision.py": "e3ef0eb6ac6db5696718c152d048fad0c4190b0a4ddca85ab414c79f2bb6f171",
+    "tests/test_precision.py": "cd5c2c79b8bd840bbb8875c613362d9810909a668c41ecb82eb93b939d5aeb72",
+    "tests/test_precision_integration.py": "ca33f56e2d00b44eacf5119cbdb3366ebdf257193dda7879a87e2dc65dbfa3cf",
+    "headroom/lab/hooks.py": "99f59f7d2f2f3a2f9ffbd31d2b7d8632e7c0b8612a647c3b4d6dd66ef5157810",
+    "headroom/verify/precision.py": "f87b95e8f3609e49cc445ed5530c3407a4952b64cdd3e9d6630b007430e0cdd9",
+    "headroom/verify/compare.py": "dc4451d81d04c80ec02e2d336be569f69935bd8ad839f4c5e0b2ac70c9429a6f"
+  },
+  "limitations": [
+    "Unknown, mixed, compiled or cross-thread observations do not select relaxed tolerance.",
+    "No proof of every native/custom operator dtype or of full workload equivalence.",
+    "Observation overhead stays in measured intervals; CPU evidence is not CUDA memory/throughput acceptance.",
+    "No tensor data copying, retention, or added GPU synchronization by precision observation."
+  ]
+}

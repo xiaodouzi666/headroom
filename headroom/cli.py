@@ -314,8 +314,8 @@ def watch(
 ) -> None:
     """Observe argv in Docker; confirmed CUDA OOM repairs mapped Python scripts.
 
-    Module, inline, or non-Python entries without a reliable repair-source mapping
-    can produce needs_human instead of a repair.
+    Shell wrappers retain their full argv. A single captured Python main supplies
+    the source mapping; ambiguous/multiple or source-free entries need human input.
     """
     from headroom.orchestrator import Policy
     from headroom.watch import watch_command
@@ -339,7 +339,7 @@ def watch(
     except (OSError, ValueError, TypeError):
         typer.echo(
             "Watch requires supported Docker argv and a valid source directory; "
-            "module, inline, or non-Python entries may need human source mapping.",
+            "automatic repair needs one captured Python main inside that source.",
             err=True,
         )
         raise typer.Exit(2) from None

@@ -1256,6 +1256,9 @@ function RoundDetails({
     ["Step-time change", "throughput_regression_pct"],
     ["Numerical equivalence", "loss_equivalence"],
     ["Comparison basis", "numerical_basis"],
+    ["Comparison precision", "comparison_precision"],
+    ["Loss tolerance", "loss_tolerance"],
+    ["Observed precision change", "observed_precision_change"],
     ["Maximum loss difference", "max_loss_delta"],
   ];
   const show = (value: unknown) =>

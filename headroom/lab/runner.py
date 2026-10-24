@@ -221,6 +221,39 @@ def read_capture(path: Path) -> dict:
     return result
 
 
+def _entrypoint_inventory(artifacts: Path, capture: dict) -> dict:
+    """Count observed capture owners; a second process is not silently selected."""
+    processes = artifacts / "processes"
+    try:
+        if processes.is_symlink():
+            raise ValueError("linked process inventory")
+        children = list(processes.iterdir()) if processes.exists() else []
+        count = 1 + len(children)
+        entry = capture.get("execution_entrypoint") or {}
+        if children:
+            reason = "MULTIPLE_PYTHON_ENTRYPOINTS"
+        elif capture.get("is_primary") is not True:
+            reason = "CAPTURE_PRIMARY_UNCONFIRMED"
+        elif entry.get("entry_observation") == "existing_profiler_unsupported":
+            reason = "CAPTURE_PROFILER_UNSUPPORTED"
+        elif entry.get("complete") is not True or entry.get("pid") != capture.get("pid"):
+            reason = "CAPTURE_ENTRYPOINT_INCOMPLETE"
+        else:
+            reason = None
+        return {
+            "captured_process_count": count,
+            "single_python_entrypoint": reason is None,
+            "reason": reason,
+            "basis": "instrumented capture owners, not a proof of absent uninstrumented processes",
+        }
+    except (OSError, ValueError):
+        return {
+            "captured_process_count": None,
+            "single_python_entrypoint": False,
+            "reason": "CAPTURE_PROCESS_INVENTORY_UNAVAILABLE",
+        }
+
+
 def merge_gpu_observations(
     device: str, before: dict, after: dict, captured_shared: bool | None = None
 ) -> dict:
@@ -258,6 +291,7 @@ def _run(
     seed: int,
     device: str,
     allocator_conf: str | None,
+    target_argv_override: dict | None = None,
 ) -> dict:
     validate_options(device, max_steps, max_seconds, seed)
     environment = container_environment(
@@ -268,6 +302,10 @@ def _run(
         allocator_conf=allocator_conf,
         command_mode=script_relative is None,
     )
+    if target_argv_override is not None:
+        if script_relative is not None:
+            raise ValueError("Target argv override requires sitecustomize command mode")
+        environment["HEADROOM_TARGET_ARGV_OVERRIDE"] = json.dumps(target_argv_override)
     root = Path(run_root).resolve() if run_root is not None else PROJECT_ROOT / "runs"
     root.mkdir(parents=True, exist_ok=True)
     run_id = uuid.uuid4().hex
@@ -298,6 +336,7 @@ def _run(
                 "source_root": str(source_root),
                 "source": source,
                 "command": command,
+                "target_argv_override": target_argv_override,
                 "environment": environment,
                 "image": docker.IMAGE,
                 "device": device,
@@ -336,6 +375,13 @@ def _run(
                         "reason": "CAPTURE_RESULT_MISSING_OR_INVALID",
                         "capture_error": str(error),
                     }
+                capture["execution_capture"] = _entrypoint_inventory(artifacts, capture)
+                manifest = read_artifact_json(directory / "manifest.json")
+                manifest.update(
+                    execution_entrypoint=capture.get("execution_entrypoint"),
+                    execution_capture=capture["execution_capture"],
+                )
+                _write_json(directory / "manifest.json", manifest)
                 captured_shared = capture.get("shared_gpu")
                 result = {
                     **capture,
@@ -395,6 +441,7 @@ def run_script(
     *,
     script_args: Sequence[str] = (),
     execution_argv: Sequence[str] | None = None,
+    execution_entrypoint: dict | None = None,
     source_root: str | Path | None = None,
     run_root: str | Path | None = None,
     max_steps: int = 20,
@@ -408,22 +455,60 @@ def run_script(
     if not script.is_file() or not script.is_relative_to(source):
         raise ValueError("script must be a file inside source_root")
     relative = script.relative_to(source)
+    if execution_entrypoint is not None and execution_argv is None:
+        raise ValueError("Captured entrypoint requires the original wrapper argv")
     if execution_argv is not None:
-        from headroom.execution import prepare_local_command, replay_argv
+        from headroom.execution import (
+            captured_wrapper_descriptor,
+            prepare_local_command,
+            replay_argv,
+            same_wrapper_entrypoint,
+        )
 
-        prepared = prepare_local_command(source, execution_argv)
+        prepared = prepare_local_command(
+            source, execution_argv, execution_entrypoint=execution_entrypoint
+        )
         if prepared.script.resolve() != script:
             raise ValueError("Execution argv must resolve to the supplied script")
-        return run_argv(
+        override = None
+        if execution_entrypoint is not None:
+            cwd = execution_entrypoint["startup_cwd_relative"]
+            override = {
+                "expected_startup_cwd": "/source" if cwd == "." else f"/source/{cwd}",
+                "expected_orig_argv": execution_entrypoint["python_argv"],
+                "original_target_args": execution_entrypoint["script_args"],
+                "effective_target_args": list(script_args),
+            }
+        result = run_argv(
             source,
-            replay_argv(execution_argv, script_args),
+            replay_argv(execution_argv, script_args, execution_entrypoint=execution_entrypoint),
             run_root=run_root,
             max_steps=max_steps,
             max_seconds=max_seconds,
             seed=seed,
             device=device,
             allocator_conf=allocator_conf,
+            **({"target_argv_override": override} if override is not None else {}),
         )
+        if execution_entrypoint is not None:
+            try:
+                manifest = read_artifact_json(Path(result["run_dir"]) / "manifest.json")
+                actual = captured_wrapper_descriptor(execution_argv, result, manifest)
+                applied = result.get("execution_entrypoint", {}).get("argv_override", {})
+                matched = (
+                    same_wrapper_entrypoint(execution_entrypoint, actual)
+                    and actual["effective_script_args"] == list(script_args)
+                    and applied.get("matched") is True
+                    and applied.get("applied") is True
+                )
+                reason = None if matched else "WRAPPER_REPLAY_ENTRYPOINT_MISMATCH"
+            except (OSError, ValueError, TypeError, KeyError) as error:
+                matched, reason = False, str(error)
+            result["execution_replay"] = {"matched": matched, "reason": reason}
+            if not matched:
+                result.update(status="error", reason="WRAPPER_REPLAY_ENTRYPOINT_MISMATCH")
+            _write_json(Path(result["run_dir"]) / "result.json", result)
+        return result
     command = [
         "/opt/venv/bin/python",
         "-m",
@@ -497,6 +582,7 @@ def run_argv(
     seed: int = 1337,
     device: str = "cuda",
     allocator_conf: str | None = None,
+    target_argv_override: dict | None = None,
 ) -> dict:
     """Observe arbitrary argv inside Docker; never interpret a host shell command.
 
@@ -528,4 +614,5 @@ def run_argv(
         seed=seed,
         device=device,
         allocator_conf=allocator_conf,
+        target_argv_override=target_argv_override,
     )

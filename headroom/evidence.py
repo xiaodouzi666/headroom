@@ -8,7 +8,7 @@ import re
 import stat
 from pathlib import Path, PurePosixPath
 
-from headroom.execution import parse_command, source_entrypoint
+from headroom.execution import captured_wrapper_descriptor, parse_command, source_entrypoint
 from headroom.lab.runner import read_artifact_json
 
 MAX_SNAPSHOT_BYTES = 512 * 1024 * 1024
@@ -72,6 +72,8 @@ def _main_source(manifest: dict) -> str | None:
     if _wrapper_command(command) and "--script" in command:
         index = command.index("--script") + 1
         candidate = command[index] if index < len(command) else ""
+    elif parse_command(command).kind == "command":
+        candidate = captured_wrapper_descriptor(command, manifest, manifest)["source_relative"]
     else:
         candidate = source_entrypoint(parse_command(command), available)
         if candidate is None:
@@ -85,7 +87,15 @@ def _source_import_roots(manifest: dict, primary: str) -> tuple[PurePosixPath, .
     if _wrapper_command(command):
         # run_target inserts script.parent before the /source cwd used to launch its -m wrapper.
         return tuple(dict.fromkeys((script_directory, PurePosixPath("."))))
-    if parse_command(command).kind == "python_module":
+    parsed = parse_command(command)
+    if parsed.kind == "command":
+        entry = captured_wrapper_descriptor(command, manifest, manifest)
+        return (
+            (PurePosixPath(entry["startup_cwd_relative"]),)
+            if entry["module"]
+            else (script_directory,)
+        )
+    if parsed.kind == "python_module":
         return (PurePosixPath("."),)
     # Direct Python script launch uses the entry-script directory, even inside a package tree.
     return (script_directory,)
@@ -171,7 +181,12 @@ def collect_sources(run_dir: Path, manifest: dict, analysis: dict) -> tuple[list
     import_roots = _source_import_roots(manifest, primary)
     entry_package_sources = []
     command = manifest.get("command", [])
-    if not _wrapper_command(command) and parse_command(command).kind == "python_module":
+    parsed = parse_command(command)
+    module_entry = parsed.kind == "python_module" or (
+        parsed.kind == "command"
+        and captured_wrapper_descriptor(command, manifest, manifest)["module"] is not None
+    )
+    if not _wrapper_command(command) and module_entry:
         entry_package_sources = [
             str(parent / "__init__.py")
             for parent in PurePosixPath(primary).parents

@@ -1,6 +1,6 @@
 # Command-mode repair
 
-The command path implements the execution handoff in PLAN C.3 and T1.9.
+The command path implements the execution handoff in PLAN C.3, T1.9 and the mapped-Python wrapper path in T2.6.
 CPU Docker checks and offline OOM handoff fixtures exercise the implementation;
 they do not certify a GPU OOM repair, model diagnosis, numerical equivalence,
 or the full arbitrary-command requirement in T2.6.
@@ -49,32 +49,70 @@ ordinary Watch does not inherit the T1.9 no-reference exception. This flag does
 not certify that numerical equivalence was measured. All source/policy,
 runtime, billing and verification gates remain in the production flow.
 
+## Shell and executable wrappers
+
+Watch can repair a wrapper with one observed, mapped Python entrypoint, for example:
+
+```sh
+headroom watch --source-root /absolute/project -- /bin/sh launch.sh --batch=8
+headroom watch --source-root /absolute/project -- /bin/sh -c 'cd sub && exec python -O -m pkg.train --batch=8'
+headroom watch --source-root /absolute/project -- ./launch.sh --batch=8
+```
+
+The entire launcher argv is replayed unchanged inside Docker. sitecustomize
+records the Python process's startup cwd, original interpreter argv, initial
+and effective target argv, main source file, module spec and process identity.
+The host checks the source mapping against the captured file manifest.
+Relative cwd and package imports remain part of the invocation.
+
+A candidate or small-batch reference can change target arguments without
+rewriting the shell program. Lab passes an internal target-argv override;
+sitecustomize applies it before the Python main only when startup cwd, complete
+original Python argv and original target arguments all match the captured
+descriptor. Interpreter flags, `-m`, and the wrapper remain unchanged. Other
+Python launches do not match and are not modified. The result records whether
+the override matched/applied and what arguments actually entered the main.
+A missing match, changed entrypoint, or multiple observed Python capture owners
+cannot pass replay verification.
+
+`FixRequest.execution_entrypoint` carries this captured descriptor. It cannot
+be inferred from an arbitrary shell string at source-preparation time:
+use Watch to obtain runtime evidence. Existing direct-Python `fix --cmd`
+entrypoints keep their original behavior. Non-OOM wrapper exit codes are
+preserved, including nonzero SystemExit.
+
+## Reproducing a kept wrapper configuration
+
+The kept configuration's `manifest.json` saves the original wrapper command
+and `execution_entrypoint`; `cli.json` saves original/effective target args.
+Together they are the Lab replay contract. Given a source tree with the patch
+applied, call `run_script` with its mapped Python file, that source root, the
+saved `execution_argv`, saved descriptor, and `cli.json["effective"]` as
+`script_args`. Lab reinjects and verifies the targeted override.
+
+`git apply` applies source edits only. A normal external shell invocation does
+**not** consume Headroom's saved descriptor or apply its target-argv override.
+To run outside Lab, the user must also implement the saved target-argument
+changes in their launcher/configuration and apply any recorded environment
+changes. The report must not suggest that applying the source diff alone
+reproduces CLI changes.
+
 ## Explicit remaining limits
 
-- `-E`, `-I`, and `-S` disable the configured injection path and cannot
-  enter automatic repair. They can still be observed with their real exit.
-- Inline `-c`, stdin, shell wrappers, arbitrary binaries and distributed
-  launchers remain capture-only. A shell may launch a captured Python child,
-  but the current capture protocol lacks a reliable mapping from that child's
-  main file/cwd to a replayable repair target. Such OOMs retain evidence and
-  return `needs_human`; no synthetic source file or altered launcher is used.
-- Module source must resolve inside the copied source tree. Installed-only
-  modules and dynamic import-path launchers need explicit source/entrypoint
-  support. Static source lookup is not proof of the behavior of custom import
-  hooks or deliberately falsified capture data.
-- No interactive stdin/TTY forwarding or dependency installation is added.
-
-The next step for shell-wrapper repair is to capture the actual Python main
-file, module spec, original argv and cwd in the owning process, validate its
-mapping to the captured source manifest, then replay the unchanged root
-launcher. Multiple Python workers require an explicit aggregation/selection
-contract. This is still pending; Python command repair does not imply that
-all arbitrary commands can now be repaired.
+- `-E`, `-I` and `-S` disable the configured injection path.
+- Inline `-c`, stdin or non-Python runtimes without a source-backed Python main
+  cannot be mapped to an editable repair target.
+- Multiple observed Python entrypoints are reported as ambiguous; one primary
+  process is not silently treated as a complete distributed workload.
+- Module/source/cwd must resolve inside the copied source. Runtime capture is
+  observed process data, not authentication against deliberately falsified code
+  or proof that no uninstrumented process existed.
+- Interactive stdin/TTY forwarding and dependency installation remain unsupported.
 
 ## Reproduction
 
 ```sh
-.venv/bin/python reports/command-replay-20261024/run_tests.py
+.venv/bin/python reports/wrapper-replay-20261024/run_tests.py
 ```
 
 The script installs a network-denial guard before importing pytest, uses the

@@ -1,0 +1,105 @@
+{
+  "source_root": "/tmp/pytest-of-xiaodouzi/pytest-47/test_watch_synthetic_oom_reach0/flow-source",
+  "source": {
+    "files": {
+      "launch.sh": {
+        "sha256": "d2f8b5febe3aadb3fd091fd7f852830728cb566581f3090c044935275a62a425",
+        "bytes": 29
+      },
+      "train.py": {
+        "sha256": "78515c1bd7c431e92ec67686ff677fc7ebf3de31fbd577f81248e4dbc6cc823b",
+        "bytes": 158
+      }
+    },
+    "skipped": [],
+    "total_bytes": 187
+  },
+  "command": [
+    "/bin/sh",
+    "launch.sh",
+    "--batch=8"
+  ],
+  "target_argv_override": null,
+  "environment": {
+    "PATH": "/opt/venv/bin:/usr/bin:/bin",
+    "HOME": "/tmp",
+    "HF_HOME": "/tmp/headroom-hf",
+    "HF_HUB_CACHE": "/tmp/headroom-hf/hub",
+    "HF_DATASETS_CACHE": "/tmp/headroom-hf/datasets",
+    "HF_HUB_OFFLINE": "1",
+    "TRANSFORMERS_OFFLINE": "1",
+    "HF_DATASETS_OFFLINE": "1",
+    "HF_HUB_DISABLE_TELEMETRY": "1",
+    "TOKENIZERS_PARALLELISM": "false",
+    "TMPDIR": "/tmp",
+    "LANG": "C.UTF-8",
+    "PYTHONUNBUFFERED": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONHASHSEED": "1337",
+    "PYTHONNOUSERSITE": "1",
+    "PYTHONPATH": "/runtime/headroom/lab:/runtime",
+    "OMP_NUM_THREADS": "4",
+    "MKL_NUM_THREADS": "4",
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+    "CUDA_VISIBLE_DEVICES": "",
+    "HEADROOM_CAPTURE": "1",
+    "HEADROOM_OUTPUT_DIR": "/out",
+    "HEADROOM_MAX_STEPS": "20",
+    "HEADROOM_MAX_SECONDS": "120",
+    "HEADROOM_SEED": "1337",
+    "HEADROOM_DEVICE": "cpu"
+  },
+  "image": "headroom-lab:py312-cu124",
+  "device": "cpu",
+  "max_steps": 20,
+  "max_seconds": 120,
+  "seed": 1337,
+  "execution_entrypoint": {
+    "schema_version": 1,
+    "complete": true,
+    "pid": 1,
+    "ppid": 0,
+    "executable": "/opt/venv/bin/python",
+    "startup_cwd": "/source",
+    "cwd": "/source",
+    "orig_argv": [
+      "python",
+      "-O",
+      "train.py",
+      "--batch=8"
+    ],
+    "startup_argv": [
+      "train.py",
+      "--batch=8"
+    ],
+    "effective_startup_argv": [
+      "train.py",
+      "--batch=8"
+    ],
+    "argv_override": {
+      "requested": false,
+      "matched": false,
+      "applied": false,
+      "original_target_args": [
+        "--batch=8"
+      ],
+      "effective_target_args": [
+        "--batch=8"
+      ],
+      "reason": "not_requested"
+    },
+    "argv": [
+      "train.py",
+      "--batch=8"
+    ],
+    "main_file": "/source/train.py",
+    "module": null,
+    "entry_observation": "main_frame_observed"
+  },
+  "execution_capture": {
+    "captured_process_count": 1,
+    "single_python_entrypoint": true,
+    "reason": null,
+    "basis": "instrumented capture owners, not a proof of absent uninstrumented processes"
+  }
+}

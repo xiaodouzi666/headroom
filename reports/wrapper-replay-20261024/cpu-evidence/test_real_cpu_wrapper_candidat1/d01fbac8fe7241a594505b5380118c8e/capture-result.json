@@ -1,0 +1,199 @@
+{
+  "protocol": "headroom.lab.v1",
+  "parameter_count": null,
+  "parameter_count_complete": false,
+  "parameter_count_source": "lab_module_parameter_hooks",
+  "parameter_count_observations": [],
+  "root_forward_parameter_counts": [],
+  "parameter_count_coverage": "Unique live Parameters registered on nn.Module during capture, plus Parameters seen via root forward module.parameters(); sampled at root forwards and optimizer updates. Tied parameters count once; no tensor is retained. Standalone tensors, pre-capture unused modules, and no-root-forward construction failures are not covered. Changing observed counts are incomplete. This is runtime evidence, not authentication against a target that deliberately tampers with hooks.",
+  "precision_observation": {
+    "protocol": "headroom.precision.v1",
+    "source": "lab_runtime_precision_observer_v1",
+    "device": "cpu",
+    "precision": "unknown",
+    "complete": false,
+    "root_modes": {
+      "fp32": 0,
+      "bf16": 0,
+      "unknown": 0
+    },
+    "counts": {
+      "module_pre": 0,
+      "module_post": 0,
+      "root_forwards": 0,
+      "operation_calls": 0,
+      "tensor_metadata": 0,
+      "ignored_device_tensors": 0
+    },
+    "autocast": {
+      "disabled": 0,
+      "bfloat16": 0,
+      "unsupported": 0,
+      "unknown": 0
+    },
+    "dtypes": {
+      "parameter": {
+        "float32": 0,
+        "bfloat16": 0,
+        "float16": 0,
+        "float64": 0,
+        "complex": 0,
+        "other_floating": 0,
+        "non_floating": 0
+      },
+      "input": {
+        "float32": 0,
+        "bfloat16": 0,
+        "float16": 0,
+        "float64": 0,
+        "complex": 0,
+        "other_floating": 0,
+        "non_floating": 0
+      },
+      "output": {
+        "float32": 0,
+        "bfloat16": 0,
+        "float16": 0,
+        "float64": 0,
+        "complex": 0,
+        "other_floating": 0,
+        "non_floating": 0
+      },
+      "operation_input": {
+        "float32": 0,
+        "bfloat16": 0,
+        "float16": 0,
+        "float64": 0,
+        "complex": 0,
+        "other_floating": 0,
+        "non_floating": 0
+      },
+      "operation_output": {
+        "float32": 0,
+        "bfloat16": 0,
+        "float16": 0,
+        "float64": 0,
+        "complex": 0,
+        "other_floating": 0,
+        "non_floating": 0
+      }
+    },
+    "errors": {},
+    "coverage": {
+      "module_hooks": "Every observed module pre/post forward; direct registered parameters",
+      "internal_autocast": "TorchFunctionMode samples autocast and tensor argument/output metadata during forwards",
+      "root_summary": "Mixed root forward modes, unknown/unsupported dtypes, errors or limits are unknown",
+      "tensor_data_access": false,
+      "gpu_synchronization": false,
+      "tensor_references_retained": false,
+      "all_operator_dtypes_proven": false,
+      "limitations": [
+        "TorchFunctionMode observes Python-dispatched torch functions; C++/compiled/custom operators may not expose internal autocast or every intermediate dtype.",
+        "Metadata records observed precision, not tensor values or full numerical equivalence.",
+        "Known compiled module wrappers and cross-thread module forwards remain unknown.",
+        "Metadata observation adds Python overhead; no tensor data or GPU synchronization is added.",
+        "Runtime hooks are not authentication against deliberate target tampering."
+      ]
+    }
+  },
+  "execution_entrypoint": {
+    "schema_version": 1,
+    "complete": true,
+    "pid": 1,
+    "ppid": 0,
+    "executable": "/opt/venv/bin/python",
+    "startup_cwd": "/source/sub",
+    "cwd": "/source/sub",
+    "orig_argv": [
+      "python",
+      "-O",
+      "-m",
+      "pkg.entry",
+      "--batch=8",
+      "literal space;$(text)"
+    ],
+    "startup_argv": [
+      "-m",
+      "--batch=8",
+      "literal space;$(text)"
+    ],
+    "effective_startup_argv": [
+      "-m",
+      "--batch=8",
+      "literal space;$(text)"
+    ],
+    "argv_override": {
+      "requested": false,
+      "matched": false,
+      "applied": false,
+      "original_target_args": [
+        "--batch=8",
+        "literal space;$(text)"
+      ],
+      "effective_target_args": [
+        "--batch=8",
+        "literal space;$(text)"
+      ],
+      "reason": "not_requested"
+    },
+    "argv": [
+      "/source/sub/pkg/entry.py",
+      "--batch=8",
+      "literal space;$(text)"
+    ],
+    "main_file": "/source/sub/pkg/entry.py",
+    "module": "pkg.entry",
+    "entry_observation": "main_frame_observed"
+  },
+  "pairing_capture": {
+    "complete": false,
+    "reason": "pairing requires a supported run_script target"
+  },
+  "schema_version": 1,
+  "capture_complete": true,
+  "execution_status": "completed",
+  "status": "completed",
+  "termination_reason": "script_exit",
+  "pid": 1,
+  "is_primary": true,
+  "steps": 0,
+  "loss_series": [],
+  "step_records": [],
+  "peak_allocated_bytes": null,
+  "peak_reserved_bytes": null,
+  "peak_alloc_gb": null,
+  "peak_reserved_gb": null,
+  "step_ms_median": null,
+  "timing_note": "Intervals between completed optimizer updates; first includes target setup; pairing initialization hash time excluded, total wall time retains it; module/precision observation overhead remains in measured intervals",
+  "wall_seconds": 0.0019468071404844522,
+  "snapshot": {
+    "available": false,
+    "trace_count": null
+  },
+  "snapshot_trace_count": null,
+  "oom": null,
+  "shared_gpu": null,
+  "gpu": null,
+  "env": {
+    "pid": 1,
+    "is_primary": true,
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "device": "cpu",
+    "seed": 1337,
+    "max_steps": 20,
+    "max_seconds": 120.0,
+    "PYTORCH_CUDA_ALLOC_CONF": null,
+    "CUDA_VISIBLE_DEVICES": "",
+    "seeded": {
+      "python": true,
+      "torch": true,
+      "numpy": true
+    },
+    "deterministic_algorithms": true,
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8"
+  },
+  "errors": [],
+  "exception": null
+}

@@ -19,7 +19,7 @@ All work, caches, runs, and media remain on azuki.
 | T1.3 | LLM 客户端与路由（P0，~1.5h） | 离线实现完成，实测待验收 | reports/runtime-output-cap-20261024T102844Z/verification.json;210 guarded tests; exact Nano ID and explicit output-cap field; real Super JSON/Ultra200k pending |
 | T1.4 | Diagnose（Ultra）（P0，~2.5h） | 实现完成，模型验收待办 | docs/DIAGNOSE.md; docs/PROMPT_PREFLIGHT.md; four complete requests audited locally; provider billing domain and real Ultra diagnosis pending |
 | T1.5 | Patch（Super）与应用（P0，~2.5h） | 实现及离线验收完成；真实补丁待办 | docs/PATCH.md; git apply, compile, bounded repair and policy tests; real Super/GPU cases pending |
-| T1.6 | Verify 与比较（P0，~2h） | 原计划条件化数值比较及GPU命令回归通过；模型修复验收待办 | docs/VERIFY.md; parameter shrink rejected; original numerical/throughput gates retained |
+| T1.6 | Verify 与比较（P0，~2h） | 运行时精度识别、原计划数值比较及GPU回归通过；模型修复验收待办 | docs/VERIFY.md; FP32/BF16 observation selects original 1e-3/2e-2 tolerance, unknown retains stricter bound; actual dtype change requires policy; 20-update GPU proof retained |
 | T1.7 | 单轮编排 + 存储 + 事件（P0，~2h） | 主流程与存储已实现并离线联调 | docs/SEARCH.md; SQLite ordered events, partial reports, SDK fixture pipeline; live two-call gate pending |
 | T1.8 | 报告（P0，~1.5h） | 报告实现与数字追溯通过 | docs/STORAGE_REPORTS.md; JSON/Markdown, source links, Pareto files; real repaired report pending |
 | T1.9 | 真实仓库：nanoGPT（P0，~2h） | 仓库命令重跑与无参考n/a接线完成；真实修复待办 | reports/nanogpt-lab-baseline-20261024.json; actual repair/22GB/diff/cost gates pending |
@@ -31,7 +31,7 @@ All work, caches, runs, and media remain on azuki.
 | T2.3 | Nano 栈标注（P1，~1h） | Nano标注与子预算已实现；实测待办 | headroom/annotate.py; top40 strict labels, 0.02 USD sub-budget; live eight-case agreement pending |
 | T2.4 | 预算守卫与成本面板（P0，~45min） | 持久预算与面板已实现并离线测 | docs/RUNTIME.md; per-attempt reservations, unknown charges, daily/total caps, partial stop reports |
 | T2.5 | HF Transformers 场景（P1，~2h） | HF场景CPU/GPU基线通过；修复待办 | reports/hf-trainer-baseline-20261024.json; real Trainer OOM; configuration-only repair gate pending |
-| T2.6 | Watch 模式（P2，~1.5h） | Python脚本/模块/flags可重跑；shell仍仅观察，完整修复验收待办 | docs/WATCH_HF.md; 89 scoped tests passed; modules/inline/flags/shell observed in Docker; unsupported replay OOM needs_human; missing capture unknown; no host fallback |
+| T2.6 | Watch 模式（P2，~1.5h） | 单一Python入口的shell启动链可修复重跑；多进程定位与真实模型验收待办 | docs/WATCH_HF.md; exact wrapper/cwd/module preserved, matched pre-main argv changes; real CPU candidate/reference captures; ambiguous multiple Python processes remain needs_human; no host fallback |
 | T2.7 | Docker/HF 缓存稳健性（P1）：验收：三个场景在 Docker 路径下结果与子进程路径一致（峰值差 ≤ 1%）。 | 安全独立子进程环境阻塞；原门槛未通过 | reports/t2.7-isolation-preflight-20261024.json; unshare uid_map EPERM; bwrap network setup EPERM; no sudo/system change/unsafe host fallback; existing Docker dual-entry CPU checks are component evidence only |
 | T2.8 | 小评测 + 自优化（P0，可夜间自治，~4h） | 显式策略矩阵与离线统计完成；原真实验收待办 | docs/EVALUATION.md; default/strict 实际等价，allow_precision 必须显式选择；全矩阵共享预算，逐行完整 Policy；原两档歧义、≤3轮优化、target_met/首因各≥75% 和 $12 实测均未关闭 |
 | T3.1 | FastAPI + SSE（P0，~3h） | API队列/SSE/下载已实现并测 | docs/API.md; shared admission/preparation/queue/worker deadline, owned process cleanup, report-ready SSE, session isolation and rate limits |
@@ -54,6 +54,8 @@ All work, caches, runs, and media remain on azuki.
 | Phase 6 | Weekly health/alerts; balance by Nov 25; manual Dec 1 and Dec 8 access | 未开始 | Future dated acceptance |
 
 ## Acceptance log
+
+- 2026-10-24T12:04:28.000883+00:00: runtime precision observation now selects original FP32/BF16 tolerance and records actual precision changes; shell launchers with one mapped Python target preserve wrapper/cwd/module while replaying patched target arguments. Guarded full backend1100tests passed257.33s with source hashes unchanged; frontend39tests/build passed. Actual CUDA FP32/BF16 runs each completed20updates/20losses, observed change and2% tolerance verified (max delta0.0001003146). Stable s2 diagnostic copy explains foreach temporary peak but does not replace canonical acceptance. No new model calls/cost, profile enablement or PLAN changes. Evidence reports/precision-wrapper-20261024/verification.json.
 
 - 2026-10-24T11:37:25.038903+00:00: restored the retained original scalar-loss contract instead of unapproved global pairing gates; optional pairing remains evidence. Added scoped repository no-reference n/a acceptance, CLI/YAML policy controls, exact Python flags/module replay through baseline/candidate/reference/Watch/API/evaluation, and separate nine-case MVP20% reclaim targets (general default30% unchanged). Guarded full backend1035tests passed with unchanged source hashes; frontend39tests/typecheck/build passed. Manual non-pinned Python module GPU regression completed20updates twice,73.3787%peak saving, identical observed losses and unknown pairing; zero model benchmark credit. Local preview refreshed; six-hour read-only promo follow-up installed. New model cost0, no recharge/public submission, PLAN bytes unchanged. Full goal remains active; see reports/original-plan-contract-20261024/verification.json.
 
@@ -106,9 +108,9 @@ All work, caches, runs, and media remain on azuki.
 
 ## 待 Frank 决策
 
-- Ultra readiness: a catalogue-wide 1,048,576-token reservation plus4,000 output tokens costs1.060576USD before tax at observed prices, exceeding the unchanged0.60USD run guard. Four real request payloads now have pinned local template counts29,221–40,430, but this is not a provider billing ceiling. docs/PROMPT_PREFLIGHT.md records the distinction. Promotional balance alone does not settle this guard: establish the provider input domain or explicitly review a bounded calibration/policy alternative before live repair; no verified flag or threshold was changed.
+- Ultra admission: the current strict implementation reserves1.060576USD for the entire1,048,576-token context plus4,000 output tokens; this is not a provider minimum charge or an original PLAN requirement. Four final requests measure29,221–40,430 tokens with the pinned local template, which remains an estimate rather than a provider billing bound. docs/PROMPT_PREFLIGHT.md records the public-interface audit and separates provider bounds, local estimates and actual usage. Original0.35/0.60USD actual-cost gates and current0.10USD connectivity-only authorization remain unchanged; no live profile enabled.
 
-- T1.2: s2 optimizer-state peak fraction is39.8715%, below original40%; task remains unaccepted. Its baseline also already fits22GB, so later T2.1 two-round acceptance remains unresolved. Preserve these results for the requested later discussion; no threshold or fixture changes made to force a pass.
+- T1.2: s2 optimizer-state peak fraction is39.8715%, below original40%; task remains unaccepted. Its baseline also already fits22GB, so later T2.1 two-round acceptance remains unresolved. Preserve these results for the requested later discussion; no threshold or fixture changes made to force a pass. A separate foreach=False diagnostic copy now has stable runtime hashes,49.4149464840% optimizer fraction and20 matched losses (max delta2.384185791e-7); reports/s2-optimizer-diagnostic-20261024 records it. Canonical/history unchanged; this is not acceptance or a model-generated repair.
 
 - 2026-10-23: Frank requests retaining the original plan; discuss audit proposals individually later. No acceptance threshold or scope change is approved.
 

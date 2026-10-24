@@ -135,6 +135,7 @@ def verify_script(
     baseline_script=None,
     script_args=(),
     execution_argv=None,
+    execution_entrypoint=None,
     baseline_execution_argv=None,
     baseline_args=None,
     candidate_source_root=None,
@@ -164,12 +165,16 @@ def verify_script(
     if type(seed) is not int:
         raise ValueError("Verification requires an explicit or recorded baseline seed")
     command_options = {"execution_argv": execution_argv} if execution_argv is not None else {}
+    if execution_entrypoint is not None:
+        command_options["execution_entrypoint"] = execution_entrypoint
     original_command = (
         execution_argv if baseline_execution_argv is None else baseline_execution_argv
     )
     baseline_command_options = (
         {"execution_argv": original_command} if original_command is not None else {}
     )
+    if execution_entrypoint is not None:
+        baseline_command_options["execution_entrypoint"] = execution_entrypoint
     candidate = run_script(
         candidate_script,
         script_args=script_args,
@@ -195,7 +200,9 @@ def verify_script(
         elif candidate.get("status") == "completed":
             if baseline_args is None:
                 try:
-                    if original_command is not None:
+                    if execution_entrypoint is not None:
+                        baseline_args = list(execution_entrypoint["script_args"])
+                    elif original_command is not None:
                         from headroom.execution import parse_command
 
                         baseline_args = list(parse_command(original_command).script_args)

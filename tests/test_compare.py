@@ -265,3 +265,92 @@ def test_shared_gpu_does_not_invalidate_oom_measured_capacity():
     assert report.target_met
     assert report.checks["gpu_observation_clear"] is False
     assert report.checks["throughput_limit"] is None
+
+
+def with_precision(result, mode, *, complete=True):
+    result["precision_observation"] = {
+        "protocol": "headroom.precision.v1",
+        "source": "lab_runtime_precision_observer_v1",
+        "device": result["env"]["device"],
+        "complete": complete,
+        "precision": mode,
+        "root_modes": {key: 20 if key == mode else 0 for key in ("fp32", "bf16", "unknown")},
+        "errors": {},
+    }
+    return result
+
+
+def test_existing_bf16_workload_uses_original_tolerance_without_a_new_precision_change():
+    baseline = with_precision(run(), "bf16")
+    candidate = with_precision(
+        run(peak=6_000_000_000, losses=[x + 0.01 for x in baseline["loss_series"]]), "bf16"
+    )
+    report = compare_runs(baseline, candidate, target="reclaim")
+    assert report.target_met and report.loss_equivalence == "within_tol"
+    assert report.comparison_precision == "bf16" and report.loss_tolerance == 0.02
+    assert report.observed_precision_change is False and report.numerics_changed is False
+
+
+def test_actual_fp32_to_bf16_transition_requires_policy_even_if_plan_claims_none():
+    baseline = with_precision(run(), "fp32")
+    candidate = with_precision(
+        run(peak=6_000_000_000, losses=[x + 0.01 for x in baseline["loss_series"]]), "bf16"
+    )
+    denied = compare_runs(baseline, candidate, target="reclaim")
+    allowed = compare_runs(
+        baseline, candidate, target="reclaim", policy={"allow_numerics_change": True}
+    )
+    assert denied.observed_precision_change and denied.numerics_changed
+    assert denied.loss_equivalence == "changed" and not denied.target_met
+    assert denied.checks["numerics_policy"] is False
+    assert allowed.target_met and allowed.loss_equivalence == "changed"
+    assert allowed.loss_tolerance == 0.02
+    candidate["loss_series"] = [x + 0.03 for x in baseline["loss_series"]]
+    assert not compare_runs(
+        baseline, candidate, target="reclaim", policy={"allow_numerics_change": True}
+    ).target_met
+
+
+@pytest.mark.parametrize("unknown_side", ["baseline", "candidate"])
+def test_missing_or_incomplete_precision_does_not_upgrade_tolerance(unknown_side):
+    baseline = with_precision(run(), "bf16", complete=unknown_side != "baseline")
+    candidate = with_precision(
+        run(peak=6_000_000_000, losses=[x + 0.01 for x in baseline["loss_series"]]),
+        "bf16",
+        complete=unknown_side != "candidate",
+    )
+    report = compare_runs(
+        baseline, candidate, target="reclaim", policy={"allow_numerics_change": True}
+    )
+    assert report.comparison_precision == "fp32" and report.loss_tolerance == 0.001
+    assert report.observed_precision_change is None
+    assert not report.target_met
+
+
+def test_precision_metadata_does_not_create_a_new_global_gate_for_legacy_runs():
+    report = compare_runs(run(), run(peak=6_000_000_000), target="reclaim")
+    assert report.target_met and report.loss_equivalence == "identical"
+    assert report.observed_precision_change is None
+    assert report.loss_tolerance == 0.001
+
+
+def test_oom_bf16_tolerance_uses_original_reference_precision():
+    baseline = with_precision(run(status="oom", losses=[]), "bf16")
+    reference = with_precision(run(), "bf16")
+    candidate = with_precision(run(losses=[x + 0.01 for x in reference["loss_series"]]), "bf16")
+    report = compare_runs(baseline, candidate, reference=reference)
+    assert report.target_met and report.loss_equivalence == "within_tol"
+    reference["precision_observation"]["complete"] = False
+    assert compare_runs(baseline, candidate, reference=reference).loss_tolerance == 0.001
+
+
+def test_observed_fp32_after_bf16_does_not_inherit_relaxed_bf16_bound():
+    baseline = with_precision(run(), "bf16")
+    candidate = with_precision(
+        run(peak=6_000_000_000, losses=[x + 0.01 for x in baseline["loss_series"]]), "fp32"
+    )
+    report = compare_runs(
+        baseline, candidate, target="reclaim", policy={"allow_numerics_change": True}
+    )
+    assert report.observed_precision_change and report.numerics_changed
+    assert report.loss_tolerance == 0.001 and not report.target_met

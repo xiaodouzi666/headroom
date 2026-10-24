@@ -1,0 +1,532 @@
+{
+  "protocol": "headroom.lab.v1",
+  "parameter_count": 2,
+  "parameter_count_complete": true,
+  "parameter_count_source": "lab_module_parameter_hooks",
+  "parameter_count_observations": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+  ],
+  "root_forward_parameter_counts": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+  ],
+  "parameter_count_coverage": "Unique live Parameters registered on nn.Module during capture, plus Parameters seen via root forward module.parameters(); sampled at root forwards and optimizer updates. Tied parameters count once; no tensor is retained. Standalone tensors, pre-capture unused modules, and no-root-forward construction failures are not covered. Changing observed counts are incomplete. This is runtime evidence, not authentication against a target that deliberately tampers with hooks.",
+  "precision_observation": {
+    "protocol": "headroom.precision.v1",
+    "source": "lab_runtime_precision_observer_v1",
+    "device": "cpu",
+    "precision": "fp32",
+    "complete": true,
+    "root_modes": {
+      "fp32": 20,
+      "bf16": 0,
+      "unknown": 0
+    },
+    "counts": {
+      "module_pre": 20,
+      "module_post": 20,
+      "root_forwards": 20,
+      "operation_calls": 20,
+      "tensor_metadata": 160,
+      "ignored_device_tensors": 0
+    },
+    "autocast": {
+      "disabled": 60,
+      "bfloat16": 0,
+      "unsupported": 0,
+      "unknown": 0
+    },
+    "dtypes": {
+      "parameter": {
+        "float32": 40,
+        "bfloat16": 0,
+        "float16": 0,
+        "float64": 0,
+        "complex": 0,
+        "other_floating": 0,
+        "non_floating": 0
+      },
+      "input": {
+        "float32": 20,
+        "bfloat16": 0,
+        "float16": 0,
+        "float64": 0,
+        "complex": 0,
+        "other_floating": 0,
+        "non_floating": 0
+      },
+      "output": {
+        "float32": 20,
+        "bfloat16": 0,
+        "float16": 0,
+        "float64": 0,
+        "complex": 0,
+        "other_floating": 0,
+        "non_floating": 0
+      },
+      "operation_input": {
+        "float32": 60,
+        "bfloat16": 0,
+        "float16": 0,
+        "float64": 0,
+        "complex": 0,
+        "other_floating": 0,
+        "non_floating": 0
+      },
+      "operation_output": {
+        "float32": 20,
+        "bfloat16": 0,
+        "float16": 0,
+        "float64": 0,
+        "complex": 0,
+        "other_floating": 0,
+        "non_floating": 0
+      }
+    },
+    "errors": {},
+    "coverage": {
+      "module_hooks": "Every observed module pre/post forward; direct registered parameters",
+      "internal_autocast": "TorchFunctionMode samples autocast and tensor argument/output metadata during forwards",
+      "root_summary": "Mixed root forward modes, unknown/unsupported dtypes, errors or limits are unknown",
+      "tensor_data_access": false,
+      "gpu_synchronization": false,
+      "tensor_references_retained": false,
+      "all_operator_dtypes_proven": false,
+      "limitations": [
+        "TorchFunctionMode observes Python-dispatched torch functions; C++/compiled/custom operators may not expose internal autocast or every intermediate dtype.",
+        "Metadata records observed precision, not tensor values or full numerical equivalence.",
+        "Known compiled module wrappers and cross-thread module forwards remain unknown.",
+        "Metadata observation adds Python overhead; no tensor data or GPU synchronization is added.",
+        "Runtime hooks are not authentication against deliberate target tampering."
+      ]
+    }
+  },
+  "execution_entrypoint": {
+    "schema_version": 1,
+    "complete": true,
+    "pid": 1,
+    "ppid": 0,
+    "executable": "/opt/venv/bin/python",
+    "startup_cwd": "/source/sub",
+    "cwd": "/source/sub",
+    "orig_argv": [
+      "python",
+      "-O",
+      "-m",
+      "pkg.entry",
+      "--batch",
+      "8"
+    ],
+    "startup_argv": [
+      "-m",
+      "--batch",
+      "8"
+    ],
+    "effective_startup_argv": [
+      "-m",
+      "--batch",
+      "8"
+    ],
+    "argv_override": {
+      "requested": false,
+      "matched": false,
+      "applied": false,
+      "original_target_args": [
+        "--batch",
+        "8"
+      ],
+      "effective_target_args": [
+        "--batch",
+        "8"
+      ],
+      "reason": "not_requested"
+    },
+    "argv": [
+      "/source/sub/pkg/entry.py",
+      "--batch",
+      "8"
+    ],
+    "main_file": "/source/sub/pkg/entry.py",
+    "module": "pkg.entry",
+    "entry_observation": "main_frame_observed"
+  },
+  "pairing_capture": {
+    "complete": false,
+    "reason": "pairing requires a supported run_script target"
+  },
+  "schema_version": 1,
+  "capture_complete": true,
+  "execution_status": "completed",
+  "status": "completed",
+  "termination_reason": "step_limit",
+  "pid": 1,
+  "is_primary": true,
+  "steps": 20,
+  "loss_series": [
+    0.7261294722557068,
+    0.6692009568214417,
+    0.6167356371879578,
+    0.568383514881134,
+    0.5238223671913147,
+    0.482754647731781,
+    0.44490668177604675,
+    0.41002604365348816,
+    0.3778800368309021,
+    0.34825417399406433,
+    0.32095101475715637,
+    0.2957885265350342,
+    0.27259865403175354,
+    0.25122690200805664,
+    0.23153077065944672,
+    0.21337877213954926,
+    0.19664981961250305,
+    0.1812324821949005,
+    0.16702388226985931,
+    0.1539292186498642
+  ],
+  "step_records": [
+    {
+      "step": 1,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 2605.9213639236987,
+      "elapsed_ms": 2605.9213639236987,
+      "wall_time_us": 1792842902718464,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 2,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.4501182120293379,
+      "elapsed_ms": 2606.371482135728,
+      "wall_time_us": 1792842902718911,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 3,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.3515048883855343,
+      "elapsed_ms": 2606.7229870241135,
+      "wall_time_us": 1792842902719262,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 4,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.3409991040825844,
+      "elapsed_ms": 2607.063986128196,
+      "wall_time_us": 1792842902719602,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 5,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.3482019528746605,
+      "elapsed_ms": 2607.412188081071,
+      "wall_time_us": 1792842902719951,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 6,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.3361869603395462,
+      "elapsed_ms": 2607.7483750414103,
+      "wall_time_us": 1792842902720287,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 7,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.3346989396959543,
+      "elapsed_ms": 2608.0830739811063,
+      "wall_time_us": 1792842902720622,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 8,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.34102913923561573,
+      "elapsed_ms": 2608.424103120342,
+      "wall_time_us": 1792842902720963,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 9,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.3357159439474344,
+      "elapsed_ms": 2608.7598190642893,
+      "wall_time_us": 1792842902721298,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 10,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.4623900167644024,
+      "elapsed_ms": 2609.2222090810537,
+      "wall_time_us": 1792842902721762,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 11,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.40939287282526493,
+      "elapsed_ms": 2609.631601953879,
+      "wall_time_us": 1792842902722171,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 12,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.3474161494523287,
+      "elapsed_ms": 2609.9790181033313,
+      "wall_time_us": 1792842902722518,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 13,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.37682196125388145,
+      "elapsed_ms": 2610.355840064585,
+      "wall_time_us": 1792842902722894,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 14,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.6809649057686329,
+      "elapsed_ms": 2611.036804970354,
+      "wall_time_us": 1792842902723575,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 15,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.3503721673041582,
+      "elapsed_ms": 2611.387177137658,
+      "wall_time_us": 1792842902723926,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 16,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.3384668380022049,
+      "elapsed_ms": 2611.72564397566,
+      "wall_time_us": 1792842902724264,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 17,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.3337380476295948,
+      "elapsed_ms": 2612.05938202329,
+      "wall_time_us": 1792842902724598,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 18,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.3406659234315157,
+      "elapsed_ms": 2612.4000479467213,
+      "wall_time_us": 1792842902724939,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 19,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.3310570027679205,
+      "elapsed_ms": 2612.7311049494892,
+      "wall_time_us": 1792842902725270,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    {
+      "step": 20,
+      "optimizer": "torch.optim.sgd.SGD",
+      "step_ms": 0.3307959996163845,
+      "elapsed_ms": 2613.0619009491056,
+      "wall_time_us": 1792842902725600,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    }
+  ],
+  "peak_allocated_bytes": null,
+  "peak_reserved_bytes": null,
+  "peak_alloc_gb": null,
+  "peak_reserved_gb": null,
+  "step_ms_median": 0.3442226443439722,
+  "timing_note": "Intervals between completed optimizer updates; first includes target setup; pairing initialization hash time excluded, total wall time retains it; module/precision observation overhead remains in measured intervals",
+  "wall_seconds": 2.6143372610677034,
+  "snapshot": {
+    "available": false,
+    "trace_count": null
+  },
+  "snapshot_trace_count": null,
+  "oom": null,
+  "shared_gpu": false,
+  "gpu": null,
+  "env": {
+    "pid": 1,
+    "is_primary": true,
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "device": "cpu",
+    "seed": 1337,
+    "max_steps": 20,
+    "max_seconds": 120.0,
+    "PYTORCH_CUDA_ALLOC_CONF": null,
+    "CUDA_VISIBLE_DEVICES": "",
+    "seeded": {
+      "python": true,
+      "torch": true,
+      "numpy": true
+    },
+    "deterministic_algorithms": true,
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8"
+  },
+  "errors": [],
+  "exception": {
+    "type": "StepLimitReached",
+    "message": "Reached 20 optimizer updates"
+  },
+  "execution_capture": {
+    "captured_process_count": 1,
+    "single_python_entrypoint": true,
+    "reason": null,
+    "basis": "instrumented capture owners, not a proof of absent uninstrumented processes"
+  },
+  "run_id": "a3986ed27df74c5bbe257eaffcee00dc",
+  "run_dir": "/tmp/pytest-of-xiaodouzi/pytest-47/test_real_cpu_verify_runner_ov1/runs/a3986ed27df74c5bbe257eaffcee00dc",
+  "artifact_dir": "/tmp/pytest-of-xiaodouzi/pytest-47/test_real_cpu_verify_runner_ov1/runs/a3986ed27df74c5bbe257eaffcee00dc/artifacts",
+  "container_name": "headroom-lab-a3986ed27df74c5bbe257eaffcee00dc",
+  "cleanup_verified": true,
+  "gpu_observation_complete": true,
+  "started_at": "2026-10-24T11:54:57.582216+00:00",
+  "execution": {
+    "timed_out": false,
+    "returncode": 1,
+    "log_limit_bytes_per_stream": 8388608,
+    "state": {
+      "Status": "exited",
+      "Running": false,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 0,
+      "ExitCode": 1,
+      "Error": "",
+      "StartedAt": "2026-10-24T11:54:57.617954905Z",
+      "FinishedAt": "2026-10-24T11:55:03.099520077Z"
+    },
+    "image_id": "sha256:54accb9f005c435d13c018026781487600914cd99434a2d424136522dfed3661",
+    "cleanup_verified": true,
+    "cleanup_attempts": [
+      {
+        "operation": "stop",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "operation": "kill",
+        "returncode": 1,
+        "stderr": "Error response from daemon: cannot kill container: headroom-lab-a3986ed27df74c5bbe257eaffcee00dc: container ca44d932e7077c81ce5181fd3577b6c45b8dea21ff21a28fb2d83497cd9a9d77 is not running\n"
+      },
+      {
+        "operation": "rm",
+        "returncode": 0,
+        "stderr": ""
+      }
+    ],
+    "cleanup_inspect": {
+      "returncode": 1,
+      "stdout": "[]\n",
+      "stderr": "Error response from daemon: No such container: headroom-lab-a3986ed27df74c5bbe257eaffcee00dc\n"
+    }
+  },
+  "gpu_before": {
+    "queried": false,
+    "processes": []
+  },
+  "image_id": "sha256:54accb9f005c435d13c018026781487600914cd99434a2d424136522dfed3661",
+  "gpu_after": {
+    "queried": false,
+    "processes": []
+  },
+  "gpu_observation_note": "CPU execution; GPU observation not applicable",
+  "finished_at": "2026-10-24T11:55:03.172426+00:00"
+}

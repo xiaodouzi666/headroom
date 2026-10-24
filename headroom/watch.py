@@ -6,8 +6,9 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, replace
 from pathlib import Path
 
+from headroom.execution import prepare_captured_command
 from headroom.lab.envs import validate_options
-from headroom.lab.runner import PROJECT_ROOT, run_argv
+from headroom.lab.runner import PROJECT_ROOT, read_artifact_json, run_argv
 from headroom.orchestrator import FixRequest, run_fix
 from headroom.repository import parse_watch_command, prepare_local_command
 
@@ -148,6 +149,32 @@ def watch_command(
             stdout_path=str(lab_directory / "stdout.log"),
             stderr_path=str(lab_directory / "stderr.log"),
         )
+    wrapper = None
+    if parsed.kind == "command" and valid_directory:
+        try:
+            wrapper = prepare_captured_command(
+                lab_directory / "source",
+                command,
+                result,
+                read_artifact_json(lab_directory / "manifest.json"),
+            )
+        except (OSError, ValueError, TypeError, KeyError) as error:
+            parsed = replace(parsed, repair_reason=str(error))
+        else:
+            parsed = replace(
+                parsed,
+                kind="captured_wrapper",
+                script=str(wrapper.script.relative_to(wrapper.source_root)),
+                script_args=wrapper.script_args,
+                repair_supported=True,
+                repair_reason=None,
+            )
+        outcome.update(
+            command_details=asdict(parsed),
+            repair_supported=parsed.repair_supported,
+            repair_unavailable_reason=parsed.repair_reason,
+            execution_entrypoint=wrapper.execution_entrypoint if wrapper else None,
+        )
     if result.get("cleanup_verified") is not True:
         outcome.update(status="needs_human", exit_code=125, reason="CLEANUP_UNVERIFIED")
     elif _cuda_oom(result, device):
@@ -158,17 +185,27 @@ def watch_command(
         elif not valid_directory:
             outcome.update(status="needs_human", reason="CAPTURE_SOURCE_UNAVAILABLE")
         else:
-            _, snapshot_command = _command(list(command), snapshot)
-            if not snapshot_command.repair_supported:
-                outcome.update(status="needs_human", reason="CAPTURE_SOURCE_UNAVAILABLE")
-                return _save_outcome(directory, outcome)
-
-            request = request.model_copy(
-                update={
-                    "script": str(snapshot / snapshot_command.script),
-                    "source_root": str(snapshot),
-                }
-            )
+            if wrapper is not None:
+                request = request.model_copy(
+                    update={
+                        "script": str(wrapper.script),
+                        "source_root": str(wrapper.source_root),
+                        "script_args": list(wrapper.script_args),
+                        "execution_argv": list(wrapper.execution_argv),
+                        "execution_entrypoint": wrapper.execution_entrypoint,
+                    }
+                )
+            else:
+                _, snapshot_command = _command(list(command), snapshot)
+                if not snapshot_command.repair_supported:
+                    outcome.update(status="needs_human", reason="CAPTURE_SOURCE_UNAVAILABLE")
+                    return _save_outcome(directory, outcome)
+                request = request.model_copy(
+                    update={
+                        "script": str(snapshot / snapshot_command.script),
+                        "source_root": str(snapshot),
+                    }
+                )
             outcome["triggered"] = True
             try:
                 repaired = (fix_runner or run_fix)(request, run_root=directory / "fix")

@@ -284,3 +284,39 @@ loss_comparable remained false. This confirms that module/flag replay and the
 retained original numerical rule work without a pinned program exception; it
 does not establish general workload equivalence or a model-generated repair.
 Receipt: `reports/command-manual-gpu-20261024T113103Z.json`.
+
+
+## Observed precision and the original tolerance
+
+The production verifier now selects its comparison precision from
+`result.precision_observation`, captured inside the Lab. It distinguishes an
+observed dtype from a change of dtype: BF16 baseline → BF16 candidate does not
+by itself require permission for a new precision change. FP32 → BF16 is marked
+`numerics_changed` and requires the existing policy permission, even when a
+proposal labels its numerical impact as none. The original loss bounds remain
+1e-3 for FP32 and 2e-2 for observed BF16 comparisons. Explicitly requested tighter
+bounds remain tighter; insufficient, mixed or unsupported observations do not
+automatically increase the tolerance. Old captures without precision evidence
+retain the FP32 bound rather than gaining a new global rejection gate.
+
+The observer reads parameter, input and output dtype metadata at module hooks,
+and samples Python-dispatched tensor operations during root forwards. This
+captures functional autocast inside a forward even when the final loss is cast
+back to FP32. No tensor data is copied or hashed, no tensor reference survives
+the observation, and no GPU synchronization is added. Counters and metadata
+traversal are bounded. Known compiled/scripted modules, mixed root modes,
+unsupported dtypes, errors and insufficient coverage remain unknown. These are
+runtime observations, not proof of every native operator's internal dtype.
+
+The operation mode is entered only for an observed root forward and restored
+when it returns, with capture cleanup as a fallback. It is not active around
+ordinary optimizer or backward execution. Same-Tensor dispatcher reentry is
+recorded once; different nested losses and subsequent backward calls remain
+observable. Precision observation overhead remains in reported optimizer-step
+intervals; no overhead-free performance claim is made.
+
+`VerifyReport` and per-round report tables expose `comparison_precision`,
+`loss_tolerance`, `observed_precision_change` and the supporting
+`precision_evidence`. The direct Python comparison interface still accepts an
+explicit `precision` for trusted callers and labels that override; model output
+cannot select this override in the production orchestration path.

@@ -150,3 +150,36 @@ The retained setup/audit logs include the initial separate-template compatibilit
 audit-driver assertion corrected from `CostLedger.records` to `entries`, and a blocked cl100k
 cache miss. The latter was resolved by pointing at the already existing `.cache/tiktoken`;
 the network guard stayed enabled. None changed project behavior or acceptance claims.
+
+## Read-only admission audit (2026-10-24)
+
+The 1.060576 USD value is a conservative implementation reservation for 1,048,576
+input tokens plus 4,000 output tokens at the observed 1/3 USD-per-million prices.
+It is **not** a minimum fee charged by Nebius and the original PLAN does not require
+short requests to reserve the entire model context. PLAN acceptance remains based
+on actual usage-priced cost, including the original diagnosis/run thresholds.
+
+The public OpenAPI reviewed at version `20261022-1d60f32ca` had no documented
+free tokenize/count endpoint or numeric Chat input cap. Responses truncation is
+`auto` or `disabled`; it does not establish a smaller numeric billing ceiling.
+Completions accepts token-ID arrays in the public schema, but Ultra compatibility
+and additional billable special tokens are not verified, so it cannot yet replace
+the Chat adapter or establish a hard upper bound.
+
+Local template counts, provider-contract bounds, and actual usage costs must stay
+separate. An explicitly configured estimate-based admission policy can use the
+complete final request, pinned tokenizer/template, a margin and output cap; it
+can stop subsequent calls on unknown or excessive charges. Such a prediction
+cannot guarantee that an individual call will never exceed its estimate. No
+policy/profile has been enabled by this audit, and current authorization remains
+limited to the previously approved 0.10 USD trial connectivity scope.
+
+Primary sources: [Ultra cookbook](https://github.com/nebius/token-factory-cookbook/blob/main/models/nemotron/nemotron3-ultra-550b-a55b.md),
+[OpenAPI](https://api.tokenfactory.nebius.com/openapi.json),
+[Chat](https://docs.tokenfactory.nebius.com/api-reference/inference/create-chat-completion),
+[Responses](https://docs.tokenfactory.nebius.com/api-reference/inference/create-a-response),
+[Completions](https://docs.tokenfactory.nebius.com/api-reference/inference/create-completion),
+[billing](https://docs.tokenfactory.nebius.com/other-capabilities/billing-new).
+Account balance is not treated as a provider hard stop; the billing documentation
+describes negative balances and automatic payment. No API inference, credential
+read, payment or account mutation was performed for this audit.

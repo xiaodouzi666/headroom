@@ -35,18 +35,19 @@ Automatic repair supports direct Python scripts and local `-m` modules/packages
 inside the captured source. Interpreter options such as `-O`, `-W`, `-X` and
 `-x` are retained through baseline, candidate and reference execution via the
 same sitecustomize command backend. The editable source path does not replace
-the original module invocation. Inline code, generic/shell launchers and
-distributed commands remain capture-only: a confirmed CUDA OOM returns
-`needs_human`, its original exit code and evidence. See
+the original module invocation. Shell/executable wrappers can enter repair when runtime capture identifies one
+Python main inside the source snapshot. Candidate and reference target-argument
+overrides are applied before that main only on an exact original argv/cwd match,
+and their actual application is checked afterward. Inline code without a mapped
+file and ambiguous multiple targets return `needs_human` with preserved evidence. See
 [COMMAND_MODE.md](COMMAND_MODE.md) for the complete replay contract and limits.
 
 Options `-E`, `-I` and `-S` can prevent sitecustomize capture. Non-Python runtimes
 may also produce no allocator evidence. Such runs retain the real container exit
 and logs, mark `capture_status=unknown`, and return `needs_human`; stderr containing
 "CUDA out of memory" is never treated as authoritative OOM evidence. Interactive
-stdin/TTY forwarding is not implemented. Distributed/multi-process launchers are
-observation-only: a single captured process is not a verified aggregate memory
-profile or a safely replayable repair command.
+stdin/TTY forwarding is not implemented. Multiple observed Python entrypoints are ambiguous: one primary capture is not
+a verified aggregate memory profile. The wrapper path selects no arbitrary worker.
 
 Every observed command uses Lab's no-network, read-only-source Docker container,
 secret-free environment, process/time/step bounds and verified cleanup. No

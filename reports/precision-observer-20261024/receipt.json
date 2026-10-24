@@ -1,0 +1,48 @@
+{
+  "schema": "headroom.offline-verification.v1",
+  "recorded_at": "2026-10-24T11:46:51.648458+00:00",
+  "base_head": "7139306b2e47c02ed433e7924d8f75166a556846",
+  "provenance": "cpu_fixture",
+  "scope": "Bounded runtime module/function precision observations; actual CPU Docker capture/compare integration",
+  "executed_gpu": false,
+  "executed_model_api": false,
+  "credentials_read": false,
+  "commands": [
+    {
+      "argv": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/lab/precision.py",
+        "tests/test_precision.py",
+        "tests/test_precision_integration.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_precision.py",
+        "tests/test_precision_integration.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "passed": 30,
+      "elapsed_seconds": 10.11
+    }
+  ],
+  "tool_output_excerpt": "verification.txt",
+  "cpu_evidence": "cpu-observations.json",
+  "files": {
+    "headroom/lab/precision.py": "be3b36fd2183754c53d1fcdbed727b22b8a04e6988a55c81b0d21b809b5fb747",
+    "tests/test_precision.py": "adaf4fb9ebf3f7689c469157b30010d265cc28772b712571679e79c5179ed4bd",
+    "tests/test_precision_integration.py": "252f764b4f952303bc6035d3b9b6a7ecf11c86cb3e298a96f2d926f461b0d592"
+  },
+  "limitations": [
+    "No proof of every C++/compiled/custom operator dtype; known compiled wrappers and cross-thread observations remain unknown.",
+    "Fixed dtype buckets and saturating counters; metadata only, no tensor data copy/retention or added GPU synchronization.",
+    "Observation overhead stays in measured intervals; CPU evidence is not GPU throughput or CUDA acceptance.",
+    "Unknown, mixed or unsupported precision never claims complete fp32/bf16 evidence."
+  ]
+}

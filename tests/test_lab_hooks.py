@@ -264,3 +264,91 @@ def test_command_exception_hook_records_controlled_terminal_reason(tmp_path: Pat
     assert len(callbacks) == 1
     assert len(forwarded) == 1
     assert session.finished
+
+
+def test_precision_mode_only_applies_during_forward_and_backward_is_not_duplicated(tmp_path):
+    from torch.overrides import has_torch_function_unary
+
+    session = CaptureSession(tmp_path, device="cpu").start()
+    model = torch.nn.Linear(2, 1)
+    value = torch.ones(1, 2)
+    assert not has_torch_function_unary(value)
+    loss = model(value).square().sum()
+    assert not has_torch_function_unary(loss)
+    loss.backward(retain_graph=True)
+    loss.backward()
+    result = session.finish()
+    assert len(result["loss_series"]) == 2
+    assert result["loss_series"][0] == result["loss_series"][1]
+    assert result["precision_observation"]["precision"] == "fp32"
+    assert not has_torch_function_unary(loss)
+
+
+def test_backward_inside_forward_is_captured_once_and_preserves_gradient(tmp_path):
+    class Inner(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.weight = torch.nn.Parameter(torch.tensor(2.0))
+
+        def forward(self, value):
+            loss = (self.weight * value).square()
+            loss.backward()
+            return loss.detach()
+
+    session = CaptureSession(tmp_path, device="cpu").start()
+    model = Inner()
+    assert model(torch.tensor(3.0)).item() == 36
+    result = session.finish()
+    assert result["loss_series"] == [36]
+    assert model.weight.grad.item() == 36
+    assert result["precision_observation"]["complete"]
+
+
+def test_cross_thread_forward_cannot_pop_or_leak_the_owner_precision_mode(tmp_path):
+    import threading
+
+    from torch.overrides import _get_current_function_mode
+
+    entered, release = threading.Event(), threading.Event()
+    failures = []
+
+    class Child(torch.nn.Module):
+        def forward(self, value):
+            entered.set()
+            assert release.wait(5)
+            return value * 2
+
+    class Parent(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.child = Child()
+            self.worker = None
+
+        def forward(self, value):
+            def work():
+                try:
+                    self.child(value)
+                except BaseException as exc:  # noqa: BLE001 - relay worker failures to the main test
+                    failures.append(exc)
+
+            self.worker = threading.Thread(target=work)
+            self.worker.start()
+            assert entered.wait(5)
+            return value + 1
+
+    previous = _get_current_function_mode()
+    session = CaptureSession(tmp_path, device="cpu").start()
+    model = Parent()
+    try:
+        assert model(torch.tensor(1.0)).item() == 2
+        assert _get_current_function_mode() is previous
+    finally:
+        release.set()
+        if model.worker is not None:
+            model.worker.join(5)
+        result = session.finish()
+    assert not failures
+    assert _get_current_function_mode() is previous
+    assert result["precision_observation"]["complete"] is False
+    assert result["precision_observation"]["errors"]["cross_thread"] > 0
+    assert not [error for error in result["errors"] if error["stage"] == "precision_observation"]

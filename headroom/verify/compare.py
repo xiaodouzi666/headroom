@@ -8,6 +8,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from headroom.verify.precision import derive_precision
+
 # Original-plan acceptance gates. Diagnostic observations (including optional
 # workload pairing) must not silently become additional mandatory requirements.
 REQUIRED_CHECKS = (
@@ -47,6 +49,10 @@ class VerifyReport(BaseModel):
     reference_run: str | None = None
     acceptance_scope: Literal["standard", "repository"] = "standard"
     numerical_basis: str = "unavailable"
+    comparison_precision: Literal["fp32", "bf16"] = "fp32"
+    loss_tolerance: float = 1e-3
+    observed_precision_change: bool | None = None
+    precision_evidence: dict = Field(default_factory=dict)
 
 
 def _number(value, *, positive=False):
@@ -132,7 +138,7 @@ def compare_runs(
     reference: Mapping | None = None,
     pairing: Mapping | None = None,
     numerics_impact="none",
-    precision="fp32",
+    precision=None,
     tolerance=None,
     required_steps=20,
     reclaim_reduction_pct=30,
@@ -148,8 +154,25 @@ def compare_runs(
         raise ValueError("Unsupported acceptance scope")
     if type(required_steps) is not int or required_steps < 1:
         raise ValueError("required_steps must be a positive integer")
-    if numerics_impact not in {"none", "minor", "significant"} or precision not in {"fp32", "bf16"}:
+    if numerics_impact not in {"none", "minor", "significant"} or precision not in {
+        None,
+        "fp32",
+        "bf16",
+    }:
         raise ValueError("Unsupported numerical impact or precision")
+    precision_evidence = derive_precision(baseline, candidate, reference)
+    explicit_precision = precision is not None
+    if precision is None:
+        precision = precision_evidence["comparison_precision"]
+    else:
+        # Compatibility for trusted direct callers; production derives the mode
+        # from Lab observations rather than accepting a model's precision claim.
+        precision_evidence["source"] = "explicit caller precision; observations retained separately"
+        precision_evidence["notes"] = [
+            "Comparison precision was supplied explicitly by the caller; it is not an automatic runtime inference."
+        ]
+        precision_evidence["comparison_precision"] = precision
+    observed_change = precision_evidence["observed_change"]
     if _number(reclaim_reduction_pct) is None or reclaim_reduction_pct > 100:
         raise ValueError("Reclaim reduction must be between 0 and 100 percent")
     policy = dict(policy or {})
@@ -177,7 +200,7 @@ def compare_runs(
     regression = (after_ms / before_ms - 1) * 100 if before_ms and after_ms else None
     if regression is not None and not math.isfinite(regression):
         regression = None
-    notes = []
+    notes = list(precision_evidence["notes"])
     baseline_oom = baseline.get("status") == "oom"
     baseline_valid = _capture_valid(baseline) and baseline.get("status") in {"oom", "completed"}
     completed = (
@@ -186,7 +209,11 @@ def compare_runs(
         and candidate.get("steps") == required_steps
     )
     candidate_losses = _losses(candidate)
-    numerical_change = numerics_impact != "none" or precision == "bf16"
+    numerical_change = (
+        numerics_impact != "none"
+        or observed_change is True
+        or (explicit_precision and precision == "bf16" and observed_change is None)
+    )
     param_before, param_after = _parameters(baseline), _parameters(candidate)
     parameter_equal = (
         (param_before == param_after) if None not in (param_before, param_after) else None
@@ -369,6 +396,10 @@ def compare_runs(
         completed=completed,
         acceptance_scope=acceptance_scope,
         numerical_basis=numerical_basis,
+        comparison_precision=precision,
+        loss_tolerance=tolerance,
+        observed_precision_change=observed_change,
+        precision_evidence=precision_evidence,
         peak_before=before,
         peak_after=after,
         reduction_pct=reduction,

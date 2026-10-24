@@ -1,0 +1,142 @@
+{
+  "source_root": "/tmp/pytest-of-xiaodouzi/pytest-47/test_real_cpu_verify_runner_ov0/runs/9136bc6e19f8435f85097e7e31ca2dd6/source",
+  "source": {
+    "files": {
+      "launch.sh": {
+        "sha256": "d2f8b5febe3aadb3fd091fd7f852830728cb566581f3090c044935275a62a425",
+        "bytes": 29
+      },
+      "train.py": {
+        "sha256": "2379a2ebc95378135184a25903dbdfd7d1c72b25b0ed6443bcae20e04f1325c9",
+        "bytes": 344
+      },
+      "sub/pkg/__init__.py": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "sub/pkg/entry.py": {
+        "sha256": "bb3111c1fd0d4147af9583b6262d7c9e7e04feb313f9e68a267017fd500ad7b3",
+        "bytes": 194
+      },
+      "sub/pkg/helper.py": {
+        "sha256": "3e29430f1f5190ce5b49d92306ff0a807804a34c425ce0eca201f29817ad5015",
+        "bytes": 11
+      }
+    },
+    "skipped": [],
+    "total_bytes": 578
+  },
+  "command": [
+    "/bin/sh",
+    "launch.sh",
+    "--batch",
+    "8"
+  ],
+  "target_argv_override": {
+    "expected_startup_cwd": "/source",
+    "expected_orig_argv": [
+      "python",
+      "-O",
+      "train.py",
+      "--batch",
+      "8"
+    ],
+    "original_target_args": [
+      "--batch",
+      "8"
+    ],
+    "effective_target_args": [
+      "--batch",
+      "1"
+    ]
+  },
+  "environment": {
+    "PATH": "/opt/venv/bin:/usr/bin:/bin",
+    "HOME": "/tmp",
+    "HF_HOME": "/tmp/headroom-hf",
+    "HF_HUB_CACHE": "/tmp/headroom-hf/hub",
+    "HF_DATASETS_CACHE": "/tmp/headroom-hf/datasets",
+    "HF_HUB_OFFLINE": "1",
+    "TRANSFORMERS_OFFLINE": "1",
+    "HF_DATASETS_OFFLINE": "1",
+    "HF_HUB_DISABLE_TELEMETRY": "1",
+    "TOKENIZERS_PARALLELISM": "false",
+    "TMPDIR": "/tmp",
+    "LANG": "C.UTF-8",
+    "PYTHONUNBUFFERED": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONHASHSEED": "1337",
+    "PYTHONNOUSERSITE": "1",
+    "PYTHONPATH": "/runtime/headroom/lab:/runtime",
+    "OMP_NUM_THREADS": "4",
+    "MKL_NUM_THREADS": "4",
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+    "CUDA_VISIBLE_DEVICES": "",
+    "HEADROOM_CAPTURE": "1",
+    "HEADROOM_OUTPUT_DIR": "/out",
+    "HEADROOM_MAX_STEPS": "20",
+    "HEADROOM_MAX_SECONDS": "120",
+    "HEADROOM_SEED": "1337",
+    "HEADROOM_DEVICE": "cpu",
+    "HEADROOM_TARGET_ARGV_OVERRIDE": "{\"expected_startup_cwd\": \"/source\", \"expected_orig_argv\": [\"python\", \"-O\", \"train.py\", \"--batch\", \"8\"], \"original_target_args\": [\"--batch\", \"8\"], \"effective_target_args\": [\"--batch\", \"1\"]}"
+  },
+  "image": "headroom-lab:py312-cu124",
+  "device": "cpu",
+  "max_steps": 20,
+  "max_seconds": 120,
+  "seed": 1337,
+  "execution_entrypoint": {
+    "schema_version": 1,
+    "complete": true,
+    "pid": 1,
+    "ppid": 0,
+    "executable": "/opt/venv/bin/python",
+    "startup_cwd": "/source",
+    "cwd": "/source",
+    "orig_argv": [
+      "python",
+      "-O",
+      "train.py",
+      "--batch",
+      "8"
+    ],
+    "startup_argv": [
+      "train.py",
+      "--batch",
+      "8"
+    ],
+    "effective_startup_argv": [
+      "train.py",
+      "--batch",
+      "1"
+    ],
+    "argv_override": {
+      "requested": true,
+      "matched": true,
+      "applied": true,
+      "original_target_args": [
+        "--batch",
+        "8"
+      ],
+      "effective_target_args": [
+        "--batch",
+        "1"
+      ],
+      "reason": "matched_before_main"
+    },
+    "argv": [
+      "train.py",
+      "--batch",
+      "1"
+    ],
+    "main_file": "/source/train.py",
+    "module": null,
+    "entry_observation": "main_frame_observed"
+  },
+  "execution_capture": {
+    "captured_process_count": 1,
+    "single_python_entrypoint": true,
+    "reason": null,
+    "basis": "instrumented capture owners, not a proof of absent uninstrumented processes"
+  }
+}

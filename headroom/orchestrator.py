@@ -58,6 +58,7 @@ class FixRequest(BaseModel):
     source_root: str | None = None
     script_args: list[str] = Field(default_factory=list, max_length=100)
     execution_argv: list[str] | None = Field(default=None, max_length=256)
+    execution_entrypoint: dict | None = None
     repository_mode: bool = False
     target: str = "fix-oom"
     reclaim_reduction_pct: float = Field(default=30.0, gt=0, le=100)
@@ -239,7 +240,9 @@ def run_fix(
     ):
         raise ValueError("Script must be a Python file inside its source root")
     if request.execution_argv is not None:
-        prepared = prepare_local_command(source, request.execution_argv)
+        prepared = prepare_local_command(
+            source, request.execution_argv, execution_entrypoint=request.execution_entrypoint
+        )
         if (
             prepared.script.resolve() != source_script
             or list(prepared.script_args) != request.script_args
@@ -249,9 +252,13 @@ def run_fix(
             )
     if request.repository_mode and request.execution_argv is None:
         raise ValueError("Repository command mode requires execution_argv")
+    if request.execution_entrypoint is not None and request.execution_argv is None:
+        raise ValueError("Captured entrypoint requires its original command argv")
     execution_options = (
         {"execution_argv": request.execution_argv} if request.execution_argv is not None else {}
     )
+    if request.execution_entrypoint is not None:
+        execution_options["execution_entrypoint"] = request.execution_entrypoint
     relative = source_script.relative_to(source)
     limit = min(
         money(request.budget_usd),
@@ -770,7 +777,12 @@ def run_fix(
                         "numerics_impact": candidate_numerics,
                         "original_source": str(original_source),
                         "original_execution_argv": request.execution_argv,
-                        "execution_argv": replay_argv(request.execution_argv, patch.effective_cli)
+                        "execution_entrypoint": request.execution_entrypoint,
+                        "execution_argv": replay_argv(
+                            request.execution_argv,
+                            patch.effective_cli,
+                            execution_entrypoint=request.execution_entrypoint,
+                        )
                         if request.execution_argv is not None
                         else None,
                     },
@@ -790,7 +802,12 @@ def run_fix(
                     "round": number,
                     "source": str(patch.candidate_dir),
                     "effective_cli": list(patch.effective_cli),
-                    "execution_argv": replay_argv(request.execution_argv, patch.effective_cli)
+                    "execution_entrypoint": request.execution_entrypoint,
+                    "execution_argv": replay_argv(
+                        request.execution_argv,
+                        patch.effective_cli,
+                        execution_entrypoint=request.execution_entrypoint,
+                    )
                     if request.execution_argv is not None
                     else None,
                     "allocator_conf": allocator,

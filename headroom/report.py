@@ -195,6 +195,9 @@ def _round_report(row, provenance):
         else None,
         "loss_equivalence": verification.get("loss_equivalence") or "unknown",
         "numerical_basis": numerical_basis_label(verification.get("numerical_basis")),
+        "comparison_precision": verification.get("comparison_precision") or "unknown",
+        "loss_tolerance": _number(verification.get("loss_tolerance"), places=6),
+        "observed_precision_change": verification.get("observed_precision_change"),
     }
     row["display_peak_after"] = row["display_verification"]["peak_after"]
     row["diff_sha256"] = None
@@ -491,6 +494,9 @@ def render_markdown(report):
             f"| Target met | — | {_text(measured['target_met'])} |",
             f"| Loss equivalence | — | {_text(measured['loss_equivalence'])} |",
             f"| Comparison basis | — | {_text(measured['numerical_basis'])} |",
+            f"| Comparison precision | — | {_text(measured['comparison_precision'])} |",
+            f"| Loss tolerance | — | {_text(measured['loss_tolerance'])} |",
+            f"| Observed precision change | — | {_text(measured['observed_precision_change'])} |",
             f"| Peak reduction | — | {measured['reduction_pct']} |",
             f"| Step-time change | — | {measured['throughput_regression_pct']} |",
             f"| Maximum loss delta | — | {measured['max_loss_delta']} |",
