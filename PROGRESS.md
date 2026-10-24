@@ -60,7 +60,7 @@ All work, caches, runs, and media remain on azuki.
 - Keep original failed gates and procedure conflicts visible: s2's 39.8715% optimizer fraction versus40%, strict Ultra admission versus the original $0.60 MVP procedure, default precision policy/bf16 tier, and independent subprocess isolation.
 - T1.12 reporting is now implemented and verified with retained offline pipeline artifacts. The nine real model-generated repairs, accuracy, budget and timing requirements still need actual execution.
 - T3.5 / Phase6 webhook delivery is implemented but disabled. The owner must select/authorize a real destination and supply public domain/Cloudflare access before deployment and delivery acceptance; no recipient message or unit installation has occurred.
-- Complete a current requirement-by-requirement readiness audit before claiming development or the overall goal complete. Owner design, genuine repair replay/media, final review/video/submission and future dated uptime checks remain separately open.
+- Current requirement-by-requirement source audit found no additional independently implementable feature gap at1452d27; see reports/readiness-after-outcomes-20261024.md. This does not establish full acceptance or release readiness. Owner design, genuine repair replay/media, final review/video/submission and future dated uptime checks remain separately open.
 - No original threshold is lowered, no old run is replaced, and no evaluation/release tag is created before acceptance.
 
 ## Acceptance log
