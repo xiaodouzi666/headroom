@@ -87,7 +87,7 @@ def _publish(path, payload):
             os.close(fd)
 
 
-def save_patch_response(path, response=None, *, error=None, records=()):
+def save_patch_response(path, response=None, *, error=None, records=(), normalized_proposal=None):
     """Persist visible output verbatim or bounded prefixes, not hidden reasoning/requests."""
     records = tuple(records)
     parsed = getattr(response, "parsed", None)
@@ -96,8 +96,16 @@ def save_patch_response(path, response=None, *, error=None, records=()):
         if parsed is not None
         else None
     )
+    normalized_raw = (
+        json.dumps(normalized_proposal, ensure_ascii=False, allow_nan=False).encode()
+        if normalized_proposal is not None
+        else None
+    )
+    normalized_diff = (
+        normalized_proposal.get("diff") if isinstance(normalized_proposal, dict) else None
+    )
     record = {
-        "schema_version": 1,
+        "schema_version": 2,
         "content_is_untrusted_data": True,
         "response_available": response is not None,
         "visible": _content(response.text) if response is not None else None,
@@ -106,6 +114,37 @@ def save_patch_response(path, response=None, *, error=None, records=()):
         "parsed_sha256": hashlib.sha256(parsed_raw).hexdigest() if parsed_raw is not None else None,
         "parsed_omitted": False,
         "diff": _content(parsed.get("diff")) if isinstance(parsed, dict) else None,
+        "normalized_proposal": normalized_proposal,
+        "normalized_proposal_utf8_bytes": len(normalized_raw)
+        if normalized_raw is not None
+        else None,
+        "normalized_proposal_sha256": (
+            hashlib.sha256(normalized_raw).hexdigest() if normalized_raw is not None else None
+        ),
+        "normalized_proposal_omitted": False,
+        "normalized_diff": _content(normalized_diff),
+        "normalization": {
+            "status": "applied" if normalized_proposal is not None else "not_applied",
+            "algorithm": "diff_lines_join_lf_v1" if normalized_proposal is not None else None,
+            "source_field": "diff_lines" if normalized_proposal is not None else None,
+            "source_parsed_sha256": (
+                hashlib.sha256(parsed_raw).hexdigest() if parsed_raw is not None else None
+            ),
+            "line_count": (
+                len(parsed["diff_lines"])
+                if normalized_proposal is not None and isinstance(parsed, dict)
+                else None
+            ),
+            "terminal_lf": bool(normalized_diff) if normalized_proposal is not None else None,
+            "output_proposal_sha256": (
+                hashlib.sha256(normalized_raw).hexdigest() if normalized_raw is not None else None
+            ),
+            "output_diff_sha256": (
+                hashlib.sha256(normalized_diff.encode()).hexdigest()
+                if isinstance(normalized_diff, str)
+                else None
+            ),
+        },
         "model": _text(response.model) if response is not None else None,
         "response_model": _text(response.response_model) if response is not None else None,
         "finish_reason": _text(response.finish_reason) if response is not None else None,
@@ -126,16 +165,19 @@ def save_patch_response(path, response=None, *, error=None, records=()):
     if len(encoded()) > MAX_RESPONSE_ARTIFACT_BYTES:
         record["parsed_omitted"] = parsed is not None
         record["parsed"] = None
+        record["normalized_proposal_omitted"] = normalized_proposal is not None
+        record["normalized_proposal"] = None
     if len(encoded()) > MAX_RESPONSE_ARTIFACT_BYTES:
-        for key in ("visible", "diff"):
+        for key in ("visible", "diff", "normalized_diff"):
             blob = record[key]
             if blob is not None:
                 blob["text"] = ""
                 blob["truncated"] = blob["utf8_bytes"] != 0
         if len(encoded()) > MAX_RESPONSE_ARTIFACT_BYTES:
             raise ValueError("Patch response metadata exceeds private artifact limit")
-        # Preserve an independently inspectable original diff prefix and visible-output prefix.
+        # Each prefix retains its own full hash and explicit wire/normalized origin.
         for key, value in (
+            ("normalized_diff", normalized_diff),
             ("diff", parsed.get("diff") if isinstance(parsed, dict) else None),
             ("visible", response.text if response is not None else None),
         ):

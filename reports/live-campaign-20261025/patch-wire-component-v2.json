@@ -1,0 +1,149 @@
+{
+  "started_utc": "2026-10-24T23:09:58.094712+00:00",
+  "case": "generic_patch_wire_component",
+  "accepted": true,
+  "mvp_case": false,
+  "gpu_execution": false,
+  "counts_as_mvp_success": false,
+  "prior_component_failure_retained": "reports/live-campaign-20261025/patch-wire-component-v1.json",
+  "production_changed_since_prior_component": false,
+  "mvp_repair_iteration": 3,
+  "purpose": "Verify native diff_lines transport through production router, deterministic conversion, git apply and py_compile on a generic non-benchmark source.",
+  "request_limit": 4,
+  "patch_repairs": 3,
+  "completion_cap": 4000,
+  "profile_sha256": "a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c",
+  "driver_sha256": "c95959d7090fdd8997f6c3c6199a88adedbdb6889e7c6099eebbe3805728f541",
+  "source_sha256": "edaaeb1663f87186a7d2b9942f72c68fdfb45038cadc123c80897872606d0c10",
+  "production_pins": [
+    {
+      "path": "headroom/patch.py",
+      "sha256": "81b846cd2f24994e244c366b2eb6b08bf849ccadf6e4ee76e9fbfbde60cc8ab7"
+    },
+    {
+      "path": "headroom/patch_evidence.py",
+      "sha256": "b9fa4d0fb959fe6bb9dce41bfd47beb4570add454d6115e70c51b46727950915"
+    },
+    {
+      "path": "headroom/prompts/patch.md",
+      "sha256": "58f18984164131efa4c45be040cde7bf962d4af3d630be6401d4fe10c77d8faa"
+    },
+    {
+      "path": "headroom/prompts/patch_fix.md",
+      "sha256": "b8d0f04735d5cd0d384a247f4080295fd1d8106cfc6da0b20bc2b62f5765eab5"
+    }
+  ],
+  "full_provider_reservation_usd": "0.0822432",
+  "wire_schema_sha256": "1c2fa96109e19114d3a9d3784c673298bbd14bdbccd33babc32a5a03c51c7a94",
+  "result": {
+    "status": "applied",
+    "reason": "STATIC_CHECKS_PASSED",
+    "artifact_dir": "/home/xiaodouzi/workspace/headroom/runs/acceptance/patch-wire-component-20261025-v2/patch/patch-engine-63a3ea2d752c484c8e67a3283644ba9f",
+    "attempts": 3,
+    "runtime_verified": false
+  },
+  "patch_sha256": "c55f7d74d6ef5aa4d7a494e8d6110ede0bead99d4713e8f53ed686527b4e48cb",
+  "patch_lf_count": 6,
+  "response_artifact": "/home/xiaodouzi/workspace/headroom/runs/acceptance/patch-wire-component-20261025-v2/patch/patch-engine-63a3ea2d752c484c8e67a3283644ba9f/attempt-3-response.json",
+  "response_sha256": "582c9f64b587c680a8b6927bb43409848ef2593d6bbdf2e6e7b3daa18fcaf198",
+  "checks": {
+    "bounded_calls": true,
+    "applied": true,
+    "bounded_patch_attempts": true,
+    "source_unchanged": true,
+    "git_apply_recorded": true,
+    "compile_exit_zero": true,
+    "only_example_changed": true,
+    "docstring_added": true,
+    "behavior_ast_unchanged": true,
+    "physical_lines_present": true
+  },
+  "dispatch_count": 3,
+  "runtime_receipt": "/home/xiaodouzi/workspace/headroom/runs/acceptance/patch-wire-component-20261025-v2/runtime/runtime.json",
+  "runtime_sha256": "82a749a6b01859bc0a58d24c32ab3dfd6e8ca8bfc47d7d7763f09a8c3e9d6c62",
+  "usage": {
+    "calls": 3,
+    "known_cost_usd": "0.00087666",
+    "total_cost_usd": "0.00087666",
+    "unknown_cost_calls": 0,
+    "complete": true,
+    "billing_complete": true,
+    "bounded_cost_calls": 0,
+    "unresolved_cost_calls": 0,
+    "conservative_total_usd": "0.00087666",
+    "admission_counts": {
+      "verified_provider_bound": 3,
+      "local_estimate": 0,
+      "unknown": 0
+    },
+    "input_tokens": 3161,
+    "known_input_tokens": 3161,
+    "output_tokens": 202,
+    "known_output_tokens": 202,
+    "by_model": [
+      {
+        "model": "nvidia/nemotron-3-super-120b-a12b",
+        "calls": 3,
+        "known_cost_usd": "0.00087666",
+        "total_cost_usd": "0.00087666",
+        "unknown_cost_calls": 0,
+        "complete": true,
+        "billing_complete": true,
+        "bounded_cost_calls": 0,
+        "unresolved_cost_calls": 0,
+        "conservative_total_usd": "0.00087666",
+        "admission_counts": {
+          "verified_provider_bound": 3,
+          "local_estimate": 0,
+          "unknown": 0
+        },
+        "input_tokens": 3161,
+        "known_input_tokens": 3161,
+        "output_tokens": 202,
+        "known_output_tokens": 202
+      }
+    ]
+  },
+  "budget": {
+    "run_id": "3d61ca042a6e498a9fd33800e58042b0",
+    "limit_usd": "0.1",
+    "run_budget_mode": "actual_usage",
+    "shared_pool_requires_provider_bounds": true,
+    "run_limit_basis": "actual_usage",
+    "run_budget_basis": "actual_usage",
+    "billing_complete": true,
+    "conservative_total_usd": "0.00087666",
+    "bounded_attempts": 0,
+    "reviewed_retained_attempts": 0,
+    "unresolved_attempts": 0,
+    "run_budget_reached": false,
+    "run_budget_exceeded": false,
+    "remaining_basis": "actual_usage",
+    "conservative_charge_usd": "0.00087666",
+    "reserved_or_actual_usd": "0.00087666",
+    "contains_local_estimate": false,
+    "known_charge_usd": "0.00087666",
+    "total_actual_usd": "0.00087666",
+    "unknown_attempts": 0,
+    "pending_attempts": 0,
+    "remaining_usd": "0.09912334",
+    "status": "closed",
+    "halt_reason": null,
+    "billing_bound_unresolved": false,
+    "dispatch_blocked": false
+  },
+  "cleanup_errors": [],
+  "financial_checks": {
+    "runtime_completed": true,
+    "cleanup_clean": true,
+    "budget_closed_no_halt": true,
+    "no_pending": true,
+    "no_unresolved": true,
+    "billing_complete": true,
+    "within_component_limit": true,
+    "all_settled_responses": true,
+    "exact_model": true,
+    "ledger_binding": true
+  },
+  "completed_utc": "2026-10-24T23:10:00.559048+00:00"
+}

@@ -265,3 +265,10 @@ condition = "AND"
 regexTarget = "secret"
 paths = ['''^reports/super\-patch\-fix\-20261025/actual\-source\-integration\-summary\.json$''']
 regexes = ['''^NEBIUS/TAVILY$''']
+
+[[rules.allowlists]]
+description = "Verified nonsecret source digest: recomputed runtime profile SHA256 in one financial review"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/live\-campaign\-20261025/mvp\-v4\-cap\-budget\-review\.json$''']
+regexes = ['''^a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c$''']

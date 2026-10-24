@@ -70,7 +70,10 @@ def mock_router(payloads, requests, completion_tokens=100):
     def handler(request):
         body = json.loads(request.content)
         requests.append(body)
-        payload = payloads[min(len(requests) - 1, len(payloads) - 1)]
+        fixture = payloads[min(len(requests) - 1, len(payloads) - 1)]
+        # Test fixtures describe public proposals; this mock emits their wire encoding.
+        payload = {key: value for key, value in fixture.items() if key != "diff"}
+        payload["diff_lines"] = fixture["diff"].splitlines()
         return httpx.Response(
             200,
             json={

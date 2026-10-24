@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-10-24T23:18:16.997129+00:00",
+  "scope": "Offline helper tests and read-only existing v3 result audit; not CLI fix execution.",
+  "tests_exit_code": 0,
+  "tests_passed": 11,
+  "test_log": "reports/live-campaign-20261025/cli-exit-semantics-tests.log",
+  "test_log_sha256": "ad574132318122e87146d7125200c4df46b378bb3462a6260dba412d474bf32d",
+  "audit_command": [
+    ".venv/bin/python",
+    ".cache/setup/audit_cli_exit_semantics_v1.py",
+    "--campaign",
+    "runs/evaluation/live/20261024T225604279740Z-1a7d57a8/campaign.json"
+  ],
+  "audit_exit_code": 2,
+  "audit": "reports/live-campaign-20261025/mvp-v3-cli-exit-semantics.json",
+  "audit_sha256": "74b17dc0f4a634f12e5db8dca8307554b4ddcdb6ddc4e6691de0a575d0f6341a",
+  "evidence_complete": true,
+  "expected_fix_exit_codes": [
+    78,
+    78,
+    78,
+    0,
+    78,
+    78,
+    78,
+    78,
+    78
+  ],
+  "literal_fix_exit_codes": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "formal_cli_gate": false,
+  "source_sha256": {
+    ".cache/setup/audit_cli_exit_semantics_v1.py": "6495e528604aa1acd62b609fab4d9969db2640c0f59e5a6051c74b3091434cfd",
+    ".cache/setup/test_cli_exit_semantics_v1.py": "70750b6b2680dc032b31e436b178181b1711add460982245c520fcae3835e4c8",
+    "headroom/cli.py": "64c5b2dc5abc1311e967182dd38f3c6388ab98474c6be8444f2487f9aa6e9eeb"
+  },
+  "provider_calls": 0,
+  "gpu_jobs": 0,
+  "real_environment_reads": 0,
+  "ledger_or_store_mutations": 0,
+  "old_auditor_changed": false
+}

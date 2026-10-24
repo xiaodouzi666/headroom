@@ -1,0 +1,81 @@
+{
+  "status": "implemented_focused_verified_frozen",
+  "base_commit": "1a935c8716cee05edf2b1ad1d3e37d35f52a5ef3",
+  "source_change": "Only add production patcher role to existing curation role alternatives",
+  "changed_files": [
+    "headroom/replay_curation.py",
+    "tests/test_repair_replay_curation.py"
+  ],
+  "before_sha256": {
+    "headroom/replay_curation.py": "3a52683dc9b0af2f2f73cc0bae231bca492daaf780dbdc1441b8bdb1c06e9f9b",
+    "tests/test_repair_replay_curation.py": "bbcad4dd30655950c245aba14e49ba3aa8bf48114f94df3e63b1074926aeda3e"
+  },
+  "after_sha256": {
+    "headroom/replay_curation.py": "b37aa557769280d619c584c47e1cbd969aa34c2bcbea423ff69d7802aad8b1f3",
+    "tests/test_repair_replay_curation.py": "a9a91b441e469966a951f1ab804ab3eeea54e97c6df8d189317a02f2f7c72a0d"
+  },
+  "focused_receipt": "reports/replay-ui-preparation-20261025/curation-focused-20261024T230357Z-01b31988-receipt.json",
+  "focused_receipt_sha256": "b93fe2447c4950e1f82ec7e9c204e4014d17891780e7552bc426567aebad8fe5",
+  "test_summary": [
+    "41 passed in 5.08s"
+  ],
+  "checks": [
+    {
+      "command": [
+        "/home/xiaodouzi/workspace/headroom/.venv/bin/ruff",
+        "check",
+        "headroom/replay_curation.py",
+        "tests/test_repair_replay_curation.py",
+        "reports/replay-ui-preparation-20261025/curation_focused_guarded.py"
+      ],
+      "exit_code": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/home/xiaodouzi/workspace/headroom/.venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/replay_curation.py",
+        "tests/test_repair_replay_curation.py",
+        "reports/replay-ui-preparation-20261025/curation_focused_guarded.py"
+      ],
+      "exit_code": 0,
+      "stdout": "3 files already formatted\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "--",
+        "headroom/replay_curation.py",
+        "tests/test_repair_replay_curation.py",
+        "reports/remaining-acceptance-20261025.md"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "guards": "Parent and spawn deny real DNS/INET, real .env/profile, production run DB and budget DB. Only fixture ASGI calls; no live curation.",
+  "real_api_calls": 0,
+  "gpu_runs": 0,
+  "production_curation_executed": false,
+  "kept_invariants": [
+    "live provenance",
+    "terminal complete evidence",
+    "exact identity/http/response predicates",
+    "required diagnosis",
+    "candidate CUDA and patch verification",
+    "event ordering",
+    "Store/report cost agreement",
+    "owner/public flag access control",
+    "artifact allowlist and no-follow checks",
+    "transaction recovery"
+  ],
+  "limitations": "Offline tests are not real repair success/UI acceptance. Original v2 remains failed/ineligible; select actual qualified later run IDs before real curation.",
+  "draft_history_preserved": ".cache/setup/curation-role-patcher-draft"
+}

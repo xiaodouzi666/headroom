@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "reviewed_at_utc": "2026-10-24T23:11:06.413831+00:00",
+  "scope": "MVP v4 financial/capability preflight within original PLAN final repair iteration3; not real-scene acceptance or full-test sign-off.",
+  "financial_capability_preflight_passed": true,
+  "blocking_findings": [],
+  "checks": {
+    "profile_original_exact": true,
+    "profile_active_actual_strict": true,
+    "catalogue_get_only": true,
+    "all_closed_no_unresolved": true,
+    "allhistory_expected": true,
+    "runtime_global_daily_unchanged": true,
+    "nominal_campaign_fit": true,
+    "no_probe_reallocation": true,
+    "component_evidence_verified": true,
+    "ultra_us_prices_context_fees": true,
+    "ultra_default_prices_context_fees": true,
+    "super_us_prices_context_fees": true,
+    "super_default_prices_context_fees": true,
+    "nano_us_prices_context_fees": true,
+    "nano_default_prices_context_fees": true,
+    "retentions_preserved": true,
+    "combined_envelope_unchanged": true
+  },
+  "catalogue_timestamp_utc": "2026-10-24T23:07:56.342179+00:00",
+  "catalogue_inference_calls": 0,
+  "pricing_observations": [
+    {
+      "role": "ultra",
+      "endpoint": "https://api.tokenfactory.us-central1.nebius.com/v1/",
+      "model_id": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "ordinary_prices_context_zero_fees_match": true,
+      "cached_price_match": true,
+      "cached_price_basis": "fresh_catalogue",
+      "catalogue_cached_input_per_token": "0.00000012"
+    },
+    {
+      "role": "ultra",
+      "endpoint": "https://api.tokenfactory.nebius.com/v1/",
+      "model_id": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "ordinary_prices_context_zero_fees_match": true,
+      "cached_price_match": true,
+      "cached_price_basis": "fresh_catalogue",
+      "catalogue_cached_input_per_token": "0.00000012"
+    },
+    {
+      "role": "super",
+      "endpoint": "https://api.tokenfactory.us-central1.nebius.com/v1/",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b",
+      "ordinary_prices_context_zero_fees_match": true,
+      "cached_price_match": true,
+      "cached_price_basis": "fresh_catalogue",
+      "catalogue_cached_input_per_token": "0.00000006"
+    },
+    {
+      "role": "super",
+      "endpoint": "https://api.tokenfactory.nebius.com/v1/",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b",
+      "ordinary_prices_context_zero_fees_match": true,
+      "cached_price_match": true,
+      "cached_price_basis": "fresh_catalogue",
+      "catalogue_cached_input_per_token": "0.00000006"
+    },
+    {
+      "role": "nano",
+      "endpoint": "https://api.tokenfactory.us-central1.nebius.com/v1/",
+      "model_id": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "ordinary_prices_context_zero_fees_match": true,
+      "cached_price_match": true,
+      "cached_price_basis": "same_account_UI_observation_not_catalogue",
+      "catalogue_cached_input_per_token": null
+    },
+    {
+      "role": "nano",
+      "endpoint": "https://api.tokenfactory.nebius.com/v1/",
+      "model_id": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "ordinary_prices_context_zero_fees_match": true,
+      "cached_price_match": true,
+      "cached_price_basis": "same_account_UI_observation_not_catalogue",
+      "catalogue_cached_input_per_token": null
+    }
+  ],
+  "ui_observation": {
+    "source_report": "reports/live-campaign-20261025/mvp-v4-account-price-observation.json",
+    "displayed_usd": "29.69",
+    "display_may_lag": true,
+    "used_as_spending_limit": false,
+    "read_by_reviewer_in_browser": false
+  },
+  "ledger": {
+    "snapshot_at_utc": "2026-10-24T23:11:06.406314+00:00",
+    "runs": 37,
+    "attempts": 133,
+    "known_subtotal_usd": "2.01859426",
+    "conservative_total_usd": "2.03806162",
+    "remaining_conservative_usd": "7.96158742",
+    "actual_total_usd": null,
+    "charge_status_counts": {
+      "exact": 126,
+      "upper_bound": 6,
+      "reviewed_retained": 1
+    },
+    "pending_attempts": 0,
+    "unresolved_attempts": 0,
+    "open_or_halted_runs": 0,
+    "canonical_snapshot_sha256": "adf7761f4a3ba6d47e100c877c0e48b0dba00ea5ab746d27d2d9aaae9425cd8b",
+    "read_method": "mode=ro, query_only, one read transaction"
+  },
+  "planned_limits": {
+    "case_usd": ".6",
+    "campaign_usd": "5.4",
+    "daily_usd": "9.99964904",
+    "runtime_allhistory_usd": "9.99964904",
+    "existing_global_ledger": ".cache/budget.db",
+    "mode": "actual_usage"
+  },
+  "funding": {
+    "external_probe_known_or_retained_usd": "1.82224246",
+    "current_combined_conservative_usd": "3.86030408",
+    "external_plus_full_runtime_daily_cap_usd": "11.82189150",
+    "combined_daily_ceiling_usd": "12",
+    "alltime_net_allocated_usd": "16",
+    "net_gift_face_usd": "25",
+    "gross_original_gift_reference_usd": "30.25",
+    "trial_counted_usd": "0",
+    "unused_probe_pool_reallocated": false
+  },
+  "limits_and_caveats": [
+    "Same all-history global ledger; prior components and failed campaigns remain charged. No new budget pool.",
+    "Case .6/campaign5.4 under actual_usage are stop/acceptance thresholds, not hard invoice caps; each request full provider bound protects global/day gift envelope.",
+    "Super internal diff_lines now has one real generic bounded-fixer success after2repairs; this does not guarantee real-scene schema/apply/numerical success.",
+    "Super remains exact model, reasoningFalse, 4000 completion cap and original three-repair limit. Public diff/parser/policy gates unchanged.",
+    "Nano catalogue cache price remains null; fallback .012/M is supported by recorded fresh same-account Prices UI, whose EU label is not presented as a US catalogue cache price.",
+    "Displayed29.69 gross rounded/lagging balance is not reconciled actual charge and never replaces conservative ledger. No recharge/trial counted.",
+    "Old runtime.01644864 and external4291.049344 remain actualunknown and retained.",
+    "Full regression, GPU readiness and final command/source pinning are parent checks outside this financial review.",
+    "Any new request, price/fee/profile change requires updating affected snapshot evidence."
+  ],
+  "source_sha256": {
+    ".cache/tokenfactory-runtime.json": "a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c",
+    "reports/live-campaign-20261025/allocation.json": "3db9675ddc542bb2ba42f9929748deea64d3810e913f13c303615e78f88203c0",
+    "reports/live-campaign-20261025/mvp-v4-catalogue/report.json": "2c860d29b2198751f886da11010a6ee8c018e780e45571099d4ec47b3538536a",
+    "reports/live-campaign-20261025/mvp-v4-account-price-observation.json": "4d6784365806b82b67f80531da68058fec92437e48611e04ed65ffef01111db1",
+    "reports/live-campaign-20261025/patch-wire-components-review.json": "de4083b1f1524d053bd0e6e259ef85679d27c92d21a1c1e0387f1cf0b5f6b83a",
+    "headroom/patch.py": "81b846cd2f24994e244c366b2eb6b08bf849ccadf6e4ee76e9fbfbde60cc8ab7",
+    "headroom/patch_evidence.py": "b9fa4d0fb959fe6bb9dce41bfd47beb4570add454d6115e70c51b46727950915",
+    "headroom/prompts/patch.md": "58f18984164131efa4c45be040cde7bf962d4af3d630be6401d4fe10c77d8faa",
+    "headroom/prompts/patch_fix.md": "b8d0f04735d5cd0d384a247f4080295fd1d8106cfc6da0b20bc2b62f5765eab5"
+  },
+  "reviewer_actions": {
+    "provider_calls": 0,
+    "gpu_jobs": 0,
+    "secret_reads": 0,
+    "ledger_writes": 0,
+    "profile_writes": 0,
+    "source_changes": 0
+  }
+}

@@ -41,10 +41,29 @@ does not fabricate a performance measurement.
 
 ## Structured output and request limits
 
-`PatchProposal` is a strict Pydantic object with only `diff` (string),
-`env_changes` (string mapping), `cli_changes` (string array), and optional
-`notes` (string array). Unknown fields and coercions are rejected. Diff size is
-at most 512,000 bytes and 20 files. Model context contains line-numbered source,
+The public PatchProposal remains a strict Pydantic object with only diff
+(string), env_changes (string mapping), cli_changes (string array), and
+optional notes (string array). Public application and stored patch files still
+use that string contract. Unknown fields and coercions are rejected. Diff size
+is at most 512,000 bytes and 20 files.
+
+Model requests use the separate internal PatchWireProposal: diff_lines is
+a strict array of strings with the same env/CLI/notes constraints. Each element
+is exactly one physical unified-diff line; local Pydantic validation rejects any
+embedded CR or LF. The provider schema contains no unverified regex pattern.
+The host appends exactly one LF to each element, including the final element;
+an empty array becomes an empty string. It does not strip whitespace, split
+flattened strings, interpret literal backslash escapes, infer headers/hunks or
+repair malformed model output. Literal backslash sequences that are legitimate
+source text stay literal. The joined string must satisfy the original 512,000
+character proposal limit and the unchanged parser's UTF-8 byte limit.
+
+An empty array permits an env-only or CLI-only proposal under the original
+policy; an entirely empty proposal still fails NO_CHANGE. Both writer and
+fixer use the wire schema, then convert explicitly to the public proposal before
+the unchanged path, diff, policy, Git application and compilation checks.
+
+Model context contains line-numbered source,
 at most 128 KiB of raw source text. Whole files that do not fit are listed as
 omitted; no partial source is silently presented as complete.
 
@@ -69,9 +88,15 @@ object exists, available protocol records remain explicit metadata rather than
 invented content. `PatchAttempt.response_artifact` identifies the saved file.
 
 Each artifact is at most **256 KiB** of UTF-8 JSON. It records visible assistant
-text, parsed proposal and diff where available, original content byte counts
+text and parsed wire proposal where available, original content byte counts
 and SHA-256 digests, finish/validation metadata, usage and protocol-cost data.
-Large parsed objects are explicitly omitted; retained visible/diff prefixes are
+The separate normalized proposal/diff has its own complete byte counts and
+SHA-256. Normalization metadata binds the original parsed-wire hash to the
+normalized proposal/diff hashes, line count, final-LF rule and the named
+diff_lines_join_lf_v1 transform. This means conversion was performed, not that
+the diff applied or the target passed. Schema/transport failures carry
+normalization=not_applied rather than a fabricated normalized result.
+Large parsed/normalized objects are explicitly omitted; retained text prefixes are
 marked truncated and cannot be treated as complete patches. There is no stored
 request payload, request headers, credentials or hidden reasoning text.
 Reasoning-token *counts* may remain in usage metadata. These files are untrusted
@@ -99,10 +124,17 @@ different malformed inputs yield the same file-count error. The new prompt
 wording clarifies that existing format, rather than relaxing the parser or
 guessing what the unsaved historical payloads contained.
 
-The explicit reasoning control and private evidence code have been applied.
-Current production-tree targeted integration passed 294 guarded tests, including CPU Docker; the next live
-attempt has not run. No new model-repair success or real-scene acceptance is
-claimed. See [application record](../reports/super-patch-fix-20261025/application.json),
+The explicit reasoning control and private evidence code were applied and
+passed 294 guarded production-tree integration tests, including CPU Docker.
+MVP v3 then produced directly observable flattened single-string diffs despite
+zero reported reasoning tokens. That evidence motivates the separate wire-array
+contract; it does not justify unescaping or accepting invalid diffs. The wire implementation has now been applied after117 guarded draft tests.
+A live generic component first preserved a malformed hunk failure, then the
+unchanged normal bounded repair loop applied and compiled its third proposal.
+Removing the added docstring leaves the complete Python AST unchanged. The four
+component calls cost0.00126246USD in total, all known and settled. This proves
+transport/application on the generic component only and earns zero MVP repair
+credit. Full production-tree regression passed2026 tests in551.34s with236 source/config/test/prompt hashes unchanged. The final9-case MVP remains pending. See [application record](../reports/super-patch-fix-20261025/application.json),
 [standard-diff check](../reports/unified-diff-contract-20261025.json),
 [error ambiguity controls](../reports/unified-diff-contract-20261025-supplement.json)
 and [MVP v2 findings](../reports/live-campaign-20261025/mvp-v2-repair-findings.md).

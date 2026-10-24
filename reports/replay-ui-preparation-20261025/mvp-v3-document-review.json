@@ -1,0 +1,143 @@
+{
+  "created_utc": "2026-10-24T23:06:54.211064+00:00",
+  "scope": "Independent v3 document factual review; no source/tests changes",
+  "changed_document_hashes": {
+    "before": {
+      "PROGRESS.md": "2c567355f243fe2af4b87978561247f799dd2e00e8aafb776fc6e99747edbaf4",
+      "docs/RESULTS.md": "595e0257d7190b39d9bb8dd1866dcc40e7e1c959d3f00c715e9a80cff73456c0",
+      "docs/FEEDBACK.md": "99b9f3dc7ec66be2f47fdd034d7898ec4c6ed14d931078bf10aab9b8dceca144",
+      "reports/phase-1-summary-20261025-mvp-v3.md": "00016183274688324838be3ed296303a65ca7267695df7acaf8315eb95e00c41",
+      "reports/phase-1-summary.md": "00016183274688324838be3ed296303a65ca7267695df7acaf8315eb95e00c41"
+    },
+    "after": {
+      "PROGRESS.md": "90ea99bfcbc32f6c67f73afa33452be814e6dbbfe10e77f57a0d80d74d956aba",
+      "docs/RESULTS.md": "73c0f97d0b06bc16050a0f09f285ea5a975d49a7afb42b4b2d2b6976182e7989",
+      "docs/FEEDBACK.md": "7aed8fc7167f5dae337b65331ffa701cab92f0b05b57f329a330abd407ea3057",
+      "reports/phase-1-summary-20261025-mvp-v3.md": "54f6849ece5dc8cb6545cdb416ca2d3b71ea8c2c9c40bbc2a7c2798b457d0f47",
+      "reports/phase-1-summary.md": "54f6849ece5dc8cb6545cdb416ca2d3b71ea8c2c9c40bbc2a7c2798b457d0f47"
+    }
+  },
+  "confirmed": {
+    "denominator": 9,
+    "target_true": 0,
+    "first_cause_true": 3,
+    "first_cause_false": 1,
+    "first_cause_unknown": 5,
+    "model_calls": 78,
+    "known_cost_usd": "0.50587762",
+    "verified_bound_usd": "0.00276750",
+    "conservative_cost_usd": "0.50864512",
+    "actual_total_usd": null,
+    "super_responses": 54,
+    "nonempty_flat_diffs_rejected": 52,
+    "empty_no_change_rejected": 1,
+    "cli_only_applied_then_candidate_failed": 1,
+    "git_apply_compile_successes": 0,
+    "operational_skips": 4,
+    "campaign_exit_code": 1
+  },
+  "worker_evidence": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "run_id": "7d6f8559922e4b39b129e3f7bc642815",
+      "worker_exit_code": 0,
+      "cleanup_verified": true,
+      "campaign_and_report_timing_match": true
+    },
+    {
+      "scenario_id": "s2_fp32_adamw_1b",
+      "run_id": "66128f6c6b644a73a894c296bebb6e98",
+      "worker_exit_code": 0,
+      "cleanup_verified": true,
+      "campaign_and_report_timing_match": true
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "run_id": "6316b7d577984557942b42a4534fc39b",
+      "worker_exit_code": 0,
+      "cleanup_verified": true,
+      "campaign_and_report_timing_match": true
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "run_id": "f8d67775bc5b416cbef68db8638e1255",
+      "worker_exit_code": 0,
+      "cleanup_verified": true,
+      "campaign_and_report_timing_match": true
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "run_id": "132d0339878b4677b9d68006f6d35e9e",
+      "worker_exit_code": 0,
+      "cleanup_verified": true,
+      "campaign_and_report_timing_match": true
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "run_id": "a41b0719963d4152b16a9bf1cc527131",
+      "worker_exit_code": 0,
+      "cleanup_verified": true,
+      "campaign_and_report_timing_match": true
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "run_id": "b3a4666c8aab43d9be15fee37fa87b3c",
+      "worker_exit_code": 0,
+      "cleanup_verified": true,
+      "campaign_and_report_timing_match": true
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "run_id": "6a6941cc5c364168b6be3867aef5c9ee",
+      "worker_exit_code": 0,
+      "cleanup_verified": true,
+      "campaign_and_report_timing_match": true
+    },
+    {
+      "scenario_id": "nanogpt",
+      "run_id": "0b1d292253c5485aa24d926c08437ccd",
+      "worker_exit_code": 0,
+      "cleanup_verified": true,
+      "campaign_and_report_timing_match": true
+    }
+  ],
+  "worker_source": "evaluation_worker.py:162,173-182,211; process.exitcode persisted, not derived from workflow status",
+  "s5_evidence": {
+    "run_id": "132d0339878b4677b9d68006f6d35e9e",
+    "patch_status": "applied",
+    "cli_changes": [
+      "--grad_accum_steps=4"
+    ],
+    "candidate_status": "error",
+    "exception": {
+      "type": "SystemExit",
+      "message": "2"
+    },
+    "completed": false,
+    "target_met": false,
+    "decision": "revert"
+  },
+  "404_correction": "Current preview and live evaluation share runs/headroom.db; owner/public_replay guard is documented. Evidence: reports/replay-ui-preparation-20261025/preview-404-readonly-evidence.json",
+  "scope_limits": "No claim of live CLI invocation, repair success, actual-known cost, or original full acceptance; v4 remains pending.",
+  "evidence_sha256": {
+    "runs/evaluation/live/20261024T225604279740Z-1a7d57a8/jobs/7d6f8559922e4b39b129e3f7bc642815/report.json": "d294e24ad32987489ffa2f40f712ec0d213674e5c2d32c439a2ea51a9986adf4",
+    "runs/evaluation/live/20261024T225604279740Z-1a7d57a8/jobs/66128f6c6b644a73a894c296bebb6e98/report.json": "c234262918423e7045a6d0a31e5f66d1455f1fec79e751f784125854d360496e",
+    "runs/evaluation/live/20261024T225604279740Z-1a7d57a8/jobs/6316b7d577984557942b42a4534fc39b/report.json": "ef5ee19337c6cdeeaeeb70d27dfdab24d81b69201eea0e7cc150cf2ea97c4fc4",
+    "runs/evaluation/live/20261024T225604279740Z-1a7d57a8/jobs/f8d67775bc5b416cbef68db8638e1255/report.json": "c6e23b385d17b5098fa616647105058d83f261ce5412aaccd22e09c88206a88e",
+    "runs/evaluation/live/20261024T225604279740Z-1a7d57a8/jobs/132d0339878b4677b9d68006f6d35e9e/report.json": "a3c0fd6f80f60d15d49b2dbb4465b171b96190a613390f5de2e083387ecca2cc",
+    "runs/evaluation/live/20261024T225604279740Z-1a7d57a8/jobs/a41b0719963d4152b16a9bf1cc527131/report.json": "9d5bb8a14fcbdd154efe1f183f7fbbd1d896483d939703cd6e0ccaf66a08ca7d",
+    "runs/evaluation/live/20261024T225604279740Z-1a7d57a8/jobs/b3a4666c8aab43d9be15fee37fa87b3c/report.json": "3c2057c7180125201841d1267f138b72f824a1ff8d11454e431854f3082b727e",
+    "runs/evaluation/live/20261024T225604279740Z-1a7d57a8/jobs/6a6941cc5c364168b6be3867aef5c9ee/report.json": "c43f4bb5483cc30971de766e344ae763ed98308ea4455620b498b5b179bbbe04",
+    "runs/evaluation/live/20261024T225604279740Z-1a7d57a8/jobs/0b1d292253c5485aa24d926c08437ccd/report.json": "6ac937cdd33adf3f47c6ef27b9838391f29bc8dd49afbc644ba9464f12fbff98",
+    "reports/live-campaign-20261025/mvp-v3-audit-v2.json": "8f154e10dd9205822705bb1f468e2527fce7282c745b38c31e0930eefa7b1fe5",
+    "reports/live-campaign-20261025/mvp-v3-repair-review.json": "01c7c52bb5f60054ff48972027c381f56fa0cf8c844950018ecf23307c645bc8",
+    "reports/live-campaign-20261025/mvp-v3-execution.json": "dcd990464f7b64d8fa88712b3afd1b1e0ac09f8d09278f201007ce465b615b40",
+    "reports/live-campaign-20261025/mvp-v3-profile-restored.json": "5ee6303fbdd982e7e4a763c7df31c181ee8e58b00f9901cc110104a27d0a5e8c",
+    "runs/evaluation/live/20261024T225604279740Z-1a7d57a8/campaign.json": "2ff4b0d4ae537eef1026239896f388a592537727dae331d42f643849b12c8b14"
+  },
+  "diff_check_passed": true,
+  "real_api_calls": 0,
+  "gpu_runs": 0,
+  "real_env_profile_reads": false,
+  "database_access_this_review": false
+}

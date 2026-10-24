@@ -144,7 +144,14 @@ def test_sdk_patch_and_report_pipeline_keeps_fixture_provenance(tmp_path, execut
         def respond(request):
             body = json.loads(request.content)
             calls.append(body["model"])
-            payload = diagnosis if len(calls) == 1 else proposal
+            payload = (
+                diagnosis
+                if len(calls) == 1
+                else {
+                    **{key: value for key, value in proposal.items() if key != "diff"},
+                    "diff_lines": proposal["diff"].splitlines(),
+                }
+            )
             return httpx.Response(
                 200,
                 json={
@@ -493,7 +500,7 @@ def search_run(
                     )
                 )
                 payload = {
-                    "diff": diff,
+                    "diff_lines": diff.splitlines(),
                     "env_changes": {},
                     "cli_changes": [],
                     "notes": ["Offline synthetic fixture."],

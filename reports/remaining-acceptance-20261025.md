@@ -1,3 +1,88 @@
+# 回放准备后续修复状态（2026-10-25）
+
+主代理在上述只读调查后批准了最小修复。生产 `headroom/replay_curation.py` 现已接受真实 `patcher`，同时保留旧 `patch` / `patch_fix`；其余真实性、身份、所有权、费用一致性、candidate 验证、artifact 白名单和事务恢复门未改。对应 41 项独立 guarded 离线测试通过（5.08 秒），Ruff/check/format 通过；父进程与 spawn 均验证真实网络、`.env`、profile、生产 Store/ledger 被阻断。生产和测试已冻结，未执行实际 curation、模型、GPU 或真实 API。
+
+证据为 `reports/replay-ui-preparation-20261025/curation-role-fix-receipt.json`；真实 404 的只读同库/私有 owner 状态证据为同目录 `preview-404-readonly-evidence.json`。以下准备文中的“角色缺口尚未修复”与“本次只读”是先前调查快照，保留原字节；本段只更新该修复状态。它不表示 MVP v3 已通过，也不表示某个 run 已发布或满足五条 replay 门。必须待主代理选择真实、完整、合格的 repair ID 后执行读检查及 curation；v2 仍因无 candidate repair 验证不合格。
+
+---
+
+# MVP v3 后的真实修复回放 / UI 验收准备（只读审计）
+
+审计时间：2026-10-24T23:00:57.529329+00:00。代码基点 `1a935c8716cee05edf2b1ad1d3e37d35f52a5ef3`。MVP v3 在主代理发出本任务时正在运行；本节未查看/接受其最终结果、未选择或发布任何 v3 run。preflight 为 `reports/live-campaign-20261025/mvp-v3-preflight.json`，SHA-256 `f47efd59142d5e3681d5b10b93387a3ed2931419127d382af227f01c15f71b3d`。下面是执行准备，不是任何 UI、回放或模型验收通过记录。原 PLAN 和后面的历史审计正文保持不变。
+
+此次只读取源码、既有报告，以及预览服务的监听 PID/cwd/打开文件描述符；没有打开 SQLite 连接、读取 `.env`、调用 API/模型/Tavily、运行 GPU/测试、截图、Lighthouse 或执行 curation。只更新本报告。
+
+## 1. 已确认 404 的边界：默认预览与 live campaign 共用 Store
+
+- `headroom/evaluation.py:1472–1477`：`provenance == "live"` 使用 `<project>/runs/headroom.db`；只有 fixture campaign 使用自己的 `fixture.db`。不能把 fixture 的隔离 DB 设计推及真实 MVP。
+- `headroom/api/app.py:85–87`：默认 DB 同样是 `runs/headroom.db`，API 展示文件根为 `runs/jobs`。
+- 实际预览服务监听 `127.0.0.1:8765`，PID `3842066`，cwd 为 azuki Headroom 根目录。只读 `/proc/3842066/fd` 观察到其打开的是 `/home/xiaodouzi/workspace/headroom/runs/headroom.db` 及对应 WAL/SHM。因此当前默认预览无需数据库导入，也不能通过复制整库来处理 404。
+- `headroom/api/app.py:283–290`：run 不属于当前 `api_owner` 且未标 `public_replay`，会返回 404。campaign run 未经 curation 直接访问即可能命中这一会话边界；404 本身不证明数据丢失。
+- 另有独立的文件定位差异：campaign 原始 artifacts 位于 `runs/evaluation/live/<campaign>/jobs/<run_id>`，API 下载从 `runs/jobs/<run_id>` 读取（`app.py:412–424,482–490`）。既有 curation 的职责是验证并镜像白名单文件，再标公开回放；不导入/复制 calls、events 或账单。
+- 若以后显式启动使用其他 `ApiSettings.db_path` 的预览，应重新核对实际路径。现有 CLI 没有 `--source-db` / `--destination-db`，不可声称它支持跨 Store 导入。
+
+## 2. 发布前的一个真实阻碍：patch 模型角色名不一致
+
+当前 `headroom/replay_curation.py` SHA-256 为 `3a52683dc9b0af2f2f73cc0bae231bca492daaf780dbdc1441b8bdb1c06e9f9b`。
+
+`replay_curation.py:166–179` 要求成功模型响应含 `diagnose` 和 `patch` / `patch_fix` 中至少一种角色；生产 `headroom/patch.py:574–579` 的初次和修复调用统一使用 `patcher`。真实、具有完整验证证据的生产 run 也会因此被错误拒为 `REAL_MODEL_RESPONSE_RECORDS_MISSING`。本次只报告，未更改代码、未运行 curation，也未借此降低身份/响应/验证门。
+
+最小修正方向是让筛选接受真实生产角色 `patcher`，保留必要的历史兼容名称，并补真实 router role → curation 的离线回归；其余 live provenance、精确响应身份、CUDA repair、report/round/event/capture/patch 一致性仍须保留。由主代理安排，当前版本不能标记“已可发布真实 repair”。
+
+## 3. v3 结束并修复上述角色缺口后的最短命令路径
+
+先对 v3 campaign 作既有只读验收；主代理明确选择实际 ID。选择依据是完成的真实候选验证证据，不是仅 `target_met`、baseline OOM、模型生成了 diff 或工作流结束。v1/v2 没有候选 repair 验证，不能充作真实 repair replay。失败但已真实应用并验证的 run 可以保留失败状态展示；它不能冒充成功修复。
+
+在 azuki 项目根，下面只列模板，本次均未运行：
+
+```sh
+source scripts/env.sh
+uv run --offline python scripts/curate_repair_replays.py --run-id SELECTED_RUN_ID
+```
+
+重复 `--run-id` 可组成明确的批次，最多 16 个唯一 ID；任一不合格拒绝整批。脚本默认只读，固定检查 `runs/headroom.db`，不构造 Store、不创建表/文件、不写事件/flag。读检查 exit 0 仅表示该批当前 eligible；exit 1 表示存在不合格行；输入/读取错误 exit 2。参数见 `scripts/curate_repair_replays.py:11–38`。
+
+审阅返回的 source/asset hash、真实状态、`verified_attempt_rounds`、下载清单，以及 public 内容是否符合当前发布范围后，主代理才执行相同 ID 集合：
+
+```sh
+uv run --offline python scripts/curate_repair_replays.py --run-id SELECTED_RUN_ID --execute
+```
+
+执行仅在已存在 row 上增加 `public_replay` / curation metadata，并将展示白名单逐 hash 镜像到 `runs/jobs/<id>`；不复制源码、allocator snapshot、env 或私有模型响应，也不改模型调用、账单、target、round 或原报告字节。预存文件冲突不覆盖；重复执行须元数据与资产仍相同。提交/回滚不确定时保留资产与异常，不能凭失败退出盲目清理/重试。完整约束见 `docs/REPAIR_REPLAYS.md`。
+
+既有筛选还检查：terminal live、未 pending report、完整连续 events、真实诊断/patch response、报告用量与 calls 一致、至少一个真实 CUDA candidate、原 verification/patch-result/source manifest 一致、patch.applied 先于 verify.done、kept 属于已验证 round。`target_met=false`、unknown actual、keep/revert 原事实均不被改写。对新 bounded 费用，实际未知仍 null；必须另外核对正式 billing proof，curation 本身不创造财务证明。
+
+## 4. 尽量复用现成 run，逐个验真实 API/显示，不新增模型
+
+主代理完成 curation 后，首先只打开已发布回放：
+
+1. `/api/replays` 列出选中 ID；`/api/runs/<id>` 可访问且保留原 provenance/status/target/selected round。报告、patch、evidence 与 configuration 下载只使用接口返回的真实链接；逐项核对响应内容/hash，不猜测 URL、不把隐藏按钮当 artifact 已存在。
+2. SSE 读取保存的事件 sequence，检查无遗漏/重复及末尾 `stream.end`。`app.py:427–470` 对终态 public replay 会发送历史及尾部事件后结束；这只能证明**历史 SSE 回放**，不是模型正在执行或浏览器已创建 live run。
+3. UI 对照同一 report：before/after 是 selected 配置；每轮 applied/verified/keep/revert 分开；actual 未知显示 Unknown，费用上界单独标注，不能把 conservative upper 显示为已知 actual。检查回放启动耗时是否 ≤2 秒（T3.3），手机宽度是否溢出、完整下载是否可读；这些均须真实测量，本次未执行。
+4. 从这一套真实页面可截取 T3.6 的 ≥8 张素材，并在服务/页面稳定后做一次 Lighthouse Performance ≥70。一次截图或历史测试不能代替测量；本任务没有启动截图/性能负载。
+5. 复用同 run 的 `headroom report` / `headroom replay` / `headroom usage` 读入口和报告数字检查，可补 T1.8 展示/报告核对，不触发模型/GPU；但 CLI `report/replay` 不能证明 CLI `fix` 入口通过。
+
+T3.3 原门为 ≥5 条且包含 s2 两轮求解、nanoGPT 和一个 reclaim（PLAN:333）。目前默认五条 baseline 即便可打开，也不能代替这些 repair 内容；不能挑五个失败/相同 run 的副本充数，更不能把 s2 baseline 已 fit22 或人为重复回放算两轮求解。v3 只有实际达到这些内容时才能复用；不足项仍明确 pending。当前没有选定 v3 ID，也未声称五条已满足。
+
+## 5. 一次后续真实 UI run 可合并的门，以及不能合并的门
+
+| 实际执行 | 可直接复用的证据 | 仍独立的原门 |
+|---|---|---|
+| 浏览器 Home 真实提交一个必要场景，连同正在发生的 SSE 一直看到最终报告 | T3.2 浏览器入口/实时事件/最终报告；T3.1 单请求实时 SSE；同次真实模型用量、run 预算事实、下载；若选择尚缺的 s3 且目标/策略一致，实际 reduction≥30% 时可同时补 T1.6 | 单请求不证明两请求排队；也不证明 .05 run / .1 daily 拒绝、公网限流/告警或 CLI/Watch 入口 |
+| 已保存真实 repair 的 curation + 页面回放 | T3.3 的真实内容、历史 SSE、启动时间；T1.8 报告展示/下载；T3.6 素材 | 不证明浏览器新提交 live run、实时模型运行、实际新修复成功；失败仍失败 |
+| 干净 clone 按 README 实际执行 s1 `headroom fix` | T5.1 与 T1.7 的真正 CLI/事件/exit；满足时兼得 T1.11 Docker 路径 | evaluation harness child exit 0、CLI `report/replay` 或浏览器 API 不能替代此入口 |
+| 真正 Watch 包装 OOM 入口 | T2.6 Watch 识别→Lab→报告及其退出语义；若 HF 场景/约束适合可同次补 HF 特定门 | 不能从 fix/eval/API 成功推导 Watch 已执行 |
+
+优先让必须新增的 UI run 覆盖 MVP 尚缺的实际场景门，避免仅为界面再次生成相同修复。若 MVP 已覆盖全部 s3 数值门，则选已验证最稳定场景，以实际完成情况记验收；不预承诺新调用次数/费用或成功。原 default policy、completion cap、run/day/global 额度及数值门均不改变。
+
+费用展示与费用行为也须区分：一次普通 0.6 运行能证明其本次费用与 Store/ledger 一致，不能证明 `--budget 0.05` 部分报告或日额度 0.1 的拒绝行为。先复用已有受控 guard/账本专项证据；缺真实门再由主代理在统一预算池内安排，不清账、不伪造余额、不故意耗光赠送池触发 banner。GPU 忙/预算耗尽 banner 只在真实状态已自然发生或明确标测试状态时验证；状态 unknown 不算 busy/empty。
+
+并发第二请求 queued、上传 socket 静态拒绝、公共 HTTPS/429/restart/通知仍按各自真实入口检验；不能以此次回放一次性声称全部通过。Frank 的域名/设计/告警接收方等交付依赖不由回放解决。
+
+---
+
+以下为原有审计快照，按原字节保留；其中“v2 未执行”等是当时状态，已由本节及真实 v2 失败报告明确覆盖。v2 最终失败：s1 22 calls / 16 Super attempts、0 apply/compile/candidate，actual null / certified upper 0.14129888；后八项为运营停止导致 0-call/0-GPU skip，不是八次模型质量失败。对应 `reports/live-campaign-20261025/mvp-v2-audit.json` 与 `reports/phase-1-summary-20261025-mvp-v2.md`。v3 尚待主代理审计；任何新验收结论均不从本准备文档推导。
+
 # 原计划后续真实验收顺序（2026-10-25）
 
 ## MVP v2 前更新：先复用证据，再补缺项

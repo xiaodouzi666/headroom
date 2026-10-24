@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "reviewed_at_utc": "2026-10-24T22:58:36.862954+00:00",
+  "scope": "Mathematical allocation option only, not an applied limit, new spending authorization or dispatch approval. Wait for MVP v3 result before deciding whether any transfer is needed.",
+  "state": "option_not_applied",
+  "new_requests_authorized_by_this_report": false,
+  "current_partitions_usd": {
+    "historical_probes": "0.00035096",
+    "new_probe_pool_ceiling": "6",
+    "new_probe_charged_or_permanently_retained": "1.82189150",
+    "unused_probe_pool": "4.17810850",
+    "runtime_all_time": "9.99964904",
+    "runtime_day_current": "9.99964904",
+    "combined_all_time": "16",
+    "combined_day": "12"
+  },
+  "full_transfer_option_usd": {
+    "transfer": "4.17810850",
+    "new_probe_pool_ceiling": "1.82189150",
+    "new_runtime_all_time_ceiling": "14.17775754",
+    "same_UTC_day_runtime_ceiling_maximum": "10.17775754",
+    "same_day_increase_over_current_runtime_day_ceiling": "0.17810850",
+    "all_time_equation": "0.00035096 + 1.82189150 + 14.17775754 = 16",
+    "same_day_equation": "1.82224246 + 10.17775754 = 12"
+  },
+  "snapshot_for_orientation_only": {
+    "utc_day": "2026-10-24",
+    "runtime_charged_or_retained_or_pending_usd": "1.72765884",
+    "runtime_committed_including_open_run_floors_usd": "2.32765884",
+    "runtime_same_day_committed_usd": "2.32765884",
+    "current_all_time_uncommitted_usd": "7.67199020",
+    "hypothetical_reallocated_all_time_uncommitted_usd": "11.85009870",
+    "hypothetical_reallocated_same_day_uncommitted_usd": "7.85009870",
+    "pending_attempt_count": 0,
+    "open_run_count": 1,
+    "actual_account_balance_reconciled": false,
+    "note": "Mutable campaign snapshot, not a guarantee of spendable account balance; pending and open-run floors are not released."
+  },
+  "gift_tax_judging_reference": {
+    "initial_gift_net_face_usd": "25",
+    "initial_gift_gross_observed_usd": "30.25",
+    "token_envelope_net_usd": "16",
+    "reference_tax_multiplier": "1.21",
+    "worst_reference_gross_tokens_usd": "19.36",
+    "unallocated_buffer_gross_usd": "0.89",
+    "judging_reserve_gross_usd": "10",
+    "identity": "19.36 + 0.89 + 10 = 30.25",
+    "trial_counted": false,
+    "new_recharge": false,
+    "invoice_or_current_balance_reconciliation_claimed": false
+  },
+  "checks": {
+    "no_pending_probe_claims_in_allocation": true,
+    "unused_probe_pool_exact": true,
+    "old_total_16": true,
+    "new_total_16": true,
+    "new_runtime_all_time_14_17775754": true,
+    "same_day_combined_12": true,
+    "gift_reference_reserve_unchanged": true,
+    "unknown_probe_full_bound_still_part_of_probe_cost": true
+  },
+  "decision_boundaries": [
+    "This option transfers only unused internal probe allocation. It does not release the 1.049344 unknown 429 probe reserve, the 0.01644864 historical Nano reserve, any pending runtime reservation, or any other settled bound.",
+    "For the current UTC day (2026-10-24), external probe known/retained cost is 1.82224246. Runtime day maximum is therefore 10.17775754, only 0.17810850 more than the current 9.99964904. Applying the full 4.17810850 increase to today daily ceiling would violate the combined 12 cap.",
+    "On a later UTC day with no external probe spending, a separately reviewed runtime day ceiling could be at most 12 and is still constrained by remaining lifetime allocation. Lifetime charges/reserves do not reset at midnight.",
+    "Do not change caps while the current MVP is running. After it finishes, check every active/pending/unknown state and record the final v3 result before deciding necessity.",
+    "If selected, atomically document reduced probe allocation and increased runtime lifetime ceiling; future probes must not reuse the transferred pool. Use the same persistent runtime ledger and explicit reviewed daily cap; never create a fresh ledger or reset historical charges.",
+    "Do not reinterpret per-case .6 or nominal campaign 5.4 as independent guaranteed invoice caps. Existing full-provider-bound global/day reservation controls must continue on every dispatch.",
+    "Before any future dispatch, refresh account/promotion availability and model prices/context/non-token fees under the existing preflight process. This mathematical review did not query the account or change prices/profile.",
+    "No change to PLAN, thresholds, pricing, trial exclusion, tax/buffer or judging reserve is proposed. Existing authenticated UI balance is not a reconciled invoice."
+  ],
+  "conclusion": "No mathematical obstacle to transferring the unused all-time probe allocation within net16, conditional on post-MVP reconciliation; the current UTC-day cap permits only a small corresponding daily increase. No allocation changed.",
+  "source_hashes": [
+    {
+      "path": "reports/live-campaign-20261025/allocation.json",
+      "sha256": "3db9675ddc542bb2ba42f9929748deea64d3810e913f13c303615e78f88203c0"
+    },
+    {
+      "path": "reports/live-campaign-20261025/authorization.json",
+      "sha256": "748a58b81c1cdbcae684df6d457681cfead987440cc7431e409bcdb9d0d8ef28"
+    },
+    {
+      "path": "reports/live-campaign-20261025/daily-reallocation-review.json",
+      "sha256": "799374dff85faec18d48ae861333fe9a92c1f7887157d1e7286807b9dd389d64"
+    },
+    {
+      "path": "reports/live-campaign-20261025/retained-429-review.json",
+      "sha256": "c02138911262f6458799a9b026689382af057f1b8e692727c5152c57e9fa9892"
+    },
+    {
+      "path": "reports/live-campaign-20261025/mvp-v3-preflight.json",
+      "sha256": "f47efd59142d5e3681d5b10b93387a3ed2931419127d382af227f01c15f71b3d"
+    },
+    {
+      "path": "reports/live-campaign-20261025/mvp-v3-billing-observation.json",
+      "sha256": "d84e79b8998faa710f7f168988d420f178cefe4793ec29546f3be901b4532d18"
+    }
+  ],
+  "reviewer_actions": {
+    "real_env_reads": false,
+    "provider_or_http_calls": 0,
+    "gpu_jobs": 0,
+    "ledger_profile_allocation_changes": false,
+    "receipt_only": true
+  }
+}

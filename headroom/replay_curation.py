@@ -175,7 +175,7 @@ def _inspection(connection, runs, run_id):
         and isinstance(call.get("usage"), dict)
     }
     _require(
-        "diagnose" in valid_roles and valid_roles & {"patch", "patch_fix"},
+        "diagnose" in valid_roles and valid_roles & {"patcher", "patch", "patch_fix"},
         "REAL_MODEL_RESPONSE_RECORDS_MISSING",
     )
     usage = report.get("usage", {})

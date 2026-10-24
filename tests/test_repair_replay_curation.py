@@ -46,7 +46,16 @@ def write(path, value):
     path.write_text(json.dumps(value))
 
 
-def fixture_run(tmp_path, *, run_id="a" * 32, target_met=True, provenance="live", in_jobs=False):
+def fixture_run(
+    tmp_path,
+    *,
+    run_id="a" * 32,
+    target_met=True,
+    provenance="live",
+    in_jobs=False,
+    call_roles=("diagnose", "patcher"),
+    patch_call_overrides=None,
+):
     """Synthetic records shaped like one fully saved live attempt, not live evidence."""
     runs = tmp_path / "runs"
     source = runs / ("jobs" if in_jobs else "campaign/jobs") / run_id
@@ -149,7 +158,7 @@ def fixture_run(tmp_path, *, run_id="a" * 32, target_met=True, provenance="live"
                     target_met=target_met, loss_equivalence=verification["loss_equivalence"]
                 )
             store.add_event(run_id, kind, values)
-        for role in ("diagnose", "patch"):
+        for role in call_roles:
             store.add_llm_call(
                 run_id,
                 {
@@ -162,6 +171,7 @@ def fixture_run(tmp_path, *, run_id="a" * 32, target_met=True, provenance="live"
                     "usage": {"prompt_tokens": 10, "completion_tokens": 10, "total_tokens": 20},
                     "cost": {"usd": "0.001", "status": "known"},
                     "cost_usd": "0.001",
+                    **(patch_call_overrides or {} if role != "diagnose" else {}),
                 },
             )
         store.add_round(
@@ -581,3 +591,54 @@ def test_exclusive_write_failure_never_removes_preexisting_file(tmp_path):
     with pytest.raises(FileExistsError):
         curation._write_new(path, b"replacement")
     assert path.read_bytes() == b"preexisting manifest"
+
+
+@pytest.mark.parametrize("patch_role", ["patcher", "patch", "patch_fix"])
+def test_production_and_legacy_patch_roles_are_eligible_without_writes(tmp_path, patch_role):
+    run_id, _ = fixture_run(tmp_path, call_roles=("diagnose", patch_role))
+    before = saved_records(tmp_path, run_id)
+    result = curate_repair_replays([run_id], project_root=tmp_path)
+    assert result["eligible"] is True and result["executed"] is False
+    assert result["runs"][0]["verified_attempt_rounds"] == [1]
+    assert saved_records(tmp_path, run_id) == before
+    assert not (tmp_path / "runs/jobs").exists()
+
+
+@pytest.mark.parametrize(
+    "call_roles,overrides",
+    [
+        (("diagnose",), None),
+        (("patcher",), None),
+        (("diagnose", "research"), None),
+        (("diagnose", "PatchER"), None),
+        (("diagnose", "patcher"), {"outcome": "not_dispatched"}),
+        (("diagnose", "patcher"), {"http_status": 429}),
+        (("diagnose", "patcher"), {"response_model": "nvidia/unrelated-model"}),
+        (("diagnose", "patcher"), {"usage": None}),
+    ],
+)
+def test_patcher_name_does_not_bypass_valid_response_requirements(tmp_path, call_roles, overrides):
+    run_id, _ = fixture_run(tmp_path, call_roles=call_roles, patch_call_overrides=overrides)
+    before = saved_records(tmp_path, run_id)
+    result = curate_repair_replays([run_id], project_root=tmp_path, execute=True)
+    assert result["eligible"] is False and result["executed"] is False
+    assert result["runs"][0]["reason"] == "REAL_MODEL_RESPONSE_RECORDS_MISSING"
+    assert saved_records(tmp_path, run_id) == before
+    assert not (tmp_path / "runs/jobs").exists()
+
+
+def test_uncurated_campaign_stays_private_in_default_store(tmp_path):
+    run_id, _ = fixture_run(tmp_path)
+    before = saved_records(tmp_path, run_id)
+    settings = ApiSettings(
+        project_root=tmp_path,
+        db_path=tmp_path / "runs/headroom.db",
+        run_root=tmp_path / "runs/jobs",
+        web_dist=tmp_path / "no-web",
+    )
+    with TestClient(create_app(settings)) as client:
+        assert client.get("/api/replays").json()["count"] == 0
+        for suffix in ("", "/events", "/report.json", "/patch.diff"):
+            assert client.get(f"/api/runs/{run_id}{suffix}").status_code == 404
+    assert saved_records(tmp_path, run_id) == before
+    assert not (tmp_path / "runs/jobs" / run_id).exists()

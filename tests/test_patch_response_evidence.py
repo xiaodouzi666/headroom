@@ -91,7 +91,7 @@ def artifacts(tmp_path):
 
 def test_rejected_diff_is_saved_verbatim_before_diff_validation(source, tmp_path):
     raw_diff = "not a unified diff\\nwith literal backslash n"
-    parsed = {"diff": raw_diff, "env_changes": {}, "cli_changes": []}
+    parsed = {"diff_lines": [raw_diff], "env_changes": {}, "cli_changes": []}
     text = json.dumps(parsed)
     calls = []
     result = run_engine(source, tmp_path, router_for(text, calls), max_repairs=0)
@@ -101,8 +101,12 @@ def test_rejected_diff_is_saved_verbatim_before_diff_validation(source, tmp_path
     record = json.loads(path.read_text())
     assert record["visible"]["text"] == text
     assert record["parsed"] == parsed
-    assert record["diff"]["text"] == raw_diff
-    assert record["diff"]["sha256"] == hashlib.sha256(raw_diff.encode()).hexdigest()
+    assert record["diff"] is None  # The original wire proposal has no diff string.
+    assert record["normalized_diff"]["text"] == raw_diff + "\n"
+    assert (
+        record["normalized_diff"]["sha256"]
+        == hashlib.sha256((raw_diff + "\n").encode()).hexdigest()
+    )
     assert record["validation"] == "schema_passed"
     assert stat.S_IMODE(path.stat().st_mode) == 0o600
     assert stat.S_IMODE(path.parent.stat().st_mode) == 0o700
@@ -115,7 +119,7 @@ def test_rejected_diff_is_saved_verbatim_before_diff_validation(source, tmp_path
         "offline-key-must-not-be-recorded",
     ):
         assert secret not in path.read_text()
-    assert not record["diff"]["truncated"]
+    assert not record["normalized_diff"]["truncated"]
     assert (source / "train.py").read_text() == "x = 1\n"
 
 
@@ -174,7 +178,7 @@ def test_pre_dispatch_failure_does_not_copy_previous_call_record(source, tmp_pat
             raise BudgetExceeded("offline next admission refused")
 
     router = router_for(
-        json.dumps({"diff": "invalid", "env_changes": {}, "cli_changes": []}),
+        json.dumps({"diff_lines": ["invalid"], "env_changes": {}, "cli_changes": []}),
         calls,
         before_attempt=before_attempt,
     )
@@ -204,7 +208,7 @@ def test_evidence_write_failure_never_retries_or_loses_original_validation_error
 
 def test_large_unicode_response_is_bounded_with_full_hashes(source, tmp_path):
     diff = "字" * 200000
-    parsed = {"diff": diff, "env_changes": {}, "cli_changes": []}
+    parsed = {"diff_lines": [diff], "env_changes": {}, "cli_changes": []}
     text = json.dumps(parsed, ensure_ascii=False)
     calls = []
     result = run_engine(source, tmp_path, router_for(text, calls), max_repairs=0)
@@ -214,11 +218,12 @@ def test_large_unicode_response_is_bounded_with_full_hashes(source, tmp_path):
     record = json.loads(raw)
     assert len(raw) <= MAX_RESPONSE_ARTIFACT_BYTES
     assert record["parsed"] is None and record["parsed_omitted"]
-    assert record["diff"]["utf8_bytes"] == len(diff.encode())
-    assert record["diff"]["sha256"] == hashlib.sha256(diff.encode()).hexdigest()
+    assert record["normalized_proposal"] is None and record["normalized_proposal_omitted"]
+    assert record["normalized_diff"]["utf8_bytes"] == len((diff + "\n").encode())
+    assert record["normalized_diff"]["sha256"] == hashlib.sha256((diff + "\n").encode()).hexdigest()
     assert record["visible"]["sha256"] == hashlib.sha256(text.encode()).hexdigest()
-    assert record["diff"]["truncated"] and record["visible"]["truncated"]
-    assert diff.startswith(record["diff"]["text"])
+    assert record["normalized_diff"]["truncated"] and record["visible"]["truncated"]
+    assert (diff + "\n").startswith(record["normalized_diff"]["text"])
     assert text.startswith(record["visible"]["text"])
 
 

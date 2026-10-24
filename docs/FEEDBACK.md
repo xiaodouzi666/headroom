@@ -411,3 +411,9 @@ for a separately saved raw SDK usage declaration.
 Evidence: [v2 call/ledger audit](../reports/live-campaign-20261025/mvp-v2-audit.json),
 [operational audit note](../reports/live-campaign-20261025/mvp-v2-operational-audit-note.json),
 and [post-v2 saved ledger review](../reports/live-campaign-20261025/mvp-v2-profile-restored.json).
+
+### TF022 — native JSON string flattened patch line boundaries
+
+In MVPv3, Super returned54 complete structured responses with stop/zero reported reasoning. Raw visible JSON and parsed objects agree:52 nonempty unified diff strings have zero LF and zero literal backslash-n separators across multiple scenes. Local parser/control experiments accept standard paired headers with or without diff --git; no local newline stripping was found. Consequently the strict file/hunk parser rejected these52 nonempty responses. A separate empty diff was rejected as NO_CHANGE, making53 total rejections; the other empty-diff CLI-only response reached the real Lab but failed its unsupported argument. This isolates an observed wire-output problem; it does not prove an internal provider cause or a valid repair.
+
+Action: request explicit diff_lines arrays, one physical line per element; reject embedded CR/LF and deterministically join the supplied boundaries while retaining original wire and normalized artifacts. Keep git apply/compile/honesty/4000-token limits intact. A generic one-call transport component check precedes the last permitted MVP repair iteration. Outcome pending; do not claim the format fixes model patch correctness. Evidence: reports/live-campaign-20261025/mvp-v3-repair-review.json.

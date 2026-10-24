@@ -14,7 +14,14 @@ from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    ValidationError,
+    field_validator,
+)
 from unidiff import PatchSet
 from unidiff.errors import UnidiffParseError
 
@@ -59,6 +66,39 @@ class PatchProposal(BaseModel):
     notes: list[Annotated[str, StringConstraints(max_length=2000)]] = Field(
         default_factory=list, max_length=20
     )
+
+
+class PatchWireProposal(BaseModel):
+    """Model-only transport; each item is exactly one physical unified-diff line."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+    diff_lines: list[Annotated[str, StringConstraints(max_length=512000)]] = Field(
+        max_length=512000
+    )
+    env_changes: dict[str, str]
+    cli_changes: list[Annotated[str, StringConstraints(max_length=1000)]] = Field(max_length=60)
+    notes: list[Annotated[str, StringConstraints(max_length=2000)]] = Field(
+        default_factory=list, max_length=20
+    )
+
+    @field_validator("diff_lines")
+    @classmethod
+    def physical_lines(cls, lines):
+        if any("\n" in line or "\r" in line for line in lines):
+            raise ValueError("Each diff_lines item must exclude CR and LF")
+        # One LF follows each item, including the last. The public proposal's
+        # original character limit and the parser's UTF-8 byte limit both remain.
+        if sum(len(line) + 1 for line in lines) > 512000:
+            raise ValueError("Joined diff exceeds the original proposal limit")
+        return lines
+
+    def to_proposal(self) -> PatchProposal:
+        return PatchProposal(
+            diff="".join(line + "\n" for line in self.diff_lines),
+            env_changes=self.env_changes,
+            cli_changes=self.cli_changes,
+            notes=self.notes,
+        )
 
 
 @dataclass(frozen=True)
@@ -574,7 +614,7 @@ class PatchEngine:
                 response = self.router.chat(
                     "patcher",
                     messages,
-                    PatchProposal,
+                    PatchWireProposal,
                     max_tokens=self.max_completion_tokens,
                     reasoning=False,
                 )
@@ -629,14 +669,20 @@ class PatchEngine:
                     break
                 failure = {"reason": attempt.reason, "detail": attempt.detail}
             else:
+                normalized = (
+                    PatchWireProposal.model_validate(response.parsed, strict=True)
+                    .to_proposal()
+                    .model_dump()
+                )
                 response_artifact = save_patch_response(
                     response_path,
                     response,
                     records=self.router.client.ledger.entries[ledger_start:],
+                    normalized_proposal=normalized,
                 )
                 last = apply_proposal(
                     snapshot,
-                    response.parsed,
+                    normalized,
                     work_root=directory / f"attempt-{index + 1}",
                     policy=policy,
                     base_cli=base_cli,

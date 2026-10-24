@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-24T23:02:07.241773+00:00",
+  "source_commit": "1a935c8716cee05edf2b1ad1d3e37d35f52a5ef3",
+  "source_sha256": {
+    "headroom/replay_curation.py": "3a52683dc9b0af2f2f73cc0bae231bca492daaf780dbdc1441b8bdb1c06e9f9b",
+    "tests/test_repair_replay_curation.py": "bbcad4dd30655950c245aba14e49ba3aa8bf48114f94df3e63b1074926aeda3e",
+    "headroom/api/app.py": "9f7d8a5ffdea12f4a32cd243914cd0a10b22af20a0c06584794a45285afee887",
+    "headroom/evaluation.py": "b29bf986b85c8d5ef830099fb84b9a95839d0b68a4719516ef859db987a69394",
+    "headroom/patch.py": "fd36e13d91ea8f9167e915d5c8385ffce68fa9d8aa18de90d014c3ab275a85c9",
+    "docs/PLAN.md": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56"
+  },
+  "mode": "read_only_saved_state_and_proc_inspection",
+  "live_http_performed": false,
+  "provider_calls": 0,
+  "gpu_runs": 0,
+  "sqlite_mode": "mode=ro; query_only=ON; bounded read transaction; explicit rollback",
+  "store_constructed": false,
+  "database_mutation": false,
+  "ledger_access": false,
+  "credentials_read": false,
+  "curation_executed": false,
+  "preview": {
+    "address": "127.0.0.1:8765",
+    "processes": [
+      {
+        "pid": 3842066,
+        "cwd": "/home/xiaodouzi/workspace/headroom",
+        "open_database_files": [
+          "/home/xiaodouzi/workspace/headroom/runs/headroom.db",
+          "/home/xiaodouzi/workspace/headroom/runs/headroom.db-shm",
+          "/home/xiaodouzi/workspace/headroom/runs/headroom.db-wal"
+        ]
+      }
+    ]
+  },
+  "preserved_v2_record": {
+    "run_id": "e0bde71d5a0e4e67bd33e50acd9956a8",
+    "exists": true,
+    "status": "needs_human",
+    "provenance": "live",
+    "target_met": false,
+    "api_owner_present": false,
+    "api_owner_absent_or_null": true,
+    "public_replay": false,
+    "run_directory": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261024T223453139983Z-b34f1afd/jobs/e0bde71d5a0e4e67bd33e50acd9956a8",
+    "call_role_counts": [
+      {
+        "role": "annotate",
+        "calls": 1
+      },
+      {
+        "role": "diagnose",
+        "calls": 5
+      },
+      {
+        "role": "patcher",
+        "calls": 16
+      }
+    ],
+    "raw_run_data_sha256": "88a6b8281255d6c9f5d71644e71e2834628a3b34784969fdcd5f337b7ea63f46",
+    "canonical_api_job_exists": false,
+    "source_report_json_exists": true,
+    "source_report_md_exists": true
+  },
+  "conclusions": [
+    "The current preview and live evaluation share runs/headroom.db; no database import is needed.",
+    "The preserved v2 row exists. Its api_owner is absent/null and public_replay is false.",
+    "app.py hashes every session token into a non-null owner. accessible() returns 404 for this private unowned row, independent of browser session.",
+    "This is a source-and-state proof of the access-control branch, not a new HTTP reproduction of the prior 404.",
+    "Curation would additionally mirror allowlisted display artifacts into runs/jobs/<id>; it does not import calls/events/financial records.",
+    "V2 has no applied/verified candidate repair and remains ineligible; it must not be curated merely to remove the 404.",
+    "Production patch calls use patcher, while the curation role filter only accepts patch/patch_fix. This separate defect must be fixed before eligible production repairs can be curated."
+  ],
+  "source_locations": {
+    "session_owner": "headroom/api/app.py:262-268",
+    "private_row_404": "headroom/api/app.py:283-290",
+    "api_artifacts": "headroom/api/app.py:412-424,482-490",
+    "live_evaluation_store": "headroom/evaluation.py:1472-1477",
+    "curation_database": "headroom/replay_curation.py:398-415",
+    "curation_role_filter": "headroom/replay_curation.py:166-179",
+    "production_patch_role": "headroom/patch.py:574-579"
+  }
+}
