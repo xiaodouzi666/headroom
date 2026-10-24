@@ -1,0 +1,292 @@
+{
+  "task": "T0.5",
+  "schema_version": 1,
+  "mode": "execute",
+  "created_at": "2026-10-24T00:57:12.081106+00:00",
+  "api_base": "https://api.tavily.com",
+  "preflight": {
+    "credential_present": true,
+    "env_mode_600": true,
+    "preflight_error": null
+  },
+  "sdk": {
+    "distribution": "tavily-python",
+    "version": "0.8.5",
+    "search_signature": "(self, query: str, search_depth: Literal['basic', 'advanced', 'fast', 'ultra-fast'] = None, topic: Literal['general', 'news', 'finance'] = None, time_range: Literal['day', 'week', 'month', 'year'] = None, start_date: str = None, end_date: str = None, days: int = None, max_age_hours: int = None, max_results: int = None, include_domains: Sequence[str] = None, exclude_domains: Sequence[str] = None, include_domains_mode: Literal['restrict', 'prefer'] = None, include_answer: Union[bool, Literal['basic', 'advanced']] = None, include_raw_content: Union[bool, Literal['markdown', 'text']] = None, include_images: bool = None, timeout: float = 60, country: str = None, auto_parameters: bool = None, include_favicon: bool = None, include_usage: bool = None, exact_match: bool = None, fetch_timeout: float = None, cache_fallback: bool = None, language: str = None, filter_by_language: bool = None, **kwargs) -> dict",
+    "extract_signature": "(self, urls: Union[List[str], str], include_images: bool = None, extract_depth: Literal['basic', 'advanced'] = None, format: Literal['markdown', 'text'] = None, timeout: float = 30, include_favicon: bool = None, include_usage: bool = None, query: str = None, chunks_per_source: int = None, **kwargs) -> dict",
+    "source": "installed SDK inspection; not a live API observation"
+  },
+  "attempted_requests": 4,
+  "api_checks_passed": true,
+  "task_accepted": false,
+  "task_acceptance_note": "Requires real successful probes and two factual FEEDBACK entries.",
+  "operations": [
+    {
+      "id": "search_basic",
+      "method": "search",
+      "arguments": {
+        "query": "PyTorch 2.5 torch.utils.checkpoint use_reentrant False",
+        "max_results": 2,
+        "include_domains": [
+          "docs.pytorch.org",
+          "pytorch.org",
+          "github.com"
+        ],
+        "include_answer": false,
+        "include_raw_content": false,
+        "include_usage": true,
+        "auto_parameters": false,
+        "timeout": 30,
+        "search_depth": "basic"
+      },
+      "status": "succeeded",
+      "credits": 1,
+      "reason": null,
+      "response_schema": {
+        "query": "string",
+        "follow_up_questions": "null",
+        "answer": "null",
+        "images": {
+          "type": "array",
+          "length": 0,
+          "item_shapes": []
+        },
+        "results": {
+          "type": "array",
+          "length": 2,
+          "item_shapes": [
+            {
+              "url": "string",
+              "title": "string",
+              "content": "string",
+              "score": "number",
+              "raw_content": "null",
+              "id": "string"
+            }
+          ]
+        },
+        "response_time": "number",
+        "usage": {
+          "credits": "integer"
+        },
+        "request_id": "string"
+      },
+      "results": [
+        {
+          "url": "https://docs.pytorch.org/docs/main/utils/checkpoint.html",
+          "title": "torch.utils.checkpoint \u2014 PyTorch main documentation",
+          "score": 0.90227455,
+          "content_characters": 1357
+        },
+        {
+          "url": "https://github.com/pytorch/pytorch/blob/main/torch/utils/checkpoint.py",
+          "title": "pytorch/torch/utils/checkpoint.py at main \u00b7 pytorch/pytorch \u00b7 GitHub",
+          "score": 0.8974172,
+          "content_characters": 1445
+        }
+      ],
+      "failed_results": null,
+      "usage": {
+        "credits": 1
+      },
+      "credits_source": "api_usage.credits",
+      "request_id": "e3388d43-2e08-41a8-bf81-7de022c7571d",
+      "api_response_time": 2.46,
+      "elapsed_seconds": 2.9315231600776315
+    },
+    {
+      "id": "search_advanced",
+      "method": "search",
+      "arguments": {
+        "query": "PyTorch 2.5 torch.utils.checkpoint use_reentrant False",
+        "max_results": 2,
+        "include_domains": [
+          "docs.pytorch.org",
+          "pytorch.org",
+          "github.com"
+        ],
+        "include_answer": false,
+        "include_raw_content": false,
+        "include_usage": true,
+        "auto_parameters": false,
+        "timeout": 30,
+        "search_depth": "advanced"
+      },
+      "status": "succeeded",
+      "credits": 2,
+      "reason": null,
+      "response_schema": {
+        "query": "string",
+        "follow_up_questions": "null",
+        "answer": "null",
+        "images": {
+          "type": "array",
+          "length": 0,
+          "item_shapes": []
+        },
+        "results": {
+          "type": "array",
+          "length": 2,
+          "item_shapes": [
+            {
+              "url": "string",
+              "title": "string",
+              "content": "string",
+              "score": "number",
+              "raw_content": "null",
+              "id": "string"
+            }
+          ]
+        },
+        "response_time": "number",
+        "usage": {
+          "credits": "integer"
+        },
+        "request_id": "string"
+      },
+      "results": [
+        {
+          "url": "https://docs.pytorch.org/docs/main/utils/checkpoint.html",
+          "title": "torch.utils.checkpoint \u2014 PyTorch main documentation",
+          "score": 0.9047265,
+          "content_characters": 1461
+        },
+        {
+          "url": "https://github.com/pytorch/pytorch/blob/main/torch/utils/checkpoint.py",
+          "title": "pytorch/torch/utils/checkpoint.py at main \u00b7 pytorch/pytorch \u00b7 GitHub",
+          "score": 0.8896154,
+          "content_characters": 2300
+        }
+      ],
+      "failed_results": null,
+      "usage": {
+        "credits": 2
+      },
+      "credits_source": "api_usage.credits",
+      "request_id": "5e0a6d59-bb30-4996-a7a8-d5280a9908f6",
+      "api_response_time": 4.1,
+      "elapsed_seconds": 4.29677826911211
+    },
+    {
+      "id": "extract_checkpoint",
+      "method": "extract",
+      "arguments": {
+        "urls": [
+          "https://docs.pytorch.org/docs/2.5/checkpoint.html"
+        ],
+        "extract_depth": "basic",
+        "format": "markdown",
+        "include_usage": true,
+        "timeout": 30
+      },
+      "status": "succeeded",
+      "credits": 0,
+      "reason": null,
+      "response_schema": {
+        "results": {
+          "type": "array",
+          "length": 1,
+          "item_shapes": [
+            {
+              "url": "string",
+              "title": "string",
+              "raw_content": "string",
+              "images": {
+                "type": "array",
+                "length": 0,
+                "item_shapes": []
+              }
+            }
+          ]
+        },
+        "failed_results": {
+          "type": "array",
+          "length": 0,
+          "item_shapes": []
+        },
+        "response_time": "number",
+        "usage": {
+          "credits": "integer"
+        },
+        "request_id": "string"
+      },
+      "results": [
+        {
+          "url": "https://docs.pytorch.org/docs/2.5/checkpoint.html",
+          "title": "torch.utils.checkpoint \u2014 PyTorch 2.5 documentation",
+          "raw_content_characters": 17645
+        }
+      ],
+      "failed_results": [],
+      "usage": {
+        "credits": 0
+      },
+      "credits_source": "api_usage.credits",
+      "request_id": "0edc4186-417c-441b-9bd3-dc5e4b14d6a6",
+      "api_response_time": 1.07,
+      "elapsed_seconds": 1.3346724330913275
+    },
+    {
+      "id": "extract_issue",
+      "method": "extract",
+      "arguments": {
+        "urls": [
+          "https://github.com/pytorch/pytorch/issues/102223"
+        ],
+        "extract_depth": "basic",
+        "format": "markdown",
+        "include_usage": true,
+        "timeout": 30
+      },
+      "status": "succeeded",
+      "credits": 0,
+      "reason": null,
+      "response_schema": {
+        "results": {
+          "type": "array",
+          "length": 1,
+          "item_shapes": [
+            {
+              "url": "string",
+              "title": "string",
+              "raw_content": "string",
+              "images": {
+                "type": "array",
+                "length": 0,
+                "item_shapes": []
+              }
+            }
+          ]
+        },
+        "failed_results": {
+          "type": "array",
+          "length": 0,
+          "item_shapes": []
+        },
+        "response_time": "number",
+        "usage": {
+          "credits": "integer"
+        },
+        "request_id": "string"
+      },
+      "results": [
+        {
+          "url": "https://github.com/pytorch/pytorch/issues/102223",
+          "title": "torch.utils.checkpoint fails with torch.autograd.grad even when use_reentrant=False \u00b7 Issue #102223 \u00b7 pytorch/pytorch \u00b7 GitHub",
+          "raw_content_characters": 14925
+        }
+      ],
+      "failed_results": [],
+      "usage": {
+        "credits": 0
+      },
+      "credits_source": "api_usage.credits",
+      "request_id": "919c98a9-26e5-4a8b-a30a-d5038672bace",
+      "api_response_time": 0.02,
+      "elapsed_seconds": 0.14753960282541811
+    }
+  ],
+  "credits_total_reported": 3,
+  "status": "succeeded",
+  "exit_code": 0
+}

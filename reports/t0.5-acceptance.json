@@ -1,0 +1,47 @@
+{
+  "task": "T0.5",
+  "accepted": true,
+  "verified_at_utc": "2026-10-24T00:59:26.669639+00:00",
+  "canonical_plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "source_commit_before_documentation": "0f8f4bc32a1cdb565fd6191f4108987ed33a7783",
+  "command": ".venv/bin/python scripts/probe_tavily.py --execute",
+  "observed_shell_exit_code": 0,
+  "live_report": "reports/probe-tavily-20261024T005720856027Z-332161bd.json",
+  "gates": {
+    "four_specified_api_operations_succeeded": true,
+    "two_factual_feedback_entries": [
+      "TAVILY-001",
+      "TAVILY-002"
+    ],
+    "returned_schema_documented": "docs/TOOLS.md",
+    "independent_read_only_api_review": true
+  },
+  "credits": {
+    "api_reported_total": 3,
+    "account_used_before": 0,
+    "account_used_after": 3,
+    "account_remaining_after": 997,
+    "account_limit": 1000,
+    "pay_as_you_go": false,
+    "auto_upgrade": false,
+    "billing_reconciliation": "Observed UI delta agrees with API total; not a future billing guarantee"
+  },
+  "independent_review": "t06_evidence_audit confirmed exact operations, returned URLs, nonempty content, empty extract failures and unique request IDs; no extra requests or secret reads; final FEEDBACK/schema/account-delta/full-gate review also passed",
+  "script_acceptance_flag_note": "The immutable raw script report keeps task_accepted=false by design. This separate acceptance adds the reviewed feedback/schema gates.",
+  "boundaries": [
+    "Only T0.5 is accepted; T2.2 research orchestration is not implemented by this probe.",
+    "During this T0.5 probe no model calls were made; Nebius registration/credits remain deferred.",
+    "No automatic retries or fallback requests. Attempt count is SDK method attempts, not independent packet capture.",
+    "Extract reported zero per response; this does not imply future extraction is free.",
+    "Only sanitized metadata, field shapes and content lengths are stored; no raw key or retrieved page body."
+  ],
+  "source_sha256": {
+    "reports/probe-tavily-20261024T005720856027Z-332161bd.json": "cc81fbe230f287eee4c9f9970b71b877a44226309fe57cea9c07337e9288d62e",
+    "reports/tavily-account-before-20261024T005712Z.json": "2e6b83a9826f3bafc116a38df246999800058d9fec53d0f4406e79185d40f2b4",
+    "reports/tavily-account-after-20261024T005808Z.json": "8d328e658dde714efc3fa79204e85ed7a67c2ae82bc32f52a3cc4b382721b64b",
+    "docs/FEEDBACK.md": "ad1c6bc2000ed0d4fe8f73be8a5b22ff05c3ebf81f55f27f65948fccbc5f52d1",
+    "docs/TOOLS.md": "5a31e1ca3444dc53b6563e5fb83749c5cce9c47308156015d105b01147b72e3a",
+    "scripts/probe_tavily.py": "f653e9dd0a2ad64eee15109c4fc1a9af009a6c921a004a59c290323ac3cef63f",
+    "tests/test_tavily_probe.py": "f633313d364bbcf864491cd081185aaaa2542b7cdcd47e3d5915ca06376b1a19"
+  }
+}

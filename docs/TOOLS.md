@@ -1,9 +1,9 @@
 # Tavily tool contract and T0.5 probe
 
-Status: the probe is prepared and tested with offline fixtures only. No Tavily API
-call, live success, account balance, or actual credit charge has been observed by
-this preparation work. T0.5 remains pending real probe acceptance and two factual
-`docs/FEEDBACK.md` entries. Offline fixture reports are not live evidence.
+Status: **T0.5 accepted on 2026-10-24** after four authorized live operations,
+exit code 0, independent report review, two factual FEEDBACK entries and this
+schema update. See `reports/t0.5-acceptance.json`. This establishes the four probe
+operations, not the later T2.2 research agent or any Nebius model acceptance.
 
 ## Installed SDK inspected
 
@@ -43,14 +43,14 @@ The issue is an extraction fixture, not evidence that its historical behavior
 applies to our installed PyTorch release. Versioned documentation avoids the
 moving `stable` redirect.
 
-## Documented API response shapes — live observation pending
+## API response shapes — documentation and live observations
 
 The following field shapes are supported by the official
 [Search reference](https://docs.tavily.com/documentation/api-reference/endpoint/search)
 and [Extract reference](https://docs.tavily.com/documentation/api-reference/endpoint/extract),
 read on 2026-10-23. Optional fields depend on request options and API behavior.
-These are documentation-based contracts; the probe records the actual sanitized
-field/type structure when an authorized live request eventually runs.
+These general contracts are documentation-based. The report below records the
+actual sanitized field/type structures observed in the authorized live run.
 
 ```text
 SearchResponse = {
@@ -76,6 +76,48 @@ failure cause a failed operation. Returned credit usage is recorded verbatim as
 numeric `usage.credits`; absent/invalid usage stays `null`, never assumed zero.
 Extract's reported credits may be zero before its accumulated billing threshold;
 zero is not proof of a permanently free request.
+
+## Live results, 2026-10-24
+
+Command: `.venv/bin/python scripts/probe_tavily.py --execute`, exit 0. Report:
+`reports/probe-tavily-20261024T005720856027Z-332161bd.json`. Exactly four SDK method
+attempts were made, with no automatic retries or fallback queries.
+
+| Operation | Content result | Client elapsed seconds | API-reported credits |
+|---|---|---:|---:|
+| search_basic | 2 nonempty results | 2.932 | 1 |
+| search_advanced | 2 nonempty results | 4.297 | 2 |
+| extract_checkpoint | Exact versioned URL; 17,645 raw-content characters | 1.335 | 0 |
+| extract_issue | Exact issue URL; 14,925 raw-content characters | 0.148 | 0 |
+
+Both extracts returned an empty failed_results array. All four responses had a
+unique request_id. Search returned main-branch URLs despite the version keyword;
+see TAVILY-001 in FEEDBACK. These observations are not statistical performance
+claims or a content-accuracy evaluation.
+
+The actual successful response shapes were:
+
+```text
+Search = {
+  query: string, follow_up_questions: null, answer: null, images: [],
+  results: [{url: string, title: string, content: string, score: number,
+             raw_content: null, id: string}],
+  response_time: number, usage: {credits: integer}, request_id: string
+}
+Extract = {
+  results: [{url: string, title: string, raw_content: string, images: []}],
+  failed_results: [], response_time: number,
+  usage: {credits: integer}, request_id: string
+}
+```
+
+The report preserves item counts separately (2 for each search, 1 for each
+extract). Empty arrays and nulls describe this run, not all possible responses.
+API-reported total was 3 credits. The refreshed Billing page independently showed
+3/1,000 free-plan credits used, 997 remaining, pay-as-you-go off, auto-upgrade off,
+requests stopping at the limit and no upcoming invoice. Evidence:
+`reports/tavily-account-after-20261024T005808Z.json`. Per-extract zeros remain
+observed values, not a claim of free future extraction.
 
 ## Probe report schema
 
@@ -121,7 +163,9 @@ source scripts/env.sh
 uv run python scripts/probe_tavily.py
 ```
 
-Only after Frank confirms available credits and the allowed spending boundary:
+The completed run used the user-authorized free plan after verifying 0/1,000 used,
+pay-as-you-go off, auto-upgrade off and a hard stop at the plan limit. Any later
+run must stay within its separately authorized scope and current account limits:
 
 ```sh
 uv run python scripts/probe_tavily.py --execute

@@ -8,11 +8,11 @@ All work, caches, runs, and media remain on azuki.
 
 | Task | Description | Status | Evidence |
 |---|---|---|---|
-| T0.1 | 账号、额度、密钥、仓库（P0，Codex 主导，Frank 只补无法自动化的部分，~40min） | 进行中 | GitHub public Apache-2.0 verified; keys and balance pending |
+| T0.1 | 账号、额度、密钥、仓库（P0，Codex 主导，Frank 只补无法自动化的部分，~40min） | 进行中 | GitHub and Tavily verified; Nebius key and promotional balance pending |
 | T0.2 | 服务器环境勘察（P0，~30min） | 已验收 | docs/ENV.md; reports/env-preflight.json; Docker GPU ok, NET ok, 5694.85 GiB free; shared GPU and no sudo recorded |
 | T0.3 | 仓库骨架与工具链（P0，~40min） | 已验收 | reports/toolchain-checks.json; reports/pre-commit-t0.3.log; commit ca6c86ad099c519b92d1ccb88219b08450aa8da6, Frank author/committer, pushed origin/main |
 | T0.4 | Token Factory 探测（P0，~1h） | 离线实现完成，实测待验收 | scripts/probe_models.py; 55 guarded tests; default 62-item dry-run sends zero requests; live verification pending Nebius access |
-| T0.5 | Tavily 探测（P1，~15min） | 进行中 | Probe prepared,14 offline tests; no live API calls or acceptance |
+| T0.5 | Tavily 探测（P1，~15min） | 已验收 | reports/t0.5-acceptance.json; live exit0, 4/4 operations, 2 factual FEEDBACK entries, observed schema; API total3 credits matches UI3/1000 |
 | T0.6 | 场景集 v0（P0，~2h） | 已验收 | reports/t0.6-acceptance.json; 3 synthetic CUDA OOM <7s, 5 reclaim completed20 steps with measured README peaks; pinned nanoGPT CUDA OOM11.489s; all cleanup verified |
 | T1.1 | Lab 包装器：运行并抓证据（P0，~3h） | 已验收 | reports/t1.1-acceptance.json; GPU report022523 all checks true; s1 2050 events; s3 completed20 deterministic; final full regression 95 tests passed |
 | T1.2 | 证据包生成（P0，~3h） | 实现完成，验收未通过 | reports/t1.2-acceptance.json; s1/s2/s4/s5 artifacts and real peak replay verified; s2 optimizer-state fraction 39.8715% < original 40% |
@@ -54,6 +54,9 @@ All work, caches, runs, and media remain on azuki.
 | Phase 6 | Weekly health/alerts; balance by Nov 25; manual Dec 1 and Dec 8 access | 未开始 | Future dated acceptance |
 
 ## Acceptance log
+
+- 2026-10-24 00:57 UTC: Frank completed hidden-input Tavily import; private .env preflight passed. The authorized four-operation live probe exited0; basic/advanced searches and both exact-URL extracts succeeded. Report: reports/probe-tavily-20261024T005720856027Z-332161bd.json. Two factual feedback entries (TAVILY-001/002) and observed TOOLS schemas are now recorded; independent read-only review confirmed API checks. Full T0.5 acceptance: reports/t0.5-acceptance.json.
+- Account usage was independently refreshed before and after this run: free-plan used credits moved0 to3/1000, matching API total3;997 remain, pay-as-you-go and auto-upgrade are off, and the UI says requests stop at plan limit. Evidence: reports/tavily-account-after-20261024T005808Z.json. The two extract responses reporting0 do not prove future extraction is free. Nebius remains deferred/unverified; no model calls or other task acceptance is implied.
 
 - 2026-10-24 offline continuation completed: reports/api-prep-20261023T222659Z.json records 259 passed in53.97s, Ruff and formatting passed, and the default model-probe dry-run planned62 operations with network_requests=0 and accepted=false. New coverage includes55 guarded probe tests,82 LLM client/router/cost tests,25 diagnosis checks and2 SDK/schema/evidence integration tests. Full prior tests remain green; historical runs are preserved. Original PLAN SHA remains e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56.
 - Independent review fixed native-versus-fenced JSON classification, retry dispatch after a shared budget violation, absolute streaming deadlines, nonfinite JSON, malformed SDK responses missing accounting, and response model identity. Missing or mismatched identity cannot become accepted capability/diagnosis; uncertain billing stays unknown and model probes halt further paid dispatch. T0.4/T1.3/T1.4 remain unaccepted pending real model calls.
@@ -103,6 +106,5 @@ All work, caches, runs, and media remain on azuki.
 
 - Devpost: registration and an existing project draft were observed in the logged-in browser on 2026-10-24; final project submission remains pending.
 - Token Factory: https://tokenfactory.nebius.com ; promo https://nebius.com/promo-code?utm_promo_event_code=2026-devpost-global-ai-hack&utm_promo_code_type=Token_Factory&utm_promo_activation_code=NEBIUS-DEVPOST-GLOBAL26 ; activation code NEBIUS-DEVPOST-GLOBAL26 ($25); Builders Program https://dev.nebius.com/builders (additional $25). Provide NEBIUS_API_KEY in server .env and confirm available credits >= $25.
-- Tavily: account and free plan verified on 2026-10-24; import the existing default key into server .env using the hidden-input importer. No new account is needed.
 - HF_TOKEN only if later gated model access requires it.
 - Domain/Cloudflare access is needed for T3.5. Video and Devpost submission remain Frank-owned per plan.

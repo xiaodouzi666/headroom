@@ -1,0 +1,109 @@
+{
+  "task": "T0.5",
+  "schema_version": 1,
+  "mode": "dry_run",
+  "created_at": "2026-10-24T00:56:49.136466+00:00",
+  "api_base": "https://api.tavily.com",
+  "preflight": {
+    "credential_present": true,
+    "env_mode_600": true,
+    "preflight_error": null
+  },
+  "sdk": {
+    "distribution": "tavily-python",
+    "version": "0.8.5",
+    "search_signature": "(self, query: str, search_depth: Literal['basic', 'advanced', 'fast', 'ultra-fast'] = None, topic: Literal['general', 'news', 'finance'] = None, time_range: Literal['day', 'week', 'month', 'year'] = None, start_date: str = None, end_date: str = None, days: int = None, max_age_hours: int = None, max_results: int = None, include_domains: Sequence[str] = None, exclude_domains: Sequence[str] = None, include_domains_mode: Literal['restrict', 'prefer'] = None, include_answer: Union[bool, Literal['basic', 'advanced']] = None, include_raw_content: Union[bool, Literal['markdown', 'text']] = None, include_images: bool = None, timeout: float = 60, country: str = None, auto_parameters: bool = None, include_favicon: bool = None, include_usage: bool = None, exact_match: bool = None, fetch_timeout: float = None, cache_fallback: bool = None, language: str = None, filter_by_language: bool = None, **kwargs) -> dict",
+    "extract_signature": "(self, urls: Union[List[str], str], include_images: bool = None, extract_depth: Literal['basic', 'advanced'] = None, format: Literal['markdown', 'text'] = None, timeout: float = 30, include_favicon: bool = None, include_usage: bool = None, query: str = None, chunks_per_source: int = None, **kwargs) -> dict",
+    "source": "installed SDK inspection; not a live API observation"
+  },
+  "attempted_requests": 0,
+  "api_checks_passed": false,
+  "task_accepted": false,
+  "task_acceptance_note": "Requires real successful probes and two factual FEEDBACK entries.",
+  "operations": [
+    {
+      "id": "search_basic",
+      "method": "search",
+      "arguments": {
+        "query": "PyTorch 2.5 torch.utils.checkpoint use_reentrant False",
+        "max_results": 2,
+        "include_domains": [
+          "docs.pytorch.org",
+          "pytorch.org",
+          "github.com"
+        ],
+        "include_answer": false,
+        "include_raw_content": false,
+        "include_usage": true,
+        "auto_parameters": false,
+        "timeout": 30,
+        "search_depth": "basic"
+      },
+      "status": "not_executed",
+      "reason": "execute_flag_required",
+      "elapsed_seconds": null,
+      "credits": null
+    },
+    {
+      "id": "search_advanced",
+      "method": "search",
+      "arguments": {
+        "query": "PyTorch 2.5 torch.utils.checkpoint use_reentrant False",
+        "max_results": 2,
+        "include_domains": [
+          "docs.pytorch.org",
+          "pytorch.org",
+          "github.com"
+        ],
+        "include_answer": false,
+        "include_raw_content": false,
+        "include_usage": true,
+        "auto_parameters": false,
+        "timeout": 30,
+        "search_depth": "advanced"
+      },
+      "status": "not_executed",
+      "reason": "execute_flag_required",
+      "elapsed_seconds": null,
+      "credits": null
+    },
+    {
+      "id": "extract_checkpoint",
+      "method": "extract",
+      "arguments": {
+        "urls": [
+          "https://docs.pytorch.org/docs/2.5/checkpoint.html"
+        ],
+        "extract_depth": "basic",
+        "format": "markdown",
+        "include_usage": true,
+        "timeout": 30
+      },
+      "status": "not_executed",
+      "reason": "execute_flag_required",
+      "elapsed_seconds": null,
+      "credits": null
+    },
+    {
+      "id": "extract_issue",
+      "method": "extract",
+      "arguments": {
+        "urls": [
+          "https://github.com/pytorch/pytorch/issues/102223"
+        ],
+        "extract_depth": "basic",
+        "format": "markdown",
+        "include_usage": true,
+        "timeout": 30
+      },
+      "status": "not_executed",
+      "reason": "execute_flag_required",
+      "elapsed_seconds": null,
+      "credits": null
+    }
+  ],
+  "credits_total_reported": null,
+  "status": "not_executed",
+  "reason": "execute_flag_required",
+  "exit_code": 78
+}
