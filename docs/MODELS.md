@@ -1,7 +1,44 @@
-# Token Factory model probes — minimal live chats verified; full T0.4 pending
+# Token Factory model probes — first capability checkpoint passed; full T0.4 pending
 
-Status on 2026-10-24: authenticated directories and one Super/Nano chat each succeeded; **full T0.4 accepted=false**. Evidence: reports/tokenfactory-minimal-20261024.json. The server key is configured privately. Ultra inference, JSON/tools, reasoning controls, long-input limits and concurrency remain unmeasured. Earlier offline evidence remains historical; this checkpoint does not enable the full runtime.
+Status on 2026-10-25 (Asia/Shanghai): the explicitly authorized three-call checkpoint passed: Ultra chat, Super native JSON schema and Super tool-call generation, once each. Earlier Super/Nano chats remain valid historical evidence. **Full T0.4 accepted=false**: reasoning controls, long-input limits, concurrency and the rest of the model matrix remain unmeasured. The server key is private and the full runtime profile remains absent. Evidence: reports/model-checkpoint-20261025/verification.json.
 
+
+## First bounded capability checkpoint — 2026-10-25 local / 2026-10-24 UTC
+
+The owner authorized exactly three single calls, zero retries, a $1.25 token
+ceiling and a $2 total envelope using existing gifted credit. All three returned
+HTTP200 with the exact requested model identity and known, bounded usage.
+
+| Case | Prompt / completion tokens | Reasoning within completion | Finish / classifier | Token cost USD |
+| --- | ---: | ---: | --- | ---: |
+| Ultra chat | 23 / 20 | 16 | stop / nonempty_content | 0.000083 |
+| Super native JSON schema | 29 / 76 | 61 | stop / exact_json_shape | 0.0000771 |
+| Super tool generation | 394 / 40 | 9 | tool_calls / expected_tool_call | 0.0001542 |
+
+Total: **$0.0003143** in usage-priced tokens; **$0.000380303** with a 21%
+reference tax calculation. These are not reconciled invoice amounts. The
+refreshed UI remained Active with $30.25 including-tax balance and separate
+$1 trial credit; its rounded values do not establish the exact charged pool.
+
+Schema classification checks the requested object with probe=headroom and
+integer value=7. Tools classification checks the generated add(a=2,b=3)
+function call; no external function or Tavily call was executed. Raw response
+text and arguments are not saved, so no exact Ultra wording is asserted.
+A single success per method does not establish general quality or latency.
+
+Before each POST, the operator manually compared freshly returned catalogue
+identity, context, ordinary/cached prices and all zero non-token fees with
+pricing-current.json. This matters because the script's catalogue refresh only
+enforces model presence; it does not automatically compare prices/context/fees
+to that reviewed file. The fixed per-process reservations summed to $1.2093952
+and could not reuse the entire allowance independently. Exclusive dispatch
+records and sequential reviews preserve the three-call boundary.
+
+All three allowed POSTs are consumed; remaining dollars authorize no extra
+request. No long-context, control, concurrency, diagnosis, repair or runtime
+profile activation occurred. Full T0.4 is still unaccepted. Detailed reports,
+authorization, dispatch and review receipts are in
+reports/model-checkpoint-20261025/; the old observations below remain historical.
 
 ## First authenticated model observations — 2026-10-24 10:21–10:24 UTC
 
@@ -40,8 +77,8 @@ not a reasoning on/off control or the separate reasoning_budget candidates.
 
 The original historical default probe IDs remain below for reproducibility;
 use the explicit exact Nano override shown above when probing. No long-input
-limit is inferred from advertised context. Ultra cannot be reserved under the
-current0.10USD authorization using its entire advertised context as input bound.
+limit is inferred from advertised context. At that earlier checkpoint, Ultra could not be reserved under the
+then-current0.10USD authorization using its entire advertised context as input bound.
 
 Sources: [Chat API](https://docs.tokenfactory.nebius.com/api-reference/inference/create-chat-completion),
 [Prices](https://tokenfactory.nebius.com/organization/prices),
@@ -205,7 +242,7 @@ The report's accepted flag always remains false, including after every request s
 
 ## Remaining live acceptance steps
 
-- Account/key and minimal chat prerequisites are established; obtain sufficient credit and explicit authorization for the full suite, keeping verified pricing/caps current.
+- Account/key, promotional credit and the first three capabilities are established; obtain separate authorization for the remaining full suite and keep verified pricing/caps current.
 - Inspect both live verbose catalogues; reconcile exact model IDs, deployment context limits and pricing.
 - Execute the capability matrix with bounded requests and inspect real JSON/tools behavior; reason about unknown reasoning/budget observations rather than turning HTTP200 into capability proof.
 - Run the full long staircase and four-way Super experiment; retain failures, 429s, latency and every charge.

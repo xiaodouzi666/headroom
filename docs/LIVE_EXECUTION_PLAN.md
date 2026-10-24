@@ -1,6 +1,6 @@
-# Proposal: next live-model acceptance execution package
+# Live-model acceptance: first checkpoint complete, remaining package proposed
 
-Status: **proposal only; not authorized and not executed**. Initial proposal prepared 2026-10-24 against HEAD `96aca1d`; executable-driver instructions updated during continuation from `20e9956`. This document does not enable a live profile, change the original PLAN, create credentials, or authorize spending. No key, API call, or GPU job was used to prepare it.
+Status on 2026-10-25 local: **the explicitly authorized first three-call checkpoint passed; the remaining package is unapproved and unexecuted**. Initial proposal was prepared 2026-10-24 against HEAD `96aca1d`; executable-driver instructions were updated from `20e9956`. Actual checkpoint receipts are in reports/model-checkpoint-20261025/. This document does not enable a live profile, change the original PLAN, create credentials, or authorize additional spending.
 
 ## Current evidence and what it does not establish
 
@@ -8,9 +8,9 @@ Promotional credit was redeemed in the existing Token Factory organization on 20
 
 The specific promotion email states a 2026-12-31 redemption deadline and no expiry after redemption. The $25 × 1.21 = $30.25 adjustment is consistent with the official Netherlands 21% VAT rate and the UI's inclusive-tax label; it is not a new provider spending guarantee. See [billing and consumption](https://docs.tokenfactory.nebius.com/other-capabilities/billing-new). Refresh available credit immediately before any later authorized dispatch. The existing headroom-azuki key remains listed under the same account's default project; no new key or inference call was made during redemption.
 
-The default `.cache/tokenfactory-runtime.json` remains closed/absent. Previous explicit authorization covered only $0.10 of trial connectivity checks. It does **not** authorize this package. The new at-most-three-call checkpoint with a $1.25 token cap and $2 overall envelope has been presented for explicit approval and remains pending as of this reconciliation. Redemption alone does not enable it. Existing Super/Nano chat evidence is in `reports/tokenfactory-minimal-20261024.json`; Ultra has not been invoked. The two known calls had usage-derived token cost $0.00003666, not an invoice total. T0.4 remains unaccepted.
+The default `.cache/tokenfactory-runtime.json` remains closed/absent. The earlier $0.10 trial authorization covered two Super/Nano chats costing $0.00003666 by usage. The owner then authorized exactly one Ultra chat, one Super json_schema and one Super tools request, with zero retries, a $1.25 token cap and $2 total envelope. All passed and all three allowed requests are consumed: current checkpoint token cost $0.0003143, 21% reference amount $0.000380303. These are not invoice totals and neither authorization covers the remaining package. T0.4 remains unaccepted.
 
-The older reviewed probe price file `.cache/setup/probe-prices-minimal-20261024.json` contains only Super and Nano and cannot authorize Ultra or Lightning requests. The new `reports/promo-checkpoint-preparation-20261024/pricing-reviewed.json` covers only exact Ultra/Super identifiers, fresh advertised prices, and documented conservative input/output bounds. Three actual guarded CLI dry-runs and request audits are ready in that directory; their receipt explicitly refuses live execution until new authorization. This documentary review does not accept actual model capability or grant spending permission.
+The historical price file `.cache/setup/probe-prices-minimal-20261024.json` covers Super/Nano only. The later preparation directory reports/promo-checkpoint-preparation-20261024/ remains an unchanged pre-approval receipt. The executed checkpoint used reports/model-checkpoint-20261025/pricing-current.json, manually matched against fresh catalogues before each dispatch. Its scope is exact Ultra/Super only; it is not a full live runtime profile or permission for more calls.
 
 Historical catalogue arithmetic below is a planning input, not renewed provider verification:
 
@@ -40,19 +40,19 @@ Two different future choices exist; neither is implicit approval:
 
 Super/Nano retain strict admission. The current Ultra estimator supports reviewed text-schema fallback, not native `response_format`, arbitrary provider reasoning controls, or ignored historical tool IDs. Its pinned local template has a 262144-token limit although the provider catalogue advertised 1048576; a nominal 200k evidence pack is not automatically eligible for this estimator.
 
-## Smallest recommended next authorization
+## Completed first authorization — exactly three calls
 
-**Proposed authorization: one staged strict probe tranche with token-charge cap $1.25 and a $2 overall envelope, only while refreshed usable credit is at least $2.** The displayed promotional balance meets the credit prerequisite; explicit spending approval is still pending. The $0.75 difference is unspent headroom for tax/fees and account uncertainty, not permission for extra calls. Confirm applicable fees before treating that envelope as sufficient. This tranche is separate from the old $0.10 authorization and requires no local-estimation risk acceptance.
+**Authorized and completed: one staged strict probe tranche with token-charge cap $1.25 and a $2 overall envelope.** Refreshed promotional balance was $30.25 including tax before each call and after completion. The $0.75 difference was reserved for tax/fees, not extra calls. The tranche was separate from the old $0.10 authorization and used strict provider bounds, without local-estimation risk acceptance.
 
-The tranche comprises, at most:
+The completed tranche comprised exactly:
 
 1. one Ultra chat request, output cap 1024;
 2. one Super `json_schema` request, output cap 256;
 3. one Super `tools` request, output cap 256.
 
-Using the historical bounds, all three reservations sum to $1.2093952. No retries, no alternative-method retries, no long-input requests, no live runtime profile, and no repairs are included. Review each report before the next request. If Ultra truncates, JSON parsing fails, tools do not execute as expected, the model identity differs, billing is unknown, or an account/rate limit is returned, stop and retain that evidence. A failed capability result is useful evidence, not permission to repeat it.
+Freshly reviewed bounds gave fixed reservations summing to $1.2093952. Reports were reviewed sequentially, with one POST per process and no retries. All three capabilities passed with exact identity, complete usage and no truncation/unknown charge/bound violation. The tools fixture only generated the expected add call; it executed no external tool. No long-input request, live runtime profile or repair was included. Per-call results and independent review are retained in reports/model-checkpoint-20261025/verification.json.
 
-This is an access/capability checkpoint, **not T0.4/T1.3/MVP acceptance**. Promotional credit is now posted; keep the tranche pending until its separate authorization and pre-dispatch checks are complete. No payment is needed merely to remove the earlier trial-only balance obstacle.
+This passed access/capability checkpoint is **not T0.4/T1.3/MVP acceptance**. Its three-call authorization is fully consumed even though the usage-priced cost was only $0.0003143. Any further inference requires a separate scope; do not repeat these calls under this receipt.
 
 ## Exact probe commands and review protocol
 
@@ -83,6 +83,8 @@ uv run --env-file .env python scripts/probe_models.py \
 
 For the two Super requests, use the same command structure with `--roles super`, exact ID `nvidia/nemotron-3-super-120b-a12b`, output cap 256, and respectively `--capability-method json_schema` and `--capability-method tools`. Recompute `REMAINING` after **each reviewed report**, from the single authorized tranche total minus all known charges and unresolved reservations. Do not provide the original full amount independently to every invocation.
 
+The probe refresh checks exact model presence, but does not compare refreshed catalogue price/context/fee values against the reviewed pricing file. Before every POST, the operator must perform that comparison and refuse unknown/nonzero unsupported fees or mismatches; refreshed catalogue retrieval alone is insufficient. The completed checkpoint retained these manual comparisons in its review receipts.
+
 The probe budget is per-process memory, not the runtime's durable SQLite ledger. Every invocation also performs two GETs. A report with HTTP 400/429 and missing usage can retain a conservative reservation without globally halting the script; exit code zero does not mean all capabilities passed. Consequently:
 
 - Do not execute a shell loop, `--suite all`, or automatic retry chain under the immediate-stop-on-unknown policy.
@@ -93,7 +95,7 @@ The probe budget is per-process memory, not the runtime's durable SQLite ledger.
 
 ## Full acceptance stages and proposed capped envelopes
 
-A larger, **conditional** proposal is $12.30 of nominal token-charge allowance, with a $15 account envelope only if separately reviewed fees fit the remaining $2.70. A 21% calculation yields $14.883, consistent with the rate underlying the displayed promotional adjustment. The actual future usage invoice and fee coverage still need reconciliation; this arithmetic is not a guaranteed all-in cap. The first $1.25 tranche above would be included in stage A, not added twice.
+A larger, **conditional** proposal is $12.30 of nominal token-charge allowance, with a $15 account envelope only if separately reviewed fees fit the remaining $2.70. A 21% calculation yields $14.883, consistent with the rate underlying the displayed promotional adjustment. The actual future usage invoice and fee coverage still need reconciliation; this arithmetic is not a guaranteed all-in cap. The completed first tranche belongs to stage A: subtract its actual $0.0003143 token cost if a later stage-A total is authorized, without counting its released reservation twice.
 
 | Stage | Proposed nominal token cap | Required scope and stop point |
 | --- | ---: | --- |
@@ -240,11 +242,11 @@ After any dispatch, stop on unknown usage/charge, identity mismatch, violated bo
 
 Runtime calls share `.cache/budget.db`; it preserves pending/unknown charges across runs/restarts. Probe invocations do not share that ledger, so an operator receipt must subtract probe expenses/reservations before setting the remaining runtime authorization. Runtime `authorized_total_usd` is an all-time ledger limit, not a fresh per-stage balance; reconcile any existing rows before choosing it. The $12 daily default is separate from the all-time total and the proposed $12.30 combined package; do not silently increase the daily cap to squeeze stages into one day.
 
-A closed/absent live profile remains the required state until preparation and the explicit authorization choice are complete. No outcome in this document counts as acceptance.
+A closed/absent live profile remains the required state until preparation and the explicit authorization choice are complete. The narrow checkpoint has its separate receipt; no broader stage acceptance is inferred.
 
 ## Narrow decisions still outstanding
 
-The immediate decision has now been requested and remains pending: **authorize the <=$2 strict checkpoint against the confirmed promotional credit, or defer it**. It does not require approving local estimates or changing the original plan.
+The <=$2 checkpoint was authorized and completed. No repeated approval is needed for those already completed calls. Further T0.4 capabilities, long input and concurrency require a new concrete spending scope; the larger stage table above is still only a proposal.
 
 Before diagnosis/MVP, ask one separate concrete decision: retain a genuinely hard provider-bound budget and approve the specified larger admission cap/procedure, or accept the explicitly described local-estimation overshoot risk while keeping the original nominal $0.60 cap. Neither choice lowers actual-cost or scientific acceptance thresholds.
 

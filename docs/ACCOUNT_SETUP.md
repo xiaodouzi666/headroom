@@ -39,10 +39,14 @@ T0.1's account/key/repository/credit gates are now accepted; see
 reports/t0.1-acceptance-promo-20261024.json. The separate full-campaign spending
 boundary remains unapproved. The previous $0.10 trial-connectivity authorization
 covered the two completed minimal calls; it does not authorize recharge or the
-full capability/repair evaluation. A new proposed checkpoint of at most three
-single calls, $1.25 in token charges and a $2 total envelope including tax reserve,
-has been presented for explicit approval and is still pending as of this
-reconciliation. Promotional redemption does not grant additional inference
+full capability/repair evaluation. The owner subsequently authorized the three-single-call checkpoint with a
+$1.25 token ceiling and $2 total envelope. All three passed on 2026-10-25 local:
+Ultra chat, Super native schema and Super tool generation. The $0.0003143
+usage-priced token total and $0.000380303 tax-reference total are not reconciled
+invoice amounts. The refreshed account still displayed $30.25 incl. tax and
+$1 separate trial credit. All three allowed calls are consumed; no retry,
+recharge or wider evaluation is authorized. See
+reports/model-checkpoint-20261025/verification.json. Promotional redemption does not grant additional inference
 authorization. Tavily has a separate completed live acceptance record; its usage
 does not prove Nebius model capabilities. If billing/country/credits block signup,
 the official FAQ directs participants to Nebius support: https://discord.com/invite/eXYTGhgnhK .
@@ -78,6 +82,7 @@ rather than the email alone, establish that credit was posted.
 Preserve the earlier account snapshots and spend records. Refresh the same
 account's available promotional balance before any newly authorized dispatch;
 no provider switch, new key or recharge is needed for this checkpoint.
-The full runtime profile remains closed/absent, and the proposed checkpoint and
-full-campaign spending boundaries still require their own explicit authorization.
+The full runtime profile remains closed/absent. The first checkpoint is now
+complete; any further capability or full-campaign spending requires its own
+explicit authorization.
 No automatic recharge or additional spending was enabled by redemption.

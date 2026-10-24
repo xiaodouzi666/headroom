@@ -1,0 +1,53 @@
+{
+  "verified": true,
+  "verified_at": "2026-10-24T20:37:55.059810+00:00",
+  "source": "reports/model-checkpoint-20261025/preflight-catalogue/report.json; https://docs.tokenfactory.nebius.com/api-reference/inference/create-chat-completion",
+  "output_caps_include_reasoning": true,
+  "models": {
+    "nvidia/Nemotron-3-Ultra-550b-a55b": {
+      "input_usd_per_million": "1.000000",
+      "output_usd_per_million": "3.000000",
+      "prompt_token_ceiling": 1048576,
+      "output_cap_field": "max_completion_tokens",
+      "input_ceiling_basis": "Full advertised context; conservative documented context bound, not local tokenizer estimate",
+      "output_cap_evidence": "https://docs.tokenfactory.nebius.com/api-reference/inference/create-chat-completion",
+      "cached_input_usd_per_million": "0.12000000",
+      "fee_components_per_request": {
+        "request": "0",
+        "image": "0",
+        "price_per_video_second": "0",
+        "price_per_minute": "0"
+      },
+      "live_capability_accepted": false
+    },
+    "nvidia/nemotron-3-super-120b-a12b": {
+      "input_usd_per_million": "0.3000000",
+      "output_usd_per_million": "0.9000000",
+      "prompt_token_ceiling": 262144,
+      "output_cap_field": "max_completion_tokens",
+      "input_ceiling_basis": "Full advertised context; conservative documented context bound, not local tokenizer estimate",
+      "output_cap_evidence": "https://docs.tokenfactory.nebius.com/api-reference/inference/create-chat-completion",
+      "cached_input_usd_per_million": "0.06000000",
+      "fee_components_per_request": {
+        "request": "0",
+        "image": "0",
+        "price_per_video_second": "0",
+        "price_per_minute": "0"
+      },
+      "live_capability_accepted": false
+    }
+  },
+  "review_scope": "Exact three-call checkpoint authorized by human; latest catalogue manually compared, whole-context strict reservation and reasoning-inclusive output cap; no broader run authorization",
+  "endpoint": "https://api.tokenfactory.us-central1.nebius.com/v1/",
+  "catalogue_sha256": "94825527d992b69c18246bf9e53a0bf43a9585b3eb8f67a5ed9a939e7848ea74",
+  "authorization_granted": true,
+  "tax_included_in_token_prices": false,
+  "limitations": [
+    "Documented provider contract is not empirical Ultra capability verification.",
+    "No claim that advertised context is the account's currently usable long-input limit.",
+    "Ordinary input price conservatively covers lower cached-input price; script cost is not a reconciled invoice.",
+    "Any unknown usage/model identity, provider bound violation, failed capability or rate/account limit stops all later requests.",
+    "No runtime profile, repair, Tavily, long-input, concurrency or automatic retry is authorized."
+  ],
+  "authorization_record": "reports/model-checkpoint-20261025/authorization.json"
+}

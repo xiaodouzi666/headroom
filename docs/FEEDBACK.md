@@ -1,6 +1,6 @@
 # Tool feedback
 
-Token Factory directory and minimal Super/Nano chat observations are now recorded below; full repair and capability acceptance remains pending.
+Token Factory directory, minimal Super/Nano chat and the first Ultra chat / Super schema / Super tools checkpoint are recorded below; full repair and capability acceptance remains pending.
 Tavily observations below come from the authorized live run on 2026-10-24.
 
 
@@ -141,3 +141,37 @@ raw source paths and SHA256 values are retained there. Public sources:
 https://docs.tokenfactory.nebius.com/api-reference/inference/create-chat-completion,
 https://docs.tokenfactory.nebius.com/cached-tokens.md,
 https://tokenfactory.nebius.com/organization/prices.
+
+## TF-006 — Ultra first chat succeeded with bounded reported reasoning
+
+The 2026-10-25 local checkpoint sent one Ultra chat with max_completion_tokens=1024.
+The exact Ultra identity matched in every identity-bearing event; HTTP200 ended
+with stop and nonempty_content. Usage was 23 prompt and 20 completion tokens,
+including 16 reasoning tokens; the usage-priced cost was $0.000083. The retained
+classification does not preserve the exact answer text. This establishes a
+single small Ultra inference, not long-input capability or diagnosis accuracy.
+
+## TF-007 — Super native schema passed one exact object check
+
+One Super json_schema request with max_completion_tokens=256 returned HTTP200,
+stop and exact_json_shape: the validator checked probe=headroom and integer
+value=7 with the required key set. Usage was 29 prompt / 76 completion, with 61
+reasoning tokens inside completion; cost $0.0000771. This supports the native
+schema method for this fixture. Complex Diagnosis/Patch schema reliability and
+the dedicated real client acceptance remain untested.
+
+## TF-008 — Super generated the expected function call
+
+One Super tools request returned expected_tool_call and finish_reason=tool_calls.
+The classifier verified add with arguments matching a=2 and b=3. Usage was
+394 prompt / 40 completion, including 9 reasoning tokens; cost $0.0001542.
+Content TTFT was null because this was a tool-call response; event TTFT was
+793.903ms and elapsed 916.082ms. No external function or Tavily was executed,
+so this does not close T2.2's multi-turn research acceptance.
+
+Evidence for TF-006 through TF-008: reports/model-checkpoint-20261025/verification.json
+and its hashed per-call reports. Exactly three POSTs, no retries, no unknown
+billing or token-bound violation. Total usage-priced cost was $0.0003143;
+21% reference amount $0.000380303 is not a reconciled invoice. Every dispatch
+had a manual current catalogue price/context/fee review: the script itself
+does not enforce equality between new catalogue metadata and the reviewed file.
