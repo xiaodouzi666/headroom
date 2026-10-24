@@ -1,0 +1,147 @@
+{
+  "status": "offline_verified",
+  "live_accepted": false,
+  "api_calls": 0,
+  "new_gpu_runs": 0,
+  "credential_reads": 0,
+  "dns_inet_blocked": true,
+  "env_file_access_blocked": true,
+  "pytest_exit_code": 0,
+  "pytest_log": "/home/xiaodouzi/workspace/headroom/reports/diagnosis-acceptance-20261024/pytest-final.log",
+  "owned_sources_unchanged": true,
+  "source_sha256": {
+    "headroom/acceptance/diagnosis.py": "9601ad92d4b7a6a4632aaf12d9d75f922da6867fb3299f9c9574e0c7aecc4948",
+    "scripts/check_diagnosis_acceptance.py": "84abd0f9e28b6fc7d6c3fd72b18edc16e2c42f308a3d041150edd6ba7a41fb87",
+    "tests/test_diagnosis_acceptance.py": "60601f376c9a23b0038d44aae3b358f7abb5c356f90c22f9cacc484b1e4df15b",
+    "docs/DIAGNOSIS_ACCEPTANCE.md": "f8146321827831f1127112e8b8ffd80a482ad1464ecc1b7f33f37cea151fa11b"
+  },
+  "preparation": "/home/xiaodouzi/workspace/headroom/runs/acceptance/diagnosis-prepared-20261024-v2/preparation.json",
+  "preparation_sha256": "0ab26a228041c57318b6b81fd6e1a9d0c97892986eaab48c5cb667cce68513a0",
+  "rows": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "status": "ready",
+      "capture": "/home/xiaodouzi/workspace/headroom/runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/3da11308215443ba9b4e0fed3c3c84d3",
+      "evidence_tokens": 20901,
+      "required_saving_gb": null,
+      "evidence_quality": {
+        "history_complete": true,
+        "peak_is_exact": true,
+        "warnings": []
+      },
+      "truth_status": "authored",
+      "scoreable_category": "activations"
+    },
+    {
+      "scenario_id": "s2_fp32_adamw_1b",
+      "status": "ready",
+      "capture": "/home/xiaodouzi/workspace/headroom/runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/b4b14202cf304cf7838b07bb16649942",
+      "evidence_tokens": 29970,
+      "required_saving_gb": 6.4659752448,
+      "evidence_quality": {
+        "history_complete": true,
+        "peak_is_exact": true,
+        "warnings": [
+          "reserved - allocated >= 1 GB is a high cache-gap proxy; it does not by itself prove harmful fragmentation."
+        ]
+      },
+      "truth_status": "authored",
+      "scoreable_category": "optimizer_state"
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "status": "ready",
+      "capture": "/home/xiaodouzi/workspace/headroom/runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/f8159c6fff8e44cab1bcc0b8e42275f7",
+      "evidence_tokens": 32793,
+      "required_saving_gb": 0.7307152896,
+      "evidence_quality": {
+        "history_complete": true,
+        "peak_is_exact": true,
+        "warnings": [
+          "reserved - allocated >= 1 GB is a high cache-gap proxy; it does not by itself prove harmful fragmentation."
+        ]
+      },
+      "truth_status": "authored",
+      "scoreable_category": "activations"
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "status": "ready",
+      "capture": "/home/xiaodouzi/workspace/headroom/runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/5319e0a91b834950bcac2530c6ac0def",
+      "evidence_tokens": 29406,
+      "required_saving_gb": null,
+      "evidence_quality": {
+        "history_complete": true,
+        "peak_is_exact": true,
+        "warnings": []
+      },
+      "truth_status": "authored",
+      "scoreable_category": "retained_graph"
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "status": "ready",
+      "capture": "/home/xiaodouzi/workspace/headroom/runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/81f981c9462d4b7a96bdd6d34f7c5569",
+      "evidence_tokens": 24573,
+      "required_saving_gb": 1.5065275392,
+      "evidence_quality": {
+        "history_complete": true,
+        "peak_is_exact": true,
+        "warnings": [
+          "reserved - allocated >= 1 GB is a high cache-gap proxy; it does not by itself prove harmful fragmentation."
+        ]
+      },
+      "truth_status": "unverified",
+      "scoreable_category": null
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "status": "ready",
+      "capture": "/home/xiaodouzi/workspace/headroom/runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/eb3af4ffa3a944bcb5f32428fbf9dade",
+      "evidence_tokens": 20358,
+      "required_saving_gb": null,
+      "evidence_quality": {
+        "history_complete": true,
+        "peak_is_exact": true,
+        "warnings": []
+      },
+      "truth_status": "authored",
+      "scoreable_category": "temporaries"
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "status": "ready",
+      "capture": "/home/xiaodouzi/workspace/headroom/runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/37068d1305064d7b8ab05e08d67fb2de",
+      "evidence_tokens": 25021,
+      "required_saving_gb": 5.3459426304,
+      "evidence_quality": {
+        "history_complete": true,
+        "peak_is_exact": true,
+        "warnings": []
+      },
+      "truth_status": "authored",
+      "scoreable_category": "optimizer_state"
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "status": "ready",
+      "capture": "/home/xiaodouzi/workspace/headroom/runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/2645ed312030450b9055179ea957f48c",
+      "evidence_tokens": 30300,
+      "required_saving_gb": 0.9300424704,
+      "evidence_quality": {
+        "history_complete": true,
+        "peak_is_exact": true,
+        "warnings": []
+      },
+      "truth_status": "authored",
+      "scoreable_category": "params"
+    }
+  ],
+  "limits": "Prepared model requests only; no profile activation, budget alteration, key/API/GPU access.",
+  "development_history": [
+    "Initial 23 and expanded 25 tests passed.",
+    "Required-reduction revision briefly failed 14/28 tests because revalidation omitted the new field; fixed without any live execution.",
+    "Then 28 and 31 tests passed.",
+    "Original real-capture preparation is preserved but superseded by v2."
+  ]
+}

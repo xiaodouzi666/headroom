@@ -206,6 +206,74 @@ match; false for this separate library is not a measured incompatibility.
 A documentation result never installs a package or grants a precision-policy
 exception. Explicit caller-supplied search domains still take precedence.
 
-The ordinary per-run four-call limit, two-method exploration and 24-hour cache
-remain in force. Regression tests use fixture content with network blocked;
-they do not establish a new successful live Tavily extraction.
+The ordinary per-run four-call limit and 24-hour cache remain in force.
+The standalone explore method remains for component callers/probes. Production
+repair research now uses the native model tool loop below; a host topic hint
+does not execute search or extraction on the model's behalf.
+
+
+## Native Super tool loop (offline implementation verified)
+
+A repair run constructs one ResearchToolLoop using its existing budgeted router
+and ResearchSession. For each new API topic from an accepted diagnosis plan,
+Super receives two function schemas with json_schema=None: tavily_search and
+tavily_extract. The model chooses the query, allowed domains and extraction URLs.
+The host adds the observed PyTorch version, fixes basic depth and the existing
+SDK request settings, and executes only these two read-only methods.
+
+The loop preserves assistant tool_calls and each corresponding tool_call_id
+message. Entire batches are validated before any member executes: function
+names, exact fields, JSON duplicate/nonfinite rejection, types, domains, public
+official URLs, exact PyTorch documentation minor version and unique bounded IDs.
+If a batch exceeds the remaining dispatch slots or contains an invalid member,
+all members are explicitly not_executed and no follow-up model request is made.
+A provider/tool failure stops research; any unexecuted members of that same
+batch receive explicit not_executed responses. Cancellation retains the partial
+transcript and never invents an interrupted tool's output.
+
+Limits apply across all repair rounds, not separately per topic:
+
+- At most 5 logical router calls and 4 tool dispatch slots, including cache hits.
+- The shared ResearchSession independently persists at most 4 actual Tavily
+  method attempts per run; cached results retain credits_used=0 without a call.
+- The original model-client retry policy is unchanged. Actual HTTP attempts are
+  separately recorded. The production budget callbacks halt on unknown charges;
+  a 429/503 cannot dispatch a second request after the unknown charge is recorded.
+- All model requests use the same run/daily ledger, existing profile capability
+  checks and global deadline. This adds no live authorization or budget.
+
+Tools require successful saved capability evidence in the reviewed Super
+profile. Without it, research records tools_capability_unverified and sends no
+model/tool request; there is no host exploration fallback. Optional missing
+Tavily credentials/session or absent API topic remain explicit. Unknown model
+billing or a model/budget failure propagates to the existing partial-run stop.
+Unknown Tavily credits stop further research with the real null credit value.
+
+Each tool message is at most 16,000 UTF-8 bytes and contains an explicitly
+untrusted evidence object. Text excerpts start at an 8,000-byte limit and may
+shrink to keep the serialized message within its cap. Source omissions and
+truncation are marked. Retrieved text cannot add tools, change policy, run code,
+read credentials or increase quotas. Final assistant prose is preserved as
+model output but never creates Sources: citations come only from successful or
+cached ResearchSession results. Search-only or issue-only extraction stays partial. Completion requires a
+successful/cached search and extraction of the topic's official documentation
+hint URL; a fluent final answer cannot establish that. Actual retrieval can
+complete at the turn cap without an extra model summary.
+
+rounds/NN/research-TOPIC.json preserves transcripts, validated dispatch records,
+actual operation metadata, logical-turn/attempt counts and stop reason. Store
+research rows remain the actual Tavily operations. Existing research.done events
+also include newly recorded model identity/usage/time/cost from the LLM ledger,
+separately from Tavily credits. Patch context and report Sources use this same
+research evidence. Repeated topics reuse the saved result; research_enabled=False
+and existing evaluation evidence restrictions are not overridden.
+
+Guarded reproduction:
+    .venv/bin/python reports/research-tool-loop-20261024/offline_tests.py -q tests/test_research_tool_loop.py tests/test_orchestrator.py tests/test_research.py
+
+The runner installs independent DNS/INET and real-project-.env read guards
+before importing tests. Tests use the real OpenAI SDK/router/budget callbacks
+with MockTransport and fake Tavily method responses. They demonstrate protocol,
+dispatch, cache, limits, failure and production wiring. They do not establish
+live Super tool capability, a new Tavily extraction, GPU repair effectiveness,
+or completed s1/s5 competition acceptance.

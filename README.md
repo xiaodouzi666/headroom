@@ -16,8 +16,10 @@ flowchart LR
   Input[Script or pinned repository] --> Lab[Isolated GPU baseline]
   Lab --> Evidence[Allocator history and source evidence]
   Evidence --> Ultra[Nemotron Ultra diagnosis]
-  Tavily[Versioned documentation via Tavily] --> Super
-  Ultra --> Super[Nemotron Super patch]
+  Ultra --> SuperResearch[Nemotron Super tool loop]
+  SuperResearch --> Tavily[Versioned documentation via Tavily]
+  Tavily --> SuperResearch
+  SuperResearch --> Super[Nemotron Super patch]
   Evidence --> Nano[Nemotron Nano stack labels]
   Super --> Verify[Same-seed validation]
   Verify --> Search[Keep or revert]
@@ -29,8 +31,8 @@ Each candidate keeps its original baseline, source snapshot, logs and patch. The
 
 | Service | Role | Current evidence |
 |---|---|---|
-| Token Factory / Nemotron Ultra | Evidence-grounded diagnosis and repair planning | Offline SDK/schema integration; live capability, long-input and cost probes pending |
-| Token Factory / Nemotron Super | Bounded patch generation and repair | Minimal authenticated chat passed; diff/apply/compile tested offline; real generated repair pending |
+| Token Factory / Nemotron Ultra | Evidence-grounded diagnosis and repair planning | Real 200k evidence package and eight-scenario diagnosis driver prepared; actual provider-token, accuracy and cost acceptance pending |
+| Token Factory / Nemotron Super | Bounded patch generation, research tools and repair | Minimal authenticated chat passed; native Tavily tool loop and diff/apply/compile tested offline; real tool/repair acceptance pending |
 | Token Factory / Nemotron Nano | Top-stack labels with a 0.02 USD sub-budget | Minimal authenticated chat passed; offline labels/budget checks; eight-scenario live agreement pending |
 | Tavily | Search plus exact versioned documentation extraction | Real PyTorch 2.5 checkpoint/allocator queries and zero-credit cache hits |
 
@@ -48,7 +50,7 @@ uv run headroom fix scenarios/s1_batch_too_big/train.py
 
 The host CLI can use uv-managed, Conda, or system Python 3.12. The Lab image owns its Python and hash-locked dependencies; it does not mount the host `.venv`. The build downloads public dependencies into the image using a small retained allowlist context, with no keys or run data. See [Portable Lab runtime](docs/LAB_RUNTIME.md) for disk requirements and image checks.
 
-Without a reviewed live profile, the final command exits 78 and writes a partial report before GPU/model work. Configure the private key, confirmed credit/spending authorization and actual model/pricing/capability evidence using [Runtime setup](docs/RUNTIME.md). The [CPU prompt audit](docs/PROMPT_PREFLIGHT.md) can inspect complete requests without enabling model calls. No payment is initiated by these commands.
+Without a reviewed live profile, the final command exits 78 and writes a partial report before GPU/model work. Configure the private key, confirmed credit/spending authorization and actual model/pricing/capability evidence using [Runtime setup](docs/RUNTIME.md). The [CPU prompt audit](docs/PROMPT_PREFLIGHT.md) can inspect complete requests without enabling model calls. Dedicated [client](docs/CLIENT_ACCEPTANCE.md) and [eight-scenario diagnosis](docs/DIAGNOSIS_ACCEPTANCE.md) acceptance drivers prepare auditable inputs by default; live execution is a separate explicit step through the existing runtime and shared budget ledger. No payment is initiated by these commands.
 
 For capture-only work, use `uv run headroom snapshot scenarios/s1_batch_too_big/train.py`. To validate the evaluation manifest without executing anything, use `uv run headroom eval --validate-only`; `--dry-run` actually runs all baselines on the GPU and makes no model request.
 

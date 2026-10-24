@@ -8,7 +8,7 @@ Headroom keeps execution evidence separate from model interpretation. The truste
 2. The orchestrator validates policy and live prerequisites before paid/GPU work, snapshots source, then captures a bounded Docker baseline.
 3. The evidence analyzer reconstructs allocator history, verifies source hashes and creates JSON, Markdown and a timeline. Cache gap remains a proxy, not a fragmentation diagnosis.
 4. Ultra receives bounded evidence and structured constraints. Optional Nano labels annotate the top stacks without overwriting measured categories.
-5. Tavily retrieves current-version API/flag references and stores a private 24-hour cache. Retrieved text is untrusted context. A run has at most four Tavily method calls.
+5. Super chooses Tavily search/extract calls through a bounded native tool loop. Original call IDs and retrieved results are retained; only actually retrieved or cached official references become Sources. All repair rounds share five logical model turns and four tool dispatch slots, in addition to the existing four-call Tavily quota and private 24-hour cache. Retrieved text is untrusted; unknown charges stop further work. Live tool-capability acceptance remains pending.
 6. Super proposes a diff, allowed allocator environment changes and safe argv changes. A fresh candidate tree receives the patch and static/compilation checks.
 7. The verifier runs the candidate and, when needed, discovers an original small-batch reference. It keeps original-baseline, parameter, numerical, policy and timing checks separate.
 8. Search keeps only justified improvements, records failed attempts and reverts its source pointer without deleting evidence. At most six rounds run. Each retained configuration has a cumulative patch, environment, argv and manifest.
@@ -25,6 +25,8 @@ Docker has no network, read-only source/runtime mounts, an isolated temporary di
 Offline fixtures test control flow, policy and accounting; they cannot prove a model capability, repair success or accuracy. CPU executions test Trainer integration and environment behavior; they cannot establish CUDA memory reduction. Baseline GPU runs prove actual workload behavior, not an automated repair. Imported baseline replay events explicitly identify the import instead of impersonating a historical live agent trace.
 
 An OOM baseline has no comparable completed-run throughput. Numerical equivalence can be equivalent, non-equivalent, changed, or n/a; a missing comparison is not a pass. Parameter counts are observed runtime evidence with coverage limitations. All original plan gates, including s2's failed 40% requirement, remain visible in PROGRESS.
+
+Client and diagnosis acceptance have separate prepare/execute drivers. Preparation pins authentic capture files and request bytes without reading account credentials. Explicit live execution uses the same router, reviewed profile and global durable budget ledger as repair runs, with a separate acceptance Store. Local token estimates and transport fixtures never earn live acceptance.
 
 ## Remaining external dependencies
 

@@ -1,0 +1,101 @@
+{
+  "task": "Original PLAN A5/T2.2 native Super Tavily tool loop",
+  "created_at": "2026-10-24T14:09:40.200008+00:00",
+  "base_commit": "20e9956",
+  "provenance": "offline_mocktransport_fake_tavily_synthetic_lab_only",
+  "status": "implementation_frozen_focused_checks_passed",
+  "changed_source": [
+    "headroom/research/tool_loop.py",
+    "headroom/orchestrator.py"
+  ],
+  "unchanged_contracts": [
+    "headroom/llm/client.py",
+    "headroom/llm/router.py",
+    "headroom/runtime.py",
+    "headroom/research/tavily_tool.py",
+    "docs/PLAN.md"
+  ],
+  "limits": {
+    "logical_model_turns_per_run": 5,
+    "tool_dispatch_slots_per_run_including_cache": 4,
+    "tavily_actual_attempts_per_run": 4,
+    "tool_message_max_utf8_bytes": 16000,
+    "tool_context_initial_utf8_bytes": 8000,
+    "patch_context_existing_utf8_bytes_per_topic": 24000
+  },
+  "budget_semantics": "Existing router/client/runtime callbacks unchanged; actual attempts recorded separately. Real runtime with mocked 429/503 dispatched once then blocked retry on unknown charge.",
+  "focused_tests": [
+    {
+      "log": "pytest-first.log",
+      "passed": 88,
+      "seconds": 7.79
+    },
+    {
+      "log": "pytest-integrated.log",
+      "passed": 142,
+      "seconds": 14.94
+    },
+    {
+      "log": "pytest-final.log",
+      "passed": 144,
+      "seconds": 15.68
+    }
+  ],
+  "command": ".venv/bin/python reports/research-tool-loop-20261024/offline_tests.py -q tests/test_research_tool_loop.py tests/test_orchestrator.py tests/test_research.py tests/test_runtime_budget.py tests/test_bounded_search.py tests/test_verification_feedback.py --basetemp runs/research-tool-loop-cpu-20261024-7d937b2e",
+  "static_checks": {
+    "scoped_ruff": "passed",
+    "git_diff_check": "passed"
+  },
+  "guards": [
+    "DNS resolution denied",
+    "AF_INET/AF_INET6 socket creation denied by audit hook",
+    "socket connect denied",
+    "actual project .env open denied by audit hook",
+    "CUDA_VISIBLE_DEVICES empty"
+  ],
+  "actual_fixture_example": {
+    "report": "runs/research-tool-loop-cpu-20261024-7d937b2e/test_production_cross_round_in0/jobs/a30dd490ee28431c8da5764c098ad195/report.json",
+    "repair_rounds": 3,
+    "logical_model_turns": 5,
+    "actual_mock_model_attempts": 5,
+    "tool_dispatches": 4,
+    "fake_tavily_method_calls": 3,
+    "genuine_local_cache_hits": 1,
+    "research_status": "partial",
+    "stop_reason": "model_turn_limit",
+    "repair_target_met": "synthetic fixture true; not GPU/model acceptance"
+  },
+  "evidence_contract": [
+    "One loop instance across all repair rounds; repeated topics reuse saved evidence.",
+    "Assistant tool_calls and matched tool_call_id responses retained; invalid or over-quota batch entirely not_executed.",
+    "Sources come only from successful/cached session results, never terminal model prose.",
+    "Success requires actual extraction of the topic official documentation URL; issue-only research stays partial.",
+    "research.done includes actual LLM ledger model/usage/time/cost metadata separately from credits.",
+    "No fallback host exploration on missing verified tool capability."
+  ],
+  "limitations": [
+    "No live model/Tavily calls, no GPU runs, no real credential reads.",
+    "No profile/capability or budget authorization change.",
+    "No s1/s5 live end-to-end source acceptance or competition acceptance claimed.",
+    "General existing client retry policy is unchanged; production budget callbacks constrain unresolved billing before another dispatch."
+  ],
+  "sha256": {
+    "headroom/research/tool_loop.py": "211aff18cd0be897a3f1ab6bc5ff100a4f2b188c274380750177b5ebc85672b9",
+    "headroom/orchestrator.py": "b7d9991aaf0301e36a9a9406d2fb0a78293881963cbede221416086691775d91",
+    "tests/test_research_tool_loop.py": "def479a81ba02d9ef09ede41d2eddc0c00f2cac7098b6198332a79ed4014fa94",
+    "tests/test_orchestrator.py": "1b835210fe381a98416b50980a9a5fa1968ec894dc110873cc94dc8ac496375d",
+    "docs/TOOLS.md": "3b528b1219d331d4101f4d3d7e875bb73b274c3d4a147d8f7d28912d6c814b94",
+    "docs/SEARCH.md": "fb30297dc5a13346ad563f7a9fec2d9a9e8e803d3090bd8b2ad39e5afa980b5b",
+    "reports/research-tool-loop-20261024/offline_tests.py": "c212649dc139bbce94125ad39109e1a462450dbaeea35e2cc688742b586353d7",
+    "headroom/research/tavily_tool.py": "c45594f1562f8dbb8e79e2f4a248ec4c183b3f7dd4c5a0bde8840ce80f10e6c2",
+    "headroom/llm/client.py": "18c7a381347bdb2255a312c725afdda16761df3220482a6c776a2e7a474db8a7",
+    "headroom/llm/router.py": "1c12c49c8e5d025271c3626cd30fbf73de02730a278b4713dfe8758a5e1b41b4",
+    "headroom/runtime.py": "3e06894de5a054accf43534fd6eabce274d0c6d284244fb9f9d21baabf5c4a5b",
+    "docs/PLAN.md": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56"
+  },
+  "log_sha256": {
+    "pytest-first.log": "0b3668d9ac42503a2ae4fa17e8d31a604d230ed5cfe028adcf98f51d9bf76070",
+    "pytest-integrated.log": "cd29a47966c358c6278250e44fd258b368b81fc6718dd3b6b4b232d91cee2134",
+    "pytest-final.log": "a11bff8a479d91824b740ae824e3444a121645f3d6e4b310f992354066c99908"
+  }
+}

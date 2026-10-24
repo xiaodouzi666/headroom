@@ -142,23 +142,41 @@ report links point directly to that tier.
 
 Research follows the APIs/flags actually proposed in the selected plan step:
 checkpointing/use_reentrant, allocator options, AdamW/fused/foreach,
-bitsandbytes, torch.compile or FSDP. At most two distinct topics are explored
-per run. Each exploration performs search plus extract, under the component's
-four-call per-run reservation and 24-hour cache. Repeated topics reuse their
-already recorded context. Search is never performed before the Nebius runtime
-preflight and baseline complete.
+bitsandbytes, torch.compile or FSDP. Topic selection is only an applicability
+hint. One run-wide ResearchToolLoop asks Super, through the same budgeted router,
+to choose native tavily_search/tavily_extract calls. It preserves assistant/tool
+IDs and actual tool outputs. The production path no longer calls host explore.
+
+The entire run permits at most five logical research model turns and four tool
+dispatches (including cache hits); the existing persistent ResearchSession still
+limits actual Tavily attempts to four. Actual model attempts are recorded
+separately from logical turns. The existing production budget callbacks stop
+unknown charges before another dispatch. Repeated topics reuse saved context,
+and the same loop instance survives keep/revert rounds. Research begins only
+after runtime preflight and baseline/diagnosis. It uses the same deadline and
+budget as diagnosis and patching.
 
 Only a production live run reads the private regular mode-0600 .env to obtain
-TAVILY_API_KEY. The implementation does not read that file during offline tests.
-Research disabled, no applicable topic, missing credential/version or an
-unavailable research session is reported explicitly. Optional research failure
-does not manufacture a source and does not block a valid patch. Provider quota,
-credits and unknown outcomes remain the component's actual recorded values.
+TAVILY_API_KEY. Offline tests never read it. Research disabled, no applicable
+topic, missing credential/version/session, unverified tools, invalid arguments
+and exhausted limits remain explicit. Missing tool capability has no host-call
+fallback. Optional unavailable research does not invent sources or claim tools
+were verified; model errors/unknown model billing/budget exceptions stop the
+pipeline through its existing partial-report path.
 
-Patch context contains the component's untrusted-data wrapper and at most
-24,000 UTF-8 bytes of research text per topic. Truncation is labeled; full
-component evidence remains cached/recorded. Sources are included in the final
-report and the component writes each method operation to Store.research.
+Tools are strictly validated read-only documentation requests; entire invalid
+or over-quota batches are not executed. Tool messages are bounded, marked
+untrusted evidence, and paired with their exact call IDs. Successful/cached
+session results alone supply Sources. A terminal assistant answer cannot add
+citations. Search without extraction of the topic's official documentation remains partial. See TOOLS.md for the
+precise limits and failure contract.
+
+Patch context retains the existing 24,000-byte research excerpt cap per topic.
+The run stores rounds/NN/research-TOPIC.json with transcripts, actual method
+operations, logical/model-attempt counts and stop reason. Tavily operations
+remain in Store.research; research.done includes the existing _llm_phase model
+identity/usage/time/cost fields. No added research call is hidden as Tavily
+credits. The global search/verification/precision gates remain unchanged.
 
 ## Nano annotations and progress events
 

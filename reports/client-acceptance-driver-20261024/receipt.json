@@ -1,0 +1,116 @@
+{
+  "task": "Original PLAN T1.3 acceptance driver; offline development and real-capture preparation only",
+  "base_head": "20e9956f9a99ab197095c494e6ec79d6297fd3ac",
+  "source_frozen": true,
+  "source_sha256": {
+    "headroom/acceptance/__init__.py": "e57348e12931ffb3f07c1dfde6eaa6ad65f259f8cfa5aea95910324e931bfeab",
+    "headroom/acceptance/common.py": "aaa57c1668ab3a468d083e914ae63eeb230392aecdf3618e4617b33e2bc42e39",
+    "headroom/acceptance/client.py": "e3824d52b3625fc1b77ce9816418bbd952ce94a4c2c9a43c001d634478b4b7f7",
+    "headroom/acceptance/long_evidence.py": "7ab5d2e12b5e77020b15407084ba1dd94f892773c6f38bac0abe9e85a61e8271",
+    "scripts/check_client_acceptance.py": "5bfc6ee8067feec5a4693e6df90d1842d496653333bc0f235e80f9e82b33efde",
+    "tests/test_client_acceptance.py": "3d2ad7ec4676747b8650da722f65ebef59d2b3c67ec8deeea91b68ae006dd009",
+    "docs/CLIENT_ACCEPTANCE.md": "5a0eb8048eccc95310ae1a5d5950a53fd6cd886823221eb3a3c22c1be6ae20e6"
+  },
+  "validation": {
+    "focused_test_log": "focused-final-revision-1.log",
+    "result": "59 passed in 4.87s",
+    "scope": [
+      "tests/test_client_acceptance.py",
+      "tests/test_runtime_budget.py"
+    ],
+    "independent_guards": [
+      "DNS",
+      "socket.connect",
+      "socket.connect_ex",
+      "real project .env reads"
+    ],
+    "test_summary": {
+      "mode": "test",
+      "exit_code": 0,
+      "external_access_attempts": [],
+      "elapsed_seconds": 5.165241112932563
+    },
+    "ruff_check_exit": 0,
+    "ruff_format_exit": 0
+  },
+  "real_capture_preparation": {
+    "mode": "offline_prepare_existing_real_capture",
+    "output": "runs/acceptance/client/20261024-offline-s2-v1",
+    "capture": "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/b4b14202cf304cf7838b07bb16649942",
+    "case_status": "ready",
+    "accepted": false,
+    "live_executed": false,
+    "api_calls": 0,
+    "gpu_tasks": 0,
+    "external_access_attempts": [],
+    "source_revalidation_passed": true,
+    "elapsed_seconds": 10.167030710028484,
+    "prepared_manifest_sha256": "6f1600735c0e6d5dac6e1ad27a9aaa5656f1fe814c70991d57ff9526c4c4b67f",
+    "ultra": {
+      "reason": null,
+      "selected_snapshot": "artifacts/snapshot.json",
+      "record_count": 53,
+      "duplicate_records_omitted": 0,
+      "tokenizer": "cl100k_base",
+      "evidence_content_tokens_local_estimate": 222428,
+      "evidence_with_locators_tokens_local_estimate": 225303,
+      "provider_prompt_tokens": null,
+      "provider_token_bound": null
+    }
+  },
+  "final_source_capture_revalidation": {
+    "mode": "offline_verify_existing_real_capture",
+    "output": "runs/acceptance/client/20261024-offline-s2-v1",
+    "capture": "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/b4b14202cf304cf7838b07bb16649942",
+    "case_status": "ready",
+    "accepted": false,
+    "live_executed": false,
+    "api_calls": 0,
+    "gpu_tasks": 0,
+    "external_access_attempts": [],
+    "source_revalidation_passed": true,
+    "elapsed_seconds": 2.225813115015626,
+    "prepared_manifest_sha256": "6f1600735c0e6d5dac6e1ad27a9aaa5656f1fe814c70991d57ff9526c4c4b67f",
+    "ultra": {
+      "reason": null,
+      "selected_snapshot": "artifacts/snapshot.json",
+      "record_count": 53,
+      "duplicate_records_omitted": 0,
+      "tokenizer": "cl100k_base",
+      "evidence_content_tokens_local_estimate": 222428,
+      "evidence_with_locators_tokens_local_estimate": 225303,
+      "provider_prompt_tokens": null,
+      "provider_token_bound": null
+    }
+  },
+  "live_calls": 0,
+  "gpu_tasks": 0,
+  "credentials_read": false,
+  "profile_enabled": false,
+  "production_budget_modified": false,
+  "t1_3_live_accepted": false,
+  "common_contract": {
+    "entry": "acceptance_run",
+    "requires": [
+      "execute=True",
+      "live_authorized=True",
+      "explicit existing reviewed profile",
+      "explicit run/daily limits"
+    ],
+    "global_authoritative_ledger": ".cache/budget.db",
+    "store": "runs/acceptance/headroom.db",
+    "limits": "existing profile total authorization plus min(requested, deployment env) run/daily limits",
+    "finally": "runtime.json top-level calls/usage/budget/error_type; close_run preserves unknown/halt; original interruption propagates",
+    "mock": "MockTransport only with temporary root; forced offline_fixture; no accepted=true"
+  },
+  "limits": [
+    "200k cl100k content estimate is not provider tokens or a hard billing bound",
+    "Actual expected provider identity, valid response, known usage and cost remain required",
+    "Ultra acceptance additionally requires actual provider prompt_tokens>=200000",
+    "Current $0.10 minimal-connectivity authorization does not authorize these acceptance calls",
+    "Prepared capture consistency is verified; no malicious-producer authenticity is claimed",
+    "No source runtime/client/router/orchestrator implementation was changed by this task",
+    "No repeated paid attempt of the same prepared case is allowed"
+  ],
+  "retained_history": "Initial diagnostic logs retained; final checks are in focused-final-revision-1.log and lint-final.log"
+}

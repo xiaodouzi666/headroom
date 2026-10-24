@@ -1,6 +1,6 @@
 # Proposal: next live-model acceptance execution package
 
-Status: **proposal only; not authorized and not executed**. Prepared 2026-10-24 against Headroom HEAD `96aca1d`. This document does not enable a live profile, change the original PLAN, create credentials, or authorize spending. No key, API call, or GPU job was used to prepare it.
+Status: **proposal only; not authorized and not executed**. Initial proposal prepared 2026-10-24 against HEAD `96aca1d`; executable-driver instructions updated during continuation from `20e9956`. This document does not enable a live profile, change the original PLAN, create credentials, or authorize spending. No key, API call, or GPU job was used to prepare it.
 
 ## Current evidence and what it does not establish
 
@@ -126,22 +126,83 @@ Concurrency uses the same paid flags and `--suite concurrency`; it schedules fou
 
 Record actual server input tokens separately from the generator's approximate count, latency, usage and exact failure text. A largest successful sample is a **tested lower bound**, not proof of the provider's exact maximum. Rate-limit failure is not evidence of a context limit. Merely accepting a reasoning parameter is not proof that it changed reasoning behavior. The script deliberately leaves `accepted=false` and does not apply its configuration proposal; reviewed model/config updates, meaningful capability interpretation and >=5 genuine feedback entries remain required by PLAN T0.4.
 
-### B: T1.3 detail and missing executable driver
+### B: T1.3 client acceptance driver
 
-A needle probe alone does not fulfill the original client/router/evidence-pack contract. There is no existing dedicated T1.3 acceptance command in `scripts/`; do not invent one. Before enabling execution, prepare and review a small acceptance driver using existing `build_live_runtime`, `BudgetLedger`, and `router.chat`, with:
+The dedicated driver is implemented in scripts/check_client_acceptance.py and
+headroom/acceptance/client.py; see docs/CLIENT_ACCEPTANCE.md. Preparation uses one
+preserved CUDA capture, its unchanged C4 summary and unique original allocator
+records with JSON pointers and hashes. It does not load credentials or a runtime
+profile. Local counts are estimates; only a successful real Ultra response with
+provider prompt_tokens >= 200000 can accept the long-input gate. A needle/filler
+probe still does not satisfy this evidence-pack requirement.
 
-- a single Super schema-validated request and one Ultra request containing an auditable 200k evidence pack;
-- explicit selected model identity, complete final request hash/token domains, response validation, server usage, latency, and retained raw evidence;
-- the shared `.cache/budget.db`, unique run IDs, no supplements/retries after unknown cost, and an explicitly bounded output;
-- a **strict** reviewed profile for the long Ultra request, rather than assuming the 262144 local template can accommodate that evidence pack.
+Prepare a new package without inference:
 
-At output cap4000 for both calls, historical combined strict reservation is $1.1428192, fitting the proposed $1.20 tranche. The account, reviewed bounds and all earlier expenditure must still permit it. The driver is a remaining preparation deliverable, not an API acceptance result.
+~~~sh
+python scripts/check_client_acceptance.py \
+  --capture "$CAPTURE" --output runs/acceptance/client/UNIQUE
+~~~
 
-### C: T1.4 detail and missing executable driver
+After separate authorization and capability/credit review, execute one selected
+case at a time; review its result before selecting the other case:
 
-There is no diagnosis-only acceptance CLI. Prepare a reviewed driver that reuses valid original scenario evidence, calls `diagnose_with_router(..., max_supplements=0)` once per case, and saves schema validation, real stack IDs, expected/observed first cause and per-call usage. If evidence needs regeneration, schedule the existing isolated Lab separately; it is GPU work and is not included in the present read-only preparation.
+~~~sh
+python scripts/check_client_acceptance.py \
+  --prepared runs/acceptance/client/UNIQUE/prepared.json \
+  --case super_schema --execute --live-authorized \
+  --profile "$PROFILE" --run-limit-usd "$CASE_ADMISSION" \
+  --daily-limit-usd "$DAILY_ADMISSION"
+~~~
 
-Do not count a local estimator or seed/source hash as real model validation. The current s5 authored-truth uncertainty must remain visible; do not relabel measured fragmentation or force a positive score. Each $0.35 threshold is an acceptance result. Under a strict profile its $1.060576 admission reservation cannot fit an independently enforced $0.35 call cap; under local estimates actual overshoot remains possible and must fail the result.
+The second case is ultra_200k. Both use an output cap of 512, the actual
+build_live_runtime/router chain and the shared .cache/budget.db. Dedicated
+acceptance records live in runs/acceptance/headroom.db and do not become repair
+results. Each package permits only one execution attempt per case; failed
+artifacts are retained. Unknown charges block later cases and invocations.
+Deployment budget environment variables can lower admission limits.
+
+Use reviewed strict admission for this proposal. A 220k local preparation does
+not prove the local-estimator template or a provider bound will accept it.
+Inspect the returned identity, schema/text, usage, latency, actual cost and
+runtime receipt; append factual live findings to docs/FEEDBACK.md only after
+real execution. Offline MockTransport results never close T1.3.
+
+### C: T1.4 diagnosis-only acceptance driver
+
+scripts/check_diagnosis_acceptance.py prepares eight specified original captures
+without rerunning GPU workloads. It freezes README/manifest truth, source and
+evidence hashes, actual stack IDs and required savings. s5 uncertainty remains
+explicit with denominator eight; a cache gap is not relabeled as proven harmful
+fragmentation. See docs/DIAGNOSIS_ACCEPTANCE.md.
+
+~~~sh
+python scripts/check_diagnosis_acceptance.py \
+  --from-baselines reports/evaluation-baselines-20261024.json \
+  --output runs/acceptance/diagnosis/UNIQUE
+~~~
+
+The future separately authorized execution template is:
+
+~~~sh
+python scripts/check_diagnosis_acceptance.py \
+  --prepared runs/acceptance/diagnosis/UNIQUE/preparation.json \
+  --execute --live-authorized --runtime-profile "$PROFILE" \
+  --admission-cap-usd "$CASE_ADMISSION" \
+  --campaign-cap-usd "$CAMPAIGN_ADMISSION" --daily-cap-usd "$DAILY_ADMISSION"
+~~~
+
+One diagnosis per case uses max_supplements=0 through the shared runtime and
+ledger. It does not run patches, Lab, research or Nano. It retains raw responses,
+validation issues, stack references, first-category comparisons, actual usage,
+cost and timing. Missing/changed inputs, unknown charges and failed capability
+or budget admission remain visible; they do not become zero-cost successes.
+
+The original first-cause threshold remains >=6/8 and actual per-call cost remains
+<=$0.35. Explicit admission values are separate from that actual-cost gate.
+Historical strict Ultra reservation with 4000 output tokens is $1.060576, so a
+$0.35 admission cap can refuse a call even if its eventual actual cost might be
+lower. A local estimate remains non-guaranteed and requires the earlier explicit
+decision; neither this driver nor these templates supply that authorization.
 
 ### D: T1.12 existing executable path
 

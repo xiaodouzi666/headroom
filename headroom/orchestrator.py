@@ -26,6 +26,7 @@ from headroom.llm.client import LLMError
 from headroom.patch import PatchEngine
 from headroom.report import generate_report
 from headroom.research.tavily_tool import ResearchSession
+from headroom.research.tool_loop import ResearchToolLoop
 from headroom.runtime import RuntimeNotReady, build_live_runtime, read_live_profile
 from headroom.search import (
     baseline_target_met,
@@ -316,7 +317,7 @@ def run_fix(
         return event
 
     started = time.monotonic()
-    bundle = budget = research_session = None
+    bundle = budget = research_session = research_loop = None
     budget_open = False
     evidence, artifacts = {}, {}
     sources, points, history = [], [], []
@@ -602,7 +603,7 @@ def run_fix(
             step_data = step.model_dump()
             active_round["fix_id"] = step.fix_id
             active_round["plan_step"] = step_data
-            # At most two distinct proposed techniques per run => at most four real calls.
+            # Topic hints identify the proposed API. Super chooses the actual tools.
             topics = select_research_topics(step_data)
             if not research_ready and (topics or not request.research_enabled):
                 try:
@@ -614,6 +615,8 @@ def run_fix(
                 except (OSError, ValueError, TypeError, RuntimeError):
                     research_session, research_reason = None, "session_unavailable"
                 research_ready = True
+                if research_session is not None:
+                    research_loop = ResearchToolLoop(bundle.router, research_session)
                 if research_reason:
                     skipped = {
                         "provider": "tavily",
@@ -624,67 +627,67 @@ def run_fix(
                     store.add_research(run_id, skipped)
                     emit("research.done", status="skipped", reason=research_reason, api_calls=0)
                     data["research"] = skipped
-            for topic in topics:
-                if topic in research_results:
-                    continue
-                if research_session is None:
-                    break
-                if len(research_results) >= 2:
-                    emit(
-                        "research.done",
-                        status="skipped",
-                        reason="two_topic_limit",
-                        topic=topic,
-                        api_calls=0,
-                    )
-                    continue
-                try:
-                    result = research_session.explore(topic)
-                except BudgetExceeded:
-                    raise
-                except (OSError, ValueError, TypeError, RuntimeError):
-                    result = {
-                        "status": "failed",
-                        "topic": topic,
-                        "sources": [],
-                        "context": "",
-                        "operations": [],
-                        "notes": ["Research unavailable; no content inferred."],
-                    }
-                    emit(
-                        "research.done", status="failed", reason="research_unavailable", topic=topic
-                    )
+
+            def save_research(
+                result,
+                round_dir=round_dir,
+                research_session=research_session,
+                research_loop=research_loop,
+            ):
+                topic = result["topic"]
                 research_results[topic] = result
                 for citation in result.get("sources", []):
                     if not any(existing["url"] == citation["url"] for existing in sources):
                         sources.append(citation)
                 _write(round_dir / f"research-{topic}.json", result)
-            if research_results:
-                statuses = [
-                    op.get("status")
-                    for result in research_results.values()
-                    for op in result.get("operations", [])
-                ]
+                results = list(research_results.values())
+                operations = [op for item in results for op in item.get("operations", [])]
+                succeeded = any(op.get("status") in {"succeeded", "cached"} for op in operations)
                 data["research"] = {
                     "status": (
-                        "skipped"
-                        if statuses and all(value == "not_executed" for value in statuses)
-                        else "completed"
-                        if statuses and all(value in {"succeeded", "cached"} for value in statuses)
+                        "completed"
+                        if results and all(item["status"] == "succeeded" for item in results)
                         else "partial"
-                        if any(value in {"succeeded", "cached"} for value in statuses)
+                        if succeeded
+                        else "skipped"
+                        if all(item["status"] == "not_executed" for item in results)
                         else "failed"
                     ),
+                    "mechanism": "model_tool_calls",
                     "topics": list(research_results),
                     "api_calls": research_session.api_calls,
+                    "model_turns": research_loop.model_turns,
+                    "model_attempts": research_loop.model_attempts,
+                    "tool_calls": research_loop.tool_calls,
+                    "stop_reason": result.get("stop_reason"),
                     "sources": sources,
-                    "operations": [
-                        op
-                        for result in research_results.values()
-                        for op in result.get("operations", [])
-                    ],
+                    "operations": operations,
                 }
-            elif research_session is not None or (not topics and not research_ready):
+                store.update_run(run_id, research=data["research"])
+
+            for topic in topics:
+                if topic in research_results or research_loop is None:
+                    continue
+                research_start = len(store.llm_calls(run_id))
+                try:
+                    research_loop.research(topic, step_data, on_update=save_research)
+                finally:
+                    # Includes rejected/unknown attempts; model cost is never Tavily credits.
+                    emit(
+                        "research.done",
+                        topic=topic,
+                        round=number,
+                        status=data["research"].get("status"),
+                        reason=data["research"].get("stop_reason"),
+                        api_calls=data["research"].get("api_calls", 0),
+                        **_llm_phase(store, run_id, research_start),
+                    )
+            if (
+                not research_results
+                and research_session is not None
+                or not topics
+                and not research_ready
+            ):
                 data["research"] = {
                     "status": "skipped",
                     "reason": "no_applicable_api_topic",

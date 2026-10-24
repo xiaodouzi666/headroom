@@ -10,7 +10,7 @@ from types import SimpleNamespace
 import httpx
 import pytest
 
-from headroom.config import RuntimeConfig, candidate_models
+from headroom.config import RuntimeConfig, VerifiedCapabilities, candidate_models
 from headroom.llm.client import TokenFactoryClient
 from headroom.llm.cost import Pricing
 from headroom.llm.router import LLMRouter
@@ -282,6 +282,8 @@ def search_run(
     cancel_after=None,
     research_factory=None,
     research_enabled=False,
+    research_responses=None,
+    research_capabilities=True,
     target="fit:22GB",
     reclaim_reduction_pct=30.0,
     search_mode="until_target",
@@ -298,7 +300,7 @@ def search_run(
     root = source(tmp_path)
     store = Store(tmp_path / "search-store.db")
     requests, verifies = [], []
-    counters = {"diagnose": 0, "patch": 0}
+    counters = {"diagnose": 0, "patch": 0, "research": 0}
     env = {
         "seed": 1337,
         "torch": "2.5.1",
@@ -335,6 +337,12 @@ def search_run(
             for name, spec in candidate_models().items()
         }
 
+        if research_enabled and research_capabilities:
+            models["super"] = replace(
+                models["super"],
+                capabilities=VerifiedCapabilities(tools=True, evidence="offline mock only"),
+            )
+
         def before(role, spec, attempt, body):
             if (
                 role == "diagnose"
@@ -354,6 +362,74 @@ def search_run(
         def respond(request):
             body = json.loads(request.content)
             requests.append(body)
+            if body.get("tools"):
+                index = counters["research"]
+                counters["research"] += 1
+                if research_responses is not None:
+                    message = research_responses[index]
+                elif index == 0:
+                    message = {
+                        "role": "assistant",
+                        "content": None,
+                        "tool_calls": [
+                            {
+                                "id": "fixture_search",
+                                "type": "function",
+                                "function": {
+                                    "name": "tavily_search",
+                                    "arguments": json.dumps(
+                                        {
+                                            "query": "checkpoint use_reentrant False",
+                                            "max_results": 3,
+                                            "include_domains": ["docs.pytorch.org", "github.com"],
+                                        }
+                                    ),
+                                },
+                            }
+                        ],
+                    }
+                elif index == 1:
+                    message = {
+                        "role": "assistant",
+                        "content": None,
+                        "tool_calls": [
+                            {
+                                "id": "fixture_extract",
+                                "type": "function",
+                                "function": {
+                                    "name": "tavily_extract",
+                                    "arguments": json.dumps(
+                                        {
+                                            "urls": [
+                                                "https://docs.pytorch.org/docs/2.5/checkpoint.html"
+                                            ],
+                                        }
+                                    ),
+                                },
+                            }
+                        ],
+                    }
+                else:
+                    message = {"role": "assistant", "content": "Fixture research complete."}
+                return httpx.Response(
+                    200,
+                    json={
+                        "id": "fixture-research",
+                        "object": "chat.completion",
+                        "created": 0,
+                        "model": body["model"],
+                        "choices": [
+                            {
+                                "index": 0,
+                                "finish_reason": "tool_calls"
+                                if message.get("tool_calls")
+                                else "stop",
+                                "message": message,
+                            }
+                        ],
+                        "usage": {"prompt_tokens": 10, "completion_tokens": 10, "total_tokens": 20},
+                    },
+                )
             if body["model"] == ULTRA_MODEL:
                 index = counters["diagnose"]
                 counters["diagnose"] += 1
@@ -674,7 +750,18 @@ def test_research_uses_actual_version_once_and_injects_context_sources(tmp_path,
     assert result["target_met"] and len(calls) == 2
     assert calls[0][1]["query"].startswith("PyTorch 2.5.1")
     assert len(store.research(result["run_id"])) == 2
-    assert "Versioned checkpoint documentation" in requests[1]["messages"][-1]["content"]
+    patch_requests = [
+        body
+        for body in requests
+        if not body.get("tools") and body["model"] != "nvidia/Nemotron-3-Ultra-550b-a55b"
+    ]
+    assert "Versioned checkpoint documentation" in patch_requests[0]["messages"][-1]["content"]
+    research_events = [
+        event
+        for event in store.events(result["run_id"])
+        if event["kind"] == "research.done" and event.get("data", {}).get("llm_calls")
+    ]
+    assert research_events
     report = json.loads(Path(result["report_json"]).read_text())
     assert report["sources"][0]["url"] == "https://docs.pytorch.org/docs/2.5/checkpoint.html"
     assert report["run"]["research"]["api_calls"] == 2
