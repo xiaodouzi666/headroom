@@ -9,7 +9,8 @@ No model-generated repair has yet passed the original acceptance gates, and
 there is no accepted main repair benchmark or ablation score. Authenticated
 capability probing and the real long-evidence client gate are now complete.
 Diagnosis v5 has partial measured success; MVP v1 stopped safely after its first
-Nano call. **MVP v2 has not been executed at this documentation snapshot.**
+Nano call. **MVP v2 has now finished without an accepted repair: s1 failed
+before candidate execution, and eight cases were operationally skipped.**
 Tavily API/cache component evidence and the independent T2.7 GPU execution-path
 comparison have passed. These facts do not substitute for a successful repair.
 
@@ -21,6 +22,7 @@ comparison have passed. These facts do not substitute for a successful repair.
 | T1.3 client/router | Super strict schema and Ultra authentic evidence with 268,920 provider input tokens from 53 unique source records; one attempt each | Accepted transport/schema/usage gate; no filler. The free-text Ultra response overclaimed fragmentation, so this is not diagnosis correctness |
 | T1.4 diagnosis v5 | 7/8 first-cause matches, 8/8 valid references, eight stop responses with zero reasoning tokens; usage-priced total USD 0.328770 | Full acceptance remains false: s1/s6 contain forbidden proposals, s7 requests more information, and s5 truth remains unverified. The fixed denominator is eight |
 | T1.12 MVP v1 | One of nine attempted: real s1 baseline, then one Nano response; no applied repair and eight unexecuted cases | Failed campaign remains preserved. Its unknown actual Nano charge was not treated as zero or retroactively accepted |
+| T1.12 MVP v2 | s1: 22 model calls, 16 Super attempts (10 file-count rejections, six truncation/filtered responses), zero apply/compile/candidate runs; eight later cases stopped at runtime readiness | Not accepted: target success 0/9, first-cause match one with eight unobserved. The eight admission skips are not model quality failures |
 | T2.7 isolation parity | Six real CUDA arms: s1, s3 and HF through production Docker and an independent subprocess controller; allocated/reserved peak differences 0% | Accepted original <=1% gate. s3 completed 20 updates in each arm with identical losses; s1 and HF genuinely OOM before the first update, not 20-step successes |
 
 The T0.4 receipt records USD 0.77289846 in known usage-priced charges and
@@ -56,6 +58,62 @@ and [T2.7 independent review](../reports/t2.7-acceptance-20261025.json).
 The T2.7 reference runs inside the same Docker isolation envelope, with shared
 capture instrumentation/image/source/clock checks; it is not a bare-host backend
 or independent allocator instrumentation. It makes no throughput claim.
+
+## MVP v2: real protocol failure before candidate execution
+
+The campaign completed with exit 1. All nine harness workers exited 0 and wrote
+reports; that process evidence does not mean successful repair. Only s1 ran the
+model/GPU pipeline: one genuine CUDA OOM baseline (24.750424064 allocated GB),
+22 model calls (Nano 1, Ultra 5, Super 16), and 283.708064 seconds including
+campaign cleanup. Its first cause was activations, matching the authored label,
+but target_met=false and there is no selected patch or after-run.
+
+Four patch rounds produced 16 attempts: ten rejected with “diff must touch
+between one and twenty files”, and six rejected as truncated/filtered responses.
+No attempt reached git apply or py_compile, and no candidate GPU/verification
+run occurred. The fifth diagnosis requested more information. Candidate loss
+equivalence, parameter equality and memory savings are unmeasured, not failures
+of an executed candidate. The original any-applied aggregate remains unknown
+where evidence is missing; no nonexistent final patch is manufactured.
+
+For six Super responses completion reached 4000: five also reported 4000
+reasoning tokens, and one reported 3962. The ten old raw diff payloads were not
+saved, so their error cannot uniquely identify missing headers, escaped newlines
+or explanation-only output. An independent standard-diff check accepted both
+ordinary unified diff and a matching optional git header; separate malformed
+inputs reproduced the same file-count error. There is no evidence of an
+inherent prompt/parser format contradiction.
+
+The parent disabled future admission after seeing the common protocol failure.
+s2–s8 and nanoGPT therefore produced runtime_not_ready/needs_human reports with
+zero model calls and zero GPU runs. They remain in the unchanged nine-case
+acceptance denominator, but must not be called eight model quality failures.
+The reviewed profile was restored after the campaign ended; this operation did
+not change the ledger or regrade any result.
+
+s1 actual cost is still null: known subtotal USD 0.14104766 plus formally
+verified Nano upper USD 0.00025122 gives conservative upper **USD 0.14129888**.
+The upper certifies the original <=0.6 cost gate; it does not establish exact
+actual spend or compensate for target failure. The saved post-v2 ledger review
+records known USD 1.51145418, conservative occupation USD 1.52815404 and
+remaining runtime pool USD 8.47149500. These are historical local-ledger values,
+not a refreshed account balance or invoice.
+
+The common patch/fixer fix is applied in source: explicit reasoning=False with
+the original 4000 cap, clearer existing diff instructions, and bounded private
+visible-response evidence. Current production-tree targeted integration passed 294 guarded tests;
+**the next live run has not been tested, and no repaired outcome is claimed**.
+Previously passed 1977 backend/68 frontend tests validate the committed
+5d3093c baseline, not this new protocol revision.
+
+Evidence: [v2 audit](../reports/live-campaign-20261025/mvp-v2-audit.json),
+[operational classification](../reports/live-campaign-20261025/mvp-v2-operational-audit-note.json),
+[repair findings](../reports/live-campaign-20261025/mvp-v2-repair-findings.md),
+[restored-profile ledger snapshot](../reports/live-campaign-20261025/mvp-v2-profile-restored.json),
+[standard diff contract](../reports/unified-diff-contract-20261025.json),
+[non-unique error controls](../reports/unified-diff-contract-20261025-supplement.json),
+and [applied revision](../reports/super-patch-fix-20261025/application.json).
+The original failed v1/v2 artifacts remain unchanged.
 
 ## Manual GPU verification regression (not model-driven repair)
 
@@ -354,8 +412,8 @@ invalidate an applied argv/environment change.
 
 This is reporting functionality, not a new model benchmark. Offline fixtures and
 the manually authored GPU regressions above do not add live repair successes.
-MVP v1 failed before repair; MVP v2 is not yet executed. Accepted main evaluation
-and ablation results remain pending.
+MVP v1 and v2 failed before a successful repair; the eight later v2 cases were
+operational skips. Accepted main evaluation and ablation results remain pending.
 
 ## First Token Factory connectivity measurements — not repair results
 

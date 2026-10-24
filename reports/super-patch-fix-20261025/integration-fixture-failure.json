@@ -1,0 +1,15 @@
+{
+  "integration_receipt": "reports/super-patch-fix-20261025/integration-20261024T224639Z-6d19d25c-receipt.json",
+  "observed": "287 passed, 7 failed; production/test/prompt source hashes unchanged",
+  "cause": "reviewed_fixture assigns reasoning capability only to Ultra; Super explicit reasoning=False correctly refuses before dispatch in real build_live_runtime fixture",
+  "source": "tests/test_actual_usage_budget.py:142-151",
+  "evidence_path": ".cache/tmp/pytest-of-xiaodouzi/pytest-147/test_kept_success_then_unverif1/jobs/13f317aab1c24fbda6bf4ecb113f226d/rounds/02/patches/patch-engine-b1ce04c5aa0b417b9477e00591d5280c/attempt-1-response.json",
+  "evidence_sha256": "93abce66551079469858881b0dc7803b5eead04267ecda5ba9eff61fe03b2f05",
+  "error_type": "CapabilityNotVerified",
+  "protocol_record_count": 0,
+  "failure_count": 7,
+  "needed_change": "Only offline fixture declares mock chat_template_kwargs for Super as well as Ultra; retain assertions and policies. Await root ownership authorization.",
+  "implementation_or_tests_modified_by_reviewer": false,
+  "live_calls": 0,
+  "gpu_jobs": 0
+}

@@ -49,12 +49,63 @@ at most 128 KiB of raw source text. Whole files that do not fit are listed as
 omitted; no partial source is silently presented as complete.
 
 The engine sends one initial request and at most three repair requests. Every
-request uses `max_tokens <= 4000`, and reported completion usage must be present
-and within the cap before application. A missing/oversized usage report is not
-retried. Default client configuration disables live requests. The existing client
+request uses `max_tokens <= 4000` and explicit `reasoning=False`, including
+fixer requests. The verified model capability chooses the supported control;
+this does not raise or replace the original completion cap. Reported completion
+usage must be present and within the cap before application. A missing/oversized
+usage report is not retried. Default client configuration disables live requests. The existing client
 owns model identity validation, provider allowlisting, live credentials and
 billing; the orchestrator must enforce its run-wide money cap. Offline
 MockTransport tests do not verify real model capability, pricing, or token counts.
+
+## Private response evidence and the applied protocol revision
+
+Every patch/fixer request now attempts to save
+`attempt-1-response.json` through `attempt-4-response.json` in its private
+engine directory before candidate application. A `ResponseValidationError`
+contributes its attached response, so rejected schema/truncation output is not
+lost merely because `router.chat` did not return normally. When no response
+object exists, available protocol records remain explicit metadata rather than
+invented content. `PatchAttempt.response_artifact` identifies the saved file.
+
+Each artifact is at most **256 KiB** of UTF-8 JSON. It records visible assistant
+text, parsed proposal and diff where available, original content byte counts
+and SHA-256 digests, finish/validation metadata, usage and protocol-cost data.
+Large parsed objects are explicitly omitted; retained visible/diff prefixes are
+marked truncated and cannot be treated as complete patches. There is no stored
+request payload, request headers, credentials or hidden reasoning text.
+Reasoning-token *counts* may remain in usage metadata. These files are untrusted
+diagnostic evidence, not executable input or automatically public downloads.
+
+Publication pins every directory component with no-follow directory handles,
+requires the private parent directory to be mode 0700, and creates mode-0600
+temporary files with O_EXCL/O_NOFOLLOW. Atomic exclusive publication never
+overwrites an existing attempt artifact or follows a destination symlink.
+Only this writer's new temporary file is cleaned up on failure.
+
+**Store and BudgetLedger remain the financial authority.** The response
+artifact's protocol records describe an observed response/cost calculation;
+they do not prove ledger settlement or authorize continued dispatch. If evidence
+writing fails, the failure propagates and no replacement model request is made
+to regenerate the artifact. Existing financial records and pending/unknown
+protections are not cleared. On a failed model call, the original exception is
+preserved with the evidence failure noted; interruption/budget exceptions are
+not converted into ordinary patch retries.
+
+MVP v2 preserved 16 failed Super attempts, with no apply/compile/candidate
+execution. The historical raw diff payloads are absent. Offline checks prove
+that both ordinary unified diff and a matching optional git header are accepted;
+different malformed inputs yield the same file-count error. The new prompt
+wording clarifies that existing format, rather than relaxing the parser or
+guessing what the unsaved historical payloads contained.
+
+The explicit reasoning control and private evidence code have been applied.
+Current production-tree targeted integration passed 294 guarded tests, including CPU Docker; the next live
+attempt has not run. No new model-repair success or real-scene acceptance is
+claimed. See [application record](../reports/super-patch-fix-20261025/application.json),
+[standard-diff check](../reports/unified-diff-contract-20261025.json),
+[error ambiguity controls](../reports/unified-diff-contract-20261025-supplement.json)
+and [MVP v2 findings](../reports/live-campaign-20261025/mvp-v2-repair-findings.md).
 
 ## Copy, apply, compile and evidence
 
@@ -138,9 +189,12 @@ completion overrun, source redaction/preflight, cheating reason codes, normal
 memory transformations, explicit model-change disclosure, and parameter evidence.
 
 T1.5's actual 8-scene Super generation success rate (at least 6/8 after at most
-3 repairs) and real completion usage remain pending approved Token Factory
-availability. T1.10's s1 runtime parameter-count and full normal-patch acceptance
-remain pending Lab/Verify evidence. Unit tests do not close either live gate.
+3 repairs) remains unaccepted. Token Factory access and gifted-credit execution
+are available, but MVP v2's s1 failed all 16 patch/fixer attempts before
+application, and the other eight campaign cases were operational skips.
+T1.10's s1 runtime parameter-count and full normal-patch acceptance still need
+real repaired Lab/Verify evidence. Unit tests and the new protocol implementation
+do not close either live gate.
 
 
 

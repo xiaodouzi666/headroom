@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-24T22:41:33.996579+00:00",
+  "audit_script": ".cache/setup/audit_mvp_acceptance_v2.py",
+  "audit_script_sha256": "4f937a04819285578cc714bee7eac5f68ef91f12cdda8a6b6941d6ed8b30b745",
+  "audit": "reports/live-campaign-20261025/mvp-v2-audit.json",
+  "audit_sha256": "32efb71b7be602197456490802a316bbb7c4ac42fd712673408635b34acda69d",
+  "audit_exit_code": 2,
+  "audit_exit_meaning": "Normal not-accepted result; no stderr or audit errors.",
+  "campaign": "runs/evaluation/live/20261024T223453139983Z-b34f1afd/campaign.json",
+  "campaign_sha256": "6232791b1a279372ff9c8b84a9d37d2a520171e9bfa352db64d5590d587bae2e",
+  "operational_stop": "reports/live-campaign-20261025/mvp-v2-protocol-stop.json",
+  "operational_stop_sha256": "a1ef2bf7016be773f49f3dc22040ef85534cecd6defd7484339b7727eaf623a3",
+  "accepted": false,
+  "fixed_original_denominator": 9,
+  "model_exercised_scenarios": 1,
+  "operational_skipped_scenarios": 8,
+  "s1": {
+    "run_id": "e0bde71d5a0e4e67bd33e50acd9956a8",
+    "target_met": false,
+    "first_cause_match": true,
+    "stored_model_call_records": 22,
+    "wall_seconds": 283.70806439290754,
+    "actual_cost_usd": null,
+    "cost_upper_usd": "0.14129888",
+    "cost_basis": "verified_upper_bound",
+    "billing_evidence_complete_and_consistent": true
+  },
+  "skipped": [
+    {
+      "scenario_id": "s2_fp32_adamw_1b",
+      "run_id": "bb7934d6f53f4741ba407656159791f9",
+      "classification": "operational_skip_runtime_not_ready",
+      "stored_status": "needs_human",
+      "stored_target": false,
+      "model_quality_result": "not_observed",
+      "model_call_records": 0,
+      "gpu_workloads": 0,
+      "gpu_zero_basis": "Recorded admission stop: read_live_profile rejected before GPU baseline; no inference about model capability from stored target=false."
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "run_id": "8d989da600e54b6d88e2ee42c2812f6e",
+      "classification": "operational_skip_runtime_not_ready",
+      "stored_status": "needs_human",
+      "stored_target": false,
+      "model_quality_result": "not_observed",
+      "model_call_records": 0,
+      "gpu_workloads": 0,
+      "gpu_zero_basis": "Recorded admission stop: read_live_profile rejected before GPU baseline; no inference about model capability from stored target=false."
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "run_id": "bbb9443e6e984b678230022ad62ef8f6",
+      "classification": "operational_skip_runtime_not_ready",
+      "stored_status": "needs_human",
+      "stored_target": false,
+      "model_quality_result": "not_observed",
+      "model_call_records": 0,
+      "gpu_workloads": 0,
+      "gpu_zero_basis": "Recorded admission stop: read_live_profile rejected before GPU baseline; no inference about model capability from stored target=false."
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "run_id": "52012b4bf5d2408eb81f4bbca1e2b791",
+      "classification": "operational_skip_runtime_not_ready",
+      "stored_status": "needs_human",
+      "stored_target": false,
+      "model_quality_result": "not_observed",
+      "model_call_records": 0,
+      "gpu_workloads": 0,
+      "gpu_zero_basis": "Recorded admission stop: read_live_profile rejected before GPU baseline; no inference about model capability from stored target=false."
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "run_id": "aa1bab0d83f74140a2a484c4c13f8201",
+      "classification": "operational_skip_runtime_not_ready",
+      "stored_status": "needs_human",
+      "stored_target": false,
+      "model_quality_result": "not_observed",
+      "model_call_records": 0,
+      "gpu_workloads": 0,
+      "gpu_zero_basis": "Recorded admission stop: read_live_profile rejected before GPU baseline; no inference about model capability from stored target=false."
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "run_id": "d49b5e368bf848838cee3a2bfd85fb3e",
+      "classification": "operational_skip_runtime_not_ready",
+      "stored_status": "needs_human",
+      "stored_target": false,
+      "model_quality_result": "not_observed",
+      "model_call_records": 0,
+      "gpu_workloads": 0,
+      "gpu_zero_basis": "Recorded admission stop: read_live_profile rejected before GPU baseline; no inference about model capability from stored target=false."
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "run_id": "5f548c0f6a994339a4f38e2c12000c2a",
+      "classification": "operational_skip_runtime_not_ready",
+      "stored_status": "needs_human",
+      "stored_target": false,
+      "model_quality_result": "not_observed",
+      "model_call_records": 0,
+      "gpu_workloads": 0,
+      "gpu_zero_basis": "Recorded admission stop: read_live_profile rejected before GPU baseline; no inference about model capability from stored target=false."
+    },
+    {
+      "scenario_id": "nanogpt",
+      "run_id": "6b969feb78f54176833240218f199d55",
+      "classification": "operational_skip_runtime_not_ready",
+      "stored_status": "needs_human",
+      "stored_target": false,
+      "model_quality_result": "not_observed",
+      "model_call_records": 0,
+      "gpu_workloads": 0,
+      "gpu_zero_basis": "Recorded admission stop: read_live_profile rejected before GPU baseline; no inference about model capability from stored target=false."
+    }
+  ],
+  "interpretation": [
+    "The campaign is not accepted: zero successful targets against the unchanged minimum six of nine.",
+    "The eight operational skips are not eight model quality failures. Their stored target=false remains unchanged; diagnosis/model-quality observations remain unknown.",
+    "s1 upper bound certifies the original cost inequality but is not confirmed actual spend. The legacy audit key cost_complete_and_consistent uses billing-proof semantics here; cost_usd remains null.",
+    "The original failed v1, v2 campaign, reports and audit are not rewritten or retroactively passed.",
+    "The parent controls profile restoration; this audit did not read or modify the profile or assert its current enabled state."
+  ],
+  "actions": {
+    "provider_requests": 0,
+    "gpu_workloads": 0,
+    "real_env_reads": 0,
+    "ledger_mutations": 0,
+    "production_or_test_changes": false,
+    "campaign_or_audit_overwrite": false,
+    "sql_access": "auditor read-only mode=ro/query_only transaction only"
+  }
+}

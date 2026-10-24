@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "completed_at_utc": "2026-10-24T22:52:29.576629+00:00",
+  "status": "targeted_actual_source_integration_passed",
+  "passed": 294,
+  "failed": 0,
+  "pytest_seconds": 103.11,
+  "driver_elapsed_seconds": 103.75330630806275,
+  "current_receipt": "reports/super-patch-fix-20261025/integration-20261024T225006Z-4b4386a8-receipt.json",
+  "current_receipt_sha256": "a4c81f2119195f1cfbd80ea05bba864e043ee682784ffdb4cda78d05794173cf",
+  "prior_failed_receipt": "reports/super-patch-fix-20261025/integration-20261024T224639Z-6d19d25c-receipt.json",
+  "prior_result": "287 passed / 7 failed; preserved, not overwritten",
+  "fixture_correction": "reports/super-patch-fix-20261025/fixture-correction.json",
+  "failure_analysis": "reports/super-patch-fix-20261025/integration-fixture-failure.json",
+  "fixture_scan": {
+    "scope": "Tests constructing real build_live_runtime and feeding run_fix/search_run/PatchEngine",
+    "needed_fixture_fix": [
+      "tests/test_actual_usage_budget.py:reviewed_fixture"
+    ],
+    "reuse": "test_bounded_billing_reporting uses the same helper",
+    "no_edit_needed": "test_research_tool_loop standalone profile only calls its tool loop; its production repair integration uses the updated search_run helper",
+    "capability_negative_tests_preserved": true
+  },
+  "executed_command": [
+    ".venv/bin/python",
+    "reports/super-patch-fix-20261025/integration_driver.py"
+  ],
+  "guarded_pytest_files": [
+    "tests/test_patch.py",
+    "tests/test_patch_response_evidence.py",
+    "tests/test_orchestrator.py",
+    "tests/test_bounded_search.py",
+    "tests/test_verification_feedback.py",
+    "tests/test_wrapper_execution.py",
+    "tests/test_actual_usage_budget.py",
+    "tests/test_bounded_billing.py",
+    "tests/test_bounded_billing_reporting.py",
+    "tests/test_budget.py",
+    "tests/test_runtime_budget.py",
+    "tests/test_llm_cost.py",
+    "tests/test_llm_router.py"
+  ],
+  "guards": {
+    "parent_self_check_passed": true,
+    "actual_spawn_self_check_passed": true,
+    "network": "real DNS/INET denied, SDK only MockTransport",
+    "credentials": "NEBIUS/TAVILY env removed; real .env and live runtime profile reads refused",
+    "database": "production budget/Store/acceptance SQLite paths refused including URI form; temp fixture databases permitted",
+    "gpu": "CUDA_VISIBLE_DEVICES empty; --gpus subprocess denied; real wrapper targets run CPU Docker network-none",
+    "guard_path": "reports/super-patch-fix-20261025/integration_guarded.py",
+    "guard_sha256": "70a590cb02af1691b4f6c309493bbe028053e0d0be8e3e44cdca3fe1ed6fb0e8"
+  },
+  "source_hashes": {
+    "count": 236,
+    "all_unchanged": true,
+    "before": "reports/super-patch-fix-20261025/integration-20261024T225006Z-4b4386a8-sources-before.json",
+    "after": "reports/super-patch-fix-20261025/integration-20261024T225006Z-4b4386a8-sources-after.json",
+    "selected": [
+      {
+        "path": "headroom/patch.py",
+        "sha256": "fd36e13d91ea8f9167e915d5c8385ffce68fa9d8aa18de90d014c3ab275a85c9"
+      },
+      {
+        "path": "headroom/patch_evidence.py",
+        "sha256": "d747e1e0524be7ed673d8eeb459a6d197ad5b11f9536617c8564dcefb7fbc484"
+      },
+      {
+        "path": "headroom/prompts/patch.md",
+        "sha256": "c10fdeb9d927883198d827c5dbdfb2e9409bbc918ab159d0ad053977c1c75438"
+      },
+      {
+        "path": "headroom/prompts/patch_fix.md",
+        "sha256": "61c4a2f47d2a97d13a8a6e06d9a1cd6cfea73c122c7574bcf1da940f07fa6d7e"
+      },
+      {
+        "path": "tests/test_actual_usage_budget.py",
+        "sha256": "98e90cad7a49da47a3f23e776ec5f3771ef5da2d543792d3116e04afc2259f6e"
+      },
+      {
+        "path": "tests/test_orchestrator.py",
+        "sha256": "8e4b87b6d8543592f6fe26bc8fd068c32fd9cd07fa4ad21a1803b92982a0f4da"
+      },
+      {
+        "path": "tests/test_patch.py",
+        "sha256": "e67b2a8fb72a7d16861a10961221c8e974f7ffef2371bc2f6d76409eb155cf6f"
+      },
+      {
+        "path": "tests/test_patch_response_evidence.py",
+        "sha256": "7154f80a7d9c9d9d4398144fee97b999d128d62b36da66c6e91a3807a7234d44"
+      },
+      {
+        "path": "tests/test_wrapper_execution.py",
+        "sha256": "ee06f14be495d8264ea2de254b06f06c2dec266a8f8088c3318b7a0b09015a63"
+      },
+      {
+        "path": "docs/PLAN.md",
+        "sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56"
+      }
+    ]
+  },
+  "static_checks": [
+    {
+      "command": [
+        "uv",
+        "run",
+        "--offline",
+        "--no-sync",
+        "ruff",
+        "check",
+        "."
+      ],
+      "exit_code": 0,
+      "log": "reports/super-patch-fix-20261025/actual-source-ruff-check-revision.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "--offline",
+        "--no-sync",
+        "ruff",
+        "format",
+        "--check",
+        "."
+      ],
+      "exit_code": 0,
+      "log": "reports/super-patch-fix-20261025/actual-source-format-check-revision.log",
+      "sha256": "22dce21ca275dfa0c227e230885782f9c295d415d2bef7e6236ad55f42da3530"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "log": "reports/super-patch-fix-20261025/actual-source-diff-check-revision.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "restrictions": {
+    "production_implementation_changed_by_this_integration": false,
+    "single_authorized_test_fixture_changed": true,
+    "live_provider_calls": 0,
+    "gpu_jobs": 0,
+    "production_ledger_or_profile_writes": false,
+    "real_env_reads": false
+  },
+  "limitations": [
+    "This is the current 294-case targeted integration; the previous 1977 full suite belongs to the previous source revision.",
+    "No live Super response or successful MVP repair is established by offline tests.",
+    "Original failed integration and historic missing raw diff remain preserved.",
+    "The first observation SSH connection was interrupted; its original process continued and wrote the 7-failure receipt. Only the authorized fixture correction caused the second test run."
+  ]
+}

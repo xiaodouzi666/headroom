@@ -1,0 +1,273 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-24T22:36:11.067965+00:00",
+  "scope": "First new MVP v2 Nano settlement and first three following settled model calls only; point-in-time read-only billing observation, not case/campaign acceptance.",
+  "run_id": "e0bde71d5a0e4e67bd33e50acd9956a8",
+  "source_commit": "5d3093c94d7b8f8b3ab3626acf0919e3138e8b4d",
+  "selected_call_ids": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "calls": [
+    {
+      "store_call_id": 2,
+      "role": "annotate",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "created_at": "2026-10-24T22:35:02.502206+00:00",
+      "usage": {
+        "prompt_tokens": 3643,
+        "completion_tokens": 136,
+        "total_tokens": 3779,
+        "cached_tokens": null,
+        "reasoning_tokens": null
+      },
+      "cost_usd": null,
+      "computed_charge_or_upper_usd": "0.00025122",
+      "cost_upper_usd": "0.00025122",
+      "billing_status": "bounded",
+      "store_data_sha256": "56982c2e3e9ff796a4a626735aff1848f067e7182173f504afe01e9204da4b9f",
+      "ledger_attempt": {
+        "id": "e99035ecd83948938840960ae3e75cd5",
+        "run_id": "e0bde71d5a0e4e67bd33e50acd9956a8",
+        "upper_usd": "0.01644864",
+        "charged_usd": "0.00025122",
+        "actual_usd": null,
+        "settled": 1,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1,
+        "charge_status": "upper_bound",
+        "charge_basis": "verified_tariff_missing_cache_count",
+        "review_sha256": null
+      },
+      "checks": {
+        "store_settled_response_200": true,
+        "exact_model_identity": true,
+        "attempt_identity": true,
+        "strict_dispatched": true,
+        "usage_counts_match": true,
+        "within_verified_cap": true,
+        "reservation_matches_original_formula": true,
+        "settled_amount_not_over_reservation": true,
+        "actual_still_null": true,
+        "store_bounded_only": true,
+        "ledger_bounded_settled": true,
+        "upper_and_basis_match": true,
+        "reason_is_missing_cache_count": true
+      },
+      "passed": true
+    },
+    {
+      "store_call_id": 3,
+      "role": "diagnose",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "created_at": "2026-10-24T22:35:04.433619+00:00",
+      "usage": {
+        "prompt_tokens": 30547,
+        "completion_tokens": 1387,
+        "total_tokens": 31934,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "cost_usd": "0.034708",
+      "computed_charge_or_upper_usd": "0.034708",
+      "cost_upper_usd": null,
+      "billing_status": "known",
+      "store_data_sha256": "24f400132379bd88f972882aa6c69f3566ab927ca9e76d103891ad360062ac9f",
+      "ledger_attempt": {
+        "id": "82c18d9af0ce4902a047709e12b18e64",
+        "run_id": "e0bde71d5a0e4e67bd33e50acd9956a8",
+        "upper_usd": "1.073152",
+        "charged_usd": "0.034708",
+        "actual_usd": "0.034708",
+        "settled": 1,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1,
+        "charge_status": "exact",
+        "charge_basis": null,
+        "review_sha256": null
+      },
+      "checks": {
+        "store_settled_response_200": true,
+        "exact_model_identity": true,
+        "attempt_identity": true,
+        "strict_dispatched": true,
+        "usage_counts_match": true,
+        "within_verified_cap": true,
+        "reservation_matches_original_formula": true,
+        "settled_amount_not_over_reservation": true,
+        "store_exact_known": true,
+        "ledger_exact_settled": true,
+        "actual_cost_matches_usage": true
+      },
+      "passed": true
+    },
+    {
+      "store_call_id": 4,
+      "role": "patcher",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "created_at": "2026-10-24T22:35:10.493946+00:00",
+      "usage": {
+        "prompt_tokens": 3985,
+        "completion_tokens": 2722,
+        "total_tokens": 6707,
+        "cached_tokens": 0,
+        "reasoning_tokens": 1908
+      },
+      "cost_usd": "0.0036453",
+      "computed_charge_or_upper_usd": "0.0036453",
+      "cost_upper_usd": null,
+      "billing_status": "known",
+      "store_data_sha256": "97fd171433224afbdb8671bbe806d1c146e93d8d5e27e28318bafb7204728cd7",
+      "ledger_attempt": {
+        "id": "aca749bc8d404b9d9a36c77aa304669e",
+        "run_id": "e0bde71d5a0e4e67bd33e50acd9956a8",
+        "upper_usd": "0.0822432",
+        "charged_usd": "0.0036453",
+        "actual_usd": "0.0036453",
+        "settled": 1,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1,
+        "charge_status": "exact",
+        "charge_basis": null,
+        "review_sha256": null
+      },
+      "checks": {
+        "store_settled_response_200": true,
+        "exact_model_identity": true,
+        "attempt_identity": true,
+        "strict_dispatched": true,
+        "usage_counts_match": true,
+        "within_verified_cap": true,
+        "reservation_matches_original_formula": true,
+        "settled_amount_not_over_reservation": true,
+        "store_exact_known": true,
+        "ledger_exact_settled": true,
+        "actual_cost_matches_usage": true
+      },
+      "passed": true
+    },
+    {
+      "store_call_id": 5,
+      "role": "patcher",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "created_at": "2026-10-24T22:35:25.195545+00:00",
+      "usage": {
+        "prompt_tokens": 4691,
+        "completion_tokens": 2102,
+        "total_tokens": 6793,
+        "cached_tokens": 0,
+        "reasoning_tokens": 1236
+      },
+      "cost_usd": "0.0032991",
+      "computed_charge_or_upper_usd": "0.0032991",
+      "cost_upper_usd": null,
+      "billing_status": "known",
+      "store_data_sha256": "b8c4322d8f3fc7d2c52d980d3dc664b4a7cf8850ca853cb24c1532c92c0849b4",
+      "ledger_attempt": {
+        "id": "cf82ee1bee2942729d6730900fa36300",
+        "run_id": "e0bde71d5a0e4e67bd33e50acd9956a8",
+        "upper_usd": "0.0822432",
+        "charged_usd": "0.0032991",
+        "actual_usd": "0.0032991",
+        "settled": 1,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1,
+        "charge_status": "exact",
+        "charge_basis": null,
+        "review_sha256": null
+      },
+      "checks": {
+        "store_settled_response_200": true,
+        "exact_model_identity": true,
+        "attempt_identity": true,
+        "strict_dispatched": true,
+        "usage_counts_match": true,
+        "within_verified_cap": true,
+        "reservation_matches_original_formula": true,
+        "settled_amount_not_over_reservation": true,
+        "store_exact_known": true,
+        "ledger_exact_settled": true,
+        "actual_cost_matches_usage": true
+      },
+      "passed": true
+    }
+  ],
+  "first_nano_formula": "(3643 * max(0.06, 0.012) + 136 * 0.24) / 1,000,000 = 0.00025122 USD upper; actual remains null",
+  "selected_calls_total_actual_usd": null,
+  "selected_calls_known_actual_usd": "0.0416524",
+  "selected_calls_conservative_total_usd": "0.04190362",
+  "historical_retained_checks": {
+    "historical_ledger_attempt_unchanged": true,
+    "historical_actual_still_null": true,
+    "historical_full_bound_still_retained": true,
+    "historical_store_payload_unchanged": true,
+    "historical_review_receipt_unchanged": true
+  },
+  "pool_checks": {
+    "within_runtime_global": true,
+    "within_runtime_daily": true,
+    "profile_unchanged": true,
+    "current_run_has_no_halt": true,
+    "no_global_halt": true
+  },
+  "ledger_snapshot": {
+    "logical_sha256": "05e1291505ae06a83f6827be46119201023b3b0de22e29234150e030197f896a",
+    "current_run": {
+      "id": "e0bde71d5a0e4e67bd33e50acd9956a8",
+      "day": "2026-10-24",
+      "limit_usd": "0.6",
+      "status": "open",
+      "halt_reason": null,
+      "budget_mode": "actual_usage"
+    },
+    "attempt_count": 35,
+    "known_actual_usd": "1.41708182",
+    "charged_including_pending_and_bounds_usd": "1.51602488",
+    "global_committed_including_open_run_floors_usd": "1.98685516",
+    "daily_committed_including_open_run_floors_usd": "1.98685516",
+    "global_uncommitted_usd": "8.01279388",
+    "daily_uncommitted_usd": "8.01279388",
+    "pending_attempts": [
+      {
+        "id": "9481c4cd50ba47b28a6167ae0b498247",
+        "run_id": "e0bde71d5a0e4e67bd33e50acd9956a8",
+        "upper_usd": "0.0822432",
+        "charged_usd": "0.0822432",
+        "actual_usd": null,
+        "settled": 0,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1,
+        "charge_status": "pending",
+        "charge_basis": null,
+        "review_sha256": null
+      }
+    ],
+    "selected_store_and_ledger_calls_agree": true
+  },
+  "blocking_findings": [],
+  "limitations": [
+    "The campaign is executing and the ledger may change immediately after this snapshot. A pending call retains its full upper and is not reported as zero or success.",
+    "Four selected already-settled calls were read from Store and matched by unique attempt UUID to the committed ledger; the two databases do not provide a cross-database atomic snapshot. Selected settlements were stable; unrelated in-flight totals are time-labelled.",
+    "Nano cache tariff .012/M remains backed by reviewed account Prices UI while catalogue cache value is missing; missing usage cache count is not treated as zero.",
+    "No historical failed case/report was regraded. No overall run/campaign target result is asserted."
+  ],
+  "source_sha256": {
+    "reports/live-campaign-20261025/mvp-v2-preflight.json": "f14a485caf8edb3ca703cf2a0c79624f182720a3ab8310a98bb8687c385b8540",
+    "reports/live-campaign-20261025/mvp-v2-cap-budget-review.json": "0940f47ccd6f2dd0780b43479798532ff25128fcb19fea1129103da7eeccada5",
+    "reports/live-campaign-20261025/mvp-v1-nano-retention-proposal.json": "044b44c878ba28210c9d3acc8df0e612f6f1ae854424f35e11226ed32c146528",
+    "reports/live-campaign-20261025/mvp-v1-nano-retention-verification.json": "f53fccfaa71ae3f2a9b380a46b45095db42c2e522d5032e985cb01ddd3f5b3a1",
+    ".cache/tokenfactory-runtime.json": "a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c",
+    "headroom/llm/cost.py": "b8199ad73c930f68689aea4b24bd3848ff69f62925ee624ea67b0acfd47c72c7",
+    "headroom/runtime.py": "cc8c933c987560b43ef776cdecb88953a85a8e23c4c1a6bd087674dd2fe8de63",
+    "headroom/budget.py": "55df4929cc5e1798e16b90e4fae0b0bb82cb231224fc2e17092c4c0d39bc306d"
+  },
+  "reviewer_actions": {
+    "sqlite_mode": "ro with query_only/explicit read transactions; no migration",
+    "real_env_reads": false,
+    "api_calls": 0,
+    "gpu_jobs": 0,
+    "ledger_profile_source_changes": false
+  }
+}

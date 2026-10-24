@@ -234,3 +234,34 @@ regexes = [
     '''^6e78c46022ed02d4960d1f21d3df12742dd2885f3ed13b5ec2c056daf2c10bcf$''',
     '''^ff08fbc91b3b1d1da222317baf1faf8aaaa4970ddf75b44391fd70c88f5270dc$''',
 ]
+
+# Proposed two verified false-positive exemptions only. Do not apply during frozen integration.
+# Keep all default rules and existing configuration unchanged; each block requires exact path AND exact digest.
+
+[[rules.allowlists]]
+description = "Verified runtime-profile SHA256 in one historical report"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/live\-campaign\-20261025/mvp\-v2\-billing\-observation\.json$''']
+regexes = ['''^a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c$''']
+
+[[rules.allowlists]]
+description = "Verified runtime-profile SHA256 in one historical report"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/live\-campaign\-20261025/mvp\-v2\-preflight\.json$''']
+regexes = ['''^a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c$''']
+
+[[rules.allowlists]]
+description = "Verified nonsecret receipt value: recomputed runtime profile SHA256"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/live\-campaign\-20261025/mvp\-v3\-cap\-budget\-review\.json$''']
+regexes = ['''^a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c$''']
+
+[[rules.allowlists]]
+description = "Verified nonsecret receipt value: public provider names in a guard-description sentence, not a credential"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/super\-patch\-fix\-20261025/actual\-source\-integration\-summary\.json$''']
+regexes = ['''^NEBIUS/TAVILY$''']

@@ -1,0 +1,118 @@
+{
+  "schema": "headroom.unified-diff-contract-review.v1",
+  "conclusion": "No prompt/parser contradiction: both standard unified diff and matching optional git header parse and apply successfully.",
+  "results": [
+    {
+      "format": "standard_unified",
+      "diff": "--- a/example.py\n+++ b/example.py\n@@ -1 +1 @@\n-VALUE = 1\n+VALUE = 2\n",
+      "parsed_file_count": 1,
+      "validated_paths": [
+        "example.py"
+      ],
+      "status": "applied",
+      "reason": "STATIC_CHECKS_PASSED",
+      "apply_command": [
+        "/usr/bin/git",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "-c",
+        "core.fsmonitor=false",
+        "-c",
+        "core.attributesFile=/dev/null",
+        "-c",
+        "protocol.allow=never",
+        "apply",
+        "--3way",
+        "-"
+      ],
+      "apply_mode": "three_way_command_direct_fallback",
+      "compile_exit_code": 0,
+      "candidate_exactly_expected": true,
+      "original_unchanged": true,
+      "runtime_verified": false,
+      "raw_result": {
+        "path": ".cache/setup/unified-diff-contract-20261025/standard_unified/patch-54d5ff3188ce4cb5840df1efa7b73ce0/result.json",
+        "sha256": "3acecf2ed18864cbed61b278e3b8241cdc1ee9182eb912f45914fe83376d3b18",
+        "bytes": 2018
+      }
+    },
+    {
+      "format": "git_header_unified",
+      "diff": "diff --git a/example.py b/example.py\n--- a/example.py\n+++ b/example.py\n@@ -1 +1 @@\n-VALUE = 1\n+VALUE = 2\n",
+      "parsed_file_count": 1,
+      "validated_paths": [
+        "example.py"
+      ],
+      "status": "applied",
+      "reason": "STATIC_CHECKS_PASSED",
+      "apply_command": [
+        "/usr/bin/git",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "-c",
+        "core.fsmonitor=false",
+        "-c",
+        "core.attributesFile=/dev/null",
+        "-c",
+        "protocol.allow=never",
+        "apply",
+        "--3way",
+        "-"
+      ],
+      "apply_mode": "three_way_command_direct_fallback",
+      "compile_exit_code": 0,
+      "candidate_exactly_expected": true,
+      "original_unchanged": true,
+      "runtime_verified": false,
+      "raw_result": {
+        "path": ".cache/setup/unified-diff-contract-20261025/git_header_unified/patch-9cfff0796af94687b154543a463ced00/result.json",
+        "sha256": "ca4a27855d6803076870c52b95528e0c188197014651de1480e911a3db9cbba6",
+        "bytes": 2028
+      }
+    }
+  ],
+  "negative_controls": [
+    {
+      "case": "path_escape",
+      "rejected": true,
+      "reason": "patch path contains traversal or empty components"
+    },
+    {
+      "case": "mismatched_git_header",
+      "rejected": true,
+      "reason": "invalid unified diff"
+    }
+  ],
+  "implementation_pins": [
+    {
+      "path": "headroom/patch.py",
+      "sha256": "39750bd0702b55755bbfa3bd5ead00e5ff0b153166612f6842263f18e907f053",
+      "bytes": 26365
+    },
+    {
+      "path": "headroom/prompts/patch.md",
+      "sha256": "7dd0711ebc147a1747035045f5d2f7cbf8e7a9231a2e84a2bd56c668d115779d",
+      "bytes": 1894
+    },
+    {
+      "path": "headroom/prompts/patch_fix.md",
+      "sha256": "d12f4046338ac58e7ad2d1ff7a9b85fde2b06e12926c10e9960c5bfc82a078cb",
+      "bytes": 1171
+    },
+    {
+      "path": "tests/test_patch.py",
+      "sha256": "9431102f1757d6f25e479c96e2f128d06c50990c0576335ce1441c7de8b60ba4",
+      "bytes": 16619
+    }
+  ],
+  "implementation_unchanged_during_test": true,
+  "limitations": [
+    "Artificial one-line fixture only; no real scene solution used.",
+    "The ten historical model diff payloads were not saved; this test does not identify their malformed content.",
+    "No target execution or GPU/runtime acceptance; py_compile only."
+  ],
+  "provider_calls": 0,
+  "gpu_runs": 0,
+  "database_accesses": 0,
+  "environment_files_read": 0
+}

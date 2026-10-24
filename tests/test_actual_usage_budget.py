@@ -148,6 +148,10 @@ def reviewed_fixture(tmp_path):
         "reasoning_method": "chat_template_kwargs",
         "evidence": "offline fixture only",
     }
+    data["models"]["super"]["capabilities"] = {
+        "reasoning_method": "chat_template_kwargs",
+        "evidence": "offline fixture only",
+    }
     return LiveProfile.model_validate(data)
 
 

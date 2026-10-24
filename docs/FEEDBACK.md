@@ -344,3 +344,70 @@ The failed campaign is preserved and is not a successful repair.
 Evidence: runs/evaluation/live/20261024T221011565478Z-4deef5b7/campaign.json,
 reports/live-campaign-20261025/mvp-v1-audit.json, and the source-pinned call record
 for run1ae2055418724d708a7b2fb1a9e76fc6 / attempt4b98ca96f08441c38f5fdca0537eaf4f.
+
+## TF-020 — Super exhausted patch output in reasoning; old diff failures remain ambiguous
+
+MVP v2's s1 generated 16 Super patch/fixer attempts across four rounds. Six
+responses reached the original 4000 total-completion cap: five reported 4000
+reasoning tokens and the sixth reported 3962. They corresponded to rejected
+truncated/filtered responses. The production patcher had not explicitly selected
+reasoning=False; accepting a total output cap did not guarantee useful visible
+JSON within it. The 4000 limit remains unchanged.
+
+Ten other attempts failed before git apply with “diff must touch between one
+and twenty files”. Their raw parsed.diff values were not persisted, so this
+message cannot establish whether the model omitted headers, double-escaped
+newlines, returned prose, or produced another malformed form. The independent
+standard-diff receipt successfully parsed/applied/compiled both standard unified
+diff and the same diff with a matching optional git header. Negative controls
+for literal backslash-n and plain explanation reproduced the old file-count
+error. This rules out claiming a demonstrated prompt/parser contradiction; it
+does not reconstruct the ten missing responses.
+
+All 16 attempts stopped before apply/compile; no candidate GPU result or
+numerical-equivalence result exists. s1's final diagnosis requested more
+information; the eight later cases were operationally skipped, not eight
+independent model quality failures. Failed model requests remained in the
+financial records.
+
+The applied common revision now requests reasoning=False for patch and fixer,
+keeps max_completion_tokens<=4000 and existing policy/parser checks, clarifies
+the existing standard-diff instructions, and saves private bounded visible
+response evidence. Current production-tree targeted integration passed 294 guarded tests. There has been no next live validation, so the change is not reported
+as a successful model repair. Clear effective reasoning-control metadata and
+complete usage on truncated responses would help clients diagnose this failure
+without assuming that a short or schema-constrained response is reliable.
+
+Evidence: [v2 repair findings](../reports/live-campaign-20261025/mvp-v2-repair-findings.md),
+[v2 audit](../reports/live-campaign-20261025/mvp-v2-audit.json),
+[standard diff receipt](../reports/unified-diff-contract-20261025.json),
+[ambiguous-error controls](../reports/unified-diff-contract-20261025-supplement.json),
+and [applied revision](../reports/super-patch-fix-20261025/application.json).
+
+## TF-021 — A second Nano response omitted the cache split; its cost remains bounded
+
+The fresh v2 s1 annotation response used 3643 prompt tokens and 136 completion
+tokens (3779 total) with the exact Nano identity. Parsed cached-token usage was
+again missing. This is a new response, separate from v1's 480-completion
+observation. Missing cache usage is not cached=0 and is not an exact invoice.
+
+Using the reviewed maximum input tariff of $0.06 per million and output tariff
+$0.24 per million gives the conservative upper
+3643*0.06/1,000,000 + 136*0.24/1,000,000 = **$0.00025122**.
+The runtime verified provider-bound admission, identity, valid usage, output cap,
+tariffs and successful ledger settlement before marking this charge bounded.
+Actual cost remains null; exact-cost complete remains false. The known s1
+subtotal $0.14104766 plus this bound yields $0.14129888 conservative total,
+not known actual spend. This newly bounded charge is distinct from v1's
+separately reviewed, permanently retained full reservation of $0.01644864.
+
+This proves only that this annotation charge is no greater than the original
+$0.02/run limit. It does not pass eight-case Top40 annotation coverage,
+delivery to Ultra or the >=80% heuristic-agreement gate. Returning a consistent
+cached-token count on every response would make exact usage-priced accounting
+possible without this uncertainty. The old parsed record does not substitute
+for a separately saved raw SDK usage declaration.
+
+Evidence: [v2 call/ledger audit](../reports/live-campaign-20261025/mvp-v2-audit.json),
+[operational audit note](../reports/live-campaign-20261025/mvp-v2-operational-audit-note.json),
+and [post-v2 saved ledger review](../reports/live-campaign-20261025/mvp-v2-profile-restored.json).

@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-10-24T22:50:16.937810+00:00",
+  "source_scan": "reports/super-patch-fix-20261025/gitleaks-staged-initial.json",
+  "source_scan_sha256": "7205cec0e7e2388dcc586d779edc1f7c337fb75ff396ba138484ac1355188e35",
+  "verified_findings": 2,
+  "unverified_findings": [],
+  "findings": [
+    {
+      "finding_index": 0,
+      "file": "reports/live-campaign-20261025/mvp-v2-billing-observation.json",
+      "line": 261,
+      "json_pointer": "/source_sha256/.cache/tokenfactory-runtime.json",
+      "source": ".cache/tokenfactory-runtime.json",
+      "verified_sha256": "a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c",
+      "verification": "sha256 of current exact named noncredential runtime-profile bytes matches the recorded value; only digest compared, no profile content emitted",
+      "classification": "verified_nonsecret_source_sha256"
+    },
+    {
+      "finding_index": 1,
+      "file": "reports/live-campaign-20261025/mvp-v2-preflight.json",
+      "line": 30,
+      "json_pointer": "/pins/.cache/tokenfactory-runtime.json",
+      "source": ".cache/tokenfactory-runtime.json",
+      "verified_sha256": "a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c",
+      "verification": "sha256 of current exact named noncredential runtime-profile bytes matches the recorded value; only digest compared, no profile content emitted",
+      "classification": "verified_nonsecret_source_sha256"
+    }
+  ],
+  "proposal": ".cache/setup/super-patch-gitleaks-additions.toml",
+  "proposal_sha256": "a1ceb8703c72f7aaf31f0ba8896cdfdc0e4c90fedf39d361c3f9fb39adc421e2",
+  "exact_path_digest_pairs": 2,
+  "formal_config_modified": false,
+  "formal_config_sha256": "bc98e719fc2b0e4ea86e6d37ddc1ebcd3fbe5db630e973092d837aa12af9dcb2",
+  "checks": {
+    "combined_toml_parses": true,
+    "all_default_rules_preserved": true,
+    "existing_allowlists_unchanged": true,
+    "path_AND_exact_64hex_only": true,
+    "changed_digest_or_path_rejected": true
+  },
+  "scope": {
+    "real_env_read": false,
+    "profile_content_printed": false,
+    "ledger_access": false,
+    "network_calls": 0,
+    "gpu_runs": 0,
+    "source_or_tests_changed": false,
+    "new_scan_run": false,
+    "unscanned_mvp_v3_file_exempted": false
+  }
+}

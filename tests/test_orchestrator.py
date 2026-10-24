@@ -139,6 +139,7 @@ def test_sdk_patch_and_report_pipeline_keeps_fixture_provenance(tmp_path, execut
                 reasoning_method="chat_template_kwargs", evidence="offline mock only"
             ),
         )
+        models["super"] = replace(models["super"], capabilities=models["ultra"].capabilities)
 
         def respond(request):
             body = json.loads(request.content)
@@ -350,11 +351,12 @@ def search_run(
                 reasoning_method="chat_template_kwargs", evidence="offline mock only"
             ),
         )
+        models["super"] = replace(models["super"], capabilities=models["ultra"].capabilities)
 
         if research_enabled and research_capabilities:
             models["super"] = replace(
                 models["super"],
-                capabilities=VerifiedCapabilities(tools=True, evidence="offline mock only"),
+                capabilities=replace(models["super"].capabilities, tools=True),
             )
 
         def before(role, spec, attempt, body):

@@ -10,7 +10,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from headroom.config import SUPER_MODEL
+from headroom.config import SUPER_MODEL, RuntimeConfig, VerifiedCapabilities, candidate_models
 from headroom.llm.client import TokenFactoryClient
 from headroom.llm.router import LLMRouter
 from headroom.patch import PatchEngine, PatchProposal, apply_proposal, validate_diff
@@ -55,6 +55,17 @@ def project(tmp_path):
     return source
 
 
+def patch_config():
+    models = candidate_models()
+    models["super"] = dataclasses.replace(
+        models["super"],
+        capabilities=VerifiedCapabilities(
+            reasoning_method="chat_template_kwargs", evidence="offline test fixture"
+        ),
+    )
+    return RuntimeConfig(models=models)
+
+
 def mock_router(payloads, requests, completion_tokens=100):
     def handler(request):
         body = json.loads(request.content)
@@ -82,7 +93,9 @@ def mock_router(payloads, requests, completion_tokens=100):
             },
         )
 
-    return LLMRouter(TokenFactoryClient(transport=httpx.MockTransport(handler)))
+    return LLMRouter(
+        TokenFactoryClient(config=patch_config(), transport=httpx.MockTransport(handler))
+    )
 
 
 def test_applies_in_fresh_git_copy_and_original_unchanged(project, tmp_path):
@@ -236,6 +249,7 @@ def test_real_router_generates_patch_with_super_and_4000_cap(project, tmp_path):
         and requests[0]["model"] == SUPER_MODEL
         and requests[0]["max_tokens"] == 4000
     )
+    assert requests[0]["chat_template_kwargs"] == {"enable_thinking": False}
     assert result.attempts[0].llm_usage["completion_tokens"] == 100
     assert result.attempts[0].llm_cost["usd"] is None
     assert (
@@ -261,6 +275,7 @@ def test_policy_repair_against_original_with_failure_history(project, tmp_path):
     finally:
         router.client.close()
     assert result.applied and len(result.attempts) == 2
+    assert all(r["chat_template_kwargs"] == {"enable_thinking": False} for r in requests)
     assert result.attempts[0].reason == "MODEL_SHRUNK"
     assert all(Path(item.candidate_dir).exists() for item in result.attempts)
     assert len({item.candidate_dir for item in result.attempts}) == 2
@@ -299,7 +314,7 @@ def test_compile_failure_can_be_repaired(tmp_path):
 
 
 def test_default_live_disabled_stops_without_repair_storm(project, tmp_path):
-    with TokenFactoryClient() as client:
+    with TokenFactoryClient(config=patch_config()) as client:
         result = PatchEngine(LLMRouter(client)).generate_and_apply(
             project, {"fix_id": "f1"}, work_root=tmp_path / "work"
         )

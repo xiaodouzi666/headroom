@@ -358,6 +358,7 @@ def test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_repo
                 reasoning_method="chat_template_kwargs", evidence="offline mock only"
             ),
         )
+        models["super"] = replace(models["super"], capabilities=models["ultra"].capabilities)
 
         def respond(request):
             body = json.loads(request.content)

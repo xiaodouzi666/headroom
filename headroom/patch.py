@@ -19,8 +19,9 @@ from unidiff import PatchSet
 from unidiff.errors import UnidiffParseError
 
 from headroom.lab.runner import copy_source
-from headroom.llm.client import LLMError
-from headroom.llm.router import LLMRouter
+from headroom.llm.client import CapabilityNotVerified, LLMError
+from headroom.llm.router import LLMRouter, ResponseValidationError
+from headroom.patch_evidence import save_patch_response
 from headroom.verify.policy import (
     PatchPolicy,
     PolicyIssue,
@@ -75,6 +76,7 @@ class PatchAttempt:
     detail: str | None = None
     llm_usage: dict[str, Any] | None = None
     llm_cost: dict[str, Any] | None = None
+    response_artifact: str | None = None
 
 
 @dataclass(frozen=True)
@@ -566,34 +568,72 @@ class PatchEngine:
         last = None
         for index in range(self.max_repairs + 1):
             response = None
+            ledger_start = len(self.router.client.ledger.entries)
+            response_path = directory / f"attempt-{index + 1}-response.json"
             try:
                 response = self.router.chat(
-                    "patcher", messages, PatchProposal, max_tokens=self.max_completion_tokens
+                    "patcher",
+                    messages,
+                    PatchProposal,
+                    max_tokens=self.max_completion_tokens,
+                    reasoning=False,
                 )
                 if response.usage is None:
                     raise LLMError("PATCH_USAGE_UNVERIFIED")
                 if response.usage.completion_tokens > self.max_completion_tokens:
                     raise LLMError("PATCH_COMPLETION_LIMIT_EXCEEDED")
-            except LLMError as error:
+            except BaseException as error:
+                if isinstance(error, ResponseValidationError):
+                    response = error.response
+                records = self.router.client.ledger.entries[ledger_start:]
+                try:
+                    response_artifact = save_patch_response(
+                        response_path, response, error=error, records=records
+                    )
+                except Exception as artifact_error:
+                    error.add_note("Private patch-response evidence could not be saved.")
+                    raise error from artifact_error
+                if not isinstance(error, LLMError):
+                    raise
+                protocol = records[-1] if records else None
                 reason = str(error)
                 attempt = PatchAttempt(
                     index + 1,
                     "failed",
                     "LLM_RESPONSE_REJECTED",
                     detail=reason[:2000],
-                    llm_usage=asdict(response.usage) if response and response.usage else None,
-                    llm_cost=response.cost.as_dict() if response else None,
+                    llm_usage=(
+                        asdict(response.usage)
+                        if response and response.usage
+                        else asdict(protocol.usage)
+                        if protocol and protocol.usage
+                        else None
+                    ),
+                    llm_cost=(
+                        response.cost.as_dict()
+                        if response
+                        else protocol.cost.as_dict()
+                        if protocol
+                        else None
+                    ),
+                    response_artifact=response_artifact,
                 )
                 attempts.append(attempt)
                 _write_json(directory / f"attempt-{index + 1}.json", asdict(attempt))
                 if (
-                    "Live model requests are disabled" in reason
+                    isinstance(error, CapabilityNotVerified)
+                    or "Live model requests are disabled" in reason
                     or "PATCH_USAGE_" in reason
                     or "PATCH_COMPLETION_" in reason
                 ):
                     break
                 failure = {"reason": attempt.reason, "detail": attempt.detail}
             else:
+                response_artifact = save_patch_response(
+                    response_path,
+                    response,
+                    records=self.router.client.ledger.entries[ledger_start:],
+                )
                 last = apply_proposal(
                     snapshot,
                     response.parsed,
@@ -632,6 +672,7 @@ class PatchEngine:
                     index=index + 1,
                     llm_usage=asdict(response.usage),
                     llm_cost=response.cost.as_dict(),
+                    response_artifact=response_artifact,
                 )
                 attempts.append(attempt)
                 _write_json(directory / f"attempt-{index + 1}.json", asdict(attempt))
