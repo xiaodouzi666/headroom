@@ -1,0 +1,67 @@
+{
+  "status": "ready_for_review",
+  "execute": false,
+  "live_authorized": false,
+  "cli_argv": [
+    "--suite",
+    "capabilities",
+    "--roles",
+    "super",
+    "--capability-method",
+    "json_schema",
+    "--base-url",
+    "https://api.tokenfactory.us-central1.nebius.com/v1/",
+    "--model-id",
+    "super=nvidia/nemotron-3-super-120b-a12b",
+    "--max-completion-tokens",
+    "256",
+    "--max-retries",
+    "0",
+    "--budget-usd",
+    "0.0788736",
+    "--pricing-file",
+    "/home/xiaodouzi/workspace/headroom/reports/promo-checkpoint-preparation-20261024/pricing-reviewed.json"
+  ],
+  "payload": {
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Return JSON exactly {\"probe\":\"headroom\",\"value\":7}."
+      }
+    ],
+    "stream": true,
+    "stream_options": {
+      "include_usage": true
+    },
+    "max_completion_tokens": 256,
+    "response_format": {
+      "type": "json_schema",
+      "json_schema": {
+        "name": "headroom_probe",
+        "strict": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "probe": {
+              "type": "string"
+            },
+            "value": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "probe",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "metadata": {},
+  "token_reservation_usd": "0.0788736",
+  "max_inference_requests": 1,
+  "catalogue_get_requests_per_execution": 2,
+  "max_retries": 0
+}

@@ -8,7 +8,7 @@ All work, caches, runs, and media remain on azuki.
 
 | Task | Description | Status | Evidence |
 |---|---|---|---|
-| T0.1 | 账号、额度、密钥、仓库（P0，Codex 主导，Frank 只补无法自动化的部分，~40min） | 进行中 | GitHub/Tavily and private Nebius key verified; authenticated catalogues200 and Super/Nano chats passed; original >=25USD credit gate pending |
+| T0.1 | 账号、额度、密钥、仓库（P0，Codex 主导，Frank 只补无法自动化的部分，~40min） | 已验收 | reports/t0.1-acceptance-promo-20261024.json; official promo face25USD redeemed, UI30.25USD incl.tax; current matching key/0600/env and both authenticated catalogues200 with4/5Nemotron models; public Apache2 and retained live Tavily proof verified; further inference authorization remains separate |
 | T0.2 | 服务器环境勘察（P0，~30min） | 已验收 | docs/ENV.md; reports/env-preflight.json; Docker GPU ok, NET ok, 5694.85 GiB free; shared GPU and no sudo recorded |
 | T0.3 | 仓库骨架与工具链（P0，~40min） | 已验收 | reports/toolchain-checks.json; reports/pre-commit-t0.3.log; commit ca6c86ad099c519b92d1ccb88219b08450aa8da6, Frank author/committer, pushed origin/main |
 | T0.4 | Token Factory 探测（P0，~1h） | 首次目录/chat实测通过；完整验收待办 | reports/tokenfactory-minimal-20261024.json; two catalogues200; exact Super/Nano chats; full JSON/tools/Ultra staircase/concurrency pending;93 guarded probe tests |
@@ -56,7 +56,7 @@ All work, caches, runs, and media remain on azuki.
 ## Next acceptance and remaining deliverables
 
 - The dedicated T1.3/T1.4 drivers and PLAN A5 / T2.2 native model tool loop are implemented. Real historical inputs have been prepared and independently hash-checked; this does not accept model capability, token usage, diagnosis accuracy or repair success.
-- Next live execution follows docs/LIVE_EXECUTION_PLAN.md only after current account credit, capabilities and applicable spending authorization are confirmed. The previous $0.10 trial-connectivity authorization does not cover full acceptance; the live runtime profile remains absent.
+- Promotional credit is now redeemed and verified:25USD face value,30.25USD including-tax balance. Next live execution follows docs/LIVE_EXECUTION_PLAN.md after applicable spending authorization and capability checks; the requested first checkpoint is1.25USD token/2USD total and is not yet approved. The previous0.10USD trial-connectivity authorization does not cover full acceptance; the live runtime profile remains absent.
 - Keep original failed gates and procedure conflicts visible: s2's 39.8715% optimizer fraction versus40%, strict Ultra admission versus the original $0.60 MVP procedure, default precision policy/bf16 tier, and independent subprocess isolation.
 - T1.12 reporting is now implemented and verified with retained offline pipeline artifacts. The nine real model-generated repairs, accuracy, budget and timing requirements still need actual execution.
 - T3.5 / Phase6 webhook delivery is implemented but disabled. The owner must select/authorize a real destination and supply public domain/Cloudflare access before deployment and delivery acceptance; no recipient message or unit installation has occurred.
@@ -64,6 +64,8 @@ All work, caches, runs, and media remain on azuki.
 - No original threshold is lowered, no old run is replaced, and no evaluation/release tag is created before acceptance.
 
 ## Acceptance log
+
+- 2026-10-24T14:54:54.961187+00:00: completed T0.1 account/credit gate: official received25USD promo redeemed in the existing Token Factory organization, refreshed transaction shows AI Builder Program Credits +30.25USD including tax, trial separately1USD. Existing console/server key mask matches, both fresh official GET catalogues200 with4/5Nemotron models, private0600 ignored env and public Apache2 repository verified; prior accepted live Tavily evidence retained. No card top-up, new key/terms or new model/Tavily/GPU work. First1.25USD token/2USD total checkpoint requested, not yet authorized; live profile remains absent. Promo-arrival heartbeat paused after fulfillment. Reports: reports/promo-redemption-20261024.json and reports/t0.1-acceptance-promo-20261024.json. Full goal remains active.
 
 - 2026-10-24T14:43:16.949374+00:00: completed original T1.12 actual patch/config application, selected configuration completion and per-round facts through JSON/Markdown/curated API/UI; reverts retain application facts and ambiguous evidence remains unknown. Default-disabled T3.5/Phase6 HTTPS notification delivery now has durable incident state, bounded retry and safe unknown-delivery handling. Full guarded backend1583passed473.96s; all148 source hashes unchanged and current; frontend66passed/typecheck/build. Four retained offline pipeline outcomes and actual desktop/390px browser layout verified; live score count remains0. Health unit templates validate but are not installed or enabled. New model/Tavily calls/GPU workloads/notifications/cost0; live runtime profile absent; original PLAN/gates unchanged. Reports: reports/outcomes-monitoring-20261024/verification.json and reports/handoff-outcomes-monitoring-20261024.md. Full goal remains active; current requirement audit and external acceptance are separate.
 
@@ -138,11 +140,11 @@ All work, caches, runs, and media remain on azuki.
 
 - 2026-10-23: Frank explicitly authorized stopping the current llama-server (PID 398152). Fresh identity check found owner chenchunlai; normal SIGTERM failed with PermissionError. The initial permission denial was not bypassed. Frank subsequently stopped it; GPU availability and all T0.6 baselines were verified on 2026-10-23 at09:29–09:34 Beijing time. Evidence: reports/gpu-release.json.
 
-- Current authorization covers only0.10USD from trial credit for minimal connectivity; two successful chats are recorded above. Full repair/evaluation spending and the original >=25USD gate remain pending. Promotional credits will be reconciled when available; their arrival does not erase the spending boundary. Bank-card top-up remains separate from an account-level hard cap. See docs/ACCOUNT_SETUP.md.
+- Current authorization covers only0.10USD from trial credit for minimal connectivity; two successful chats are recorded above. The original >=25USD credit gate is now accepted; full repair/evaluation spending remains pending. Promotional credits were redeemed and reconciled on2026-10-24:25USD face value,30.25USD gross adjustment; their arrival does not erase the spending boundary. Bank-card top-up remains separate from an account-level hard cap. See docs/ACCOUNT_SETUP.md.
 
 ## Frank 待办
 
 - Devpost: registration and an existing project draft were observed in the logged-in browser on 2026-10-24; final project submission remains pending.
-- Token Factory: https://tokenfactory.nebius.com ; promo https://nebius.com/promo-code?utm_promo_event_code=2026-devpost-global-ai-hack&utm_promo_code_type=Token_Factory&utm_promo_activation_code=NEBIUS-DEVPOST-GLOBAL26 ; activation code NEBIUS-DEVPOST-GLOBAL26 ($25); Builders Program https://dev.nebius.com/builders (additional $25). NEBIUS_API_KEY is now privately configured and authenticated. Confirm available credits >= $25 and full-campaign spending authorization before the original live evaluation.
+- Token Factory: https://tokenfactory.nebius.com ; promo https://nebius.com/promo-code?utm_promo_event_code=2026-devpost-global-ai-hack&utm_promo_code_type=Token_Factory&utm_promo_activation_code=NEBIUS-DEVPOST-GLOBAL26 ; activation code NEBIUS-DEVPOST-GLOBAL26 ($25); Builders Program https://dev.nebius.com/builders (additional $25). NEBIUS_API_KEY is now privately configured and authenticated. Promo credit >=$25 is now verified in reports/promo-redemption-20261024.json; full-campaign spending authorization remains pending.
 - HF_TOKEN only if later gated model access requires it.
 - Domain/Cloudflare access is needed for T3.5. Video and Devpost submission remain Frank-owned per plan.

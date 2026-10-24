@@ -1,0 +1,39 @@
+{
+  "reviewed_at": "2026-10-24T14:55:28.809054+00:00",
+  "catalogue": {
+    "path": "reports/tokenfactory-catalogue-promo-20261024T145241Z/report.json",
+    "sha256": "42e75844ad5dac5e34f4ad7579aa68a906c4d80f3b42bc08cbe93f4dc17d4920",
+    "observed_at": "2026-10-24T14:52:51.957182+00:00"
+  },
+  "sources": [
+    {
+      "url": "https://docs.tokenfactory.nebius.com/api-reference/inference/create-chat-completion",
+      "checked_by": "child public documentation read",
+      "facts": [
+        "max_completion_tokens bounds generated completion tokens, including visible output and reasoning.",
+        "The max_tokens field documentation says prompt token count plus requested maximum output cannot exceed model context."
+      ],
+      "inference": "Using the entire advertised context as input reservation is conservative under the documented context constraint; it is not a measured prompt count."
+    },
+    {
+      "url": "https://nebius.com/services/token-factory/models/nvidia-nemotron-models-inference",
+      "checked_by": "root public source review reported in task",
+      "facts": [
+        "Root reported ordinary Ultra/Super prices match fresh authenticated catalogue."
+      ]
+    },
+    {
+      "url": "https://docs.tokenfactory.nebius.com/other-capabilities/billing",
+      "checked_by": "root public source review reported in task",
+      "facts": [
+        "Root reported Netherlands 21 percent tax; account transaction reconciliation remains separate."
+      ]
+    }
+  ],
+  "unsupported_claims": [
+    "Ultra successful inference",
+    "Super native schema/tools passed",
+    "Invoice reconciled",
+    "Spending approved"
+  ]
+}

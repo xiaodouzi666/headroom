@@ -1,10 +1,24 @@
 # Account setup and outstanding access
 
-Nebius billing is now active and its server-only private key has been verified.
-On2026-10-24 the account displayed1USD trial credit and zero cash balance. Both
-authenticated directories and minimal Super/Nano calls succeeded. Promotional
-credits and the original at-least25USD gate remain pending; see
-reports/tokenfactory-minimal-20261024.json.
+Nebius billing is active and its server-only private key was previously verified.
+Promotional credit was redeemed in the current Token Factory organization on
+2026-10-24. At 14:50 UTC, the refreshed Transactions page showed
+**Adjustment: AI Builder Program Credits +$30.25 (Incl. tax)** and an account
+balance of **$30.25**. Trial credit remained separately listed as **$1 / 29 days**.
+This is promotional account credit, not a cash payment or cash balance.
+The received promotion had a $25 face value; $25 × 1.21 = $30.25 is consistent
+with the official 21% Netherlands VAT rate and the displayed inclusive-tax
+adjustment. This arithmetic does not establish an account hard spending cap.
+See reports/promo-redemption-20261024.json and the
+[official billing documentation](https://docs.tokenfactory.nebius.com/other-capabilities/billing-new).
+
+The original at-least-$25 credit-availability condition is now evidenced.
+The earlier $1 trial / $0 cash observation remains historical; it is not the
+current promotional balance. Both authenticated directories and minimal
+Super/Nano calls had already succeeded; preserve their separate evidence in
+reports/tokenfactory-minimal-20261024.json. The same account's default project
+still lists the existing headroom-azuki key. Redemption created no new key,
+performed no card recharge, and made no additional inference call.
 Tavily was verified live on 2026-10-24: its existing key is configured in the
 server .env (0600), T0.5 passed, and the free-plan counter is 6/1,000 credits used after the real Research component check (994 remain).
 See reports/tavily-account-after-research-20261024.json.
@@ -14,18 +28,24 @@ Headroom requires real NVIDIA-model runtime calls through Nebius Token Factory. 
 
 1. Sign in to https://tokenfactory.nebius.com using Google or GitHub.
 2. The current billing documentation requires a billing account and bank card during onboarding. It supports negative balances and automatic card charging. We have not confirmed an account-level hard spending cap. Do not assume promotional credits enforce a zero-overspend limit. Source: https://docs.tokenfactory.nebius.com/other-capabilities/billing-new
-3. Apply for the hackathon promotional credits via https://nebius.com/promo-code?utm_promo_event_code=2026-devpost-global-ai-hack&utm_promo_code_type=Token_Factory&utm_promo_activation_code=NEBIUS-DEVPOST-GLOBAL26 . NEBIUS-DEVPOST-GLOBAL26 is the application activation code; it is not confirmed as a directly redeemable billing code. Check actual received credits in the console.
-4. Optional additional Token Factory credit: https://dev.nebius.com/builders . Its terms specify a 90-day validity from issuance: https://nebius.com/builders-terms-and-conditions . The separate hackathon credit expiration has not been verified.
+3. Original hackathon application route (completed for the received promotion; no repeat application is needed): https://nebius.com/promo-code?utm_promo_event_code=2026-devpost-global-ai-hack&utm_promo_code_type=Token_Factory&utm_promo_activation_code=NEBIUS-DEVPOST-GLOBAL26 . NEBIUS-DEVPOST-GLOBAL26 is the application activation code; it is not confirmed as a directly redeemable billing code. Check actual received credits in the console.
+4. Optional additional Token Factory credit: https://dev.nebius.com/builders . The previously consulted general terms specify a 90-day validity from issuance: https://nebius.com/builders-terms-and-conditions . Keep those generic terms separate from the specific received promotion email recorded below; do not apply a generic expiry assumption to the redeemed balance.
 5. Create an API key in the Token Factory console. Store only in server .env (mode 600), not chat, source or reports. Source: https://docs.tokenfactory.nebius.com/api-reference/introduction
 6. Tavily is complete: the existing default key was imported by Frank via hidden
    input, and all four real API probes succeeded. See reports/t0.5-acceptance.json.
    No further Tavily signup or key entry is required for this checkpoint.
 
-T0.1 remains incomplete until at least25USD available credit and the full-campaign
-spending boundary are confirmed. The current authorization covers only0.10USD
-from trial credit for minimal connectivity; it does not authorize recharge or
-the full capability/repair evaluation. Two minimal calls have completed. Tavily has a separate completed live acceptance record; its usage does not
-prove that Nebius is configured. If billing/country/credits block signup, the official FAQ directs participants to Nebius support: https://discord.com/invite/eXYTGhgnhK .
+T0.1's account/key/repository/credit gates are now accepted; see
+reports/t0.1-acceptance-promo-20261024.json. The separate full-campaign spending
+boundary remains unapproved. The previous $0.10 trial-connectivity authorization
+covered the two completed minimal calls; it does not authorize recharge or the
+full capability/repair evaluation. A new proposed checkpoint of at most three
+single calls, $1.25 in token charges and a $2 total envelope including tax reserve,
+has been presented for explicit approval and is still pending as of this
+reconciliation. Promotional redemption does not grant additional inference
+authorization. Tavily has a separate completed live acceptance record; its usage
+does not prove Nebius model capabilities. If billing/country/credits block signup,
+the official FAQ directs participants to Nebius support: https://discord.com/invite/eXYTGhgnhK .
 
 ## Self-funding versus promotional approval
 
@@ -48,9 +68,16 @@ Input is hidden and the key is never printed. This server-only ignored helper re
 
 ## Promotional credit continuation
 
-The owner requested using promotional credit once it arrives. Reconcile actual
-credit availability and expiration in this same Token Factory account; neither a
-new provider nor another API key is implied. Preserve existing spend records and
-get a sufficient explicit campaign authorization before the original full probes
-and repair evaluations. A pending application or promotional email is not proof
-of credited balance. No automatic recharge or additional spending is enabled.
+The owner's request to switch to promotional credit when it arrived has been
+carried out by redeeming the received promotion in the existing organization.
+The promotion email states a redemption deadline of 2026-12-31 and says redeemed
+credits do not expire. These are recorded terms from that specific email, not a
+general promise about other offers. The transaction and refreshed account balance,
+rather than the email alone, establish that credit was posted.
+
+Preserve the earlier account snapshots and spend records. Refresh the same
+account's available promotional balance before any newly authorized dispatch;
+no provider switch, new key or recharge is needed for this checkpoint.
+The full runtime profile remains closed/absent, and the proposed checkpoint and
+full-campaign spending boundaries still require their own explicit authorization.
+No automatic recharge or additional spending was enabled by redemption.

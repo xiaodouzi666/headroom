@@ -1,0 +1,52 @@
+{
+  "verified": true,
+  "verified_at": "2026-10-24T14:55:28.809054+00:00",
+  "source": "reports/tokenfactory-catalogue-promo-20261024T145241Z/report.json; https://docs.tokenfactory.nebius.com/api-reference/inference/create-chat-completion; https://nebius.com/services/token-factory/models/nvidia-nemotron-models-inference",
+  "output_caps_include_reasoning": true,
+  "models": {
+    "nvidia/Nemotron-3-Ultra-550b-a55b": {
+      "input_usd_per_million": "1.000000",
+      "output_usd_per_million": "3.000000",
+      "prompt_token_ceiling": 1048576,
+      "output_cap_field": "max_completion_tokens",
+      "input_ceiling_basis": "Full advertised context; conservative documented context bound, not local tokenizer estimate",
+      "output_cap_evidence": "https://docs.tokenfactory.nebius.com/api-reference/inference/create-chat-completion",
+      "cached_input_usd_per_million": "0.12000000",
+      "fee_components_per_request": {
+        "request": "0",
+        "image": "0",
+        "price_per_video_second": "0",
+        "price_per_minute": "0"
+      },
+      "live_capability_accepted": false
+    },
+    "nvidia/nemotron-3-super-120b-a12b": {
+      "input_usd_per_million": "0.3000000",
+      "output_usd_per_million": "0.9000000",
+      "prompt_token_ceiling": 262144,
+      "output_cap_field": "max_completion_tokens",
+      "input_ceiling_basis": "Full advertised context; conservative documented context bound, not local tokenizer estimate",
+      "output_cap_evidence": "https://docs.tokenfactory.nebius.com/api-reference/inference/create-chat-completion",
+      "cached_input_usd_per_million": "0.06000000",
+      "fee_components_per_request": {
+        "request": "0",
+        "image": "0",
+        "price_per_video_second": "0",
+        "price_per_minute": "0"
+      },
+      "live_capability_accepted": false
+    }
+  },
+  "review_scope": "Documented conservative token bounds and fresh advertised pricing for three explicit text probes only; no spending authorization",
+  "endpoint": "https://api.tokenfactory.us-central1.nebius.com/v1/",
+  "catalogue_sha256": "42e75844ad5dac5e34f4ad7579aa68a906c4d80f3b42bc08cbe93f4dc17d4920",
+  "authorization_granted": false,
+  "tax_included_in_token_prices": false,
+  "limitations": [
+    "Documented provider contract is not empirical Ultra capability verification.",
+    "No claim that advertised context is the account's currently usable long-input limit.",
+    "Ordinary input price conservatively covers lower cached-input price; script cost is not a reconciled invoice.",
+    "Any unknown usage/model identity, provider bound violation, failed capability or rate/account limit stops all later requests.",
+    "No runtime profile, repair, Tavily, long-input, concurrency or automatic retry is authorized."
+  ]
+}

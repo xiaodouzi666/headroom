@@ -4,11 +4,13 @@ Status: **proposal only; not authorized and not executed**. Initial proposal pre
 
 ## Current evidence and what it does not establish
 
-The account UI was refreshed on 2026-10-24; the original confirmed-credit gate of at least $25 remains unmet. Private account evidence remains in `.cache/account-check-20261024T132819Z.json`; do not publish its tenant information. Credit must be refreshed immediately before any later authorized dispatch.
+Promotional credit was redeemed in the existing Token Factory organization on 2026-10-24. At 14:50 UTC, the refreshed transaction was **Adjustment: AI Builder Program Credits +$30.25 (Incl. tax)** and account balance was **$30.25**; trial credit remained separately **$1 / 29 days**. The received promotion had a $25 face value. The original at-least-$25 credit-availability condition is now evidenced, but this is promotional account credit, not cash or a card recharge. Evidence: `reports/promo-redemption-20261024.json`. The earlier private `.cache/account-check-20261024T132819Z.json` remains an unchanged historical snapshot; do not publish its tenant information.
 
-The default `.cache/tokenfactory-runtime.json` is absent. Previous explicit authorization covered only $0.10 of trial connectivity checks. It does **not** authorize this package. Existing Super/Nano chat evidence is in `reports/tokenfactory-minimal-20261024.json`; Ultra has not been invoked. The two known calls had usage-derived token cost $0.00003666, not an invoice total. T0.4 remains unaccepted.
+The specific promotion email states a 2026-12-31 redemption deadline and no expiry after redemption. The $25 × 1.21 = $30.25 adjustment is consistent with the official Netherlands 21% VAT rate and the UI's inclusive-tax label; it is not a new provider spending guarantee. See [billing and consumption](https://docs.tokenfactory.nebius.com/other-capabilities/billing-new). Refresh available credit immediately before any later authorized dispatch. The existing headroom-azuki key remains listed under the same account's default project; no new key or inference call was made during redemption.
 
-The existing reviewed probe price file `.cache/setup/probe-prices-minimal-20261024.json` contains only Super and Nano. It cannot authorize Ultra or Lightning requests. A future reviewed file must be prepared from refreshed official model metadata and output-cap evidence; do not add `verified=true` merely to bypass a guard.
+The default `.cache/tokenfactory-runtime.json` remains closed/absent. Previous explicit authorization covered only $0.10 of trial connectivity checks. It does **not** authorize this package. The new at-most-three-call checkpoint with a $1.25 token cap and $2 overall envelope has been presented for explicit approval and remains pending as of this reconciliation. Redemption alone does not enable it. Existing Super/Nano chat evidence is in `reports/tokenfactory-minimal-20261024.json`; Ultra has not been invoked. The two known calls had usage-derived token cost $0.00003666, not an invoice total. T0.4 remains unaccepted.
+
+The older reviewed probe price file `.cache/setup/probe-prices-minimal-20261024.json` contains only Super and Nano and cannot authorize Ultra or Lightning requests. The new `reports/promo-checkpoint-preparation-20261024/pricing-reviewed.json` covers only exact Ultra/Super identifiers, fresh advertised prices, and documented conservative input/output bounds. Three actual guarded CLI dry-runs and request audits are ready in that directory; their receipt explicitly refuses live execution until new authorization. This documentary review does not accept actual model capability or grant spending permission.
 
 Historical catalogue arithmetic below is a planning input, not renewed provider verification:
 
@@ -29,7 +31,7 @@ Strict admission reserves the full reviewed provider input ceiling, not the shor
 - 1024 output tokens: $1.051648.
 - 4000 output tokens, used by diagnosis: $1.060576.
 
-An account with only $1 of usable credit cannot admit even the first strictly bounded Ultra probe. A funded account alone also does not make the default `--budget 0.6` pipeline executable: the first Ultra diagnosis requires more than the whole run allowance. PLAN T1.4's $0.35 is an **actual per-call acceptance threshold**; no separate $0.35 runtime cap was found. PLAN T1.12 additionally explicitly requires the $0.60 run argument.
+The previous trial-only $1 balance could not admit even the first strictly bounded Ultra probe. The newly credited promotional balance removes that particular balance obstacle. A funded account alone still does not make the default `--budget 0.6` pipeline executable: the first Ultra diagnosis requires more than the whole run allowance. PLAN T1.4's $0.35 is an **actual per-call acceptance threshold**; no separate $0.35 runtime cap was found. PLAN T1.12 additionally explicitly requires the $0.60 run argument.
 
 Two different future choices exist; neither is implicit approval:
 
@@ -40,7 +42,7 @@ Super/Nano retain strict admission. The current Ultra estimator supports reviewe
 
 ## Smallest recommended next authorization
 
-**Only after usable credit is at least $2: authorize one staged strict probe tranche with token-charge cap $1.25 and a $2 overall envelope.** The $0.75 difference is unspent headroom for tax/fees and account uncertainty, not permission for extra calls. Confirm applicable fees before treating that envelope as sufficient. This tranche is separate from the old $0.10 authorization and requires no local-estimation risk acceptance.
+**Proposed authorization: one staged strict probe tranche with token-charge cap $1.25 and a $2 overall envelope, only while refreshed usable credit is at least $2.** The displayed promotional balance meets the credit prerequisite; explicit spending approval is still pending. The $0.75 difference is unspent headroom for tax/fees and account uncertainty, not permission for extra calls. Confirm applicable fees before treating that envelope as sufficient. This tranche is separate from the old $0.10 authorization and requires no local-estimation risk acceptance.
 
 The tranche comprises, at most:
 
@@ -50,7 +52,7 @@ The tranche comprises, at most:
 
 Using the historical bounds, all three reservations sum to $1.2093952. No retries, no alternative-method retries, no long-input requests, no live runtime profile, and no repairs are included. Review each report before the next request. If Ultra truncates, JSON parsing fails, tools do not execute as expected, the model identity differs, billing is unknown, or an account/rate limit is returned, stop and retain that evidence. A failed capability result is useful evidence, not permission to repeat it.
 
-This is an access/capability checkpoint, **not T0.4/T1.3/MVP acceptance**. If promotional credit remains absent and no payment is desired, keep this tranche pending and continue offline work.
+This is an access/capability checkpoint, **not T0.4/T1.3/MVP acceptance**. Promotional credit is now posted; keep the tranche pending until its separate authorization and pre-dispatch checks are complete. No payment is needed merely to remove the earlier trial-only balance obstacle.
 
 ## Exact probe commands and review protocol
 
@@ -91,7 +93,7 @@ The probe budget is per-process memory, not the runtime's durable SQLite ledger.
 
 ## Full acceptance stages and proposed capped envelopes
 
-A larger, **conditional** proposal is $12.30 of nominal token-charge allowance, with a $15 account envelope only if separately reviewed fees fit the remaining $2.70. For reference only, a 21% buffer would yield $14.883. This is not a claim about this account's tax treatment. The first $1.25 tranche above would be included in stage A, not added twice.
+A larger, **conditional** proposal is $12.30 of nominal token-charge allowance, with a $15 account envelope only if separately reviewed fees fit the remaining $2.70. A 21% calculation yields $14.883, consistent with the rate underlying the displayed promotional adjustment. The actual future usage invoice and fee coverage still need reconciliation; this arithmetic is not a guaranteed all-in cap. The first $1.25 tranche above would be included in stage A, not added twice.
 
 | Stage | Proposed nominal token cap | Required scope and stop point |
 | --- | ---: | --- |
@@ -103,7 +105,7 @@ A larger, **conditional** proposal is $12.30 of nominal token-charge allowance, 
 
 This envelope is a **capped attempt**, not a promise to complete all acceptance. Stages C/D are currently blocked on the explicit strict-versus-estimate choice above. With local estimates the nominal cap is not a provider-hard ceiling. If a genuinely hard total is required, use strict bounds and resolve the original $0.60 procedure conflict first.
 
-For perspective, reserving every default probe at its full historical input ceiling gives $20.20365824 for the 60 POST requests in the 62-item plan, before tax/fees. This is a conservative arithmetic ceiling, not predicted actual cost. It alone exceeds stage A's capped attempt and would be about $24.4464 under the illustrative 21% buffer. Do not promise the full plan fits a $25 promotion on worst-case reservations plus downstream work.
+For perspective, reserving every default probe at its full historical input ceiling gives $20.20365824 for the 60 POST requests in the 62-item plan, before tax/fees. This is a conservative arithmetic ceiling, not predicted actual cost. It alone exceeds stage A's capped attempt and would be about $24.4464 with a 21% tax allowance. Do not promise the full plan fits a $25 promotion on worst-case reservations plus downstream work.
 
 ### A: T0.4 detail
 
@@ -242,7 +244,7 @@ A closed/absent live profile remains the required state until preparation and th
 
 ## Narrow decisions still outstanding
 
-The immediate decision, when requested later, can be only: **authorize the <=$2 strict checkpoint after confirmed credit, or defer it**. It does not require approving local estimates or changing the original plan.
+The immediate decision has now been requested and remains pending: **authorize the <=$2 strict checkpoint against the confirmed promotional credit, or defer it**. It does not require approving local estimates or changing the original plan.
 
 Before diagnosis/MVP, ask one separate concrete decision: retain a genuinely hard provider-bound budget and approve the specified larger admission cap/procedure, or accept the explicitly described local-estimation overshoot risk while keeping the original nominal $0.60 cap. Neither choice lowers actual-cost or scientific acceptance thresholds.
 
