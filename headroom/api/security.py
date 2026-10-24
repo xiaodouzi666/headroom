@@ -7,6 +7,7 @@ from pathlib import Path, PurePosixPath
 
 RUN_ID = re.compile(r"[0-9a-f]{32}\Z")
 ARTIFACTS = {
+    "configuration.json": (None, "application/json"),
     "cli.json": ("cli.json", "application/json"),
     "pareto.json": ("pareto.json", "application/json"),
     "pareto.md": ("pareto.md", "text/plain; charset=utf-8"),
@@ -21,6 +22,35 @@ ARTIFACTS = {
     "timeline-before.png": ("evidence/before/timeline.png", "image/png"),
     "timeline-after.png": ("evidence/after/timeline.png", "image/png"),
 }
+
+
+def artifact_relative(row, name):
+    """Resolve selected evidence from recorded round identity, never a client path.
+
+    Historical imports without selection metadata retain the original fixed layout.
+    Explicitly missing/new selected evidence must never fall back to an old image.
+    """
+    relative, _ = ARTIFACTS[name]
+    after_names = {
+        "evidence-after.json": "evidence.json",
+        "timeline-after.png": "timeline.png",
+    }
+    if name not in after_names and name != "configuration.json":
+        return relative
+    kept = row.get("kept")
+    number = kept.get("round") if isinstance(kept, dict) else None
+    selected = type(number) is int and 1 <= number <= 6
+    if name == "configuration.json":
+        if not selected:
+            raise ValueError("No selected configuration")
+        return f"configurations/round-{number:02d}/manifest.json"
+    if row.get("after_evidence_status") == "unavailable":
+        raise ValueError("Selected after evidence is unavailable")
+    if selected:
+        return f"rounds/{number:02d}/evidence/{after_names[name]}"
+    if "kept" in row or "after_evidence_status" in row:
+        raise ValueError("No selected after evidence")
+    return relative
 
 
 def open_regular(root, relative, max_bytes=64 * 1024 * 1024):

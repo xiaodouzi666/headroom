@@ -387,3 +387,97 @@ it("does not present historical baseline completion as successful exploration", 
     screen.getByText("Selected configuration meets target").nextElementSibling,
   ).toHaveTextContent("N/A — baseline only");
 });
+
+it("hands off CLI-only wrapper repairs with safe selected arguments and complete downloads", async () => {
+  window.history.replaceState({}, "", "/runs/" + id);
+  const reportPath = detailPath + "/report.json";
+  const injected =
+    "</pre><script>alert(1)</script><img src=x onerror=alert(1)>";
+  const artifacts = Object.fromEntries(
+    [
+      "report.json",
+      "patch.diff",
+      "env.sh",
+      "cli.json",
+      "configuration.json",
+    ].map((name) => [name, detailPath + "/" + name]),
+  );
+  const selected = {
+    round: 1,
+    original: {
+      execution_argv: ["/bin/sh", "launch.sh", injected],
+      script_args: ["--batch=8"],
+    },
+    effective: {
+      execution_argv: ["/bin/sh", "launch.sh", injected],
+      script_args: ["--batch=1"],
+    },
+    wrapper_replay: { kind: "captured_wrapper", source_relative: "train.py" },
+  };
+  const mocked = vi.fn((input: unknown) => {
+    if (input === detailPath)
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            run_id: id,
+            status: "budget_exceeded",
+            artifacts,
+            usage: {},
+          }),
+        ),
+      );
+    if (input === reportPath)
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            selected_configuration: selected,
+            pareto: {
+              frontier: [
+                {
+                  round: 1,
+                  artifacts: {
+                    manifest: "configurations/round-01/manifest.json",
+                  },
+                },
+              ],
+            },
+          }),
+        ),
+      );
+    if (input === detailPath + "/patch.diff")
+      return Promise.resolve(new Response(""));
+    return Promise.reject(new Error("Unexpected offline request"));
+  });
+  vi.stubGlobal("fetch", mocked);
+  vi.stubGlobal("EventSource", OfflineEvents);
+  const view = render(<App />);
+  await screen.findByText("Reproduce the selected configuration");
+  for (const name of ["cli.json", "configuration.json"])
+    expect(await screen.findByRole("link", { name })).toHaveAttribute(
+      "href",
+      detailPath + "/" + name,
+    );
+  expect(screen.getByRole("link", { name: "manifest" })).toHaveAttribute(
+    "href",
+    detailPath + "/configurations/round-01/manifest.json",
+  );
+  const preview = view.container.querySelector("pre.code-block");
+  expect(preview).toHaveTextContent("--batch=8");
+  expect(preview).toHaveTextContent("--batch=1");
+  expect(preview).toHaveTextContent(injected);
+  expect(view.container.querySelector("script")).toBeNull();
+  expect(view.container.querySelector('img[src="x"]')).toBeNull();
+  expect(
+    screen.getByText(/An empty diff can represent a CLI-only/),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText(/An ordinary shell does not apply it/),
+  ).toBeInTheDocument();
+  expect(
+    mocked.mock.calls.every(([url]) =>
+      [detailPath, reportPath, detailPath + "/patch.diff"].includes(
+        String(url),
+      ),
+    ),
+  ).toBe(true);
+});

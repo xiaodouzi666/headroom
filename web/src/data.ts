@@ -92,6 +92,8 @@ export function mergeEvents(
   return [...existing, incoming].sort((a, b) => a.sequence - b.sequence);
 }
 const ARTIFACTS = new Set([
+  "cli.json",
+  "configuration.json",
   "pareto.json",
   "pareto.md",
   "annotations.json",

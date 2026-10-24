@@ -1,0 +1,19 @@
+............FF...................................................        [100%]
+=================================== FAILURES ===================================
+___ test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline[blocked] ____
+tests/test_lab_deadline.py:120: in test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline
+    assert result["status"] == "timeout" and result["execution"]["timed_out"], result
+E   AssertionError: {'protocol': 'headroom.lab.v1', 'parameter_count': None, 'parameter_count_complete': False, 'parameter_count_source': 'lab_module_parameter_hooks', ...}
+E   assert ('timeout' == 'timeout'
+E     
+E       timeout and False)
+______________ test_real_cpu_parent_and_late_child_share_deadline ______________
+tests/test_lab_deadline.py:142: in test_real_cpu_parent_and_late_child_share_deadline
+    assert len(captures) == 2, result
+E   AssertionError: {'protocol': 'headroom.lab.v1', 'parameter_count': None, 'parameter_count_complete': False, 'parameter_count_source': 'lab_module_parameter_hooks', ...}
+E   assert 1 == 2
+E    +  where 1 = len([{'protocol': 'headroom.lab.v1', 'parameter_count': None, 'parameter_count_complete': False, 'parameter_count_source': 'lab_module_parameter_hooks', ...}])
+=========================== short test summary info ============================
+FAILED tests/test_lab_deadline.py::test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline[blocked]
+FAILED tests/test_lab_deadline.py::test_real_cpu_parent_and_late_child_share_deadline
+2 failed, 63 passed in 70.75s (0:01:10)

@@ -1,0 +1,64 @@
+{
+  "phase": "partial-first finalization source/tests/docs frozen",
+  "timestamp_utc": "2026-10-24T13:16:08.459390+00:00",
+  "supersedes_source_hashes_in": "receipt.json (original pre-GPU deadline validation remains preserved)",
+  "trigger": "Root GPU continuous-allocation stress run timed out with snapshot.pickle present but no raw result.json; no GPU replay performed by this agent.",
+  "trigger_evidence": "runs/deadline-gpu-20261024T131014Z/timed.json",
+  "source_sha256": {
+    "headroom/lab/hooks.py": "9be7e0adb7ef30a3cb6ad888098f50954944af8db3d09c7a198208ce5556bcc7",
+    "headroom/lab/deadline.py": "b01e85b63eeac8ef27f1f300cee15dda5656345332d0d67592366e4ec4726de9",
+    "headroom/lab/docker.py": "8276b44a6332ab466978216d7171036a522cbb192aa6bf23bdde3921308be899",
+    "headroom/lab/runner.py": "d16869bb52730917c398fa85e8d6baa1e3df8e48c92fe880af286e4ebae013aa",
+    "tests/test_lab_finalize.py": "92c2fbf5b1a131ab3065f21491c0b01260800311bb34b03c0a1901d12937dfaa",
+    "tests/test_lab_hooks.py": "c00b7f4be85d48c000ba7f4071b350ea6968a57ca832108fee69b24c2ed729ea",
+    "tests/test_lab_deadline.py": "7ffe7bc6427a78cc473ba912c7671851a9f9ca5371e643b89546c1227bda84e3",
+    "docs/LAB.md": "187ce878a3df2494161639ed92748f6499dca265dbf161d8b640168fa0b1fafd",
+    "docs/PLAN.md": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56"
+  },
+  "verification": [
+    {
+      "log": "pytest-partial-first.log",
+      "result": "26 passed in 10.20s"
+    },
+    {
+      "log": "pytest-partial-first-reviewed.log",
+      "result": "28 passed in 10.22s"
+    },
+    {
+      "log": "pytest-partial-first-final.log",
+      "result": "30 passed in 10.22s"
+    },
+    {
+      "result": "Scoped Ruff check and format --check passed for final hooks.py and test_lab_finalize.py"
+    }
+  ],
+  "guards": "Independent socket/DNS and real-project-.env audit guards installed before pytest; user target executes only in CPU Docker network none.",
+  "design": [
+    "Atomic partial core checkpoint precedes CUDA snapshot and exception formatting; allocator snapshot remains first CUDA operation.",
+    "Known steps/losses/deadline persist immediately; pre-snapshot peaks are labeled last-completed-update or unavailable. Measured capture-end peaks update the next checkpoint.",
+    "Partial capture_complete=false and finalization_incomplete=true are explicit; provisional completed/OOM execution is not an accepted status.",
+    "Small memory/traceback/environment artifacts precede unchanged full snapshot history; snapshot pickle/JSON atomic replacement prevents partial files masquerading as complete.",
+    "First checkpoint failure and interrupted snapshot always uninstall capture hooks; artifact failure preserves already observed timeout.",
+    "Final result only replaces partial after the original capture checks; compare_runs rejects partial captures."
+  ],
+  "unchanged": [
+    "Original hard deadline",
+    "Capture reserve min(5 seconds, 10 percent max_seconds)",
+    "200000 history entries",
+    "Original optimizer step/loss and target acceptance gates",
+    "No new provider or API calls"
+  ],
+  "raw_cpu_evidence": "cpu-evidence-partial-first.json",
+  "limitations": [
+    "Full large-history serialization within fixed reserve is not guaranteed.",
+    "Partial core capture is not GPU snapshot completeness or a passing repair.",
+    "Root will separately verify stress partial and small-history complete timeout on GPU."
+  ],
+  "report_sha256": {
+    "pytest-partial-first.log": "9f02391d311c95b30a56dc68b895ac7f2f6b5b7455a4994385a47726232b580c",
+    "pytest-partial-first-reviewed.log": "cbfbb40fcb7cab9e43369361ca5496f4cf147fb5f8636d06edeb77d679c7c76e",
+    "pytest-partial-first-final.log": "c8730943bee86305de5080d81c2c231d0c89933b1312273e3d707c8a06f30cdb",
+    "cpu-evidence-partial-first.json": "a577d58368eba4bfe8d9bca0a48c609743051601bb2515cd6e1ee2ad7d70fb35",
+    "offline_tests.py": "11df05cc17c9bd1ce6bec45fa26adef9460b402518a9dc3cadeecf4df24164aa"
+  }
+}

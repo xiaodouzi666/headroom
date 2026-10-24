@@ -540,6 +540,8 @@ def _run(
     directory.mkdir(mode=0o700)
     artifacts = directory / "artifacts"
     artifacts.mkdir()
+    control = directory / "control"
+    control.mkdir(mode=0o700)
     name = f"headroom-lab-{run_id}"
     metadata = {
         "run_id": run_id,
@@ -591,15 +593,26 @@ def _run(
                     environment=environment,
                     command=command,
                     device=device,
+                    control=control,
                 )
                 execution = docker.execute(
-                    create_args=args, name=name, run_dir=directory, max_seconds=max_seconds
+                    create_args=args,
+                    name=name,
+                    run_dir=directory,
+                    max_seconds=max_seconds,
+                    control_dir=control,
                 )
                 manifest = read_artifact_json(directory / "manifest.json")
                 records, inventory = _read_capture_roster(directory, manifest)
                 selected, inventory = _select_capture(
                     records, inventory, capture_target, script_mode=script_relative is not None
                 )
+                inventory["observed_timeout_captures"] = [
+                    row["capture_relative"]
+                    for row in records
+                    if (row["capture"] or {}).get("status") == "timeout"
+                    and (row["capture"] or {}).get("termination_reason") == "timeout"
+                ]
                 primary = next(
                     (row["capture"] for row in records if row["capture_relative"] == "artifacts"),
                     None,
@@ -618,6 +631,7 @@ def _run(
                     selected_capture_relative=selected_relative,
                 )
                 manifest.update(
+                    image_id=execution.get("image_id"),
                     execution_entrypoint=capture.get("execution_entrypoint"),
                     execution_capture=inventory,
                     selected_capture_relative=selected_relative,
@@ -663,7 +677,16 @@ def _run(
                 ):
                     result.update(status="error", reason="CAPTURE_INCOMPLETE")
                 result["image_id"] = execution.get("image_id")
-                if execution["timed_out"] or capture.get("status") == "timeout":
+                roster_timeout = (
+                    inventory["complete"]
+                    and bool(inventory["observed_timeout_captures"])
+                    and all(row["capture"]["status"] in {"completed", "timeout"} for row in records)
+                    and actual_exit in {1, 124}
+                    and state.get("OOMKilled") is False
+                    and state.get("Running") is False
+                    and not execution.get("error")
+                )
+                if execution["timed_out"] or capture.get("status") == "timeout" or roster_timeout:
                     result.update(status="timeout", reason="TIMEOUT")
                 elif execution.get("error"):
                     result.update(status="error", reason=execution["error"])

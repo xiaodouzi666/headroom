@@ -1,0 +1,124 @@
+{
+  "timestamp_utc": "2026-10-24T13:25:14.043559+00:00",
+  "base_commit": "ffb08a84155f7861a6e8bb8d9c6d4b3a84bc091f",
+  "scope": "Portable Lab, absolute deadlines with durable partial capture, selected-configuration delivery",
+  "backend": {
+    "passed": 1344,
+    "elapsed_seconds": 450.83424448990263,
+    "source_files_unchanged": true,
+    "receipt": "reports/continuation-full-tests-20261024T131727Z.json"
+  },
+  "frontend": {
+    "passed": 50,
+    "typecheck": true,
+    "production_build": true,
+    "logs": "reports/artifact-delivery-20261024"
+  },
+  "gpu": {
+    "passed": true,
+    "receipt": "reports/deadline-manual-gpu-20261024T131612Z.json",
+    "stress_capture_complete": false,
+    "stress_finalization_stage": "write:snapshot.json",
+    "scope": "Manual component regression, not model-generated repair or benchmark acceptance"
+  },
+  "components": [
+    "reports/portable-lab-20261024/receipt.json",
+    "reports/lab-deadline-20261024/receipt.json",
+    "reports/lab-deadline-20261024/receipt-partial-first.json",
+    "reports/configuration-handoff-20261024/receipt.json",
+    "reports/artifact-delivery-20261024/receipt.json"
+  ],
+  "browser": "reports/artifact-delivery-20261024/browser-baseline-check.json",
+  "preview": "reports/artifact-delivery-20261024/preview-refresh.json",
+  "failed_gpu_evidence_retained": "reports/deadline-manual-gpu-20261024T131014Z-failed.json",
+  "frontend_source_sha256": [
+    {
+      "path": "web/src/App.test.tsx",
+      "sha256": "27eb276227b788da3de231694672416d73bc110386035fe6e6d9c666cfe82eab"
+    },
+    {
+      "path": "web/src/App.tsx",
+      "sha256": "98ebb331dd9b5ddd2014de838989d0649b906069d8f51802ac685930f915d211"
+    },
+    {
+      "path": "web/src/DiffView.tsx",
+      "sha256": "3216e49582486d549e2f78f32a65377b0e89751d072e648b08117a8d00849ba1"
+    },
+    {
+      "path": "web/src/EvaluationView.test.tsx",
+      "sha256": "f30f284dda0dd22f862a263de4a5e1432bc9dc7881bbfe40d262820e4fb013ab"
+    },
+    {
+      "path": "web/src/EvaluationView.tsx",
+      "sha256": "dd999bb29c0ced5d33c7289e8caf19f40ea517567c60f1a83e0aff0d03234943"
+    },
+    {
+      "path": "web/src/MemoryChart.test.tsx",
+      "sha256": "447a5d03a124a2ae656a6139cf52a49ecfcf5dac2bb18824249a71d5e08f82ff"
+    },
+    {
+      "path": "web/src/MemoryChart.tsx",
+      "sha256": "8313b3c21db19fa4def4b2f622801907712eed599fb480a2b53229c3a0611f26"
+    },
+    {
+      "path": "web/src/Run.test.tsx",
+      "sha256": "937444ba01af6af306228770b4aa7627d306acf70a5b72cd030f1f181bb4ca74"
+    },
+    {
+      "path": "web/src/api.ts",
+      "sha256": "06372b6065e49ba70b10af3276c71aef9a22e2dbde6ae32b1c88c3171085411d"
+    },
+    {
+      "path": "web/src/components.tsx",
+      "sha256": "ae173d7f338ee59e802b6fb26d272feb36eed11ce7952271609bad6002fb7972"
+    },
+    {
+      "path": "web/src/data.test.ts",
+      "sha256": "d5115d9c1a37e836287251c6b0f912f1bff388b62800bede1517aa05bd643999"
+    },
+    {
+      "path": "web/src/data.ts",
+      "sha256": "855bd5c859256e9a77e8ee631fcd71baab840b0219169ab7a778b0b7c4202f82"
+    },
+    {
+      "path": "web/src/main.tsx",
+      "sha256": "b8c1e566187ea5d53bf9b4c2f4cd8fc8193b4958afa219e57d39b76153f4fb20"
+    },
+    {
+      "path": "web/src/styles.css",
+      "sha256": "cb0ba5b8b15d73a12d29d3ce0a3ae4249e16622be42c13c646f4f3d9851d1e2c"
+    },
+    {
+      "path": "web/src/test-setup.ts",
+      "sha256": "9b328c4843431fa76d8de00008fc159e95f99a840211085ff3b8f25e53d14409"
+    },
+    {
+      "path": "web/src/theme.ts",
+      "sha256": "fbaaf4cafb0849e6b50cb9a39d617cd1597765d014af8585b36576efba69fb97"
+    },
+    {
+      "path": "web/src/vite-env.d.ts",
+      "sha256": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5"
+    }
+  ],
+  "plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "checks_before_assembly": {
+    "ruff_check": true,
+    "ruff_format": true,
+    "precommit_all_files": true,
+    "staged_gitleaks": true,
+    "diff_check": true
+  },
+  "model_calls": 0,
+  "model_cost_usd": "0",
+  "live_profile_enabled": false,
+  "original_gates_unchanged": true,
+  "full_goal_complete": false,
+  "notes": [
+    "Large timeout capture may remain explicitly partial at the unchanged hard deadline; it cannot pass repair verification.",
+    "Clean candidate checkout proof used an external installed host Python and no local .venv/.env; this proves container independence, not a separately installed Conda environment.",
+    "Clean checkout proof preceded the later partial-finalization correction; complete final source is covered by guarded backend and GPU regression.",
+    "Python distributions are hash-locked; Ubuntu/apt image is not claimed bit-reproducible.",
+    "Raw recorded diff whitespace is explicitly exempted without changing its archived bytes; runtime source retains whitespace checks."
+  ]
+}

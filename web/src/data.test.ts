@@ -236,3 +236,14 @@ describe("availability evidence", () => {
     ).toBe(false);
   });
 });
+
+it("exposes only API-advertised selected CLI and configuration downloads", () => {
+  for (const name of ["cli.json", "configuration.json"]) {
+    const url = "/api/runs/" + id + "/" + name;
+    expect(artifactLink(id, name, { [name]: url })).toBe(url);
+    expect(artifactLink(id, name, {})).toBeNull();
+    expect(
+      artifactLink(id, name, { [name]: "https://other.invalid/" + name }),
+    ).toBeNull();
+  }
+});

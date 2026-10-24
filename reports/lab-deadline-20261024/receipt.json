@@ -1,0 +1,105 @@
+{
+  "phase": "final source/tests/docs frozen; CPU deadline validation on self-contained runtime completed",
+  "timestamp_utc": "2026-10-24T13:10:40.133945+00:00",
+  "base_commit": "ffb08a84155f7861a6e8bb8d9c6d4b3a84bc091f",
+  "source_sha256": {
+    "headroom/lab/deadline.py": "b01e85b63eeac8ef27f1f300cee15dda5656345332d0d67592366e4ec4726de9",
+    "headroom/lab/hooks.py": "df7f797954cb068f0226d1856d4a7289e6daf512e7e810baef30479f0d26c511",
+    "headroom/lab/envs.py": "a0d71fcbc4acc2eed00ea3613c79c7bfe0fb0e474435d49db72807af2f05434a",
+    "headroom/lab/docker.py": "8276b44a6332ab466978216d7171036a522cbb192aa6bf23bdde3921308be899",
+    "headroom/lab/runner.py": "d16869bb52730917c398fa85e8d6baa1e3df8e48c92fe880af286e4ebae013aa",
+    "tests/test_lab_deadline.py": "7ffe7bc6427a78cc473ba912c7671851a9f9ca5371e643b89546c1227bda84e3",
+    "tests/test_runner.py": "c18c38855ee8742c1561bd426a44c14c6d2d5b7ca706d459b0d0cf499a91ebb2",
+    "docs/LAB.md": "4f685a2f3ff01c6b0151f518bf4d73e0c599df6240526c5da05585930e620e46",
+    "docs/PLAN.md": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+    "headroom/lab/runtime_image.py": "938be05da0d96f00bf7cb40c82c0931e0854eda811c4c1386895cc4b09281e45",
+    "tests/test_lab_docker.py": "27a5f6418fab3809c14d4f601c4fd584bb5bc9bc54e503b3f44da979d91cfc27",
+    "tests/test_hf_cache.py": "d047964cfb7a0c34dcaafa24127101def9b444488f5b2c937028224726a7cb2f",
+    "docs/LAB_RUNTIME.md": "6b5dca9ea3d34395409192f350d5a5d78426840d9e625c6770b2395a360acb55"
+  },
+  "image": {
+    "tag": "headroom-lab:py312-cu124-runtime-v1",
+    "image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7",
+    "uv_lock_sha256": "9ef946a38727f9a18c1b951067b5c5c40d154a7bb8f973ab2ed6500cbdd1d1df",
+    "build_receipt": "reports/portable-lab-20261024/image-verified.json",
+    "selection": "create uses preflight immutable image_id; actual execution image_id is in result and manifest; no host venv mount"
+  },
+  "formula": "hard=start+max_seconds; capture=hard-min(5 seconds, 10%*max_seconds)",
+  "clock_contract": "same boot ID and explicit equal CLOCK_MONOTONIC offsets; namespace inode is diagnostic only",
+  "verification": [
+    {
+      "log": "pytest-first.log",
+      "result": "10 failed, 54 passed in 21.85s",
+      "cause": "Initial namespace-inode equality was too strict; real Docker uses a distinct zero-offset time namespace."
+    },
+    {
+      "log": "pytest-second.log",
+      "result": "2 failed, 63 passed in 70.75s",
+      "cause": "Fixtures assumed masking only main-thread SIGALRM prevents Python dispatch and that a PID1 parent's exit permits every child to serialize."
+    },
+    {
+      "log": "pytest-blocked.log",
+      "result": "1 passed in 7.29s",
+      "basis": "Signal-masked native pipe read exercises the unchanged hard watchdog."
+    },
+    {
+      "log": "pytest-final.log",
+      "result": "65 passed in 73.17s"
+    },
+    {
+      "log": "pytest-reviewed.log",
+      "result": "73 passed in 100.50s",
+      "basis": "Includes persistent deadline after swallowed exception, 20 updates after timeout, safe descendant-timeout aggregation, and negative root/child states."
+    },
+    {
+      "log": "pytest-portable-runtime.log",
+      "result": "75 passed in 107.63s (0:01:47)",
+      "basis": "Same guarded 4-file CPU suite on verified portable runtime plus real newline/comma mount-path rejection; actual image ID consistency checked."
+    },
+    {
+      "result": "Scoped Ruff check and Ruff format --check passed.",
+      "basis": "After tests, only Ruff import grouping in docker.py changed; no runtime logic changed."
+    }
+  ],
+  "guard": "pytest runner installs independent DNS/socket denial and real-project-.env audit denial before importing pytest; CUDA_VISIBLE_DEVICES is empty; actual user targets are CPU Docker network-none only.",
+  "raw_cpu_evidence": "runs/deadline-cpu-20261024-portable; cpu-evidence-portable-index.json preserves fourteen genuine CPU runs including three 20-step seeded AdamW runs.",
+  "preserved_behavior": [
+    "Timeout remains timeout even when caught by target or followed by optimizer updates.",
+    "Natural no-optimizer exit remains completed with zero steps and empty loss series; verification policy is not relaxed.",
+    "Root/child errors, incomplete rosters, OOMKilled and inconsistent root exit cannot be masked by aggregated descendant soft timeout.",
+    "Host watchdog starts cleanup at its existing deadline; existing bounded Docker teardown follows, not a newly enlarged runtime."
+  ],
+  "limitations": [
+    "No GPU/model API calls; CPU artifact completeness is not CUDA snapshot acceptance.",
+    "A parent's exit can prevent child serialization; both capture-ready deadlines remain observable, and incomplete roster remains explicit.",
+    "Blocked or ignored alarm, slow initialization or serialization may still require hard termination without complete artifacts.",
+    "Natural inference capture is supported, but zero optimizer updates/missing backward losses remain n/a and cannot satisfy training repair acceptance.",
+    "Final GPU deadline/capture acceptance and full repository regression belong to root follow-up, not this CPU receipt."
+  ],
+  "changes_frozen": true,
+  "review": "payment_readiness independently reviewed sticky timeout, complete-roster child timeout aggregation, and immutable-image/no-host-venv wiring; no unresolved blocking finding reported.",
+  "report_sha256": {
+    "clock-offset-probe/docker-create.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "clock-offset-probe/probe.json": "18c404d248adc3d4adc5f275ebd71cf7b319bfd62ca7e29b067b72199cf496f9",
+    "clock-offset-probe/source/clock.py": "a3cab06357cb9850cce42f9f3f41565db45969218abcf64eb7a0d8c521166323",
+    "clock-offset-probe/source/clock.py.executed.txt": "48379aedb7f140c16b80f6ffc45cea09a3c35b9c5336c2e2209cbdb9c7b34727",
+    "clock-offset-probe/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "clock-offset-probe/stdout.log": "501c305c15840e70ac8e627ba43ce3c96f250c4ec74340858756ff350b56583d",
+    "clock-probe/docker-create.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "clock-probe/probe.json": "7b488f6a6bceb1ba82f786ab5c3d401155d2e6ed7ec3589ff1d3ea691dcf7a5a",
+    "clock-probe/source/clock.py": "49149af824f921fa15230120075524f31db9e43e9f339dfa54ed80a4045050fa",
+    "clock-probe/source/clock.py.executed.txt": "a766b23669b764fd91fce964ec8d5179293baf26e4755abfc215719e9ea30a4e",
+    "clock-probe/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "clock-probe/stdout.log": "2f90c3eb566f71a01ca5955ed37197d782598f521f08f22e067e538615af0b7d",
+    "cpu-evidence-index.json": "161c429c64cd3c8d8f1371577097a4f8a8912a0b01a225b0e42b685e62aee880",
+    "cpu-evidence-portable-index.json": "f0feb2d82ade3233d8891c2a8c2faac0218f1ef0d3c4161212f8cdb2705b6d51",
+    "offline_tests.py": "11df05cc17c9bd1ce6bec45fa26adef9460b402518a9dc3cadeecf4df24164aa",
+    "pytest-blocked.log": "cbcf61cdc1ba1ff3c6e79a9901c83129adf24b7f9b3bf3e3526d7b4cf9c2cf95",
+    "pytest-final.log": "ace8aa85374023a4309236f113b839a5f0d4f62124fc9560dc69571dc7d15d2d",
+    "pytest-first.log": "97ed7fc1de30f6088a642f94189bded8689823d9621055d199d7c1703c880cd9",
+    "pytest-portable-runtime.log": "66a8d8259aa6890c672d8587460bd793e1c509a229fce61b870bdd14d4015592",
+    "pytest-reviewed.log": "d43b2669f8ff125106d0288625c32ba0a68bff5f9d7217fc8a8bee9730065bc9",
+    "pytest-second.log": "0deb565873ad657e24574c5af42be3277ed34678bff417f1cc5540424fe88182",
+    "receipt-old-image.json": "faf73fa252c34338f309f03a9f351664a16c515d873d22d5e5e8be2ade4e3b87"
+  }
+}

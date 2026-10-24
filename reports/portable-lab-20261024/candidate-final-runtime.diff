@@ -1,0 +1,15 @@
+--- .cache/portable-checkout/20261024T130927Z-e8cf25eb/checkout/headroom/lab/docker.py	2026-10-24 15:09:28.000000000 +0200
++++ headroom/lab/docker.py	2026-10-24 15:09:57.030528847 +0200
+@@ -11,8 +11,10 @@
+ from headroom.lab.cache import validated_hf_cache
+ from headroom.lab.deadline import NANOSECONDS, publish_deadline
+ from headroom.lab.envs import HOST_ENV
+-from headroom.lab.runtime_image import IMAGE  # noqa: F401 - compatibility export for callers
+-from headroom.lab.runtime_image import require_runtime_image
++from headroom.lab.runtime_image import (
++    IMAGE,  # noqa: F401 - compatibility export for callers
++    require_runtime_image,
++)
+ 
+ LOG_LIMIT = 8 * 1024 * 1024
+ 

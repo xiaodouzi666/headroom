@@ -81,6 +81,7 @@ def container_environment(
         "MKL_NUM_THREADS": "4",
         "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
         "CUDA_VISIBLE_DEVICES": "0" if device == "cuda" else "",
+        "HEADROOM_CONTROL_DIR": "/control",
     }
     if allocator_conf:
         result["PYTORCH_CUDA_ALLOC_CONF"] = allocator_conf

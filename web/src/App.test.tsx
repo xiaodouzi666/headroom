@@ -237,3 +237,16 @@ it.each(["until_target", "bounded_pareto"])(
     expect(body.budget).toBe("0.60");
   },
 );
+
+it("distinguishes an explicitly empty patch from missing patch evidence", () => {
+  const view = render(<DiffView diff="" recorded />);
+  expect(
+    screen.getByText("No source changes in this patch"),
+  ).toBeInTheDocument();
+  expect(screen.queryByText("No patch produced")).not.toBeInTheDocument();
+  view.rerender(<DiffView diff="" />);
+  expect(screen.getByText("No patch produced")).toBeInTheDocument();
+  expect(
+    screen.queryByText("No source changes in this patch"),
+  ).not.toBeInTheDocument();
+});

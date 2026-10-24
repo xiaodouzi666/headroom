@@ -40,11 +40,13 @@ Run on a Linux NVIDIA/Docker host with Python 3.12, uv, Docker GPU support and s
 
 ```bash
 git clone https://github.com/xiaodouzi666/headroom.git && cd headroom
-uv sync
+uv sync --locked --python 3.12
 bash scripts/build_lab_image.sh
 cp .env.example .env && chmod 600 .env
 uv run headroom fix scenarios/s1_batch_too_big/train.py
 ```
+
+The host CLI can use uv-managed, Conda, or system Python 3.12. The Lab image owns its Python and hash-locked dependencies; it does not mount the host `.venv`. The build downloads public dependencies into the image using a small retained allowlist context, with no keys or run data. See [Portable Lab runtime](docs/LAB_RUNTIME.md) for disk requirements and image checks.
 
 Without a reviewed live profile, the final command exits 78 and writes a partial report before GPU/model work. Configure the private key, confirmed credit/spending authorization and actual model/pricing/capability evidence using [Runtime setup](docs/RUNTIME.md). The [CPU prompt audit](docs/PROMPT_PREFLIGHT.md) can inspect complete requests without enabling model calls. No payment is initiated by these commands.
 

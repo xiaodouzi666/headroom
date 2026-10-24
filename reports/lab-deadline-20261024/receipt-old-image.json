@@ -1,0 +1,78 @@
+{
+  "phase": "old-image deadline validation; new self-contained runtime integration pending",
+  "timestamp_utc": "2026-10-24T13:05:20.782392+00:00",
+  "base_commit": "ffb08a84155f7861a6e8bb8d9c6d4b3a84bc091f",
+  "source_sha256": {
+    "headroom/lab/deadline.py": "b01e85b63eeac8ef27f1f300cee15dda5656345332d0d67592366e4ec4726de9",
+    "headroom/lab/hooks.py": "df7f797954cb068f0226d1856d4a7289e6daf512e7e810baef30479f0d26c511",
+    "headroom/lab/envs.py": "a0d71fcbc4acc2eed00ea3613c79c7bfe0fb0e474435d49db72807af2f05434a",
+    "headroom/lab/docker.py": "50a1db94b45dfec468b5f66e3b2f8b9db2307b93645b1fbf0ecd36aa1c87b478",
+    "headroom/lab/runner.py": "7962a3b2b4c35a63206997d2b57db8970b66708ca4ed272f35b495c012f7dc17",
+    "tests/test_lab_deadline.py": "43a9362f6665999b91966435ec1b735a3968cb1c4632339dfe144a278146c2c8",
+    "tests/test_runner.py": "c18c38855ee8742c1561bd426a44c14c6d2d5b7ca706d459b0d0cf499a91ebb2",
+    "docs/LAB.md": "5de0969c47059a220959f173fcc46032c7399d9317b9d65906da76eab15ac929",
+    "docs/PLAN.md": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56"
+  },
+  "formula": "hard=start+max_seconds; capture=hard-min(5 seconds, 10%*max_seconds)",
+  "clock_contract": "same boot ID and explicit equal CLOCK_MONOTONIC offsets; namespace inode is diagnostic only",
+  "verification": [
+    {
+      "log": "pytest-first.log",
+      "result": "10 failed, 54 passed in 21.85s",
+      "cause": "Initial namespace-inode equality was too strict; real Docker uses a distinct zero-offset time namespace."
+    },
+    {
+      "log": "pytest-second.log",
+      "result": "2 failed, 63 passed in 70.75s",
+      "cause": "Fixtures assumed masking only main-thread SIGALRM prevents Python dispatch and that a PID1 parent's exit permits every child to serialize."
+    },
+    {
+      "log": "pytest-blocked.log",
+      "result": "1 passed in 7.29s",
+      "basis": "Signal-masked native pipe read exercises the unchanged hard watchdog."
+    },
+    {
+      "log": "pytest-final.log",
+      "result": "65 passed in 73.17s"
+    },
+    {
+      "log": "pytest-reviewed.log",
+      "result": "73 passed in 100.50s",
+      "basis": "Includes persistent deadline after swallowed exception, 20 updates after timeout, safe descendant-timeout aggregation, and negative root/child states."
+    }
+  ],
+  "guard": "pytest runner installs independent DNS/socket denial and real-project-.env audit denial before importing pytest; CUDA_VISIBLE_DEVICES is empty; actual user targets are CPU Docker network-none only.",
+  "raw_cpu_evidence": "runs/deadline-cpu-20261024; report cpu-evidence-index.json indexes ten durable complete/partial original runs.",
+  "preserved_behavior": [
+    "Timeout remains timeout even when caught by target or followed by optimizer updates.",
+    "Natural no-optimizer exit remains completed with zero steps and empty loss series; verification policy is not relaxed.",
+    "Root/child errors, incomplete rosters, OOMKilled and inconsistent root exit cannot be masked by aggregated descendant soft timeout.",
+    "Host watchdog starts cleanup at its existing deadline; existing bounded Docker teardown follows, not a newly enlarged runtime."
+  ],
+  "limitations": [
+    "No GPU/model API calls; CPU artifact completeness is not CUDA snapshot acceptance.",
+    "A parent's exit can prevent child serialization; both capture-ready deadlines remain observable, and incomplete roster remains explicit.",
+    "Blocked or ignored alarm, slow initialization or serialization may still require hard termination without complete artifacts."
+  ],
+  "report_sha256": {
+    "clock-offset-probe/docker-create.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "clock-offset-probe/probe.json": "18c404d248adc3d4adc5f275ebd71cf7b319bfd62ca7e29b067b72199cf496f9",
+    "clock-offset-probe/source/clock.py": "a3cab06357cb9850cce42f9f3f41565db45969218abcf64eb7a0d8c521166323",
+    "clock-offset-probe/source/clock.py.executed.txt": "48379aedb7f140c16b80f6ffc45cea09a3c35b9c5336c2e2209cbdb9c7b34727",
+    "clock-offset-probe/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "clock-offset-probe/stdout.log": "501c305c15840e70ac8e627ba43ce3c96f250c4ec74340858756ff350b56583d",
+    "clock-probe/docker-create.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "clock-probe/probe.json": "7b488f6a6bceb1ba82f786ab5c3d401155d2e6ed7ec3589ff1d3ea691dcf7a5a",
+    "clock-probe/source/clock.py": "49149af824f921fa15230120075524f31db9e43e9f339dfa54ed80a4045050fa",
+    "clock-probe/source/clock.py.executed.txt": "a766b23669b764fd91fce964ec8d5179293baf26e4755abfc215719e9ea30a4e",
+    "clock-probe/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "clock-probe/stdout.log": "2f90c3eb566f71a01ca5955ed37197d782598f521f08f22e067e538615af0b7d",
+    "cpu-evidence-index.json": "161c429c64cd3c8d8f1371577097a4f8a8912a0b01a225b0e42b685e62aee880",
+    "offline_tests.py": "11df05cc17c9bd1ce6bec45fa26adef9460b402518a9dc3cadeecf4df24164aa",
+    "pytest-blocked.log": "cbcf61cdc1ba1ff3c6e79a9901c83129adf24b7f9b3bf3e3526d7b4cf9c2cf95",
+    "pytest-final.log": "ace8aa85374023a4309236f113b839a5f0d4f62124fc9560dc69571dc7d15d2d",
+    "pytest-first.log": "97ed7fc1de30f6088a642f94189bded8689823d9621055d199d7c1703c880cd9",
+    "pytest-reviewed.log": "d43b2669f8ff125106d0288625c32ba0a68bff5f9d7217fc8a8bee9730065bc9",
+    "pytest-second.log": "0deb565873ad657e24574c5af42be3277ed34678bff417f1cc5540424fe88182"
+  }
+}

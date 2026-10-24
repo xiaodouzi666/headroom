@@ -88,7 +88,11 @@ def test_capture_rejects_bare_success_claim(tmp_path):
 
 def test_docker_arguments_mount_only_required_directories(tmp_path, monkeypatch):
     monkeypatch.setattr(docker, "docker_binary", lambda: "/usr/bin/docker")
-    for name in (".venv", "headroom", "source", "artifacts"):
+    verified_id = "sha256:" + "a" * 64
+    monkeypatch.setattr(
+        docker, "require_runtime_image", lambda *args, **kwargs: {"image_id": verified_id}
+    )
+    for name in ("headroom", "source", "artifacts"):
         (tmp_path / name).mkdir()
     command = docker.create_arguments(
         name="headroom-test",
@@ -100,9 +104,11 @@ def test_docker_arguments_mount_only_required_directories(tmp_path, monkeypatch)
         device="cpu",
     )
     mounts = [command[index + 1] for index, value in enumerate(command) if value == "--mount"]
-    assert len(mounts) == 4
+    assert command[-2:] == [verified_id, "train.py"]
+    assert len(mounts) == 3
+    assert not any("destination=/opt/venv" in mount or ".venv" in mount for mount in mounts)
     assert not any(f"source={tmp_path}," in mount for mount in mounts)
-    assert sum(mount.endswith(",readonly") for mount in mounts) == 3
+    assert sum(mount.endswith(",readonly") for mount in mounts) == 2
     assert "--gpus" not in command
     assert command[command.index("--network") + 1] == "none"
     assert "--read-only" in command

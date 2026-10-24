@@ -113,7 +113,12 @@ while True:
     assert result.get("reason") == "TIMEOUT", result
     assert result["cleanup_verified"], result
     assert (Path(result["artifact_dir"]) / "child-started.txt").exists()
-    assert 29 <= elapsed < 65, elapsed
+    control = result["execution"]["deadline_control"]
+    assert control["hard_deadline_monotonic_ns"] - control["started_monotonic_ns"] == 30_000_000_000
+    assert control["capture_reserve_seconds"] == 3
+    # A 27-second observation window leaves three seconds inside the same
+    # 30-second hard limit for capture. It must not sleep to fill that reserve.
+    assert 26 <= elapsed < 65, elapsed
 
 
 def test_full_cpp_symbolization_dependency_is_available_without_cuda(source, tmp_path):

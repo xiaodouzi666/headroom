@@ -655,3 +655,97 @@ def test_repository_module_argv_survives_validation_preparation_and_queue(settin
     assert captured[0].script_args == ["--label", "two words"]
     assert captured[0].repository_mode is True
     assert captured[0].script.endswith("/package/train.py")
+
+
+def test_selected_after_downloads_follow_real_orchestration_and_retained_round(settings, tmp_path):
+    from test_orchestrator import search_run
+
+    (tmp_path / "pipeline").mkdir()
+    result, source_store, _, _, _ = search_run(
+        tmp_path / "pipeline",
+        [
+            {"before": "VALUE = 1\n", "after": "VALUE = 2\n", "peak": 20, "target": True},
+            {"before": "VALUE = 2\n", "after": "VALUE = 3\n", "peak": 21, "target": True},
+        ],
+        max_rounds=2,
+        search_mode="bounded_pareto",
+    )
+    try:
+        real_row = source_store.get_run(result["run_id"])
+        settings.run_root = Path(result["run_dir"]).parent
+        app = create_app(settings, worker=completed_worker)
+        with TestClient(app) as client:
+            bootstrap = client.post("/api/runs", json={"script_text": "pass"}).json()["run_id"]
+            wait_done(client, bootstrap)
+            owner = app.state.store.get_run(bootstrap)["api_owner"]
+            app.state.store.create_run(result["run_id"], {**real_row, "api_owner": owner})
+            directory = Path(result["run_dir"])
+            # HTTP tests use image byte markers; this is not a rendered GPU artifact.
+            for number in (1, 2):
+                (directory / f"rounds/{number:02d}/evidence/timeline.png").write_bytes(
+                    f"fixture round {number}".encode()
+                )
+            old = directory / "evidence/after"
+            old.mkdir(parents=True)
+            (old / "timeline.png").write_bytes(b"stale legacy image")
+            url = f"/api/runs/{result['run_id']}"
+            links = client.get(url).json()["artifacts"]
+            assert client.get(links["timeline-after.png"]).content == b"fixture round 1"
+            expected = directory / "rounds/01/evidence/evidence.json"
+            assert client.get(links["evidence-after.json"]).json() == json.loads(
+                expected.read_text()
+            )
+            manifest = client.get(links["configuration.json"]).json()
+            assert manifest["round"] == 1
+            assert client.get(links["cli.json"]).json()["effective"] == []
+            other = TestClient(app)
+            try:
+                assert other.get(links["timeline-after.png"]).status_code == 404
+                assert other.get(links["configuration.json"]).status_code == 404
+            finally:
+                other.close()
+            app.state.store.update_run(result["run_id"], after_evidence_status="unavailable")
+            assert "timeline-after.png" not in client.get(url).json()["artifacts"]
+            assert client.get(url + "/timeline-after.png").status_code == 404
+            assert client.get(url + "/evidence-after.json").status_code == 404
+            assert client.get(url + "/configuration.json").status_code == 200
+    finally:
+        source_store.close()
+
+
+@pytest.mark.parametrize(
+    "kept",
+    [None, {}, {"round": True}, {"round": 0}, {"round": 7}, {"round": "../01"}, {"round": []}],
+)
+def test_invalid_selected_round_never_falls_back_to_historical_artifacts(settings, kept):
+    app = create_app(settings, worker=completed_worker)
+    with TestClient(app) as client:
+        run_id = client.post("/api/runs", json={"script_text": "pass"}).json()["run_id"]
+        wait_done(client, run_id)
+        directory = settings.run_root / run_id / "evidence/after"
+        directory.mkdir(parents=True)
+        (directory / "timeline.png").write_bytes(b"must not expose stale evidence")
+        app.state.store.update_run(run_id, kept=kept)
+        url = f"/api/runs/{run_id}"
+        assert "timeline-after.png" not in client.get(url).json()["artifacts"]
+        assert client.get(url + "/timeline-after.png").status_code == 404
+        assert client.get(url + "/configuration.json").status_code == 404
+
+
+def test_selected_evidence_and_manifest_never_follow_symlinks(settings, tmp_path):
+    app = create_app(settings, worker=completed_worker)
+    with TestClient(app) as client:
+        run_id = client.post("/api/runs", json={"script_text": "pass"}).json()["run_id"]
+        wait_done(client, run_id)
+        directory = settings.run_root / run_id
+        folder = directory / "rounds/01/evidence"
+        folder.mkdir(parents=True)
+        outside = tmp_path / "outside.txt"
+        outside.write_text("outside fixture")
+        (folder / "timeline.png").symlink_to(outside)
+        (directory / "configurations").mkdir()
+        (directory / "configurations/round-01").symlink_to(tmp_path, target_is_directory=True)
+        app.state.store.update_run(run_id, kept={"round": 1}, after_evidence_status="available")
+        url = f"/api/runs/{run_id}"
+        assert client.get(url + "/timeline-after.png").status_code == 404
+        assert client.get(url + "/configuration.json").status_code == 404

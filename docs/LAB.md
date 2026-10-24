@@ -166,3 +166,90 @@ formal T1.1 acceptance uses the later **2050-event** report cited above.
 
 This acceptance does not certify T1.2 peak composition/fragmentation, model
 diagnosis, patching, numerical equivalence, end-to-end repair, or T2.1 search.
+
+
+## Observation deadline within the existing hard limit
+
+Production Lab launches now publish control/deadline.json after container
+creation and immediately before start. That directory is mounted read-only at
+/control. The host and every captured Python child use this one absolute
+CLOCK_MONOTONIC deadline; a later child does not receive a new full max_seconds.
+
+The host hard deadline remains start + max_seconds. The internal observation
+deadline is earlier by min(5 seconds, 10% of max_seconds), reserving time inside
+the original limit for snapshot capture and serialization. For max_seconds=30,
+the observation window ends at 27 seconds and the hard cutoff remains 30 seconds.
+This is a maximum window, not a minimum runtime: the Lab does not sleep merely
+to consume the reserve. Existing global job deadlines are unchanged, and the
+existing bounded container teardown still runs after exit or a hard cutoff.
+
+The control record and capture result retain both deadlines, the reserve, the
+remaining window seen by that Python process, and clock identity observations.
+On this host Docker uses a distinct time namespace inode with the same
+monotonic offset. Compatibility therefore requires a matching boot ID and an
+explicitly readable, equal CLOCK_MONOTONIC offset from /proc/self/timens_offsets.
+An inode is recorded for diagnostics, not treated as proof of a different clock.
+Missing/mismatched offsets or malformed/missing control records fail setup
+before the target main. A target-writable /out file is never accepted as the
+deadline authority, and the control mount path cannot be redirected there.
+
+The internal SIGALRM marks deadline_reached and raises CaptureTimeout while
+enough time remains to attempt the existing capture finalization. If the target
+catches BaseException and returns or performs more optimizer updates afterward,
+that persistent deadline flag still makes the final result timeout. It remains
+status=timeout, including for a script without an optimizer. An ignored alarm, blocked native operation, slow
+setup, oversized capture or other failure to finish is still cut off by the
+original host limit; complete evidence is not guaranteed when work cannot
+respond or serialize within the reserve. The result distinguishes a complete
+internal timeout from execution.timed_out=true hard termination. Neither is
+converted to completed. A completed helper followed by a complete child timeout
+is reported as timeout only when the whole roster contains completed/timeout
+records and the root exit/state agrees. A separate child error, missing capture,
+root exit 0/7 or container OOM kill cannot be hidden by that aggregation. Each
+capture-ready.json also saves its observed deadline.
+If a parent exits first, Docker can end a child before the child serializes its
+final record; the existing incomplete capture roster remains explicit, even
+though both ready records prove they used the same cutoff.
+
+Capture finalization first writes an atomic partial result. It records the real
+execution status, already observed optimizer steps/losses, deadline state, and
+available peaks; unknown values remain null. Peaks copied before the final CUDA
+query are explicitly labeled as last-completed-update observations. The allocator
+snapshot remains the first CUDA operation during exception finalization. Once
+the end-of-capture peaks are measured, a new checkpoint preserves them before
+serialization.
+
+Every checkpoint has capture_complete=false, finalization_incomplete=true and a
+finalization_stage. A timeout stays timeout; provisional completed/OOM execution
+is labeled error/capture_incomplete, with its original execution_status retained.
+Small memory/traceback/environment artifacts are written before the unchanged
+full snapshot history. Snapshot pickle and JSON use temporary files followed by
+atomic replacement. artifact_writes distinguishes pending, complete and failed
+files; an interrupted temporary file is not a complete artifact. Only final
+serialization and the original capture checks can produce the final result.
+
+If the hard cutoff interrupts a large history conversion, the host preserves
+that partial result and original artifact directory. It cannot be used as a
+complete repair capture or a passing target, and missing snapshot JSON does not
+become a synthetic timeline. This changes neither the 200,000-entry history
+setting nor the observation reserve or hard deadline. It cannot guarantee full
+serialization of arbitrary history within a fixed reserve.
+
+A naturally returning no-optimizer script remains completed with steps=0 and an
+empty loss sequence. This does not manufacture training updates, step timing,
+loss equivalence or a passing repair target. Those existing verification limits
+are unchanged; see VERIFY.md.
+
+Offline reproduction:
+
+    source scripts/env.sh
+    .venv/bin/python reports/lab-deadline-20261024/offline_tests.py -q tests/test_lab_deadline.py tests/test_lab_hooks.py tests/test_lab_docker.py tests/test_runner.py tests/test_lab_finalize.py
+
+Tests use CPU-only Docker with no network and an independent host DNS/socket and
+real-project-.env read guard. Clock probes and preserved failed test logs live
+under reports/lab-deadline-20261024/. No model or GPU acceptance is implied.
+
+The self-contained runtime is described in [LAB_RUNTIME.md](LAB_RUNTIME.md).
+Lab create uses the immutable image ID returned by its contract/lock preflight,
+without mounting the host virtual environment. The execution result and run
+manifest both preserve the actual container image ID.

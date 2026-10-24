@@ -159,6 +159,65 @@ def _pareto_report(value):
     return value
 
 
+def _selected_configuration(run):
+    """Describe only the persisted selection; never reconstruct a shell command."""
+    kept = run.get("kept")
+    if not isinstance(kept, dict) or type(kept.get("round")) is not int:
+        return {}
+    if not 1 <= kept["round"] <= 6:
+        return {}
+    request = run.get("request")
+    request = request if isinstance(request, dict) else {}
+
+    def argv(value):
+        return value if isinstance(value, list) and all(isinstance(v, str) for v in value) else None
+
+    def string(value):
+        return value if isinstance(value, str) else None
+
+    descriptor = kept.get("execution_entrypoint")
+    wrapper = None
+    if isinstance(descriptor, dict) and descriptor.get("kind") == "captured_wrapper":
+        wrapper = {
+            key: argv(descriptor.get(key)) for key in ("root_argv", "python_argv", "script_args")
+        }
+        wrapper.update(
+            {
+                key: string(descriptor.get(key))
+                for key in ("source_relative", "startup_cwd_relative", "module")
+            }
+        )
+        wrapper["kind"] = "captured_wrapper"
+    artifacts = {}
+    raw_artifacts = kept.get("artifacts")
+    if isinstance(raw_artifacts, dict):
+        for key, filename in (
+            ("patch", "patch.diff"),
+            ("env", "env.sh"),
+            ("cli", "cli.json"),
+            ("manifest", "manifest.json"),
+        ):
+            expected = f"configurations/round-{kept['round']:02d}/{filename}"
+            if raw_artifacts.get(key) == expected:
+                artifacts[key] = expected
+    return {
+        "round": kept["round"],
+        "script": string(request.get("script")),
+        "original": {
+            "execution_argv": argv(request.get("execution_argv")),
+            "script_args": argv(request.get("script_args")),
+            "allocator_conf": string(request.get("allocator_conf")),
+        },
+        "effective": {
+            "execution_argv": argv(kept.get("execution_argv")),
+            "script_args": argv(kept.get("effective_cli")),
+            "allocator_conf": string(kept.get("allocator_conf")),
+        },
+        "wrapper_replay": wrapper,
+        "artifacts": artifacts,
+    }
+
+
 def _search_report(value):
     """Preserve explicit search metadata; historical runs have no inferred mode."""
     if not isinstance(value, dict):
@@ -396,6 +455,7 @@ def build_report(
         "rounds": rounds,
         "pareto": _pareto_report(run.get("pareto")),
         "search": _search_report(run.get("search")),
+        "selected_configuration": _selected_configuration(run),
         "verification": verification,
         "allocator": {
             "cached_free_bytes": header.get("cached_free_bytes"),
@@ -577,7 +637,7 @@ def render_markdown(report):
         lines.append("| none | unknown | unknown | unverified | No configuration kept |")
     for point in frontier:
         links = []
-        for key in ("patch", "env", "cli"):
+        for key in ("patch", "env", "cli", "manifest"):
             if point.get("artifacts", {}).get(key):
                 path = quote(_relative(point["artifacts"][key]), safe="/-._~")
                 links.append(f"[{key}]({path})")
@@ -600,6 +660,45 @@ def render_markdown(report):
         if key in report["artifacts"]:
             path = quote(_relative(report["artifacts"][key]), safe="/-._~")
             lines.append(f"[{key}]({path})")
+    lines += [
+        "",
+        "## Reproduce the selected configuration",
+        "",
+        (
+            "The source diff does not include CLI arguments or environment changes. "
+            "An empty diff can represent a CLI-only or environment-only repair."
+        ),
+        (
+            "Apply the patch to the original source, apply the recorded environment changes, "
+            "and use the effective target arguments from cli.json. Review configuration.json "
+            "(the selected manifest) for recorded execution metadata."
+        ),
+        (
+            "Argument arrays below preserve token boundaries; they are evidence, not shell commands. "
+            "Null means not recorded or not applicable; no invocation is inferred."
+        ),
+    ]
+    selected = report.get("selected_configuration", {})
+    if selected:
+        lines.append("Selected round: " + _text(selected["round"]) + ".")
+        for key, relative in selected.get("artifacts", {}).items():
+            link = quote(_relative(relative), safe="/-._~")
+            lines.append(f"[Selected {_text(key)}]({link})")
+        preview = {key: value for key, value in selected.items() if key != "artifacts"}
+        lines += [
+            "",
+            "<pre>" + html.escape(json.dumps(preview, indent=2, ensure_ascii=False)) + "</pre>",
+        ]
+        if selected.get("wrapper_replay") is not None:
+            lines.append(
+                "Wrapper replay requires the manifest's execution_entrypoint and execution_argv, "
+                "the mapped source tree, cli.json effective arguments and recorded environment. "
+                "Lab run_script uses that descriptor to apply and verify the target-argument override. "
+                "An ordinary shell does not apply this override: update the launcher or configuration "
+                "explicitly before running outside Lab."
+            )
+    else:
+        lines.append("No selected configuration recorded; no replay command is inferred.")
     lines += ["", "## Verification", "", "| Check | Result |", "|---|---|"]
     checks = report["verification"].get("checks", {})
     if isinstance(checks, dict):
@@ -741,6 +840,14 @@ def generate_report(output_dir, run, **kwargs):
                 if not artifact.is_relative_to(output) or not artifact.is_file():
                     report["warnings"].append(f"Retained configuration artifact unavailable: {key}")
                     del point["artifacts"][key]
+    selected = report.get("selected_configuration", {})
+    for key, relative in list(selected.get("artifacts", {}).items()):
+        try:
+            with open_regular(output, relative):
+                pass
+        except (OSError, ValueError):
+            report["warnings"].append(f"Selected configuration artifact unavailable: {key}")
+            del selected["artifacts"][key]
     for row in report["rounds"]:
         _load_round_diff(output, row, report["warnings"])
     report["unavailable_artifacts"] = missing

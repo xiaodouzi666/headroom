@@ -6,8 +6,13 @@ import datetime
 import json
 import os
 import subprocess
+import sys
 import uuid
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from headroom.lab.runtime_image import IMAGE, require_runtime_image
 
 
 def main():
@@ -16,7 +21,7 @@ def main():
     parser.add_argument("--report", default=None, help="Optional report path inside the project")
     parser.add_argument("--timeout", type=int, default=60)
     args = parser.parse_args()
-    root = Path(__file__).resolve().parents[1]
+    root = ROOT
     cases = sorted((root / "scenarios").glob("s*/train.py"))
     if args.scenario:
         cases = [p for p in cases if p.parent.name in args.scenario]
@@ -28,6 +33,7 @@ def main():
         for k, v in os.environ.items()
         if k not in {"NEBIUS_API_KEY", "TAVILY_API_KEY", "HF_TOKEN"}
     }
+    runtime_image = require_runtime_image(root, executable="docker", environment=safe_env)
     for script in cases:
         name = "headroom-smoke-" + uuid.uuid4().hex[:12]
         command = [
@@ -59,15 +65,13 @@ def main():
             "/work",
             "--mount",
             f"type=bind,src={root / 'scenarios'},dst=/cases,readonly",
-            "--mount",
-            f"type=bind,src={root / '.venv'},dst=/opt/venv,readonly",
             "--env",
             "PYTHONDONTWRITEBYTECODE=1",
             "--env",
             "OMP_NUM_THREADS=2",
             "--entrypoint",
             "/opt/venv/bin/python",
-            "headroom-lab:py312-cu124",
+            runtime_image["image_id"],
             f"/cases/{script.parent.name}/train.py",
             "--tiny",
             "--device",
@@ -119,6 +123,8 @@ def main():
         "at": datetime.datetime.now(datetime.UTC).isoformat(),
         "scope": "tiny CPU plumbing only; full GPU calibration and T0.6 acceptance pending",
         "network": "none",
+        "requested_image": IMAGE,
+        "runtime_image": runtime_image,
         "source_read_only": True,
         "api_keys_mounted": False,
         "cases": rows,

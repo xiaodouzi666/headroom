@@ -1,0 +1,52 @@
+{
+  "recorded_at": "2026-10-24T12:56:33.017379+00:00",
+  "base_head": "ffb08a84155f7861a6e8bb8d9c6d4b3a84bc091f",
+  "scope": "selected configuration handoff; offline implementation evidence only",
+  "files": {
+    "headroom/report.py": "8a299321b789f9f7b42d883a14f53396cd68fca224455d7736d8ead1a3a14200",
+    "tests/test_report.py": "9665f413e0bce2fc77dab0e49d8408f297ef2188c6cc95c642340833b1bba6d8",
+    "web/src/App.tsx": "52facdce363384fed5479efe19f87a7365043ba54fce9166ad1df18507e70433",
+    "web/src/data.ts": "855bd5c859256e9a77e8ee631fcd71baab840b0219169ab7a778b0b7c4202f82",
+    "web/src/Run.test.tsx": "937444ba01af6af306228770b4aa7627d306acf70a5b72cd030f1f181bb4ca74",
+    "web/src/data.test.ts": "d5115d9c1a37e836287251c6b0f912f1bff388b62800bede1517aa05bd643999",
+    "docs/STORAGE_REPORTS.md": "f2c3b23febe8b0ba9ad300f5f7e3d56befaccd883d0a9fe94516d9cb9ce06cfc"
+  },
+  "checks": {
+    "python": {
+      "passed": 96,
+      "log": "pytest-first.log",
+      "suites": [
+        "tests/test_report.py",
+        "tests/test_search.py",
+        "tests/test_bounded_search.py"
+      ]
+    },
+    "web": {
+      "passed": 27,
+      "log": "frontend-first.log",
+      "suites": [
+        "src/Run.test.tsx",
+        "src/data.test.ts"
+      ]
+    },
+    "typecheck": true,
+    "production_build": true,
+    "build_log": "build.log",
+    "ruff": "clean"
+  },
+  "guards": {
+    "python": "offline_tests.py denies DNS/socket/project .env reads; CUDA_VISIBLE_DEVICES empty",
+    "node": "node-guard.cjs denies network and project .env reads; loaded for vitest/typecheck/build"
+  },
+  "after_tests": "Only report prose changed from complete execution contract to recorded execution metadata; no behavior changed.",
+  "gpu_calls": 0,
+  "provider_calls": 0,
+  "credentials_read": false,
+  "live_repair_acceptance": false,
+  "notes": [
+    "Selected argv is evidence, never a runnable shell command.",
+    "Historical absent selection does not invent metadata.",
+    "configuration.json is supplied by root-owned API resolver; no manifest copied.",
+    "Root owns complete regression and commit/push."
+  ]
+}

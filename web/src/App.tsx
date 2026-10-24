@@ -593,7 +593,7 @@ function RunPage({ runId }: { runId: string }) {
     [report, setReport] = useState<Dict>({}),
     [evidence, setEvidence] = useState<Dict>({}),
     [events, setEvents] = useState<RunEvent[]>([]),
-    [diff, setDiff] = useState(""),
+    [diff, setDiff] = useState<string | null>(null),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
     [stream, setStream] = useState("Connecting");
@@ -712,6 +712,8 @@ function RunPage({ runId }: { runId: string }) {
     summary = record(report.summary);
   const downloads = [
     "patch.diff",
+    "cli.json",
+    "configuration.json",
     "report.md",
     "report.json",
     "env.sh",
@@ -973,7 +975,7 @@ function RunPage({ runId }: { runId: string }) {
                 }
               >
                 <Suspense fallback={<Loading />}>
-                  <DiffView diff={diff} />
+                  <DiffView diff={diff ?? ""} recorded={diff !== null} />
                 </Suspense>
                 {rows(report.rounds).map((row, index) => (
                   <RoundDetails
@@ -1043,6 +1045,56 @@ function RunPage({ runId }: { runId: string }) {
                   Only comparable, verified configurations establish a tradeoff.
                   Unknown or shared timing does not establish a speed advantage.
                 </p>
+              </Section>
+              <Section
+                title="Reproduce the selected configuration"
+                kicker="Downloads and execution"
+              >
+                <p className="caption">
+                  The source diff does not include CLI arguments or environment
+                  changes. An empty diff can represent a CLI-only or
+                  environment-only repair. Apply the patch to the original
+                  source, apply env.sh changes, and use the effective target
+                  arguments from cli.json. configuration.json contains the
+                  selected manifest.
+                </p>
+                {Object.keys(record(report.selected_configuration)).length ? (
+                  <>
+                    <p className="caption">
+                      Argument arrays preserve token boundaries; they are
+                      recorded evidence, not shell commands. Null means not
+                      recorded or not applicable.
+                    </p>
+                    <pre className="code-block">
+                      {JSON.stringify(
+                        Object.fromEntries(
+                          Object.entries(
+                            record(report.selected_configuration),
+                          ).filter(([key]) => key !== "artifacts"),
+                        ),
+                        null,
+                        2,
+                      )}
+                    </pre>
+                    {record(report.selected_configuration).wrapper_replay !=
+                      null && (
+                      <p className="caption">
+                        Wrapper replay requires the manifest&apos;s
+                        execution_entrypoint and execution_argv, the mapped
+                        source tree, effective target arguments and recorded
+                        environment. Lab applies and verifies the targeted
+                        override. An ordinary shell does not apply it: update
+                        the launcher or configuration before running outside
+                        Lab.
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="muted small-copy">
+                    No selected configuration recorded; no replay command is
+                    inferred.
+                  </p>
+                )}
               </Section>
               <Section title="Did the change hold up?" kicker="Verification">
                 <div className="table-wrap">
@@ -1398,7 +1450,7 @@ function RoundDetails({
             <summary>Inspect round {number} patch</summary>
             {expanded && (
               <Suspense fallback={<Loading />}>
-                <DiffView diff={String(row.diff)} />
+                <DiffView diff={String(row.diff)} recorded />
               </Suspense>
             )}
           </details>

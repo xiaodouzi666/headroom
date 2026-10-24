@@ -1,0 +1,3 @@
+from pathlib import Path
+
+print(Path("/proc/self/timens_offsets").read_text())

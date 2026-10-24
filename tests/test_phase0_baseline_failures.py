@@ -52,8 +52,6 @@ def cpu_canary(monkeypatch):
                 "1",
                 "--tmpfs",
                 "/tmp:rw,nosuid,nodev,size=64m",
-                "--mount",
-                f"type=bind,src={ROOT / '.venv'},dst=/opt/venv,readonly",
                 "--entrypoint",
                 "/opt/venv/bin/python",
                 image,
@@ -73,7 +71,7 @@ def cpu_canary(monkeypatch):
             "expected_mode": "oom",
             "script": "scripts/check_gpu_baselines.py",
         }
-        return BASELINE.run_case(case, directory, "headroom-lab:py312-cu124")
+        return BASELINE.run_case(case, directory, BASELINE.IMAGE)
 
     return run
 

@@ -98,7 +98,7 @@ last_event_id. An early needs_human event does not end the stream before worker
 finalization. Idle comments keep the connection alive. Unknown cleanup ends the
 affected stream explicitly with that uncertainty.
 
-Whitelisted artifacts: report.md, report.json, patch.diff, env.sh, cli.json,
+Whitelisted artifacts: report.md, report.json, patch.diff, env.sh, cli.json, configuration.json,
 pareto.json, pareto.md, annotations.json, evidence.json, evidence-after.json,
 evidence.md, timeline-before.png and timeline-after.png. They map only to generated
 paths beneath run_root/{generated UUID}. Every directory and leaf is opened with
@@ -107,6 +107,20 @@ from redirecting the read. Nonregular/missing/oversized files are rejected.
 There is no arbitrary path download endpoint. Files use attachment and nosniff
 headers. Existing web/dist is safely served with an index fallback for frontend
 routes; static symlinks and traversal are rejected, and API 404s stay API 404s.
+
+Selected after-evidence aliases resolve to the recorded kept round:
+`evidence-after.json` and `timeline-after.png` read
+`rounds/XX/evidence/evidence.json` and `rounds/XX/evidence/timeline.png`.
+A reverted later round is never selected. Explicitly unavailable selected
+evidence returns 404 even if a legacy after file remains. Historical imports
+without selection metadata retain the original fixed after layout.
+
+`configuration.json` downloads the selected
+`configurations/round-XX/manifest.json`, including the retained original and
+effective execution metadata. Download it with `cli.json`, `env.sh` and
+`patch.diff`: changing only arguments or environment can legitimately produce
+an empty source diff. These aliases retain session/replay authorization,
+regular-file size limits and no-symlink traversal; callers never supply paths.
 
 ## Isolation, limits and lifecycle
 

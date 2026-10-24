@@ -10,11 +10,15 @@ import os
 import re
 import shlex
 import subprocess
+import sys
 import time
 import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from headroom.lab.runtime_image import IMAGE, require_runtime_image
+
 SAFE_ENV = {
     k: v for k, v in os.environ.items() if k not in {"NEBIUS_API_KEY", "TAVILY_API_KEY", "HF_TOKEN"}
 }
@@ -113,8 +117,6 @@ def docker_command(case, name, image):
         "/tmp:rw,nosuid,nodev,size=512m",
         "--tmpfs",
         "/work:rw,nosuid,nodev,size=64m",
-        "--mount",
-        f"type=bind,src={ROOT / '.venv'},dst=/opt/venv,readonly",
         "--env",
         "PYTHONDONTWRITEBYTECODE=1",
         "--env",
@@ -370,18 +372,20 @@ def main():
                 for split in ("train", "val")
             ):
                 initial.update(ready=False, reason="nanoGPT input data missing")
-    image = command(
-        ["docker", "image", "inspect", "--format", "{{.Id}}", "headroom-lab:py312-cu124"]
-    )
-    if image.returncode:
-        initial.update(ready=False, reason="Lab Docker image unavailable")
+    runtime_image = None
+    try:
+        runtime_image = require_runtime_image(ROOT, executable="docker", environment=SAFE_ENV)
+    except (OSError, ValueError, RuntimeError) as error:
+        initial.update(ready=False, reason=str(error))
     run_id = (
         datetime.datetime.now(datetime.UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
     )
     report = {
         "run_id": run_id,
         "preflight": initial,
-        "image": image.stdout.strip(),
+        "image": runtime_image["image_id"] if runtime_image else None,
+        "runtime_image": runtime_image,
+        "requested_image": IMAGE,
         "check_only": args.check_only,
         "workloads_launched": 0,
         "cases": [],
@@ -391,7 +395,7 @@ def main():
         directory = ROOT / "runs" / "phase0-baselines" / run_id
         directory.mkdir(parents=True)
         for case in cases:
-            result = run_case(case, directory, image.stdout.strip())
+            result = run_case(case, directory, runtime_image["image_id"])
             report["cases"].append(result)
             report["workloads_launched"] += int(result["status"] != "blocked")
             print(case["id"], result["status"], flush=True)

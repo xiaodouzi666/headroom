@@ -130,3 +130,33 @@ retained real T1.2 acceptance metadata when present. The actual s2 optimizer
 share remains below its unchanged threshold; s5's high cache gap remains
 unconfirmed fragmentation. These artifacts are used as read-only test inputs;
 no GPU workload or provider request is made by these tests.
+
+
+## Selected configuration handoff
+
+Reports now expose `selected_configuration` from the persisted `run.kept` and
+original request. It preserves the selected round, original/effective execution
+argv, target arguments and allocator setting. Argument arrays preserve token
+boundaries; they are displayed as escaped JSON, never executed or converted into
+a shell command. Missing historical metadata stays null or absent rather than
+being reconstructed from the last attempted round.
+
+The Run page's main downloads include `cli.json` and `configuration.json`.
+The latter is the selected tier's `manifest.json`, served through the API
+without creating another manifest. The report's retained configuration table
+links patch, environment, CLI and manifest files; its selected configuration
+section repeats the files associated with the displayed selection.
+
+A source diff does not include CLI arguments or environment changes. A CLI-only
+or environment-only repair can legitimately have an empty diff. Reproduction
+requires the original source, source patch, recorded environment and effective
+target arguments. For captured wrappers, the manifest also supplies the
+execution argv and target descriptor; Lab uses these to apply and verify its
+targeted override. An ordinary shell does not consume this descriptor. Users
+running outside Lab must explicitly update their launcher/configuration; see
+[Command-mode repair](COMMAND_MODE.md#reproducing-a-kept-wrapper-configuration).
+
+The JSON preview is an audit aid, not an automatic execution tool or a new
+repair acceptance claim. Offline tests cover CLI-only selection, retained
+selection after a later reverted round, descriptor/argument display, unknown
+historical fields, file links and HTML escaping.

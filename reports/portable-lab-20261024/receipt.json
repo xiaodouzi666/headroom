@@ -1,0 +1,131 @@
+{
+  "created_at": "2026-10-24T13:11:17.635398+00:00",
+  "status": "frozen",
+  "scope": "T5.1 portable self-contained Lab runtime; no live model or GPU execution by this agent",
+  "image": {
+    "image": "headroom-lab:py312-cu124-runtime-v1",
+    "image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7",
+    "runtime_contract": "python312-self-contained-v1",
+    "uv_lock_sha256": "9ef946a38727f9a18c1b951067b5c5c40d154a7bb8f973ab2ed6500cbdd1d1df",
+    "size_bytes": 5681452589,
+    "repo_digests": [],
+    "created": "2026-10-24T15:03:31.667857166+02:00"
+  },
+  "retained_build_context": ".cache/lab-build/20261024T125636Z-40028903",
+  "build_context_manifest": {
+    "image": "headroom-lab:py312-cu124-runtime-v1",
+    "uv_lock_sha256": "9ef946a38727f9a18c1b951067b5c5c40d154a7bb8f973ab2ed6500cbdd1d1df",
+    "locked_package_lines": 93,
+    "files": {
+      "verify_runtime.py": "ba2d7429dddfa42aa18a490a5c44edd5dd05ad3d1d3290600d04494d102650a7",
+      "requirements.txt": "c3bbd6e116cd6adafe5f4be51eb62381abf7d6b957e0b2d260635d433e3fb897",
+      "lock.sha256": "c8fec1d77197fb0426e6f8c7bba05702e762c869d01f9877b7fb49066e97aceb",
+      "Dockerfile": "400fc504bc940a5b3c784c2522a1018404ad0d5d924a6996e1860669518a395a",
+      ".dockerignore": "fdb34accf5cfbaf888b578fa42db4be4828576afbbdf6291b918cfa9768e92af"
+    },
+    "source_context": "explicit allowlist; no project source, .env, runs, caches or host venv"
+  },
+  "build_log": "build.log",
+  "production_dependency_lock": "uv.lock exact versions and accepted wheel SHA256 hashes; 93 production dependency lines",
+  "source_sha256": {
+    "README.md": "c5776744326eff0d0c07aa2442901c44b2d0bc18082260192d53bc5e04ed51c1",
+    "docs/LAB_RUNTIME.md": "6b5dca9ea3d34395409192f350d5a5d78426840d9e625c6770b2395a360acb55",
+    "headroom/lab/runtime_image.py": "938be05da0d96f00bf7cb40c82c0931e0854eda811c4c1386895cc4b09281e45",
+    "lab-image/Dockerfile": "400fc504bc940a5b3c784c2522a1018404ad0d5d924a6996e1860669518a395a",
+    "lab-image/verify_runtime.py": "ba2d7429dddfa42aa18a490a5c44edd5dd05ad3d1d3290600d04494d102650a7",
+    "scripts/build_lab_image.py": "ce17023844014f818b64c55379de46ee40788c639c949e11531cd88a89e72676",
+    "scripts/build_lab_image.sh": "240c44464b1ad16bf0198b404ab4c04ab316025bca1ba07aaff5810860c14a51",
+    "scripts/check_gpu_baselines.py": "11b701d0f7b31e0c01e07ee5e40b07705533ee865001d3202d065c86ad899d1d",
+    "scripts/check_scenario_smoke.py": "9e232a2ccb513c8ab34d4a35d008b9e6b9f21787ddf639ceaa851c6a703b2659",
+    "tests/test_runtime_image.py": "944ba5f4f16190b4b7803189c69cb74ce3f6d7c2e9c94d82a132a02fa85d315b",
+    "tests/test_phase0_runtime_image.py": "7ce2a57101aff9297bc3f4f56a2edf406ba036b31731e064aad19661fbfaf965",
+    "tests/test_phase0_baseline_failures.py": "4768b3676431776a5006c48c453de606d8f5ec97d3cab3bbf8ee584538d705eb",
+    "tests/test_lab_docker.py": "27a5f6418fab3809c14d4f601c4fd584bb5bc9bc54e503b3f44da979d91cfc27",
+    "tests/test_hf_cache.py": "d047964cfb7a0c34dcaafa24127101def9b444488f5b2c937028224726a7cb2f",
+    "headroom/lab/docker.py": "8276b44a6332ab466978216d7171036a522cbb192aa6bf23bdde3921308be899",
+    "headroom/lab/runner.py": "d16869bb52730917c398fa85e8d6baa1e3df8e48c92fe880af286e4ebae013aa"
+  },
+  "candidate_checkout": {
+    "kind": "candidate_tracked_tree_not_committed",
+    "base_commit": "ffb08a84155f7861a6e8bb8d9c6d4b3a84bc091f",
+    "candidate_tree": "9ed58379f2e1cffea8efb7cf6b9f06926913bb28",
+    "checkout": "/home/xiaodouzi/workspace/headroom/.cache/portable-checkout/20261024T130927Z-e8cf25eb/checkout",
+    "file_count": 693,
+    "archive_sha256": "27da2cce3ea58b3cb4a9f9b654ed1b700932163be13a90ca8fb224f3a3e1b409",
+    "real_index_unchanged": true,
+    "checkout_has_venv": false,
+    "checkout_has_env": false,
+    "added_source_files": [
+      "docs/LAB_RUNTIME.md",
+      "headroom/lab/runtime_image.py",
+      "headroom/lab/deadline.py",
+      "lab-image/verify_runtime.py",
+      "scripts/build_lab_image.py",
+      "tests/test_lab_deadline.py",
+      "tests/test_runtime_image.py",
+      "tests/test_phase0_runtime_image.py"
+    ]
+  },
+  "clean_checkout_cpu": "clean-checkout-summary.json",
+  "candidate_final_difference": "Only docker.py equivalent grouped import formatting after candidate tree; preserved candidate-final-runtime.diff. Execution semantics unchanged.",
+  "tests": [
+    {
+      "scope": "runtime image / Phase0 interfaces (independent DNS/socket and real .env guard)",
+      "result": "23 passed in 0.08s",
+      "log": "offline-revision-2.txt"
+    },
+    {
+      "scope": "Lab mount / HF cache units, real Docker test deferred to next scope",
+      "result": "36 passed, 1 deselected in 0.11s",
+      "log": "mount-unit-tests.txt"
+    },
+    {
+      "scope": "Real CPU Docker: HF readonly cache; Phase0 CPU error classification and timeout cleanup",
+      "result": "3 passed in 8.39s",
+      "log": "cpu-integration-tests.txt"
+    }
+  ],
+  "scoped_lint": "lint.txt (all checks passed; 12 files already formatted)",
+  "core_agent_regression": {
+    "result": "75 passed in 107.63s",
+    "log": "../lab-deadline-20261024/pytest-portable-runtime.log",
+    "source": "other agent verified final runtime wiring"
+  },
+  "preserved_initial_failure": "prepare-initial.log (requirements marker whitespace parser; fixed before build)",
+  "source_frozen": true,
+  "gpu_executed_by_this_agent": false,
+  "provider_called": false,
+  "real_env_read": false,
+  "profile_enabled": false,
+  "credentials_changed": false,
+  "limitations": [
+    "Python dependencies are hash-locked. Ubuntu tag and apt OS packages are not pinned for bit-for-bit OS rebuild reproducibility.",
+    "Image was locally built and has an image ID but no registry RepoDigest; no push performed.",
+    "Clean candidate tracked tree is not yet a committed release. It has no .venv or .env; host launcher used existing external system-linked Python3.12.3 venv. Actual Conda/uv-managed interpreters were not separately installed or claimed tested.",
+    "CPU execution/capture evidence does not validate GPU behavior or real model-generated repair. Root coordinates separate GPU/full-suite evidence.",
+    "Original images, failed evidence and historical runs remain intact."
+  ],
+  "evidence_sha256": {
+    "build.log": "8b30ddfd465885dd945c68efe01240ece82dfbaa89999b0ae21e9ebe18c3c380",
+    "candidate-checkout.json": "3055ecbd7057a87912e804941d03f4a0e5ba15b32844c83862afd835d9eb279a",
+    "candidate-final-runtime.diff": "2cf043431fb8b02889f5edddbfc6f5eaecd9c963fd9220a078055f5b5f671a84",
+    "clean-checkout-cpu.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "clean-checkout-cpu.log": "690ae7f0e38b1b485d94cd6099f633db203e6b13b159ef01b6ba44a12a8be570",
+    "clean-checkout-summary.json": "c7c26a8a75f5f5dea05ebde226ecfcbfe3216030a2a8a9867b3d5e41ce8a0249",
+    "context-prepared.json": "a5d25fa8db32f8320dbcf9c4108befeb9e26f98ac8fd1a6b815e3b29d3a66967",
+    "cpu-integration-tests.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "cpu-integration-tests.txt": "3806da609b52fe7db1b301c65cf451bdb30ae117bf43add5f2966b6d6dbefa43",
+    "cpu_clean_checkout_smoke.py": "e5e8e1842981161ebd239cd5504af40b53cf19bc04d18fcdf610851e8df7624e",
+    "image-inspect.json": "c75883775a9e289c708959cf9e5f4582d41368bd37cdd76695aec773a08b08ce",
+    "image-verified.json": "d05f1a68e1730d8d5a98f9c2ce3563bc421ee8df25187b8744d7d27bac9b4809",
+    "lint.txt": "f89b5905d1ee7ee5fa75e6f76b46c3aebd944a531bb138a53c505a8f711e2fcd",
+    "mount-unit-tests.txt": "06ef4f873a9d8891d20b4de3c47696b12bf90b0ca2406a081ad41ae7bc1914c9",
+    "offline-final.txt": "31d7a7543f29b08db6836b2c8a4ca306d16fa414a038bd5b022f24e8f1ccdeec",
+    "offline-revision-1.txt": "27a8f69d8de78603a09a636d83fc3e73cfbace01b895cce544979726c6a18a82",
+    "offline-revision-2.txt": "614e544c270f7bd0389babf1c69d82509429bd083bb1694b7a57efbae140246d",
+    "offline-tests.txt": "cdf51e5c680baeb49e2b88f7c365e2d38bc9bd2601753b595585fb2e3097055a",
+    "prepare-initial.log": "13958f48f657ebe7237ebf800cfd20a161c15ee0c6f2baba2f15ef4062999758",
+    "prepare_candidate_checkout.py": "cc2e89d8fcf51761e1dfccdc3820132b8c14bd7b28f4c5ec613b482ae905fa09",
+    "wrapper-prepared.json": "4977b605f2ad809d63a28657e025c32fc4b3e9131cccdd7baa30bde76322fbc2"
+  }
+}

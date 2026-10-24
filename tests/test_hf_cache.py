@@ -87,8 +87,9 @@ def test_real_docker_reads_local_hf_config_and_cannot_modify_cache(tmp_path):
     # Dedicated synthetic project cache, not the user's HOME or a credential-bearing Hub cache.
     project = tmp_path / "project"
     project.mkdir()
-    for name in (".venv", "headroom"):
-        (project / name).symlink_to(PROJECT_ROOT / name, target_is_directory=True)
+    (project / "headroom").symlink_to(PROJECT_ROOT / "headroom", target_is_directory=True)
+    (project / "uv.lock").write_bytes((PROJECT_ROOT / "uv.lock").read_bytes())
+    assert not (project / ".venv").exists()
     make_cache(project)
     source, output, run_dir = (tmp_path / name for name in ("source", "output", "run"))
     for directory in (source, output, run_dir):
@@ -139,14 +140,17 @@ Path("/out/cache-check.json").write_text(json.dumps({"readonly": readonly, "offl
     assert validated_hf_cache(project)
 
 
-def test_mutable_host_hub_cache_is_never_selected_or_mounted(tmp_path):
+def test_mutable_host_hub_cache_is_never_selected_or_mounted(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        docker, "require_runtime_image", lambda *args, **kwargs: {"image_id": docker.IMAGE}
+    )
     hub = tmp_path / ".cache/huggingface/hub"
     hub.mkdir(parents=True)
     (hub / "version.txt").write_text("1")
     (hub.parent / "token").write_text("offline-canary-not-a-real-token")
     previous = {path: path.read_bytes() for path in hub.parent.rglob("*") if path.is_file()}
     assert validated_hf_cache(tmp_path) is None
-    for name in (".venv", "headroom", "source", "output"):
+    for name in ("headroom", "source", "output"):
         (tmp_path / name).mkdir()
     args = docker.create_arguments(
         name="headroom-offline-cache-selection",

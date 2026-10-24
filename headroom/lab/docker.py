@@ -9,9 +9,13 @@ import time
 from pathlib import Path
 
 from headroom.lab.cache import validated_hf_cache
+from headroom.lab.deadline import NANOSECONDS, publish_deadline
 from headroom.lab.envs import HOST_ENV
+from headroom.lab.runtime_image import (
+    IMAGE,  # noqa: F401 - compatibility export for callers
+    require_runtime_image,
+)
 
-IMAGE = "headroom-lab:py312-cu124"
 LOG_LIMIT = 8 * 1024 * 1024
 
 
@@ -31,7 +35,9 @@ def create_arguments(
     environment: dict,
     command: list[str],
     device: str,
+    control: Path | None = None,
 ) -> list[str]:
+    runtime = require_runtime_image(project_root, executable=docker_binary(), environment=HOST_ENV)
     args = [
         docker_binary(),
         "create",
@@ -64,7 +70,6 @@ def create_arguments(
     if device == "cuda":
         args.extend(["--gpus", "device=0"])
     for host, destination, readonly in (
-        (project_root / ".venv", "/opt/venv", True),
         (project_root / "headroom", "/runtime/headroom", True),
         (source, "/source", True),
         (output, "/out", False),
@@ -77,6 +82,12 @@ def create_arguments(
         if "," in str(host) or "\n" in str(host):
             raise ValueError("mount paths cannot contain commas or newlines")
         args.extend(["--mount", mount])
+    if control is not None:
+        if control.is_symlink() or not control.is_dir():
+            raise ValueError("Deadline control must be a regular directory")
+        if "," in str(control) or "\n" in str(control):
+            raise ValueError("Deadline control mount path is invalid")
+        args.extend(["--mount", f"type=bind,source={control},destination=/control,readonly"])
     cache = validated_hf_cache(project_root)
     if cache is not None:
         if "," in str(cache) or "\n" in str(cache):
@@ -84,7 +95,7 @@ def create_arguments(
         args.extend(["--mount", f"type=bind,source={cache},destination=/hf-cache,readonly"])
     for key, value in sorted(environment.items()):
         args.extend(["--env", f"{key}={value}"])
-    return [*args, IMAGE, *command[1:]]
+    return [*args, runtime["image_id"], *command[1:]]
 
 
 def inspect_container(name: str) -> dict:
@@ -159,7 +170,14 @@ def cleanup_container(name: str) -> dict:
     return {"cleanup_verified": absent, "cleanup_attempts": attempts, "cleanup_inspect": inspection}
 
 
-def execute(*, create_args: list[str], name: str, run_dir: Path, max_seconds: float) -> dict:
+def execute(
+    *,
+    create_args: list[str],
+    name: str,
+    run_dir: Path,
+    max_seconds: float,
+    control_dir: Path | None = None,
+) -> dict:
     """Bound execution and log size, then remove the entire container process tree."""
     result = {"timed_out": False, "returncode": None}
     process = None
@@ -171,6 +189,12 @@ def execute(*, create_args: list[str], name: str, run_dir: Path, max_seconds: fl
         if created.returncode != 0:
             result.update(error="CONTAINER_CREATE_FAILED", returncode=created.returncode)
             return result
+        if control_dir is not None:
+            control = publish_deadline(control_dir, max_seconds)
+            result["deadline_control"] = control
+            deadline_ns = control["hard_deadline_monotonic_ns"]
+        else:
+            deadline_ns = time.monotonic_ns() + int(max_seconds * NANOSECONDS)
         process = subprocess.Popen(
             [docker_binary(), "start", "--attach", name],
             env=HOST_ENV,
@@ -178,7 +202,6 @@ def execute(*, create_args: list[str], name: str, run_dir: Path, max_seconds: fl
             stderr=subprocess.PIPE,
             start_new_session=True,
         )
-        deadline = time.monotonic() + max_seconds
         saved = {"stdout": 0, "stderr": 0}
         with (
             selectors.DefaultSelector() as selector,
@@ -189,12 +212,12 @@ def execute(*, create_args: list[str], name: str, run_dir: Path, max_seconds: fl
             selector.register(process.stdout, selectors.EVENT_READ, "stdout")
             selector.register(process.stderr, selectors.EVENT_READ, "stderr")
             while selector.get_map():
-                if time.monotonic() >= deadline:
+                if time.monotonic_ns() >= deadline_ns:
                     result["timed_out"] = True
                     process.kill()
                     break
                 for key, _ in selector.select(
-                    timeout=min(0.2, max(0, deadline - time.monotonic()))
+                    timeout=min(0.2, max(0, (deadline_ns - time.monotonic_ns()) / NANOSECONDS))
                 ):
                     data = os.read(key.fileobj.fileno(), 65536)
                     if not data:
@@ -205,7 +228,7 @@ def execute(*, create_args: list[str], name: str, run_dir: Path, max_seconds: fl
                     saved[key.data] += min(len(data), remaining)
             result["returncode"] = process.wait(timeout=5)
             result["log_limit_bytes_per_stream"] = LOG_LIMIT
-    except (OSError, subprocess.SubprocessError) as error:
+    except (OSError, ValueError, subprocess.SubprocessError) as error:
         result["error"] = f"CONTAINER_EXECUTION_FAILED: {error}"
     finally:
         if process is not None:

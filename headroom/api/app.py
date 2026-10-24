@@ -27,7 +27,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from headroom.api.availability import AvailabilityMonitor
 from headroom.api.evaluations import register_evaluations
 from headroom.api.queue import TERMINAL, AdmissionError, RunQueue
-from headroom.api.security import ARTIFACTS, RUN_ID, job_directory, open_regular
+from headroom.api.security import ARTIFACTS, RUN_ID, artifact_relative, job_directory, open_regular
 from headroom.lab.runner import PROJECT_ROOT
 from headroom.orchestrator import FixRequest, Policy
 from headroom.repository import (
@@ -411,8 +411,9 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
         result = _public_run(row)
         result["usage"] = store.usage(run_id)
         result["artifacts"] = {}
-        for name, (relative, _) in ARTIFACTS.items():
+        for name in ARTIFACTS:
             try:
+                relative = artifact_relative(row, name)
                 with open_regular(job_directory(settings.run_root, run_id), relative):
                     result["artifacts"][name] = f"/api/runs/{run_id}/{name}"
             except (OSError, ValueError):
@@ -476,11 +477,12 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
 
     @app.get("/api/runs/{run_id}/{artifact}")
     def download(run_id: str, artifact: str, request: Request):
-        accessible(run_id, request)
+        row = accessible(run_id, request)
         if artifact not in ARTIFACTS:
             raise HTTPException(404, "Artifact not found")
-        relative, media = ARTIFACTS[artifact]
+        _, media = ARTIFACTS[artifact]
         try:
+            relative = artifact_relative(row, artifact)
             handle = open_regular(job_directory(settings.run_root, run_id), relative)
         except (OSError, ValueError):
             raise HTTPException(404, "Artifact unavailable") from None

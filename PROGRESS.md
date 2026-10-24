@@ -14,17 +14,17 @@ All work, caches, runs, and media remain on azuki.
 | T0.4 | Token Factory 探测（P0，~1h） | 首次目录/chat实测通过；完整验收待办 | reports/tokenfactory-minimal-20261024.json; two catalogues200; exact Super/Nano chats; full JSON/tools/Ultra staircase/concurrency pending;93 guarded probe tests |
 | T0.5 | Tavily 探测（P1，~15min） | 已验收 | reports/t0.5-acceptance.json; live exit0, 4/4 operations, 2 factual FEEDBACK entries, observed schema; API total3 credits matches UI3/1000 |
 | T0.6 | 场景集 v0（P0，~2h） | 已验收 | reports/t0.6-acceptance.json; 3 synthetic CUDA OOM <7s, 5 reclaim completed20 steps with measured README peaks; pinned nanoGPT CUDA OOM11.489s; all cleanup verified |
-| T1.1 | Lab 包装器：运行并抓证据（P0，~3h） | 已验收 | reports/t1.1-acceptance.json; GPU report022523 all checks true; s1 2050 events; s3 completed20 deterministic; final full regression 95 tests passed |
+| T1.1 | Lab 包装器：运行并抓证据（P0，~3h） | 原验收保留；绝对截止及部分证据GPU增强通过 | reports/t1.1-acceptance.json retains original checks; reports/deadline-manual-gpu-20261024T131612Z.json verifies shared hard deadline, natural/small-timeout full captures, stress timeout explicit partial, canonical s3 twice20updates; no invented inference training steps |
 | T1.2 | 证据包生成（P0，~3h） | 实现完成，验收未通过 | reports/t1.2-acceptance.json; s1/s2/s4/s5 artifacts and real peak replay verified; s2 optimizer-state fraction 39.8715% < original 40% |
 | T1.3 | LLM 客户端与路由（P0，~1.5h） | 离线实现完成，实测待验收 | reports/runtime-output-cap-20261024T102844Z/verification.json;210 guarded tests; exact Nano ID and explicit output-cap field; real Super JSON/Ultra200k pending |
 | T1.4 | Diagnose（Ultra）（P0，~2.5h） | 实现完成，模型验收待办 | docs/DIAGNOSE.md; docs/PROMPT_PREFLIGHT.md; four complete requests audited locally; provider billing domain and real Ultra diagnosis pending |
 | T1.5 | Patch（Super）与应用（P0，~2.5h） | 实现及离线验收完成；真实补丁待办 | docs/PATCH.md; git apply, compile, bounded repair and policy tests; real Super/GPU cases pending |
 | T1.6 | Verify 与比较（P0，~2h） | 运行时精度识别、原计划数值比较及GPU回归通过；模型修复验收待办 | docs/VERIFY.md; FP32/BF16 observation selects original 1e-3/2e-2 tolerance, unknown retains stricter bound; actual dtype change requires policy; 20-update GPU proof retained |
 | T1.7 | 单轮编排 + 存储 + 事件（P0，~2h） | 主流程与存储已实现并离线联调 | docs/SEARCH.md; SQLite ordered events, partial reports, SDK fixture pipeline; live two-call gate pending |
-| T1.8 | 报告（P0，~1.5h） | 报告实现与数字追溯通过 | docs/STORAGE_REPORTS.md; JSON/Markdown, source links, Pareto files; real repaired report pending |
+| T1.8 | 报告（P0，~1.5h） | 报告、选中配置及数字追溯通过 | docs/STORAGE_REPORTS.md; selected round argv/environment/manifest and patch downloads, explicit CLI-only/empty diff; real repaired report pending |
 | T1.9 | 真实仓库：nanoGPT（P0，~2h） | 仓库命令重跑与无参考n/a接线完成；真实修复待办 | reports/nanogpt-lab-baseline-20261024.json; actual repair/22GB/diff/cost gates pending |
 | T1.10 | Honesty 与安全（P0，~1h） | 静态与CPU真实性检查通过；完整修复待办 | docs/PATCH.md; model shrink/truncation/escape checks and observed parameter counts |
-| T1.11 | Docker Lab（P1，仅 `DOCKER_GPU=ok`，~1.5h） | Docker隔离与缓存组件通过 | docs/LAB.md; docs/WATCH_HF.md; no-network, read-only source/cache and cleanup tests |
+| T1.11 | Docker Lab（P1，仅 `DOCKER_GPU=ok`，~1.5h） | 自有Python镜像、干净目录CPU及隔离组件通过 | docs/LAB_RUNTIME.md; hash-locked image-owned Python3.12, verified immutable image ID, no host venv mount; clean candidate tree script/module each3updates with capture/cleanup verified |
 | T1.12 | MVP 整体验收 + 报告（P0，~1.5h，10/24 晚） | 待Nebius真实MVP验收 | eval/mvp_phase1.yaml has nine scenarios and explicit20% reclaim target; real repair success/time/cost pending |
 | T2.1 | 显存求解循环：keep-or-revert 搜索 + Pareto 前沿（P0，~3h） | 默认达标即停及显式有限Pareto探索完成；真实验收待办 | docs/SEARCH.md; bounded_pareto preserves verified selections on later failure/budget stop, <=6 rounds, independent retained patches and honest frontier; original s2/bf16 policy gates unchanged |
 | T2.2 | Tavily Research（P0，~2h） | 真实Research组件通过；修复报告待办 | reports/research-component-20261024T022414Z.json; four live methods, 3 reported credits, repeat cache 0 calls/credits |
@@ -34,8 +34,8 @@ All work, caches, runs, and media remain on azuki.
 | T2.6 | Watch 模式（P2，~1.5h） | shell/Python启动器可定位唯一CUDA OOM子进程并重跑；真实模型修复验收待办 | docs/WATCH_HF.md; preserved multi-process inventory and selected capture binding; exact target replay; manual real GPU helper+s1 OOM selected correctly; candidate/reference each20updates passed; duplicate/OOM ambiguity and root failures rejected; no host fallback |
 | T2.7 | Docker/HF 缓存稳健性（P1）：验收：三个场景在 Docker 路径下结果与子进程路径一致（峰值差 ≤ 1%）。 | 安全独立子进程环境阻塞；原门槛未通过 | reports/t2.7-isolation-preflight-20261024.json; unshare uid_map EPERM; bwrap network setup EPERM; no sudo/system change/unsafe host fallback; existing Docker dual-entry CPU checks are component evidence only |
 | T2.8 | 小评测 + 自优化（P0，可夜间自治，~4h） | 显式策略矩阵与离线统计完成；原真实验收待办 | docs/EVALUATION.md; default/strict 实际等价，allow_precision 必须显式选择；全矩阵共享预算，逐行完整 Policy；原两档歧义、≤3轮优化、target_met/首因各≥75% 和 $12 实测均未关闭 |
-| T3.1 | FastAPI + SSE（P0，~3h） | API队列/SSE/下载已实现并测 | docs/API.md; shared admission/preparation/queue/worker deadline, owned process cleanup, report-ready SSE, session isolation and rate limits |
-| T3.2 | 前端素版（P0，~4h） | 四页前端/当前浏览器通过；真实修复流程待办 | reports/bounded-pareto-ui-20261024/receipt.json;47 frontend tests/typecheck/build passed; explicit search mode, selected success and exploration stop separate; old history unknown; earlier Lighthouse results remain dated evidence |
+| T3.1 | FastAPI + SSE（P0，~3h） | API队列/SSE/选中轮次下载已实现并测 | docs/API.md; selected round after PNG/JSON and configuration manifest; missing selected evidence never falls back to stale files; existing ownership/nofollow/deadline rules retained |
+| T3.2 | 前端素版（P0，~4h） | 四页前端/配置复现/当前浏览器通过；真实修复流程待办 | reports/artifact-delivery-20261024;50 frontend tests/typecheck/build; selected manifest/cli downloads and recorded execution metadata; empty patch distinct from absent patch; historical baseline still N/A; Lighthouse remains dated |
 | T3.3 | Replay（P0，~1.5h） | 5条真实基线回放可用；规定修复回放待办 | reports/baseline-replays.json; explicitly baseline-only; s2 two-round/nanoGPT/reclaim repair replay not fabricated |
 | T3.4 | Claude Design 对齐（P1，~3h；设计稿 10/25–10/26 由 Frank+Claude 产出到 `design/`） | 待Frank设计稿与认可 | No design package has been supplied; theme implementation exists |
 | T3.5 | 公网部署、限流、监控（P0，~2.5h；Frank 提供域名/Cloudflare） | 部署与监控模板完成；公网待办 | docs/DEPLOYMENT.md;600s from admission through execution, cleanup separate; fresh read-only availability/local budget; public domain/tunnel/alerts acceptance pending |
@@ -44,7 +44,7 @@ All work, caches, runs, and media remain on azuki.
 | T4.2 | 主评测 | 工具与表格已准备；真实主评测待办 | docs/EVALUATION.md; docs/RESULTS.md; Nebius live model run required |
 | T4.3 | 消融 | 三条件消融工具完成；实测待办 | full Ultra / traceback+summary Ultra / full Super; no predicted gain presented as measured |
 | T4.4 | 冻结 | 待真实评测后冻结 | No v0.9-eval tag created before acceptance |
-| T5.1 | README | README初稿完成；干净环境真实repair待办 | README.md; honest role/status table, local quickstart, evidence and limits |
+| T5.1 | README | 五命令Quickstart与干净目录CPU通过；真实repair待办 | README.md; locked Python3.12 and self-contained Lab image; reports/portable-lab-20261024 proves script/module capture without local .venv/.env; clean-clone live fix remains pending |
 | T5.2 | docs 定稿 | 文档初稿完成；评审与真实模型反馈待办 | docs/ARCHITECTURE.md; RESULTS.md; FEEDBACK.md; no fabricated model experience |
 | T5.3 | Devpost 描述 | Devpost本地草稿完成；未保存表单 | docs/DEVPOST.md; owner final review/submission pending |
 | T5.4 | 视频 | 视频脚本完成；待真实修复与录制 | docs/VIDEO_SCRIPT.md; <=2:50 storyboard, actual evidence required |
@@ -54,6 +54,8 @@ All work, caches, runs, and media remain on azuki.
 | Phase 6 | Weekly health/alerts; balance by Nov 25; manual Dec 1 and Dec 8 access | 未开始 | Future dated acceptance |
 
 ## Acceptance log
+
+- 2026-10-24T13:25:14.043559+00:00: portable image now owns Python3.12/hash-locked CUDA dependencies and runs by verified immutable image ID; clean candidate tree with no .venv/.env passed script/module CPU capture. Shared absolute hard deadline and durable partial-first finalization retain timeout facts without inventing success; actual GPU natural/small-timeout complete, continuous stress explicitly partial, and two canonical s3 runs completed20 with deterministic first5 losses. Selected-round after evidence/configuration downloads and report/UI execution metadata fixed; CLI-only empty patch distinguished. Full guarded backend1344passed450.83s with unchanged sources; frontend50passed/typecheck/build and historical browser compatibility verified. Initial GPU serialization failure preserved. New model calls/cost0; no live profile/PLAN/gate changes. Reports: reports/portable-delivery-20261024/verification.json and reports/handoff-portable-lab-20261024.md. Full goal remains active.
 
 - 2026-10-24 bounded Pareto continuation: explicit until_target/bounded_pareto across CLI/YAML/API/Watch/evaluation/UI; default stops at first verified target, bounded stays within <=6 rounds and unchanged policy/budget/deadline. Later revert/budget/error retains selected patch/metrics/verification together; fresh-evidence loss clears stale after image. Search metadata distinguishes baseline goal, first verified target and exploration termination. Cross-mode ablation pairs are excluded; missing historical mode remains unknown. Full guarded backend1266passed322.07s with unchanged sources; frontend47passed/typecheck/build and browser baseline-only display verified. Ruff/precommit/gitleaks passed. Reports: reports/bounded-pareto-20261024/verification.json and reports/handoff-bounded-pareto-20261024.md. New model calls/cost0; no new GPU workload, no live runtime profile. All original failed/external gates remain open.
 

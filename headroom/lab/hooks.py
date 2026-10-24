@@ -30,6 +30,7 @@ from torch.nn.modules.module import (
 )
 from torch.optim.optimizer import register_optimizer_step_post_hook
 
+from headroom.lab.deadline import capture_window, configured_control
 from headroom.lab.precision import PrecisionObserver
 
 
@@ -65,6 +66,13 @@ _AMOUNT = r"([0-9]+(?:\.[0-9]+)?)\s*(bytes?|[KMGT]?i?B)"
 def _atomic_json(path: Path, value: Any) -> None:
     temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
     temporary.write_text(json.dumps(value, allow_nan=False, indent=2) + "\n")
+    temporary.replace(path)
+
+
+def _atomic_pickle(path: Path, value: Any) -> None:
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    with temporary.open("wb") as handle:
+        pickle.dump(value, handle)
     temporary.replace(path)
 
 
@@ -203,6 +211,12 @@ class CaptureSession:
         self.precision_observer = PrecisionObserver(device)
         self._precision_mode = None
         self.entrypoint_capture = None
+        self.deadline_reached = False
+        self.deadline_observation = {
+            "basis": "relative_process_limit",
+            "clock_verified": False,
+            "max_seconds": max_seconds,
+        }
 
     def _error(self, stage: str, exc: BaseException) -> None:
         self.errors.append({"stage": stage, "type": type(exc).__name__, "message": str(exc)})
@@ -354,13 +368,19 @@ class CaptureSession:
         ]
         self.installed = True
         _ACTIVE_SESSION = self
+        self.started_at = self.last_step_at = time.perf_counter()
+        control = configured_control()
+        remaining = self.max_seconds
+        if control is not None:
+            remaining, self.deadline_observation = capture_window(control, self.max_seconds)
         if threading.current_thread() is threading.main_thread():
             self._previous_alarm_handler = signal.getsignal(signal.SIGALRM)
             signal.signal(signal.SIGALRM, self._timeout)
-            self._previous_timer = signal.setitimer(signal.ITIMER_REAL, self.max_seconds)
+            # A zero setitimer disarms the alarm. Expired windows are handled
+            # explicitly below without executing the user's target.
+            self._previous_timer = signal.setitimer(signal.ITIMER_REAL, remaining)
         else:
             self._error("timer", RuntimeError("Non-main thread: external timeout guard required"))
-        self.started_at = self.last_step_at = time.perf_counter()
         _atomic_json(self.output_dir / "env.json", self.env)
         _atomic_json(
             self.output_dir / "capture-ready.json",
@@ -371,13 +391,19 @@ class CaptureSession:
                 "device": self.device,
                 "history_enabled": self.history_enabled,
                 "optimizer_hook": "global_post_hook",
+                "deadline_observation": self.deadline_observation,
             },
         )
         self.ready = True
+        if remaining <= 0:
+            self._timeout(0, None)
         return self
 
     def _timeout(self, signum: int, frame: Any) -> None:
-        raise CaptureTimeout(f"Capture exceeded {self.max_seconds:g} seconds")
+        self.deadline_reached = True
+        self.deadline_observation["triggered"] = True
+        self.deadline_observation.setdefault("triggered_monotonic_ns", time.monotonic_ns())
+        raise CaptureTimeout("Lab observation deadline reached; hard deadline unchanged")
 
     def _peaks(self) -> tuple[int | None, int | None]:
         if self.device != "cuda" or not self.history_enabled:
@@ -588,22 +614,104 @@ class CaptureSession:
             return self._result or {}
         # Do not let a second timer interrupt serialization after the capture boundary.
         self._cancel_timer()
-        # Grab the allocator state before formatting exceptions or querying external tools.
-        snapshot = self.take_snapshot()
         self.finished = True
-        self._uninstall()
         reason = termination_reason or "script_exit"
-        if isinstance(exc, StepLimitReached):
+        if self.deadline_reached:
+            status, reason = "timeout", "timeout"
+        elif isinstance(exc, StepLimitReached):
             status, reason = "completed", "step_limit"
         elif isinstance(exc, CaptureTimeout):
             status, reason = "timeout", "timeout"
         elif exc is not None:
-            if is_cuda_oom(exc, self.device):
-                status, reason = "oom", "oom"
-            else:
-                status, reason = "error", termination_reason or "exception"
-        exception_text = "".join(traceback.format_exception(exc)) if exc is not None else ""
+            # Exception text can itself synchronize CUDA or block; classify it
+            # only after the allocator snapshot and first durable observations.
+            status, reason = "error", termination_reason or "exception"
+        # Persist already observed facts before any potentially slow CUDA/history work.
+        # A provisional completed/OOM execution must never look like an accepted capture.
+        last_step = self.step_records[-1] if self.step_records else {}
+        allocated = last_step.get("peak_allocated_bytes")
+        reserved = last_step.get("peak_reserved_bytes")
+        artifact_writes = {
+            name: "pending"
+            for name in (
+                "memory_stats.json",
+                "memory_summary.txt",
+                "traceback.txt",
+                "env.json",
+                "snapshot.pickle",
+                "snapshot.json",
+            )
+        }
+        self._result = {
+            "protocol": "headroom.lab.v1",
+            "schema_version": 1,
+            "capture_complete": False,
+            "finalization_incomplete": True,
+            "execution_status": status,
+            "execution_termination_reason": reason,
+            "status": "timeout" if status == "timeout" else "error",
+            "termination_reason": "timeout" if status == "timeout" else "capture_incomplete",
+            "pid": self.pid,
+            "is_primary": self.is_primary,
+            "steps": len(self.step_records),
+            "loss_series": self.loss_series,
+            "step_records": self.step_records,
+            "peak_allocated_bytes": allocated,
+            "peak_reserved_bytes": reserved,
+            "peak_alloc_gb": allocated / 1e9 if allocated is not None else None,
+            "peak_reserved_gb": reserved / 1e9 if reserved is not None else None,
+            "peak_observation": "last_completed_optimizer_update" if last_step else "unavailable",
+            "deadline_observation": self.deadline_observation,
+            "deadline_reached": self.deadline_reached,
+            "snapshot": {"available": False, "trace_count": None},
+            "snapshot_trace_count": None,
+            "shared_gpu": self.shared_gpu,
+            "gpu": self.gpu,
+            "env": self.env,
+            "errors": self.errors,
+            "artifact_writes": artifact_writes,
+        }
+
+        def checkpoint(stage: str) -> None:
+            self._result["finalization_stage"] = stage
+            self._result["wall_seconds"] = time.perf_counter() - self.started_at
+            _atomic_json(self.output_dir / "result.json", self._result)
+
+        try:
+            checkpoint("snapshot_capture")
+            # Still the first CUDA operation in the exception finalization path.
+            snapshot = self.take_snapshot()
+        finally:
+            # Even a failed first checkpoint or an interrupted snapshot must not
+            # leave global optimizer/backward hooks installed.
+            self._uninstall()
         allocated, reserved = self._peaks()
+        self._result.update(
+            peak_allocated_bytes=allocated,
+            peak_reserved_bytes=reserved,
+            peak_alloc_gb=allocated / 1e9 if allocated is not None else None,
+            peak_reserved_gb=reserved / 1e9 if reserved is not None else None,
+            peak_observation="capture_end" if allocated is not None else "unavailable",
+        )
+        trace_count = None
+        if isinstance(snapshot, dict) and isinstance(snapshot.get("device_traces"), list):
+            trace_count = sum(len(events) for events in snapshot["device_traces"])
+        self._result.update(
+            snapshot={"available": snapshot is not None, "trace_count": trace_count},
+            snapshot_trace_count=trace_count,
+        )
+        checkpoint("exception_classification")
+        if (
+            exc is not None
+            and not self.deadline_reached
+            and not isinstance(exc, (StepLimitReached, CaptureTimeout))
+            and is_cuda_oom(exc, self.device)
+        ):
+            status, reason = "oom", "oom"
+        self._result.update(execution_status=status, execution_termination_reason=reason)
+        checkpoint("exception_formatting")
+        exception_text = "".join(traceback.format_exception(exc)) if exc is not None else ""
+        checkpoint("memory_observations")
         memory_stats: Any = None
         memory_summary = "CUDA memory summary unavailable for CPU capture.\n"
         if self.device == "cuda" and self.history_enabled:
@@ -616,26 +724,28 @@ class CaptureSession:
             except Exception as summary_error:  # noqa: BLE001 - report capture failures
                 self._error("memory_summary", summary_error)
                 memory_summary = f"Unavailable: {type(summary_error).__name__}: {summary_error}\n"
-        trace_count = None
-        if isinstance(snapshot, dict) and isinstance(snapshot.get("device_traces"), list):
-            trace_count = sum(len(events) for events in snapshot["device_traces"])
         oom = None
         if status == "oom":
             oom = parse_oom_details(snapshot, str(exc), self.device_index)
             oom["traceback"] = exception_text
+        # Small observations reach disk before the full, unchanged allocator history.
         artifact_writers = {
-            "snapshot.pickle": lambda path: path.write_bytes(pickle.dumps(snapshot)),
-            "snapshot.json": lambda path: _atomic_json(path, native_snapshot(snapshot)),
             "memory_stats.json": lambda path: _atomic_json(path, memory_stats),
             "memory_summary.txt": lambda path: path.write_text(memory_summary),
             "traceback.txt": lambda path: path.write_text(exception_text),
             "env.json": lambda path: _atomic_json(path, self.env),
+            "snapshot.pickle": lambda path: _atomic_pickle(path, snapshot),
+            "snapshot.json": lambda path: _atomic_json(path, native_snapshot(snapshot)),
         }
         for filename, writer in artifact_writers.items():
+            checkpoint(f"write:{filename}")
             try:
                 writer(self.output_dir / filename)
+                artifact_writes[filename] = "complete"
             except Exception as artifact_error:  # noqa: BLE001 - report capture failures
+                artifact_writes[filename] = "failed"
                 self._error(f"write:{filename}", artifact_error)
+        checkpoint("post_capture_observations")
         if self.gpu is not None:
             self.gpu["at_capture_end"] = self._gpu_processes()
             self.gpu["shared_gpu_basis"] = "compute processes before capture CUDA initialization"
@@ -652,18 +762,23 @@ class CaptureSession:
         )
         if self.device == "cuda" and (snapshot is None or allocated is None or reserved is None):
             capture_complete = False
-        if not capture_complete:
+        if not capture_complete and status != "timeout":
             status, reason = "error", "capture_error"
         self._result = {
             "protocol": "headroom.lab.v1",
             **self._parameter_evidence(),
             "precision_observation": self._precision_evidence(),
             "execution_entrypoint": self._entrypoint_evidence(),
+            "deadline_observation": self.deadline_observation,
+            "deadline_reached": self.deadline_reached,
             "pairing_capture": self.pairing_capture.evidence(len(self.step_records))
             if self.pairing_capture is not None
             else {"complete": False, "reason": "pairing requires a supported run_script target"},
             "schema_version": 1,
             "capture_complete": capture_complete,
+            "finalization_incomplete": False,
+            "finalization_stage": "finished",
+            "artifact_writes": artifact_writes,
             "execution_status": execution_status,
             "status": status,
             "termination_reason": reason,
@@ -676,6 +791,7 @@ class CaptureSession:
             "peak_reserved_bytes": reserved,
             "peak_alloc_gb": allocated / 1e9 if allocated is not None else None,
             "peak_reserved_gb": reserved / 1e9 if reserved is not None else None,
+            "peak_observation": "capture_end" if allocated is not None else "unavailable",
             "step_ms_median": statistics.median([record["step_ms"] for record in self.step_records])
             if self.step_records
             else None,

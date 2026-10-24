@@ -1,7 +1,13 @@
 import { useMemo } from "react";
 import { parse } from "diff2html";
 import { Empty } from "./components";
-export default function DiffView({ diff }: { diff: string }) {
+export default function DiffView({
+  diff,
+  recorded = false,
+}: {
+  diff: string;
+  recorded?: boolean;
+}) {
   const files = useMemo(() => {
     try {
       return parse(diff);
@@ -9,6 +15,13 @@ export default function DiffView({ diff }: { diff: string }) {
       return [];
     }
   }, [diff]);
+  if (!diff && recorded)
+    return (
+      <Empty title="No source changes in this patch">
+        This recorded patch is empty. Review the configuration and environment
+        downloads for argument or environment changes.
+      </Empty>
+    );
   if (!diff)
     return (
       <Empty title="No patch produced">

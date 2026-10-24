@@ -1,0 +1,407 @@
+{
+  "timestamp": "2026-10-24T13:17:18.609461+00:00",
+  "scope": "Manual real GPU capture/deadline regression; no AI repair or benchmark acceptance",
+  "checks": {
+    "runtime_unchanged": true,
+    "verified_portable_image_used": true,
+    "natural_completed": true,
+    "no_fake_optimizer_steps": true,
+    "training_twenty_steps": true,
+    "training_deterministic_first_five": true,
+    "canonical_unchanged": true,
+    "timeout_not_completed": true,
+    "stress_preserves_observation_or_explicit_partial": true,
+    "normal_small_timeout_and_training_capture_complete": true,
+    "all_cleanup_verified": true,
+    "native_cuda_peaks_positive": true,
+    "trusted_shared_clock": true,
+    "hard_deadline_unchanged": true,
+    "bounded_capture_reserve": true,
+    "snapshot_saved_at_timeout": true,
+    "gpu_observed_unshared": true,
+    "inference_not_misreported_as_training_repair": true
+  },
+  "passed": true,
+  "captures": [
+    {
+      "run_dir": "runs/deadline-gpu-20261024T131612Z/lab/ab44ed1df7cb40c69285f4e961e5f8ba",
+      "status": "completed",
+      "steps": 0,
+      "peak_allocated_bytes": 51388416,
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7"
+    },
+    {
+      "run_dir": "runs/deadline-gpu-20261024T131612Z/lab/4a98084609224943a8d702857b0c095a",
+      "status": "timeout",
+      "steps": 0,
+      "peak_allocated_bytes": 51388416,
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7"
+    },
+    {
+      "run_dir": "runs/deadline-gpu-20261024T131612Z/lab/ecff64e05c394e23b085f10618326214",
+      "status": "timeout",
+      "steps": 0,
+      "peak_allocated_bytes": 51388416,
+      "capture_complete": false,
+      "cleanup_verified": true,
+      "image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7"
+    },
+    {
+      "run_dir": "runs/deadline-gpu-20261024T131612Z/lab/a6becc95e74d4b2cacc73e1efe5aa726",
+      "status": "completed",
+      "steps": 20,
+      "peak_allocated_bytes": 2435717632,
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7"
+    },
+    {
+      "run_dir": "runs/deadline-gpu-20261024T131612Z/lab/78d20df9005a4c3895bb5a5e07a001d8",
+      "status": "completed",
+      "steps": 20,
+      "peak_allocated_bytes": 2435717632,
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7"
+    }
+  ],
+  "observed_timeout_deadline": {
+    "basis": "verified_host_monotonic_deadline",
+    "clock_verified": true,
+    "observed_clock_identity": {
+      "clock": "CLOCK_MONOTONIC",
+      "boot_id": "a4458013-9ffc-488c-916d-639030ea9fa4",
+      "monotonic_offset": {
+        "seconds": 0,
+        "nanoseconds": 0
+      },
+      "time_namespace_device": 5,
+      "time_namespace_inode": 4026534010
+    },
+    "protocol": "headroom.deadline.v1",
+    "clock_identity": {
+      "clock": "CLOCK_MONOTONIC",
+      "boot_id": "a4458013-9ffc-488c-916d-639030ea9fa4",
+      "monotonic_offset": {
+        "seconds": 0,
+        "nanoseconds": 0
+      },
+      "time_namespace_device": 5,
+      "time_namespace_inode": 4026531834
+    },
+    "started_monotonic_ns": 1403533655217684,
+    "hard_deadline_monotonic_ns": 1403553655217684,
+    "capture_deadline_monotonic_ns": 1403551655217684,
+    "max_seconds": 20,
+    "capture_reserve_seconds": 2.0,
+    "observed_monotonic_ns": 1403534909452046,
+    "remaining_capture_seconds": 16.745765638,
+    "expired_before_target": false,
+    "triggered": true,
+    "triggered_monotonic_ns": 1403551655288836
+  },
+  "stress_finalization": {
+    "status": "timeout",
+    "execution_status": "timeout",
+    "capture_complete": false,
+    "finalization_incomplete": true,
+    "finalization_stage": "write:snapshot.json",
+    "steps": 0,
+    "peak_allocated_bytes": 51388416
+  },
+  "workload_scope": "Natural 3 forwards; small-history timeout after 3 forwards; original continuous-forward stress retained separately; 2 canonical s3 training runs. Partial stress capture is never complete repair acceptance.",
+  "comparison": {
+    "completed": false,
+    "peak_before": 0.051388416,
+    "peak_after": 0.051388416,
+    "reduction_pct": 0.0,
+    "step_ms_before": null,
+    "step_ms_after": null,
+    "loss_equivalence": "n/a",
+    "target_met": false,
+    "notes": [
+      "Loss equivalence is n/a: the original-plan scalar comparison lacks a completed same-seed reference or aligned finite losses.",
+      "Loss states describe the original-plan observed scalar comparison; matching inputs, effective batch and objective are not established. This is not proof of workload equivalence."
+    ],
+    "checks": {
+      "baseline_capture": true,
+      "target_mode_valid": true,
+      "candidate_completed_required_steps": false,
+      "finite_candidate_losses": false,
+      "parameter_count_unchanged": true,
+      "numerics_policy": true,
+      "same_seed": true,
+      "same_inputs": null,
+      "same_effective_batch": null,
+      "same_objective": null,
+      "loss_series_aligned_to_updates": false,
+      "loss_series_comparison_available": false,
+      "loss_comparable": false,
+      "repository_no_reference_exception": false,
+      "loss_tolerance": false,
+      "numerical_acceptance": false,
+      "parameter_policy": true,
+      "measured_cuda_peaks": true,
+      "same_gpu_hardware": true,
+      "gpu_observation_clear": true,
+      "throughput_limit": false,
+      "memory_target": false
+    },
+    "max_loss_delta": null,
+    "throughput_regression_pct": null,
+    "numerics_changed": false,
+    "parameter_count_before": 2099200,
+    "parameter_count_after": 2099200,
+    "target": "fix-oom",
+    "units": "GB = 1e9 bytes; percentages are relative to baseline",
+    "run_ids": {
+      "baseline": "ab44ed1df7cb40c69285f4e961e5f8ba",
+      "candidate": "ab44ed1df7cb40c69285f4e961e5f8ba"
+    },
+    "reference_run": null,
+    "acceptance_scope": "standard",
+    "numerical_basis": "unavailable",
+    "comparison_precision": "fp32",
+    "loss_tolerance": 0.001,
+    "observed_precision_change": false,
+    "precision_evidence": {
+      "source": "lab_runtime_precision_observer_v1",
+      "before": "fp32",
+      "after": "fp32",
+      "comparison_before": "fp32",
+      "observed_change": false,
+      "comparison_precision": "fp32",
+      "notes": [],
+      "limitations": "Observed Python-dispatched forward precision, not proof of every internal operator dtype or full workload equivalence."
+    }
+  },
+  "source_sha256": [
+    {
+      "path": "headroom/__init__.py",
+      "sha256": "91447944015cec709e8aa7655f7e9d64e1e4508e7023a57fe3746911c0fc6fed"
+    },
+    {
+      "path": "headroom/annotate.py",
+      "sha256": "e9122ccc20ffa6e364b84d2c4abf0a164679da5e41fb43feda9acceaed087ee6"
+    },
+    {
+      "path": "headroom/api/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "headroom/api/app.py",
+      "sha256": "61642ed0ddde43f58bde4743a51b2f41123ca3a67a098f0673ae10f17ee0c01e"
+    },
+    {
+      "path": "headroom/api/availability.py",
+      "sha256": "02633477a7b518426ba4c2a8a8d3e63554df8a86b3de3845ebb8cb41945441cb"
+    },
+    {
+      "path": "headroom/api/evaluations.py",
+      "sha256": "6bd6eadf19ee15168b7d5594f50fb6ac57d68f74668aa6eef5a5fb8a309d29c8"
+    },
+    {
+      "path": "headroom/api/queue.py",
+      "sha256": "9d3133d3d7d178a571355ebc64706b13953e3f836cda38d6fc27a5638846448e"
+    },
+    {
+      "path": "headroom/api/security.py",
+      "sha256": "966a60624778495b554647c29f5b763a680034d971e4f34bc9ca3b848054b1f0"
+    },
+    {
+      "path": "headroom/budget.py",
+      "sha256": "e29ace2cd320ebec535865f98caed064d3c3f48ff07f9c5352894f59dd7a5d09"
+    },
+    {
+      "path": "headroom/cli.py",
+      "sha256": "e833e0ad18c83e916fa34ad8c3a31c4f1a200a72bed1cd5636ef18cecb603983"
+    },
+    {
+      "path": "headroom/config.py",
+      "sha256": "1905ebb5c3a780c05236caa0896521e45d1f7294b403dc8a35013b1740443709"
+    },
+    {
+      "path": "headroom/diagnose.py",
+      "sha256": "b3e1703ebebba4fb20e365d8c71b203a33f78eb1b600c3a402afe56ae701f45f"
+    },
+    {
+      "path": "headroom/evaluation.py",
+      "sha256": "488f739fba1e5245070c037caa2bcee90e23968d3ea1036fd778a23558dbef9c"
+    },
+    {
+      "path": "headroom/evidence.py",
+      "sha256": "6aec6ff0b3ac57b5dd6c00d5b59ff3fc3684b69ea032d563f142cf673f6fbc00"
+    },
+    {
+      "path": "headroom/evidence_analysis.py",
+      "sha256": "6570b4e7fcad4d4016a0cf2e465603cd20e2f26f787c3c9cd01afc85a295c13a"
+    },
+    {
+      "path": "headroom/execution.py",
+      "sha256": "400d5c782dc6269818a1d5f63d7ab0ea1a85a8c15c05ef7543b7116245e256ea"
+    },
+    {
+      "path": "headroom/lab/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "headroom/lab/cache.py",
+      "sha256": "b2366f2bf6fc5722167e7cc7cb78aa84e8f0da3fe28dbcfb57cc3319eb0b4932"
+    },
+    {
+      "path": "headroom/lab/deadline.py",
+      "sha256": "b01e85b63eeac8ef27f1f300cee15dda5656345332d0d67592366e4ec4726de9"
+    },
+    {
+      "path": "headroom/lab/docker.py",
+      "sha256": "8276b44a6332ab466978216d7171036a522cbb192aa6bf23bdde3921308be899"
+    },
+    {
+      "path": "headroom/lab/entrypoint.py",
+      "sha256": "deaca058a164e06239b0f2fc1bc8b844cfba55045f51710218a67c25a5a636e3"
+    },
+    {
+      "path": "headroom/lab/envs.py",
+      "sha256": "a0d71fcbc4acc2eed00ea3613c79c7bfe0fb0e474435d49db72807af2f05434a"
+    },
+    {
+      "path": "headroom/lab/hooks.py",
+      "sha256": "9be7e0adb7ef30a3cb6ad888098f50954944af8db3d09c7a198208ce5556bcc7"
+    },
+    {
+      "path": "headroom/lab/precision.py",
+      "sha256": "e3ef0eb6ac6db5696718c152d048fad0c4190b0a4ddca85ab414c79f2bb6f171"
+    },
+    {
+      "path": "headroom/lab/run_target.py",
+      "sha256": "3aea073c8115a0d4fba56725efd84cd90cf9dc093bf9178d6458624350992847"
+    },
+    {
+      "path": "headroom/lab/runner.py",
+      "sha256": "d16869bb52730917c398fa85e8d6baa1e3df8e48c92fe880af286e4ebae013aa"
+    },
+    {
+      "path": "headroom/lab/runtime_image.py",
+      "sha256": "938be05da0d96f00bf7cb40c82c0931e0854eda811c4c1386895cc4b09281e45"
+    },
+    {
+      "path": "headroom/lab/sitecustomize.py",
+      "sha256": "1549611160fcee36ae8e68053eda752fb38a0dc21f0dbe08246832ce2d71e150"
+    },
+    {
+      "path": "headroom/llm/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "headroom/llm/admission.py",
+      "sha256": "a218e98d8c39fbebc1233ccc48b8fc7cfd196c33698692aaeb8de62c0ec3bb5c"
+    },
+    {
+      "path": "headroom/llm/client.py",
+      "sha256": "18c7a381347bdb2255a312c725afdda16761df3220482a6c776a2e7a474db8a7"
+    },
+    {
+      "path": "headroom/llm/cost.py",
+      "sha256": "6bfad58c5c2f09f3f37a94898f1427e8b7ae3d582b345224c0cc44890422a124"
+    },
+    {
+      "path": "headroom/llm/preflight.py",
+      "sha256": "4b8871d9b7ba6084bea8b42d3f8e55c8762f1d08650e417982c8835e5d87e5ae"
+    },
+    {
+      "path": "headroom/llm/router.py",
+      "sha256": "1c12c49c8e5d025271c3626cd30fbf73de02730a278b4713dfe8758a5e1b41b4"
+    },
+    {
+      "path": "headroom/orchestrator.py",
+      "sha256": "7508ea618623969756b439e4ae64dce56dadb7dc6eec248cb58f0c3beb6848a1"
+    },
+    {
+      "path": "headroom/patch.py",
+      "sha256": "39750bd0702b55755bbfa3bd5ead00e5ff0b153166612f6842263f18e907f053"
+    },
+    {
+      "path": "headroom/project_config.py",
+      "sha256": "9bb4a49439f19688e63bac753a8c02a2d09b60e1c7f8a2ef980dbb9093534619"
+    },
+    {
+      "path": "headroom/report.py",
+      "sha256": "8a299321b789f9f7b42d883a14f53396cd68fca224455d7736d8ead1a3a14200"
+    },
+    {
+      "path": "headroom/repository.py",
+      "sha256": "6c64359e39aa6cb8a7fb3813bce0019795b9cc5b519b26985bdf2920fb7b4675"
+    },
+    {
+      "path": "headroom/research/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "headroom/research/tavily_tool.py",
+      "sha256": "9657522ef4aa882b289b1791123cbe3f3d0883163dc305d1618c16720837d901"
+    },
+    {
+      "path": "headroom/runtime.py",
+      "sha256": "3e06894de5a054accf43534fd6eabce274d0c6d284244fb9f9d21baabf5c4a5b"
+    },
+    {
+      "path": "headroom/schemas.py",
+      "sha256": "b4d6f8c27a7047b46bd8d4b82f7a109f6f858c741b0c28385d4b3aa03df7a364"
+    },
+    {
+      "path": "headroom/search.py",
+      "sha256": "205f04330677046425248601eb0ed0be3ece01ad9e64db7a54b01f6dbc6b8138"
+    },
+    {
+      "path": "headroom/store/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "headroom/store/db.py",
+      "sha256": "279ac5621009373b91ba5ecb351c0f0ac1f68f7a8ab1f677919dcd8f9a9f5912"
+    },
+    {
+      "path": "headroom/store/models.py",
+      "sha256": "42bc9d2bdc64ae12c49bd6935e9080f0f56e69ca6965a8994e767ed03701f699"
+    },
+    {
+      "path": "headroom/timeline_plot.py",
+      "sha256": "efe6dc8a9d2ce01825f930e06ce46ad3b4d1377000fd4082b377b2cfcaf537fa"
+    },
+    {
+      "path": "headroom/verify/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "headroom/verify/compare.py",
+      "sha256": "dc4451d81d04c80ec02e2d336be569f69935bd8ad839f4c5e0b2ac70c9429a6f"
+    },
+    {
+      "path": "headroom/verify/pairing.py",
+      "sha256": "2fac1543ca6486ec13efd05800db0b21b1a0189a727cd33d8e1213803da0f62e"
+    },
+    {
+      "path": "headroom/verify/policy.py",
+      "sha256": "5c020472f1ca5aeb7d088bd68303f341cb794e7669edb0d9a7db801547f55d28"
+    },
+    {
+      "path": "headroom/verify/precision.py",
+      "sha256": "f87b95e8f3609e49cc445ed5530c3407a4952b64cdd3e9d6630b007430e0cdd9"
+    },
+    {
+      "path": "headroom/verify/runner.py",
+      "sha256": "d638c6546211eab4ea4f08a648adb4ca9e6837e2ebf5b1f5d78de57fbf6ef957"
+    },
+    {
+      "path": "headroom/watch.py",
+      "sha256": "1f4fcdf150c20726ce9e6f4472b1b69636ea17893de826d7c86e620c5ff7a228"
+    }
+  ],
+  "canonical_training_sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+  "model_calls": 0,
+  "model_cost_usd": "0"
+}

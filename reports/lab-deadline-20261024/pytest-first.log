@@ -1,0 +1,92 @@
+..........FFFF.F..........................................FFF.FF         [100%]
+=================================== FAILURES ===================================
+____ test_real_cpu_soft_timeout_retains_complete_capture_and_readonly_clock ____
+tests/test_lab_deadline.py:87: in test_real_cpu_soft_timeout_retains_complete_capture_and_readonly_clock
+    assert result["status"] == "timeout" and result["capture_complete"], result
+E   AssertionError: {'protocol': 'headroom.lab.v1', 'parameter_count': None, 'parameter_count_complete': False, 'parameter_count_source': 'lab_module_parameter_hooks', ...}
+E   assert ('error' == 'timeout'
+E     
+E     - timeout
+E     + error)
+___ test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline[ignored] ____
+tests/test_lab_deadline.py:120: in test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline
+    assert result["status"] == "timeout" and result["execution"]["timed_out"], result
+E   AssertionError: {'protocol': 'headroom.lab.v1', 'parameter_count': None, 'parameter_count_complete': False, 'parameter_count_source': 'lab_module_parameter_hooks', ...}
+E   assert ('error' == 'timeout'
+E     
+E     - timeout
+E     + error)
+___ test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline[blocked] ____
+tests/test_lab_deadline.py:120: in test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline
+    assert result["status"] == "timeout" and result["execution"]["timed_out"], result
+E   AssertionError: {'protocol': 'headroom.lab.v1', 'parameter_count': None, 'parameter_count_complete': False, 'parameter_count_source': 'lab_module_parameter_hooks', ...}
+E   assert ('error' == 'timeout'
+E     
+E     - timeout
+E     + error)
+______________ test_real_cpu_parent_and_late_child_share_deadline ______________
+tests/test_lab_deadline.py:142: in test_real_cpu_parent_and_late_child_share_deadline
+    assert len(captures) == 2, result
+E   AssertionError: {'protocol': 'headroom.lab.v1', 'parameter_count': None, 'parameter_count_complete': False, 'parameter_count_source': 'lab_module_parameter_hooks', ...}
+E   assert 1 == 2
+E    +  where 1 = len([{'protocol': 'headroom.lab.v1', 'parameter_count': None, 'parameter_count_complete': False, 'parameter_count_source': 'lab_module_parameter_hooks', ...}])
+_____ test_real_cpu_natural_no_optimizer_exit_remains_completed_zero_steps _____
+tests/test_lab_deadline.py:182: in test_real_cpu_natural_no_optimizer_exit_remains_completed_zero_steps
+    assert result["status"] == "completed" and result["termination_reason"] == "script_exit", result
+E   AssertionError: {'protocol': 'headroom.lab.v1', 'parameter_count': None, 'parameter_count_complete': False, 'parameter_count_source': 'lab_module_parameter_hooks', ...}
+E   assert ('error' == 'completed'
+E     
+E     - completed
+E     + error)
+____________ test_adamw_steps_and_all_three_seeds_are_deterministic ____________
+tests/test_runner.py:43: in test_adamw_steps_and_all_three_seeds_are_deterministic
+    assert result["status"] == "completed", result
+E   AssertionError: {'protocol': 'headroom.lab.v1', 'parameter_count': None, 'parameter_count_complete': False, 'parameter_count_source': 'lab_module_parameter_hooks', ...}
+E   assert 'error' == 'completed'
+E     
+E     - completed
+E     + error
+_______________ test_command_mode_captures_real_optimizer_steps ________________
+tests/test_runner.py:56: in test_command_mode_captures_real_optimizer_steps
+    assert result["status"] == "completed", result
+E   AssertionError: {'protocol': 'headroom.lab.v1', 'parameter_count': None, 'parameter_count_complete': False, 'parameter_count_source': 'lab_module_parameter_hooks', ...}
+E   assert 'error' == 'completed'
+E     
+E     - completed
+E     + error
+____________________ test_keys_absent_and_source_read_only _____________________
+tests/test_runner.py:84: in test_keys_absent_and_source_read_only
+    assert result["status"] == "completed", result
+E   AssertionError: {'protocol': 'headroom.lab.v1', 'parameter_count': None, 'parameter_count_complete': False, 'parameter_count_source': 'lab_module_parameter_hooks', ...}
+E   assert 'error' == 'completed'
+E     
+E     - completed
+E     + error
+_____ test_infinite_loop_timeout_30_seconds_cleans_container_and_children ______
+tests/test_runner.py:112: in test_infinite_loop_timeout_30_seconds_cleans_container_and_children
+    assert result["status"] == "timeout", result
+E   AssertionError: {'protocol': 'headroom.lab.v1', 'parameter_count': None, 'parameter_count_complete': False, 'parameter_count_source': 'lab_module_parameter_hooks', ...}
+E   assert 'error' == 'timeout'
+E     
+E     - timeout
+E     + error
+_______ test_full_cpp_symbolization_dependency_is_available_without_cuda _______
+tests/test_runner.py:137: in test_full_cpp_symbolization_dependency_is_available_without_cuda
+    assert result["status"] == "completed", result
+E   AssertionError: {'protocol': 'headroom.lab.v1', 'parameter_count': None, 'parameter_count_complete': False, 'parameter_count_source': 'lab_module_parameter_hooks', ...}
+E   assert 'error' == 'completed'
+E     
+E     - completed
+E     + error
+=========================== short test summary info ============================
+FAILED tests/test_lab_deadline.py::test_real_cpu_soft_timeout_retains_complete_capture_and_readonly_clock
+FAILED tests/test_lab_deadline.py::test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline[ignored]
+FAILED tests/test_lab_deadline.py::test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline[blocked]
+FAILED tests/test_lab_deadline.py::test_real_cpu_parent_and_late_child_share_deadline
+FAILED tests/test_lab_deadline.py::test_real_cpu_natural_no_optimizer_exit_remains_completed_zero_steps
+FAILED tests/test_runner.py::test_adamw_steps_and_all_three_seeds_are_deterministic
+FAILED tests/test_runner.py::test_command_mode_captures_real_optimizer_steps
+FAILED tests/test_runner.py::test_keys_absent_and_source_read_only - Assertio...
+FAILED tests/test_runner.py::test_infinite_loop_timeout_30_seconds_cleans_container_and_children
+FAILED tests/test_runner.py::test_full_cpp_symbolization_dependency_is_available_without_cuda
+10 failed, 54 passed in 21.85s

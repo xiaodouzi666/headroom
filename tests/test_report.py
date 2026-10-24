@@ -195,7 +195,7 @@ def test_pareto_display_numbers_and_relative_artifacts_are_auditable(tmp_path):
 
     tier = tmp_path / "configurations/round-01"
     tier.mkdir(parents=True)
-    for name in ("patch.diff", "env.sh", "cli.json"):
+    for name in ("patch.diff", "env.sh", "cli.json", "manifest.json"):
         (tier / name).write_text("offline fixture\n")
     point = {
         "round": 1,
@@ -207,6 +207,7 @@ def test_pareto_display_numbers_and_relative_artifacts_are_auditable(tmp_path):
             "patch": "configurations/round-01/patch.diff",
             "env": "configurations/round-01/env.sh",
             "cli": "configurations/round-01/cli.json",
+            "manifest": "configurations/round-01/manifest.json",
         },
         "provenance": "offline_fixture",
     }
@@ -226,6 +227,7 @@ def test_pareto_display_numbers_and_relative_artifacts_are_auditable(tmp_path):
     markdown = (tmp_path / "report.md").read_text()
     assert "20.125 GB" in markdown and "110.500 ms" in markdown
     assert "[patch](configurations/round-01/patch.diff)" in markdown
+    assert "[manifest](configurations/round-01/manifest.json)" in markdown
     assert "missing" in markdown and "credential" in markdown
     assert check_report_numbers(doc, markdown) == []
 
@@ -571,3 +573,104 @@ def test_invalid_search_mode_does_not_break_historical_rendering(mode):
     doc = build_report({"search": {"mode": mode}})
     assert doc["search"]["mode"] is None
     assert "Search mode: unknown." in render_markdown(doc)
+
+
+def test_cli_only_selection_preserves_original_effective_args_and_all_downloads(tmp_path):
+    tier = tmp_path / "configurations/round-02"
+    tier.mkdir(parents=True)
+    artifacts = {}
+    for key, name, content in (
+        ("patch", "patch.diff", ""),
+        ("env", "env.sh", ""),
+        ("cli", "cli.json", '{"original":["--batch=8"],"effective":["--batch=1"]}'),
+        ("manifest", "manifest.json", '{"round":2}'),
+    ):
+        (tier / name).write_text(content)
+        artifacts[key] = str((tier / name).relative_to(tmp_path))
+    run = {
+        "request": {"script": "/captured/train.py", "script_args": ["--batch=8"]},
+        "kept": {"round": 2, "effective_cli": ["--batch=1"], "artifacts": artifacts},
+    }
+    doc = generate_report(tmp_path, run)
+    selected = doc["selected_configuration"]
+    assert selected["original"]["script_args"] == ["--batch=8"]
+    assert selected["effective"]["script_args"] == ["--batch=1"]
+    assert selected["original"]["execution_argv"] is None
+    assert selected["effective"]["execution_argv"] is None
+    assert selected["artifacts"] == artifacts
+    assert selected["wrapper_replay"] is None
+    markdown = render_markdown(doc)
+    assert "empty diff can represent a CLI-only" in markdown
+    assert "source diff does not include CLI arguments or environment changes" in markdown
+    assert "[Selected manifest](configurations/round-02/manifest.json)" in markdown
+    assert "[Selected cli](configurations/round-02/cli.json)" in markdown
+    assert "--batch=8" in markdown and "--batch=1" in markdown
+    assert check_report_numbers(doc, markdown) == []
+
+
+def test_selected_wrapper_replay_is_explicit_escaped_and_does_not_use_last_round():
+    injected = "</pre><script>alert(1)</script> [click](javascript:bad)"
+    root = ["/bin/sh", "launch.sh", "--batch=8", injected]
+    descriptor = {
+        "kind": "captured_wrapper",
+        "root_argv": root,
+        "python_argv": ["python", "-m", "pkg.train", "--batch=8"],
+        "script_args": ["--batch=8"],
+        "source_relative": "pkg/train.py",
+        "startup_cwd_relative": ".",
+        "module": "pkg.train",
+    }
+    run = {
+        "request": {"execution_argv": root, "script_args": ["--batch=8"]},
+        "kept": {
+            "round": 1,
+            "execution_argv": root,
+            "effective_cli": ["--batch=1"],
+            "allocator_conf": "expandable_segments:True",
+            "execution_entrypoint": descriptor,
+        },
+    }
+    doc = build_report(run, rounds=[{"number": 2, "decision": "revert"}])
+    selected = doc["selected_configuration"]
+    assert selected["round"] == 1
+    assert selected["original"]["execution_argv"] == root
+    assert selected["effective"]["execution_argv"] == root
+    assert selected["effective"]["script_args"] == ["--batch=1"]
+    assert selected["effective"]["allocator_conf"] == "expandable_segments:True"
+    assert selected["wrapper_replay"]["python_argv"] == descriptor["python_argv"]
+    markdown = render_markdown(doc)
+    assert "execution_entrypoint" in markdown
+    assert "ordinary shell does not apply this override" in markdown
+    assert "<script>" not in markdown
+    assert "&lt;/pre&gt;&lt;script&gt;" in markdown
+    assert "no invocation is inferred" in markdown
+
+
+@pytest.mark.parametrize("kept", [None, {}, {"round": True}, {"round": 7}])
+def test_historical_or_malformed_selection_does_not_invent_replay(kept):
+    doc = build_report({"kept": kept})
+    assert doc["selected_configuration"] == {}
+    assert "No selected configuration recorded" in render_markdown(doc)
+
+
+def test_missing_or_linked_selected_manifest_is_not_linked(tmp_path):
+    tier = tmp_path / "configurations/round-01"
+    tier.mkdir(parents=True)
+    outside = tmp_path / "outside.json"
+    outside.write_text("{}")
+    (tier / "manifest.json").symlink_to(outside)
+    doc = generate_report(
+        tmp_path,
+        {
+            "kept": {
+                "round": 1,
+                "artifacts": {
+                    "manifest": "configurations/round-01/manifest.json",
+                    "cli": "configurations/round-01/cli.json",
+                    "patch": "../bad.diff",
+                },
+            }
+        },
+    )
+    assert doc["selected_configuration"]["artifacts"] == {}
+    assert "Selected manifest" not in render_markdown(doc)
