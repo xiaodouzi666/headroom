@@ -10,6 +10,38 @@ been measured. Nebius account/key and two minimal chats are now verified; full
 capabilities, long-input testing and a larger authorized evaluation budget remain
 required. Tavily real API and cache checks have passed.
 
+## Manual GPU verification regression (not model-driven repair)
+
+On 2026-10-24, the new default verifier was exercised on the full-size s3
+standalone workload and a **manually authored** one-line `@torch.no_grad()`
+evaluation fix. Both ran for 20 optimizer updates in separate network-disabled
+Lab containers on the 3090 Ti, seed 1337, with no other GPU process observed.
+All captures and cleanup checks passed.
+
+| Measurement | Original | Manual candidate |
+|---|---:|---:|
+| Peak allocated, decimal GB | 2.435717632 | 0.648419840 |
+| Lab optimizer-interval median, ms | 40.896303 | 41.032609 |
+| Completed updates | 20 | 20 |
+| Parameters | 37,791,744 | 37,791,744 |
+
+Peak reduction was **73.3787%**; the measured optimizer-interval increase was
+**0.3333%**. All 20 training losses were identical (`max_loss_delta=0`), and
+actual input/target fingerprints, initial parameters and per-update pairing
+matched without a caller override. The unchanged reclaim comparison returned
+`target_met=true`. These are observed Lab intervals, not an end-to-end training
+throughput claim. Initialization hashing is reported separately; it remains
+part of total wall time.
+
+Evidence: [manual GPU receipt](../reports/pairing-manual-gpu-20261024T111357Z.json),
+with raw source, patch, snapshots and results under
+`runs/manual-pairing-gpu-20261024T111357Z/`. The receipt records the exact
+reproduction procedure and source hashes. This validates the verifier and new
+CUDA instrumentation for one known repair; it contributes **zero model-generated
+repair successes** to T1.12/T4.2/T4.3. Automatic pairing remains limited to the
+reviewed s3/s4 source contracts; unsupported scripts and old captures remain
+unknown. Full T1.6 and the original small-batch numerical question remain open.
+
 ## Preparation checks (not benchmark results)
 
 | Check | Observed outcome | Limit |

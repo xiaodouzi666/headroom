@@ -195,3 +195,16 @@ def test_more_information_is_not_ready_for_patching(payload):
     payload["needs_more_info"] = True
     result = validate(payload)
     assert result.valid and not result.ready_for_patch
+
+
+def test_empty_plan_information_request_does_not_demand_invented_savings(payload):
+    payload.update(root_causes=[], plan=[], needs_more_info=True)
+    result = validate_diagnosis(
+        payload,
+        evidence={"stack_catalog": {"stk_actual": []}},
+        policy={},
+        required_saving_gb=3.0,
+    )
+    assert result.valid and not result.ready_for_patch
+    assert result.requires_supplement is False
+    assert result.supplement_request is None

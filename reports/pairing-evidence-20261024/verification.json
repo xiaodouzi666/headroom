@@ -1,0 +1,195 @@
+{
+  "recorded_at": "2026-10-24T11:12:44.738734+00:00",
+  "task": "Original-plan production pairing evidence, bounded s3/s4",
+  "status": "implemented; CPU/structural proof only; GPU acceptance and original OOM numerical policy pending",
+  "files": {
+    "headroom/verify/pairing.py": "2fac1543ca6486ec13efd05800db0b21b1a0189a727cd33d8e1213803da0f62e",
+    "headroom/verify/runner.py": "9e956d8545e70fabdd5a7ffdba55908d56ef875ed6f235f8dd6983d282ccea6c",
+    "headroom/lab/hooks.py": "c5d421235a0756c7730e511d18707d8150d4f40f910e7a7205f21a6cb4b8e3b4",
+    "headroom/lab/run_target.py": "3aea073c8115a0d4fba56725efd84cd90cf9dc093bf9178d6458624350992847",
+    "tests/test_pairing.py": "3120f7df2c64d83ecbfd781b1163977f63427363e313763599cc7e5373f92487",
+    "docs/VERIFY.md": "fe0cf5b827dfff2a57e692da49db6c9b81c109249f54c2b67429621f97e88ea7"
+  },
+  "tests": [
+    {
+      "log": "reports/pairing-evidence-20261024/pytest-first.log",
+      "passed": 11,
+      "seconds": 16.28
+    },
+    {
+      "log": "reports/pairing-evidence-20261024/pytest-regression.log",
+      "passed": 67,
+      "seconds": 24.6
+    },
+    {
+      "log": "reports/pairing-evidence-20261024/pytest-final.log",
+      "passed": 68,
+      "seconds": 24.65
+    },
+    {
+      "log": "reports/pairing-evidence-20261024/pytest-timing-lint-final.log",
+      "purpose": "lint-only fixture simplification final timing rerun",
+      "passed": 2,
+      "deselected": 13,
+      "seconds": 1.15
+    }
+  ],
+  "review": {
+    "agent": "/root/nebius_cap_semantics",
+    "conclusion": "no remaining material pairing acceptance/timing finding within bounded cooperative s3/s4 scope",
+    "fixed_finding": "synchronize pending CUDA target initialization before starting hash timer; only subsequent hash/copy duration excluded"
+  },
+  "runs": [
+    {
+      "run_id": "8e0057ce1a7e41ad8f0ac4997a3fb738",
+      "result": ".cache/tmp/pairing-final-20261024/test_real_cpu_default_verifier0/runs/8e0057ce1a7e41ad8f0ac4997a3fb738/result.json",
+      "status": "completed",
+      "steps": 20,
+      "cleanup_verified": true,
+      "source_profile": "s3",
+      "capture_complete": true,
+      "capture_reason": "captured initialized tensors before training loop",
+      "hash_seconds": 0.0005231690593063831,
+      "bytes_hashed": 70784,
+      "pairing": null,
+      "loss_equivalence": null,
+      "target_met": null
+    },
+    {
+      "run_id": "98cb89db0b924226aab8a72a721a6007",
+      "result": ".cache/tmp/pairing-final-20261024/test_real_cpu_default_verifier0/runs/98cb89db0b924226aab8a72a721a6007/result.json",
+      "status": "completed",
+      "steps": 20,
+      "cleanup_verified": true,
+      "source_profile": "s3",
+      "capture_complete": true,
+      "capture_reason": "captured initialized tensors before training loop",
+      "hash_seconds": 0.0005649121012538671,
+      "bytes_hashed": 70784,
+      "pairing": {
+        "protocol": "headroom.pairing.v1",
+        "checks": {
+          "same_inputs": true,
+          "same_effective_batch": true,
+          "same_objective": true
+        },
+        "reasons": [],
+        "source": "Lab runtime fingerprints and pinned source contracts",
+        "reference_run": "8e0057ce1a7e41ad8f0ac4997a3fb738",
+        "candidate_run": "98cb89db0b924226aab8a72a721a6007"
+      },
+      "loss_equivalence": "identical",
+      "target_met": false
+    },
+    {
+      "run_id": "31089db1407a45018c0c9d094f3493f1",
+      "result": ".cache/tmp/pairing-final-20261024/test_real_cpu_default_verifier1/runs/31089db1407a45018c0c9d094f3493f1/result.json",
+      "status": "completed",
+      "steps": 20,
+      "cleanup_verified": true,
+      "source_profile": "s4",
+      "capture_complete": true,
+      "capture_reason": "captured initialized tensors before training loop",
+      "hash_seconds": 0.0004798229783773422,
+      "bytes_hashed": 68480,
+      "pairing": {
+        "protocol": "headroom.pairing.v1",
+        "checks": {
+          "same_inputs": false,
+          "same_effective_batch": false,
+          "same_objective": true
+        },
+        "reasons": [
+          "same_inputs differs",
+          "same_effective_batch differs"
+        ],
+        "source": "Lab runtime fingerprints and pinned source contracts",
+        "reference_run": "cc605ba4edbb4fcf901798c9c668c35a",
+        "candidate_run": "31089db1407a45018c0c9d094f3493f1"
+      },
+      "loss_equivalence": "n/a",
+      "target_met": false
+    },
+    {
+      "run_id": "5316d5bc8d2c4f9b9061891ccbc978f8",
+      "result": ".cache/tmp/pairing-final-20261024/test_real_cpu_default_verifier1/runs/5316d5bc8d2c4f9b9061891ccbc978f8/result.json",
+      "status": "completed",
+      "steps": 20,
+      "cleanup_verified": true,
+      "source_profile": null,
+      "capture_complete": false,
+      "capture_reason": "source outside pinned s3/s4 AST contracts",
+      "hash_seconds": 0.0,
+      "bytes_hashed": 0,
+      "pairing": {
+        "protocol": "headroom.pairing.v1",
+        "checks": {
+          "same_inputs": null,
+          "same_effective_batch": null,
+          "same_objective": null
+        },
+        "reasons": [
+          "candidate: source outside pinned s3/s4 AST contracts"
+        ],
+        "source": "Lab runtime fingerprints and pinned source contracts",
+        "reference_run": "cc605ba4edbb4fcf901798c9c668c35a",
+        "candidate_run": "5316d5bc8d2c4f9b9061891ccbc978f8"
+      },
+      "loss_equivalence": "n/a",
+      "target_met": false
+    },
+    {
+      "run_id": "62a7f23c26024e2bafd6942b639b05cd",
+      "result": ".cache/tmp/pairing-final-20261024/test_real_cpu_default_verifier1/runs/62a7f23c26024e2bafd6942b639b05cd/result.json",
+      "status": "completed",
+      "steps": 20,
+      "cleanup_verified": true,
+      "source_profile": "s4",
+      "capture_complete": true,
+      "capture_reason": "captured initialized tensors before training loop",
+      "hash_seconds": 0.0004953211173415184,
+      "bytes_hashed": 69632,
+      "pairing": {
+        "protocol": "headroom.pairing.v1",
+        "checks": {
+          "same_inputs": true,
+          "same_effective_batch": true,
+          "same_objective": true
+        },
+        "reasons": [],
+        "source": "Lab runtime fingerprints and pinned source contracts",
+        "reference_run": "cc605ba4edbb4fcf901798c9c668c35a",
+        "candidate_run": "62a7f23c26024e2bafd6942b639b05cd"
+      },
+      "loss_equivalence": "identical",
+      "target_met": false
+    },
+    {
+      "run_id": "cc605ba4edbb4fcf901798c9c668c35a",
+      "result": ".cache/tmp/pairing-final-20261024/test_real_cpu_default_verifier1/runs/cc605ba4edbb4fcf901798c9c668c35a/result.json",
+      "status": "completed",
+      "steps": 20,
+      "cleanup_verified": true,
+      "source_profile": "s4",
+      "capture_complete": true,
+      "capture_reason": "captured initialized tensors before training loop",
+      "hash_seconds": 0.0005079340189695358,
+      "bytes_hashed": 69632,
+      "pairing": null,
+      "loss_equivalence": null,
+      "target_met": null
+    }
+  ],
+  "limitations": [
+    "Exact normalized standalone s3/s4 source AST contracts only; other scripts/source changes/command mode unknown.",
+    "Actual initialized input, target, and parameter fingerprints plus per-update coverage, not seed/config equality.",
+    "No numerical threshold, effective-batch policy, GPU gate, original PLAN, or historical evidence altered.",
+    "CPU runs do not establish GPU memory savings or throughput.",
+    "No GPU/provider API/key reads; no commit or push."
+  ],
+  "checks": {
+    "ruff": "passed",
+    "format": "5 files already formatted",
+    "git_diff_check": "passed"
+  }
+}

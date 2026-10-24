@@ -757,76 +757,226 @@ def ablation_summary(rows):
     }
 
 
-def _markdown(document):
-    columns = [
-        ("scenario_id", "Scenario"),
-        ("condition", "Condition"),
-        ("policy_name", "Policy"),
-        ("status", "State"),
-        ("ground_truth", "Authored cause"),
-        ("first_cause_matches", "First cause matches"),
-        ("target_met", "Target met"),
-        ("peak_before_bytes", "Before bytes"),
-        ("peak_after_bytes", "After bytes"),
-        ("peak_reduction_pct", "Reduction %"),
-        ("throughput_change_pct", "Throughput change %"),
-        ("step_time_change_pct", "Step-time change %"),
-        ("loss_equivalence", "Loss equivalence"),
-        ("rounds", "Rounds"),
-        ("cost_usd", "USD"),
-        ("wall_seconds", "Wall seconds"),
-        ("run_id", "Source run"),
-    ]
-    lines = [
-        "# Evaluation campaign",
-        "",
-        "Status: " + document["status"],
-        "Offline fixtures are excluded from live scores. Missing values remain unknown.",
-        "Costs include failed and partial attempts. Throughput is not inferred from step time.",
-        "",
-        "| " + " | ".join(label for _, label in columns) + " |",
-        "| " + " | ".join("---" for _ in columns) + " |",
-    ]
-    for row in document["rows"]:
-        values = [row.get(key) for key, _ in columns]
-        lines.append(
-            "| "
-            + " | ".join(
-                "unknown" if value is None else str(value).replace("|", "\\|").replace("\n", " ")
-                for value in values
-            )
-            + " |"
-        )
-    lines += [
-        "",
-        "Summary:",
-        "",
-        "```json",
-        json.dumps(document["summary"], indent=2),
-        "```",
-        "",
-        "Paired diagnosis ablation:",
-        "",
-        "```json",
-        json.dumps(document["ablation"], indent=2),
-        "```",
-        "",
-    ]
-    if document["summary"]["status"] == "pending":
-        lines += [
-            "No live evaluation scores are available.",
+CAMPAIGN_COLUMNS = (
+    ("scenario_id", "Scenario"),
+    ("condition", "Condition"),
+    ("policy_name", "Policy"),
+    ("provenance", "Evidence"),
+    ("status", "State"),
+    ("ground_truth", "Authored cause"),
+    ("first_cause_matches", "First cause matches"),
+    ("target_met", "Target met"),
+    ("peak_before_bytes", "Before bytes"),
+    ("peak_after_bytes", "After bytes"),
+    ("peak_reduction_pct", "Reduction %"),
+    ("throughput_change_pct", "Throughput change %"),
+    ("step_time_change_pct", "Step-time change %"),
+    ("loss_equivalence", "Loss equivalence"),
+    ("rounds", "Rounds"),
+    ("cost_usd", "USD"),
+    ("wall_seconds", "Wall seconds"),
+    ("run_id", "Source run"),
+)
+
+
+def campaign_conclusions(summary, ablation):
+    """Describe measured denominators and paired differences without acceptance claims."""
+    if summary["status"] == "pending":
+        return [
+            "No live evaluation scores are available; offline fixtures are excluded from live scores.",
             "The three-condition ablation remains pending.",
             "Offline plumbing tests do not establish model diagnosis or repair performance.",
         ]
+    attempts = summary["attempted_live_runs"]
+    lines = [
+        (
+            f"The campaign contains {attempts} live attempts, with "
+            f"{summary['target_unknown_runs']} unknown target outcomes and "
+            f"{summary['first_cause_unknown_runs']} unscored first diagnoses."
+        ),
+        (
+            f"Target success is {_rate(summary['target_met_rate'])}; first-cause accuracy is "
+            f"{_rate(summary['first_cause_accuracy'])}, using all attempted live runs as the denominator "
+            "only when every outcome is known."
+        ),
+    ]
+    pairs = ablation["paired_scored_count"]
+    if pairs:
+        accuracy = ablation["accuracy"]
+        lines.append(
+            f"The paired comparison contains {pairs} scenario-policy pairs: "
+            + ", ".join(f"{name} {_rate(accuracy[name])}" for name in CONDITIONS)
+            + "."
+        )
+        lines.append(
+            f"Full Ultra minus traceback-only Ultra is {_points(ablation['ultra_full_minus_traceback'])} "
+            "percentage points; full Ultra minus full Super is "
+            f"{_points(ablation['full_ultra_minus_full_super'])} percentage points."
+        )
     else:
-        pairs = document["ablation"]["paired_scored_count"]
-        lines += [
-            f"The campaign contains {document['summary']['attempted_live_runs']} live attempts.",
-            f"First-round cause comparison has {pairs} comparable three-condition pairs.",
-            "Unverified truth, missing diagnostics, and differing source hashes are excluded explicitly.",
-            "These observations are descriptive and do not establish statistical significance.",
-        ]
+        lines.append(
+            "No comparable three-condition pairs are available; no ablation advantage is established."
+        )
+    lines.append(
+        f"{len(ablation['excluded'])} scenario-policy groups were excluded from the paired comparison; "
+        "these descriptive observations do not establish statistical significance or completion of a planned gate."
+    )
+    return lines
+
+
+def _rate(value):
+    return "unknown" if value is None else f"{value * 100:.2f}%"
+
+
+def _points(value):
+    return "unknown" if value is None else f"{value * 100:+.2f}"
+
+
+def _cell(value):
+    from headroom.report import _text
+
+    return _text("unknown" if value is None else value)
+
+
+def campaign_tables(document):
+    """Recompute summaries from saved rows; never trust embedded summary claims."""
+    rows = document.get("rows")
+    if document.get("mode") != "campaign" or not isinstance(rows, list) or len(rows) > 1000:
+        raise ValueError("Expected a bounded evaluation campaign")
+    if any(not isinstance(row, dict) for row in rows):
+        raise ValueError("Campaign rows must be objects")
+    identities = [
+        (row.get("scenario_id"), row.get("policy_name", "default"), row.get("condition"))
+        for row in rows
+    ]
+    if any(any(not isinstance(part, str) for part in identity) for identity in identities):
+        raise ValueError("Campaign row identity must be explicit")
+    if len(set(identities)) != len(identities):
+        raise ValueError("Duplicate scenario-policy-condition rows cannot be scored")
+    if document.get("provenance") not in {"live", "offline_fixture"}:
+        raise ValueError("Campaign provenance must be explicit")
+    # A fixture document cannot elevate individual rows into measured live evidence.
+    if document["provenance"] == "offline_fixture":
+        rows = [{**row, "provenance": "offline_fixture"} for row in rows]
+    summary, ablation = summarize(rows), ablation_summary(rows)
+    return {
+        **document,
+        "rows": rows,
+        "summary": summary,
+        "ablation": ablation,
+        "conclusions": campaign_conclusions(summary, ablation),
+    }
+
+
+def render_campaign(document):
+    """Render an existing campaign without invoking a runner, provider or GPU."""
+    document = campaign_tables(document)
+    summary, ablation = document["summary"], document["ablation"]
+    metrics = summary["measured_metrics"]
+    equivalence = metrics["numerical_equivalence"]
+    lines = [
+        "# Evaluation campaign",
+        "",
+        "Status: " + _cell(document.get("status")),
+        "Evidence: " + _cell(document["provenance"]),
+        "Offline fixtures are excluded from live scores. Missing values remain unknown.",
+        "Costs include failed and partial attempts. Throughput is not inferred from step time.",
+        "",
+        "| " + " | ".join(label for _, label in CAMPAIGN_COLUMNS) + " |",
+        "| " + " | ".join("---" for _ in CAMPAIGN_COLUMNS) + " |",
+    ]
+    for row in document["rows"]:
+        lines.append("| " + " | ".join(_cell(row.get(key)) for key, _ in CAMPAIGN_COLUMNS) + " |")
+    aggregate = {
+        "scenario_id": "Summary (live only)",
+        "condition": "all",
+        "policy_name": "all",
+        "provenance": "live",
+        "status": summary["status"],
+        "first_cause_matches": f"{summary['first_cause_correct']}/{summary['first_cause_scored_denominator']} scored; {summary['first_cause_unknown_runs']} unknown",
+        "target_met": f"{summary['target_met_count']}/{summary['target_measured_denominator']} known; {summary['target_unknown_runs']} unknown",
+        "peak_reduction_pct": metrics["peak_reduction_pct"]["mean"],
+        "throughput_change_pct": metrics["throughput_change_pct"]["mean"],
+        "step_time_change_pct": metrics["step_time_change_pct"]["mean"],
+        "loss_equivalence": f"{equivalence['equivalent']}/{equivalence['comparable_count']} comparable",
+        "rounds": metrics["rounds"]["mean"],
+        "cost_usd": summary["total_cost_usd"],
+        "wall_seconds": metrics["wall_seconds"]["mean"],
+    }
+    lines.append("| " + " | ".join(_cell(aggregate.get(key)) for key, _ in CAMPAIGN_COLUMNS) + " |")
+    lines += [
+        "",
+        "## Summary",
+        "",
+        "Aggregate reductions, timings and rounds are means over measured values; denominators remain explicit.",
+        "| Metric | Value | Measured / comparable | Unknown / not comparable |",
+        "|---|---|---|---|",
+        f"| Target success rate | {_rate(summary['target_met_rate'])} | {summary['target_measured_denominator']} | {summary['target_unknown_runs']} |",
+        f"| First-cause accuracy | {_rate(summary['first_cause_accuracy'])} | {summary['first_cause_scored_denominator']} | {summary['first_cause_unknown_runs']} |",
+    ]
+    for name in (
+        "peak_reduction_pct",
+        "throughput_change_pct",
+        "step_time_change_pct",
+        "rounds",
+        "wall_seconds",
+        "cost_usd",
+    ):
+        metric = metrics[name]
+        lines.append(
+            f"| {_cell(name)} mean | {_cell(metric['mean'])} | {metric['measured_count']} | {metric['unknown_count']} |"
+        )
+    lines += [
+        f"| Numerical equivalence | {_rate(equivalence['rate_among_comparable'])} | {equivalence['comparable_count']} | {equivalence['not_comparable_or_unknown']} |",
+        "",
+        f"Known cost subtotal USD: {_cell(summary['known_cost_usd'])}; total USD: {_cell(summary['total_cost_usd'])}.",
+        f"Offline fixture rows excluded: {summary['offline_fixture_rows_excluded']}.",
+        "",
+        "## Paired diagnosis ablation",
+        "",
+        "| Condition | Correct first causes | Comparable pairs | Accuracy |",
+        "|---|---|---|---|",
+    ]
+    for condition in CONDITIONS:
+        correct = sum(pair["correct"][condition] for pair in ablation["pairs"])
+        lines.append(
+            f"| {condition} | {correct} | {ablation['paired_scored_count']} | {_rate(ablation['accuracy'][condition])} |"
+        )
+    lines += [
+        "",
+        "| Scenario | Policy | Full Ultra | Traceback Ultra | Full Super |",
+        "|---|---|---|---|---|",
+    ]
+    for pair in ablation["pairs"]:
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    _cell(pair["scenario_id"]),
+                    _cell(pair["policy_name"]),
+                    *[_cell(pair["correct"][name]) for name in CONDITIONS],
+                ]
+            )
+            + " |"
+        )
+    if not ablation["pairs"]:
+        lines.append("| none | unknown | unknown | unknown | unknown |")
+    if ablation["excluded"]:
+        lines += ["", "| Excluded scenario | Policy | Reason |", "|---|---|---|"]
+        for row in ablation["excluded"]:
+            lines.append(
+                "| "
+                + " | ".join(
+                    _cell(row.get(key)) for key in ("scenario_id", "policy_name", "reason")
+                )
+                + " |"
+            )
+    lines += ["", "## Evidence-limited conclusions", "", *document["conclusions"]]
     return "\n".join(lines) + "\n"
+
+
+def _markdown(document):
+    return render_campaign(document)
 
 
 def _campaign(

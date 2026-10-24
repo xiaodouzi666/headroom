@@ -1,0 +1,125 @@
+{
+  "timestamp_utc": "20261024T111357Z",
+  "scope": "Manual known no_grad repair: real GPU instrumentation/verification regression, not model-generated repair acceptance",
+  "source": "scenarios/s3_eval_no_grad_missing/train.py",
+  "source_sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+  "candidate_sha256": "192819d69ff6261b28ca284cc3d9989e0098c8519d09775cd140d6eb5b3e0bd2",
+  "manual_patch": "runs/manual-pairing-gpu-20261024T111357Z/manual-patch.diff",
+  "script_args": [
+    "--device",
+    "cuda",
+    "--steps",
+    "20"
+  ],
+  "seed": 1337,
+  "required_steps": 20,
+  "target": "reclaim",
+  "baseline_run": "runs/manual-pairing-gpu-20261024T111357Z/lab/c0bd44ac8c564e59ac39d46b2d2b223c",
+  "candidate_run": "runs/manual-pairing-gpu-20261024T111357Z/lab/6c4bad9ff7f64bfcbda15b43965d12b7",
+  "checks": {
+    "baseline_completed_20": true,
+    "candidate_completed_20": true,
+    "both_cleanup_verified": true,
+    "both_capture_complete": true,
+    "both_unshared": true,
+    "real_pairing_complete": true,
+    "default_verifier_pairing": true,
+    "loss_identical": true,
+    "manual_memory_target_met": true,
+    "original_source_unchanged": true
+  },
+  "passed": true,
+  "verification": {
+    "completed": true,
+    "peak_before": 2.435717632,
+    "peak_after": 0.64841984,
+    "reduction_pct": 73.37869416876643,
+    "step_ms_before": 40.89630313683301,
+    "step_ms_after": 41.03260894771665,
+    "loss_equivalence": "identical",
+    "target_met": true,
+    "notes": [
+      "Pairing: Lab runtime fingerprints and pinned source contracts; all three pairing checks matched",
+      "Reference discovery: Baseline did not OOM or reference already supplied"
+    ],
+    "checks": {
+      "baseline_capture": true,
+      "target_mode_valid": true,
+      "candidate_completed_required_steps": true,
+      "finite_candidate_losses": true,
+      "parameter_count_unchanged": true,
+      "numerics_policy": true,
+      "same_seed": true,
+      "same_inputs": true,
+      "same_effective_batch": true,
+      "same_objective": true,
+      "loss_series_aligned_to_updates": true,
+      "loss_comparable": true,
+      "loss_tolerance": true,
+      "parameter_policy": true,
+      "measured_cuda_peaks": true,
+      "same_gpu_hardware": true,
+      "gpu_observation_clear": true,
+      "throughput_limit": true,
+      "memory_target": true
+    },
+    "max_loss_delta": 0.0,
+    "throughput_regression_pct": 0.33329616720509936,
+    "numerics_changed": false,
+    "parameter_count_before": 37791744,
+    "parameter_count_after": 37791744,
+    "target": "reclaim",
+    "units": "GB = 1e9 bytes; percentages are relative to baseline",
+    "run_ids": {
+      "baseline": "c0bd44ac8c564e59ac39d46b2d2b223c",
+      "candidate": "6c4bad9ff7f64bfcbda15b43965d12b7"
+    },
+    "reference_run": null
+  },
+  "pairing_checks": {
+    "same_inputs": true,
+    "same_effective_batch": true,
+    "same_objective": true
+  },
+  "observations": [
+    {
+      "status": "completed",
+      "steps": 20,
+      "peak_allocated_bytes": 2435717632,
+      "peak_reserved_bytes": 2510290944,
+      "step_ms_median": 40.89630313683301,
+      "shared_gpu": false,
+      "gpu_observation_complete": true,
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "timing_note": "Intervals between completed optimizer updates; first includes target setup; pairing initialization hash time excluded, total wall time retains it",
+      "pairing_hash_seconds": 0.38468010001815856,
+      "bytes_hashed": 177957888
+    },
+    {
+      "status": "completed",
+      "steps": 20,
+      "peak_allocated_bytes": 648419840,
+      "peak_reserved_bytes": 799014912,
+      "step_ms_median": 41.03260894771665,
+      "shared_gpu": false,
+      "gpu_observation_complete": true,
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "timing_note": "Intervals between completed optimizer updates; first includes target setup; pairing initialization hash time excluded, total wall time retains it",
+      "pairing_hash_seconds": 0.38773845694959164,
+      "bytes_hashed": 177957888
+    }
+  ],
+  "elapsed_seconds": 18.31571929412894,
+  "model_calls": 0,
+  "paid_cost_usd": "0",
+  "gpu_runs": 2,
+  "reproduction": "Run original s3 with the listed args/seed in run_script; copy its standalone train.py and add only @torch.no_grad() before def evaluate; call verify_script with that candidate and original baseline, device=cuda, target=reclaim, same args/seed, required_steps=20, max_seconds=120, and no pairing override.",
+  "limitations": [
+    "Manually authored known repair; no Ultra/Super model produced it",
+    "No MVP/main/ablation model score changed",
+    "Does not establish arbitrary-script pairing support",
+    "Total wall time retains fingerprint overhead; only initialization hash time is excluded from optimizer step intervals"
+  ]
+}

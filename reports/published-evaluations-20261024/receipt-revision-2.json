@@ -1,0 +1,61 @@
+{
+  "generated_at": "2026-10-24T11:14:31.974464+00:00",
+  "revision": 2,
+  "previous_receipt": "reports/published-evaluations-20261024/receipt.json",
+  "scope": "Preserve report-produced Decimal percentage strings through publication",
+  "provenance": "offline_validation",
+  "backend": {
+    "command": ".venv/bin/python -m pytest tests/test_published_evaluations.py tests/test_evaluation.py -q",
+    "passed": 78,
+    "duration_seconds": 1.37
+  },
+  "frontend": {
+    "command": "npm test -- src/EvaluationView.test.tsx && npm run typecheck",
+    "passed": 4,
+    "typecheck": "passed",
+    "production_frontend_changed": false
+  },
+  "lint": "Ruff and git diff --check passed",
+  "regression_chain": [
+    "generate_report creates report.json with string percentages",
+    "result_row produces saved campaign row",
+    "curated read-only API preserves exact percentage text",
+    "summary measured_count remains one and mean equals the original 25/20 percent measurements",
+    "Results component renders finite string percentages"
+  ],
+  "numeric_boundary": {
+    "accepted": "Native finite numbers, or signed finite percentage strings with magnitude <=1e30, <=80 coefficient digits, absolute exponent <=80, text length <=160",
+    "rejected_as_unknown": [
+      "booleans",
+      "null",
+      "NaN/Infinity",
+      "malformed numeric strings",
+      "unsupported magnitude or precision"
+    ]
+  },
+  "external_activity": {
+    "paid_calls": 0,
+    "gpu_tasks": 0,
+    "credential_reads": false,
+    "real_network_probes": false
+  },
+  "history": "Previous receipt and verification log left unchanged.",
+  "sources": [
+    {
+      "path": "headroom/api/evaluations.py",
+      "sha256": "2294b25599624a7028d0bdff6f2bd9a6241220693c66af068d4d621aefc2868c"
+    },
+    {
+      "path": "tests/test_published_evaluations.py",
+      "sha256": "5a3c5343682e77a04931564f9e1b77b2307373c7c7e58ec6e4bb339062723942"
+    },
+    {
+      "path": "web/src/EvaluationView.test.tsx",
+      "sha256": "7aa3b101521497b1d88e6eeabd3bbad9e6a3de4a3430654c9a2aff4108ac1fc4"
+    },
+    {
+      "path": "docs/PUBLISHED_EVALUATIONS.md",
+      "sha256": "0d2ebebc210cab37a2edb0cba000add6e6c89ad3e055a0cd7e582c164beef561"
+    }
+  ]
+}

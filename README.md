@@ -70,7 +70,22 @@ The Lab executes watched commands only in Docker with no network, read-only sour
 
 ## Related work
 
-PyTorch allocator snapshots supply the low-level evidence. nanoGPT supplies a fixed real training entrypoint; Transformers supplies Trainer, ViT and T5 fixtures. Headroom adds the diagnosis–patch–verification loop and recorded tradeoffs. See [Architecture](docs/ARCHITECTURE.md) for boundaries and [Feedback](docs/FEEDBACK.md) for actual provider observations.
+Headroom combines runtime allocator evidence, reviewable script patches, same-seed verification and a memory-budget search. These components have substantial prior work. The comparison below describes documented scope, not a measured superiority claim. Headroom's model-driven repair evaluation is still pending.
+
+| Prior work | Documented scope | Headroom's intended focus |
+|---|---|---|
+| [PyTorch memory snapshots and memory_viz](https://docs.pytorch.org/docs/2.14/torch_cuda_memory.html) | Allocator histories, allocation stacks and interactive memory inspection. | Use that evidence to drive a recorded diagnosis, patch and verification loop. |
+| [Memory debugging guides](https://pytorch.org/blog/understanding-gpu-memory-1/) and agent skills | Explain debugging techniques or encode reusable procedures; capabilities vary by guide/skill. | Produce concrete patches and measured per-run evidence, with missing verification kept unknown. |
+| [GPU-Boost](https://github.com/its-arnavtech/GPU-Boost) | GPU inspection, synthetic benchmarks, source analysis and reviewable patches. Its current README also documents approved deterministic edits, validation and rollback. | Runtime allocator evidence and explicit memory targets; GPU-Boost should not be described as having no execution or validation. |
+| [NeMo Megatron-Bridge memory-snapshot skill](https://docs.nvidia.com/nemo/megatron-bridge/nightly/skills/nemo-mbridge-memory-snapshot-analysis/SKILL.html) | Capture guidance and scripts that replay traces, attribute allocations and compare snapshots. | Carry evidence into a script-level repair loop outside a single training framework, within supported Lab entrypoints. |
+| [loadtune](https://pypi.org/project/loadtune/) | Empirical ML pipeline profiling and system-parameter tuning, including DataLoader settings, automatic batch sizing and CUDA OOM handling. | Explain allocator-level memory causes and propose source/environment changes, alongside throughput measurements. |
+| [AutoKernel](https://github.com/RightNow-AI/autokernel) | Iteratively edits and benchmarks Triton/CUDA kernels, keeping or reverting changes with correctness checks. | Search workload memory changes under numerical and throughput constraints. |
+| [Karpathy autoresearch](https://github.com/karpathy/autoresearch) | Iterates on a training program using fixed-duration experiments and validation bits per byte. | Apply a bounded keep/revert search to measured memory use and memory targets. |
+| [Checkmate (MLSys 2020)](https://arxiv.org/abs/1910.02653) | Solves tensor rematerialization schedules to trade training time against memory. | Integrate several memory techniques as inspectable patches; no claim of a better scheduling algorithm. |
+| [ZeRO-Offload](https://www.deepspeed.ai/tutorials/zero-offload/) | Offloads optimizer state/computation to the CPU through DeepSpeed configuration; supports single-GPU use. | Diagnose a supplied workload and verify suggested changes; offloading itself is established prior work. |
+| [Mist](https://github.com/CentML/Mist) and [Galvatron](https://github.com/PKU-DAIR/Hetu-Galvatron) | Optimize distributed training configurations across parallelism and memory-related choices. | A single-GPU script repair workflow, rather than a replacement distributed execution system. |
+
+Sources checked on 2026-10-24. This is a scoped comparison, not an exhaustive novelty review: we do not claim to be the first or only memory-oriented optimization agent. The original planning document is preserved unchanged; the current descriptions above reflect verified upstream documentation. nanoGPT and Transformers provide the repository/library fixtures used here. See [Architecture](docs/ARCHITECTURE.md) for implementation boundaries and [Feedback](docs/FEEDBACK.md) for actual provider observations.
 
 ## Development
 

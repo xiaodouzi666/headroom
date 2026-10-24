@@ -253,3 +253,235 @@ def test_pareto_does_not_turn_unknown_shared_timing_into_a_comparison(tmp_path):
     assert "unknown / shared timing" in markdown
     assert "1.000 ms" not in markdown and "../outside.diff" not in markdown
     assert doc["pareto"]["frontier"][0]["artifacts"] == {}
+
+
+def test_real_round_artifacts_keep_reverted_diff_and_each_verification(tmp_path):
+    import copy
+    import hashlib
+
+    before = {
+        "status": "completed",
+        "capture_complete": True,
+        "peak_allocated_bytes": 10_000_000_000,
+        "step_ms_median": 100,
+    }
+    kept = {
+        "completed": True,
+        "target_met": False,
+        "loss_equivalence": "identical",
+        "peak_before": 10.0,
+        "peak_after": 8.0,
+        "reduction_pct": 20.0,
+        "step_ms_before": 100.0,
+        "step_ms_after": 110.0,
+        "throughput_regression_pct": 10.0,
+        "max_loss_delta": 0.0,
+        "checks": {"loss_tolerance": True},
+        "notes": ["First candidate retained."],
+        "after": {**before, "peak_allocated_bytes": 8_000_000_000, "step_ms_median": 110},
+    }
+    reverted = {
+        **kept,
+        "loss_equivalence": "changed",
+        "peak_after": 6.0,
+        "reduction_pct": 40.0,
+        "max_loss_delta": 0.1,
+        "checks": {"loss_tolerance": False},
+        "notes": ["Second candidate failed numerical verification."],
+        "after": {**before, "peak_allocated_bytes": 6_000_000_000},
+    }
+    diffs = [
+        "--- a/train.py\n+++ b/train.py\n@@ -1 +1 @@\n-VALUE = 1\n+VALUE = 2\n",
+        "--- a/train.py\n+++ b/train.py\n@@ -1 +1 @@\n-VALUE = 2\n+VALUE = 3\n",
+    ]
+    rounds = []
+    for number, (decision, verified, diff) in enumerate(
+        zip(("keep", "revert"), (kept, reverted), diffs, strict=True), 1
+    ):
+        relative = f"rounds/{number:02d}/patches/attempt-01/patch.diff"
+        file = tmp_path / relative
+        file.parent.mkdir(parents=True)
+        file.write_text(diff)
+        rounds.append(
+            {
+                "number": number,
+                "decision": decision,
+                "reason": decision + "_reason",
+                "patch": relative,
+                "verification": verified,
+                "provenance": "offline_fixture",
+            }
+        )
+    original = copy.deepcopy(rounds)
+    doc = generate_report(
+        tmp_path,
+        {
+            "run_id": "fixture",
+            "status": "completed",
+            "provenance": "offline_fixture",
+            "baseline": before,
+            "after": kept["after"],
+            "target_met": False,
+        },
+        rounds=rounds,
+        verification=kept,
+    )
+    assert rounds == original
+    assert doc["measurements"]["after"]["peak_allocated_bytes"] == 8_000_000_000
+    assert doc["summary"]["loss_equivalence"] == "identical"
+    assert doc["summary"]["target_met"] is False
+    for row, diff, expected in zip(doc["rounds"], diffs, (kept, reverted), strict=True):
+        assert row["diff"] == diff
+        assert row["diff_status"] == "available"
+        assert row["diff_bytes"] == len(diff.encode())
+        assert row["diff_sha256"] == hashlib.sha256(diff.encode()).hexdigest()
+        assert row["diff_summary"] == "1 file(s), 1 added line(s), 1 removed line(s)."
+        assert row["verification"] == expected
+        assert row["display_verification"]["target_met"] is False
+    assert doc["rounds"][1]["decision"] == "revert"
+    assert doc["rounds"][1]["display_verification"]["peak_after"] == "6.000 GB"
+    assert doc["rounds"][1]["display_verification"]["max_loss_delta"] == "0.100000"
+    markdown = (tmp_path / "report.md").read_text()
+    assert "[Round candidate patch](rounds/02/patches/attempt-01/patch.diff)" in markdown
+    assert "+VALUE = 3" in markdown and "+VALUE = 2" in markdown
+    assert "| loss\\_tolerance | False |" in markdown
+    assert "Offline fixture only" in markdown
+    assert not check_report_numbers(doc, markdown)
+    assert json.loads((tmp_path / "report.json").read_text()) == doc
+
+
+def test_round_without_verification_has_unknowns_not_final_kept_values(tmp_path):
+    doc = generate_report(
+        tmp_path,
+        {"status": "baseline_only", "provenance": "saved_baseline"},
+        rounds=[{"number": 1, "decision": "revert", "reason": "patch_failed"}],
+        verification={"peak_before": 10.0, "peak_after": 8.0, "loss_equivalence": "identical"},
+    )
+    row = doc["rounds"][0]
+    assert row["display_verification"]["peak_before"] == "unknown"
+    assert row["display_verification"]["peak_after"] == "unknown"
+    assert row["display_verification"]["completed"] is None
+    assert row["display_verification"]["loss_equivalence"] == "unknown"
+    assert row["provenance"] == "saved_baseline"
+    assert row["diff_status"] == "unavailable"
+    assert row["diff"] is None
+    assert "baseline" in (tmp_path / "report.md").read_text()
+
+
+@pytest.mark.parametrize(
+    "kind", ["missing", "outside", "symlink", "directory", "non_utf8", "oversized"]
+)
+def test_round_patch_unavailable_never_reads_or_links_invalid_artifact(tmp_path, monkeypatch, kind):
+    from headroom import report
+
+    output = tmp_path / "out"
+    output.mkdir()
+    path = "rounds/01/patch.diff"
+    local = output / path
+    local.parent.mkdir(parents=True)
+    outside = tmp_path / "private.diff"
+    outside.write_text("private-canary-441")
+    if kind == "outside":
+        path = "../private.diff"
+    elif kind == "symlink":
+        local.symlink_to(outside)
+    elif kind == "directory":
+        local.mkdir()
+    elif kind == "non_utf8":
+        local.write_bytes(b"\xff")
+    elif kind == "oversized":
+        monkeypatch.setattr(report, "MAX_ROUND_DIFF_BYTES", 4)
+        local.write_bytes(b"12345")
+    doc = generate_report(
+        output,
+        {"provenance": "offline_fixture"},
+        rounds=[{"number": 1, "decision": "revert", "patch": path, "diff": "stale-inline-diff"}],
+    )
+    row = doc["rounds"][0]
+    assert row["diff_status"] == "unavailable"
+    assert row["diff"] is None
+    assert row["patch"] is None
+    assert row["diff_sha256"] is None
+    rendered = (output / "report.md").read_text()
+    assert "private-canary-441" not in rendered
+    assert "stale-inline-diff" not in rendered
+    assert "[Round candidate patch]" not in rendered
+    assert (
+        "unavailable" in row["diff_summary"]
+        or "invalid" in row["diff_summary"]
+        or "missing" in row["diff_summary"]
+    )
+
+
+def test_round_patch_rejects_symlinked_parent_directory(tmp_path):
+    output, outside = tmp_path / "output", tmp_path / "outside"
+    output.mkdir()
+    outside.mkdir()
+    (outside / "patch.diff").write_text("outside-canary")
+    (output / "rounds").symlink_to(outside, target_is_directory=True)
+    doc = generate_report(output, {}, rounds=[{"number": 1, "patch": "rounds/patch.diff"}])
+    assert doc["rounds"][0]["diff_status"] == "unavailable"
+    assert "outside-canary" not in (output / "report.md").read_text()
+
+
+@pytest.mark.parametrize("diff", ["", "failed patch text </pre><script>bad</script> 5.000 GB"])
+def test_empty_or_unparseable_round_patch_is_retained_as_actual_evidence(tmp_path, diff):
+    (tmp_path / "patch.diff").write_text(diff)
+    doc = generate_report(
+        tmp_path,
+        {},
+        rounds=[
+            {"number": 1, "decision": "revert", "reason": "apply_failed", "patch": "patch.diff"}
+        ],
+    )
+    row = doc["rounds"][0]
+    assert row["diff_status"] == "available"
+    assert row["diff"] == diff
+    assert row["diff_bytes"] == len(diff.encode())
+    rendered = (tmp_path / "report.md").read_text()
+    assert "<script>" not in rendered
+    assert not check_report_numbers(doc, rendered)
+
+
+def test_round_build_only_does_not_claim_file_read_or_accept_provided_available_status():
+    doc = build_report(
+        {"provenance": "offline_fixture"},
+        rounds=[
+            {
+                "number": 1,
+                "patch": "rounds/01/patch.diff",
+                "diff": "untrusted",
+                "diff_status": "available",
+                "diff_sha256": "invented",
+            }
+        ],
+    )
+    row = doc["rounds"][0]
+    assert row["diff_status"] == "not_loaded"
+    assert row["diff"] is None and row["diff_sha256"] is None
+
+
+def test_round_information_request_and_exhausted_supplement_remain_visible(tmp_path):
+    doc = generate_report(
+        tmp_path,
+        {"status": "needs_human", "provenance": "offline_fixture"},
+        rounds=[
+            {
+                "number": 1,
+                "decision": "revert",
+                "reason": "diagnosis_needs_more_info",
+                "requested_information": [
+                    "Capture optimizer step",
+                    "<script>untrusted text</script>",
+                ],
+                "supplement_request": "Expected saving does not cover the requested reduction.",
+            }
+        ],
+    )
+    text = (tmp_path / "report.md").read_text()
+    assert "Capture optimizer step" in text
+    assert "Required planning supplement" in text
+    assert "Expected saving does not cover" in text
+    assert "<script>" not in text
+    assert doc["rounds"][0]["requested_information"][0] == "Capture optimizer step"
+    assert doc["rounds"][0]["display_verification"]["completed"] is None

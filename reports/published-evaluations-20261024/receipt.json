@@ -1,0 +1,92 @@
+{
+  "generated_at": "2026-10-24T11:10:37.275889+00:00",
+  "scope": "PLAN A.3, T1.8, T3.2, T4.2-T4.3 saved evaluation tables and per-round evidence",
+  "provenance": "offline_validation",
+  "backend": {
+    "command": ".venv/bin/python -m pytest tests/test_evaluation.py tests/test_published_evaluations.py tests/test_api.py -q",
+    "passed": 88,
+    "duration_seconds": 14.02
+  },
+  "frontend": {
+    "command": "npm test && npm run typecheck && npm run build",
+    "passed": 38,
+    "test_files": 5,
+    "typecheck": "passed",
+    "production_build": "passed"
+  },
+  "lint": "Ruff passed for changed Python modules and focused tests; four changed TSX files formatted with Prettier",
+  "publication": {
+    "default_manifest_created": false,
+    "default_api_response": {
+      "status": "pending",
+      "evaluations": []
+    },
+    "read_only_routes": [
+      "GET /api/evaluations",
+      "GET /api/evaluations/{identifier}"
+    ],
+    "private_run_scanning": false,
+    "summary_claims": "recomputed from explicitly curated, whitelisted rows",
+    "duplicate_policy": "reject duplicate scenario-policy-condition identities"
+  },
+  "verification": [
+    "Fixture document cannot elevate its rows or embedded aggregates into live scores.",
+    "Unknown target/cost and mismatched source hashes retain unknown totals and excluded pair reasons.",
+    "API strips private paths and keeps published files unchanged.",
+    "FIFO/symlink/invalid publication inputs are rejected without model execution.",
+    "Full per-round patch Blob download includes reverted rounds and excludes unavailable diffs."
+  ],
+  "external_activity": {
+    "paid_calls": 0,
+    "gpu_tasks": 0,
+    "credential_reads": false,
+    "real_network_probes": false
+  },
+  "limitations": [
+    "No real campaign is published or claimed complete.",
+    "Visual browser verification is owned by the parent task.",
+    "Full repository suite is owned by the parent task."
+  ],
+  "sources": [
+    {
+      "path": "headroom/evaluation.py",
+      "sha256": "9e387e32f7ac4cd110695313c17af211fcb1318172e31ca538e6c6ff68cb216f"
+    },
+    {
+      "path": "headroom/api/evaluations.py",
+      "sha256": "f65ad3538ca91d1b9a2255d9b9ddae9d2612519c265871532a36bce697079d32"
+    },
+    {
+      "path": "headroom/api/app.py",
+      "sha256": "ae171aca34e93098bcf3b3c41a303af47d4b568fcd4bc4f1ba1e034fd5ed82c8"
+    },
+    {
+      "path": "scripts/render_evaluation.py",
+      "sha256": "9f34add642e9d4166c0a0700e95daf949427755391e41f73b8554f7fe27552f1"
+    },
+    {
+      "path": "tests/test_published_evaluations.py",
+      "sha256": "2303a80b7388dc133de7970a1802047a350b79be55f782ab3f46da816c160cd6"
+    },
+    {
+      "path": "web/src/App.tsx",
+      "sha256": "6bda40892afed8529d97317067b91620aeb3e0d20157ee945bb2eaa8d8b49520"
+    },
+    {
+      "path": "web/src/EvaluationView.tsx",
+      "sha256": "3159f0122e7f0296589d6c556aed791525be795999bd7dd0070863c464b8a53f"
+    },
+    {
+      "path": "web/src/EvaluationView.test.tsx",
+      "sha256": "84ef117429634a296f3adf74a773a9e7d43ee8e2b291ab98e91cf6a33a9fb944"
+    },
+    {
+      "path": "web/src/Run.test.tsx",
+      "sha256": "590aa9127dcd400ee19edc12e3df006f7e17b5f4df9faee06afb6289afe5d310"
+    },
+    {
+      "path": "docs/PUBLISHED_EVALUATIONS.md",
+      "sha256": "4ec513c2520147da9f1d6b8272d4b3bee487ad0933ce6886f21a3f0aa11c1a53"
+    }
+  ]
+}

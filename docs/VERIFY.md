@@ -171,3 +171,72 @@ checks true, s1 CUDA OOM with 2,050 device events and 101,007,360 parameters
 37,791,744 parameters (coverage complete). All containers were cleaned up and
 GPU samples were unshared. These are baseline/capture regression results, **not
 T1.6 repaired-GPU acceptance or a measured repair saving**.
+
+
+## Automatic pairing evidence: bounded s3/s4 production support
+
+The default verify_script path now derives same_inputs, same_effective_batch,
+and same_objective from pairing_capture artifacts. It does not infer them from
+equal seeds, argv, config, target stdout, or a target-supplied claim. Detailed
+pairing_evidence is saved in the candidate verification.json and returned to
+the orchestrator. Existing historical runs without these observations remain
+unknown; they are not retroactively upgraded.
+
+Support is intentionally limited to the complete standalone s3/s4 program ASTs
+pinned in headroom/verify/pairing.py. Whitespace and comments do not affect the
+contract. The only accepted AST differences are:
+
+- s3 evaluate wrapped in torch.no_grad() as a decorator or a top-level with
+  block; its underlying body stays identical.
+- s4 loss.backward(retain_graph=True/False) or loss.backward(), and the
+  total_loss metric accumulation using loss, loss.item(), loss.detach(), or
+  loss.detach().item(), with the corresponding emit total_loss value. The
+  backward_retain_graph reporting boolean may change.
+
+All other source changes, including data or target construction, loss
+expression, model, learning rate, training no_grad, or batch defaults, are
+unsupported and explicitly unknown. This is a reviewed source contract, not a
+generic proof for arbitrary Python. Command-mode capture and unsupported
+external repositories remain unknown. Explicit caller-supplied pairing remains
+a separate labeled compatibility/testing seam; production automatic proof does
+not use it.
+
+For supported programs, a short initialization tracer reaches the reviewed main
+loop before its first timed operation, hashes the actual fixed training and
+evaluation inputs/targets plus initial named parameters, then removes itself.
+The SHA-256 fingerprints include dtype and shape and are bounded to 512 MiB
+total tensor bytes. Only weak references and fingerprints survive capture.
+Root forwards, backward caller/frame objects, tensor mutation versions, and
+actual optimizer hooks verify one training forward/backward per update on the
+captured tensors. Effective batch is the observed training tensor leading
+dimension per actual update. Missing coverage, capture errors, mutation,
+unexpected updates, or a preexisting Python tracer make proof unknown.
+
+Before starting the hash timer, capture synchronizes the observed CUDA devices,
+so pending target initialization remains in the Lab interval. Initial hashing
+time is recorded separately and deducted once from the first Lab optimizer interval. Total wall time and the execution deadline retain it;
+ordinary hook/tracer overhead is not claimed to be eliminated. No per-step
+tensor copies or hash operations are added. Initial model parameters must match
+as an additional objective condition. Pairing is evidence for cooperative
+targets, not authentication against a program deliberately rewriting hooks.
+
+CPU Docker regressions exercise real s3/s4 baselines and legal repairs without
+passing synthetic pairing flags. They prove actual identical loss and pairing,
+not GPU memory savings or throughput acceptance. Changed runtime batch produces
+mismatched input/effective-batch proof; changed target source stays unknown.
+All original numerical thresholds, required steps, GPU checks, and batch-policy
+gates remain unchanged. Small-batch OOM reference versus a different effective
+batch remains non-comparable; its original numerical-policy question is pending.
+
+
+### Full-size CUDA regression after the CPU checks
+
+The root continuation subsequently exercised the original s3 workload and a
+manually written no_grad decorator in two real 20-step GPU Lab runs. The default
+verifier derived all three pairing checks from actual captures and reported
+identical training losses, unchanged parameters, a 73.3787% peak reduction and
+0.3333% longer measured optimizer intervals. All capture/cleanup/unshared checks
+passed. See `reports/pairing-manual-gpu-20261024T111357Z.json` and `docs/RESULTS.md`
+for exact bytes, times and reproduction. This is an instrumentation/verification
+regression for a known manual repair; it is not a generated model repair, general
+script support, or closure of the remaining T1.6/MVP/evaluation gates.

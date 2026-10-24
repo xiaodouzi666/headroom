@@ -24,6 +24,7 @@ from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from headroom.api.availability import AvailabilityMonitor
+from headroom.api.evaluations import register_evaluations
 from headroom.api.queue import TERMINAL, AdmissionError, RunQueue
 from headroom.api.security import ARTIFACTS, RUN_ID, job_directory, open_regular
 from headroom.lab.runner import PROJECT_ROOT
@@ -244,6 +245,7 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(settings.allowed_hosts))
     app.state.store, app.state.queue, app.state.settings = store, queue, settings
     app.state.availability = availability
+    register_evaluations(app, settings.data_root)
 
     @app.middleware("http")
     async def local_session(request, call_next):

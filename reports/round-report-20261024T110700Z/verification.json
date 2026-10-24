@@ -1,0 +1,85 @@
+{
+  "completed_utc": "2026-10-24T11:07:37.484009+00:00",
+  "scope": "Persisted round diff and verifier rendering only; no orchestrator/API changes",
+  "source_commit_reviewed": "5ede237495903924edb19d4fb0dfe7a20b724687",
+  "files": {
+    "headroom/report.py": "4194d841a7da245540f324050bb65b5c622fec5380a9fd2b7fd8b4eb67c6cf40",
+    "tests/test_report.py": "d763854f9ea56b75720ea1d3b3037015581ff70bd4d44acf431d4f02d0ac3944"
+  },
+  "plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "plan_requirements": [
+    "docs/PLAN.md:151 per-round diff summary and verification table",
+    "docs/PLAN.md:270 report diff and verification",
+    "docs/PLAN.md:296 keep/revert evidence"
+  ],
+  "tests": {
+    "passed": 63,
+    "skipped": 0,
+    "seconds": 0.14,
+    "log": "reports/round-report-20261024T110700Z/tests-first.log",
+    "command_record": "reports/round-report-20261024T110700Z/test-command.json",
+    "independent_socket_and_dns_guard": true
+  },
+  "checks": {
+    "ruff": {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/report.py",
+        "tests/test_report.py"
+      ],
+      "exit_code": 0,
+      "log": "reports/round-report-20261024T110700Z/ruff.log",
+      "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "format": {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/report.py",
+        "tests/test_report.py"
+      ],
+      "exit_code": 0,
+      "log": "reports/round-report-20261024T110700Z/format.log",
+      "log_sha256": "3bc53bf3e981a98a34a852e175bf9b77af841edea74fca595d9aedcbaf9a4938"
+    },
+    "diff_check": {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "--",
+        "headroom/report.py",
+        "tests/test_report.py"
+      ],
+      "exit_code": 0,
+      "log": "reports/round-report-20261024T110700Z/diff_check.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "behavior": [
+    "Reads existing round.patch through open_regular; bounded regular UTF-8 files only; no symlink traversal.",
+    "Keeps both kept and reverted diffs, exact bytes/SHA-256, parsed diff summary or explicit unavailable summary.",
+    "Reports each round's own verification checks, notes, before/after, timing, loss delta, and target state; unknown values stay unknown.",
+    "Preserves final kept summary independently of later reverted candidates.",
+    "Preserves per-round provenance and visibly labels offline fixtures; renders requested_information and supplement_request.",
+    "Diff text is HTML escaped and every rendered GB/percentage remains backed by report JSON."
+  ],
+  "round_download_contract": "Front-end may download complete row.diff only when diff_status=available; no new API endpoint.",
+  "limitations": [
+    "No live model or GPU round was executed; focused scenarios are labeled offline fixtures.",
+    "This does not validate patch effectiveness or change any numerical/acceptance threshold."
+  ],
+  "model_api_requests": 0,
+  "gpu_runs": 0,
+  "paid_cost_usd": "0",
+  "no_commit_or_push": true,
+  "artifact_sha256": {
+    "tests-first.log": "d101cb599ddb1f7fd8eca998ccc2beab5db924c2e4aaf0b612fc833af0611332",
+    "format.log": "3bc53bf3e981a98a34a852e175bf9b77af841edea74fca595d9aedcbaf9a4938",
+    "test-command.json": "3f8c920b4a0abd5e150400a7e0b9d517f9f132c86bfa18e22d1b46b9aab695c3",
+    "diff_check.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ruff.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+  }
+}

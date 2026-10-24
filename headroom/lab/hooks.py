@@ -194,6 +194,8 @@ class CaptureSession:
         self._previous_alarm_handler: Any = None
         self._previous_timer: tuple[float, float] | None = None
         self._result: dict[str, Any] | None = None
+        self.pairing_capture: Any = None
+        self._pairing_hash_excluded = False
 
     def _error(self, stage: str, exc: BaseException) -> None:
         self.errors.append({"stage": stage, "type": type(exc).__name__, "message": str(exc)})
@@ -309,6 +311,8 @@ class CaptureSession:
         session = self
 
         def recorded_backward(tensor: torch.Tensor, *args: Any, **kwargs: Any) -> Any:
+            if os.getpid() == session.pid and session.pairing_capture is not None:
+                session.pairing_capture.backward(tensor, sys._getframe(1))
             if os.getpid() == session.pid and tensor.numel() == 1:
                 scalar = float(tensor.detach().item())
                 if not math.isfinite(scalar):
@@ -400,6 +404,8 @@ class CaptureSession:
         if os.getpid() != self.pid or self.finished:
             return
         if self._forward_depth == 0:
+            if self.pairing_capture is not None:
+                self.pairing_capture.forward(args)
             # Root .parameters() deduplicates tied parameters. Weak references also
             # cover registered but unused modules without keeping their storage alive.
             parameters = list(module.parameters())
@@ -439,6 +445,11 @@ class CaptureSession:
         if self.device == "cuda":
             torch.cuda.synchronize(self.device_index)
         ended = time.perf_counter()
+        if self.pairing_capture is not None:
+            self.pairing_capture.step(optimizer)
+            if not self._pairing_hash_excluded:
+                self.last_step_at += self.pairing_capture.hash_seconds
+                self._pairing_hash_excluded = True
         self._sample_parameters()
         allocated, reserved = self._peaks()
         self.step_records.append(
@@ -481,6 +492,8 @@ class CaptureSession:
     def _uninstall(self) -> None:
         global _ACTIVE_SESSION
         self._cancel_timer()
+        if self.pairing_capture is not None:
+            self.pairing_capture.close()
         if self._step_handle is not None:
             self._step_handle.remove()
             self._step_handle = None
@@ -574,6 +587,9 @@ class CaptureSession:
         self._result = {
             "protocol": "headroom.lab.v1",
             **self._parameter_evidence(),
+            "pairing_capture": self.pairing_capture.evidence(len(self.step_records))
+            if self.pairing_capture is not None
+            else {"complete": False, "reason": "pairing requires a supported run_script target"},
             "schema_version": 1,
             "capture_complete": capture_complete,
             "execution_status": execution_status,
@@ -591,7 +607,8 @@ class CaptureSession:
             "step_ms_median": statistics.median([record["step_ms"] for record in self.step_records])
             if self.step_records
             else None,
-            "timing_note": "Intervals between completed optimizer updates; first includes target setup",
+            "timing_note": "Intervals between completed optimizer updates; first includes target setup; "
+            "pairing initialization hash time excluded, total wall time retains it",
             "wall_seconds": time.perf_counter() - self.started_at,
             "snapshot": {"available": snapshot is not None, "trace_count": trace_count},
             "snapshot_trace_count": trace_count,

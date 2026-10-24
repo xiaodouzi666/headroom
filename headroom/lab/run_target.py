@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from headroom.lab.hooks import CaptureSession, CaptureSetupError, active_session
+from headroom.verify.pairing import PairingCapture
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -42,6 +43,8 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError(f"Target is not a regular file: {script}")
         sys.argv = [str(script), *target_args]
         sys.path.insert(0, str(script.parent))
+        session.pairing_capture = PairingCapture(script)
+        session.pairing_capture.install()
         runpy.run_path(str(script), run_name="__main__")
     except SystemExit as exc:
         if exc.code is None or exc.code == 0:

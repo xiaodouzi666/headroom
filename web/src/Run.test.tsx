@@ -132,3 +132,102 @@ describe("run event lifecycle", () => {
     expect(source.closed).toBe(true);
   });
 });
+
+it("renders per-round verification and only downloads complete retained or reverted diffs", async () => {
+  window.history.replaceState({}, "", `/runs/${id}`);
+  const patch = "--- a/train.py\n+++ b/train.py\n@@ -1 +1 @@\n-x=1\n+x=2\n";
+  const reportPath = detailPath + "/report.json";
+  const displayed = {
+    peak_before: "10.000 GB",
+    peak_after: "8.000 GB",
+    reduction_pct: "20.000%",
+    step_ms_before: "100.000 ms",
+    step_ms_after: "110.000 ms",
+    throughput_regression_pct: "10.000%",
+    loss_equivalence: "changed",
+    max_loss_delta: "0.500000",
+    target_met: false,
+    completed: true,
+  };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((input: unknown) => {
+      if (input === detailPath)
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              run_id: id,
+              status: "needs_human",
+              provenance: "offline_fixture",
+              usage: {},
+              artifacts: { "report.json": reportPath },
+            }),
+          ),
+        );
+      if (input === reportPath)
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              rounds: [
+                {
+                  number: 1,
+                  decision: "revert",
+                  reason: "loss changed",
+                  provenance: "offline_fixture",
+                  diff_status: "available",
+                  diff: patch,
+                  diff_summary: "1 file, 1 insertion, 1 deletion",
+                  display_verification: displayed,
+                  verification: {
+                    checks: { loss_tolerance: false },
+                    notes: ["Reference differs."],
+                  },
+                },
+                {
+                  number: 2,
+                  decision: "revert",
+                  reason: "patch missing",
+                  diff_status: "unavailable",
+                  verification: {},
+                },
+              ],
+            }),
+          ),
+        );
+      return Promise.reject(new Error("Unexpected request"));
+    }),
+  );
+  vi.stubGlobal("EventSource", OfflineEvents);
+  const nativeURL = URL;
+  const create = vi.fn((_blob: Blob) => "blob:offline"),
+    revoke = vi.fn();
+  vi.stubGlobal(
+    "URL",
+    Object.assign(class extends nativeURL {}, {
+      createObjectURL: create,
+      revokeObjectURL: revoke,
+    }),
+  );
+  const click = vi
+    .spyOn(HTMLAnchorElement.prototype, "click")
+    .mockImplementation(() => {});
+  render(<App />);
+  const table = await screen.findByRole("table", {
+    name: "Round 1 verification",
+  });
+  expect(table).toHaveTextContent("20.000%");
+  expect(table).toHaveTextContent("changed");
+  expect(table).toHaveTextContent("Not passed");
+  expect(screen.getByText("Reference differs.")).toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "Download round 2 patch" }),
+  ).not.toBeInTheDocument();
+  vi.useFakeTimers();
+  screen.getByRole("button", { name: "Download round 1 patch" }).click();
+  expect(create).toHaveBeenCalledTimes(1);
+  expect(create.mock.calls[0][0]).toHaveProperty("size", patch.length);
+  expect(click).toHaveBeenCalledTimes(1);
+  await vi.advanceTimersByTimeAsync(1000);
+  expect(revoke).toHaveBeenCalledWith("blob:offline");
+  click.mockRestore();
+});

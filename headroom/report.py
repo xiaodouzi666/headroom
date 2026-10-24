@@ -1,5 +1,6 @@
 """Evidence-preserving, offline report rendering. JSON is the source of display numbers."""
 
+import hashlib
 import html
 import json
 import re
@@ -7,6 +8,13 @@ from decimal import Decimal, InvalidOperation, localcontext
 from pathlib import Path, PurePosixPath
 from urllib.parse import quote, urlsplit
 from uuid import uuid4
+
+from unidiff import PatchSet
+from unidiff.errors import UnidiffParseError
+
+from headroom.api.security import open_regular
+
+MAX_ROUND_DIFF_BYTES = 2 * 1024 * 1024  # PatchProposal permits at most 512,000 Unicode characters.
 
 NUMBER_UNIT = re.compile(r"(?<![\w.])([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*(GiB|GB|%)")
 
@@ -151,6 +159,103 @@ def _pareto_report(value):
     return value
 
 
+def _round_report(row, provenance):
+    """Retain verifier values and round identity without certifying a candidate."""
+    row = _clone(row)
+    verification = row.get("verification")
+    verification = verification if isinstance(verification, dict) else {}
+    after = verification.get("after", row.get("after"))
+    after = after if isinstance(after, dict) else {}
+    peak_after = verification.get("peak_after")
+    row["provenance"] = row.get("provenance") or provenance or "unknown"
+    row["display_verification"] = {
+        "peak_before": _number(verification.get("peak_before"), "GB"),
+        "peak_after": _number(peak_after, "GB")
+        if _decimal(peak_after) is not None
+        else _gb(after.get("peak_allocated_bytes")),
+        "reduction_pct": _number(verification.get("reduction_pct"), "%"),
+        "step_ms_before": _number(verification.get("step_ms_before"), "ms"),
+        "step_ms_after": _number(verification.get("step_ms_after"), "ms"),
+        "throughput_regression_pct": _number(verification.get("throughput_regression_pct"), "%"),
+        "max_loss_delta": _number(verification.get("max_loss_delta"), places=6),
+        "completed": verification.get("completed")
+        if type(verification.get("completed")) is bool
+        else None,
+        "target_met": verification.get("target_met")
+        if type(verification.get("target_met")) is bool
+        else None,
+        "loss_equivalence": verification.get("loss_equivalence") or "unknown",
+    }
+    row["display_peak_after"] = row["display_verification"]["peak_after"]
+    row["diff_sha256"] = None
+    row["diff_bytes"] = None
+    if row.get("patch"):
+        try:
+            row["patch"] = _relative(row["patch"])
+        except ValueError:
+            row["patch"] = None
+            row["diff"] = None
+            row["diff_status"] = "unavailable"
+            row["diff_summary"] = "Stored patch path is invalid."
+        else:
+            # Only generate_report may promote this to an available persisted artifact.
+            row["diff"] = None
+            row["diff_status"] = "not_loaded"
+            row["diff_summary"] = "Stored patch has not been loaded."
+    elif isinstance(row.get("diff"), str):
+        row["diff_status"] = "provided_text"
+        row["diff_summary"] = (
+            row.get("diff_summary") or "Supplied inline diff; no stored patch verified."
+        )
+    else:
+        row["diff"] = None
+        row["diff_status"] = "unavailable"
+        row["diff_summary"] = "No patch was recorded for this round."
+    return row
+
+
+def _load_round_diff(output, row, warnings):
+    """Load an actual kept or reverted candidate patch without following symlinks."""
+    if row["diff_status"] != "not_loaded":
+        return
+    try:
+        with open_regular(output, row["patch"], max_bytes=MAX_ROUND_DIFF_BYTES) as handle:
+            raw = handle.read(MAX_ROUND_DIFF_BYTES + 1)
+        if len(raw) > MAX_ROUND_DIFF_BYTES:
+            raise ValueError("Patch exceeds the report limit")
+        diff = raw.decode("utf-8")
+    except (OSError, ValueError, UnicodeError):
+        row["diff_status"] = "unavailable"
+        row["diff_summary"] = "Stored patch is missing, unsafe, oversized, or not UTF-8."
+        row["patch"] = None
+        warnings.append(
+            "Round patch unavailable: " + str(row.get("number", row.get("round", "unknown")))
+        )
+        return
+    row.update(
+        diff=diff,
+        diff_status="available",
+        diff_sha256=hashlib.sha256(raw).hexdigest(),
+        diff_bytes=len(raw),
+    )
+    if not diff:
+        row["diff_summary"] = (
+            "Empty code diff; consult this round's recorded plan and configuration changes."
+        )
+        return
+    try:
+        parsed = PatchSet(diff)
+        if not parsed:
+            raise UnidiffParseError("No file changes")
+        row["diff_summary"] = (
+            f"{len(parsed)} file(s), {parsed.added} added line(s), {parsed.removed} removed line(s)."
+        )
+        row["diff_files"] = [entry.path for entry in parsed]
+    except (UnidiffParseError, ValueError):
+        # Failed/invalid patch attempts are still evidence; do not hide their bytes.
+        row["diff_summary"] = "Stored patch text; unified-diff summary unavailable."
+
+
 def build_report(
     run,
     *,
@@ -233,9 +338,7 @@ def build_report(
         )
     for item in diagnosis.get("plan", []):
         item["display_expected_saving"] = _number(item.get("expected_saving_gb"), "GB")
-    for round_data in rounds:
-        result = (round_data.get("verification") or {}).get("after", round_data.get("after") or {})
-        round_data["display_peak_after"] = _gb(result.get("peak_allocated_bytes"))
+    rounds = [_round_report(row, run.get("provenance")) for row in rounds]
     return {
         "schema_version": 1,
         "scope": "Report of supplied artifacts; generation does not certify diagnosis or repair",
@@ -280,6 +383,7 @@ def render_markdown(report):
         "## Summary",
         "",
         f"Run: {_text(report['run'].get('run_id', report['run'].get('id')))}",
+        f"Evidence provenance: {_text(report['run'].get('provenance', 'unknown'))}.",
         (
             f"Status: {_text(report['status'])}; target: {_text(summary['target'])}; "
             f"target met: {_text(summary['target_met'])}."
@@ -332,18 +436,65 @@ def render_markdown(report):
     if not report["rounds"]:
         lines.append("No repair round recorded.")
     for row in report["rounds"]:
+        measured = row["display_verification"]
         lines += [
             f"### Round {_text(row.get('number', row.get('round')))}",
             "",
             (
                 f"Decision: {_text(row.get('decision', row.get('status')))}; "
                 f"reason: {_text(row.get('reason'))}; "
-                f"after peak: {row['display_peak_after']}."
+                f"provenance: {_text(row['provenance'])}."
             ),
-            f"Diff summary: {_text(row.get('diff_summary', row.get('summary')))}.",
+            "This round's candidate is shown even if reverted; the final retained configuration is separate.",
+            f"Diff summary: {_text(row['diff_summary'])}",
         ]
-        if row.get("diff"):
-            lines += ["", "<pre>" + html.escape(str(row["diff"])) + "</pre>", ""]
+        if row["provenance"] == "offline_fixture":
+            lines.append("Offline fixture only; this round is not GPU acceptance evidence.")
+        if row.get("plan_step"):
+            lines.append("Recorded plan: " + _text(row["plan_step"]) + ".")
+        if row.get("requested_information"):
+            lines.append("Information requested before continuing:")
+            for item in row["requested_information"]:
+                lines.append("- " + _text(item))
+        if row.get("supplement_request"):
+            lines.append("Required planning supplement: " + _text(row["supplement_request"]))
+        if row["diff_status"] == "available":
+            path = quote(_relative(row["patch"]), safe="/-._~")
+            lines += [
+                f"[Round candidate patch]({path})",
+                f"Patch SHA-256: {_text(row['diff_sha256'])}; bytes: {_text(row['diff_bytes'])}.",
+                "The candidate diff applies to that round's current source, not necessarily the original baseline.",
+            ]
+        if isinstance(row.get("diff"), str) and row["diff"]:
+            lines += ["", "<pre>" + html.escape(row["diff"]) + "</pre>", ""]
+        lines += [
+            "",
+            "| Round verification | Recorded before | Candidate |",
+            "|---|---|---|",
+            f"| Peak allocated | {measured['peak_before']} | {measured['peak_after']} |",
+            f"| Step time | {measured['step_ms_before']} | {measured['step_ms_after']} |",
+            f"| Completed | — | {_text(measured['completed'])} |",
+            f"| Target met | — | {_text(measured['target_met'])} |",
+            f"| Loss equivalence | — | {_text(measured['loss_equivalence'])} |",
+            f"| Peak reduction | — | {measured['reduction_pct']} |",
+            f"| Step-time change | — | {measured['throughput_regression_pct']} |",
+            f"| Maximum loss delta | — | {measured['max_loss_delta']} |",
+            "",
+            "Before/after values come from this round's verifier; they are not inferred from neighboring rounds.",
+            "",
+            "| Round check | Result |",
+            "|---|---|",
+        ]
+        verification = row.get("verification")
+        verification = verification if isinstance(verification, dict) else {}
+        checks = verification.get("checks")
+        if isinstance(checks, dict) and checks:
+            lines += [f"| {_text(name)} | {_text(value)} |" for name, value in checks.items()]
+        else:
+            lines.append("| Verification available | unknown |")
+        for note in verification.get("notes", []):
+            lines.append("- " + _text(note))
+        lines.append("")
     for key, label in (("patch", "Patch diff"), ("env", "Environment changes")):
         if key in report["artifacts"]:
             link = quote(_relative(report["artifacts"][key]), safe="/-._~")
@@ -515,6 +666,8 @@ def generate_report(output_dir, run, **kwargs):
                 if not artifact.is_relative_to(output) or not artifact.is_file():
                     report["warnings"].append(f"Retained configuration artifact unavailable: {key}")
                     del point["artifacts"][key]
+    for row in report["rounds"]:
+        _load_round_diff(output, row, report["warnings"])
     report["unavailable_artifacts"] = missing
     markdown = render_markdown(report)
     if check_report_numbers(report, markdown):

@@ -10,6 +10,7 @@ import yaml
 
 from headroom.lab.runner import read_artifact_json, run_script
 from headroom.verify.compare import compare_runs
+from headroom.verify.pairing import derive_pairing
 
 _ALLOWED_BATCH_FLAGS = {"--batch", "--batch_size", "--batch-size"}
 
@@ -234,6 +235,17 @@ def verify_script(
                         "GPU_UNAVAILABLE",
                     }:
                         break
+    pairing_evidence = derive_pairing(
+        reference if baseline.get("status") == "oom" else baseline, candidate, required_steps
+    )
+    if pairing is None:
+        pairing = pairing_evidence["checks"]
+    else:
+        pairing_evidence = {
+            **pairing_evidence,
+            "source": "explicit caller-supplied pairing (not automatic runtime proof)",
+            "checks": dict(pairing),
+        }
     report = compare_runs(
         baseline,
         candidate,
@@ -245,6 +257,12 @@ def verify_script(
         **comparison_options,
     )
     report.notes.append(
+        "Pairing: "
+        + pairing_evidence["source"]
+        + "; "
+        + ("; ".join(pairing_evidence["reasons"]) or "all three pairing checks matched")
+    )
+    report.notes.append(
         "Reference discovery: " + discovery.get("reason", discovery.get("source", "provided"))
     )
     if baseline.get("status") == "oom" and reference is None:
@@ -254,6 +272,7 @@ def verify_script(
     payload = {
         "report": report.model_dump(),
         "reference_discovery": discovery,
+        "pairing_evidence": pairing_evidence,
         "candidate_run_dir": candidate.get("run_dir"),
         "reference_run_dir": reference.get("run_dir") if reference else None,
     }
@@ -267,4 +286,5 @@ def verify_script(
         "candidate": candidate,
         "reference": reference,
         "reference_discovery": discovery,
+        "pairing_evidence": pairing_evidence,
     }

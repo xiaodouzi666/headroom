@@ -261,6 +261,7 @@ def search_run(
     cancel_after=None,
     research_factory=None,
     research_enabled=False,
+    target="fit:22GB",
 ):
     import difflib
 
@@ -348,7 +349,7 @@ def search_run(
                             "type": "code",
                             "title": plan.get("title", "Fixture change"),
                             "description": plan.get("description", "Change a fixture constant."),
-                            "expected_saving_gb": 50.0,
+                            "expected_saving_gb": plan.get("saving", 50.0),
                             "numerics_impact": plan.get("numerics", "none"),
                             "throughput_impact": "none",
                             "risk": "Offline fixture only.",
@@ -356,9 +357,11 @@ def search_run(
                         }
                     ],
                     "verification": {"max_steps": 20, "compare_loss": True, "tolerance": 0.001},
-                    "needs_more_info": False,
-                    "notes": ["Synthetic, not model/GPU acceptance."],
+                    "needs_more_info": plan.get("needs_more_info", False),
+                    "notes": ["Synthetic request: provide the missing input shape."],
                 }
+                if plan.get("empty_plan"):
+                    payload.update(root_causes=[], plan=[])
             else:
                 plan = plans[min(counters["patch"], len(plans) - 1)]
                 counters["patch"] += 1
@@ -467,12 +470,17 @@ def search_run(
             "notes": ["All metrics are synthetic."],
         }
         verifies.append({"original": original, "candidate": candidate, "kwargs": kwargs})
-        return {"report": result, "candidate": candidate, "reference": None}
+        return {
+            "report": result,
+            "candidate": candidate,
+            "reference": None,
+            "pairing_evidence": {"provenance": "offline_fixture", "reason": "test transport only"},
+        }
 
     result = run_fix(
         FixRequest(
             script=str(root / "train.py"),
-            target="fit:22GB",
+            target=target,
             max_rounds=max_rounds,
             research_enabled=research_enabled,
         ),
@@ -805,4 +813,67 @@ def test_interruption_during_pareto_publication_cannot_commit_unkept_point(tmp_p
     assert len(json.loads(Path(result["run_dir"], "pareto.json").read_text())["points"]) == 1
     assert "+VALUE = 2" in Path(result["run_dir"], "patch.diff").read_text()
     assert [row["decision"] for row in store.rounds(result["run_id"])] == ["keep", "revert"]
+    store.close()
+
+
+@pytest.mark.parametrize("empty_plan", [False, True])
+def test_diagnosis_information_request_stops_without_repeating_same_evidence(tmp_path, empty_plan):
+    result, store, requests, verifies, root = search_run(
+        tmp_path, [{"needs_more_info": True, "empty_plan": empty_plan}], max_rounds=6
+    )
+    assert result["status"] == "needs_human"
+    assert result["target_met"] is False
+    assert len(requests) == 1
+    assert verifies == []
+    assert (root / "train.py").read_text() == "VALUE = 1\n"
+    report = json.loads(Path(result["report_json"]).read_text())
+    assert len(report["rounds"]) == 1
+    assert report["rounds"][0]["reason"] == "diagnosis_needs_more_info"
+    assert "input shape" in report["rounds"][0]["requested_information"][0]
+    kinds = [event["kind"] for event in store.events(result["run_id"])]
+    assert "needs_human" in kinds and "patch.written" not in kinds
+    store.close()
+
+
+def test_reclaim_requests_supplement_then_stops_with_insufficient_savings(tmp_path):
+    result, store, requests, verifies, _ = search_run(
+        tmp_path, [{"saving": 0.1}], target="reclaim", max_rounds=6
+    )
+    assert result["status"] == "needs_human"
+    assert verifies == []
+    # One initial diagnosis plus the existing bounded supplement, not six rounds.
+    assert len(requests) == 2
+    prompt = json.loads(next(m["content"] for m in requests[0]["messages"] if m["role"] == "user"))
+    assert prompt["required_saving_gb"] == 9.0
+    diagnosis = json.loads((Path(result["run_dir"]) / "diagnosis.json").read_text())
+    assert diagnosis["requires_supplement"] is True
+    assert "9 GB" in diagnosis["supplement_request"]
+    assert any(i["code"] == "INSUFFICIENT_EXPECTED_SAVING" for i in diagnosis["issues"])
+    store.close()
+
+
+def test_remaining_reclaim_savings_use_original_peak_and_keep_unknown_oom_unknown():
+    from headroom.orchestrator import _required_reduction
+
+    baseline = {"status": "completed", "peak_allocated_bytes": 10_000_000_000}
+    current = {"status": "completed", "peak_allocated_bytes": 8_000_000_000}
+    assert _required_reduction(baseline, "reclaim") == 3.0
+    assert _required_reduction(current, "reclaim", original_baseline=baseline) == 1.0
+    assert _required_reduction(current, "fit:7GB") == 1.0
+    assert _required_reduction(current, "fit:9GB") == 0.0
+    assert _required_reduction({**baseline, "status": "oom"}, "reclaim") is None
+    assert _required_reduction({"status": "completed"}, "reclaim") is None
+    assert _required_reduction(current, "reclaim", original_baseline={"status": "oom"}) is None
+
+
+def test_verifier_pairing_evidence_is_retained_in_round_artifact_and_report(tmp_path):
+    result, store, _, _, _ = search_run(
+        tmp_path, [{"before": "VALUE = 1\n", "after": "VALUE = 2\n"}], max_rounds=1
+    )
+    expected = {"provenance": "offline_fixture", "reason": "test transport only"}
+    directory = Path(result["run_dir"])
+    verification = json.loads((directory / "rounds/01/verification.json").read_text())
+    report = json.loads(Path(result["report_json"]).read_text())
+    assert verification["pairing_evidence"] == expected
+    assert report["rounds"][0]["verification"]["pairing_evidence"] == expected
     store.close()

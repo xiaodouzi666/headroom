@@ -1,0 +1,8 @@
+{
+  "command": [
+    ".venv/bin/python",
+    "-c",
+    "import socket\ndef denied(*args, **kwargs):\n    raise AssertionError(\"Offline report verification forbids network\")\nsocket.getaddrinfo = denied\nsocket.create_connection = denied\nsocket.socket.connect = denied\nsocket.socket.connect_ex = denied\nimport pytest\nraise SystemExit(pytest.main([\"-q\", \"tests/test_report.py\", \"tests/test_search.py\"]))\n"
+  ],
+  "exit_code": 0
+}

@@ -191,7 +191,13 @@ def validate_diagnosis(
             DiagnosisIssue("INVALID_SAVINGS_TOTAL", "Expected savings overflow the numeric range.")
         )
         return DiagnosisValidation(diagnosis, tuple(issues))
-    insufficient = required_saving_gb is not None and expected_total < required_saving_gb
+    # An explicit request for evidence may legitimately have no proposed fix yet.
+    # Repeating the same evidence to demand a larger estimate cannot supply it.
+    insufficient = (
+        not diagnosis.needs_more_info
+        and required_saving_gb is not None
+        and expected_total < required_saving_gb
+    )
     supplement = None
     if insufficient:
         issues.append(

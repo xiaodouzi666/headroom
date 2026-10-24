@@ -28,6 +28,7 @@ from headroom.runtime import RuntimeNotReady, build_live_runtime, read_live_prof
 from headroom.search import (
     decide_keep,
     pareto_point,
+    peak_gb,
     select_research_topics,
     write_cumulative_patch,
     write_pareto,
@@ -103,14 +104,23 @@ def _artifact(directory, value):
     )
 
 
-def _required_reduction(result, target):
+def _required_reduction(result, target, *, original_baseline=None):
     kind, limit = parse_target(target)
-    # OOM max allocated is only an observed lower bound, not the requested model peak.
-    if result.get("status") != "completed" or result.get("peak_alloc_gb") is None:
+    # OOM peaks are lower bounds, not the memory needed to finish a workload.
+    measured = peak_gb(result)
+    if result.get("status") != "completed" or measured is None:
         return None
-    peak = Decimal(str(result["peak_alloc_gb"]))
+    peak = Decimal(str(measured))
     if kind == "fit":
         return float(max(Decimal(0), peak - limit / Decimal(10**9)))
+    if kind == "reclaim":
+        original = result if original_baseline is None else original_baseline
+        original_peak = peak_gb(original)
+        if original.get("status") != "completed" or original_peak is None:
+            return None
+        # Match compare_runs' existing 30% reclaim target against the fixed baseline.
+        limit_gb = Decimal(str(original_peak)) * Decimal("0.7")
+        return float(max(Decimal(0), peak - limit_gb))
     return None
 
 
@@ -468,7 +478,9 @@ def run_fix(
                 evidence=diagnostic_evidence,
                 goal=request.target,
                 policy=policy,
-                required_saving_gb=_required_reduction(current_result, request.target),
+                required_saving_gb=_required_reduction(
+                    current_result, request.target, original_baseline=baseline
+                ),
             )
             diagnosis = checked.diagnosis.model_dump() if checked.diagnosis else None
             diagnosis_data = {
@@ -476,6 +488,8 @@ def run_fix(
                 "issues": [asdict(i) for i in checked.issues],
                 "valid": checked.valid,
                 "ready_for_patch": checked.ready_for_patch,
+                "requires_supplement": checked.requires_supplement,
+                "supplement_request": checked.supplement_request,
             }
             _write(round_dir / "diagnosis.json", diagnosis_data)
             _write(directory / "diagnosis.json", diagnosis_data)
@@ -487,12 +501,32 @@ def run_fix(
                 **_llm_phase(store, run_id, diagnose_start),
             )
             if not checked.ready_for_patch:
+                needs_information = bool(
+                    checked.diagnosis is not None and checked.diagnosis.needs_more_info
+                )
+                blocked_reason = (
+                    "diagnosis_needs_more_info" if needs_information else "diagnosis_not_ready"
+                )
                 finish_round(
                     {
-                        "reason": "diagnosis_not_ready",
+                        "reason": blocked_reason,
                         "diagnosis": _artifact(directory, round_dir / "diagnosis.json"),
+                        "requested_information": (
+                            checked.diagnosis.notes if needs_information else []
+                        ),
+                        "supplement_request": checked.supplement_request,
                     }
                 )
+                if needs_information:
+                    raise RuntimeNotReady(
+                        "Diagnosis requests additional information; inspect diagnosis.json notes "
+                        "before restarting with new evidence"
+                    )
+                if checked.requires_supplement:
+                    raise RuntimeNotReady(
+                        "Diagnosis still lacks sufficient evidenced savings after the bounded "
+                        "supplement; inspect diagnosis.json before restarting"
+                    )
                 continue
             step = checked.diagnosis.plan[0]
             step_data = step.model_dump()
@@ -659,6 +693,7 @@ def run_fix(
             )
             candidate_verification["after"] = verified["candidate"]
             candidate_verification["reference_discovery"] = verified.get("reference_discovery")
+            candidate_verification["pairing_evidence"] = verified.get("pairing_evidence")
             active_round["verification"] = candidate_verification
             _write(round_dir / "verification.json", candidate_verification)
             emit(

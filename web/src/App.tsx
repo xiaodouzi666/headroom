@@ -14,6 +14,7 @@ import {
   SquareArrowOutUpRight,
 } from "lucide-react";
 import { getJSON, getText, submitRun } from "./api";
+import EvaluationView from "./EvaluationView";
 import {
   analysisOf,
   availabilityBlocks,
@@ -245,8 +246,8 @@ function Home() {
       {error && <Notice tone="red">{error}</Notice>}
       {!loading && provider.configured === false && (
         <Notice>
-          <strong>Live analysis is not enabled yet.</strong> Runs may pause while
-          model readiness checks are completed.{" "}
+          <strong>Live analysis is not enabled yet.</strong> Runs may pause
+          while model readiness checks are completed.{" "}
           {replays.length > 0 && (
             <a href="#replays">Explore saved evidence instead →</a>
           )}
@@ -896,11 +897,12 @@ function RunPage({ runId }: { runId: string }) {
                   <DiffView diff={diff} />
                 </Suspense>
                 {rows(report.rounds).map((row, index) => (
-                  <div className="round-note" key={index}>
-                    <Badge>Round {String(row.number ?? index + 1)}</Badge>
-                    <strong>{human(row.decision ?? row.status)}</strong>
-                    <p>{text(row.reason, "No decision reason recorded.")}</p>
-                  </div>
+                  <RoundDetails
+                    key={index}
+                    row={row}
+                    index={index}
+                    provenance={run.provenance}
+                  />
                 ))}
               </Section>
               <Section
@@ -1225,6 +1227,133 @@ function Sources({ sources }: { sources: Dict[] }) {
   );
 }
 
+function RoundDetails({
+  row,
+  index,
+  provenance,
+}: {
+  row: Dict;
+  index: number;
+  provenance: unknown;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const number =
+    typeof row.number === "number" && row.number >= 1 && row.number <= 6
+      ? row.number
+      : index + 1;
+  const verification = record(row.verification),
+    display = record(row.display_verification);
+  const completeDiff =
+    row.diff_status === "available" && typeof row.diff === "string";
+  const fields = [
+    ["Completed", "completed"],
+    ["Target met", "target_met"],
+    ["Peak before", "peak_before"],
+    ["Peak after", "peak_after"],
+    ["Peak reduction", "reduction_pct"],
+    ["Step time before", "step_ms_before"],
+    ["Step time after", "step_ms_after"],
+    ["Step-time change", "throughput_regression_pct"],
+    ["Numerical equivalence", "loss_equivalence"],
+    ["Maximum loss difference", "max_loss_delta"],
+  ];
+  const show = (value: unknown) =>
+    typeof value === "boolean"
+      ? value
+        ? "Yes"
+        : "No"
+      : typeof value === "number" && Number.isFinite(value)
+        ? String(value)
+        : text(value);
+  function download() {
+    if (!completeDiff) return;
+    const url = URL.createObjectURL(
+      new Blob([String(row.diff)], { type: "text/plain;charset=utf-8" }),
+    );
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `round-${String(number).padStart(2, "0")}.patch.diff`;
+    anchor.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  return (
+    <article className="round-note">
+      <Badge>Round {number}</Badge>{" "}
+      <strong>{human(row.decision ?? row.status)}</strong>
+      <p>{text(row.reason, "No decision reason recorded.")}</p>
+      {provenanceLabel({ provenance: row.provenance ?? provenance }) && (
+        <p className="caption">
+          {provenanceLabel({ provenance: row.provenance ?? provenance })}
+        </p>
+      )}
+      <p className="small-copy">
+        {text(row.diff_summary, "Patch summary unavailable.")}
+      </p>
+      {completeDiff ? (
+        <>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={download}
+          >
+            Download round {number} patch
+          </button>
+          <details onToggle={(event) => setExpanded(event.currentTarget.open)}>
+            <summary>Inspect round {number} patch</summary>
+            {expanded && (
+              <Suspense fallback={<Loading />}>
+                <DiffView diff={String(row.diff)} />
+              </Suspense>
+            )}
+          </details>
+        </>
+      ) : (
+        <p className="caption">
+          Round patch unavailable: {text(row.diff_status)}
+        </p>
+      )}
+      <div className="table-wrap">
+        <table aria-label={`Round ${number} verification`}>
+          <thead>
+            <tr>
+              <th>Measurement</th>
+              <th>Recorded result</th>
+            </tr>
+          </thead>
+          <tbody>
+            {fields.map(([label, key]) => (
+              <tr key={key}>
+                <th>{label}</th>
+                <td>{show(display[key] ?? verification[key])}</td>
+              </tr>
+            ))}
+            {Object.entries(record(verification.checks)).map(
+              ([name, result]) => (
+                <tr key={name}>
+                  <th>{human(name)}</th>
+                  <td>
+                    {typeof result === "boolean"
+                      ? result
+                        ? "Passed"
+                        : "Not passed"
+                      : "Unknown"}
+                  </td>
+                </tr>
+              ),
+            )}
+          </tbody>
+        </table>
+      </div>
+      {Array.isArray(verification.notes) &&
+        verification.notes.map((note, i) => (
+          <p className="caption" key={i}>
+            {String(note)}
+          </p>
+        ))}
+    </article>
+  );
+}
+
 function Results() {
   const [items, setItems] = useState<Dict[]>([]),
     [reports, setReports] = useState<Record<string, Dict>>({}),
@@ -1284,6 +1413,7 @@ function Results() {
         </p>
       </div>
       {error && <Notice tone="red">{error}</Notice>}
+      <EvaluationView />
       <div className="metric-grid three">
         <Metric label="Saved session runs" value={String(items.length)} />
         <Metric
