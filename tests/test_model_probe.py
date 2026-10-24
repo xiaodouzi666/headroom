@@ -875,3 +875,217 @@ def test_overridden_request_rejects_old_default_response_identity():
     assert report["probes"][0]["status"] == "unknown"
     assert report["probes"][0]["detail"] == "response_model_mismatch"
     assert budget.halt_reason == "response_model_identity_unverified"
+
+
+def test_selected_chat_method_is_exactly_one_paid_row_per_selected_role():
+    plan = probe.build_plan(
+        ["capabilities"],
+        ["ultra", "super", "nano"],
+        capability_methods=["chat"],
+        model_ids={"nano": EXACT_NANO},
+    )
+    assert len(plan) == 5
+    assert len([p for p in plan if p.method == "catalogue"]) == 2
+    assert [(p.role, p.method) for p in plan if p.role] == [
+        ("ultra", "chat"),
+        ("super", "chat"),
+        ("nano", "chat"),
+    ]
+    assert next(p.model for p in plan if p.role == "nano") == EXACT_NANO
+    assert len(probe.build_plan()) == 62
+    assert len(probe.build_plan(["all"], capability_methods=["chat"])) == 14
+
+
+@pytest.mark.parametrize("methods", [[], ["chat", "chat"], ["unknown"]])
+def test_invalid_capability_method_selection_refused(methods):
+    with pytest.raises(probe.Refused):
+        probe.build_plan(["capabilities"], capability_methods=methods)
+
+
+def test_capability_method_on_catalogue_only_is_not_silently_ignored(monkeypatch, capsys):
+    original_get = probe.os.environ.get
+    monkeypatch.setattr(
+        probe.os.environ,
+        "get",
+        lambda key, *a: (
+            pytest.fail("key read") if key == "NEBIUS_API_KEY" else original_get(key, *a)
+        ),
+    )
+    assert probe.main(["--execute", "--suite", "catalogue", "--capability-method", "chat"]) == 2
+    assert json.loads(capsys.readouterr().out)["status"] == "refused"
+
+
+@pytest.mark.parametrize("method_args", [["chat", "chat"], ["unknown"]])
+def test_bad_capability_methods_reject_before_secret_lookup(method_args, monkeypatch, capsys):
+    original_get = probe.os.environ.get
+    monkeypatch.setattr(
+        probe.os.environ,
+        "get",
+        lambda key, *a: (
+            pytest.fail("key read") if key == "NEBIUS_API_KEY" else original_get(key, *a)
+        ),
+    )
+    args = [
+        "--execute",
+        "--suite",
+        "capabilities",
+        *[part for method in method_args for part in ("--capability-method", method)],
+    ]
+    if method_args == ["unknown"]:
+        with pytest.raises(SystemExit) as error:
+            probe.main(args)
+        assert error.value.code == 2
+    else:
+        assert probe.main(args) == 2
+        assert json.loads(capsys.readouterr().out)["status"] == "refused"
+
+
+@pytest.mark.parametrize("suites", [["all"], ["catalogue", "capabilities"], ["capabilities"]])
+def test_mixed_or_full_execution_cannot_use_catalogue_only_key_gate(suites, monkeypatch, capsys):
+    original_get = probe.os.environ.get
+    monkeypatch.setattr(
+        probe.os.environ,
+        "get",
+        lambda key, *a: (
+            pytest.fail("key read") if key == "NEBIUS_API_KEY" else original_get(key, *a)
+        ),
+    )
+    monkeypatch.setattr(probe.HTTPTransport, "__init__", lambda *a: pytest.fail("transport"))
+    args = ["--execute", *[part for suite in suites for part in ("--suite", suite)]]
+    assert probe.main(args) == 2
+    assert "confirmations" in json.loads(capsys.readouterr().out)["detail"]
+
+
+def test_catalogue_missing_key_is_refused_before_transport_or_output(tmp_path, monkeypatch, capsys):
+    monkeypatch.delenv("NEBIUS_API_KEY", raising=False)
+    monkeypatch.setattr(probe.HTTPTransport, "__init__", lambda *a: pytest.fail("transport"))
+    directory = tmp_path / "catalogue"
+    assert probe.main(["--execute", "--suite", "catalogue", "--output-dir", str(directory)]) == 2
+    assert json.loads(capsys.readouterr().out)["status"] == "refused"
+    assert not directory.exists()
+
+
+def test_catalogue_only_real_http_adapter_sends_exactly_two_gets_without_paid_gates(
+    tmp_path, monkeypatch, capsys
+):
+    import httpx
+
+    monkeypatch.setenv("NEBIUS_API_KEY", "offline-placeholder-not-a-real-key")
+    monkeypatch.setattr(probe, "validate_prices", lambda *a: pytest.fail("price validation"))
+    monkeypatch.setattr(probe, "Budget", lambda *a: pytest.fail("budget construction"))
+    monkeypatch.setattr(probe.HTTPTransport, "chat", lambda *a: pytest.fail("chat called"))
+    monkeypatch.setattr(probe.Path, "read_text", lambda *a, **k: pytest.fail("price/file read"))
+    real_client = httpx.AsyncClient
+    requests = []
+    metadata = {
+        "pricing": {
+            "prompt": "0.1",
+            "completion": "0.3",
+            "request": "0",
+            "input_cache_read": "0.05",
+        },
+        "per_request_limits": {"prompt_tokens": 1000},
+        "context_length": 1000,
+        "supported_sampling_parameters": ["max_completion_tokens"],
+    }
+
+    def handler(request):
+        requests.append(request)
+        assert request.method == "GET" and request.url.path == "/v1/models"
+        assert request.url.params["verbose"] == "true"
+        return httpx.Response(200, json={"data": [{"id": EXACT_NANO, **metadata}]})
+
+    monkeypatch.setattr(
+        httpx, "AsyncClient", lambda **kw: real_client(transport=httpx.MockTransport(handler), **kw)
+    )
+    directory = tmp_path / "catalogue"
+    assert (
+        probe.main(
+            [
+                "--execute",
+                "--suite",
+                "catalogue",
+                "--pricing-file",
+                "/absent.json",
+                "--output-dir",
+                str(directory),
+            ]
+        )
+        == 0
+    )
+    output = json.loads(capsys.readouterr().out)
+    with (directory / "report.json").open() as handle:
+        report = json.load(handle)
+    assert len(requests) == 2 and len({r.url.host for r in requests}) == 2
+    assert output["status"] == "complete" and output["inference_requests"] == 0
+    assert report["accepted"] is False and "budget" not in report
+    assert report["catalogues"][0]["models"][0]["advertised_metadata"] == metadata
+    assert "offline-placeholder-not-a-real-key" not in json.dumps(report)
+
+
+@pytest.mark.parametrize(
+    "status,body",
+    [
+        (401, {"error": "not authorized"}),
+        (500, {"error": "server error"}),
+        (200, {"data": []}),
+        (200, {"data": [{"id": 123}]}),
+        (200, {"data": "malformed"}),
+        (200, []),
+        (200, None),
+    ],
+)
+def test_catalogue_failure_empty_or_malformed_is_saved_and_nonzero(
+    status, body, tmp_path, monkeypatch, capsys
+):
+    import httpx
+
+    monkeypatch.setenv("NEBIUS_API_KEY", "offline-placeholder-not-a-real-key")
+    real_client = httpx.AsyncClient
+    requests = []
+
+    def handler(request):
+        requests.append(request)
+        assert request.method == "GET"
+        return (
+            httpx.Response(status, json=body)
+            if body is not None
+            else httpx.Response(status, text="invalid JSON")
+        )
+
+    monkeypatch.setattr(
+        httpx, "AsyncClient", lambda **kw: real_client(transport=httpx.MockTransport(handler), **kw)
+    )
+    directory = tmp_path / "catalogue"
+    assert probe.main(["--execute", "--suite", "catalogue", "--output-dir", str(directory)]) == 2
+    output = json.loads(capsys.readouterr().out)
+    report = json.loads((directory / "report.json").read_text())
+    assert len(requests) == 2
+    assert output["status"] == "failed" and report["accepted"] is False
+    assert all(
+        row["status"] == "failed" and row["http_status"] == status for row in report["catalogues"]
+    )
+    assert report["inference_requests"] == 0
+
+
+@pytest.mark.parametrize(
+    "plan",
+    [
+        [],
+        [
+            probe.Probe("bad", "https://untrusted.invalid/v1/", None, "catalogue"),
+            probe.Probe("ok", probe.ENDPOINTS[1], None, "catalogue"),
+        ],
+        [
+            probe.Probe("ok", probe.ENDPOINTS[0], None, "catalogue"),
+            probe.Probe("bad", probe.ENDPOINTS[1], "nano", "chat"),
+        ],
+    ],
+)
+def test_catalogue_helper_validates_entire_plan_before_first_get(plan):
+    class NoRequests:
+        def catalogue(self, spec):
+            pytest.fail("GET before full-plan validation")
+
+    with pytest.raises(probe.Refused):
+        probe.execute_catalogue_plan(plan, NoRequests())

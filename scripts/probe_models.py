@@ -125,6 +125,7 @@ def build_plan(
     long_sizes: list[int] | None = None,
     *,
     model_ids: dict[str, str] | None = None,
+    capability_methods: list[str] | None = None,
 ) -> list[Probe]:
     if endpoint not in ENDPOINTS:
         raise Refused("endpoint is not an official allowlisted Token Factory endpoint")
@@ -142,10 +143,19 @@ def build_plan(
     selected = (
         {"catalogue", "capabilities", "long", "concurrency"} if "all" in suites else set(suites)
     )
+    methods = METHODS if capability_methods is None else tuple(capability_methods)
+    if (
+        not methods
+        or any(not isinstance(method, str) or method not in METHODS for method in methods)
+        or len(set(methods)) != len(methods)
+    ):
+        raise Refused("capability methods must be known, distinct and nonempty")
+    if capability_methods is not None and "capabilities" not in selected:
+        raise Refused("--capability-method requires a suite containing capabilities")
     probes = [Probe(f"catalogue-{i}", url, None, "catalogue") for i, url in enumerate(ENDPOINTS)]
     if "capabilities" in selected:
         for role in roles:
-            probes.extend(Probe(f"{role}-{method}", endpoint, role, method) for method in METHODS)
+            probes.extend(Probe(f"{role}-{method}", endpoint, role, method) for method in methods)
     if "long" in selected:
         for size in long_sizes or LONG_SIZES:
             if size not in LONG_SIZES:
@@ -430,6 +440,7 @@ class HTTPTransport:
         import httpx
 
         start = time.monotonic()
+        http_status = None
         try:
             async with (
                 asyncio.timeout(OTHER_TIMEOUT),
@@ -442,30 +453,50 @@ class HTTPTransport:
                     params={"verbose": "true"},
                     headers={"Authorization": f"Bearer {self.key}"},
                 )
+                http_status = response.status_code
                 result = {
-                    "http_status": response.status_code,
+                    "http_status": http_status,
                     "elapsed_ms": (time.monotonic() - start) * 1000,
                 }
                 if response.status_code == 200:
-                    data = response.json().get("data", [])
-                    result["models"] = [
-                        {
-                            "id": item["id"],
-                            "advertised_metadata": {
-                                k: item[k]
-                                for k in ("context_length", "max_model_len", "pricing", "price")
-                                if k in item
-                            },
-                        }
+                    document = response.json()
+                    data = document.get("data") if isinstance(document, dict) else None
+                    if not isinstance(data, list) or any(
+                        not isinstance(item, dict)
+                        or not isinstance(item.get("id"), str)
+                        or not re.fullmatch(r"[A-Za-z0-9_./:-]{1,200}", item["id"])
                         for item in data
-                        if isinstance(item, dict)
-                        and re.fullmatch(r"[A-Za-z0-9_./:-]{1,200}", str(item.get("id", "")))
-                    ]
+                    ):
+                        result["error"] = "malformed_catalogue_models"
+                        result["models"] = []
+                    else:
+                        result["models"] = [
+                            {
+                                "id": item["id"],
+                                "advertised_metadata": {
+                                    k: item[k]
+                                    for k in (
+                                        "context_length",
+                                        "max_model_len",
+                                        "pricing",
+                                        "price",
+                                        "per_request_limits",
+                                        "supported_sampling_parameters",
+                                    )
+                                    if k in item
+                                },
+                            }
+                            for item in data
+                        ]
                 else:
                     result["error"] = f"http_{response.status_code}"
                 return result
         except (TimeoutError, httpx.HTTPError, ValueError, TypeError, KeyError) as exc:
-            return {"error": type(exc).__name__, "elapsed_ms": (time.monotonic() - start) * 1000}
+            return {
+                "http_status": http_status,
+                "error": type(exc).__name__,
+                "elapsed_ms": (time.monotonic() - start) * 1000,
+            }
 
     def chat(self, probe: Probe, payload: dict) -> dict:
         self.check_endpoint(probe)
@@ -718,6 +749,57 @@ def probe_attempts(
         budget.settle(reserved, charged, known)
 
 
+def execute_catalogue_plan(plan: list[Probe], transport, on_result=None) -> dict:
+    """Only two allowlisted GETs; no price assumptions, inference or budget object."""
+    if (
+        len(plan) != len(ENDPOINTS)
+        or {p.endpoint for p in plan} != set(ENDPOINTS)
+        or any(p.method != "catalogue" or p.role is not None for p in plan)
+    ):
+        raise Refused("catalogue-only execution requires exactly the two official GET plans")
+    report = {
+        "schema_version": 1,
+        "mode": "catalogue_only",
+        "accepted": False,
+        "live": True,
+        "status": "running",
+        "timestamp_utc": dt.datetime.now(dt.UTC).isoformat(),
+        "inference_requests": 0,
+        "catalogues": [],
+        "note": "Authenticated directory availability only; not model inference, capability, pricing or billing verification.",
+    }
+    for spec in plan:
+        observed = transport.catalogue(spec)
+        models = observed.get("models")
+        valid = (
+            observed.get("http_status") == 200
+            and not observed.get("error")
+            and isinstance(models, list)
+            and bool(models)
+            and all(
+                isinstance(row, dict) and isinstance(row.get("id"), str) and row["id"]
+                for row in models
+            )
+        )
+        report["catalogues"].append(
+            {
+                "id": spec.id,
+                "endpoint": spec.endpoint,
+                **observed,
+                "catalogue_available": bool(valid),
+                "status": "ok" if valid else "failed",
+            }
+        )
+        if on_result:
+            on_result(report)
+    report["status"] = (
+        "complete" if all(row["catalogue_available"] for row in report["catalogues"]) else "failed"
+    )
+    if on_result:
+        on_result(report)
+    return report
+
+
 def execute_plan(
     plan: list[Probe],
     prices: dict[str, Price],
@@ -848,6 +930,12 @@ def parser() -> argparse.ArgumentParser:
         metavar="ROLE=EXACT_ID",
         help="Explicit case-sensitive candidate override; still requires live endpoint catalogue and matching reviewed pricing",
     )
+    p.add_argument(
+        "--capability-method",
+        action="append",
+        choices=METHODS,
+        help="Limit capability rows only; repeat for distinct methods (default: all thirteen)",
+    )
     p.add_argument("--base-url", choices=ENDPOINTS, default=ENDPOINTS[0])
     p.add_argument("--long-input-tokens", action="append", type=int, choices=LONG_SIZES)
     p.add_argument("--max-retries", type=int, choices=range(6), default=0)
@@ -861,7 +949,12 @@ def main(argv=None) -> int:
     try:
         model_ids = parse_model_overrides(args.model_id)
         plan = build_plan(
-            args.suite, args.roles, args.base_url, args.long_input_tokens, model_ids=model_ids
+            args.suite,
+            args.roles,
+            args.base_url,
+            args.long_input_tokens,
+            model_ids=model_ids,
+            capability_methods=args.capability_method,
         )
     except Refused as exc:
         print(
@@ -896,17 +989,19 @@ def main(argv=None) -> int:
         )
         return 0
     try:
-        if not args.allow_paid_requests or not args.credit_confirmed:
-            raise Refused("execute requires explicit paid-request and credit confirmations")
-        if not args.budget_usd or not args.available_credit_usd or args.pricing_file is None:
-            raise Refused("execute requires budget, available credit and verified pricing file")
-        cap = money(args.budget_usd)
-        if cap <= 0 or money(args.available_credit_usd) < cap:
-            raise Refused("available confirmed credit must cover the positive money cap")
-        if not 1 <= args.max_completion_tokens <= 16384:
-            raise Refused("completion cap must be 1..16384 and include reasoning")
-        roles = {p.role for p in plan if p.role}
-        prices = validate_prices(json.loads(args.pricing_file.read_text()), roles, model_ids)
+        catalogue_only = bool(plan) and all(p.method == "catalogue" for p in plan)
+        if not catalogue_only:
+            if not args.allow_paid_requests or not args.credit_confirmed:
+                raise Refused("execute requires explicit paid-request and credit confirmations")
+            if not args.budget_usd or not args.available_credit_usd or args.pricing_file is None:
+                raise Refused("execute requires budget, available credit and verified pricing file")
+            cap = money(args.budget_usd)
+            if cap <= 0 or money(args.available_credit_usd) < cap:
+                raise Refused("available confirmed credit must cover the positive money cap")
+            if not 1 <= args.max_completion_tokens <= 16384:
+                raise Refused("completion cap must be 1..16384 and include reasoning")
+            roles = {p.role for p in plan if p.role}
+            prices = validate_prices(json.loads(args.pricing_file.read_text()), roles, model_ids)
         key = os.environ.get("NEBIUS_API_KEY")
         if not key:
             raise Refused("NEBIUS_API_KEY is missing; .env is never loaded by this script")
@@ -920,6 +1015,30 @@ def main(argv=None) -> int:
             temp = output / "report.json.tmp"
             temp.write_text(json.dumps(value, indent=2) + "\n")
             temp.replace(path)
+
+        if catalogue_only:
+            report = execute_catalogue_plan(plan, HTTPTransport(key), save)
+            print(
+                json.dumps(
+                    {
+                        "accepted": False,
+                        "mode": "catalogue_only",
+                        "status": report["status"],
+                        "inference_requests": 0,
+                        "report": str(output / "report.json"),
+                        "catalogues": [
+                            {
+                                "endpoint": row["endpoint"],
+                                "http_status": row.get("http_status"),
+                                "status": row["status"],
+                            }
+                            for row in report["catalogues"]
+                        ],
+                    },
+                    indent=2,
+                )
+            )
+            return 0 if report["status"] == "complete" else 2
 
         report = execute_plan(
             plan,

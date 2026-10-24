@@ -17,7 +17,7 @@ Both catalogue endpoints are included in every execution plan:
 - https://api.tokenfactory.us-central1.nebius.com/v1/models?verbose=true
 - https://api.tokenfactory.nebius.com/v1/models?verbose=true
 
-Paid probes use the selected official --base-url (default us-central1). Redirects and non-allowlisted endpoints are refused. Catalogue absence prevents dispatch to that model. No other LLM provider is used.
+Inference probes use the selected official --base-url (default us-central1). Redirects and non-allowlisted endpoints are refused. Catalogue absence prevents dispatch to that model. No other LLM provider is used.
 
 ## Explicit model identifiers
 
@@ -58,14 +58,14 @@ The capability candidates for every model are:
 
 A successful HTTP response alone does not establish reasoning toggle or token-budget enforcement. Those rows remain unknown with observed reasoning/usage details until reviewed; malformed JSON, wrong tools, truncation and refusal are not successes. Fenced JSON maps to the application JSON_METHOD=text only after review; template/prefix/effort candidates correspond to chat_template_kwargs/system_prefix/reasoning_effort. The probe never mutates headroom/config.py.
 
-Actual network execution requires all of:
+Any execution plan containing inference requests still requires all of:
 1. --execute;
 2. --allow-paid-requests and --credit-confirmed, backed by real operator authorization;
 3. positive --budget-usd and --available-credit-usd sufficient to cover that cap;
 4. --pricing-file containing verified current prices and provider-enforced token ceilings/cap behavior for every selected model;
 5. NEBIUS_API_KEY already present in the caller environment; the tool never reads .env automatically or takes a key as an argument.
 
-These CLI confirmations are preconditions, not a mechanism to grant oneself spending permission. Current account/key/credit prerequisites remain unmet. No live command has been executed.
+These CLI confirmations are preconditions, not a mechanism to grant oneself spending permission. A current active account or trial balance is not evidence that the server key, exact model access, pricing and billable limits are verified. No live command was executed by this implementation change.
 
 Example pricing document structure (deliberately invalid until independently completed and verified):
 
@@ -101,6 +101,31 @@ After account access, balance, current pricing, cap semantics and a concrete spe
 ~~~
 
 This example does not authorize execution. Continue with separate long/concurrency suites only within the remaining authorized balance. Selected --suite options can be repeated. --roles applies to capability rows; long always uses Ultra, concurrency always uses four Super calls. --long-input-tokens selects planned 64000/200000/500000/900000 stages. A new --output-dir must not already exist. Default reports go to a unique runs/model-probes/<UTC>-<suffix>/report.json directory on the server.
+
+## Read-only authenticated catalogue and minimal chat planning
+
+With a privately configured server key, an explicitly requested directory-only command is:
+
+~~~sh
+uv run --env-file .env python scripts/probe_models.py --suite catalogue --execute
+~~~
+
+This pure plan performs exactly two allowlisted `GET /v1/models?verbose=true` calls. It does not read a pricing file, require paid-inference/credit flags, construct an inference budget or send a chat/POST request. No key value is accepted as an argument or included in reports. Without `--execute`, the script still prints a zero-network plan without reading credentials. Mixed/full plans retain every original paid gate.
+
+The report preserves each actual HTTP status and sanitized advertised metadata, including context length, pricing (and its request/cache components), per-request limits and supported sampling parameters. Both directories must return a nonempty valid model list for exit0; any401/5xx, empty/malformed response or transport failure remains failed/nonzero. `accepted` stays false, and `inference_requests=0` does not assert any billing balance or prove that a listed model can perform inference.
+
+The smallest planned three-role chat check is:
+
+~~~sh
+.venv/bin/python scripts/probe_models.py --suite capabilities \
+  --roles ultra super nano --capability-method chat \
+  --model-id nano=nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B \
+  --max-retries 0 --max-completion-tokens 16
+~~~
+
+This is also a dry-run: two catalogue entries plus one chat per selected role, with no request sent. `--capability-method` is repeatable for distinct known methods and only filters capability rows. Default behavior remains thirteen methods and62 total entries. Selecting `--suite all` still includes long-context/concurrency probes even when capabilities are filtered; use the explicit capabilities-only example for a minimal plan. Unrecognized/duplicate methods, or using the option for a suite without capabilities, are rejected before credential lookup.
+
+No claim is made that all three models can be verified within $0.10 or that $1 trial credit completes the original capability/context evaluation. Any future POST requires separately authorized spend and independently verified model prices, a genuine server-billable prompt ceiling, output caps that include reasoning and no unsupported fee components. Do not set verified flags merely to make the probe run. The current token-only price formula does not account for a separate request surcharge; a nonzero/unknown such charge requires review before inference. A catalogue-only check can precede those monetary/capability verifications without inventing them.
 
 ## Budget and failure accounting
 
