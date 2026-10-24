@@ -7,7 +7,7 @@ Autoresearch for GPU memory: capture a PyTorch workload, explain its memory use,
 
 Public demo: pending approved hostname and deployment. Local app: `headroom serve`.
 Video: pending a verified repair and the owner's recording.
-[Current results](docs/RESULTS.md) · [Task status](PROGRESS.md) · [Original plan](docs/PLAN.md)
+[Current results](docs/RESULTS.md) · [CLI and project config](docs/CLI.md) · [Task status](PROGRESS.md) · [Original plan](docs/PLAN.md)
 
 ## How it works
 

@@ -30,7 +30,8 @@ from headroom.api.security import ARTIFACTS, RUN_ID, job_directory, open_regular
 from headroom.lab.runner import PROJECT_ROOT
 from headroom.orchestrator import FixRequest, Policy
 from headroom.repository import (
-    parse_python_command,
+    command_argv,
+    parse_watch_command,
     preparation_remaining,
     prepare_repository,
     validate_repository,
@@ -168,7 +169,7 @@ def _prepare_submission(settings, submission, source, run_id, *, deadline):
     preparation_remaining(deadline)
     repository_input = submission.repo is not None
     folder = settings.data_root / "uploads" / run_id
-    profile, arguments = None, []
+    profile, arguments, execution_argv = None, [], None
     if repository_input:
         prepared = prepare_repository(
             submission.repo, submission.ref, submission.cmd, destination=folder, deadline=deadline
@@ -180,6 +181,7 @@ def _prepare_submission(settings, submission, source, run_id, *, deadline):
             raise ValueError("Repository source rejected by static policy")
         folder, script = prepared.source_root, prepared.script
         profile, arguments = prepared.source_profile, list(prepared.script_args)
+        execution_argv = list(prepared.execution_argv)
     else:
         folder.mkdir(parents=True, exist_ok=False, mode=0o700)
         script = folder / "train.py"
@@ -191,6 +193,8 @@ def _prepare_submission(settings, submission, source, run_id, *, deadline):
         source_root=str(folder),
         source_profile=profile,
         script_args=arguments,
+        execution_argv=execution_argv,
+        repository_mode=repository_input,
         target=submission.target,
         policy=submission.policy,
         budget_usd=submission.budget,
@@ -308,10 +312,13 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
                 raise HTTPException(400, "Repository input requires exactly repo, ref, cmd")
             try:
                 validate_repository(submission.repo, submission.ref)
-                parse_python_command(submission.cmd)
+                parsed = parse_watch_command(command_argv(submission.cmd))
+                if not parsed.repair_supported:
+                    raise ValueError(parsed.repair_reason)
             except (ValueError, TypeError):
                 raise HTTPException(
-                    400, "Use a public GitHub URL, exact commit SHA and Python script argv"
+                    400,
+                    "Use a public GitHub URL, exact commit SHA and a supported Python script/module argv",
                 ) from None
             source = None
         else:

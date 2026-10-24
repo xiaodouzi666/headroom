@@ -376,7 +376,11 @@ def test_repository_prepared_source_enters_same_queue(settings, monkeypatch):
         script = destination / "train.py"
         script.write_text("print('repository offline fixture')")
         return SimpleNamespace(
-            source_root=destination, script=script, script_args=(), source_profile=None
+            source_root=destination,
+            script=script,
+            script_args=(),
+            source_profile=None,
+            execution_argv=("python", "train.py"),
         )
 
     monkeypatch.setattr("headroom.api.app.prepare_repository", prepared)
@@ -603,3 +607,51 @@ def test_expired_queue_sse_waits_for_report_or_explicit_render_failure(
         finally:
             report_release.set()
             worker_release.set()
+
+
+def test_repository_module_argv_survives_validation_preparation_and_queue(settings, monkeypatch):
+    import shlex
+    import socket
+
+    from headroom.execution import prepare_local_command
+
+    def denied(*args, **kwargs):
+        pytest.fail("Network forbidden in repository argv integration test")
+
+    monkeypatch.setattr(socket, "getaddrinfo", denied)
+    monkeypatch.setattr(socket.socket, "connect", denied)
+    captured = []
+
+    def prepared(repo, ref, command, *, destination, deadline):
+        from types import SimpleNamespace
+
+        package = destination / "package"
+        package.mkdir(parents=True)
+        (package / "train.py").write_text("VALUE = 1\n")
+        resolved = prepare_local_command(destination, command)
+        return SimpleNamespace(
+            source_root=resolved.source_root,
+            script=resolved.script,
+            script_args=resolved.script_args,
+            source_profile=None,
+            execution_argv=resolved.execution_argv,
+        )
+
+    def worker(request, **kwargs):
+        captured.append(request)
+        return completed_worker(request, **kwargs)
+
+    monkeypatch.setattr("headroom.api.app.prepare_repository", prepared)
+    command = 'python3 -u -W ignore -m package.train --label "two words"'
+    with TestClient(create_app(settings, worker=worker)) as client:
+        response = client.post(
+            "/api/runs",
+            json={"repo": "https://github.com/a/b", "ref": "a" * 40, "cmd": command},
+        )
+        assert response.status_code == 202, response.text
+        assert wait_done(client, response.json()["run_id"])["status"] == "completed"
+    assert len(captured) == 1
+    assert captured[0].execution_argv == shlex.split(command)
+    assert captured[0].script_args == ["--label", "two words"]
+    assert captured[0].repository_mode is True
+    assert captured[0].script.endswith("/package/train.py")

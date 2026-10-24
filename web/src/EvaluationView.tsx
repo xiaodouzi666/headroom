@@ -34,6 +34,18 @@ const value = (v: unknown) =>
       : String(v);
 const percent = (v: unknown) =>
   decimal(v) === null ? "Unknown" : (decimal(v)! * 100).toFixed(2) + "%";
+const numericalBasis = (basis: unknown) =>
+  (
+    ({
+      original_plan_first_five_backward_scalars:
+        "Observed first five backward losses (original plan)",
+      original_plan_full_backward_scalar_series:
+        "Observed full backward-loss sequence (original plan)",
+      repository_no_reference_exception:
+        "Repository without reference; numerical equivalence unverified",
+      unavailable: "Comparison unavailable",
+    }) as Record<string, string>
+  )[String(basis)] ?? "Comparison basis not recorded";
 const metric = (key: string, v: unknown) =>
   key.endsWith("_bytes") ? gb(v) : key === "cost_usd" ? usd(v) : value(v);
 
@@ -202,7 +214,23 @@ export default function EvaluationView() {
                 {rows(document.rows).map((row, index) => (
                   <tr key={index}>
                     {columns.map(([key]) => (
-                      <td key={key}>{metric(key, row[key])}</td>
+                      <td key={key}>
+                        {metric(key, row[key])}
+                        {key === "loss_equivalence" && (
+                          <>
+                            <br />
+                            <small
+                              className="caption"
+                              title={
+                                "Acceptance scope: " +
+                                value(row.acceptance_scope)
+                              }
+                            >
+                              {numericalBasis(row.numerical_basis)}
+                            </small>
+                          </>
+                        )}
+                      </td>
                     ))}
                   </tr>
                 ))}

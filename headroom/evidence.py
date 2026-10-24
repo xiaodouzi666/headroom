@@ -8,6 +8,7 @@ import re
 import stat
 from pathlib import Path, PurePosixPath
 
+from headroom.execution import parse_command, source_entrypoint
 from headroom.lab.runner import read_artifact_json
 
 MAX_SNAPSHOT_BYTES = 512 * 1024 * 1024
@@ -71,19 +72,10 @@ def _main_source(manifest: dict) -> str | None:
     if _wrapper_command(command) and "--script" in command:
         index = command.index("--script") + 1
         candidate = command[index] if index < len(command) else ""
-    elif len(command) > 2 and command[1] == "-m":
-        module = command[2].replace(".", "/")
-        # Normal packages precede same-named .py files; namespace packages are a fallback.
-        if f"{module}/__init__.py" in available:
-            candidate = f"{module}/__main__.py"
-        elif f"{module}.py" in available:
-            candidate = f"{module}.py"
-        else:
-            candidate = f"{module}/__main__.py"
-    elif len(command) > 1 and not command[1].startswith("-"):
-        candidate = command[1]
     else:
-        return None
+        candidate = source_entrypoint(parse_command(command), available)
+        if candidate is None:
+            return None
     return _safe_relative(candidate.removeprefix("/source/"))
 
 
@@ -93,7 +85,7 @@ def _source_import_roots(manifest: dict, primary: str) -> tuple[PurePosixPath, .
     if _wrapper_command(command):
         # run_target inserts script.parent before the /source cwd used to launch its -m wrapper.
         return tuple(dict.fromkeys((script_directory, PurePosixPath("."))))
-    if len(command) > 2 and command[1] == "-m":
+    if parse_command(command).kind == "python_module":
         return (PurePosixPath("."),)
     # Direct Python script launch uses the entry-script directory, even inside a package tree.
     return (script_directory,)
@@ -171,7 +163,7 @@ def collect_sources(run_dir: Path, manifest: dict, analysis: dict) -> tuple[list
     warnings = []
     try:
         primary = _main_source(manifest)
-    except ValueError as error:
+    except (ValueError, TypeError) as error:
         primary = None
         warnings.append(f"Primary source excluded: {error}")
     if primary is None or primary not in available:
@@ -179,7 +171,7 @@ def collect_sources(run_dir: Path, manifest: dict, analysis: dict) -> tuple[list
     import_roots = _source_import_roots(manifest, primary)
     entry_package_sources = []
     command = manifest.get("command", [])
-    if len(command) > 2 and command[1] == "-m" and not _wrapper_command(command):
+    if not _wrapper_command(command) and parse_command(command).kind == "python_module":
         entry_package_sources = [
             str(parent / "__init__.py")
             for parent in PurePosixPath(primary).parents

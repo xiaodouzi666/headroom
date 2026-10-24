@@ -19,19 +19,19 @@ All work, caches, runs, and media remain on azuki.
 | T1.3 | LLM 客户端与路由（P0，~1.5h） | 离线实现完成，实测待验收 | reports/runtime-output-cap-20261024T102844Z/verification.json;210 guarded tests; exact Nano ID and explicit output-cap field; real Super JSON/Ultra200k pending |
 | T1.4 | Diagnose（Ultra）（P0，~2.5h） | 实现完成，模型验收待办 | docs/DIAGNOSE.md; docs/PROMPT_PREFLIGHT.md; four complete requests audited locally; provider billing domain and real Ultra diagnosis pending |
 | T1.5 | Patch（Super）与应用（P0，~2.5h） | 实现及离线验收完成；真实补丁待办 | docs/PATCH.md; git apply, compile, bounded repair and policy tests; real Super/GPU cases pending |
-| T1.6 | Verify 与比较（P0，~2h） | 比较器与CPU配对已测；修复验收待办 | docs/VERIFY.md; parameter shrink rejected; original numerical/throughput gates retained |
+| T1.6 | Verify 与比较（P0，~2h） | 原计划条件化数值比较及GPU命令回归通过；模型修复验收待办 | docs/VERIFY.md; parameter shrink rejected; original numerical/throughput gates retained |
 | T1.7 | 单轮编排 + 存储 + 事件（P0，~2h） | 主流程与存储已实现并离线联调 | docs/SEARCH.md; SQLite ordered events, partial reports, SDK fixture pipeline; live two-call gate pending |
 | T1.8 | 报告（P0，~1.5h） | 报告实现与数字追溯通过 | docs/STORAGE_REPORTS.md; JSON/Markdown, source links, Pareto files; real repaired report pending |
-| T1.9 | 真实仓库：nanoGPT（P0，~2h） | 固定仓库输入与真实GPU基线通过 | reports/nanogpt-lab-baseline-20261024.json; actual repair/22GB/diff/cost gates pending |
+| T1.9 | 真实仓库：nanoGPT（P0，~2h） | 仓库命令重跑与无参考n/a接线完成；真实修复待办 | reports/nanogpt-lab-baseline-20261024.json; actual repair/22GB/diff/cost gates pending |
 | T1.10 | Honesty 与安全（P0，~1h） | 静态与CPU真实性检查通过；完整修复待办 | docs/PATCH.md; model shrink/truncation/escape checks and observed parameter counts |
 | T1.11 | Docker Lab（P1，仅 `DOCKER_GPU=ok`，~1.5h） | Docker隔离与缓存组件通过 | docs/LAB.md; docs/WATCH_HF.md; no-network, read-only source/cache and cleanup tests |
-| T1.12 | MVP 整体验收 + 报告（P0，~1.5h，10/24 晚） | 待Nebius真实MVP验收 | Nine real repair runs and success/time/cost thresholds not yet measured |
+| T1.12 | MVP 整体验收 + 报告（P0，~1.5h，10/24 晚） | 待Nebius真实MVP验收 | eval/mvp_phase1.yaml has nine scenarios and explicit20% reclaim target; real repair success/time/cost pending |
 | T2.1 | 显存求解循环：keep-or-revert 搜索 + Pareto 前沿（P0，~3h） | 六轮搜索与Pareto实现完成；真实验收待办 | docs/SEARCH.md; original baseline fixed, retained cumulative patches; s2 two-round/bf16 policy issue unchanged |
 | T2.2 | Tavily Research（P0，~2h） | 真实Research组件通过；修复报告待办 | reports/research-component-20261024T022414Z.json; four live methods, 3 reported credits, repeat cache 0 calls/credits |
 | T2.3 | Nano 栈标注（P1，~1h） | Nano标注与子预算已实现；实测待办 | headroom/annotate.py; top40 strict labels, 0.02 USD sub-budget; live eight-case agreement pending |
 | T2.4 | 预算守卫与成本面板（P0，~45min） | 持久预算与面板已实现并离线测 | docs/RUNTIME.md; per-attempt reservations, unknown charges, daily/total caps, partial stop reports |
 | T2.5 | HF Transformers 场景（P1，~2h） | HF场景CPU/GPU基线通过；修复待办 | reports/hf-trainer-baseline-20261024.json; real Trainer OOM; configuration-only repair gate pending |
-| T2.6 | Watch 模式（P2，~1.5h） | 通用argv隔离观察/退出码通过；完整修复验收待办 | docs/WATCH_HF.md; 89 scoped tests passed; modules/inline/flags/shell observed in Docker; unsupported replay OOM needs_human; missing capture unknown; no host fallback |
+| T2.6 | Watch 模式（P2，~1.5h） | Python脚本/模块/flags可重跑；shell仍仅观察，完整修复验收待办 | docs/WATCH_HF.md; 89 scoped tests passed; modules/inline/flags/shell observed in Docker; unsupported replay OOM needs_human; missing capture unknown; no host fallback |
 | T2.7 | Docker/HF 缓存稳健性（P1）：验收：三个场景在 Docker 路径下结果与子进程路径一致（峰值差 ≤ 1%）。 | 安全独立子进程环境阻塞；原门槛未通过 | reports/t2.7-isolation-preflight-20261024.json; unshare uid_map EPERM; bwrap network setup EPERM; no sudo/system change/unsafe host fallback; existing Docker dual-entry CPU checks are component evidence only |
 | T2.8 | 小评测 + 自优化（P0，可夜间自治，~4h） | 显式策略矩阵与离线统计完成；原真实验收待办 | docs/EVALUATION.md; default/strict 实际等价，allow_precision 必须显式选择；全矩阵共享预算，逐行完整 Policy；原两档歧义、≤3轮优化、target_met/首因各≥75% 和 $12 实测均未关闭 |
 | T3.1 | FastAPI + SSE（P0，~3h） | API队列/SSE/下载已实现并测 | docs/API.md; shared admission/preparation/queue/worker deadline, owned process cleanup, report-ready SSE, session isolation and rate limits |
@@ -54,6 +54,8 @@ All work, caches, runs, and media remain on azuki.
 | Phase 6 | Weekly health/alerts; balance by Nov 25; manual Dec 1 and Dec 8 access | 未开始 | Future dated acceptance |
 
 ## Acceptance log
+
+- 2026-10-24T11:37:25.038903+00:00: restored the retained original scalar-loss contract instead of unapproved global pairing gates; optional pairing remains evidence. Added scoped repository no-reference n/a acceptance, CLI/YAML policy controls, exact Python flags/module replay through baseline/candidate/reference/Watch/API/evaluation, and separate nine-case MVP20% reclaim targets (general default30% unchanged). Guarded full backend1035tests passed with unchanged source hashes; frontend39tests/typecheck/build passed. Manual non-pinned Python module GPU regression completed20updates twice,73.3787%peak saving, identical observed losses and unknown pairing; zero model benchmark credit. Local preview refreshed; six-hour read-only promo follow-up installed. New model cost0, no recharge/public submission, PLAN bytes unchanged. Full goal remains active; see reports/original-plan-contract-20261024/verification.json.
 
 - 2026-10-24 11:18UTC: original-goal continuation closed concrete production gaps: explicit diagnosis information requests stop after one call (including empty plan), reclaim planning uses remaining reduction against the fixed original30% target, per-round stored diffs/verification remain visible after revert, curated Results campaigns and measured/unknown summaries/paired-ablation Markdown are implemented. Automatic pairing now derives actual tensor/initial-parameter/per-update evidence for bounded s3/s4 contracts; other sources and historical captures remain unknown. Full guarded backend923tests passed160.25s with unchanged source hashes; frontend38tests/typecheck/build passed. Two full-size manual s3 GPU runs verified20updates, unchanged37,791,744parameters, exact loss equality,73.3787%peak reduction and0.3333%optimizer-interval increase; no model generated this repair and it contributes zero model benchmark successes. No additional model charge, recharge, public port, submission, or original PLAN/gate change. See reports/plan-completion-20261024/verification.json and reports/handoff-plan-completion-20261024.md. Original full goal remains incomplete.
 

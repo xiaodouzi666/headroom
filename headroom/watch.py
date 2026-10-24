@@ -9,7 +9,7 @@ from pathlib import Path
 from headroom.lab.envs import validate_options
 from headroom.lab.runner import PROJECT_ROOT, run_argv
 from headroom.orchestrator import FixRequest, run_fix
-from headroom.repository import parse_watch_command
+from headroom.repository import parse_watch_command, prepare_local_command
 
 FIX_OPTIONS = {
     "target",
@@ -30,14 +30,14 @@ def _command(command, source_root):
     if not source.is_dir():
         raise ValueError("Watch source_root must be a directory")
     if parsed.repair_supported:
-        script = source / parsed.script
-        linked = script.is_symlink() or any(
-            (source / part).is_symlink() for part in Path(parsed.script).parents
-        )
-        if linked or not script.is_file() or not script.resolve().is_relative_to(source):
+        try:
+            prepared = prepare_local_command(source, command)
+        except ValueError:
             parsed = replace(
                 parsed, repair_supported=False, repair_reason="REPAIR_SOURCE_UNAVAILABLE_OR_LINKED"
             )
+        else:
+            parsed = replace(parsed, script=str(prepared.script.relative_to(source)))
     return source, parsed
 
 
@@ -96,6 +96,7 @@ def watch_command(
         script=str(source / relative) if parsed.repair_supported else str(source / "train.py"),
         source_root=str(source),
         script_args=list(arguments) if parsed.repair_supported else [],
+        execution_argv=list(parsed.argv) if parsed.repair_supported else None,
         device=device,
         max_steps=max_steps,
         max_seconds=max_seconds,
@@ -164,7 +165,7 @@ def watch_command(
 
             request = request.model_copy(
                 update={
-                    "script": str(snapshot / relative),
+                    "script": str(snapshot / snapshot_command.script),
                     "source_root": str(snapshot),
                 }
             )

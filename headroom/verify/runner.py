@@ -134,6 +134,8 @@ def verify_script(
     *,
     baseline_script=None,
     script_args=(),
+    execution_argv=None,
+    baseline_execution_argv=None,
     baseline_args=None,
     candidate_source_root=None,
     baseline_source_root=None,
@@ -161,6 +163,13 @@ def verify_script(
     seed = baseline.get("env", {}).get("seed") if seed is None else seed
     if type(seed) is not int:
         raise ValueError("Verification requires an explicit or recorded baseline seed")
+    command_options = {"execution_argv": execution_argv} if execution_argv is not None else {}
+    original_command = (
+        execution_argv if baseline_execution_argv is None else baseline_execution_argv
+    )
+    baseline_command_options = (
+        {"execution_argv": original_command} if original_command is not None else {}
+    )
     candidate = run_script(
         candidate_script,
         script_args=script_args,
@@ -171,6 +180,7 @@ def verify_script(
         seed=seed,
         device=device,
         allocator_conf=allocator_conf,
+        **command_options,
     )
     discovery = {
         "found": False,
@@ -184,11 +194,18 @@ def verify_script(
             )
         elif candidate.get("status") == "completed":
             if baseline_args is None:
-                manifest_path = Path(baseline.get("run_dir", "")) / "manifest.json"
                 try:
-                    manifest = read_artifact_json(manifest_path)
-                    command = manifest["command"]
-                    baseline_args = command[command.index("--") + 1 :] if "--" in command else []
+                    if original_command is not None:
+                        from headroom.execution import parse_command
+
+                        baseline_args = list(parse_command(original_command).script_args)
+                    else:
+                        manifest_path = Path(baseline.get("run_dir", "")) / "manifest.json"
+                        manifest = read_artifact_json(manifest_path)
+                        command = manifest["command"]
+                        baseline_args = (
+                            command[command.index("--") + 1 :] if "--" in command else []
+                        )
                 except (OSError, ValueError, TypeError, KeyError):
                     baseline_args = None
             if baseline_args is None:
@@ -215,6 +232,7 @@ def verify_script(
                         seed=seed,
                         device=device,
                         allocator_conf=baseline_allocator_conf,
+                        **baseline_command_options,
                     )
                     discovery["attempts"].append(
                         {
@@ -267,7 +285,7 @@ def verify_script(
     )
     if baseline.get("status") == "oom" and reference is None:
         report.notes.append(
-            "Small-batch reference unavailable; original numerical acceptance remains unmet."
+            "Small-batch reference unavailable; loss equivalence is n/a under the original no-reference rule."
         )
     payload = {
         "report": report.model_dump(),

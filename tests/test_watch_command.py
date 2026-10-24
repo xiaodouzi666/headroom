@@ -19,9 +19,7 @@ def test_flags_that_change_execution_are_not_dropped_for_repair(flags):
     argv = ["python", *flags, "train.py", "--batch=4"]
     parsed = parse_watch_command(argv)
     assert parsed.argv == tuple(argv) and parsed.capture_expected
-    assert (
-        not parsed.repair_supported and parsed.repair_reason == "INTERPRETER_FLAGS_REQUIRE_REPLAY"
-    )
+    assert parsed.repair_supported and parsed.python_flags == tuple(flags)
 
 
 @pytest.mark.parametrize("flag", ["-E", "-I", "-S", "-uS"])

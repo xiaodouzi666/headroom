@@ -17,7 +17,7 @@ report = compare_runs(
     candidate_result,
     target="fit:22GB",  # also fix-oom, reclaim, fit:22GiB
     reference=small_batch_result,  # required for numerical comparison of an OOM baseline
-    pairing=None,  # unknown by default, never inferred from a shared seed
+    pairing=None,  # optional diagnostic proof; never inferred from a shared seed
 )
 json_payload = report.model_dump()
 ```
@@ -51,36 +51,58 @@ candidate run directory using exclusive creation; old runs are preserved.
 
 ## Numerical evidence and original rules
 
-The original fp32 bound is 1e-3; permitted bf16 changes use 2e-2 and are explicitly
-marked numerics changed. Callers may tighten these bounds, not relax them.
-The four loss states are identical, within_tol, changed and n/a. A denied model
-parameter change is changed even if its printed losses happen to match. Missing
-or nonfinite losses never satisfy acceptance.
+The original fp32 bound remains 1e-3; permitted bf16 changes use 2e-2 and are
+explicitly marked numerics changed. Callers may tighten these bounds, not relax
+them. The four loss states are identical, within_tol, changed and n/a. They
+classify the **observed scalar comparison prescribed by PLAN C.5**, not a proof
+that arbitrary programs process the same workload. A denied model parameter
+change is changed even if the observed losses match. Missing or nonfinite
+candidate losses cannot satisfy the training acceptance gate.
 
-For an OOM baseline the original first-five-loss comparison against a small-batch
-reference is computed and exposed as max_loss_delta. The candidate must complete
-20 updates with finite losses and a lower final than initial loss. A reference
-must itself complete the same number of updates. Unavailable references leave
-the original numerical gate unmet.
+Candidate completion still requires the requested optimizer update count
+(default 20), valid capture and verified cleanup. Backward scalar count is a
+separate quantity: gradient accumulation can legitimately capture several
+scalars per optimizer update. For an OOM baseline, the candidate must have finite
+losses and a lower final than initial loss. The original small-batch reference
+must complete the same requested update count with the same recorded seed;
+comparison uses the first five backward scalars from each run. Reclaim compares
+both complete, finite, equally long scalar sequences. Unequal sequence lengths
+are n/a; they are never silently truncated, averaged or divided by accumulation.
 
-Pairing must describe the candidate versus baseline (reclaim), or candidate
-versus small-batch reference (OOM). Keys are same_inputs, same_effective_batch and
-same_objective, supplied only by a trusted caller with inspectable evidence. The
-implementation never obtains these assertions from arbitrary target output and
-does not derive them merely from identical seed values. The Lab's recorded Python,
-NumPy and PyTorch seed setup/deterministic mode are checked separately. A seed is
-necessary evidence, not proof of the input/data contract.
+The optional same_inputs, same_effective_batch and same_objective observations
+remain true, false or unknown as actually measured. loss_comparable additionally
+reports whether these stronger conditions are established. Their absence is
+visible in notes and does not add an unapproved global acceptance requirement.
+Equal seed values alone do not prove those conditions. Numerical basis is
+recorded separately, so an observed original-plan delta is distinguishable from
+stronger runtime pairing evidence.
 
-When pairing is unknown, loss_equivalence is n/a and the strict original numerical
-gate stays unmet even if a raw small-batch delta is available. This records a lack
-of evidence; it does not amend the plan or adopt the previously proposed acceptance
-changes. Generic gradient accumulation can produce multiple backward scalars per
-optimizer update. Such an unaligned sequence is not silently reinterpreted or
-averaged: an aggregation/data contract is needed before an equivalence claim.
+Standard script verification requires the applicable original numerical check.
+The trusted repository command entrypoints select acceptance_scope=repository:
+PLAN T1.9 explicitly permits an OOM repository candidate with no available
+reference to retain loss_equivalence=n/a. Only that case receives the
+repository_no_reference_exception; finite/decreasing candidate losses, optimizer
+updates, seed setup, parameter preservation, policy and measured memory gates
+still apply. A provided but failed reference, a failed tolerance, or a requested
+precision change cannot use this exception. Reclaim cannot use it either.
+The keep/revert decision checks the same scoped exception and reports numerical
+equivalence as unverified. It does not promote n/a to identical or within_tol.
 
-The real CPU fixture in tests/test_verify_runner.py provides an inspectable paired
-case: fixed torch.arange input, fixed labels, identical batch/model, identical
-seed and 20 updates. Its same-model losses are checked for exact equality. Its
+Section F's missing-loss/inference fallback permits an honest n/a report; it
+does not by itself waive every training acceptance check or define successful
+inference output. This implementation does not manufacture optimizer steps or
+convert an actual watchdog timeout into completed execution.
+
+**Correction on 2026-10-24:** earlier implementation treated pairing proof and
+exactly one backward scalar per update as global hard gates. Those gates were
+not in the retained original plan, and the user had not approved the proposed
+numerical-plan revision. They have been removed from mandatory acceptance while
+their measurements and limitations remain visible. Existing historical results
+are unchanged. Original loss tolerances and scenario-specific acceptance
+requirements have not been reduced.
+
+The real CPU fixture in tests/test_verify_runner.py uses fixed torch.arange
+input, fixed labels, identical batch/model, identical seed and 20 updates. Its
 half-width model has different measured parameters and a loss deviation above
 1e-3; it is rejected. This CPU fixture does not prove the s1 GPU acceptance case.
 
@@ -97,8 +119,9 @@ still needs its separate original acceptance check.
 
 The measured step-median change must satisfy the policy's 25% default bound for
 reclaim. Matching recorded GPU hardware and clear, complete GPU observations are
-required. Existing Lab samples do not establish continuous exclusivity; shared or
-incomplete observations prevent a reliable timing/capacity verdict. An OOM run
+required for throughput. Existing Lab samples do not establish continuous
+exclusivity; shared or incomplete observations prevent a reliable timing verdict.
+They do not independently reject an OOM memory-capacity result, following PLAN F. An OOM run
 has no completed-baseline throughput comparison, which is reported as unknown,
 not as an invented speedup. OOM peak reductions compare observed peaks only;
 they do not estimate the unobserved memory needed to finish the failing baseline.
@@ -117,7 +140,8 @@ cryptographic authentication against a malicious target that disables hooks.
 Old captures without this evidence cannot silently pass the model-preservation
 gate; they must be rerun through the updated Lab. This layer does not claim that
 equal parameter counts alone prove equal architecture or objective—the independent
-patch policy and workload pairing checks remain necessary.
+patch policy remains mandatory, and optional workload pairing reports its
+additional evidence without becoming a global requirement.
 
 ## Small-batch reference discovery
 
@@ -144,7 +168,8 @@ silently substituted. The smallest positive batch, 1, is tried first. Successful
 completion selects it. Bounded subsequent trials can handle a script rejecting a
 particular positive value; OOM, timeout or GPU-unavailable results stop exploration.
 The default maximum of four attempts limits execution only: failure or exhaustion
-leaves reference/acceptance incomplete. Every attempt retains its run directory.
+leaves the reference unavailable; only the original repository no-reference
+exception may then apply. Every attempt retains its run directory.
 
 ## Verification commands and evidence
 
@@ -224,9 +249,10 @@ CPU Docker regressions exercise real s3/s4 baselines and legal repairs without
 passing synthetic pairing flags. They prove actual identical loss and pairing,
 not GPU memory savings or throughput acceptance. Changed runtime batch produces
 mismatched input/effective-batch proof; changed target source stays unknown.
-All original numerical thresholds, required steps, GPU checks, and batch-policy
-gates remain unchanged. Small-batch OOM reference versus a different effective
-batch remains non-comparable; its original numerical-policy question is pending.
+Original numerical thresholds, required optimizer steps and batch-policy gates
+remain enforced. Small-batch OOM reference versus a different effective batch
+still lacks stronger pairing proof, but C.5's first-five-scalar check is evaluated
+and labeled as such. The fingerprints do not limit general-script eligibility.
 
 
 ### Full-size CUDA regression after the CPU checks
@@ -240,3 +266,21 @@ passed. See `reports/pairing-manual-gpu-20261024T111357Z.json` and `docs/RESULTS
 for exact bytes, times and reproduction. This is an instrumentation/verification
 regression for a known manual repair; it is not a generated model repair, general
 script support, or closure of the remaining T1.6/MVP/evaluation gates.
+
+
+### Original-plan comparison through a Python module command
+
+A subsequent manual GPU regression used `python -O -m train` for both baseline
+and candidate. A harmless module constant was added to a copy of s3 so its AST
+was outside the pinned pairing contracts; the candidate added only the known
+`no_grad` repair. Both isolated runs completed twenty optimizer updates, cleaned
+up and observed an unshared GPU. Peak allocated memory was 2,435,717,632 versus
+648,419,840 bytes (73.3787% lower); the full captured loss sequences matched
+exactly. Median optimizer intervals were 41.3288 versus 40.5021 ms.
+
+The default verifier used standard script acceptance and the original full-loss
+comparison. All three stronger pairing observations remained unknown and
+loss_comparable remained false. This confirms that module/flag replay and the
+retained original numerical rule work without a pinned program exception; it
+does not establish general workload equivalence or a model-generated repair.
+Receipt: `reports/command-manual-gpu-20261024T113103Z.json`.

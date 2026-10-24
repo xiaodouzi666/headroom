@@ -1,0 +1,98 @@
+{
+  "schema": "headroom.offline-verification.v1",
+  "recorded_at": "2026-10-24T11:30:19.539004+00:00",
+  "base_head": "9bccc0845cfd724908159bbebe6d881c82f3ce67",
+  "scope": "Original PLAN A.3/T1.8 project configuration and CLI policy controls; local/repository command admission",
+  "provenance": "offline_fixture",
+  "executed_live_models": false,
+  "executed_gpu_workload": false,
+  "credentials_read": false,
+  "commands": [
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/project_config.py",
+        "headroom/cli.py",
+        "headroom/api/app.py",
+        "tests/test_project_config.py",
+        "tests/test_cli.py",
+        "tests/test_api.py"
+      ],
+      "exit_code": 0,
+      "output": "reports/project-config-20261024/check-1.txt"
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/project_config.py",
+        "headroom/cli.py",
+        "headroom/api/app.py",
+        "tests/test_project_config.py",
+        "tests/test_cli.py",
+        "tests/test_api.py"
+      ],
+      "exit_code": 0,
+      "output": "reports/project-config-20261024/check-2.txt"
+    },
+    {
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_project_config.py",
+        "tests/test_cli.py",
+        "tests/test_api.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "output": "reports/project-config-20261024/check-3.txt"
+    },
+    {
+      "command": [
+        ".venv/bin/headroom",
+        "fix",
+        "--help"
+      ],
+      "exit_code": 0,
+      "output": "reports/project-config-20261024/check-4.txt"
+    }
+  ],
+  "files": [
+    {
+      "path": "headroom/project_config.py",
+      "sha256": "117e3dd612c56b1332a7aea22bbf06f654de176c273b034c2bcbbd599946ce9d"
+    },
+    {
+      "path": "headroom/cli.py",
+      "sha256": "9ed7f98ce48aba6b59db5ffeb97c1b34a04e51be22cc36c3d4e9d03cde5856c6"
+    },
+    {
+      "path": "headroom/api/app.py",
+      "sha256": "e433473bba363dbba639f908c4e2bdd4190cd3c3e72a791f6cb30616fd82e824"
+    },
+    {
+      "path": "tests/test_project_config.py",
+      "sha256": "0859d1809af2cdc78939de7c2056cb7cafe728b440fa17615609e25414773c40"
+    },
+    {
+      "path": "tests/test_cli.py",
+      "sha256": "6cfb8c47e07d60b98b01dc77044a91490a9a0ae57f0b53d7b35001325522c59b"
+    },
+    {
+      "path": "tests/test_api.py",
+      "sha256": "a65648b842403766f0812a5d94475cf84b0a7c1acca8187c233fa84b14b7f28f"
+    },
+    {
+      "path": "docs/CLI.md",
+      "sha256": "435fe55bace6a3b6e9f60af541e12c3b94097cb0e7e88d876997bbab20e601b2"
+    }
+  ],
+  "limitations": [
+    "This is software validation, not completed live repair or CUDA acceptance.",
+    "YAML cannot set provider authentication, finance, runtime profiles, live/research enablement or acceptance scope.",
+    "Repository command execution below admission is validated separately by command-dispatch changes."
+  ]
+}

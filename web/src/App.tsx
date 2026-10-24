@@ -1255,6 +1255,7 @@ function RoundDetails({
     ["Step time after", "step_ms_after"],
     ["Step-time change", "throughput_regression_pct"],
     ["Numerical equivalence", "loss_equivalence"],
+    ["Comparison basis", "numerical_basis"],
     ["Maximum loss difference", "max_loss_delta"],
   ];
   const show = (value: unknown) =>
@@ -1480,7 +1481,15 @@ function Results() {
                               ? "No"
                               : "Unknown"}
                       </td>
-                      <td>{text(summary.loss_equivalence)}</td>
+                      <td>
+                        {text(summary.loss_equivalence)}
+                        <small className="table-note">
+                          {text(
+                            summary.numerical_basis_label,
+                            "Comparison basis not recorded",
+                          )}
+                        </small>
+                      </td>
                     </tr>
                   );
                 })}

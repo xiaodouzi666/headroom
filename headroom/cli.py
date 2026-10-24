@@ -108,7 +108,13 @@ def fix(
     ctx: typer.Context,
     script: Annotated[Path | None, typer.Argument()] = None,
     target: str = typer.Option("fix-oom"),
+    reclaim_reduction_pct: float = typer.Option(30, min=0, max=100),
     allow_numerics_change: bool = False,
+    allow_batch_grad_accum: bool = True,
+    max_throughput_regression_pct: float = typer.Option(25, min=0, max=1000),
+    config: Annotated[
+        Path | None, typer.Option(help="Project YAML; CLI settings take precedence.")
+    ] = None,
     max_steps: int = typer.Option(20, min=1, max=10000),
     max_seconds: int = typer.Option(120, min=1, max=3600),
     budget: str = "0.6",
@@ -127,10 +133,41 @@ def fix(
     from rich.console import Console
 
     from headroom.orchestrator import FixRequest, Policy, run_fix
+    from headroom.project_config import (
+        ProjectConfig,
+        ProjectConfigError,
+        configured_script,
+        find_project_config,
+        load_project_config,
+    )
 
     console = Console(stderr=True, markup=False)
     try:
-        profile = None
+        config_path = find_project_config(
+            config, script=script, source_root=source_root, remote_repository=repo is not None
+        )
+        project = load_project_config(config_path) if config_path else ProjectConfig()
+
+        def explicit(name):
+            # Typer may use its bundled Click enum; compare the public source name.
+            return getattr(ctx.get_parameter_source(name), "name", None) == "COMMANDLINE"
+
+        def selected(name, value):
+            if explicit(name):
+                return value
+            return getattr(project, name) if name in project.model_fields_set else value
+
+        policy = project.policy.model_dump()
+        for name, value in (
+            ("allow_numerics_change", allow_numerics_change),
+            ("allow_batch_grad_accum", allow_batch_grad_accum),
+            ("max_throughput_regression_pct", max_throughput_regression_pct),
+        ):
+            if explicit(name):
+                policy[name] = value
+
+        profile, execution_argv = None, None
+        repository_mode = False
         arguments = list(ctx.args)
         if repo is not None:
             if script is not None or source_root is not None or arguments or not ref or not cmd:
@@ -140,23 +177,47 @@ def fix(
             prepared = prepare_repository(repo, ref, cmd)
             script, source_root = prepared.script, prepared.source_root
             arguments, profile = list(prepared.script_args), prepared.source_profile
-        elif script is None or ref is not None or cmd is not None:
-            raise ValueError("Supply a script, or --repo/--ref/--cmd")
+            execution_argv = list(prepared.execution_argv)
+            repository_mode = True
+        elif cmd is not None:
+            if script is not None or source_root is None or arguments or ref is not None:
+                raise ValueError("Local command input needs --source-root/--cmd only")
+            from headroom.repository import prepare_local_command
+
+            prepared = prepare_local_command(source_root, cmd)
+            script, source_root = prepared.script, prepared.source_root
+            arguments = list(prepared.script_args)
+            execution_argv = list(prepared.execution_argv)
+            repository_mode = True
+        else:
+            if ref is not None:
+                raise ValueError("--ref needs --repo/--cmd")
+            if script is None and config_path is not None:
+                script = configured_script(project, config_path)
+                if script is not None and source_root is None:
+                    source_root = config_path.parent.resolve()
+            if script is None:
+                raise ValueError("Supply a script, a configured script, or a repository command")
+            if not arguments:
+                arguments = project.script_args
         request = FixRequest(
             script=str(script),
             source_root=str(source_root) if source_root else None,
             script_args=arguments,
-            target=target,
-            policy=Policy(allow_numerics_change=allow_numerics_change),
-            max_steps=max_steps,
-            max_seconds=max_seconds,
-            seed=seed,
+            execution_argv=execution_argv,
+            repository_mode=repository_mode,
+            target=selected("target", target),
+            reclaim_reduction_pct=selected("reclaim_reduction_pct", reclaim_reduction_pct),
+            policy=Policy(**policy),
+            max_steps=selected("max_steps", max_steps),
+            max_seconds=selected("max_seconds", max_seconds),
+            seed=selected("seed", seed),
             budget_usd=budget,
             daily_budget_usd=daily_budget,
-            device=device,
+            device=selected("device", device),
             runtime_profile=str(runtime_profile) if runtime_profile else None,
             source_profile=profile,
-            max_rounds=max_rounds,
+            max_rounds=selected("max_rounds", max_rounds),
             research_enabled=research,
         )
         result = run_fix(
@@ -164,7 +225,8 @@ def fix(
             on_event=lambda event: console.print(f"{event['sequence']:02d} {event['kind']}"),
         )
     except (OSError, ValueError, TypeError) as error:
-        typer.echo("Fix request failed: " + type(error).__name__, err=True)
+        detail = str(error) if isinstance(error, ProjectConfigError) else type(error).__name__
+        typer.echo("Fix request failed: " + detail, err=True)
         raise typer.Exit(1) from None
     typer.echo(
         json.dumps({key: value for key, value in result.items() if key != "report"}, indent=2)

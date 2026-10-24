@@ -135,7 +135,8 @@ def test_real_cpu_default_verifier_produces_auditable_pairing(tmp_path, profile)
         assert changed_batch["candidate"]["pairing_capture"]["complete"]
         assert changed_batch["pairing_evidence"]["checks"]["same_inputs"] is False
         assert changed_batch["pairing_evidence"]["checks"]["same_effective_batch"] is False
-        assert changed_batch["report"].loss_equivalence == "n/a"
+        assert changed_batch["report"].loss_equivalence == "changed"
+        assert changed_batch["report"].checks["loss_comparable"] is False
         unsupported = script_at(
             tmp_path,
             repaired(profile, source(profile)).replace(
@@ -152,7 +153,8 @@ def test_real_cpu_default_verifier_produces_auditable_pairing(tmp_path, profile)
             target="reclaim",
         )
         assert unknown["candidate"]["status"] == "completed"
-        assert unknown["report"].loss_equivalence == "n/a"
+        assert unknown["report"].loss_equivalence == "changed"
+        assert unknown["report"].checks["loss_comparable"] is False
         assert all(value is None for value in unknown["pairing_evidence"]["checks"].values())
         assert "pinned" in unknown["candidate"]["pairing_capture"]["reason"]
 

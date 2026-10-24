@@ -1,0 +1,44 @@
+                                                                                
+ Usage: headroom fix [OPTIONS] [script]                                         
+                                                                                
+ Run the complete repair pipeline; missing live prerequisites produce a partial 
+ report.                                                                        
+                                                                                
+╭─ Arguments ──────────────────────────────────────────────────────────────────╮
+│   script      <path>                                                         │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────╮
+│ --target                                 <str>             [default:         │
+│                                                            fix-oom]          │
+│ --reclaim-reduct…                        <float range>     [default: 30]     │
+│                                          [0<=x<=100]                         │
+│ --allow-numerics…    --no-allow-nume…                      [default:         │
+│                                                            no-allow-numeric… │
+│ --allow-batch-gr…    --no-allow-batc…                      [default:         │
+│                                                            allow-batch-grad… │
+│ --max-throughput…                        <float range>     [default: 25]     │
+│                                          [0<=x<=1000]                        │
+│ --config                                 <path>            Project YAML; CLI │
+│                                                            settings take     │
+│                                                            precedence.       │
+│ --max-steps                              <int range>       [default: 20]     │
+│                                          [1<=x<=10000]                       │
+│ --max-seconds                            <int range>       [default: 120]    │
+│                                          [1<=x<=3600]                        │
+│ --budget                                 <str>             [default: 0.6]    │
+│ --daily-budget                           <str>             [default: 12]     │
+│ --device                                 <str>             [default: cuda]   │
+│ --seed                                   <int>             [default: 1337]   │
+│ --source-root                            <path>                              │
+│ --runtime-profile                        <path>                              │
+│ --repo                                   <str>                               │
+│ --ref                                    <str>                               │
+│ --cmd                                    <str>                               │
+│ --max-rounds                             <int range>       [default: 6]      │
+│                                          [1<=x<=6]                           │
+│ --research           --no-research                         [default:         │
+│                                                            research]         │
+│ --help                                                     Show this message │
+│                                                            and exit.         │
+╰──────────────────────────────────────────────────────────────────────────────╯
+

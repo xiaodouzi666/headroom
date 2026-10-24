@@ -31,14 +31,14 @@ the Docker image or copied source. Explicit commands such as
 relative imports and literal shell-looking argv are preserved during observation.
 No host binary, source, shell or package setup is executed as a fallback.
 
-Automatic repair requires a regular Python script within the captured source and
-an invocation the existing script-based fixer can replay. Ordinary script argv,
-and `-u`/`-B`/`-s` (whose effects are already fixed by Lab's unbuffered, no-bytecode,
-no-user-site environment), are supported. Modules, inline code, generic launchers
-and flags such as `-O`, `-W`, `-X` or `-x` are observed unchanged but are not silently
-converted into a different repair entrypoint. A confirmed CUDA OOM on one of
-these invocations returns `needs_human`, its original exit code and evidence.
-The existing strict repository `repo/ref/cmd` parser is unchanged.
+Automatic repair supports direct Python scripts and local `-m` modules/packages
+inside the captured source. Interpreter options such as `-O`, `-W`, `-X` and
+`-x` are retained through baseline, candidate and reference execution via the
+same sitecustomize command backend. The editable source path does not replace
+the original module invocation. Inline code, generic/shell launchers and
+distributed commands remain capture-only: a confirmed CUDA OOM returns
+`needs_human`, its original exit code and evidence. See
+[COMMAND_MODE.md](COMMAND_MODE.md) for the complete replay contract and limits.
 
 Options `-E`, `-I` and `-S` can prevent sitecustomize capture. Non-Python runtimes
 may also produce no allocator evidence. Such runs retain the real container exit

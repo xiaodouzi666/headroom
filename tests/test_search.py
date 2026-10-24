@@ -52,6 +52,7 @@ def report(*, target=False):
         "checks": {
             **dict.fromkeys(HARD_CHECKS, True),
             "parameter_count_unchanged": True,
+            "loss_tolerance": True,
             "throughput_limit": True,
             "memory_target": target,
         },
@@ -198,3 +199,35 @@ def test_cumulative_diff_handles_missing_final_newline(tmp_path):
     )
     assert "\\ No newline at end of file" in Path(paths["patch"]).read_text()
     assert json.loads(Path(paths["manifest"]).read_text())["apply_check"]["status"] == "passed"
+
+
+def test_informational_pairing_and_scalar_count_do_not_become_hard_gates():
+    baseline, candidate, verification = observed(), observed(25, 110), report()
+    verification["checks"].update(
+        loss_tolerance=True,
+        same_inputs=None,
+        same_effective_batch=False,
+        same_objective=None,
+        loss_comparable=False,
+        loss_series_aligned_to_updates=False,
+        repository_no_reference_exception=False,
+    )
+    assert decide_keep(
+        baseline, candidate, verification, original_baseline=baseline, policy={}
+    ).keep
+
+
+def test_repository_no_reference_exception_stays_scoped_in_keep():
+    from test_compare import run
+
+    from headroom.verify.compare import compare_runs
+
+    baseline, candidate = run(status="oom", peak=24_000_000_000), run(peak=20_000_000_000)
+    verification = compare_runs(baseline, candidate, acceptance_scope="repository").model_dump()
+    assert decide_keep(
+        baseline, candidate, verification, original_baseline=baseline, policy={}
+    ).keep
+    verification["acceptance_scope"] = "standard"
+    assert not decide_keep(
+        baseline, candidate, verification, original_baseline=baseline, policy={}
+    ).keep

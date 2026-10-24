@@ -1,0 +1,350 @@
+...........F............................................................ [ 63%]
+.......FFF....F.....FFFFFF.FF.FFF...F.....                               [100%]
+=================================== FAILURES ===================================
+__ test_candidate_and_small_batch_reference_keep_original_interpreter_prefix ___
+tests/test_command_replay.py:115: in test_candidate_and_small_batch_reference_keep_original_interpreter_prefix
+    result = verify.verify_script(
+headroom/verify/runner.py:260: in verify_script
+    pairing = pairing_evidence["checks"]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'checks'
+__________ test_budget_trims_prompt_without_discarding_complete_json ___________
+tests/test_evidence.py:106: in test_budget_trims_prompt_without_discarding_complete_json
+    result = build_evidence(captured_run, budget=2000)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:510: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:299: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:23: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<stdin>:6: in denied
+    ???
+E   AssertionError: Network forbidden in command-mode verification
+____________ test_large_budget_keeps_full_main_and_imported_module _____________
+tests/test_evidence.py:130: in test_large_budget_keeps_full_main_and_imported_module
+    result = build_evidence(captured_run, budget=30000)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:510: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:299: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:23: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<stdin>:6: in denied
+    ???
+E   AssertionError: Network forbidden in command-mode verification
+__________ test_unsafe_small_budget_refuses_instead_of_empty_success ___________
+tests/test_evidence.py:141: in test_unsafe_small_budget_refuses_instead_of_empty_success
+    build_evidence(captured_run, budget=100)
+headroom/evidence.py:510: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:299: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:23: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<stdin>:6: in denied
+    ???
+E   AssertionError: Network forbidden in command-mode verification
+__________________ test_plot_receives_analyzer_aligned_steps ___________________
+tests/test_evidence.py:212: in test_plot_receives_analyzer_aligned_steps
+    result = build_evidence(captured_run, budget=30000)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:510: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:299: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:23: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<stdin>:6: in denied
+    ???
+E   AssertionError: Network forbidden in command-mode verification
+______ test_sdk_patch_and_report_pipeline_keeps_fixture_provenance[None] _______
+tests/test_orchestrator.py:262: in test_sdk_patch_and_report_pipeline_keeps_fixture_provenance
+    assert result["status"] == "completed", result["reason"]
+E   AssertionError: Pipeline failed: ResponseValidationError
+E   assert 'failed' == 'completed'
+E     
+E     - completed
+E     + failed
+_ test_sdk_patch_and_report_pipeline_keeps_fixture_provenance[execution_argv1] _
+tests/test_orchestrator.py:262: in test_sdk_patch_and_report_pipeline_keeps_fixture_provenance
+    assert result["status"] == "completed", result["reason"]
+E   AssertionError: Pipeline failed: ResponseValidationError
+E   assert 'failed' == 'completed'
+E     
+E     - completed
+E     + failed
+_ test_sdk_patch_and_report_pipeline_keeps_fixture_provenance[execution_argv2] _
+tests/test_orchestrator.py:262: in test_sdk_patch_and_report_pipeline_keeps_fixture_provenance
+    assert result["status"] == "completed", result["reason"]
+E   AssertionError: Pipeline failed: ResponseValidationError
+E   assert 'failed' == 'completed'
+E     
+E     - completed
+E     + failed
+_____ test_keep_revert_keep_uses_original_verification_and_current_source ______
+tests/test_orchestrator.py:533: in test_keep_revert_keep_uses_original_verification_and_current_source
+    assert result["status"] == "completed" and result["target_met"]
+E   AssertionError: assert ('completed' == 'completed'
+E     
+E       completed and False)
+____ test_budget_stop_preserves_last_kept_patch_and_durable_partial_report _____
+tests/test_orchestrator.py:560: in test_budget_stop_preserves_last_kept_patch_and_durable_partial_report
+    assert result["kept"]["round"] == 1 and len(verifies) == 1 and len(requests) == 2
+           ^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+__________ test_single_round_remains_bounded_when_target_not_reached ___________
+tests/test_orchestrator.py:572: in test_single_round_remains_bounded_when_target_not_reached
+    assert len(verifies) == 1 and len(requests) == 2 and result["kept"]["round"] == 1
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+______ test_research_uses_actual_version_once_and_injects_context_sources ______
+tests/test_orchestrator.py:654: in test_research_uses_actual_version_once_and_injects_context_sources
+    assert result["target_met"] and len(calls) == 2
+E   assert (False)
+_ test_missing_research_credential_is_explicitly_skipped_without_blocking_patch _
+tests/test_orchestrator.py:690: in test_missing_research_credential_is_explicitly_skipped_without_blocking_patch
+    result, store, _, _, _ = search_run(
+tests/test_orchestrator.py:498: in search_run
+    result = run_fix(
+headroom/orchestrator.py:690: in run_fix
+    verified = services.verify(
+tests/test_orchestrator.py:467: in verify
+    plan = plans[index]
+           ^^^^^^^^^^^^
+E   IndexError: list index out of range
+____ test_phase_events_use_recorded_models_and_keep_unknown_elapsed_unknown ____
+tests/test_orchestrator.py:723: in test_phase_events_use_recorded_models_and_keep_unknown_elapsed_unknown
+    result, store, requests, _, _ = search_run(tmp_path, plans)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_orchestrator.py:498: in search_run
+    result = run_fix(
+headroom/orchestrator.py:690: in run_fix
+    verified = services.verify(
+tests/test_orchestrator.py:467: in verify
+    plan = plans[index]
+           ^^^^^^^^^^^^
+E   IndexError: list index out of range
+____ test_deadline_stop_preserves_kept_pointer_and_restores_signal_handler _____
+tests/test_orchestrator.py:743: in test_deadline_stop_preserves_kept_pointer_and_restores_signal_handler
+    assert result["status"] == "timeout" and result["kept"]["round"] == 1
+                                             ^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+_ test_optional_research_factory_failure_is_reported_and_does_not_block_patch __
+tests/test_orchestrator.py:763: in test_optional_research_factory_failure_is_reported_and_does_not_block_patch
+    result, store, _, _, _ = search_run(
+tests/test_orchestrator.py:498: in search_run
+    result = run_fix(
+headroom/orchestrator.py:690: in run_fix
+    verified = services.verify(
+tests/test_orchestrator.py:467: in verify
+    plan = plans[index]
+           ^^^^^^^^^^^^
+E   IndexError: list index out of range
+____ test_interruption_during_pareto_publication_cannot_commit_unkept_point ____
+tests/test_orchestrator.py:829: in test_interruption_during_pareto_publication_cannot_commit_unkept_point
+    assert result["status"] == "timeout" and result["kept"]["round"] == 1
+E   AssertionError: assert ('completed' == 'timeout'
+E     
+E     - timeout
+E     + completed)
+=========================== short test summary info ============================
+FAILED tests/test_command_replay.py::test_candidate_and_small_batch_reference_keep_original_interpreter_prefix
+FAILED tests/test_evidence.py::test_budget_trims_prompt_without_discarding_complete_json
+FAILED tests/test_evidence.py::test_large_budget_keeps_full_main_and_imported_module
+FAILED tests/test_evidence.py::test_unsafe_small_budget_refuses_instead_of_empty_success
+FAILED tests/test_evidence.py::test_plot_receives_analyzer_aligned_steps - As...
+FAILED tests/test_orchestrator.py::test_sdk_patch_and_report_pipeline_keeps_fixture_provenance[None]
+FAILED tests/test_orchestrator.py::test_sdk_patch_and_report_pipeline_keeps_fixture_provenance[execution_argv1]
+FAILED tests/test_orchestrator.py::test_sdk_patch_and_report_pipeline_keeps_fixture_provenance[execution_argv2]
+FAILED tests/test_orchestrator.py::test_keep_revert_keep_uses_original_verification_and_current_source
+FAILED tests/test_orchestrator.py::test_budget_stop_preserves_last_kept_patch_and_durable_partial_report
+FAILED tests/test_orchestrator.py::test_single_round_remains_bounded_when_target_not_reached
+FAILED tests/test_orchestrator.py::test_research_uses_actual_version_once_and_injects_context_sources
+FAILED tests/test_orchestrator.py::test_missing_research_credential_is_explicitly_skipped_without_blocking_patch
+FAILED tests/test_orchestrator.py::test_phase_events_use_recorded_models_and_keep_unknown_elapsed_unknown
+FAILED tests/test_orchestrator.py::test_deadline_stop_preserves_kept_pointer_and_restores_signal_handler
+FAILED tests/test_orchestrator.py::test_optional_research_factory_failure_is_reported_and_does_not_block_patch
+FAILED tests/test_orchestrator.py::test_interruption_during_pareto_publication_cannot_commit_unkept_point
+17 failed, 97 passed in 34.15s

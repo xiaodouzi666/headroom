@@ -161,6 +161,7 @@ def test_pinned_repository_adapter_preserves_argv_and_source_profile(monkeypatch
         source_root=source,
         script_args=("--dataset=headroom_synthetic",),
         source_profile="pinned_nanogpt",
+        execution_argv=("python", "-u", "train.py", "--dataset=headroom_synthetic"),
     )
     monkeypatch.setattr(headroom.repository, "prepare_repository", lambda *args: prepared)
     captured = []
@@ -188,6 +189,8 @@ def test_pinned_repository_adapter_preserves_argv_and_source_profile(monkeypatch
     assert captured[0].source_profile == "pinned_nanogpt"
     assert captured[0].script_args == ["--dataset=headroom_synthetic"]
     assert captured[0].source_root == str(source)
+    assert captured[0].repository_mode is True
+    assert captured[0].execution_argv == list(prepared.execution_argv)
 
 
 @pytest.mark.parametrize("code", [0, 7, 124, 125])

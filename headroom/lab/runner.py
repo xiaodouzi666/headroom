@@ -13,6 +13,7 @@ from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
+from headroom.execution import PYTHON_COMMANDS
 from headroom.lab import docker
 from headroom.lab.envs import HOST_ENV, container_environment, validate_options
 
@@ -393,6 +394,7 @@ def run_script(
     script: str | Path,
     *,
     script_args: Sequence[str] = (),
+    execution_argv: Sequence[str] | None = None,
     source_root: str | Path | None = None,
     run_root: str | Path | None = None,
     max_steps: int = 20,
@@ -406,6 +408,22 @@ def run_script(
     if not script.is_file() or not script.is_relative_to(source):
         raise ValueError("script must be a file inside source_root")
     relative = script.relative_to(source)
+    if execution_argv is not None:
+        from headroom.execution import prepare_local_command, replay_argv
+
+        prepared = prepare_local_command(source, execution_argv)
+        if prepared.script.resolve() != script:
+            raise ValueError("Execution argv must resolve to the supplied script")
+        return run_argv(
+            source,
+            replay_argv(execution_argv, script_args),
+            run_root=run_root,
+            max_steps=max_steps,
+            max_seconds=max_seconds,
+            seed=seed,
+            device=device,
+            allocator_conf=allocator_conf,
+        )
     command = [
         "/opt/venv/bin/python",
         "-m",
@@ -467,17 +485,6 @@ def run_command(
         device=device,
         allocator_conf=allocator_conf,
     )
-
-
-PYTHON_COMMANDS = frozenset(
-    {
-        "python",
-        "python3",
-        "python3.12",
-        "/opt/venv/bin/python",
-        "/opt/venv/bin/python3",
-    }
-)
 
 
 def run_argv(

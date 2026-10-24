@@ -4,7 +4,9 @@ import hashlib
 import importlib.metadata
 import json
 import math
+import os
 import shutil
+import stat
 import time
 from collections import Counter
 from dataclasses import replace
@@ -31,6 +33,7 @@ class Scenario(BaseModel):
     source_root: str
     script_args: list[str] = Field(default_factory=list)
     target: str
+    reclaim_reduction_pct: float = Field(default=30, gt=0, le=100, allow_inf_nan=False)
     expected_baseline: Literal["oom", "completed", "oom_or_completed"]
     ground_truth: str | None = None
     truth_status: Literal["authored", "unverified"] = "unverified"
@@ -246,6 +249,14 @@ def campaign_plan(
         "mode": "campaign_plan",
         "executed": False,
         "scenarios": [case.id for case in cases],
+        "targets": [
+            {
+                "scenario_id": case.id,
+                "target": case.target,
+                "reclaim_reduction_pct": case.reclaim_reduction_pct,
+            }
+            for case in cases
+        ],
         "conditions": list(conditions),
         "policies": policy_rows,
         "multipliers": {
@@ -361,6 +372,40 @@ def _prepare(case, root, directory):
     script = _inside(root, case.script)
     source = _inside(root, case.source_root)
     arguments = list(case.script_args)
+    execution = {
+        "repository_mode": case.group == "repository",
+        "requested_argv": None,
+        "execution_argv": None,
+        "command_source": None,
+    }
+    if execution["repository_mode"]:
+        from headroom.execution import command_argv, prepare_local_command, replay_argv
+
+        if case.repository_manifest:
+            path = _inside(root, case.repository_manifest)
+            descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+            with os.fdopen(descriptor, "rb") as handle:
+                if not stat.S_ISREG(os.fstat(handle.fileno()).st_mode):
+                    raise ValueError("Repository command manifest must be a regular file")
+                raw = handle.read(1048577)
+            if len(raw) > 1048576:
+                raise ValueError("Repository command manifest exceeds 1 MiB")
+            try:
+                metadata = yaml.safe_load(raw)
+            except yaml.YAMLError as exc:
+                raise ValueError("Repository command manifest is invalid YAML") from exc
+            if not isinstance(metadata, dict) or "command" not in metadata:
+                raise ValueError("Repository manifest must declare its command")
+            requested = command_argv(metadata["command"])
+            execution["command_source"] = case.repository_manifest
+            execution["repository_manifest_sha256"] = hashlib.sha256(raw).hexdigest()
+        else:
+            requested = ("python", str(script.relative_to(source)), *arguments)
+            execution["command_source"] = "scenario entrypoint and script_args"
+        declared = prepare_local_command(source, requested)
+        if declared.script != script or list(declared.script_args) != arguments:
+            raise ValueError("Repository command must match scenario entrypoint and script_args")
+        execution["requested_argv"] = list(requested)
     if case.source_sha256 is not None and _source_hash(script) != case.source_sha256:
         raise ValueError("Scenario source changed after manifest pin")
     if case.source_profile == "pinned_nanogpt":
@@ -389,7 +434,14 @@ def _prepare(case, root, directory):
         ]
         nanogpt_cli(arguments)
         script, source = prepared / "train.py", prepared
-    return script, source, arguments
+    if execution["repository_mode"]:
+        executed = replay_argv(requested, arguments)
+        prepared_command = prepare_local_command(source, executed)
+        if prepared_command.script != script or list(prepared_command.script_args) != arguments:
+            raise ValueError("Prepared repository command does not match prepared source")
+        execution["execution_argv"] = list(prepared_command.execution_argv)
+        _write(directory / ("execution-" + case.id + ".json"), execution)
+    return script, source, arguments, execution
 
 
 def _source_hash(script):
@@ -438,7 +490,7 @@ def execute_baselines(
     for case in cases:  # Deliberately sequential; Lab also owns its GPU lock.
         row = {"scenario_id": case.id, "expected_baseline": case.expected_baseline}
         try:
-            script, source, args = _prepare(case, project_root, directory)
+            script, source, args, execution = _prepare(case, project_root, directory)
             captured = selected_runner(
                 script,
                 source_root=source,
@@ -448,6 +500,11 @@ def execute_baselines(
                 max_steps=max_steps,
                 max_seconds=max_seconds,
                 run_root=directory / "lab",
+                **(
+                    {"execution_argv": execution["execution_argv"]}
+                    if execution["execution_argv"] is not None
+                    else {}
+                ),
             )
             status = captured.get("status")
             expected = (
@@ -484,6 +541,7 @@ def execute_baselines(
                 ),
                 script=case.script,
                 script_args=args,
+                execution=execution,
             )
         except (OSError, ValueError, TypeError, RuntimeError) as error:
             row.update(status="error", behavior_matches=False, error_type=type(error).__name__)
@@ -562,12 +620,16 @@ def result_row(case, condition, result, usage, *, provenance):
         "first_cause": first,
         "first_cause_matches": first_matches,
         "target_met": target,
+        "target": case.target,
+        "reclaim_reduction_pct": case.reclaim_reduction_pct,
         "peak_before_bytes": before.get("peak_allocated_bytes"),
         "peak_after_bytes": after.get("peak_allocated_bytes"),
         "peak_reduction_pct": summary.get("peak_reduction_pct"),
         "step_time_change_pct": summary.get("step_time_change_pct"),
         "throughput_change_pct": _dict(document.get("verification")).get("throughput_change_pct"),
         "loss_equivalence": summary.get("loss_equivalence"),
+        "numerical_basis": _dict(document.get("verification")).get("numerical_basis"),
+        "acceptance_scope": _dict(document.get("verification")).get("acceptance_scope"),
         "rounds": len(document["rounds"]) if isinstance(document.get("rounds"), list) else None,
         "elapsed_seconds": _number(_dict(document.get("run")).get("elapsed_seconds")),
         "usage": usage,
@@ -1074,13 +1136,16 @@ def _campaign(
             try:
                 input_dir = directory / ("input-" + run_id)
                 input_dir.mkdir()
-                script, source, args = _prepare(case, project_root, input_dir)
+                script, source, args, execution = _prepare(case, project_root, input_dir)
                 request = FixRequest(
                     script=str(script),
                     source_root=str(source),
                     script_args=args,
                     source_profile=case.source_profile,
+                    execution_argv=execution["execution_argv"],
+                    repository_mode=execution["repository_mode"],
                     target=case.target,
+                    reclaim_reduction_pct=case.reclaim_reduction_pct,
                     policy=policy,
                     budget_usd=str(per_run),
                     daily_budget_usd=str(daily),
@@ -1098,6 +1163,7 @@ def _campaign(
                 usage = store.usage(run_id) if store.get_run(run_id) is not None else None
                 row = result_row(case, condition, result, usage, provenance=provenance)
                 row["source_sha256"] = _source_hash(script)
+                row["execution"] = execution
                 row["condition_audit_dir"] = str(directory / ("condition-" + run_id))
             except (OSError, ValueError, TypeError, RuntimeError) as error:
                 usage = store.usage(run_id) if store.get_run(run_id) is not None else None
@@ -1111,6 +1177,8 @@ def _campaign(
                     "usage": usage,
                     "cost_usd": _cost(usage),
                 }
+            row["target"] = case.target
+            row["reclaim_reduction_pct"] = case.reclaim_reduction_pct
             row["policy_name"] = policy_name
             row["policy"] = policy.model_dump()
             row["group"] = case.group

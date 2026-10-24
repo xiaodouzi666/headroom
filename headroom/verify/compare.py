@@ -8,6 +8,21 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+# Original-plan acceptance gates. Diagnostic observations (including optional
+# workload pairing) must not silently become additional mandatory requirements.
+REQUIRED_CHECKS = (
+    "baseline_capture",
+    "target_mode_valid",
+    "candidate_completed_required_steps",
+    "finite_candidate_losses",
+    "numerics_policy",
+    "same_seed",
+    "numerical_acceptance",
+    "parameter_policy",
+    "measured_cuda_peaks",
+    "same_gpu_hardware",
+)
+
 
 class VerifyReport(BaseModel):
     model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
@@ -30,6 +45,8 @@ class VerifyReport(BaseModel):
     units: str = "GB = 1e9 bytes; percentages are relative to baseline"
     run_ids: dict[str, str | None] = Field(default_factory=dict)
     reference_run: str | None = None
+    acceptance_scope: Literal["standard", "repository"] = "standard"
+    numerical_basis: str = "unavailable"
 
 
 def _number(value, *, positive=False):
@@ -119,13 +136,16 @@ def compare_runs(
     tolerance=None,
     required_steps=20,
     reclaim_reduction_pct=30,
+    acceptance_scope="standard",
 ) -> VerifyReport:
-    """Use original loss thresholds; callers supply evidence-backed workload pairing.
+    """Apply PLAN C.5, with the explicit T1.9 repository no-reference exception.
 
-    pairing concerns candidate vs baseline, or candidate vs the small-batch
-    reference for OOM. Equal seeds alone do not establish equal inputs/batches.
+    Loss states describe the prescribed observed scalar comparison, not a proof
+    of workload equivalence. Stronger pairing observations remain diagnostic.
     """
     mode, fit_bytes = parse_target(target)
+    if acceptance_scope not in {"standard", "repository"}:
+        raise ValueError("Unsupported acceptance scope")
     if type(required_steps) is not int or required_steps < 1:
         raise ValueError("required_steps must be a positive integer")
     if numerics_impact not in {"none", "minor", "significant"} or precision not in {"fp32", "bf16"}:
@@ -179,9 +199,15 @@ def compare_runs(
         "parameter_count_unchanged": parameter_equal,
         "numerics_policy": not numerical_change or policy.get("allow_numerics_change", False),
         "same_seed": _same_seed(baseline, candidate),
-        "same_inputs": pairing.get("same_inputs") is True,
-        "same_effective_batch": pairing.get("same_effective_batch") is True,
-        "same_objective": pairing.get("same_objective") is True,
+        "same_inputs": pairing.get("same_inputs")
+        if type(pairing.get("same_inputs")) is bool
+        else None,
+        "same_effective_batch": pairing.get("same_effective_batch")
+        if type(pairing.get("same_effective_batch")) is bool
+        else None,
+        "same_objective": pairing.get("same_objective")
+        if type(pairing.get("same_objective")) is bool
+        else None,
     }
     if parameter_equal is None:
         notes.append("Parameter count is missing or its Lab hook coverage is incomplete.")
@@ -200,7 +226,9 @@ def compare_runs(
         and comparator.get("steps") == required_steps
     )
     other_losses = _losses(comparator) if comparator is not None else None
-    aligned = (
+    # Backward scalars and optimizer updates are different units: gradient
+    # accumulation legitimately captures multiple losses per update.
+    aligned_to_updates = (
         candidate_losses is not None
         and other_losses is not None
         and len(candidate_losses) == required_steps
@@ -215,28 +243,41 @@ def compare_runs(
             and len(candidate_losses) >= 2
             and candidate_losses[-1] < candidate_losses[0]
         )
-        notes.append("OOM comparison uses the original small-batch reference's first five losses.")
-        notes.append(
-            "Small-batch and full-batch losses are not assumed comparable merely from equal seeds."
+        count = 5
+        series_usable = (
+            candidate_losses is not None
+            and other_losses is not None
+            and len(candidate_losses) >= count
+            and len(other_losses) >= count
         )
-    checks["loss_series_aligned_to_updates"] = aligned
-    comparable = (
-        reference_valid
-        and reference_seed
-        and checks["same_seed"]
-        and all(checks[k] for k in ("same_inputs", "same_effective_batch", "same_objective"))
-        and aligned
+        numerical_basis = "original_plan_first_five_backward_scalars"
+        notes.append(
+            "OOM comparison uses the original small-batch reference's first five backward scalars."
+        )
+    else:
+        count = len(candidate_losses) if candidate_losses is not None else 0
+        series_usable = (
+            candidate_losses is not None
+            and other_losses is not None
+            and len(candidate_losses) == len(other_losses)
+        )
+        numerical_basis = "original_plan_full_backward_scalar_series"
+    checks["loss_series_aligned_to_updates"] = aligned_to_updates
+    checks["loss_series_comparison_available"] = bool(series_usable)
+    comparable = reference_valid and reference_seed and checks["same_seed"] and series_usable
+    # Retain stronger evidence without inventing it for generic user programs.
+    checks["loss_comparable"] = bool(
+        comparable
+        and all(
+            checks[k] is True for k in ("same_inputs", "same_effective_batch", "same_objective")
+        )
     )
-    checks["loss_comparable"] = comparable
-    if candidate_losses is not None and other_losses is not None:
-        count = 5 if baseline_oom else required_steps
-        if len(candidate_losses) >= count and len(other_losses) >= count:
-            max_delta = max(
-                abs(a - b)
-                for a, b in zip(candidate_losses[:count], other_losses[:count], strict=True)
-            )
-            if not math.isfinite(max_delta):
-                max_delta = None
+    if series_usable:
+        max_delta = max(
+            abs(a - b) for a, b in zip(candidate_losses[:count], other_losses[:count], strict=True)
+        )
+        if not math.isfinite(max_delta):
+            max_delta = None
     if comparable and max_delta is not None:
         numerics_ok = max_delta <= tolerance
         equivalence = (
@@ -244,9 +285,27 @@ def compare_runs(
         )
         if numerical_change:
             equivalence = "changed"
-    elif not comparable:
+    else:
+        numerical_basis = "unavailable"
         notes.append(
-            "Loss equivalence is n/a: missing comparable data/batch/objective/seed or per-update losses."
+            "Loss equivalence is n/a: the original-plan scalar comparison lacks a completed same-seed reference or aligned finite losses."
+        )
+    if not checks["loss_comparable"]:
+        notes.append(
+            "Loss states describe the original-plan observed scalar comparison; matching inputs, effective batch and objective are not established. This is not proof of workload equivalence."
+        )
+    no_reference_exception = (
+        acceptance_scope == "repository"
+        and baseline_oom
+        and reference is None
+        and candidate_losses is not None
+        and not numerical_change
+    )
+    checks["repository_no_reference_exception"] = no_reference_exception
+    if no_reference_exception:
+        numerical_basis = "repository_no_reference_exception"
+        notes.append(
+            "PLAN T1.9 permits repository OOM acceptance with loss_equivalence=n/a when no reference is available; numerical equivalence remains unverified."
         )
     if parameter_equal is False and not policy.get("allow_model_change", False):
         equivalence, numerics_ok = "changed", False
@@ -255,6 +314,7 @@ def compare_runs(
             "Numerics changed; this requires explicit policy permission and the original tolerance."
         )
     checks["loss_tolerance"] = numerics_ok
+    checks["numerical_acceptance"] = numerics_ok or no_reference_exception
     checks["parameter_policy"] = parameter_equal is True or (
         parameter_equal is False and policy.get("allow_model_change", False)
     )
@@ -276,7 +336,7 @@ def compare_runs(
     checks["gpu_observation_clear"] = _gpu_clear(baseline) and _gpu_clear(candidate)
     if not checks["gpu_observation_clear"]:
         notes.append(
-            "GPU sharing or incomplete observations prevent a reliable throughput/capacity verdict."
+            "GPU sharing or incomplete observations prevent a reliable throughput verdict; measured peak memory is still reported."
         )
     if baseline_oom:
         checks["throughput_limit"] = None
@@ -297,9 +357,9 @@ def compare_runs(
     else:
         memory_target = baseline_oom and completed
     checks["memory_target"] = memory_target
-    required = [value for key, value in checks.items() if key != "parameter_count_unchanged"]
-    if baseline_oom:
-        required.remove(checks["throughput_limit"])
+    required = [checks[key] for key in REQUIRED_CHECKS]
+    required.append(checks["memory_target"])
+    required.append(checks["loss_decreases"] if baseline_oom else checks["throughput_limit"])
     target_met = all(value is True for value in required)
     if baseline_oom:
         notes.append(
@@ -307,6 +367,8 @@ def compare_runs(
         )
     return VerifyReport(
         completed=completed,
+        acceptance_scope=acceptance_scope,
+        numerical_basis=numerical_basis,
         peak_before=before,
         peak_after=after,
         reduction_pct=reduction,

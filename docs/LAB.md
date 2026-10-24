@@ -26,6 +26,10 @@ A host deadline produces timeout and the entire owned container is removed.
 
 `headroom.lab.runner.run_command(source_root, ["python", "train.py", ...])` injects
 capture through sitecustomize. It accepts Python argv, not a shell command string.
+The production repair path also uses this command backend through
+`run_script(..., execution_argv=command)`, retaining interpreter flags and
+`-m` semantics across baseline/candidate/reference runs. See
+[COMMAND_MODE.md](COMMAND_MODE.md).
 Bootstrap failures terminate with an error instead of silently running without
 capture. Descendant Python processes write separate process evidence. The host
 checks the primary capture record against the actual container exit state.

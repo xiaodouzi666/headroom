@@ -1,0 +1,92 @@
+{
+  "mode": "campaign_plan",
+  "executed": false,
+  "scenarios": [
+    "s1_batch_too_big",
+    "s2_fp32_adamw_1b",
+    "s3_eval_no_grad_missing",
+    "s4_loss_accumulation_graph",
+    "s5_fragmentation_varlen",
+    "s6_full_vocab_logits_fp32",
+    "s7_frozen_params_optimizer_state",
+    "s8_two_models_resident",
+    "nanogpt"
+  ],
+  "targets": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "target": "fix-oom",
+      "reclaim_reduction_pct": 30
+    },
+    {
+      "scenario_id": "s2_fp32_adamw_1b",
+      "target": "reclaim",
+      "reclaim_reduction_pct": 20.0
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "target": "reclaim",
+      "reclaim_reduction_pct": 20.0
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "target": "fix-oom",
+      "reclaim_reduction_pct": 30
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "target": "reclaim",
+      "reclaim_reduction_pct": 20.0
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "target": "fix-oom",
+      "reclaim_reduction_pct": 30
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "target": "reclaim",
+      "reclaim_reduction_pct": 20.0
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "target": "reclaim",
+      "reclaim_reduction_pct": 20.0
+    },
+    {
+      "scenario_id": "nanogpt",
+      "target": "fit:22GB",
+      "reclaim_reduction_pct": 30
+    }
+  ],
+  "conditions": [
+    "full_ultra"
+  ],
+  "policies": [
+    {
+      "name": "default",
+      "policy": {
+        "allow_numerics_change": false,
+        "allow_model_change": false,
+        "allow_batch_grad_accum": true,
+        "max_throughput_regression_pct": 25
+      },
+      "same_effective_policy_as": []
+    }
+  ],
+  "multipliers": {
+    "scenarios": 9,
+    "conditions": 1,
+    "policies": 1
+  },
+  "planned_pipeline_runs": 9,
+  "provider_api_attempts": null,
+  "provider_api_attempts_note": "Pipeline count is not API-call count: annotation, diagnosis supplements, patch attempts, retries and research vary; every actual model attempt remains budgeted.",
+  "sum_of_configured_run_caps_usd": "5.4",
+  "campaign_cap_usd": "0.6",
+  "daily_cap_usd": "12",
+  "can_reserve_all_run_caps": false,
+  "per_run_cap_usd": "0.6",
+  "authorization_expanded": false,
+  "policy_note": "Original T2.8 says default versus allow_numerics_change=false. Current default and strict are equivalent; naming them separately does not resolve that ambiguity. allow_precision is an explicit optional permission."
+}

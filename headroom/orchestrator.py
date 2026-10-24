@@ -19,6 +19,7 @@ from headroom.annotate import annotate_stacks
 from headroom.budget import BudgetExceeded, BudgetLedger, money
 from headroom.diagnose import diagnose_with_router
 from headroom.evidence import build_evidence
+from headroom.execution import prepare_local_command, replay_argv
 from headroom.lab.runner import PROJECT_ROOT, run_script
 from headroom.llm.client import LLMError
 from headroom.patch import PatchEngine
@@ -56,7 +57,10 @@ class FixRequest(BaseModel):
     script: str
     source_root: str | None = None
     script_args: list[str] = Field(default_factory=list, max_length=100)
+    execution_argv: list[str] | None = Field(default=None, max_length=256)
+    repository_mode: bool = False
     target: str = "fix-oom"
+    reclaim_reduction_pct: float = Field(default=30.0, gt=0, le=100)
     policy: Policy = Field(default_factory=Policy)
     max_steps: int = Field(default=20, ge=1, le=10000)
     max_seconds: int = Field(default=120, ge=1, le=3600)
@@ -104,7 +108,7 @@ def _artifact(directory, value):
     )
 
 
-def _required_reduction(result, target, *, original_baseline=None):
+def _required_reduction(result, target, *, original_baseline=None, reclaim_reduction_pct=30):
     kind, limit = parse_target(target)
     # OOM peaks are lower bounds, not the memory needed to finish a workload.
     measured = peak_gb(result)
@@ -118,8 +122,8 @@ def _required_reduction(result, target, *, original_baseline=None):
         original_peak = peak_gb(original)
         if original.get("status") != "completed" or original_peak is None:
             return None
-        # Match compare_runs' existing 30% reclaim target against the fixed baseline.
-        limit_gb = Decimal(str(original_peak)) * Decimal("0.7")
+        # Match the requested reclaim target against the fixed original baseline.
+        limit_gb = Decimal(str(original_peak)) * (1 - Decimal(str(reclaim_reduction_pct)) / 100)
         return float(max(Decimal(0), peak - limit_gb))
     return None
 
@@ -234,6 +238,20 @@ def run_fix(
         or not source_script.is_relative_to(source)
     ):
         raise ValueError("Script must be a Python file inside its source root")
+    if request.execution_argv is not None:
+        prepared = prepare_local_command(source, request.execution_argv)
+        if (
+            prepared.script.resolve() != source_script
+            or list(prepared.script_args) != request.script_args
+        ):
+            raise ValueError(
+                "Execution argv must match the requested source and original script_args"
+            )
+    if request.repository_mode and request.execution_argv is None:
+        raise ValueError("Repository command mode requires execution_argv")
+    execution_options = (
+        {"execution_argv": request.execution_argv} if request.execution_argv is not None else {}
+    )
     relative = source_script.relative_to(source)
     limit = min(
         money(request.budget_usd),
@@ -364,6 +382,7 @@ def run_fix(
             seed=request.seed,
             device=request.device,
             allocator_conf=request.allocator_conf,
+            **execution_options,
         )
         data["baseline"] = baseline
         store.update_run(run_id, baseline=baseline)
@@ -479,7 +498,10 @@ def run_fix(
                 goal=request.target,
                 policy=policy,
                 required_saving_gb=_required_reduction(
-                    current_result, request.target, original_baseline=baseline
+                    current_result,
+                    request.target,
+                    original_baseline=baseline,
+                    reclaim_reduction_pct=request.reclaim_reduction_pct,
                 ),
             )
             diagnosis = checked.diagnosis.model_dump() if checked.diagnosis else None
@@ -684,6 +706,9 @@ def run_fix(
                 baseline_allocator_conf=request.allocator_conf,
                 numerics_impact=candidate_numerics,
                 reference=original_reference,
+                **execution_options,
+                reclaim_reduction_pct=request.reclaim_reduction_pct,
+                **({"acceptance_scope": "repository"} if request.repository_mode else {}),
             )
             if original_reference is None and verified.get("reference") is not None:
                 original_reference = verified["reference"]
@@ -744,6 +769,10 @@ def run_fix(
                         "provenance": services.provenance,
                         "numerics_impact": candidate_numerics,
                         "original_source": str(original_source),
+                        "original_execution_argv": request.execution_argv,
+                        "execution_argv": replay_argv(request.execution_argv, patch.effective_cli)
+                        if request.execution_argv is not None
+                        else None,
                     },
                 )
                 tier = {key: _artifact(directory, value) for key, value in tier.items()}
@@ -761,6 +790,9 @@ def run_fix(
                     "round": number,
                     "source": str(patch.candidate_dir),
                     "effective_cli": list(patch.effective_cli),
+                    "execution_argv": replay_argv(request.execution_argv, patch.effective_cli)
+                    if request.execution_argv is not None
+                    else None,
                     "allocator_conf": allocator,
                     "numerics_impact": candidate_numerics,
                     "artifacts": tier,

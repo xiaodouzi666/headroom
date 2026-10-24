@@ -46,11 +46,14 @@ def test_original_fp32_loss_threshold_and_reclaim(delta, expected):
     assert report.target_met == (delta <= 1e-3)
 
 
-def test_equal_seeds_and_equal_losses_do_not_prove_workload_comparability():
+def test_original_scalar_comparison_does_not_claim_workload_comparability():
     report = compare_runs(run(), run(peak=6_000_000_000), target="reclaim")
-    assert report.loss_equivalence == "n/a"
+    assert report.loss_equivalence == "identical"
     assert report.max_loss_delta == 0
-    assert not report.target_met
+    assert report.target_met
+    assert report.checks["same_inputs"] is None
+    assert report.checks["loss_comparable"] is False
+    assert "not proof" in " ".join(report.notes)
 
 
 def test_reduced_model_is_changed_even_if_it_spoofs_identical_loss():
@@ -101,11 +104,13 @@ def test_oom_requires_completed_reference_five_losses_and_decrease():
     assert not compare_runs(baseline, candidate, reference=run(), pairing=PAIR).target_met
 
 
-def test_small_batch_mismatch_reports_raw_delta_but_not_equivalence():
+def test_original_small_batch_rule_keeps_pairing_mismatch_visible():
     pair = {**PAIR, "same_effective_batch": False}
     report = compare_runs(run(status="oom"), run(), reference=run(), pairing=pair)
     assert report.max_loss_delta == 0
-    assert report.loss_equivalence == "n/a" and not report.target_met
+    assert report.loss_equivalence == "identical" and report.target_met
+    assert report.checks["same_effective_batch"] is False
+    assert report.checks["loss_comparable"] is False
 
 
 def test_microbatch_scalar_losses_are_not_implicitly_optimizer_step_losses():
@@ -194,3 +199,69 @@ def test_impossible_or_fractional_byte_peak_is_not_measured_cuda_evidence():
         report = compare_runs(run(), run(peak=peak), target="reclaim", pairing=PAIR)
         assert not report.target_met
         assert not report.checks["measured_cuda_peaks"]
+
+
+def test_matching_microbatch_sequences_compare_without_inventing_update_losses():
+    baseline, candidate = run(), run(peak=6_000_000_000)
+    baseline["loss_series"] *= 2
+    candidate["loss_series"] *= 2
+    report = compare_runs(baseline, candidate, target="reclaim")
+    assert report.target_met and report.loss_equivalence == "identical"
+    assert report.checks["loss_series_aligned_to_updates"] is False
+    assert report.checks["loss_series_comparison_available"] is True
+
+
+def test_oom_uses_first_five_scalars_with_actual_twenty_updates():
+    baseline = run(status="oom", losses=[])
+    candidate, reference = run(), run()
+    candidate["loss_series"] += [0.1] * 20
+    reference["loss_series"] += [0.2] * 40
+    report = compare_runs(baseline, candidate, reference=reference)
+    assert report.target_met and report.max_loss_delta == 0
+    assert report.checks["loss_series_aligned_to_updates"] is False
+    candidate["steps"] = 19
+    assert not compare_runs(baseline, candidate, reference=reference).target_met
+
+
+def test_repository_no_reference_is_a_scoped_na_exception():
+    baseline, candidate = run(status="oom", losses=[]), run(peak=6_000_000_000)
+    standard = compare_runs(baseline, candidate)
+    report = compare_runs(baseline, candidate, acceptance_scope="repository")
+    assert not standard.target_met
+    assert report.target_met and report.loss_equivalence == "n/a"
+    assert report.numerical_basis == "repository_no_reference_exception"
+    assert report.checks["loss_tolerance"] is False
+    assert report.checks["numerical_acceptance"] is True
+    assert report.checks["same_inputs"] is None
+    assert not compare_runs(
+        baseline, candidate, reference=run(losses=[2.0] * 20), acceptance_scope="repository"
+    ).target_met
+    assert not compare_runs(
+        baseline, candidate, reference=run(status="error"), acceptance_scope="repository"
+    ).target_met
+    candidate["loss_series"] = [1.0] * 20
+    assert not compare_runs(baseline, candidate, acceptance_scope="repository").target_met
+
+
+def test_repository_exception_never_waives_bad_losses_model_or_precision():
+    baseline = run(status="oom", losses=[])
+    for candidate in (run(losses=[]), run(losses=[float("nan")] * 20), run(parameters=81)):
+        assert not compare_runs(baseline, candidate, acceptance_scope="repository").target_met
+    assert not compare_runs(
+        baseline,
+        run(),
+        acceptance_scope="repository",
+        precision="bf16",
+        policy={"allow_numerics_change": True},
+    ).target_met
+    with pytest.raises(ValueError, match="scope"):
+        compare_runs(baseline, run(), acceptance_scope="anything")
+
+
+def test_shared_gpu_does_not_invalidate_oom_measured_capacity():
+    baseline, candidate, reference = run(status="oom"), run(peak=6_000_000_000), run()
+    baseline["shared_gpu"] = candidate["shared_gpu"] = True
+    report = compare_runs(baseline, candidate, reference=reference, target="fit:22GB")
+    assert report.target_met
+    assert report.checks["gpu_observation_clear"] is False
+    assert report.checks["throughput_limit"] is None

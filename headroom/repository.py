@@ -15,8 +15,16 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from uuid import uuid4
 
+from headroom.execution import (
+    command_argv,
+    prepare_local_command,
+    replay_argv,
+)
+from headroom.execution import (
+    parse_command as parse_watch_command,
+)
 from headroom.lab.envs import HOST_ENV
-from headroom.lab.runner import PROJECT_ROOT, PYTHON_COMMANDS, copy_source
+from headroom.lab.runner import PROJECT_ROOT, copy_source
 from headroom.verify.policy import NANOGPT_HASHES, nanogpt_cli
 
 NANOGPT_URL = "https://github.com/karpathy/nanoGPT.git"
@@ -38,6 +46,7 @@ class PreparedRepository:
     script_args: tuple[str, ...]
     source_profile: str | None
     metadata: dict
+    execution_argv: tuple[str, ...] = ()
 
 
 def validate_repository(repo: str, ref: str) -> str:
@@ -69,98 +78,6 @@ def parse_python_command(command: str | list[str]) -> tuple[str, tuple[str, ...]
     if any(part in {";", "&&", "||", "|", ">", ">>", "<"} for part in parts):
         raise ValueError("Shell operators are not repository arguments")
     return str(path), tuple(parts[2:])
-
-
-@dataclass(frozen=True)
-class WatchCommand:
-    kind: str
-    argv: tuple[str, ...]
-    python_flags: tuple[str, ...] = ()
-    script: str | None = None
-    script_args: tuple[str, ...] = ()
-    capture_expected: bool = True
-    repair_supported: bool = False
-    repair_reason: str | None = None
-
-
-def parse_watch_command(command) -> WatchCommand:
-    """Classify argv without executing code or changing interpreter semantics.
-
-    The stricter repository parser remains unchanged. Arbitrary commands are
-    observation-only and resolve solely inside the Docker image/source mounts.
-    """
-    from collections.abc import Sequence
-
-    if isinstance(command, (str, bytes)) or not isinstance(command, Sequence):
-        raise TypeError("Watch expects argv, not a shell string")
-    if (
-        not command
-        or len(command) > 256
-        or any(not isinstance(arg, str) or "\x00" in arg for arg in command)
-        or not command[0]
-        or sum(len(arg.encode("utf-8")) for arg in command) > 65536
-    ):
-        raise ValueError("Watch argv must fit 256 entries and 64 KiB without NUL bytes")
-    argv = tuple(command)
-    if argv[0] not in PYTHON_COMMANDS:
-        return WatchCommand("command", argv, repair_reason="COMMAND_REPAIR_UNSUPPORTED")
-    flags, index, capture = [], 1, True
-    while index < len(argv):
-        token = argv[index]
-        if token == "--":
-            index += 1
-            break
-        if token == "-" or not token.startswith("-"):
-            break
-        if token in {"-c", "-m"} or token.startswith(("-c", "-m")):
-            kind = "python_inline" if token.startswith("-c") else "python_module"
-            return WatchCommand(
-                kind,
-                argv,
-                tuple(flags),
-                capture_expected=capture,
-                repair_reason=kind.upper() + "_REPAIR_UNSUPPORTED",
-            )
-        flags.append(token)
-        if token in {"-W", "-X", "--check-hash-based-pycs"}:
-            index += 1
-            if index < len(argv):
-                flags.append(argv[index])
-        elif token.startswith("-") and not token.startswith("--"):
-            # These options suppress sitecustomize or ignore its PYTHONPATH.
-            if any(letter in token[1:] for letter in "EIS"):
-                capture = False
-        index += 1
-    if index >= len(argv) or argv[index] == "-":
-        return WatchCommand(
-            "python_stdin_or_option",
-            argv,
-            tuple(flags),
-            capture_expected=capture,
-            repair_reason="NO_SCRIPT_REPAIR_ENTRYPOINT",
-        )
-    script, arguments = argv[index], argv[index + 1 :]
-    path = PurePosixPath(script)
-    if path.is_absolute() or ".." in path.parts or "\\" in script or path.suffix != ".py":
-        reason = "SCRIPT_OUTSIDE_REPAIR_SOURCE"
-    elif len(arguments) > 100:
-        reason = "REPAIR_ARGV_LIMIT"
-    elif any(not flag.startswith("-") or any(c not in "uBs" for c in flag[1:]) for flag in flags):
-        reason = "INTERPRETER_FLAGS_REQUIRE_REPLAY"
-    else:
-        reason = None
-    # -u/-B/-s exactly match fixed Lab PYTHONUNBUFFERED/PYTHONDONTWRITEBYTECODE/
-    # PYTHONNOUSERSITE. All other flags stay observable but cannot be dropped by fix.
-    return WatchCommand(
-        "python_script",
-        argv,
-        tuple(flags),
-        str(path),
-        tuple(arguments),
-        capture,
-        reason is None,
-        reason,
-    )
 
 
 def preparation_remaining(deadline, ceiling=None):
@@ -332,7 +249,11 @@ def prepare_repository(
 ) -> PreparedRepository:
     preparation_remaining(deadline)
     repo = validate_repository(repo, ref)
-    entrypoint, arguments = parse_python_command(command)
+    requested_argv = command_argv(command)
+    parsed = parse_watch_command(requested_argv)
+    if not parsed.repair_supported:
+        raise ValueError(parsed.repair_reason)
+    entrypoint, arguments = parsed.script, parsed.script_args
     pinned = repo == NANOGPT_URL and ref == NANOGPT_REF
     if pinned:
         if entrypoint != "train.py":
@@ -401,13 +322,16 @@ def prepare_repository(
             converted.append("--dataset=headroom_synthetic")
         arguments = tuple(converted)
     preparation_remaining(deadline)
-    script = source / entrypoint
-    if not script.is_file() or script.is_symlink() or not script.resolve().is_relative_to(source):
-        raise ValueError("Repository entrypoint is missing or excluded")
+    execution_argv = tuple(replay_argv(requested_argv, arguments))
+    prepared = prepare_local_command(source, execution_argv)
+    script = prepared.script
+    entrypoint = str(script.relative_to(source))
     metadata = {
         "repository": repo,
         "ref": ref,
         "entrypoint": entrypoint,
+        "requested_argv": list(requested_argv),
+        "execution_argv": list(execution_argv),
         "script_args": list(arguments),
         "source_manifest": manifest,
         "dataset": data,
@@ -416,5 +340,5 @@ def prepare_repository(
     }
     (parent / "repository.json").write_text(json.dumps(metadata, indent=2) + "\n")
     return PreparedRepository(
-        source, script, arguments, "pinned_nanogpt" if pinned else None, metadata
+        source, script, arguments, "pinned_nanogpt" if pinned else None, metadata, execution_argv
     )

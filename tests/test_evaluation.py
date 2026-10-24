@@ -729,3 +729,225 @@ def test_summary_costs_preserve_high_precision_and_full_money_magnitude_span():
     result = summarize(rows)
     assert result["known_cost_usd"] == expected
     assert result["by_policy"]["default"]["known_cost_usd"] == expected
+
+
+def test_explicit_reclaim_target_reaches_request_and_campaign_evidence(tmp_path):
+    from headroom.evaluation import campaign_plan
+
+    path = manifest(tmp_path)
+    data = json.loads(path.read_text())
+    data["scenarios"][0]["reclaim_reduction_pct"] = 20
+    path.write_text(json.dumps(data))
+    requests = []
+
+    def observed(request, **kwargs):
+        requests.append(request)
+        return fake_runner()(request, **kwargs)
+
+    plan = campaign_plan(path, project_root=tmp_path)
+    assert plan["targets"][0]["reclaim_reduction_pct"] == 20
+    result = run_fixture_campaign(
+        path,
+        project_root=tmp_path,
+        output_root=tmp_path / "out",
+        runner=observed,
+        services_factory=lambda *args: None,
+    )
+    assert len(requests) == 1
+    assert requests[0].reclaim_reduction_pct == 20
+    assert requests[0].repository_mode is False
+    assert requests[0].execution_argv is None
+    assert result["rows"][0]["reclaim_reduction_pct"] == 20
+
+
+@pytest.mark.parametrize("target", [-1, 0, 101, float("inf"), float("nan"), True, "20"])
+def test_invalid_reclaim_target_is_rejected_before_execution(tmp_path, target):
+    path = manifest(tmp_path)
+    data = json.loads(path.read_text())
+    data["scenarios"][0]["reclaim_reduction_pct"] = target
+    path.write_text(json.dumps(data))
+    with pytest.raises(ValueError):
+        load_manifest(path, project_root=tmp_path)
+
+
+def test_mvp_manifest_uses_twenty_only_in_its_original_nine_case_scope():
+    root = Path(__file__).resolve().parents[1]
+    general = load_manifest(root / "eval/scenario_set.yaml", project_root=root)
+    mvp = load_manifest(root / "eval/mvp_phase1.yaml", project_root=root)
+    assert len(general.scenarios) == 12
+    assert all(case.reclaim_reduction_pct == 30 for case in general.scenarios)
+    assert len(mvp.scenarios) == 9
+    assert {case.id for case in mvp.scenarios} == {
+        case.id for case in general.scenarios if case.group == "synthetic" or case.id == "nanogpt"
+    }
+    assert all(
+        case.reclaim_reduction_pct == (20 if case.target == "reclaim" else 30)
+        for case in mvp.scenarios
+    )
+
+
+def repository_case(tmp_path):
+    path = manifest(tmp_path)
+    source = tmp_path / "case_0"
+    (source / "pkg").mkdir()
+    (source / "pkg/__init__.py").write_text("")
+    (source / "pkg/train.py").write_text("raise RuntimeError('must never execute')\n")
+    data = json.loads(path.read_text())
+    data["scenarios"][0].update(
+        group="repository",
+        script="case_0/pkg/train.py",
+        script_args=["--batch=4"],
+        repository_manifest="repository.yaml",
+    )
+    path.write_text(json.dumps(data))
+    (tmp_path / "repository.yaml").write_text(
+        json.dumps(
+            {
+                "command": "python -u -m pkg.train --batch=4",
+            }
+        )
+    )
+    return path
+
+
+def test_repository_command_survives_baseline_and_repair_request(tmp_path):
+    path = repository_case(tmp_path)
+    baseline_calls = []
+
+    def baseline(script, **kwargs):
+        baseline_calls.append((script, kwargs))
+        return {
+            "status": "completed",
+            "steps": 20,
+            "capture_complete": True,
+            "cleanup_verified": True,
+        }
+
+    baselines = execute_baselines(
+        path,
+        project_root=tmp_path,
+        output_root=tmp_path / "baseline",
+        execute=True,
+        runner=baseline,
+    )
+    command = ["python", "-u", "-m", "pkg.train", "--batch=4"]
+    assert baseline_calls[0][1]["execution_argv"] == command
+    assert baselines["rows"][0]["execution"]["requested_argv"] == command
+    assert baselines["rows"][0]["execution"]["execution_argv"] == command
+    requests = []
+
+    def observed(request, **kwargs):
+        requests.append(request)
+        return fake_runner()(request, **kwargs)
+
+    result = run_fixture_campaign(
+        path,
+        project_root=tmp_path,
+        output_root=tmp_path / "campaign",
+        runner=observed,
+        services_factory=lambda *args: None,
+    )
+    assert requests[0].repository_mode is True
+    assert requests[0].execution_argv == command
+    assert requests[0].script_args == ["--batch=4"]
+    recorded = result["rows"][0]["execution"]
+    assert recorded["command_source"] == "repository.yaml"
+    assert len(recorded["repository_manifest_sha256"]) == 64
+    assert recorded["execution_argv"] == command
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "python train.py --batch=4",
+        "python -u -m pkg.train --batch=8",
+    ],
+)
+def test_repository_command_mismatch_blocks_dispatch(tmp_path, command):
+    path = repository_case(tmp_path)
+    (tmp_path / "repository.yaml").write_text(json.dumps({"command": command}))
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Mismatched repository command must not execute")
+
+    result = execute_baselines(
+        path,
+        project_root=tmp_path,
+        execute=True,
+        runner=forbidden,
+    )
+    assert result["rows"][0]["status"] == "error"
+    assert result["rows"][0]["error_type"] == "ValueError"
+
+
+def test_nanogpt_dataset_rewrite_preserves_requested_and_executed_commands(tmp_path):
+    from headroom.evaluation import _prepare
+
+    root = Path(__file__).resolve().parents[1]
+    manifest_data = load_manifest(root / "eval/mvp_phase1.yaml", project_root=root)
+    case = next(case for case in manifest_data.scenarios if case.id == "nanogpt")
+    if not (root / case.script).is_file():
+        pytest.skip("Reviewed local nanoGPT cache is unavailable; never fetch it")
+    script, source, arguments, execution = _prepare(case, root, tmp_path)
+    assert script == source / "train.py"
+    assert "--dataset=/input" in execution["requested_argv"]
+    assert "--dataset=/input" not in execution["execution_argv"]
+    assert "--dataset=headroom_synthetic" in arguments
+    assert execution["execution_argv"] == ["python", "train.py", *arguments]
+    assert (source / "data/headroom_synthetic/train.bin").is_file()
+    saved = json.loads((tmp_path / "execution-nanogpt.json").read_text())
+    assert saved == execution
+
+
+def test_repository_without_upstream_command_labels_derived_provenance(tmp_path):
+    from headroom.evaluation import _prepare
+
+    path = manifest(tmp_path)
+    data = json.loads(path.read_text())
+    data["scenarios"][0]["group"] = "repository"
+    path.write_text(json.dumps(data))
+    case = load_manifest(path, project_root=tmp_path).scenarios[0]
+    _, _, _, execution = _prepare(case, tmp_path, tmp_path)
+    assert execution["execution_argv"] == ["python", "train.py"]
+    assert execution["command_source"] == "scenario entrypoint and script_args"
+    assert "repository_manifest_sha256" not in execution
+
+
+def test_nonregular_repository_manifest_cannot_block_preparation(tmp_path):
+    import os
+
+    path = repository_case(tmp_path)
+    metadata = tmp_path / "repository.yaml"
+    metadata.unlink()
+    os.mkfifo(metadata)
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Nonregular manifest must not reach execution")
+
+    result = execute_baselines(path, project_root=tmp_path, execute=True, runner=forbidden)
+    assert result["rows"][0]["status"] == "error"
+    assert result["rows"][0]["error_type"] == "ValueError"
+
+
+def test_campaign_keeps_numerical_basis_and_repository_exception_scope(tmp_path):
+    path = manifest(tmp_path)
+
+    def observed(request, **kwargs):
+        result = fake_runner()(request, **kwargs)
+        result["report"]["summary"]["loss_equivalence"] = "n/a"
+        result["report"]["verification"] = {
+            "numerical_basis": "repository_no_reference_exception",
+            "acceptance_scope": "repository",
+        }
+        return result
+
+    result = run_fixture_campaign(
+        path,
+        project_root=tmp_path,
+        output_root=tmp_path / "out",
+        runner=observed,
+        services_factory=lambda *args: None,
+    )
+    assert result["rows"][0]["numerical_basis"] == "repository_no_reference_exception"
+    assert result["rows"][0]["acceptance_scope"] == "repository"
+    assert result["rows"][0]["loss_equivalence"] == "n/a"

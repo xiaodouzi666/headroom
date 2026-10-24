@@ -78,7 +78,15 @@ def test_source_network_code_rejected_before_runtime_or_model(tmp_path):
     store.close()
 
 
-def test_sdk_patch_and_report_pipeline_keeps_fixture_provenance(tmp_path):
+@pytest.mark.parametrize(
+    "execution_argv",
+    [
+        None,
+        ["python", "-O", "-W", "ignore", "train.py", "--batch=4"],
+        ["python3", "-X", "dev", "-m", "train", "--batch=4"],
+    ],
+)
+def test_sdk_patch_and_report_pipeline_keeps_fixture_provenance(tmp_path, execution_argv):
     root = source(tmp_path)
     store = Store(tmp_path / "store.db")
     diagnosis = {
@@ -170,6 +178,7 @@ def test_sdk_patch_and_report_pipeline_keeps_fixture_provenance(tmp_path):
         )
 
     def baseline(script, **kwargs):
+        assert kwargs.get("execution_argv") == execution_argv
         run = Path(kwargs["run_root"]) / "fixture-baseline"
         run.mkdir(parents=True)
         shutil.copytree(kwargs["source_root"], run / "source")
@@ -200,6 +209,10 @@ def test_sdk_patch_and_report_pipeline_keeps_fixture_provenance(tmp_path):
         }
 
     def verify(before, script, **kwargs):
+        assert kwargs.get("execution_argv") == execution_argv
+        assert kwargs.get("acceptance_scope", "standard") == (
+            "repository" if execution_argv else "standard"
+        )
         assert Path(script).read_text() == "VALUE = 2\n"
         assert (root / "train.py").read_text() == "VALUE = 1\n"
         after = {
@@ -221,6 +234,9 @@ def test_sdk_patch_and_report_pipeline_keeps_fixture_provenance(tmp_path):
                 "checks": {
                     **dict.fromkeys(HARD_CHECKS, True),
                     "parameter_count_unchanged": True,
+                    "numerical_acceptance": True,
+                    "loss_tolerance": True,
+                    "loss_decreases": True,
                     "throughput_limit": None,
                     "offline_fixture_only": True,
                 },
@@ -230,7 +246,12 @@ def test_sdk_patch_and_report_pipeline_keeps_fixture_provenance(tmp_path):
         }
 
     result = run_fix(
-        FixRequest(script=str(root / "train.py")),
+        FixRequest(
+            script=str(root / "train.py"),
+            execution_argv=execution_argv,
+            script_args=["--batch=4"] if execution_argv else [],
+            repository_mode=execution_argv is not None,
+        ),
         store=store,
         run_root=tmp_path / "jobs",
         services=Services(
@@ -262,6 +283,7 @@ def search_run(
     research_factory=None,
     research_enabled=False,
     target="fit:22GB",
+    reclaim_reduction_pct=30.0,
 ):
     import difflib
 
@@ -457,6 +479,9 @@ def search_run(
         checks = {
             **dict.fromkeys(HARD_CHECKS, True),
             "parameter_count_unchanged": True,
+            "numerical_acceptance": True,
+            "loss_tolerance": True,
+            "loss_decreases": True,
             "throughput_limit": True,
             "memory_target": plan.get("target", False),
         }
@@ -481,6 +506,7 @@ def search_run(
         FixRequest(
             script=str(root / "train.py"),
             target=target,
+            reclaim_reduction_pct=reclaim_reduction_pct,
             max_rounds=max_rounds,
             research_enabled=research_enabled,
         ),
@@ -835,19 +861,26 @@ def test_diagnosis_information_request_stops_without_repeating_same_evidence(tmp
     store.close()
 
 
-def test_reclaim_requests_supplement_then_stops_with_insufficient_savings(tmp_path):
+@pytest.mark.parametrize("reclaim_reduction_pct,expected", [(30.0, 9.0), (20.0, 6.0)])
+def test_reclaim_requests_supplement_then_stops_with_insufficient_savings(
+    tmp_path, reclaim_reduction_pct, expected
+):
     result, store, requests, verifies, _ = search_run(
-        tmp_path, [{"saving": 0.1}], target="reclaim", max_rounds=6
+        tmp_path,
+        [{"saving": 0.1}],
+        target="reclaim",
+        max_rounds=6,
+        reclaim_reduction_pct=reclaim_reduction_pct,
     )
     assert result["status"] == "needs_human"
     assert verifies == []
     # One initial diagnosis plus the existing bounded supplement, not six rounds.
     assert len(requests) == 2
     prompt = json.loads(next(m["content"] for m in requests[0]["messages"] if m["role"] == "user"))
-    assert prompt["required_saving_gb"] == 9.0
+    assert prompt["required_saving_gb"] == expected
     diagnosis = json.loads((Path(result["run_dir"]) / "diagnosis.json").read_text())
     assert diagnosis["requires_supplement"] is True
-    assert "9 GB" in diagnosis["supplement_request"]
+    assert f"{expected:g} GB" in diagnosis["supplement_request"]
     assert any(i["code"] == "INSUFFICIENT_EXPECTED_SAVING" for i in diagnosis["issues"])
     store.close()
 
@@ -859,6 +892,12 @@ def test_remaining_reclaim_savings_use_original_peak_and_keep_unknown_oom_unknow
     current = {"status": "completed", "peak_allocated_bytes": 8_000_000_000}
     assert _required_reduction(baseline, "reclaim") == 3.0
     assert _required_reduction(current, "reclaim", original_baseline=baseline) == 1.0
+    assert (
+        _required_reduction(
+            current, "reclaim", original_baseline=baseline, reclaim_reduction_pct=20
+        )
+        == 0.0
+    )
     assert _required_reduction(current, "fit:7GB") == 1.0
     assert _required_reduction(current, "fit:9GB") == 0.0
     assert _required_reduction({**baseline, "status": "oom"}, "reclaim") is None

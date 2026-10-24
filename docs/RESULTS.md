@@ -40,7 +40,18 @@ reproduction procedure and source hashes. This validates the verifier and new
 CUDA instrumentation for one known repair; it contributes **zero model-generated
 repair successes** to T1.12/T4.2/T4.3. Automatic pairing remains limited to the
 reviewed s3/s4 source contracts; unsupported scripts and old captures remain
-unknown. Full T1.6 and the original small-batch numerical question remain open.
+unknown. The current verifier evaluates the original C.5 scalar rule without
+requiring these optional fingerprints; it reports the comparison basis and
+limitations explicitly. Full model-generated T1.6 acceptance remains open.
+
+A later manual command regression exercised `python -O -m train` with a source
+outside the pinned pairing contracts. Both 20-update GPU runs had unchanged
+parameters and identical observed losses. Allocated peak fell from
+2,435,717,632 to 648,419,840 bytes (73.3787%); median optimizer interval moved
+from 41.3288 to 40.5021 ms. Pairing remained unknown, and the report used
+`original_plan_full_backward_scalar_series` with standard acceptance scope.
+See [command-mode GPU receipt](../reports/command-manual-gpu-20261024T113103Z.json).
+This also contributes zero model-generated repair successes.
 
 ## Preparation checks (not benchmark results)
 

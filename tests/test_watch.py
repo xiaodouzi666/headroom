@@ -124,7 +124,14 @@ def test_uncertain_cleanup_halts_before_fix(source, tmp_path):
     assert result["exit_code"] == 125 and result["status"] == "needs_human"
 
 
-def test_oom_hands_snapshot_and_exact_argv_to_full_pipeline(source, tmp_path):
+@pytest.mark.parametrize(
+    "prefix",
+    [
+        ["python", "-O", "-W", "ignore", "train.py"],
+        ["python3", "-X", "dev", "-m", "train"],
+    ],
+)
+def test_oom_hands_snapshot_and_exact_argv_to_full_pipeline(source, tmp_path, prefix):
     calls = []
 
     def repair(request, **kwargs):
@@ -133,7 +140,7 @@ def test_oom_hands_snapshot_and_exact_argv_to_full_pipeline(source, tmp_path):
         return {"status": "completed", "target_met": True, "report_md": "fixture-report.md"}
 
     result = watch_command(
-        ["python", "train.py", "--batch=16"],
+        [*prefix, "--batch=16"],
         source_root=source,
         run_root=tmp_path / "runs",
         lab_runner=fake_lab(),
@@ -143,6 +150,8 @@ def test_oom_hands_snapshot_and_exact_argv_to_full_pipeline(source, tmp_path):
     assert result["triggered"] and result["exit_code"] == 0
     assert result["original_exit_code"] == 1 and result["report_path"] == "fixture-report.md"
     assert calls[0][0].script_args == ["--batch=16"]
+    assert calls[0][0].execution_argv == [*prefix, "--batch=16"]
+    assert calls[0][0].repository_mode is False
     assert calls[0][0].budget_usd == "0.05"
     assert Path(result["watch_report_path"]).exists()
     assert json.loads((Path(result["run_dir"]) / "watch.json").read_text())["triggered"]
@@ -204,7 +213,6 @@ def test_real_cpu_docker_preserves_exit_and_never_calls_fix(source, tmp_path, bo
     [
         ["python", "-m", "trainer.module"],
         ["python", "-c", "raise RuntimeError('fixture')"],
-        ["python", "-OO", "train.py"],
         ["/bin/sh", "-c", "python train.py"],
     ],
 )
@@ -291,7 +299,7 @@ def test_real_cpu_module_keeps_package_imports_and_argv(source, tmp_path):
         fix_runner=fail_if_fix,
     )
     assert result["exit_code"] == 17 and result["lab"]["cleanup_verified"]
-    assert result["capture_status"] == "complete" and not result["repair_supported"]
+    assert result["capture_status"] == "complete" and result["repair_supported"]
 
 
 def test_real_cpu_supported_flags_match_repair_lab_environment(source, tmp_path):

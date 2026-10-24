@@ -159,6 +159,15 @@ def _pareto_report(value):
     return value
 
 
+def numerical_basis_label(value):
+    return {
+        "original_plan_first_five_backward_scalars": "Observed first five backward losses (original plan)",
+        "original_plan_full_backward_scalar_series": "Observed full backward-loss sequence (original plan)",
+        "repository_no_reference_exception": "Repository without reference; numerical equivalence unverified",
+        "unavailable": "Comparison unavailable",
+    }.get(value, "Comparison basis not recorded")
+
+
 def _round_report(row, provenance):
     """Retain verifier values and round identity without certifying a candidate."""
     row = _clone(row)
@@ -185,6 +194,7 @@ def _round_report(row, provenance):
         if type(verification.get("target_met")) is bool
         else None,
         "loss_equivalence": verification.get("loss_equivalence") or "unknown",
+        "numerical_basis": numerical_basis_label(verification.get("numerical_basis")),
     }
     row["display_peak_after"] = row["display_verification"]["peak_after"]
     row["diff_sha256"] = None
@@ -349,6 +359,8 @@ def build_report(
             "target": run.get("target"),
             "target_met": target_met,
             "loss_equivalence": verification.get("loss_equivalence", "unknown"),
+            "numerical_basis": verification.get("numerical_basis", "unavailable"),
+            "numerical_basis_label": numerical_basis_label(verification.get("numerical_basis")),
             "peak_reduction_pct": str(reduction) if reduction is not None else None,
             "step_time_change_pct": str(step_change) if step_change is not None else None,
         },
@@ -399,6 +411,8 @@ def render_markdown(report):
         "",
         f"Peak reduction: {d['peak_reduction']}; step-time change: {d['step_time_change']}.",
         f"Numerical equivalence: {_text(summary['loss_equivalence'])}.",
+        f"Comparison basis: {_text(summary['numerical_basis_label'])}.",
+        "Observed loss agreement alone does not prove identical inputs, effective batch or objective.",
         "Step-time change describes measured intervals, not a separate throughput benchmark.",
         "Memory uses decimal GB. Missing measurements remain unknown.",
         "",
@@ -476,6 +490,7 @@ def render_markdown(report):
             f"| Completed | — | {_text(measured['completed'])} |",
             f"| Target met | — | {_text(measured['target_met'])} |",
             f"| Loss equivalence | — | {_text(measured['loss_equivalence'])} |",
+            f"| Comparison basis | — | {_text(measured['numerical_basis'])} |",
             f"| Peak reduction | — | {measured['reduction_pct']} |",
             f"| Step-time change | — | {measured['throughput_regression_pct']} |",
             f"| Maximum loss delta | — | {measured['max_loss_delta']} |",

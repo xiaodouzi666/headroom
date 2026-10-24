@@ -306,3 +306,27 @@ def test_signed_finite_decimal_percentages_preserve_exact_text(tmp_path, valid):
         row = api.get("/api/evaluations/reviewed").json()["rows"][0]
         for name in ("peak_reduction_pct", "step_time_change_pct", "throughput_change_pct"):
             assert row[name] == valid
+
+
+def test_public_projection_preserves_na_and_known_basis_without_private_strings(tmp_path):
+    document = campaign()
+    document["rows"][0].update(
+        loss_equivalence="n/a",
+        numerical_basis="repository_no_reference_exception",
+        acceptance_scope="repository",
+    )
+    document["rows"][1].update(
+        numerical_basis="/private/unknown-basis",
+        acceptance_scope="/private/unknown-scope",
+    )
+    publish(tmp_path, document)
+    with client(tmp_path) as api:
+        response = api.get("/api/evaluations/reviewed")
+        data = response.json()
+    assert response.status_code == 200
+    assert data["rows"][0]["loss_equivalence"] == "n/a"
+    assert data["rows"][0]["numerical_basis"] == "repository_no_reference_exception"
+    assert data["rows"][0]["acceptance_scope"] == "repository"
+    assert data["rows"][1]["numerical_basis"] is None
+    assert data["rows"][1]["acceptance_scope"] is None
+    assert "/private" not in response.text

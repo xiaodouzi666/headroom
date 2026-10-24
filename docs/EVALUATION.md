@@ -160,3 +160,43 @@ three-condition/two-policy matrix 48. Every invocation kept executed=false,
 authorization_expanded=false, and the unchanged USD 0.60 campaign cap.
 No model request, environment-key read, Docker workload, or GPU execution was
 part of this verification. These checks do not replace the original live gates.
+
+
+## Explicit reclaim targets and repository command provenance
+
+Each scenario may declare reclaim_reduction_pct (finite, greater than 0 and at most 100); omission
+keeps the original verifier default of 30. The field is passed through FixRequest
+to verification and is recorded in campaign plans and result rows. It is an
+explicit requested memory goal, not an inferred metric or a changed loss bound.
+
+eval/mvp_phase1.yaml selects exactly the original eight synthetic scenarios and
+nanoGPT for T1.12. Only its reclaim cases explicitly request 20%, matching that
+task's aggregate pass line. eval/scenario_set.yaml remains the unchanged
+12-case general evaluation set with the default 30%. The T1.6 s3-specific 30%
+requirement and the unresolved s2 requirements remain independent gates.
+Selecting the MVP manifest does not imply that its live runs or acceptance passed.
+
+Repository-group cases execute the command recorded in repository_manifest,
+after checking that its entrypoint and arguments match the scenario. Interpreter
+flags and module form are retained. nanoGPT's existing /input dataset rewrite is
+applied with replay_argv, and the resulting command is checked against the
+prepared source. Requested argv, actual execution argv, the command source and
+repository-manifest hash are saved beside the input and in result evidence.
+For a repository-group case without a repository manifest, the command is
+explicitly constructed from the scenario's entrypoint and script_args and labeled
+as such; it is not presented as a historical upstream command. Synthetic/library
+cases retain their existing direct-script mode.
+
+Baseline runs and repair campaigns use the same prepared repository command.
+Repair requests set repository_mode so the original T1.9 no-reference rule can
+be applied by the verifier without asserting numerical equivalence. Command or
+source mismatches fail before Lab/model execution. Preparation remains local:
+no Git fetch, setup command, model request, GPU workload, or credential access is
+performed by loading/planning the manifest or by these offline regression tests.
+
+
+Campaign rows also retain the verifier's numerical_basis and acceptance_scope.
+The curated public API accepts their defined values only and preserves the n/a
+loss state. The Results table displays the observed-comparison basis beside its
+numerical state; a repository no-reference exception stays explicitly unverified.
+Older records without these fields show that the basis was not recorded.

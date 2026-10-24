@@ -53,6 +53,8 @@ function fixture(provenance = "offline_fixture") {
         throughput_change_pct: null,
         step_time_change_pct: "12.25",
         loss_equivalence: "within_tol",
+        numerical_basis: "original_plan_full_backward_scalar_series",
+        acceptance_scope: "standard",
         rounds: 2,
         cost_usd: null,
         wall_seconds: 45,
@@ -95,6 +97,24 @@ function fixture(provenance = "offline_fixture") {
   };
 }
 describe("published evaluation results", () => {
+  it("shows the no-reference exception beside n/a without claiming equivalence", async () => {
+    const document = fixture();
+    document.rows[0].loss_equivalence = "n/a";
+    document.rows[0].numerical_basis = "repository_no_reference_exception";
+    document.rows[0].acceptance_scope = "repository";
+    setup(document);
+    render(<App />);
+    const table = await screen.findByRole("table", {
+      name: "Main evaluation results",
+    });
+    expect(within(table).getByText("n/a")).toBeInTheDocument();
+    expect(
+      within(table).getByText(
+        "Repository without reference; numerical equivalence unverified",
+      ),
+    ).toHaveAttribute("title", "Acceptance scope: repository");
+  });
+
   it("keeps unpublished evaluation pending without claiming a benchmark", async () => {
     setup();
     render(<App />);

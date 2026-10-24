@@ -485,3 +485,20 @@ def test_round_information_request_and_exhausted_supplement_remain_visible(tmp_p
     assert "<script>" not in text
     assert doc["rounds"][0]["requested_information"][0] == "Capture optimizer step"
     assert doc["rounds"][0]["display_verification"]["completed"] is None
+
+
+def test_loss_summary_exposes_original_comparison_basis_and_limit():
+    from headroom.report import build_report, render_markdown
+
+    report = build_report(
+        {"target": "reclaim", "status": "completed"},
+        verification={
+            "loss_equivalence": "identical",
+            "numerical_basis": "original_plan_full_backward_scalar_series",
+            "target_met": True,
+        },
+    )
+    rendered = render_markdown(report)
+    assert report["summary"]["numerical_basis"] == "original_plan_full_backward_scalar_series"
+    assert "Observed full backward-loss sequence" in rendered
+    assert "does not prove identical inputs" in rendered

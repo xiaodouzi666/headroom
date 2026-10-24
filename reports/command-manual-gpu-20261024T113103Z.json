@@ -1,0 +1,143 @@
+{
+  "timestamp_utc": "20261024T113103Z",
+  "scope": "Manual known no_grad repair: real GPU instrumentation/verification regression, not model-generated repair acceptance",
+  "source": "runs/manual-command-gpu-20261024T113103Z/original/train.py",
+  "execution_argv": [
+    "python",
+    "-O",
+    "-m",
+    "train",
+    "--device",
+    "cuda",
+    "--steps",
+    "20"
+  ],
+  "source_sha256": "12d0e1dcab126d8eccbdb414970fc5a873d62e302a5e838bd9b342603d0ec2ce",
+  "candidate_sha256": "2ff309034b07ada0aa3365ec2c6b2637641b0f81b942344ea6482ad25af9b0ad",
+  "manual_patch": "runs/manual-command-gpu-20261024T113103Z/manual-patch.diff",
+  "script_args": [
+    "--device",
+    "cuda",
+    "--steps",
+    "20"
+  ],
+  "seed": 1337,
+  "required_steps": 20,
+  "target": "reclaim",
+  "baseline_run": "runs/manual-command-gpu-20261024T113103Z/lab/e08ca20d6d624414a85e35afc6a9b98d",
+  "candidate_run": "runs/manual-command-gpu-20261024T113103Z/lab/2afd43aed3ef4be4b5b14b8eff373cc9",
+  "checks": {
+    "baseline_completed_20": true,
+    "candidate_completed_20": true,
+    "both_cleanup_verified": true,
+    "both_capture_complete": true,
+    "both_unshared": true,
+    "pairing_remains_unknown": true,
+    "original_scalar_basis": true,
+    "strong_pairing_not_claimed": true,
+    "original_plan_unchanged": true,
+    "loss_identical": true,
+    "manual_memory_target_met": true,
+    "original_source_unchanged": true
+  },
+  "passed": true,
+  "verification": {
+    "completed": true,
+    "peak_before": 2.435717632,
+    "peak_after": 0.64841984,
+    "reduction_pct": 73.37869416876643,
+    "step_ms_before": 41.32876149378717,
+    "step_ms_after": 40.50205450039357,
+    "loss_equivalence": "identical",
+    "target_met": true,
+    "notes": [
+      "Loss states describe the original-plan observed scalar comparison; matching inputs, effective batch and objective are not established. This is not proof of workload equivalence.",
+      "Pairing: Lab runtime fingerprints and pinned source contracts; reference: pairing requires a supported run_script target; candidate: pairing requires a supported run_script target",
+      "Reference discovery: Baseline did not OOM or reference already supplied"
+    ],
+    "checks": {
+      "baseline_capture": true,
+      "target_mode_valid": true,
+      "candidate_completed_required_steps": true,
+      "finite_candidate_losses": true,
+      "parameter_count_unchanged": true,
+      "numerics_policy": true,
+      "same_seed": true,
+      "same_inputs": null,
+      "same_effective_batch": null,
+      "same_objective": null,
+      "loss_series_aligned_to_updates": true,
+      "loss_series_comparison_available": true,
+      "loss_comparable": false,
+      "repository_no_reference_exception": false,
+      "loss_tolerance": true,
+      "numerical_acceptance": true,
+      "parameter_policy": true,
+      "measured_cuda_peaks": true,
+      "same_gpu_hardware": true,
+      "gpu_observation_clear": true,
+      "throughput_limit": true,
+      "memory_target": true
+    },
+    "max_loss_delta": 0.0,
+    "throughput_regression_pct": -2.000318817968638,
+    "numerics_changed": false,
+    "parameter_count_before": 37791744,
+    "parameter_count_after": 37791744,
+    "target": "reclaim",
+    "units": "GB = 1e9 bytes; percentages are relative to baseline",
+    "run_ids": {
+      "baseline": "e08ca20d6d624414a85e35afc6a9b98d",
+      "candidate": "2afd43aed3ef4be4b5b14b8eff373cc9"
+    },
+    "reference_run": null,
+    "acceptance_scope": "standard",
+    "numerical_basis": "original_plan_full_backward_scalar_series"
+  },
+  "pairing_checks": {
+    "same_inputs": null,
+    "same_effective_batch": null,
+    "same_objective": null
+  },
+  "observations": [
+    {
+      "status": "completed",
+      "steps": 20,
+      "peak_allocated_bytes": 2435717632,
+      "peak_reserved_bytes": 2510290944,
+      "step_ms_median": 41.32876149378717,
+      "shared_gpu": false,
+      "gpu_observation_complete": true,
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "timing_note": "Intervals between completed optimizer updates; first includes target setup; pairing initialization hash time excluded, total wall time retains it",
+      "pairing_hash_seconds": null,
+      "bytes_hashed": null
+    },
+    {
+      "status": "completed",
+      "steps": 20,
+      "peak_allocated_bytes": 648419840,
+      "peak_reserved_bytes": 799014912,
+      "step_ms_median": 40.50205450039357,
+      "shared_gpu": false,
+      "gpu_observation_complete": true,
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "timing_note": "Intervals between completed optimizer updates; first includes target setup; pairing initialization hash time excluded, total wall time retains it",
+      "pairing_hash_seconds": null,
+      "bytes_hashed": null
+    }
+  ],
+  "elapsed_seconds": 23.19061619997956,
+  "model_calls": 0,
+  "paid_cost_usd": "0",
+  "gpu_runs": 2,
+  "reproduction": "Copy original s3 and add an unused module constant so it does not match a pinned pairing AST. Run via python -O -m train inside the Lab; candidate adds only @torch.no_grad() before evaluate. Both run 20 optimizer updates with seed 1337, no supplied pairing, standard acceptance scope.",
+  "limitations": [
+    "Manually authored known repair; no Ultra/Super model produced it",
+    "No MVP/main/ablation model score changed",
+    "Does not establish arbitrary-script pairing support",
+    "Pairing is unknown; identical is the original-plan observed scalar result, not a generic workload-equivalence proof"
+  ]
+}

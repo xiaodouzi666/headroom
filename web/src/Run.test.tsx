@@ -145,6 +145,7 @@ it("renders per-round verification and only downloads complete retained or rever
     step_ms_after: "110.000 ms",
     throughput_regression_pct: "10.000%",
     loss_equivalence: "changed",
+    numerical_basis: "Observed full backward-loss sequence (original plan)",
     max_loss_delta: "0.500000",
     target_met: false,
     completed: true,

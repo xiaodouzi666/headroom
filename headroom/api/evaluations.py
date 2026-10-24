@@ -63,9 +63,23 @@ def _public_row(row, provenance):
             "ground_truth",
             "truth_status",
             "first_cause",
-            "loss_equivalence",
         )
     }
+    for name, allowed in (
+        ("loss_equivalence", {"identical", "within_tol", "changed", "n/a", "unknown"}),
+        (
+            "numerical_basis",
+            {
+                "original_plan_first_five_backward_scalars",
+                "original_plan_full_backward_scalar_series",
+                "repository_no_reference_exception",
+                "unavailable",
+            },
+        ),
+        ("acceptance_scope", {"standard", "repository"}),
+    ):
+        value = row.get(name)
+        result[name] = value if isinstance(value, str) and value in allowed else None
     result["policy_name"] = result["policy_name"] or "default"
     result["status"] = result["status"] or "unknown"
     result["provenance"] = (

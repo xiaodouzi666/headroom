@@ -11,26 +11,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from headroom.lab.runner import copy_source
+from headroom.verify.compare import REQUIRED_CHECKS
 from headroom.verify.policy import safe_relative_path, validate_env_changes
 
-HARD_CHECKS = (
-    "baseline_capture",
-    "target_mode_valid",
-    "candidate_completed_required_steps",
-    "finite_candidate_losses",
-    "numerics_policy",
-    "same_seed",
-    "same_inputs",
-    "same_effective_batch",
-    "same_objective",
-    "loss_series_aligned_to_updates",
-    "loss_comparable",
-    "loss_tolerance",
-    "parameter_policy",
-    "measured_cuda_peaks",
-    "same_gpu_hardware",
-    "gpu_observation_clear",
-)
+HARD_CHECKS = REQUIRED_CHECKS
+
 _TOOL_ENV = {
     "PATH": "/usr/local/bin:/usr/bin:/bin",
     "HOME": "/nonexistent",
@@ -85,12 +70,8 @@ def decide_keep(current, candidate, verification, *, original_baseline, policy):
     checks = verification.get("checks", {})
     if not isinstance(checks, dict) or any(checks.get(key) is not True for key in HARD_CHECKS):
         return KeepDecision(False, "verification_hard_constraints_unmet")
-    if any(
-        value is not True
-        for key, value in checks.items()
-        if key not in {"memory_target", "parameter_count_unchanged", "throughput_limit"}
-    ):
-        return KeepDecision(False, "verification_additional_constraints_unmet")
+    if original_baseline.get("status") == "oom" and checks.get("loss_decreases") is not True:
+        return KeepDecision(False, "original_loss_decrease_unverified")
     if candidate.get("status") != "completed" or verification.get("completed") is not True:
         return KeepDecision(False, "candidate_not_completed")
     if (
@@ -105,9 +86,23 @@ def decide_keep(current, candidate, verification, *, original_baseline, policy):
         and verification.get("loss_equivalence") == "changed"
         and checks.get("loss_tolerance") is True
     )
-    if not equivalent and not changed_authorized:
+    no_reference_allowed = (
+        verification.get("acceptance_scope") == "repository"
+        and original_baseline.get("status") == "oom"
+        and verification.get("loss_equivalence") == "n/a"
+        and verification.get("numerical_basis") == "repository_no_reference_exception"
+        and verification.get("numerics_changed") is False
+        and checks.get("repository_no_reference_exception") is True
+    )
+    if not equivalent and not changed_authorized and not no_reference_allowed:
+        return KeepDecision(False, "numerics_not_verified")
+    if equivalent and checks.get("loss_tolerance") is not True:
         return KeepDecision(False, "numerics_not_verified")
     notes = []
+    if no_reference_allowed:
+        notes.append(
+            "PLAN T1.9 repository no-reference exception: numerical equivalence is unverified (n/a)."
+        )
     if original_baseline.get("status") == "oom":
         if checks.get("throughput_limit") is False:
             return KeepDecision(False, "original_throughput_constraint_failed")
