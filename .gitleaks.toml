@@ -272,3 +272,29 @@ condition = "AND"
 regexTarget = "secret"
 paths = ['''^reports/live\-campaign\-20261025/mvp\-v4\-cap\-budget\-review\.json$''']
 regexes = ['''^a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c$''']
+
+# Proposed exact-path AND exact-value exclusions for 11 independently verified cache-key false positives.
+# All eight values were recomputed from original research tool dispatches with the actual source normalization/hash functions.
+# Append under the existing generic-api-key rule only; preserve all default rules and all other checks.
+[[rules.allowlists]]
+description = "Verified nonsecret Tavily request-cache SHA256 values in one MVP candidate review"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/live\-campaign\-20261025/mvp\-v4\-candidate\-verification\-review\.json$''']
+regexes = [
+    '''^2b9b22ee7eb1920b3cc5c04172acb8e949376724358e124ff184e4f069c1a70a$''',
+    '''^6d207d023f883c773e03a474405e1df1173a55d34370f6e9c5c630c43828c316$''',
+    '''^880562e50fd2183b34a2ea552649deff37299235147d38f2134955b9d3c16b07$''',
+    '''^aa07a3302e0c1d1cbc670c66c2f2bf4fbcfc42172838e08ec33d831235822faf$''',
+    '''^afe252f917e48e3919e27d4bf1dfb62fe04def23308f0ecabd0dddaf29f9bc42$''',
+    '''^d5da88cea870cde72a72ba9fff7d8a3295566cf9673fb583764d50ee671aea98$''',
+    '''^f9d1d55ce2db5d10c42638a0f4d6132ae1ec800f6d27ea63ec94d27224957e50$''',
+    '''^ffcaade845e00fc3b7ab4b0db906cacaac9b796eab86e31a3138f6a932d1d6fb$''',
+]
+
+[[rules.allowlists]]
+description = "Verified nonsecret runtime profile content digest in one final finance report"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/live\-campaign\-20261025/mvp\-v4\-finance\-review\.json$''']
+regexes = ['''^a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c$''']

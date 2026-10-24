@@ -373,8 +373,7 @@ financial records.
 The applied common revision now requests reasoning=False for patch and fixer,
 keeps max_completion_tokens<=4000 and existing policy/parser checks, clarifies
 the existing standard-diff instructions, and saves private bounded visible
-response evidence. Current production-tree targeted integration passed 294 guarded tests. There has been no next live validation, so the change is not reported
-as a successful model repair. Clear effective reasoning-control metadata and
+response evidence. Current production-tree targeted integration passed 294 guarded tests. At that v2 checkpoint there had been no next live validation. Later v3/v4 failures are recorded below; this change is not reported as a successful model repair. Clear effective reasoning-control metadata and
 complete usage on truncated responses would help clients diagnose this failure
 without assuming that a short or schema-constrained response is reliable.
 
@@ -416,4 +415,15 @@ and [post-v2 saved ledger review](../reports/live-campaign-20261025/mvp-v2-profi
 
 In MVPv3, Super returned54 complete structured responses with stop/zero reported reasoning. Raw visible JSON and parsed objects agree:52 nonempty unified diff strings have zero LF and zero literal backslash-n separators across multiple scenes. Local parser/control experiments accept standard paired headers with or without diff --git; no local newline stripping was found. Consequently the strict file/hunk parser rejected these52 nonempty responses. A separate empty diff was rejected as NO_CHANGE, making53 total rejections; the other empty-diff CLI-only response reached the real Lab but failed its unsupported argument. This isolates an observed wire-output problem; it does not prove an internal provider cause or a valid repair.
 
-Action: request explicit diff_lines arrays, one physical line per element; reject embedded CR/LF and deterministically join the supplied boundaries while retaining original wire and normalized artifacts. Keep git apply/compile/honesty/4000-token limits intact. A generic one-call transport component check precedes the last permitted MVP repair iteration. Outcome pending; do not claim the format fixes model patch correctness. Evidence: reports/live-campaign-20261025/mvp-v3-repair-review.json.
+Action: request explicit diff_lines arrays, one physical line per element; reject embedded CR/LF and deterministically join the supplied boundaries while retaining original wire and normalized artifacts. Keep git apply/compile/honesty/4000-token limits intact. At that checkpoint a generic one-call transport check was planned. The first component failed its hunk format; a second unchanged-source component passed through the normal bounded fixer. Final MVPv4 results below do not establish patch correctness merely from transport. Evidence: reports/live-campaign-20261025/mvp-v3-repair-review.json.
+
+
+## TF-023 — Explicit line transport fixes boundaries, not patch structure or placement
+
+Final MVPv4 preserved explicit diff_lines boundaries, but110 patch attempts yielded88 format/safety rejections,19 application failures,1 response rejection and2 apply/compile successes. Missing prefixes, incorrect hunk counts and copied source display labels are directly retained in response evidence. The current fixer receives a generic invalid-diff message, losing more specific parser detail. One compiled s1 patch landed after the live main path and stillOOM; s8 retained a3.556% peak reduction but missed20%. Proposed bounded structural diagnostics, separate raw-source/line metadata and exact source anchors require the owner's next-round decision. No scenario-specific correct patch was supplied to the model.
+
+MVPv4 used165 calls; all-call known subtotal1.037464332USD, plus verified missing-cache Nano bounds yields1.039832052USD conservative total, actual totalnull. The aggregate known_cost field0.549897932 sums only fully known runs and must not be called the all-call known subtotal. Returning consistent cache usage and exact editable-source/schema behavior would make integrations easier to verify. Evidence: reports/live-campaign-20261025/mvp-v4-finance-review.json; mvp-v4-candidate-verification-review.json; mvp-v4-next-repair-options.md.
+
+## TAVILY-003 — Real model-directed research and cross-run cache, incomplete required Sources
+
+Final MVPv4 recorded9 research rows with8 actualAPI calls and7 reportedcredits. s4's native model tool loop searched then extracted https://docs.pytorch.org/docs/2.5/checkpoint.html with version_match=true. s5 reused s3's exact cached query with api_calls=0 and credits_used=0, preserving the origin request. Nevertheless s1 lacks the required checkpoint Source and s5 lacks the required CUDA-memory Source, so the original T2.2 gate fails. Tool execution and organic use are observed; citation completeness is separate. More consistent version-specific ranking would reduce irrelevant-result handling. Evidence: mvp-v4-candidate-verification-review.json.

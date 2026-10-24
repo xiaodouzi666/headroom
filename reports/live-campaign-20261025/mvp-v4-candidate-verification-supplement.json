@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-24T23:33:16.589355+00:00",
+  "scope": "Read-only T1.8 number checker and actual applied source placement, after initial candidate review",
+  "source_commit": "78a83df86b181674c37509b192517a9d4101ad92",
+  "campaign_sha256": "4362f3636f1237c013970cac76856ee4c61111b653326512a8967672dc063c29",
+  "initial_candidate_review_sha256": "7971b78faa1418b19a050ca4ef8bf531ad4b8ddad2d43fc0dc43b84b31bf49f1",
+  "script": "scripts/check_report_numbers.py",
+  "script_sha256": "6fad3f6966218e5db0f421c687e0811d2aceec372dee6c5dc526903a12a5c33f",
+  "execution": "Existing script main invoked in-process under no provider/network/GPU/env/profile/ledger access guard; no subprocess",
+  "report_number_checks": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "exit_code": 0,
+      "stdout": "PASS: all GB/GiB/percentage figures are present in report.json"
+    },
+    {
+      "scenario_id": "s2_fp32_adamw_1b",
+      "exit_code": 0,
+      "stdout": "PASS: all GB/GiB/percentage figures are present in report.json"
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "exit_code": 0,
+      "stdout": "PASS: all GB/GiB/percentage figures are present in report.json"
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "exit_code": 0,
+      "stdout": "PASS: all GB/GiB/percentage figures are present in report.json"
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "exit_code": 0,
+      "stdout": "PASS: all GB/GiB/percentage figures are present in report.json"
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "exit_code": 0,
+      "stdout": "PASS: all GB/GiB/percentage figures are present in report.json"
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "exit_code": 0,
+      "stdout": "PASS: all GB/GiB/percentage figures are present in report.json"
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "exit_code": 0,
+      "stdout": "PASS: all GB/GiB/percentage figures are present in report.json"
+    },
+    {
+      "scenario_id": "nanogpt",
+      "exit_code": 0,
+      "stdout": "PASS: all GB/GiB/percentage figures are present in report.json"
+    }
+  ],
+  "all_report_number_checks_passed": true,
+  "source_placement": [
+    {
+      "run_id": "52d7c368ccca4f639599eedaf0995893",
+      "round": 3,
+      "candidate": "runs/evaluation/live/20261024T231940915002Z-2098d11d/jobs/52d7c368ccca4f639599eedaf0995893/rounds/03/patches/patch-engine-a783b9738f94484e9b31adf972707f26/attempt-1/patch-5b201bb3064e4a1f9b0e66838fc88bf3/candidate/train.py",
+      "sha256": "0ecd1483f12e01fc6e393c507fe5e53a6e11e358fc63ef15c653ea55b00ff069",
+      "bytes": 4838,
+      "line_markers": {
+        "original_full_batch_forward": [
+          99
+        ],
+        "main_invocation": [
+          117
+        ],
+        "microbatch_size_inserted": [
+          124
+        ]
+      }
+    },
+    {
+      "run_id": "0e051aac56184f55bd00fc113df5dbcf",
+      "round": 2,
+      "candidate": "runs/evaluation/live/20261024T231940915002Z-2098d11d/jobs/0e051aac56184f55bd00fc113df5dbcf/rounds/02/patches/patch-engine-b3012a57f71e408ca9c7da7d7b745070/attempt-1/patch-8600479e239c49849add90d54a59602a/candidate/train.py",
+      "sha256": "f1ef723195c87e97df8ecf18daddb136d2ffcb44f039d4fe4c7e7a42389b1618",
+      "bytes": 4914,
+      "line_markers": {
+        "teacher_constructed_on_cuda_then_moved_cpu": [
+          98
+        ]
+      }
+    }
+  ],
+  "interpretation": [
+    "s1 original full-batch forward remains at line99; new microbatch code occurs after main() and the re-raised OOM, so it did not replace the failing training path.",
+    "s8 creates the teacher on the original device before calling to('cpu'); freeing residency afterwards cannot undo historical allocation peaks. This explains why completion and scalar-loss equality did not establish the required 20% peak reduction.",
+    "Both commands used git apply --3way with direct fallback; no standalone git apply --check was invoked here.",
+    "No successful selected repair is created or retroactively accepted by these report checks."
+  ],
+  "model_calls": 0,
+  "gpu_runs": 0,
+  "new_tavily_calls": 0
+}

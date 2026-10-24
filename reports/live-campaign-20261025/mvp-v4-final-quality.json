@@ -1,0 +1,62 @@
+{
+  "observed_utc": "2026-10-24T23:36:21.150603+00:00",
+  "checks": [
+    {
+      "name": "ruff_check",
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "."
+      ],
+      "exit_code": 0,
+      "stdout": "All checks passed!",
+      "stderr": ""
+    },
+    {
+      "name": "ruff_format",
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "."
+      ],
+      "exit_code": 0,
+      "stdout": "331 files already formatted",
+      "stderr": ""
+    },
+    {
+      "name": "git_diff",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "scanner_checks": [
+    {
+      "command": [
+        "gitleaks",
+        "detect",
+        "--redact"
+      ],
+      "exit_code": 0,
+      "scope": "27 pre-commit history commits",
+      "log": ".cache/setup/mvp-v4-final-gitleaks-history.log"
+    },
+    {
+      "command": [
+        "gitleaks",
+        "protect",
+        "--staged",
+        "--redact"
+      ],
+      "exit_code": 0,
+      "scope": "Final source/docs/audits before handoff assembly; exact digest review retained",
+      "log": ".cache/setup/mvp-v4-staged-after-exact-digests.log"
+    }
+  ]
+}

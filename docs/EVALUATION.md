@@ -340,3 +340,13 @@ own JSON/Markdown/public Results column, not in the actual-cost column. Existing
 unknown rows without explicit certification remain unknown. A later review that
 retains an old full reservation in the shared ledger does not retroactively turn
 the original failed campaign into a pass.
+
+## CLI exit acceptance is separate from worker exit
+
+The original T1.12 procedure invokes `headroom fix` for each of nine cases. A recorded `evaluation_timing.worker_exit_code=0` is the multiprocessing worker's exit status, not an observed `headroom fix` shell exit. The worker calls `run_fix` directly and can return normally with `needs_human` or another non-success status.
+
+The current CLI maps `completed` to 0, `needs_human` and `budget_exceeded` to 78, `timeout` to 124, and other statuses to 1. Target success remains separate: workflow `completed` does not imply `target_met=true`.
+
+The read-only private helper `.cache/setup/audit_cli_exit_semantics_v1.py` derives `expected_fix_exit_code` only when saved campaign, report, worker-result and Store statuses agree, using a pinned CLI source contract. It always keeps `literal_fix_exit_code=null` and `invocation_observed=false`. Predicted zero is not observed CLI evidence, and the helper never makes the literal CLI acceptance gate pass.
+
+See the [boundary report](../reports/live-campaign-20261025/cli-exit-acceptance-boundary.md) and [v3 supplement](../reports/live-campaign-20261025/mvp-v3-cli-exit-semantics.json). v3 had nine normal worker exits but eight predicted CLI exits of 78 and only one predicted 0. No existing result is regraded and no additional provider or GPU call is required for this status audit. Literal CLI invocation, argument/configuration handling, terminal events and shell exit still need their own execution evidence before claiming the original CLI gate passed.

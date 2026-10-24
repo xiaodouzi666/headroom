@@ -2,7 +2,7 @@
 
 Autoresearch for GPU memory: capture a PyTorch workload, explain its memory use, propose a patch, and measure whether the change works.
 
-**Built with NVIDIA Nemotron 3 (Ultra/Super/Nano) on Nebius Token Factory.** The integration is implemented, and minimal authenticated Super/Nano chats have passed. Ultra capabilities and model-driven repair benchmarks remain pending; see the [bounded probe receipt](reports/tokenfactory-minimal-20261024.json).
+**Built with NVIDIA Nemotron 3 (Ultra/Super/Nano) on Nebius Token Factory.** T0.4's 60 prescribed probe samples and the T1.3 real-evidence client gate are accepted with failures retained. Ultra handled a measured 500,029-token input and a separate 268,920-token authentic evidence request; neither proves a one-million-token request or the exact provider maximum. The 900k probe returned 429 and its unknown charge remains conservatively retained. The final original MVP iteration failed: target 0/9 and first cause 7/9; see [capability results](reports/t0.4-acceptance-20261025.json) and [client evidence](reports/t1.3-acceptance-20261025.json).
 **Web research powered by Tavily.** Version-specific search/extraction and cache reuse have been exercised with the real service.
 
 Public demo: pending approved hostname and deployment. Local app: `headroom serve`.
@@ -31,9 +31,9 @@ Each candidate keeps its original baseline, source snapshot, logs and patch. The
 
 | Service | Role | Current evidence |
 |---|---|---|
-| Token Factory / Nemotron Ultra | Evidence-grounded diagnosis and repair planning | Real 200k evidence package and eight-scenario diagnosis driver prepared; actual provider-token, accuracy and cost acceptance pending |
-| Token Factory / Nemotron Super | Bounded patch generation, research tools and repair | Minimal authenticated chat passed; native Tavily tool loop and diff/apply/compile tested offline; real tool/repair acceptance pending |
-| Token Factory / Nemotron Nano | Top-stack labels with a 0.02 USD sub-budget | Minimal authenticated chat passed; offline labels/budget checks; eight-scenario live agreement pending |
+| Token Factory / Nemotron Ultra | Evidence-grounded diagnosis and repair planning | Real 268,920-token evidence client gate passed; diagnosis v5 matched 7/8 first causes, but full policy/plan acceptance remains false. Advertised 1M context is not a measured request size |
+| Token Factory / Nemotron Super | Bounded patch generation, research tools and repair | Live native schema/tool-call probes and a generic docstring patch/apply/compile component passed; that component contributes zero benchmark repair successes. Latest MVP has 2/8 apply+compile scenes and 0/9 targets; real Tavily calls/cache were observed, but specified Sources gates remain incomplete |
+| Token Factory / Nemotron Nano | Top-stack labels with a 0.02 USD sub-budget | Latest eight-scenario trial: 4 complete annotations, 3/40 heuristic matches within completed outputs; full coverage/agreement gate failed |
 | Tavily | Search plus exact versioned documentation extraction | Real PyTorch 2.5 checkpoint/allocator queries and zero-credit cache hits |
 
 ## Quickstart
@@ -68,13 +68,13 @@ Earlier baseline-only interface capture (before the key was configured; it does 
 
 ## Results and limitations
 
-[RESULTS](docs/RESULTS.md) separates measured baselines, component tests and pending model-driven repairs. No repair success rate or ablation win is claimed yet. The original s2 optimizer-state gate remains failed: 39.8715% versus 40%. Its baseline also already fits 22 GB; the required two-round repair gate is unresolved.
+[RESULTS](docs/RESULTS.md) separates measured baselines, component tests and pending model-driven repairs. The latest original nine-case trial measured 0/9 target success and 7/9 first-cause matches; one retained candidate reduced peak by 3.56%, below its 20% target. No ablation win is claimed. The original s2 optimizer-state gate remains failed: 39.8715% versus 40%. Its baseline also already fits 22 GB; the required two-round repair gate is unresolved.
 
-The Lab executes watched commands only in Docker with no network, read-only source/dependencies, bounded resources and verified cleanup. Static policy is defense in depth, not proof that arbitrary hostile programs are safe. Watch observes Python scripts/modules, `-c`, interpreter options and generic argv, including an explicitly requested container shell, while preserving command arguments and exit codes. Automatic repair needs a replayable Python script; other CUDA OOM entrypoints return `needs_human`, and missing instrumentation is reported as unknown. Distributed captures are not aggregate memory evidence. The independent subprocess comparison is blocked by current user/network namespace permissions; see [Watch and HF](docs/WATCH_HF.md). Captures of shared GPUs cannot establish a speed improvement. Random-initialized repository/library fixtures are not evidence of downstream task quality.
+The Lab executes watched commands only in Docker with no network, read-only source/dependencies, bounded resources and verified cleanup. Static policy is defense in depth, not proof that arbitrary hostile programs are safe. Watch observes Python scripts/modules, `-c`, interpreter options and generic argv, including an explicitly requested container shell, while preserving command arguments and exit codes. Automatic repair needs a replayable Python script; other CUDA OOM entrypoints return `needs_human`, and missing instrumentation is reported as unknown. Distributed captures are not aggregate memory evidence. The [independent subprocess comparison](reports/t2.7-acceptance-20261025.json) passed the original <=1% peak-difference gate in three scenarios and six CUDA arms, with observed differences of 0%. Its separate controller runs inside Docker and shares capture instrumentation, image and source checks; this is not a bare-host backend or independent allocator instrumentation. The earlier host namespace EPERM remains historical evidence; see [Watch and HF](docs/WATCH_HF.md). Captures of shared GPUs cannot establish a speed improvement. Random-initialized repository/library fixtures are not evidence of downstream task quality.
 
 ## Related work
 
-Headroom combines runtime allocator evidence, reviewable script patches, same-seed verification and a memory-budget search. These components have substantial prior work. The comparison below describes documented scope, not a measured superiority claim. Headroom's model-driven repair evaluation is still pending.
+Headroom combines runtime allocator evidence, reviewable script patches, same-seed verification and a memory-budget search. These components have substantial prior work. The comparison below describes documented scope, not a measured superiority claim. Headroom's latest model-driven trial failed the original MVP target gate; full evaluation and ablations remain pending.
 
 | Prior work | Documented scope | Headroom's intended focus |
 |---|---|---|
