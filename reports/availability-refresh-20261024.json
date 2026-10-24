@@ -1,0 +1,44 @@
+{
+  "generated_at": "2026-10-24T10:41:58.183578+00:00",
+  "scope": "Fix cache expiry aligned with Home polling",
+  "provenance": "offline_mock_validation",
+  "supersedes_observer_validation": "reports/availability-offline-20261024.json",
+  "backend": {
+    "command": ".venv/bin/python -m pytest tests/test_availability.py tests/test_api.py -q",
+    "passed": 63,
+    "duration_seconds": 13.5
+  },
+  "lint": "ruff format/check passed for availability module and tests",
+  "regressions": [
+    "HTTP observations every 15 seconds while background probes refresh every five seconds remain busy/fresh during in-flight refresh.",
+    "A genuinely stalled observation becomes unknown after its 15-second TTL.",
+    "Slow provider completion never refreshes an older GPU observation timestamp.",
+    "Shutdown wakes the periodic wait and starts no additional probes."
+  ],
+  "external_activity": {
+    "network": "blocked in availability tests; all HTTP and GPU subprocesses mocked",
+    "model_inference": false,
+    "credential_reads": false,
+    "gpu_allocation": false,
+    "real_provider_probe": false,
+    "real_gpu_probe": false
+  },
+  "limitations": [
+    "Parent task will run full integrated suite and repeat actual preview checks.",
+    "Background reachability remains anonymous and cannot certify account balance, authentication or inference."
+  ],
+  "sources": [
+    {
+      "path": "headroom/api/availability.py",
+      "sha256": "be7f7250537f933864bea0ac6e9bc3dcbe97cda635051b9f247d961b5be61b8a"
+    },
+    {
+      "path": "tests/test_availability.py",
+      "sha256": "fee66902b37b1ad2ec7a50917e8331afea30f0e7aef9aa4133ce2387de9017d4"
+    },
+    {
+      "path": "docs/AVAILABILITY.md",
+      "sha256": "2257f9eee0647c0cad3c625b091cda0eb0057372bf1a521f3246b4fc7ba88951"
+    }
+  ]
+}

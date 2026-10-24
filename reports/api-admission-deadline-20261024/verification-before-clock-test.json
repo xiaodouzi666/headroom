@@ -1,0 +1,65 @@
+{
+  "created_at": "2026-10-24T10:37:52.191272+00:00",
+  "base_head": "269efd056a1f0a1fed6898b2995175c712d2fa54",
+  "scope": "Admission-to-execution deadline; cleanup separate; no HTTP upload time claim",
+  "tests": {
+    "command": "uv run pytest -q tests/test_api_deadline.py tests/test_api.py tests/test_repository.py tests/test_cli.py --basetemp=runs/api-admission-deadline-20261024-d",
+    "passed": 87,
+    "seconds": 31.9,
+    "log": "reports/api-admission-deadline-20261024/tests-d.log"
+  },
+  "retained_earlier_results": [
+    {
+      "log": "tests-a.log",
+      "passed": 49
+    },
+    {
+      "log": "tests-b.log",
+      "passed": 52
+    },
+    {
+      "log": "tests-c.log",
+      "passed": 85
+    }
+  ],
+  "retained_repaired_findings": [
+    "Initial docs trailing whitespace check; diff-initial-whitespace.log retained"
+  ],
+  "checks": {
+    "ruff": {
+      "exit_code": 0
+    },
+    "format": {
+      "exit_code": 0
+    },
+    "diff": {
+      "exit_code": 0
+    }
+  },
+  "plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "files_sha256": {
+    "headroom/api/queue.py": "f4d6367674540154b449f6de950c04d9104f7c97fe01378ee081a3382758f5b9",
+    "headroom/repository.py": "beb19db1e7e75257f8af9225e747737c025c09be0927e513da7be42a433ed0d3",
+    "headroom/api/app.py": "637da11e6515added3ad57d09e12e107f0183dbbf78f7c05ae6c474bb8b12799",
+    "tests/test_api_deadline.py": "b7f846afb6f116f68208a305ad63969d217fb7513ca48f19fdbcb89b219887a6",
+    "tests/test_api.py": "4bb603f6fe804823a99e4c93d6f73c6c0406dd52faa45736cc82d2ffbf0f1a66",
+    "tests/test_repository.py": "fb5dae689d9784b4e1758a73d93e9fa963deed3466ffcb8c4f391bec4adc1ab3",
+    "docs/API.md": "61861952b005c294c431073fbc9ec6e7f1c15f0e6a401eedc34e7978d43c1ad8",
+    "docs/DEPLOYMENT.md": "de1fa82da4ccd33009d378caab2df530baaa61a1b83c2f83d3ff5d662e6e19cf"
+  },
+  "boundaries": {
+    "live_provider_requests": 0,
+    "gpu_workloads": 0,
+    "credential_file_reads": 0,
+    "payment_changes": 0,
+    "public_listeners": 0,
+    "committed": false,
+    "pushed": false
+  },
+  "remaining_acceptance": [
+    "Real public HTTPS and phone-network access",
+    "Public tunnel IP limiting",
+    "10-second service restart recovery",
+    "Delivered two-minute downtime alert"
+  ]
+}

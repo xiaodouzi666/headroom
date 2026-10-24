@@ -27,6 +27,19 @@ from headroom.llm.cost import Pricing
 MESSAGES = [{"role": "user", "content": "Return an answer"}]
 
 
+@pytest.fixture(autouse=True)
+def no_network(monkeypatch):
+    import socket
+
+    def denied(*args, **kwargs):
+        pytest.fail("Real network forbidden in client tests")
+
+    monkeypatch.setattr(socket, "getaddrinfo", denied)
+    monkeypatch.setattr(socket.socket, "connect", denied)
+    monkeypatch.setattr(socket.socket, "connect_ex", denied)
+    monkeypatch.setattr(socket, "create_connection", denied)
+
+
 def completion(content="ok", *, usage=True, finish="stop", tool_calls=None, model=SUPER_MODEL):
     result = {
         "id": "mock-completion",
@@ -381,3 +394,24 @@ def test_invalid_success_body_has_unknown_cost_and_no_automatic_retry(payload, c
     assert client.ledger.total_usd is None
     assert payload not in str(error.value)
     assert "sensitive-value" not in caplog.text
+
+
+def test_nondefault_output_cap_needs_evidence_and_known_field():
+    models = candidate_models()
+    with pytest.raises(ValueError, match="evidence"):
+        replace(models["super"], output_cap_field="max_completion_tokens")
+    with pytest.raises(ValueError, match="Unsupported output cap field"):
+        replace(models["super"], output_cap_field="max_output_tokens", evidence="fixture")
+
+
+def test_canonical_nano_identity_does_not_enable_live_or_certify_capabilities():
+    from scripts.probe_models import MODELS
+
+    models = candidate_models()
+    assert NANO_MODEL == "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+    assert MODELS["nano"] == "nvidia/nvidia-nemotron-3-nano-30b-a3b"
+    assert models["nano"].model_id == NANO_MODEL
+    assert not models["nano"].model_verified
+    assert models["nano"].evidence is None
+    assert models["nano"].output_cap_field == "max_tokens"
+    assert not RuntimeConfig().live_enabled

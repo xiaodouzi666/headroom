@@ -1,0 +1,551 @@
+........................................................................ [  8%]
+........................................................................ [ 16%]
+........................................................................ [ 25%]
+........................................................................ [ 33%]
+........................................................................ [ 42%]
+........................................................................ [ 50%]
+........................................................................ [ 58%]
+........................................................................ [ 67%]
+........................................................................ [ 75%]
+................................................FFF.FF.................. [ 84%]
+........................................................................ [ 92%]
+.......F.......................FFFF.....FFFFFFFF................         [100%]
+=================================== FAILURES ===================================
+____________ test_adamw_steps_and_all_three_seeds_are_deterministic ____________
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_adamw_steps_and_all_three0/input')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_adamw_steps_and_all_three0')
+
+    def test_adamw_steps_and_all_three_seeds_are_deterministic(source, tmp_path):
+        script = source / "train.py"
+        script.write_text(TRAINING)
+        runs = [
+            run_script(script, device="cpu", run_root=tmp_path / "runs", max_steps=20, seed=seed)
+            for seed in (1337, 1337, 1338)
+        ]
+        for result in runs:
+>           assert result["status"] == "completed", result
+E           AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '213620b3631b4d6b97347aeedc69a325', 'run_dir': '/home/xi...m/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_adamw_steps_and_all_three0/runs/213620b3631b4d6b97347aeedc69a325', ...}
+E           assert 'error' == 'completed'
+E             
+E             - completed
+E             + error
+
+tests/test_runner.py:43: AssertionError
+_______________ test_command_mode_captures_real_optimizer_steps ________________
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_command_mode_captures_rea0/input')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_command_mode_captures_rea0')
+
+    def test_command_mode_captures_real_optimizer_steps(source, tmp_path):
+        (source / "train.py").write_text(TRAINING)
+        result = run_command(
+            source, ["python", "train.py"], device="cpu", run_root=tmp_path / "runs", max_steps=7
+        )
+>       assert result["status"] == "completed", result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '474f4dbd857f45dca37dc26516040c74', 'run_dir': '/home/xi...m/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_command_mode_captures_rea0/runs/474f4dbd857f45dca37dc26516040c74', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_runner.py:56: AssertionError
+____________________ test_keys_absent_and_source_read_only _____________________
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_keys_absent_and_source_re0/input')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_keys_absent_and_source_re0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7cd2727c39b0>
+
+    def test_keys_absent_and_source_read_only(source, tmp_path, monkeypatch):
+        for name in ("NEBIUS_API_KEY", "TAVILY_API_KEY", "HF_TOKEN", "UNRELATED_SECRET"):
+            monkeypatch.setenv(name, "canary-never-a-real-credential")
+        (source / ".env").write_text("ONLY_A_TEST_CANARY=do-not-copy\n")
+        script = source / "check.py"
+        script.write_text("""import json, os
+    from pathlib import Path
+    keys = {key: os.environ.get(key) for key in
+            ("NEBIUS_API_KEY", "TAVILY_API_KEY", "HF_TOKEN", "UNRELATED_SECRET")}
+    assert all(value is None for value in keys.values()), "environment leak"
+    assert not Path("/source/.env").exists(), "source secret copied"
+    assert not Path("/runtime/.env").exists(), "runtime root mounted"
+    try:
+        Path("/source/unexpected.txt").write_text("unsafe")
+    except OSError:
+        readonly = True
+    else:
+        readonly = False
+    assert readonly, "source writable"
+    Path("/out/boundary-check.json").write_text(json.dumps({"keys":keys,"readonly":readonly}))
+    """)
+        result = run_script(script, device="cpu", run_root=tmp_path / "runs")
+>       assert result["status"] == "completed", result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '6e53de18ff2b4771965459f99c874dd0', 'run_dir': '/home/xi...m/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_keys_absent_and_source_re0/runs/6e53de18ff2b4771965459f99c874dd0', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_runner.py:84: AssertionError
+_____ test_infinite_loop_timeout_30_seconds_cleans_container_and_children ______
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_infinite_loop_timeout_30_0/input')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_infinite_loop_timeout_30_0')
+
+    def test_infinite_loop_timeout_30_seconds_cleans_container_and_children(source, tmp_path):
+        script = source / "forever.py"
+        script.write_text("""import subprocess, sys, time
+    from pathlib import Path
+    child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(180)"])
+    Path("/out/child-started.txt").write_text(str(child.pid))
+    while True:
+        time.sleep(1)
+    """)
+        started = time.monotonic()
+        result = run_script(script, device="cpu", run_root=tmp_path / "runs", max_seconds=30)
+        elapsed = time.monotonic() - started
+>       assert result["status"] == "timeout", result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '757906bd62e9438d8a188271e8b54b90', 'run_dir': '/home/xi...m/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_infinite_loop_timeout_30_0/runs/757906bd62e9438d8a188271e8b54b90', ...}
+E       assert 'error' == 'timeout'
+E         
+E         - timeout
+E         + error
+
+tests/test_runner.py:112: AssertionError
+_______ test_full_cpp_symbolization_dependency_is_available_without_cuda _______
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_full_cpp_symbolization_de0/input')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_full_cpp_symbolization_de0')
+
+    def test_full_cpp_symbolization_dependency_is_available_without_cuda(source, tmp_path):
+        script = source / "symbolize.py"
+        script.write_text("""import json
+    from pathlib import Path
+    import torch
+    from torch.utils._traceback import CapturedTraceback
+    assert not torch.cuda.is_initialized()
+    frames = CapturedTraceback.extract(cpp=True).format()
+    assert len(frames) > 0
+    assert not torch.cuda.is_initialized()
+    Path("/out/symbolizer.json").write_text(json.dumps({"frames":len(frames),"cuda_initialized":False}))
+    """)
+        result = run_script(script, device="cpu", run_root=tmp_path / "runs")
+>       assert result["status"] == "completed", result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '38ece1d03bd447acbcc0500f13d86eba', 'run_dir': '/home/xi...m/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_full_cpp_symbolization_de0/runs/38ece1d03bd447acbcc0500f13d86eba', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_runner.py:132: AssertionError
+____________ test_cpu_pair_is_identical_and_half_model_is_rejected _____________
+
+training = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_cpu_pair_is_identical_and0/source/train.py')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_cpu_pair_is_identical_and0')
+
+    def test_cpu_pair_is_identical_and_half_model_is_rejected(training, tmp_path):
+        root = tmp_path / "runs"
+        baseline = run_script(training, run_root=root, device="cpu", max_steps=20, seed=17)
+>       assert baseline["status"] == "completed", baseline
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '4c8138e56c80405bbd9e08b61ab05c2c', 'run_dir': '/home/xi...m/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_cpu_pair_is_identical_and0/runs/4c8138e56c80405bbd9e08b61ab05c2c', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_verify_runner.py:73: AssertionError
+_ test_real_cpu_docker_preserves_exit_and_never_calls_fix[print('successful')-0] _
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_docker_preserves0/source')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_docker_preserves0')
+body = "print('successful')", exit_code = 0
+
+    @pytest.mark.parametrize(
+        "body,exit_code",
+        [
+            ("print('successful')", 0),
+            ("raise SystemExit(7)", 7),
+            ("print('CUDA out of memory')\nraise RuntimeError('other failure')", 1),
+            ("import torch\nraise torch.OutOfMemoryError('CPU out of memory')", 1),
+        ],
+    )
+    def test_real_cpu_docker_preserves_exit_and_never_calls_fix(source, tmp_path, body, exit_code):
+        (source / "train.py").write_text(body + "\n")
+        result = watch_command(
+            ["python", "train.py"],
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == exit_code, result
+E       AssertionError: {'watch_id': '5dd25b952203498091c7324f7630f3fa', 'run_dir': '/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-x...etails': {'kind': 'python_script', 'argv': ('python', 'train.py'), 'python_flags': (), 'script': 'train.py', ...}, ...}
+E       assert 125 == 0
+
+tests/test_watch.py:196: AssertionError
+_ test_real_cpu_docker_preserves_exit_and_never_calls_fix[raise SystemExit(7)-7] _
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_docker_preserves1/source')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_docker_preserves1')
+body = 'raise SystemExit(7)', exit_code = 7
+
+    @pytest.mark.parametrize(
+        "body,exit_code",
+        [
+            ("print('successful')", 0),
+            ("raise SystemExit(7)", 7),
+            ("print('CUDA out of memory')\nraise RuntimeError('other failure')", 1),
+            ("import torch\nraise torch.OutOfMemoryError('CPU out of memory')", 1),
+        ],
+    )
+    def test_real_cpu_docker_preserves_exit_and_never_calls_fix(source, tmp_path, body, exit_code):
+        (source / "train.py").write_text(body + "\n")
+        result = watch_command(
+            ["python", "train.py"],
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == exit_code, result
+E       AssertionError: {'watch_id': '9cb3338ec6954e66b25578d96e698e51', 'run_dir': '/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-x...etails': {'kind': 'python_script', 'argv': ('python', 'train.py'), 'python_flags': (), 'script': 'train.py', ...}, ...}
+E       assert 125 == 7
+
+tests/test_watch.py:196: AssertionError
+_ test_real_cpu_docker_preserves_exit_and_never_calls_fix[print('CUDA out of memory')\nraise RuntimeError('other failure')-1] _
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_docker_preserves2/source')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_docker_preserves2')
+body = "print('CUDA out of memory')\nraise RuntimeError('other failure')"
+exit_code = 1
+
+    @pytest.mark.parametrize(
+        "body,exit_code",
+        [
+            ("print('successful')", 0),
+            ("raise SystemExit(7)", 7),
+            ("print('CUDA out of memory')\nraise RuntimeError('other failure')", 1),
+            ("import torch\nraise torch.OutOfMemoryError('CPU out of memory')", 1),
+        ],
+    )
+    def test_real_cpu_docker_preserves_exit_and_never_calls_fix(source, tmp_path, body, exit_code):
+        (source / "train.py").write_text(body + "\n")
+        result = watch_command(
+            ["python", "train.py"],
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == exit_code, result
+E       AssertionError: {'watch_id': '5d06efa6eb304c7dbe36d3dd9df3df27', 'run_dir': '/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-x...etails': {'kind': 'python_script', 'argv': ('python', 'train.py'), 'python_flags': (), 'script': 'train.py', ...}, ...}
+E       assert 125 == 1
+
+tests/test_watch.py:196: AssertionError
+_ test_real_cpu_docker_preserves_exit_and_never_calls_fix[import torch\nraise torch.OutOfMemoryError('CPU out of memory')-1] _
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_docker_preserves3/source')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_docker_preserves3')
+body = "import torch\nraise torch.OutOfMemoryError('CPU out of memory')"
+exit_code = 1
+
+    @pytest.mark.parametrize(
+        "body,exit_code",
+        [
+            ("print('successful')", 0),
+            ("raise SystemExit(7)", 7),
+            ("print('CUDA out of memory')\nraise RuntimeError('other failure')", 1),
+            ("import torch\nraise torch.OutOfMemoryError('CPU out of memory')", 1),
+        ],
+    )
+    def test_real_cpu_docker_preserves_exit_and_never_calls_fix(source, tmp_path, body, exit_code):
+        (source / "train.py").write_text(body + "\n")
+        result = watch_command(
+            ["python", "train.py"],
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == exit_code, result
+E       AssertionError: {'watch_id': 'b24468aa909e44d8a7edcfaef2cb3244', 'run_dir': '/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-x...etails': {'kind': 'python_script', 'argv': ('python', 'train.py'), 'python_flags': (), 'script': 'train.py', ...}, ...}
+E       assert 125 == 1
+
+tests/test_watch.py:196: AssertionError
+___________ test_real_cpu_argv_and_interpreter_semantics[command0-0] ___________
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_argv_and_interpr0/source')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_argv_and_interpr0')
+command = ['python', '-c', "print('inline')\nprint('second line')"], code = 0
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': 'fc4b00539b0e46a4b43c06c3e04d1141', 'run_dir': '/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-x...ine', 'argv': ('python', '-c', "print('inline')
+E         print('second line')"), 'python_flags': (), 'script': None, ...}, ...}
+E       assert 125 == 0
+
+tests/test_watch.py:268: AssertionError
+___________ test_real_cpu_argv_and_interpreter_semantics[command1-9] ___________
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_argv_and_interpr1/source')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_argv_and_interpr1')
+command = ['python', '-O', '-c', 'assert False; raise SystemExit(9)'], code = 9
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': 'ecc03ba3c2414b55a685bbc40995322e', 'run_dir': '/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-x...argv': ('python', '-O', '-c', 'assert False; raise SystemExit(9)'), 'python_flags': ('-O',), 'script': None, ...}, ...}
+E       assert 125 == 9
+
+tests/test_watch.py:268: AssertionError
+__________ test_real_cpu_argv_and_interpreter_semantics[command2-11] ___________
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_argv_and_interpr2/source')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_argv_and_interpr2')
+command = ['python', '-I', '-c', 'raise SystemExit(11)'], code = 11
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': '738780a926544363b083332ca8822249', 'run_dir': '/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-x...on_inline', 'argv': ('python', '-I', '-c', 'raise SystemExit(11)'), 'python_flags': ('-I',), 'script': None, ...}, ...}
+E       assert 125 == 11
+
+tests/test_watch.py:268: AssertionError
+__________ test_real_cpu_argv_and_interpreter_semantics[command3-12] ___________
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_argv_and_interpr3/source')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_argv_and_interpr3')
+command = ['python', '-S', '-c', 'raise SystemExit(12)'], code = 12
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': 'cbbc05a2070942dd9475c4b00f7f725e', 'run_dir': '/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-x...on_inline', 'argv': ('python', '-S', '-c', 'raise SystemExit(12)'), 'python_flags': ('-S',), 'script': None, ...}, ...}
+E       assert 125 == 12
+
+tests/test_watch.py:268: AssertionError
+__________ test_real_cpu_argv_and_interpreter_semantics[command4-13] ___________
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_argv_and_interpr4/source')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_argv_and_interpr4')
+command = ['/bin/sh', '-c', "printf 'plain command\n'; exit 13"], code = 13
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': 'bf8c3a8a84c54e22b6a75c39fda09e25', 'run_dir': '/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-x...ommand', 'argv': ('/bin/sh', '-c', "printf 'plain command
+E         '; exit 13"), 'python_flags': (), 'script': None, ...}, ...}
+E       assert 125 == 13
+
+tests/test_watch.py:268: AssertionError
+___________ test_real_cpu_argv_and_interpreter_semantics[command5-0] ___________
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_argv_and_interpr5/source')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_argv_and_interpr5')
+command = ['/usr/bin/printf', '%s', 'literal;$(not-a-shell)'], code = 0
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': 'd7ee04d3928d40e48383335ac76e4a1d', 'run_dir': '/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-x... 'command', 'argv': ('/usr/bin/printf', '%s', 'literal;$(not-a-shell)'), 'python_flags': (), 'script': None, ...}, ...}
+E       assert 125 == 0
+
+tests/test_watch.py:268: AssertionError
+_____________ test_real_cpu_module_keeps_package_imports_and_argv ______________
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_module_keeps_pac0/source')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_module_keeps_pac0')
+
+    def test_real_cpu_module_keeps_package_imports_and_argv(source, tmp_path):
+        package = source / "package"
+        package.mkdir()
+        (package / "__init__.py").write_text("")
+        (package / "helper.py").write_text("VALUE = 17\n")
+        (package / "entry.py").write_text(
+            "from .helper import VALUE\nimport sys\nassert sys.argv[1:] == ['literal;arg']\n"
+            "assert __package__ == 'package'\nraise SystemExit(VALUE)\n"
+        )
+        result = watch_command(
+            ["python", "-m", "package.entry", "literal;arg"],
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == 17 and result["lab"]["cleanup_verified"]
+E       assert (125 == 17)
+
+tests/test_watch.py:293: AssertionError
+__________ test_real_cpu_supported_flags_match_repair_lab_environment __________
+
+source = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_supported_flags_0/source')
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-26/test_real_cpu_supported_flags_0')
+
+    def test_real_cpu_supported_flags_match_repair_lab_environment(source, tmp_path):
+        from headroom.lab.runner import run_script
+    
+        (source / "train.py").write_text(
+            "import json, sys\n"
+            "print('FLAGS:' + json.dumps([sys.flags.dont_write_bytecode, "
+            "sys.flags.no_user_site, sys.stdout.write_through, sys.argv[1:]]))\n"
+        )
+        arguments = ["literal;$(not-a-shell)"]
+        watched = watch_command(
+            ["python", "-uBs", "train.py", *arguments],
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+        replay = run_script(
+            source / "train.py",
+            script_args=arguments,
+            source_root=source,
+            run_root=tmp_path / "replay",
+            device="cpu",
+            max_seconds=30,
+        )
+    
+        def flags(path):
+            return next(
+                line for line in Path(path).read_text().splitlines() if line.startswith("FLAGS:")
+            )
+    
+>       assert watched["exit_code"] == 0 and watched["repair_supported"]
+E       assert (125 == 0)
+
+tests/test_watch.py:328: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_runner.py::test_adamw_steps_and_all_three_seeds_are_deterministic
+FAILED tests/test_runner.py::test_command_mode_captures_real_optimizer_steps
+FAILED tests/test_runner.py::test_keys_absent_and_source_read_only - Assertio...
+FAILED tests/test_runner.py::test_infinite_loop_timeout_30_seconds_cleans_container_and_children
+FAILED tests/test_runner.py::test_full_cpp_symbolization_dependency_is_available_without_cuda
+FAILED tests/test_verify_runner.py::test_cpu_pair_is_identical_and_half_model_is_rejected
+FAILED tests/test_watch.py::test_real_cpu_docker_preserves_exit_and_never_calls_fix[print('successful')-0]
+FAILED tests/test_watch.py::test_real_cpu_docker_preserves_exit_and_never_calls_fix[raise SystemExit(7)-7]
+FAILED tests/test_watch.py::test_real_cpu_docker_preserves_exit_and_never_calls_fix[print('CUDA out of memory')\nraise RuntimeError('other failure')-1]
+FAILED tests/test_watch.py::test_real_cpu_docker_preserves_exit_and_never_calls_fix[import torch\nraise torch.OutOfMemoryError('CPU out of memory')-1]
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command0-0]
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command1-9]
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command2-11]
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command3-12]
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command4-13]
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command5-0]
+FAILED tests/test_watch.py::test_real_cpu_module_keeps_package_imports_and_argv
+FAILED tests/test_watch.py::test_real_cpu_supported_flags_match_repair_lab_environment
+18 failed, 838 passed in 77.77s (0:01:17)

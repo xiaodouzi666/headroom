@@ -100,7 +100,7 @@ def test_clean_install_publishes_fixed_hash_policy_baseline_without_network(tmp_
     project.mkdir()
     monkeypatch.setattr(repository, "PROJECT_ROOT", project)
 
-    def git(directory, *args):
+    def git(directory, *args, deadline=None):
         if args[0] == "archive":
             output = next(
                 arg.removeprefix("--output=") for arg in args if arg.startswith("--output=")

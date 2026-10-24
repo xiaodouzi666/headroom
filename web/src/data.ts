@@ -319,3 +319,23 @@ export function queueAtCapacity(queue: Dict): boolean {
     capacity
   );
 }
+
+export function availabilityBlocks(health: Dict): {
+  gpuBusy: boolean;
+  budgetBlocked: boolean;
+  budgetReason: "exhausted" | "billing_review_required" | null;
+} {
+  const gpu = record(health.gpu),
+    budget = record(health.local_budget);
+  const reason =
+    budget.scope === "local_application_authorization" &&
+    (budget.status === "exhausted" ||
+      budget.status === "billing_review_required")
+      ? budget.status
+      : null;
+  return {
+    gpuBusy: gpu.status === "busy" && gpu.busy === true && gpu.stale !== true,
+    budgetBlocked: reason !== null,
+    budgetReason: reason,
+  };
+}

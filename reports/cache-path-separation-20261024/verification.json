@@ -1,0 +1,65 @@
+{
+  "created_at": "2026-10-24T10:49:34.627492+00:00",
+  "problem": "Host HF_HOME and reviewed Lab mount shared .cache/huggingface; ordinary hub metadata made every Lab preparation require a nonexistent manifest",
+  "changes": {
+    "host_hf_home": ".cache/huggingface",
+    "reviewed_lab_cache": ".cache/hf-reviewed",
+    "container_mount": "/hf-cache (read-only, manifest-validated)",
+    "node_bin": ".tools/node-web/node-v24.22.1-linux-x64/bin (existing installation only)"
+  },
+  "tests": {
+    "command": "source scripts/env.sh; uv run pytest -q tests/test_hf_cache.py tests/test_runner.py tests/test_verify_runner.py tests/test_watch.py --basetemp=runs/cache-path-separation-20261024-a",
+    "passed": 64,
+    "seconds": 67.77,
+    "log": "reports/cache-path-separation-20261024/tests.log",
+    "pytest_exit_code": null,
+    "ssh_exit_code": 255,
+    "note": "Complete pytest summary observed after SSH transport closed; no matching pytest process remained."
+  },
+  "original_failed_evidence": [
+    "reports/continuation-full-tests-20261024T104338Z.log",
+    "reports/continuation-full-tests-20261024T104338Z.json"
+  ],
+  "checks": {
+    "shell": {
+      "exit_code": 0
+    },
+    "ruff": {
+      "exit_code": 0
+    },
+    "format": {
+      "exit_code": 0
+    },
+    "diff": {
+      "exit_code": 0
+    },
+    "node": {
+      "exit_code": 0,
+      "version": "v24.22.1"
+    }
+  },
+  "cache_state": {
+    "host_hub_present": true,
+    "host_manifest_present": false,
+    "real_reviewed_directory_created": false,
+    "alternate_hf_exists": false
+  },
+  "boundaries": {
+    "real_cache_mutation": false,
+    "real_manifest_mutation": false,
+    "downloaded_weights": false,
+    "gpu_workloads": 0,
+    "provider_requests": 0,
+    "key_reads": 0,
+    "global_node_change": false,
+    "committed": false,
+    "pushed": false
+  },
+  "files_sha256": {
+    "headroom/lab/cache.py": "b2366f2bf6fc5722167e7cc7cb78aa84e8f0da3fe28dbcfb57cc3319eb0b4932",
+    "scripts/env.sh": "7d0cde03669a0ec49e3c7c2eae31fed88f1157efa8831ea71515c8c0794d1f44",
+    "tests/test_hf_cache.py": "182381ba3b193fe04c78292913e48cbd6c92bcd0be4a82de332ef0590441f843",
+    "docs/WATCH_HF.md": "f2188bb30b0dc3891f611ccb3234385b3baf5f41bacf4be7dc0cdfa822ddf415"
+  },
+  "plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56"
+}

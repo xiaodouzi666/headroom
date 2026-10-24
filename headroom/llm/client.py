@@ -165,7 +165,7 @@ class TokenFactoryClient:
         body = {
             "model": spec.model_id,
             "messages": copy.deepcopy(list(messages)),
-            "max_tokens": max_tokens,
+            spec.output_cap_field: max_tokens,
             "timeout": spec.timeout_seconds,
         }
         if temperature is not None:

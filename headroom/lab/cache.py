@@ -31,7 +31,9 @@ def validated_hf_cache(project_root: Path) -> Path | None:
     or semantic safety of weights. Pickles, code, symlinks, tokens and Hub account
     caches are unsupported. No files are downloaded, created or modified here.
     """
-    base = project_root / ".cache" / "huggingface"
+    # HF_HOME is a mutable Hub/account cache and can appear on library import.
+    # Only this distinct, explicitly reviewed data directory is eligible to mount.
+    base = project_root / ".cache" / "hf-reviewed"
     if not base.exists() and not base.is_symlink():
         return None
     if (project_root / ".cache").is_symlink() or base.is_symlink() or not base.is_dir():

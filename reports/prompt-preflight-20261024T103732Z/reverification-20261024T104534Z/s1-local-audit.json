@@ -1,0 +1,135 @@
+{
+  "format_version": 1,
+  "purpose": "offline_prompt_diagnostic_only",
+  "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+  "provider_tokenizer_match_verified": false,
+  "provider_billable_token_ceiling": null,
+  "provider_cost_upper_usd": null,
+  "live_authorized": false,
+  "local_template": {
+    "tokens": 29221,
+    "count_kind": "exact_for_pinned_local_rendering_only",
+    "utf8_bytes": 76328,
+    "sha256": "6f7309e90c710a6169b3887b90b9dbc350ef7cfc1ee03cf7d19cf7fc8c383411",
+    "add_generation_prompt": true,
+    "add_special_tokens": false,
+    "switches": {
+      "enable_thinking": true,
+      "medium_effort": false,
+      "truncate_history_thinking": true
+    },
+    "template_config_max_length": 262144,
+    "exceeds_template_config_max_length": false,
+    "domains": [
+      "messages",
+      "chat_template_kwargs"
+    ]
+  },
+  "request": {
+    "compact_json_utf8_bytes": 78347,
+    "compact_json_sha256": "7203c8574b1a74e21ab31046563084ee4fa56944767d9c5dea3f37615d2ec59f",
+    "serialized_json_local_tokens_estimate": 30424
+  },
+  "input_form": "sdk_kwargs",
+  "request_fields": {
+    "model": {
+      "compact_json_utf8_bytes": 35,
+      "compact_json_sha256": "1470ee5fb01103bf73932350b4fe45d660ddf5a22f67279d92e4f1c9ccdcd25a",
+      "serialized_json_local_tokens_estimate": 21
+    },
+    "messages": {
+      "compact_json_utf8_bytes": 78258,
+      "compact_json_sha256": "c9b80052e730ba3bbc809fc4ecff868c57a64e1eff6f100000e4701d7fbd7bc5",
+      "serialized_json_local_tokens_estimate": 30384
+    },
+    "max_tokens": {
+      "compact_json_utf8_bytes": 4,
+      "compact_json_sha256": "b090147020e033534635010c4f7eb6fc270d44e5df67ea9e744a8087df9ca106",
+      "serialized_json_local_tokens_estimate": 4
+    },
+    "timeout": {
+      "compact_json_utf8_bytes": 3,
+      "compact_json_sha256": "284b7e6d788f363f910f7beb1910473e23ce9d6c871f1ce0f31f22a982d48ad4",
+      "serialized_json_local_tokens_estimate": 3
+    }
+  },
+  "provider_only_unmodeled_fields": [],
+  "historical_tool_id_fields_ignored_by_local_template": 0,
+  "extra_schema": null,
+  "tokenizer": {
+    "repo": "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4",
+    "revision": "02462641f13d3af838b904f48195b9bb8a1e4ebc",
+    "assets": {
+      "tokenizer.json": {
+        "sha256": "623c34567aebb18582765289fbe23d901c62704d6518d71866e0e58db892b5b7",
+        "bytes": 17077484,
+        "source_url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/resolve/02462641f13d3af838b904f48195b9bb8a1e4ebc/tokenizer.json"
+      },
+      "tokenizer_config.json": {
+        "sha256": "10f93eabcb9b1602fbb991d6308e787ce1df28ee9cd7a1c6d1e8c3f338b957bc",
+        "bytes": 177209,
+        "source_url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/resolve/02462641f13d3af838b904f48195b9bb8a1e4ebc/tokenizer_config.json"
+      },
+      "chat_template.jinja": {
+        "sha256": "82753bef5cedc4932c1ed509b5c9a12be680fd86d1adb65bc3f7398d11c8eebc",
+        "bytes": 10152,
+        "source_url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/resolve/02462641f13d3af838b904f48195b9bb8a1e4ebc/chat_template.jinja"
+      }
+    },
+    "libraries": {
+      "transformers": "4.46.3",
+      "tokenizers": "0.20.3",
+      "jinja2": "3.1.6"
+    }
+  },
+  "supported_domains": {
+    "top_level": [
+      "chat_template_kwargs",
+      "extra_body",
+      "frequency_penalty",
+      "max_completion_tokens",
+      "max_thinking_tokens",
+      "max_tokens",
+      "messages",
+      "model",
+      "n",
+      "parallel_tool_calls",
+      "presence_penalty",
+      "reasoning_budget",
+      "reasoning_effort",
+      "response_format",
+      "seed",
+      "stop",
+      "stream",
+      "stream_options",
+      "temperature",
+      "timeout",
+      "tool_choice",
+      "tools",
+      "top_p"
+    ],
+    "extra_body": [
+      "chat_template_kwargs",
+      "max_thinking_tokens",
+      "reasoning_budget",
+      "reasoning_effort"
+    ],
+    "template_switches": [
+      "enable_thinking",
+      "medium_effort",
+      "truncate_history_thinking"
+    ],
+    "messages": "plain-text system/user/assistant/tool; assistant reasoning_content; function calls with object arguments",
+    "tools": "function schema objects rendered with the pinned NVIDIA template",
+    "json_schema": "raw local JSON estimate only; provider injection unverified",
+    "unknown_fields": "rejected"
+  },
+  "warnings": [
+    "Local template exactness is conditional on these pinned NVIDIA assets and switches.",
+    "Nebius deployment tokenizer, template, defaults, and preprocessing have not been matched.",
+    "The NVIDIA tokenizer config says 262144 tokens; observed Nebius catalogue context is 1048576.",
+    "Serialized JSON counts are local estimates of separate domains, not provider injected tokens.",
+    "Domain estimates are non-additive and must not be added to template tokens as a billing bound.",
+    "No provider truncation, hard input cap, cache discount, or cost authorization is established."
+  ]
+}

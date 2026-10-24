@@ -6,8 +6,9 @@ All captures and cleanup checks passed. This is baseline acceptance, not automat
 repair or model-quality evidence.
 
 No authenticated Nemotron repair, main repair benchmark or ablation score has
-been measured. Nebius account/key, verified capabilities/billing and authorized
-credit remain required. Tavily real API and cache checks have passed.
+been measured. Nebius account/key and two minimal chats are now verified; full
+capabilities, long-input testing and a larger authorized evaluation budget remain
+required. Tavily real API and cache checks have passed.
 
 ## Preparation checks (not benchmark results)
 
@@ -16,7 +17,7 @@ credit remain required. Tavily real API and cache checks have passed.
 | CUDA toolchain | torch 2.5.1+cu124 recognizes 3090 Ti; snapshot API returns traces | Small allocation only |
 | Synthetic scenarios | 8/8 CPU tiny checks completed 20 steps; full GPU baselines below | CPU smoke itself is not GPU acceptance |
 | nanoGPT | Pinned source; tiny CPU run exit 0; full GPU CUDA OOM reproduced below | Exact allocator peak unavailable from upstream output |
-| Live model calls | Pending | Nebius account, model and spending gates remain |
+| Minimal live model calls | Super and Nano each returned HTTP200, matched identity and stop | Two short chats only; Ultra/structured output/repair/long-context acceptance pending |
 | Tavily | Real search/extract and versioned cache checks passed | Provider-reported credits are separate from account counters |
 
 ## T0.6 full default GPU baselines
@@ -249,3 +250,20 @@ does not resolve or replace the original T2.8 wording. Aggregate and per-policy
 metrics preserve unknown values and scored/comparable denominators. Real
 two-policy results, the at-most-three-round optimization study, and the original
 target_met >=75%, first-cause agreement >=75%, and USD 12 gates remain unmeasured. See [EVALUATION.md](EVALUATION.md).
+
+
+## First Token Factory connectivity measurements — not repair results
+
+Evidence: reports/tokenfactory-minimal-20261024.json, source commit269efd0.
+Both official authenticated catalogues returned200. One chat each ran on US:
+
+| Role | Prompt tokens | Completion tokens | Total seconds | Usage-priced estimate USD |
+|---|---:|---:|---:|---:|
+| Super | 23 | 19 | 0.670570 | 0.000024 |
+| Nano | 23 | 47 | 1.506663 | 0.00001266 |
+
+Both finish_reason=stop, identity matched, no retry, max_completion_tokens=128.
+Total0.00003666USD; with21% tax reserve0.0000443586USD. Pricing uses ordinary
+input conservatively and is not an independently reconciled invoice. These are
+single observations, not model speed benchmarks or completed repair scores.
+Full T0.4, original long-context/JSON/tools gates and all repair gates remain open.

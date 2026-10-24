@@ -8,16 +8,16 @@ All work, caches, runs, and media remain on azuki.
 
 | Task | Description | Status | Evidence |
 |---|---|---|---|
-| T0.1 | 账号、额度、密钥、仓库（P0，Codex 主导，Frank 只补无法自动化的部分，~40min） | 进行中 | GitHub and Tavily verified; Nebius key and promotional balance pending |
+| T0.1 | 账号、额度、密钥、仓库（P0，Codex 主导，Frank 只补无法自动化的部分，~40min） | 进行中 | GitHub/Tavily and private Nebius key verified; authenticated catalogues200 and Super/Nano chats passed; original >=25USD credit gate pending |
 | T0.2 | 服务器环境勘察（P0，~30min） | 已验收 | docs/ENV.md; reports/env-preflight.json; Docker GPU ok, NET ok, 5694.85 GiB free; shared GPU and no sudo recorded |
 | T0.3 | 仓库骨架与工具链（P0，~40min） | 已验收 | reports/toolchain-checks.json; reports/pre-commit-t0.3.log; commit ca6c86ad099c519b92d1ccb88219b08450aa8da6, Frank author/committer, pushed origin/main |
-| T0.4 | Token Factory 探测（P0，~1h） | 离线实现完成，实测待验收 | scripts/probe_models.py; 55 guarded tests; default 62-item dry-run sends zero requests; live verification pending Nebius access |
+| T0.4 | Token Factory 探测（P0，~1h） | 首次目录/chat实测通过；完整验收待办 | reports/tokenfactory-minimal-20261024.json; two catalogues200; exact Super/Nano chats; full JSON/tools/Ultra staircase/concurrency pending;93 guarded probe tests |
 | T0.5 | Tavily 探测（P1，~15min） | 已验收 | reports/t0.5-acceptance.json; live exit0, 4/4 operations, 2 factual FEEDBACK entries, observed schema; API total3 credits matches UI3/1000 |
 | T0.6 | 场景集 v0（P0，~2h） | 已验收 | reports/t0.6-acceptance.json; 3 synthetic CUDA OOM <7s, 5 reclaim completed20 steps with measured README peaks; pinned nanoGPT CUDA OOM11.489s; all cleanup verified |
 | T1.1 | Lab 包装器：运行并抓证据（P0，~3h） | 已验收 | reports/t1.1-acceptance.json; GPU report022523 all checks true; s1 2050 events; s3 completed20 deterministic; final full regression 95 tests passed |
 | T1.2 | 证据包生成（P0，~3h） | 实现完成，验收未通过 | reports/t1.2-acceptance.json; s1/s2/s4/s5 artifacts and real peak replay verified; s2 optimizer-state fraction 39.8715% < original 40% |
-| T1.3 | LLM 客户端与路由（P0，~1.5h） | 离线实现完成，实测待验收 | 82 mock tests; docs/LLM.md; real Super JSON and Ultra200k pending |
-| T1.4 | Diagnose（Ultra）（P0，~2.5h） | 实现完成，模型验收待办 | docs/DIAGNOSE.md; schema/SDK offline tests; real Ultra diagnosis pending |
+| T1.3 | LLM 客户端与路由（P0，~1.5h） | 离线实现完成，实测待验收 | reports/runtime-output-cap-20261024T102844Z/verification.json;210 guarded tests; exact Nano ID and explicit output-cap field; real Super JSON/Ultra200k pending |
+| T1.4 | Diagnose（Ultra）（P0，~2.5h） | 实现完成，模型验收待办 | docs/DIAGNOSE.md; docs/PROMPT_PREFLIGHT.md; four complete requests audited locally; provider billing domain and real Ultra diagnosis pending |
 | T1.5 | Patch（Super）与应用（P0，~2.5h） | 实现及离线验收完成；真实补丁待办 | docs/PATCH.md; git apply, compile, bounded repair and policy tests; real Super/GPU cases pending |
 | T1.6 | Verify 与比较（P0，~2h） | 比较器与CPU配对已测；修复验收待办 | docs/VERIFY.md; parameter shrink rejected; original numerical/throughput gates retained |
 | T1.7 | 单轮编排 + 存储 + 事件（P0，~2h） | 主流程与存储已实现并离线联调 | docs/SEARCH.md; SQLite ordered events, partial reports, SDK fixture pipeline; live two-call gate pending |
@@ -34,11 +34,11 @@ All work, caches, runs, and media remain on azuki.
 | T2.6 | Watch 模式（P2，~1.5h） | 通用argv隔离观察/退出码通过；完整修复验收待办 | docs/WATCH_HF.md; 89 scoped tests passed; modules/inline/flags/shell observed in Docker; unsupported replay OOM needs_human; missing capture unknown; no host fallback |
 | T2.7 | Docker/HF 缓存稳健性（P1）：验收：三个场景在 Docker 路径下结果与子进程路径一致（峰值差 ≤ 1%）。 | 安全独立子进程环境阻塞；原门槛未通过 | reports/t2.7-isolation-preflight-20261024.json; unshare uid_map EPERM; bwrap network setup EPERM; no sudo/system change/unsafe host fallback; existing Docker dual-entry CPU checks are component evidence only |
 | T2.8 | 小评测 + 自优化（P0，可夜间自治，~4h） | 显式策略矩阵与离线统计完成；原真实验收待办 | docs/EVALUATION.md; default/strict 实际等价，allow_precision 必须显式选择；全矩阵共享预算，逐行完整 Policy；原两档歧义、≤3轮优化、target_met/首因各≥75% 和 $12 实测均未关闭 |
-| T3.1 | FastAPI + SSE（P0，~3h） | API队列/SSE/下载已实现并测 | docs/API.md; worker deadlines, cleanup freeze, session isolation, resume, repo form and rate limits |
-| T3.2 | 前端素版（P0，~4h） | 四页前端/浏览器/性能通过；真实修复流程待办 | reports/web-verification-20261024.json; 27 tests; reports/lighthouse-20261024.json: Home90/90/90, baseline Run89/98/89; mobile no overflow |
+| T3.1 | FastAPI + SSE（P0，~3h） | API队列/SSE/下载已实现并测 | docs/API.md; shared admission/preparation/queue/worker deadline, owned process cleanup, report-ready SSE, session isolation and rate limits |
+| T3.2 | 前端素版（P0，~4h） | 四页前端/当前浏览器通过；真实修复流程待办 | reports/continuation-web-20261024.json;33 tests/typecheck/build; current browser and refreshed health verified; earlier Lighthouse Home90/90/90, baseline Run89/98/89 remains dated evidence |
 | T3.3 | Replay（P0，~1.5h） | 5条真实基线回放可用；规定修复回放待办 | reports/baseline-replays.json; explicitly baseline-only; s2 two-round/nanoGPT/reclaim repair replay not fabricated |
 | T3.4 | Claude Design 对齐（P1，~3h；设计稿 10/25–10/26 由 Frank+Claude 产出到 `design/`） | 待Frank设计稿与认可 | No design package has been supplied; theme implementation exists |
-| T3.5 | 公网部署、限流、监控（P0，~2.5h；Frank 提供域名/Cloudflare） | 部署与监控模板完成；公网待办 | docs/DEPLOYMENT.md; local rate/queue/deadline tests; domain/tunnel/notification setup and live acceptance pending |
+| T3.5 | 公网部署、限流、监控（P0，~2.5h；Frank 提供域名/Cloudflare） | 部署与监控模板完成；公网待办 | docs/DEPLOYMENT.md;600s from admission through execution, cleanup separate; fresh read-only availability/local budget; public domain/tunnel/alerts acceptance pending |
 | T3.6 | 预录素材（P0，~1h） | 8张真实基线UI素材完成；完整修复素材待办 | docs/media/ui-20261024T025659Z-baseline-only; baseline-only labels, desktop/mobile Home/Results/About/Run; no repaired before-after/diagnosis/diff fabricated |
 | T4.1 | 评测集定稿 | 基线范围已验收 | reports/evaluation-baselines-20261024.json; all12 matches, 5 OOM/7 completed20, full capture/cleanup; source pins |
 | T4.2 | 主评测 | 工具与表格已准备；真实主评测待办 | docs/EVALUATION.md; docs/RESULTS.md; Nebius live model run required |
@@ -54,6 +54,10 @@ All work, caches, runs, and media remain on azuki.
 | Phase 6 | Weekly health/alerts; balance by Nov 25; manual Dec 1 and Dec 8 access | 未开始 | Future dated acceptance |
 
 ## Acceptance log
+
+- 2026-10-24T10:54:58.477225+00:00: continuation completed the explicit model output cap/exact Nano ID, CPU-only complete-request audit, shared600s admission deadline, owned preparation cleanup including supervisor death, report-ready SSE, cached read-only availability/local budget, and the host-versus-reviewed HF cache separation. Full guarded backend859tests passed142.74s with source hashes unchanged; frontend33tests/typecheck/build passed on Node24.22.1; four real15s health polls stayed fresh and browser baseline report links worked. Reports: continuation-validation-20261024.json and handoff-continuation-20261024.md. Earlier18 CPU failures, Node startup failure and stale-preview observations remain preserved. Minimal Super/Nano calls are the only new model inference; no further billing, GPU repair, public deployment or submission was performed. Original PLAN/gates remain unchanged.
+
+- 2026-10-24 10:24UTC: user confirmed private key setup and explicitly authorized only up to0.10USD trial credit for minimal connectivity. Both official catalogue GETs succeeded; one Super and one Nano chat each returned200/stop with exact identity, valid usage, zero retries and no cap violation. Usage-priced total0.00003666USD, with21% tax reserve0.0000443586USD; not an invoice reconciliation. Evidence reports/tokenfactory-minimal-20261024.json. No Ultra/full evaluation or recharge authorized; live runtime remains disabled. User also requests continued original-goal development and later use of promotional credits when they arrive. Original PLAN and failed gates remain unchanged.
 
 - 2026-10-24 full-development checkpoint: final backend718tests passed107.57s; frontend27tests/typecheck/build passed; Home Lighthouse90/90/90 and real baseline Run89/98/89. Twelve actual GPU baselines matched5OOM/7completed20 with capture and cleanup verified. Full source-hash receipt: reports/final-validation-20261024.json; handoff: reports/handoff-development-20261024.md. Real Research added3credits; refreshed Tavily total6/1000,994remain, pay-as-you-go off. Nebius key/profile absent; no authenticated Nebius inference or recharge performed. All original failed gates retained.
 
@@ -98,17 +102,19 @@ All work, caches, runs, and media remain on azuki.
 
 ## 待 Frank 决策
 
+- Ultra readiness: a catalogue-wide 1,048,576-token reservation plus4,000 output tokens costs1.060576USD before tax at observed prices, exceeding the unchanged0.60USD run guard. Four real request payloads now have pinned local template counts29,221–40,430, but this is not a provider billing ceiling. docs/PROMPT_PREFLIGHT.md records the distinction. Promotional balance alone does not settle this guard: establish the provider input domain or explicitly review a bounded calibration/policy alternative before live repair; no verified flag or threshold was changed.
+
 - T1.2: s2 optimizer-state peak fraction is39.8715%, below original40%; task remains unaccepted. Its baseline also already fits22GB, so later T2.1 two-round acceptance remains unresolved. Preserve these results for the requested later discussion; no threshold or fixture changes made to force a pass.
 
 - 2026-10-23: Frank requests retaining the original plan; discuss audit proposals individually later. No acceptance threshold or scope change is approved.
 
 - 2026-10-23: Frank explicitly authorized stopping the current llama-server (PID 398152). Fresh identity check found owner chenchunlai; normal SIGTERM failed with PermissionError. The initial permission denial was not bypassed. Frank subsequently stopped it; GPU availability and all T0.6 baselines were verified on 2026-10-23 at09:29–09:34 Beijing time. Evidence: reports/gpu-release.json.
 
-- No paid API calls will run before available promotional credits and spending boundary are confirmed. Current official Token Factory billing documentation requires a bank card and allows negative balances/automatic charges; no account-level hard spending cap was verified. See docs/ACCOUNT_SETUP.md. Frank reports registration complete; Tavily free-plan limits were verified, while the Nebius key and promotional credits remain unverified and its issue is deferred at his request.
+- Current authorization covers only0.10USD from trial credit for minimal connectivity; two successful chats are recorded above. Full repair/evaluation spending and the original >=25USD gate remain pending. Promotional credits will be reconciled when available; their arrival does not erase the spending boundary. Bank-card top-up remains separate from an account-level hard cap. See docs/ACCOUNT_SETUP.md.
 
 ## Frank 待办
 
 - Devpost: registration and an existing project draft were observed in the logged-in browser on 2026-10-24; final project submission remains pending.
-- Token Factory: https://tokenfactory.nebius.com ; promo https://nebius.com/promo-code?utm_promo_event_code=2026-devpost-global-ai-hack&utm_promo_code_type=Token_Factory&utm_promo_activation_code=NEBIUS-DEVPOST-GLOBAL26 ; activation code NEBIUS-DEVPOST-GLOBAL26 ($25); Builders Program https://dev.nebius.com/builders (additional $25). Provide NEBIUS_API_KEY in server .env and confirm available credits >= $25.
+- Token Factory: https://tokenfactory.nebius.com ; promo https://nebius.com/promo-code?utm_promo_event_code=2026-devpost-global-ai-hack&utm_promo_code_type=Token_Factory&utm_promo_activation_code=NEBIUS-DEVPOST-GLOBAL26 ; activation code NEBIUS-DEVPOST-GLOBAL26 ($25); Builders Program https://dev.nebius.com/builders (additional $25). NEBIUS_API_KEY is now privately configured and authenticated. Confirm available credits >= $25 and full-campaign spending authorization before the original live evaluation.
 - HF_TOKEN only if later gated model access requires it.
 - Domain/Cloudflare access is needed for T3.5. Video and Devpost submission remain Frank-owned per plan.

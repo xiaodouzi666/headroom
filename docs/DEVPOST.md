@@ -18,9 +18,9 @@ Python, PyTorch allocator traces, Docker, SQLite, FastAPI/SSE, React/TypeScript,
 
 ## Verified so far
 
-Real synthetic/repository/library GPU baseline work, CPU sandbox checks, real Tavily search/extract and cache reuse, and offline model-client/patch/search integration are recorded in RESULTS. The development app includes clearly labeled baseline replays.
+Real synthetic/repository/library GPU baseline work, CPU sandbox checks, real Tavily search/extract and cache reuse, minimal authenticated Nemotron Super/Nano chats, and offline model-client/patch/search integration are recorded in RESULTS. The development app includes clearly labeled baseline replays.
 
-**Do not turn the following into past-tense achievements yet:** authenticated Nemotron model calls, successful automated repairs, long-input capability, measured model costs, benchmark success rates, or ablation gains. These require the pending account-dependent evaluations.
+**Do not turn the following into past-tense achievements yet:** successful automated repairs, Ultra or long-input capability, repair-cost benchmarks, benchmark success rates, or ablation gains. Two bounded chat probes establish connectivity and their observed usage only; they do not establish the application's complete provider integration. The full capability and repair evaluations remain pending.
 
 ## Challenges and learning
 

@@ -10,6 +10,7 @@ import shutil
 import stat
 import subprocess
 import tarfile
+import time
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from uuid import uuid4
@@ -162,7 +163,15 @@ def parse_watch_command(command) -> WatchCommand:
     )
 
 
-def _git(directory: Path, *args: str) -> str:
+def preparation_remaining(deadline, ceiling=None):
+    """Shared monotonic deadline; None preserves the CLI's existing per-op limits."""
+    remaining = float("inf") if deadline is None else deadline - time.monotonic()
+    if remaining <= 0:
+        raise TimeoutError("Source preparation exceeded its admission deadline")
+    return remaining if ceiling is None else min(remaining, ceiling)
+
+
+def _git(directory: Path, *args: str, deadline=None) -> str:
     limiter = shutil.which("prlimit", path=HOST_ENV["PATH"])
     if limiter is None:
         raise ValueError("Bounded repository preparation requires Linux prlimit")
@@ -193,7 +202,7 @@ def _git(directory: Path, *args: str) -> str:
         env=GIT_ENV,
         capture_output=True,
         text=True,
-        timeout=120,
+        timeout=preparation_remaining(deadline, 120),
         check=False,
     )
     if result.returncode:
@@ -201,11 +210,13 @@ def _git(directory: Path, *args: str) -> str:
     return result.stdout.strip()
 
 
-def _extract(archive: Path, output: Path) -> None:
+def _extract(archive: Path, output: Path, *, deadline=None) -> None:
+    preparation_remaining(deadline)
     output.mkdir(mode=0o700)
     total, names = 0, set()
     with tarfile.open(archive, "r:") as tar:
         for index, member in enumerate(tar):
+            preparation_remaining(deadline)
             path = PurePosixPath(member.name)
             if (
                 index >= 5000
@@ -231,6 +242,7 @@ def _extract(archive: Path, output: Path) -> None:
             with source, destination.open("xb") as handle:
                 remaining = member.size
                 while remaining:
+                    preparation_remaining(deadline)
                     chunk = source.read(min(1024 * 1024, remaining))
                     if not chunk:
                         raise ValueError("Truncated repository archive")
@@ -255,10 +267,11 @@ def _nanogpt_data(source: Path) -> dict:
     return {"kind": "synthetic_uint16", "seed": 1337, "sha256": hashes}
 
 
-def _publish_reviewed_nanogpt(extracted: Path) -> None:
+def _publish_reviewed_nanogpt(extracted: Path, *, deadline=None) -> None:
     """Publish only three fixed-hash baseline files for the non-executable policy profile."""
     payloads = {}
     for name, expected in NANOGPT_HASHES.items():
+        preparation_remaining(deadline)
         path = extracted / name
         descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
         with os.fdopen(descriptor, "rb") as handle:
@@ -277,12 +290,19 @@ def _publish_reviewed_nanogpt(extracted: Path) -> None:
         cache.mkdir(exist_ok=True, mode=0o700)
     descriptor = os.open(cache / ".publish.lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
     with os.fdopen(descriptor, "r+") as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX)
+        while True:
+            preparation_remaining(deadline)
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                time.sleep(preparation_remaining(deadline, 0.05))
         destination = cache / NANOGPT_REF
         if destination.is_symlink():
             raise ValueError("Reviewed baseline cache cannot be a symbolic link")
         if destination.exists():
             for name, payload in payloads.items():
+                preparation_remaining(deadline)
                 path = destination / name
                 descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
                 with os.fdopen(descriptor, "rb") as handle:
@@ -295,6 +315,7 @@ def _publish_reviewed_nanogpt(extracted: Path) -> None:
         temporary = cache / (".staging-" + uuid4().hex)
         temporary.mkdir(mode=0o700)
         for name, payload in payloads.items():
+            preparation_remaining(deadline)
             path = temporary / name
             path.write_bytes(payload)
             path.chmod(0o444)
@@ -302,8 +323,14 @@ def _publish_reviewed_nanogpt(extracted: Path) -> None:
 
 
 def prepare_repository(
-    repo: str, ref: str, command: str | list[str], *, destination: Path | None = None
+    repo: str,
+    ref: str,
+    command: str | list[str],
+    *,
+    destination: Path | None = None,
+    deadline: float | None = None,
 ) -> PreparedRepository:
+    preparation_remaining(deadline)
     repo = validate_repository(repo, ref)
     entrypoint, arguments = parse_python_command(command)
     pinned = repo == NANOGPT_URL and ref == NANOGPT_REF
@@ -320,30 +347,40 @@ def prepare_repository(
     if pinned and checkout.is_dir() and not checkout.is_symlink():
         try:
             use_cache = (
-                _git(checkout, "rev-parse", "HEAD") == ref
-                and _git(checkout, "remote", "get-url", "origin") == repo
-                and not _git(checkout, "status", "--porcelain")
+                _git(checkout, "rev-parse", "HEAD", deadline=deadline) == ref
+                and _git(checkout, "remote", "get-url", "origin", deadline=deadline) == repo
+                and not _git(checkout, "status", "--porcelain", deadline=deadline)
             )
         except (ValueError, subprocess.SubprocessError):
             use_cache = False
     if not use_cache:
         checkout = parent / "git"
         checkout.mkdir()
-        _git(checkout, "init", "--bare")
-        _git(checkout, "fetch", "--depth=1", "--no-tags", "--no-recurse-submodules", repo, ref)
-        if _git(checkout, "rev-parse", "FETCH_HEAD") != ref:
+        _git(checkout, "init", "--bare", deadline=deadline)
+        _git(
+            checkout,
+            "fetch",
+            "--depth=1",
+            "--no-tags",
+            "--no-recurse-submodules",
+            repo,
+            ref,
+            deadline=deadline,
+        )
+        if _git(checkout, "rev-parse", "FETCH_HEAD", deadline=deadline) != ref:
             raise ValueError("Fetched source differs from requested pin")
     archive = parent / "source.tar"
-    _git(checkout, "archive", "--format=tar", "--output=" + str(archive), ref)
+    _git(checkout, "archive", "--format=tar", "--output=" + str(archive), ref, deadline=deadline)
     if archive.stat().st_size > MAX_ARCHIVE:
         raise ValueError("Repository archive exceeds 256 MiB")
     extracted = parent / "extracted"
-    _extract(archive, extracted)
+    _extract(archive, extracted, deadline=deadline)
     if (extracted / ".gitmodules").exists():
         raise ValueError("Submodules require separately reviewed pins and are unsupported")
+    preparation_remaining(deadline)
     source = parent / "source"
     if pinned:
-        _publish_reviewed_nanogpt(extracted)
+        _publish_reviewed_nanogpt(extracted, deadline=deadline)
         minimal = parent / "reviewed-input"
         minimal.mkdir(mode=0o700)
         for name in ("train.py", "model.py", "configurator.py"):
@@ -363,6 +400,7 @@ def prepare_repository(
         if not any(arg.startswith("--dataset=") for arg in converted):
             converted.append("--dataset=headroom_synthetic")
         arguments = tuple(converted)
+    preparation_remaining(deadline)
     script = source / entrypoint
     if not script.is_file() or script.is_symlink() or not script.resolve().is_relative_to(source):
         raise ValueError("Repository entrypoint is missing or excluded")

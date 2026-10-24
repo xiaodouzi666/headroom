@@ -12,7 +12,9 @@ OFFICIAL_BASE_URLS = (
 )
 ULTRA_MODEL = "nvidia/Nemotron-3-Ultra-550b-a55b"
 SUPER_MODEL = "nvidia/nemotron-3-super-120b-a12b"
-NANO_MODEL = "nvidia/nvidia-nemotron-3-nano-30b-a3b"
+# Exact identity observed in the 2026-10-24 catalogue and minimal Nano response.
+# Selecting this ID does not enable live use or certify the full capability suite.
+NANO_MODEL = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
 LIGHTNING_MODEL = "nvidia/Nemotron-3_5-Lightning"
 ULTRA_MAX_INPUT_TOKENS = None
 EVIDENCE_TOKEN_BUDGET = None  # T0.4 must determine min(150000, floor(0.6 * measured maximum)).
@@ -93,6 +95,7 @@ class ModelSpec:
     pricing: Pricing | None = None
     model_verified: bool = False
     evidence: str | None = None
+    output_cap_field: str = "max_tokens"
 
     def __post_init__(self):
         if not self.model_id.startswith("nvidia/") or any(c.isspace() for c in self.model_id):
@@ -101,6 +104,10 @@ class ModelSpec:
             raise ValueError("Model timeout must be positive and at most 600 seconds")
         if self.model_verified and not self.evidence:
             raise ValueError("A verified model requires saved catalogue/probe evidence")
+        if self.output_cap_field not in {"max_tokens", "max_completion_tokens"}:
+            raise ValueError("Unsupported output cap field")
+        if self.output_cap_field != "max_tokens" and not self.evidence:
+            raise ValueError("A nondefault output cap field requires saved probe evidence")
 
 
 def candidate_models():

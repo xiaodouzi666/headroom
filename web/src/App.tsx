@@ -16,6 +16,7 @@ import {
 import { getJSON, getText, submitRun } from "./api";
 import {
   analysisOf,
+  availabilityBlocks,
   artifactLink,
   costTotal,
   configurationLink,
@@ -153,11 +154,27 @@ function Home() {
         if (!controller.signal.aborted) setLoading(false);
       }
     })();
-    return () => controller.abort();
+    const refresh = window.setInterval(async () => {
+      try {
+        setHealth(await getJSON("/api/health", controller.signal));
+      } catch {
+        if (!controller.signal.aborted)
+          setHealth((previous) => ({
+            ...previous,
+            gpu: { status: "unknown", available: null, busy: null },
+            local_budget: { status: "unknown", remaining_usd: null },
+          }));
+      }
+    }, 15000);
+    return () => {
+      controller.abort();
+      window.clearInterval(refresh);
+    };
   }, []);
   const queue = record(health.queue),
     provider = record(health.token_factory);
   const queueFull = queueAtCapacity(queue);
+  const availability = availabilityBlocks(health);
   async function start(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
@@ -228,8 +245,8 @@ function Home() {
       {error && <Notice tone="red">{error}</Notice>}
       {!loading && provider.configured === false && (
         <Notice>
-          <strong>Model access needs setup.</strong> Runs may pause with “needs
-          human” until the server is configured.{" "}
+          <strong>Live analysis is not enabled yet.</strong> Runs may pause while
+          model readiness checks are completed.{" "}
           {replays.length > 0 && (
             <a href="#replays">Explore saved evidence instead →</a>
           )}
@@ -239,6 +256,31 @@ function Home() {
         <Notice>
           The run queue is currently unavailable. Saved replays remain available
           below.
+        </Notice>
+      )}
+      {availability.gpuBusy && (
+        <Notice>
+          <strong>The GPU is busy.</strong> A compute workload is active.{" "}
+          {replays.length > 0 ? (
+            <a href="#replays">Explore saved evidence while you wait →</a>
+          ) : (
+            "Availability will refresh automatically."
+          )}
+        </Notice>
+      )}
+      {availability.budgetBlocked && (
+        <Notice>
+          <strong>
+            {availability.budgetReason === "exhausted"
+              ? "The local run budget is exhausted."
+              : "Model billing needs review."}
+          </strong>{" "}
+          {availability.budgetReason === "exhausted"
+            ? "The application's authorized limit has been reached."
+            : "An earlier call has an unresolved billing bound."}{" "}
+          {replays.length > 0 && (
+            <a href="#replays">Explore saved evidence instead →</a>
+          )}
         </Notice>
       )}
       <form onSubmit={start} className="workspace-grid">
@@ -445,7 +487,13 @@ function Home() {
           <button
             className="button button-primary start-button"
             type="submit"
-            disabled={busy || loading || queueFull}
+            disabled={
+              busy ||
+              loading ||
+              queueFull ||
+              availability.gpuBusy ||
+              availability.budgetBlocked
+            }
           >
             {busy ? "Starting…" : "Start analysis"}
             <ArrowRight size={18} />

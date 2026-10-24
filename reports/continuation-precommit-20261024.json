@@ -1,0 +1,39 @@
+{
+  "checks": [
+    {
+      "command": [
+        "git",
+        "diff",
+        "--cached",
+        "--check",
+        "--",
+        ".",
+        ":!reports/*.log",
+        ":!reports/**/*.log"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        ".venv/bin/pre-commit",
+        "run",
+        "--all-files"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        ".tools/bin/gitleaks",
+        "detect",
+        "--redact",
+        "--no-banner"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "source_identity": {
+    "name": "xiaodouzi666",
+    "email": "172074482@qq.com"
+  },
+  "raw_log_whitespace_preserved": true
+}

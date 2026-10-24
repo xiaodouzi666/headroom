@@ -1,9 +1,14 @@
 # Source this file on azuki to keep every cache inside the project.
 export HEADROOM_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export PATH="$HEADROOM_ROOT/.tools/bin:$PATH"
+# Use the already installed project Node runtime; never change the system Node.
+if [ -x "$HEADROOM_ROOT/.tools/node-web/node-v24.22.1-linux-x64/bin/node" ]; then
+    export PATH="$HEADROOM_ROOT/.tools/node-web/node-v24.22.1-linux-x64/bin:$PATH"
+fi
 export UV_CACHE_DIR="$HEADROOM_ROOT/.cache/uv"
 export UV_PYTHON_INSTALL_DIR="$HEADROOM_ROOT/.tools/python"
 export PRE_COMMIT_HOME="$HEADROOM_ROOT/.cache/pre-commit"
+# Mutable host Hub/account cache; Lab mounts only .cache/hf-reviewed after validation.
 export HF_HOME="$HEADROOM_ROOT/.cache/huggingface"
 export XDG_CACHE_HOME="$HEADROOM_ROOT/.cache"
 export PIP_CACHE_DIR="$HEADROOM_ROOT/.cache/pip"

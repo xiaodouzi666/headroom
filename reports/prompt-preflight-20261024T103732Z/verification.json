@@ -1,0 +1,168 @@
+{
+  "completed_utc": "2026-10-24T10:41:16.243598+00:00",
+  "scope": "Standalone CPU audit only; no shared config/client/runtime changes, provider verification or live enablement",
+  "files": {
+    "headroom/llm/preflight.py": "4b8871d9b7ba6084bea8b42d3f8e55c8762f1d08650e417982c8835e5d87e5ae",
+    "scripts/audit_prompt_tokens.py": "3f3b7590863929549b0c91a3991df49e7cf78247ad35c7d87613cc5802a40d02",
+    "tests/test_prompt_preflight.py": "1087cbde397975ca0569728baf3e4acc50dc632629dd395543f5eebae9ad19d3",
+    "docs/PROMPT_PREFLIGHT.md": "aaf346e98a71aa5432c137fb3bf138dfd682462678e01c7ab25cf257a0c68539"
+  },
+  "plan_path": "docs/PLAN.md",
+  "plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "plan_expected_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "checks": {
+    "tests": {
+      "command": [
+        ".venv/bin/python",
+        "reports/prompt-preflight-20261024T103732Z/run_offline_tests.py"
+      ],
+      "exit_code": 0,
+      "log": "reports/prompt-preflight-20261024T103732Z/tests.log",
+      "log_sha256": "3046e67bca40c819de95e618196a3b007899d3695c324a65def669532a2af7f2",
+      "passed": 35,
+      "skipped": 0,
+      "seconds": 12.96
+    },
+    "ruff": {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/llm/preflight.py",
+        "scripts/audit_prompt_tokens.py",
+        "tests/test_prompt_preflight.py"
+      ],
+      "exit_code": 0,
+      "log": "reports/prompt-preflight-20261024T103732Z/ruff.log",
+      "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "format": {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/llm/preflight.py",
+        "scripts/audit_prompt_tokens.py",
+        "tests/test_prompt_preflight.py"
+      ],
+      "exit_code": 0,
+      "log": "reports/prompt-preflight-20261024T103732Z/format.log",
+      "log_sha256": "eee76f865de5a9f2456950f710ae5d5f9b5bd0ea02aa54f614c5eed6642a0bfd"
+    },
+    "diff_check": {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "log": "reports/prompt-preflight-20261024T103732Z/diff_check.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "report_scripts_ruff": {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "reports/prompt-preflight-20261024T103732Z"
+      ],
+      "exit_code": 0,
+      "log": "reports/prompt-preflight-20261024T103732Z/reverification-20261024T104534Z/ruff.log",
+      "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "report_scripts_format": {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "reports/prompt-preflight-20261024T103732Z"
+      ],
+      "exit_code": 0,
+      "log": "reports/prompt-preflight-20261024T103732Z/reverification-20261024T104534Z/format.log",
+      "log_sha256": "eee76f865de5a9f2456950f710ae5d5f9b5bd0ea02aa54f614c5eed6642a0bfd"
+    }
+  },
+  "assets": {
+    "repo": "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4",
+    "revision": "02462641f13d3af838b904f48195b9bb8a1e4ebc",
+    "assets": {
+      "tokenizer.json": {
+        "sha256": "623c34567aebb18582765289fbe23d901c62704d6518d71866e0e58db892b5b7",
+        "bytes": 17077484,
+        "source_url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/resolve/02462641f13d3af838b904f48195b9bb8a1e4ebc/tokenizer.json"
+      },
+      "tokenizer_config.json": {
+        "sha256": "10f93eabcb9b1602fbb991d6308e787ce1df28ee9cd7a1c6d1e8c3f338b957bc",
+        "bytes": 177209,
+        "source_url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/resolve/02462641f13d3af838b904f48195b9bb8a1e4ebc/tokenizer_config.json"
+      },
+      "chat_template.jinja": {
+        "sha256": "82753bef5cedc4932c1ed509b5c9a12be680fd86d1adb65bc3f7398d11c8eebc",
+        "bytes": 10152,
+        "source_url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/resolve/02462641f13d3af838b904f48195b9bb8a1e4ebc/chat_template.jinja"
+      }
+    }
+  },
+  "evidence_audit": "evidence-audits.json",
+  "artifact_sha256": {
+    "s5-schema-domain-audit.json": "2513401a983218a11e3ab2ecd480497d90d200ece4d05c73a06450083ee92056",
+    "evidence-audits.json": "0cc42037c511e994f85a5729ec8f9fb6a7851959f36504f6de2b849382fafdc2",
+    "s2-local-audit.json": "c1ec4d0d28ede3acd861c4c87aeefe7070af6b1a0e6b268631e5ef71312d51a5",
+    "s5-local-audit.json": "f613074ffbb7025b284ba76f581fba9860c85e3afa8a5927409708ccf591f2c9",
+    "tests-first.log": "322259955f7d3f5bba5881dcb12ac0b1d162ca04ced383b7c10aacf6766f9d02",
+    "receipt-first-failure.txt": "7807b8ea43fadb93db248d752f4cdb4aabd79e9020635c9359a3149a97242e97",
+    "format.log": "eee76f865de5a9f2456950f710ae5d5f9b5bd0ea02aa54f614c5eed6642a0bfd",
+    "run_offline_tests.py": "748b1ee0bd1afcc6408834a2321adb3bd961ed2a5bf0f0622b14748db9f8959a",
+    "s4-local-audit.json": "2efc78623a1d24095a6c5d3ee757b73e477f0e034031b557792b2e0d0d98d91b",
+    "s4-schema-domain-audit.json": "0f1ab7355a9c0d80a40a37704eaa91bb773cbae20639b6cac521c1e8c9f10993",
+    "s2-schema-domain-audit.json": "984a4791544a13477ece0b4aec2199ccfc36154c17d3224d8ea232a94a52a0be",
+    "evidence-audit.log": "415155e466a195e4b6f684e1da231a0df462409d4eff13feaeb9cb3d0c8639e4",
+    "setup-compatibility.txt": "429d3bad31ffa80d9db15a014f8470e0e928316d70b41e2d1d0228dd4c47267d",
+    "diff_check.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tests.log": "3046e67bca40c819de95e618196a3b007899d3695c324a65def669532a2af7f2",
+    "audit-first-failure.txt": "5edf8fa60b7bf05cc7ee454f07ea8157b966c896e1fbccc24c9c9acda101f775",
+    "evidence-audit-cache-miss.log": "3ef4a6b50c719174a57fd1865cdd436e6394dcaf1cd9abb5811a6a19f3ba0f7b",
+    "ruff.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "audit_saved_evidence.py": "c50f0c2f11e50dbe0206c35abb3217eb9c8f504c61a3a54c231ed3d1824fc025",
+    "s1-schema-domain-audit.json": "fabd34dd4b2a67d27a2ded38c499bd29fbc86ae11e46a723fe07416885dbd692",
+    "s1-local-audit.json": "9bfbfde2930ce6a0d9995375ab50094ab7b7088d4b3a2cbefa94adeb8ae2319b",
+    "verification-before-report-script-lint-fix.json": "c8ef787e8d1144662bbc92b3bf6ba423c8fc133de80acc6fa82f3e303147418b",
+    "reverification-20261024T104534Z/s5-schema-domain-audit.json": "2513401a983218a11e3ab2ecd480497d90d200ece4d05c73a06450083ee92056",
+    "reverification-20261024T104534Z/evidence-audits.json": "0cc42037c511e994f85a5729ec8f9fb6a7851959f36504f6de2b849382fafdc2",
+    "reverification-20261024T104534Z/s2-local-audit.json": "c1ec4d0d28ede3acd861c4c87aeefe7070af6b1a0e6b268631e5ef71312d51a5",
+    "reverification-20261024T104534Z/s5-local-audit.json": "f613074ffbb7025b284ba76f581fba9860c85e3afa8a5927409708ccf591f2c9",
+    "reverification-20261024T104534Z/format.log": "eee76f865de5a9f2456950f710ae5d5f9b5bd0ea02aa54f614c5eed6642a0bfd",
+    "reverification-20261024T104534Z/s4-local-audit.json": "2efc78623a1d24095a6c5d3ee757b73e477f0e034031b557792b2e0d0d98d91b",
+    "reverification-20261024T104534Z/s4-schema-domain-audit.json": "0f1ab7355a9c0d80a40a37704eaa91bb773cbae20639b6cac521c1e8c9f10993",
+    "reverification-20261024T104534Z/s2-schema-domain-audit.json": "984a4791544a13477ece0b4aec2199ccfc36154c17d3224d8ea232a94a52a0be",
+    "reverification-20261024T104534Z/comparison.json": "69ad74f4fd51a85180a07f8ee1bddca8b69d6503186039ba577c262abf0babc2",
+    "reverification-20261024T104534Z/ruff.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "reverification-20261024T104534Z/audit_saved_evidence.py": "c50f0c2f11e50dbe0206c35abb3217eb9c8f504c61a3a54c231ed3d1824fc025",
+    "reverification-20261024T104534Z/s1-schema-domain-audit.json": "fabd34dd4b2a67d27a2ded38c499bd29fbc86ae11e46a723fe07416885dbd692",
+    "reverification-20261024T104534Z/s1-local-audit.json": "9bfbfde2930ce6a0d9995375ab50094ab7b7088d4b3a2cbefa94adeb8ae2319b",
+    "reverification-20261024T104534Z/audit.log": "415155e466a195e4b6f684e1da231a0df462409d4eff13feaeb9cb3d0c8639e4"
+  },
+  "no_dependency_changes": true,
+  "no_weights_downloaded": true,
+  "model_api_requests": 0,
+  "gpu_runs": 0,
+  "credential_reads": 0,
+  "paid_cost_usd": "0",
+  "provider_billable_token_ceiling": null,
+  "live_authorized": false,
+  "no_commit_or_push": true,
+  "report_script_followup": {
+    "completed_utc": "2026-10-24T10:45:54.236815+00:00",
+    "scope": "Only report script lint/format, removal of unused import, and explicit captured=captured closure binding",
+    "previous_receipt": "verification-before-report-script-lint-fix.json",
+    "previous_receipt_sha256": "c8ef787e8d1144662bbc92b3bf6ba423c8fc133de80acc6fa82f3e303147418b",
+    "runtime_sources_unchanged": true,
+    "guard_import_order_confirmed_by_ast": true,
+    "reverification_directory": "reports/prompt-preflight-20261024T103732Z/reverification-20261024T104534Z",
+    "reproduction": "Corrected audit driver copied to new directory; all original CPU audit JSON reports preserved",
+    "comparison": "All 9 reproduced JSON reports byte-identical to originals; see comparison.json",
+    "tests_rerun": false,
+    "model_api_requests": 0,
+    "gpu_runs": 0,
+    "credential_reads": 0,
+    "paid_cost_usd": "0"
+  }
+}

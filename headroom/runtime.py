@@ -6,6 +6,7 @@ import uuid
 from dataclasses import asdict, dataclass
 from decimal import Decimal, localcontext
 from pathlib import Path
+from typing import Literal
 
 from dotenv import dotenv_values
 from pydantic import BaseModel, ConfigDict, Field
@@ -28,16 +29,32 @@ class BillingBound(BaseModel):
     prompt_token_ceiling: int = Field(gt=0)
     max_prompt_utf8_bytes: int = Field(gt=0)
     max_completion_tokens: int = Field(gt=0)
+    output_cap_field: Literal["max_tokens", "max_completion_tokens"] = "max_tokens"
     output_cap_includes_reasoning: bool
     verified: bool
     evidence: str = Field(min_length=1)
 
-    def upper_usd(self, spec, body):
+    def output_limit(self, spec, body):
+        """Accept exactly the reviewed top-level cap, never an SDK override."""
         if not self.verified or not self.output_cap_includes_reasoning:
             raise RuntimeNotReady("Billing token ceiling/cap semantics are not verified")
-        max_tokens = body.get("max_tokens")
-        if type(max_tokens) is not int or not 0 < max_tokens <= self.max_completion_tokens:
+        cap_fields = {"max_tokens", "max_completion_tokens"}
+        if (
+            self.output_cap_field != spec.output_cap_field
+            or set(body).intersection(cap_fields) != {self.output_cap_field}
+            or (
+                isinstance(body.get("extra_body"), dict)
+                and set(body["extra_body"]).intersection(cap_fields)
+            )
+        ):
+            raise RuntimeNotReady("Output cap field differs from the reviewed billing field")
+        limit = body[self.output_cap_field]
+        if type(limit) is not int or not 0 < limit <= self.max_completion_tokens:
             raise RuntimeNotReady("Requested output exceeds the reviewed billing cap")
+        return limit
+
+    def upper_usd(self, spec, body):
+        max_tokens = self.output_limit(spec, body)
         # The profile must independently establish this bound for every accepted
         # prompt up to max_prompt_utf8_bytes. This is not a cl100k approximation.
         request = {
@@ -107,6 +124,7 @@ class LiveProfile(BaseModel):
                 ),
                 model_verified=True,
                 evidence=item.evidence,
+                output_cap_field=item.billing.output_cap_field,
             )
         return RuntimeConfig(base_url=self.base_url, live_enabled=True, models=models)
 
@@ -187,7 +205,7 @@ def build_live_runtime(
         budget.reserve(run_id, attempt_id, upper)
         pending["id"] = attempt_id
         pending["prompt_ceiling"] = profile.models[name].billing.prompt_token_ceiling
-        pending["completion_ceiling"] = body["max_tokens"]
+        pending["completion_ceiling"] = profile.models[name].billing.output_limit(spec, body)
         pending["record_id"] = store.add_llm_call(
             run_id,
             {
@@ -197,6 +215,8 @@ def build_live_runtime(
                 "outcome": "pending",
                 "settled": False,
                 "reservation_usd": str(upper),
+                "output_cap_field": spec.output_cap_field,
+                "output_cap_tokens": pending["completion_ceiling"],
                 "cost_usd": None,
             },
         )["id"]

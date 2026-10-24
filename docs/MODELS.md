@@ -1,8 +1,53 @@
-# Token Factory model probes — T0.4 prepared, live acceptance pending
+# Token Factory model probes — minimal live chats verified; full T0.4 pending
 
-Status on 2026-10-24: **OFFLINE TOOLING ONLY; accepted=false.** No authenticated catalogue, model call, price, context-limit measurement, credit balance or model capability has been verified by this work. No .env value was read. Do not interpret offline fixtures as NVIDIA/Nebius results.
+Status on 2026-10-24: authenticated directories and one Super/Nano chat each succeeded; **full T0.4 accepted=false**. Evidence: reports/tokenfactory-minimal-20261024.json. The server key is configured privately. Ultra inference, JSON/tools, reasoning controls, long-input limits and concurrency remain unmeasured. Earlier offline evidence remains historical; this checkpoint does not enable the full runtime.
 
-## Candidate models and endpoints
+
+## First authenticated model observations — 2026-10-24 10:21–10:24 UTC
+
+Both official directories returned HTTP200 (US18 models; default30). Both listed
+all four original Nemotron candidates. Super and Nano were then called once each
+through the US endpoint, using max_completion_tokens=128, zero retries and exact
+response identity checks. Both returned HTTP200, nonempty text and finish_reason=stop.
+The model IDs below are exact API identifiers, not normalized UI labels.
+
+| Model | Exact model ID | API context advertised | Input/output per1M USD | Measured chat |
+|---|---|---:|---|---|
+| Ultra | nvidia/Nemotron-3-Ultra-550b-a55b | 1048576 | 1.00/3.00 | not invoked |
+| Super | nvidia/nemotron-3-super-120b-a12b | 262144 | 0.30/0.90 | 23 prompt +19 completion;0.670570s |
+| Nano | nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B | 262144 | 0.06/0.24 | 23 prompt +47 completion;1.506663s |
+| Lightning | nvidia/Nemotron-3_5-Lightning | 1048576 | 0.06/0.24 | not invoked |
+
+Account Prices UI explicitly uses1M tokens and excludes taxes. Multiplying the
+catalogue token prices by1M matched these ordinary input/output prices. Request,
+image, video-second and minute surcharges were explicitly zero. Nano cached
+input was null in the API catalogue, while Prices UI displayed0.012/1M; this
+discrepancy is preserved. All prompt tokens were conservatively charged at the
+ordinary price; Super reported cached_tokens=0, Nano did not provide a breakdown.
+
+Usage-priced estimate: Super0.000024USD + Nano0.00001266USD =0.00003666USD.
+Including a conservative21% tax reserve gives0.0000443586USD. These are usage
+calculations, not a reconciled invoice. The authorized gross ceiling was0.10USD;
+a shared token cap0.0826USD left room for the tax reserve. Full advertised context
+was used as each input reservation ceiling; no short-prompt tokenizer guess was
+used. Successful settlement released unused reservations before the next request.
+No uncertainty, identity mismatch or provider ceiling violation was observed.
+
+The API documents max_completion_tokens as including visible and reasoning
+output. Super reported14 reasoning tokens within its19 completion tokens; Nano
+streamed reasoning but did not provide that breakdown. This tests basic chat,
+not a reasoning on/off control or the separate reasoning_budget candidates.
+
+The original historical default probe IDs remain below for reproducibility;
+use the explicit exact Nano override shown above when probing. No long-input
+limit is inferred from advertised context. Ultra cannot be reserved under the
+current0.10USD authorization using its entire advertised context as input bound.
+
+Sources: [Chat API](https://docs.tokenfactory.nebius.com/api-reference/inference/create-chat-completion),
+[Prices](https://tokenfactory.nebius.com/organization/prices),
+[Cached tokens](https://docs.tokenfactory.nebius.com/cached-tokens.md).
+
+## Historical candidate models and endpoints
 
 The following identifiers and historical prices come from PLAN.md C.1 and are only probe candidates. Runtime catalogue IDs and account pricing must be checked before accepting them.
 
@@ -151,16 +196,16 @@ Current measurements:
 
 | Target cl100k input | Server prompt tokens | Needle | TTFT/elapsed | Cost | Result |
 |---|---|---|---|---|---|
-| 64k | unknown | not run | unknown | unknown | pending account/authorization |
-| 200k | unknown | not run | unknown | unknown | pending account/authorization |
-| 500k | unknown | not run | unknown | unknown | pending account/authorization |
-| 900k | unknown | not run | unknown | unknown | pending account/authorization |
+| 64k | unknown | not run | unknown | unknown | pending full-suite authorization |
+| 200k | unknown | not run | unknown | unknown | pending full-suite authorization |
+| 500k | unknown | not run | unknown | unknown | pending full-suite authorization |
+| 900k | unknown | not run | unknown | unknown | pending full-suite authorization |
 
 The report's accepted flag always remains false, including after every request succeeds. config_proposal.applied remains false. Root must review the evidence and capability semantics, reconcile the real maximum/lower bound, update the application configuration, and review at least five genuine FEEDBACK entries before independently marking T0.4 accepted.
 
 ## Remaining live acceptance steps
 
-- Obtain approved account/key/credit prerequisites and current verified pricing/cap documentation.
+- Account/key and minimal chat prerequisites are established; obtain sufficient credit and explicit authorization for the full suite, keeping verified pricing/caps current.
 - Inspect both live verbose catalogues; reconcile exact model IDs, deployment context limits and pricing.
 - Execute the capability matrix with bounded requests and inspect real JSON/tools behavior; reason about unknown reasoning/budget observations rather than turning HTTP200 into capability proof.
 - Run the full long staircase and four-way Super experiment; retain failures, 429s, latency and every charge.

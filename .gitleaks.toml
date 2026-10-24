@@ -1,0 +1,59 @@
+# Only exact public provenance values in their specific files are exempted.
+# All default rules remain enabled; paths alone never suppress a finding.
+# Configuration semantics: https://github.com/gitleaks/gitleaks#configuration
+[extend]
+useDefault = true
+
+[[rules]]
+id = "generic-api-key"
+
+[[rules.allowlists]]
+description = "Verified public revision or recorded source digest"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^headroom/llm/preflight\.py$''']
+regexes = [
+    '''^02462641f13d3af838b904f48195b9bb8a1e4ebc$''',
+    '''^10f93eabcb9b1602fbb991d6308e787ce1df28ee9cd7a1c6d1e8c3f338b957bc$''',
+    '''^623c34567aebb18582765289fbe23d901c62704d6518d71866e0e58db892b5b7$''',
+]
+
+[[rules.allowlists]]
+description = "Verified public revision or recorded source digest"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/api\-admission\-deadline\-20261024/verification\-before\-clock\-test\.json$''']
+regexes = [
+    '''^4bb603f6fe804823a99e4c93d6f73c6c0406dd52faa45736cc82d2ffbf0f1a66$''',
+    '''^61861952b005c294c431073fbc9ec6e7f1c15f0e6a401eedc34e7978d43c1ad8$''',
+    '''^b7f846afb6f116f68208a305ad63969d217fb7513ca48f19fdbcb89b219887a6$''',
+]
+
+[[rules.allowlists]]
+description = "Verified public revision or recorded source digest"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/api\-admission\-deadline\-20261024/verification\.json$''']
+regexes = [
+    '''^1e9356c8ca06c80d3f2bc30fea6ae8953567789c1ff53564c706e064839b0b67$''',
+    '''^39dad6e84796addf88c8cf7a63a98baba4370e2443b71ce707ec74a320fb05a3$''',
+    '''^4bb603f6fe804823a99e4c93d6f73c6c0406dd52faa45736cc82d2ffbf0f1a66$''',
+]
+
+[[rules.allowlists]]
+description = "Verified public revision or recorded source digest"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/prompt\-preflight\-20261024T103732Z/verification\-before\-report\-script\-lint\-fix\.json$''']
+regexes = [
+    '''^3f3b7590863929549b0c91a3991df49e7cf78247ad35c7d87613cc5802a40d02$''',
+]
+
+[[rules.allowlists]]
+description = "Verified public revision or recorded source digest"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/prompt\-preflight\-20261024T103732Z/verification\.json$''']
+regexes = [
+    '''^3f3b7590863929549b0c91a3991df49e7cf78247ad35c7d87613cc5802a40d02$''',
+]

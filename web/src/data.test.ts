@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   analysisOf,
+  availabilityBlocks,
   artifactLink,
   costTotal,
   configurationLink,
@@ -179,4 +180,51 @@ it("counts repository preparation and the active worker against capacity", () =>
     queueAtCapacity({ capacity: 3, pending: 1, preparing: 0, running: id }),
   ).toBe(false);
   expect(queueAtCapacity({ halted: true })).toBe(true);
+});
+
+describe("availability evidence", () => {
+  it("uses fresh explicit GPU busy evidence and keeps unknown or stale data unblocked", () => {
+    expect(
+      availabilityBlocks({ gpu: { status: "busy", busy: true, stale: false } })
+        .gpuBusy,
+    ).toBe(true);
+    expect(
+      availabilityBlocks({ gpu: { status: "busy", busy: true, stale: true } })
+        .gpuBusy,
+    ).toBe(false);
+    expect(
+      availabilityBlocks({ gpu: { status: "unknown", busy: null } }).gpuBusy,
+    ).toBe(false);
+    expect(
+      availabilityBlocks({ gpu: { status: "busy", busy: false } }).gpuBusy,
+    ).toBe(false);
+  });
+  it("never confuses an account balance or unknown budget with an exhausted local limit", () => {
+    expect(
+      availabilityBlocks({
+        local_budget: {
+          status: "exhausted",
+          scope: "local_application_authorization",
+        },
+      }).budgetBlocked,
+    ).toBe(true);
+    expect(
+      availabilityBlocks({
+        local_budget: {
+          status: "billing_review_required",
+          scope: "local_application_authorization",
+        },
+      }).budgetReason,
+    ).toBe("billing_review_required");
+    expect(
+      availabilityBlocks({
+        local_budget: { status: "unknown", remaining_usd: null },
+      }).budgetBlocked,
+    ).toBe(false);
+    expect(
+      availabilityBlocks({
+        local_budget: { status: "exhausted", scope: "provider_account" },
+      }).budgetBlocked,
+    ).toBe(false);
+  });
 });

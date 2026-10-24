@@ -11,6 +11,40 @@ Live work requires all of the following:
 
 A profile is an operator-reviewed record, not a self-verifying assertion. Do not set its verified flags merely to bypass preflight. Each model needs a proven input token ceiling for its permitted prompt byte domain, output-token limit semantics that include billed reasoning, and verified current prices. An approximate tiktoken count is not a spending guarantee. Profiles and keys stay ignored. No live profile has been enabled by the development tests.
 
+
+Each model's `output_cap_field` within `billing` explicitly selects `max_tokens`
+(the backwards-compatible default) or `max_completion_tokens`. The existing
+`billing.max_completion_tokens` numeric value is the maximum allowed output
+count, regardless of which wire field is selected. For example, this fragment
+selects the field used by the separate minimal Super/Nano probes; it is not a
+complete or enabled live profile:
+
+~~~json
+{
+  "output_cap_field": "max_completion_tokens",
+  "max_completion_tokens": 128
+}
+~~~
+
+The profile forwards the selected field into `ModelSpec`. Before every attempt,
+the guard rejects a different field, two simultaneous top-level cap fields, or
+a cap hidden in SDK `extra_body`. It reserves against the selected request count
+and saves both the field and count with the pending call. After the response,
+the same count bounds all `usage.completion_tokens`, including reasoning; an
+overrun invalidates the bound and stops further paid dispatch even if the dollar
+cost remains below the reservation. Omitted fields in existing profiles still
+select `max_tokens`; the operator must select and substantiate the new field
+explicitly for each model.
+
+The [official Chat API reference](https://docs.tokenfactory.nebius.com/api-reference/inference/create-chat-completion)
+defines `max_completion_tokens` as including visible output and reasoning.
+Separate Super/Nano probes used this field on 2026-10-24 and returned matching
+identities, a stop finish, and usage within 128 tokens:
+`runs/model-probes/20261024T102428Z-minimal-3b44464e/report.json`. This supports
+their minimal cap-field integration; it does not establish Ultra capabilities,
+long-context correctness, full T0.4 acceptance, or permission for application
+repair/evaluation. No live runtime profile is created by this code change.
+
 ## Accounting
 
 The SQLite budget ledger reserves each run's cap against the daily and authorized-total budgets. Each actual network attempt, including a retry, reserves a conservative price bound before dispatch. Successful known usage settles that reservation; missing usage, network errors and interrupted attempts retain an unknown charge with its conservative bound. Unknown is never displayed as zero.

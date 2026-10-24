@@ -1,7 +1,10 @@
 # Account setup and outstanding access
 
-Nebius requirements below were documented on 2026-10-23; its key and promotional
-credits remain unverified, and troubleshooting is deferred at Frank's request.
+Nebius billing is now active and its server-only private key has been verified.
+On2026-10-24 the account displayed1USD trial credit and zero cash balance. Both
+authenticated directories and minimal Super/Nano calls succeeded. Promotional
+credits and the original at-least25USD gate remain pending; see
+reports/tokenfactory-minimal-20261024.json.
 Tavily was verified live on 2026-10-24: its existing key is configured in the
 server .env (0600), T0.5 passed, and the free-plan counter is 6/1,000 credits used after the real Research component check (994 remain).
 See reports/tavily-account-after-research-20261024.json.
@@ -18,9 +21,10 @@ Headroom requires real NVIDIA-model runtime calls through Nebius Token Factory. 
    input, and all four real API probes succeeded. See reports/t0.5-acceptance.json.
    No further Tavily signup or key entry is required for this checkpoint.
 
-T0.1 remains incomplete until the Nebius credential is verified and Frank confirms
-at least $25 available credit and its spending boundary. Nebius live probes remain
-paused. Tavily has a separate completed live acceptance record; its usage does not
+T0.1 remains incomplete until at least25USD available credit and the full-campaign
+spending boundary are confirmed. The current authorization covers only0.10USD
+from trial credit for minimal connectivity; it does not authorize recharge or
+the full capability/repair evaluation. Two minimal calls have completed. Tavily has a separate completed live acceptance record; its usage does not
 prove that Nebius is configured. If billing/country/credits block signup, the official FAQ directs participants to Nebius support: https://discord.com/invite/eXYTGhgnhK .
 
 ## Self-funding versus promotional approval
@@ -39,4 +43,14 @@ Once an existing Token Factory API key is available, the owner can run:
 ssh -t -p 40022 xiaodouzi@azuki.ubj.ink 'python3 /home/xiaodouzi/workspace/headroom/.cache/setup/import_nebius_key.py'
 ```
 
-Input is hidden and the key is never printed. This server-only ignored helper refuses to overwrite an existing key or write to a nonregular/nonprivate `.env`, preserves the Tavily entry and writes atomically with mode0600. Its syntax was checked; it has not been run with a Nebius key. Credential presence alone does not verify service access, model availability, balance, or spending authorization. The helper does not create a key, top up an account or call the API.
+Input is hidden and the key is never printed. This server-only ignored helper refuses to overwrite an existing key or write to a nonregular/nonprivate `.env`, preserves the Tavily entry and writes atomically with mode0600. The owner has used it and the resulting private key authenticated both model directories and two minimal calls. Credential presence alone does not verify service access, model availability, balance, or spending authorization. The helper does not create a key, top up an account or call the API.
+
+
+## Promotional credit continuation
+
+The owner requested using promotional credit once it arrives. Reconcile actual
+credit availability and expiration in this same Token Factory account; neither a
+new provider nor another API key is implied. Preserve existing spend records and
+get a sufficient explicit campaign authorization before the original full probes
+and repair evaluations. A pending application or promotional email is not proof
+of credited balance. No automatic recharge or additional spending is enabled.

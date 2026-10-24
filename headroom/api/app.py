@@ -12,6 +12,7 @@ import subprocess
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation, localcontext
+from functools import partial
 from pathlib import Path
 from urllib.parse import urlsplit
 from uuid import uuid4
@@ -22,12 +23,18 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from headroom.api.availability import AvailabilityMonitor
 from headroom.api.queue import TERMINAL, AdmissionError, RunQueue
 from headroom.api.security import ARTIFACTS, RUN_ID, job_directory, open_regular
 from headroom.lab.runner import PROJECT_ROOT
 from headroom.orchestrator import FixRequest, Policy
-from headroom.repository import parse_python_command, prepare_repository, validate_repository
-from headroom.runtime import RuntimeNotReady, read_live_profile, read_nebius_key
+from headroom.repository import (
+    parse_python_command,
+    preparation_remaining,
+    prepare_repository,
+    validate_repository,
+)
+from headroom.runtime import read_live_profile
 from headroom.store.db import Store
 from headroom.verify.compare import parse_target
 from headroom.verify.policy import scan_source_forbidden
@@ -137,6 +144,13 @@ def _public_run(row):
         "elapsed_seconds",
         "api_worker_finished",
         "api_cleanup_verified",
+        "api_admitted_at",
+        "api_deadline_at",
+        "api_execution_limit_seconds",
+        "api_cleanup_grace_seconds",
+        "api_report_pending",
+        "api_report_ready",
+        "api_report_error",
     )
     return {key: row.get(key) for key in fields if key in row}
 
@@ -149,7 +163,44 @@ def _stream_file(handle):
         handle.close()
 
 
-def create_app(settings=None, *, worker=None, worker_mode=None):
+def _prepare_submission(settings, submission, source, run_id, *, deadline):
+    preparation_remaining(deadline)
+    repository_input = submission.repo is not None
+    folder = settings.data_root / "uploads" / run_id
+    profile, arguments = None, []
+    if repository_input:
+        prepared = prepare_repository(
+            submission.repo, submission.ref, submission.cmd, destination=folder, deadline=deadline
+        )
+        scanned = scan_source_forbidden(
+            prepared.source_root, source_profile=prepared.source_profile, sandboxed=True
+        )
+        if not scanned.allowed:
+            raise ValueError("Repository source rejected by static policy")
+        folder, script = prepared.source_root, prepared.script
+        profile, arguments = prepared.source_profile, list(prepared.script_args)
+    else:
+        folder.mkdir(parents=True, exist_ok=False, mode=0o700)
+        script = folder / "train.py"
+        with script.open("x") as handle:
+            handle.write(source)
+    preparation_remaining(deadline)
+    return FixRequest(
+        script=str(script),
+        source_root=str(folder),
+        source_profile=profile,
+        script_args=arguments,
+        target=submission.target,
+        policy=submission.policy,
+        budget_usd=submission.budget,
+        max_steps=20,
+        max_seconds=180,
+        device="cuda",
+        runtime_profile=settings.runtime_profile,
+    )
+
+
+def create_app(settings=None, *, worker=None, worker_mode=None, availability_monitor=None):
     settings = settings or ApiSettings()
     settings.data_root.mkdir(parents=True, exist_ok=True, mode=0o700)
     settings.run_root.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -167,15 +218,24 @@ def create_app(settings=None, *, worker=None, worker_mode=None):
         grace=settings.shutdown_grace_seconds,
     )
     catalog = _catalog(settings)
+    availability = availability_monitor or AvailabilityMonitor(
+        settings, enabled=worker is None, profile_loader=read_live_profile
+    )
 
     @asynccontextmanager
     async def lifespan(_):
         queue.start()
+        availability.snapshot()
         try:
             yield
         finally:
+            availability.close()
             queue.close()
-            if not queue.thread.is_alive():
+            if (
+                not queue.thread.is_alive()
+                and not queue.expiry_thread.is_alive()
+                and not queue.preparing
+            ):
                 store.close()
 
     app = FastAPI(title="Headroom", lifespan=lifespan)
@@ -183,6 +243,7 @@ def create_app(settings=None, *, worker=None, worker_mode=None):
     app.add_middleware(GZipMiddleware, minimum_size=1024, compresslevel=6)
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(settings.allowed_hosts))
     app.state.store, app.state.queue, app.state.settings = store, queue, settings
+    app.state.availability = availability
 
     @app.middleware("http")
     async def local_session(request, call_next):
@@ -281,38 +342,7 @@ def create_app(settings=None, *, worker=None, worker_mode=None):
                 )
         run_id = uuid4().hex
 
-        def prepare():
-            folder = settings.data_root / "uploads" / run_id
-            profile, arguments = None, []
-            if repository_input:
-                prepared = prepare_repository(
-                    submission.repo, submission.ref, submission.cmd, destination=folder
-                )
-                scanned = scan_source_forbidden(
-                    prepared.source_root, source_profile=prepared.source_profile, sandboxed=True
-                )
-                if not scanned.allowed:
-                    raise ValueError("Repository source rejected by static policy")
-                folder, script = prepared.source_root, prepared.script
-                profile, arguments = prepared.source_profile, list(prepared.script_args)
-            else:
-                folder.mkdir(parents=True, exist_ok=False, mode=0o700)
-                script = folder / "train.py"
-                with script.open("x") as handle:
-                    handle.write(source)
-            return FixRequest(
-                script=str(script),
-                source_root=str(folder),
-                source_profile=profile,
-                script_args=arguments,
-                target=submission.target,
-                policy=submission.policy,
-                budget_usd=submission.budget,
-                max_steps=20,
-                max_seconds=180,
-                device="cuda",
-                runtime_profile=settings.runtime_profile,
-            )
+        prepare = partial(_prepare_submission, settings, submission, source, run_id)
 
         client_ip = request.client.host if request.client else "unknown"
         if settings.trust_cloudflared and client_ip in {"127.0.0.1", "::1"}:
@@ -331,6 +361,8 @@ def create_app(settings=None, *, worker=None, worker_mode=None):
                     if repository_input
                     else ("example" if submission.example_id else "upload"),
                     "example_id": submission.example_id,
+                    "target": submission.target,
+                    "policy": submission.policy.model_dump(),
                 },
                 request.state.owner,
                 client_ip,
@@ -395,7 +427,7 @@ def create_app(settings=None, *, worker=None, worker_mode=None):
                     payload = {k: row[k] for k in ("sequence", "kind", "data", "created_at")}
                     yield f"id: {cursor}\nevent: {row['kind']}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
                 state = store.get_run(run_id)
-                if (
+                if not state.get("api_report_pending", False) and (
                     state.get("api_worker_finished")
                     or (state.get("public_replay") is True and state["status"] in TERMINAL)
                     or (queue.snapshot()["halted"] and state["status"] in TERMINAL)
@@ -491,6 +523,7 @@ def create_app(settings=None, *, worker=None, worker_mode=None):
             "total_cost_usd": None if unknown else str(subtotal),
             "unknown_cost_calls": unknown,
             "complete": unknown == 0,
+            "local_budget": availability.snapshot()["local_budget"],
         }
 
     @app.get("/api/replays")
@@ -509,27 +542,12 @@ def create_app(settings=None, *, worker=None, worker_mode=None):
     @app.get("/api/health")
     def health():
         store.list_runs(1)
-        configured = settings.runtime_configured
-        if not configured:
-            try:
-                read_live_profile(
-                    settings.runtime_profile
-                    or settings.project_root / ".cache/tokenfactory-runtime.json"
-                )
-                read_nebius_key(settings.project_root / ".env")
-                configured = True
-            except RuntimeNotReady:
-                configured = False
+        observed = availability.snapshot()
         return {
             "status": "ok",
             "db": "ok",
             "queue": queue.snapshot(),
-            "gpu": {"status": "not_probed", "available": None},
-            "token_factory": {
-                "configured": configured,
-                "reachable": None,
-                "status": "not_probed",
-            },
+            **observed,
             "deployment": "public_host_configured" if settings.public_host else "localhost",
             "authentication": "local_session_only",
         }

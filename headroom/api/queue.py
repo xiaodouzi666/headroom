@@ -1,9 +1,12 @@
 """One scheduler thread; production jobs run in supervised spawn processes."""
 
+import ctypes
 import hashlib
 import json
 import multiprocessing
+import os
 import re
+import signal
 import sqlite3
 import subprocess
 import threading
@@ -38,9 +41,15 @@ def _finish_result(store, run_id, result):
         store.add_event(run_id, "run.done" if status == "completed" else "needs_human", {})
 
 
-def _process_entry(worker, request, store_path, run_root, run_id):
+def _process_entry(worker, request, store_path, run_root, run_id, deadline):
     store = Store(store_path)
     try:
+        if time.monotonic() >= deadline:
+            store.update_run(
+                run_id, status="timeout", target_met=False, reason="queue_deadline_exceeded"
+            )
+            store.add_event(run_id, "run.failed", {"reason": "queue_deadline_exceeded"})
+            return
         result = (worker or run_fix)(
             FixRequest.model_validate(request), store=store, run_root=Path(run_root), run_id=run_id
         )
@@ -55,6 +64,99 @@ def _process_entry(worker, request, store_path, run_root, run_id):
         store.add_event(run_id, "run.failed", {"reason": "worker_error"})
     finally:
         store.close()
+
+
+def _arm_preparation_parent_death(parent_pid):
+    """Linux parent-death notification also kills this session's Git descendants."""
+
+    def parent_lost(_signal=None, _frame=None):
+        os.killpg(os.getpid(), signal.SIGKILL)
+
+    signal.signal(signal.SIGUSR1, parent_lost)
+    libc = ctypes.CDLL(None, use_errno=True)
+    if libc.prctl(1, signal.SIGUSR1, 0, 0, 0) != 0:  # PR_SET_PDEATHSIG
+        raise OSError(ctypes.get_errno(), "Cannot supervise source preparation parent death")
+    # Parent death before prctl is not delivered retroactively.
+    if os.getppid() != parent_pid:
+        parent_lost()
+
+
+def _prepare_entry(prepare, deadline, sender, parent_pid):
+    """Data-only preparation in an owned session, never the model/GPU worker."""
+    os.setsid()
+    _arm_preparation_parent_death(parent_pid)
+    os.environ.clear()
+    os.environ.update(HOST_ENV)
+    try:
+        sender.send(("ready", None))
+        if sender.recv() != "proceed":
+            raise TimeoutError
+        if time.monotonic() >= deadline:
+            raise TimeoutError
+        request = prepare(deadline=deadline)
+        if time.monotonic() >= deadline:
+            raise TimeoutError
+        sender.send(("result", request.model_dump()))
+    except TimeoutError:
+        sender.send(("timeout", None))
+    except Exception:  # noqa: BLE001 - no source text, credentials or private errors on the pipe
+        sender.send(("error", None))
+    finally:
+        sender.close()
+        # Keep the owned session leader alive until its supervisor kills the
+        # group, including after success/error. Its PID cannot be reused first.
+        while True:
+            signal.pause()
+
+
+def _preparation_identity(pid):
+    try:
+        fields = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()
+        return fields[19], int(fields[2]), int(fields[3])
+    except (OSError, ValueError, IndexError):
+        return None
+
+
+def _preparation_group_alive(group):
+    """Linux-only verification of this owned process group, ignoring reaped zombies."""
+    try:
+        for entry in Path("/proc").iterdir():
+            if not entry.name.isdigit():
+                continue
+            try:
+                fields = (entry / "stat").read_text().rsplit(")", 1)[1].split()
+            except FileNotFoundError:
+                continue
+            if int(fields[2]) == group and fields[0] != "Z":
+                return True
+        return False
+    except (OSError, ValueError, IndexError):
+        return True
+
+
+def _stop_preparation(process, identity, ready):
+    # Match the exact owned process, not merely a possibly reused numeric PID.
+    current = _preparation_identity(process.pid)
+    if identity is None or current is None or current[0] != identity[0]:
+        process.join(0)
+        return not process.is_alive() and not _preparation_group_alive(process.pid)
+    try:
+        if current[1:] == (process.pid, process.pid):
+            os.killpg(process.pid, signal.SIGKILL)
+        elif ready:
+            return False
+        else:
+            # Before the handshake, the child cannot launch Git or touch source.
+            process.kill()
+    except ProcessLookupError:
+        pass
+    except OSError:
+        return False
+    process.join(1)
+    until = time.monotonic() + 1
+    while _preparation_group_alive(process.pid) and time.monotonic() < until:
+        time.sleep(0.01)
+    return not process.is_alive() and not _preparation_group_alive(process.pid)
 
 
 def cleanup_owned_lab(run_root, run_id):
@@ -142,6 +244,9 @@ class RunQueue:
                 "CREATE TABLE IF NOT EXISTS admissions (run_id TEXT PRIMARY KEY, ip TEXT, created REAL)"
             )
         self.thread = threading.Thread(target=self._loop, name="headroom-api-queue", daemon=True)
+        self.expiry_thread = threading.Thread(
+            target=self._expiry_loop, name="headroom-api-expiry", daemon=True
+        )
 
     def start(self):
         # Never silently resume a previously active paid/GPU job after a server restart.
@@ -169,6 +274,7 @@ class RunQueue:
                 )
                 self.store.add_event(row["run_id"], "needs_human", {"reason": "server_restart"})
         self.thread.start()
+        self.expiry_thread.start()
 
     def snapshot(self):
         with self.condition:
@@ -181,9 +287,124 @@ class RunQueue:
                 "closing": self.closing,
             }
 
+    def _finish_unstarted(self, run_id, *, reason, cleanup_verified=True, status="timeout"):
+        self.store.update_run(
+            run_id,
+            status=status if cleanup_verified else "needs_human",
+            target_met=False,
+            reason=reason,
+            api_worker_finished=False,
+            api_cleanup_verified=cleanup_verified,
+            api_report_pending=True,
+            api_report_ready=False,
+        )
+        self.store.add_event(
+            run_id,
+            "run.failed" if cleanup_verified else "needs_human",
+            {"reason": reason, "cleanup_verified": cleanup_verified},
+        )
+        ready, error = False, None
+        try:
+            directory = job_directory(self.run_root, run_id)
+            directory.mkdir(parents=True, exist_ok=True)
+            generate_report(
+                directory, self.store.get_run(run_id), rounds=[], usage=self.store.usage(run_id)
+            )
+            ready = True
+        except Exception:  # noqa: BLE001 - keep expiry alive and expose a safe terminal failure
+            error = "partial_report_generation_failed"
+            self.store.update_run(
+                run_id,
+                status="needs_human",
+                reason="Partial report generation failed; retained evidence requires review",
+            )
+            self.store.add_event(run_id, "needs_human", {"reason": error})
+        finally:
+            self.store.update_run(
+                run_id,
+                api_report_pending=False,
+                api_report_ready=ready,
+                api_report_error=error,
+                api_worker_finished=cleanup_verified,
+            )
+
+    def _prepare(self, prepare, deadline):
+        if self.mode == "thread":
+            # Trusted in-process fixtures only. Production always uses spawn.
+            return prepare(deadline=deadline), True
+        receiver, sender = multiprocessing.get_context("spawn").Pipe(duplex=True)
+        process = multiprocessing.get_context("spawn").Process(
+            target=_prepare_entry, args=(prepare, deadline, sender, os.getpid()), daemon=True
+        )
+        result, outcome, identity, ready = None, None, None, False
+        try:
+            process.start()
+            identity = _preparation_identity(process.pid)
+            sender.close()
+            while not self.closing and time.monotonic() < deadline:
+                if receiver.poll(min(0.05, max(0, deadline - time.monotonic()))):
+                    try:
+                        kind, payload = receiver.recv()
+                    except EOFError:
+                        break
+                    if kind == "ready":
+                        ready = True
+                        receiver.send("proceed")
+                    else:
+                        outcome = kind
+                        result = payload
+                        break
+
+        except (OSError, EOFError):
+            outcome = "error"
+        finally:
+            cleaned = (
+                _stop_preparation(process, identity, ready) if process.pid is not None else True
+            )
+            sender.close()
+            receiver.close()
+        if not cleaned:
+            with self.condition:
+                self.halted = True
+                self.condition.notify_all()
+            raise AdmissionError("Source preparation cleanup could not be verified", 503)
+        if self.closing:
+            raise AdmissionError("Queue stopped while source was being prepared", 503)
+        if outcome == "timeout" or time.monotonic() >= deadline:
+            raise AdmissionError("Source preparation exceeded its admission deadline", 504)
+        if outcome != "result":
+            raise ValueError("Source preparation failed")
+        return FixRequest.model_validate(result), cleaned
+
+    def _expire_pending(self):
+        expired = []
+        with self.condition:
+            retained = deque()
+            for run_id, request, deadline in self.pending:
+                if time.monotonic() >= deadline:
+                    expired.append(run_id)
+                else:
+                    retained.append((run_id, request, deadline))
+            self.pending = retained
+        for run_id in expired:
+            self._finish_unstarted(run_id, reason="queue_deadline_exceeded")
+
+    def _expiry_loop(self):
+        # Report rendering never runs in the active worker's deadline watchdog.
+        while True:
+            self._expire_pending()
+            with self.condition:
+                if self.closing:
+                    return
+                wait = min(
+                    (max(0, item[2] - time.monotonic()) for item in self.pending),
+                    default=None,
+                )
+                self.condition.wait(timeout=wait)
+
     def submit(self, run_id, request, owner, client_ip, prepare):
-        # Preparation may fetch a repository. Reserve admission/one capacity slot
-        # under short locks, then release both locks before any slow I/O.
+        # Admission starts one deadline shared by preparation, waiting and execution.
+        # Upload/validation before admission and cleanup afterwards are separate.
         with self.condition:
             if self.halted or self.closing:
                 raise AdmissionError("Queue requires cleanup or is shutting down", 503)
@@ -198,40 +419,74 @@ class RunQueue:
                 ).fetchone()[0]
                 if count >= 2:
                     raise AdmissionError("Two new run attempts per IP per hour are allowed")
-                # Failed preparation still consumes admission: otherwise repeated
-                # bad repositories bypass the limit on expensive outbound fetches.
                 connection.execute("INSERT INTO admissions VALUES (?,?,?)", (run_id, ip, now))
+            limit = self.deadline
+            deadline = time.monotonic() + limit
+            admitted_at = self.clock()
             self.preparing.add(run_id)
-        try:
-            prepared = prepare()
-        except BaseException:
-            with self.condition:
-                self.preparing.discard(run_id)
-                self.condition.notify_all()
-            raise
-        with self.condition:
-            self.preparing.discard(run_id)
-            if self.halted or self.closing:
-                self.condition.notify_all()
-                raise AdmissionError("Queue stopped while source was being prepared", 503)
+
+        def create_record():
             self.store.create_run(
                 run_id,
                 status="queued",
                 api_owner=owner,
                 api_worker_finished=False,
                 api_source=request,
-                target=prepared.target,
+                target=request.get("target"),
+                policy=request.get("policy", {}),
                 target_met=False,
-                policy=prepared.policy.model_dump(),
                 run_dir=str(self.run_root / run_id),
+                api_admitted_at=admitted_at,
+                api_deadline_at=admitted_at + limit,
+                api_execution_limit_seconds=limit,
+                api_cleanup_grace_seconds=self.grace,
             )
-            self.store.add_event(run_id, "run.queued", {"position": len(self.pending) + 1})
-            self.pending.append((run_id, prepared))
-            position = len(self.pending)
-            self.condition.notify_all()
-            return position
 
-    def _supervised(self, run_id, request):
+        try:
+            try:
+                prepared, _ = self._prepare(prepare, deadline)
+            except AdmissionError as error:
+                create_record()
+                self._finish_unstarted(
+                    run_id,
+                    reason="preparation_deadline_exceeded"
+                    if error.status == 504
+                    else "preparation_cancelled",
+                    cleanup_verified=not self.halted,
+                    status="timeout" if error.status == 504 else "cancelled",
+                )
+                raise
+            except TimeoutError:
+                create_record()
+                self._finish_unstarted(run_id, reason="preparation_deadline_exceeded")
+                raise AdmissionError(
+                    "Source preparation exceeded its admission deadline", 504
+                ) from None
+            with self.condition:
+                if self.halted or self.closing:
+                    raise AdmissionError("Queue stopped while source was being prepared", 503)
+                create_record()
+                if time.monotonic() >= deadline:
+                    self._finish_unstarted(run_id, reason="preparation_deadline_exceeded")
+                    raise AdmissionError("Source preparation exceeded its admission deadline", 504)
+                self.store.update_run(
+                    run_id, target=prepared.target, policy=prepared.policy.model_dump()
+                )
+                self.store.add_event(run_id, "run.queued", {"position": len(self.pending) + 1})
+                self.pending.append((run_id, prepared, deadline))
+                self.preparing.discard(run_id)
+                position = len(self.pending)
+                self.condition.notify_all()
+                return position
+        finally:
+            with self.condition:
+                self.preparing.discard(run_id)
+                self.condition.notify_all()
+
+    def _supervised(self, run_id, request, deadline):
+        if time.monotonic() >= deadline:
+            self._finish_unstarted(run_id, reason="queue_deadline_exceeded")
+            return True
         process = multiprocessing.get_context("spawn").Process(
             target=_process_entry,
             args=(
@@ -240,15 +495,17 @@ class RunQueue:
                 str(self.store.path),
                 str(self.run_root),
                 run_id,
+                deadline,
             ),
             daemon=True,
         )
         process.start()
         self.store.update_run(run_id, api_worker_pid=process.pid)
-        deadline = time.monotonic() + self.deadline
         while process.is_alive() and time.monotonic() < deadline and not self.closing:
             process.join(min(0.1, max(0, deadline - time.monotonic())))
-        timed_out = process.is_alive() and not self.closing
+        timed_out = not self.closing and (
+            time.monotonic() >= deadline or self.store.get_run(run_id)["status"] == "timeout"
+        )
         stopped = process.is_alive()
         if stopped:
             process.terminate()
@@ -264,7 +521,7 @@ class RunQueue:
                 run_id,
                 status="timeout",
                 target_met=False,
-                reason="Run exceeded its wall-clock deadline",
+                reason="Run exceeded its admission-to-execution deadline; cleanup is separate",
                 api_cleanup_verified=cleaned,
             )
             self.store.add_event(
@@ -312,16 +569,24 @@ class RunQueue:
     def _loop(self):
         while True:
             with self.condition:
-                self.condition.wait_for(lambda: self.closing or (self.pending and not self.halted))
                 if self.closing:
                     return
-                run_id, request = self.pending.popleft()
+                if not self.pending or self.halted:
+                    wait = min(
+                        (max(0, item[2] - time.monotonic()) for item in self.pending), default=None
+                    )
+                    self.condition.wait(timeout=wait)
+                    continue
+                run_id, request, deadline = self.pending.popleft()
                 self.running = run_id
             cleaned = False
             self.store.update_run(run_id, status="running")
             try:
                 if self.mode == "process":
-                    cleaned = self._supervised(run_id, request)
+                    cleaned = self._supervised(run_id, request, deadline)
+                elif time.monotonic() >= deadline:
+                    self._finish_unstarted(run_id, reason="queue_deadline_exceeded")
+                    cleaned = True
                 else:
                     result = self.worker(
                         request, store=self.store, run_root=self.run_root, run_id=run_id
@@ -339,13 +604,13 @@ class RunQueue:
                 )
                 with self.condition:
                     self.running = None
-                    self.halted = not cleaned
+                    self.halted = self.halted or not cleaned
                     self.condition.notify_all()
 
     def close(self):
         with self.condition:
             self.closing = True
-            for run_id, _ in self.pending:
+            for run_id, _, _ in self.pending:
                 self.store.update_run(
                     run_id,
                     status="needs_human",
@@ -356,3 +621,8 @@ class RunQueue:
             self.pending.clear()
             self.condition.notify_all()
         self.thread.join(timeout=self.grace + 7 if self.mode == "process" else 1)
+        self.expiry_thread.join(timeout=1)
+        until = time.monotonic() + self.grace + 3
+        with self.condition:
+            while self.preparing and time.monotonic() < until:
+                self.condition.wait(timeout=max(0, until - time.monotonic()))

@@ -1,11 +1,14 @@
 # Token Factory client and role router
 
-Status: **offline implementation and mock verification only**. No live request was
-made while implementing this layer. T1.3 remains unaccepted until real Super schema
-JSON and a real Ultra 200k-token request succeed, with latency/cost evidence in
-`docs/FEEDBACK.md`. T0.4 model availability, prices, capability parameters and
-maximum input length also remain unverified. This document does not waive those
-gates or the original T1.2 requirements.
+Status: **application integration remains under offline verification**. Separate
+minimal probes on 2026-10-24 returned matching Super/Nano identities with
+`max_completion_tokens=128`; see
+`runs/model-probes/20261024T102428Z-minimal-3b44464e/report.json`. Those calls are
+not a live application repair or full capability acceptance. T1.3 remains
+unaccepted until real Super schema JSON and a real Ultra 200k-token request
+succeed, with latency/cost evidence in `docs/FEEDBACK.md`. T0.4's full capability
+matrix and measured maximum input remain pending. This document does not waive
+those gates or the original T1.2 requirements.
 
 ## Entry points
 
@@ -45,9 +48,13 @@ Role names map as follows; unknown roles fail before network activity:
 | Super | super, patch, patcher, verifier | 120 seconds |
 | Nano | nano, annotate, annotator, summarize, summarizer | 120 seconds |
 
-The candidate model IDs in `headroom/config.py` preserve C.1 verbatim. They are not
-an assertion that these models exist on either endpoint. Lightning is a candidate
-constant, not an automatic fallback. `ULTRA_MAX_INPUT_TOKENS`,
+The app's Nano ID is now the exact case-sensitive
+`nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` observed in the authenticated catalogue and
+minimal Nano response. `candidate_models()` still returns unverified specs with
+live use disabled; an ID constant does not certify capabilities or enable calls.
+The probe tool deliberately retains its historical default Nano candidate;
+select the confirmed spelling with its explicit `--model-id` option.
+Lightning is a candidate constant, not an automatic fallback. `ULTRA_MAX_INPUT_TOKENS`,
 `EVIDENCE_TOKEN_BUDGET`, `REASONING_METHOD`, and `JSON_METHOD` remain `None` until
 supported by T0.4 evidence. The current offline evidence builder's independent
 CLI budget is not a verified provider context limit.
@@ -61,10 +68,19 @@ HTTPS URLs (an omitted trailing slash is normalized):
 - `https://api.tokenfactory.nebius.com/v1/`
 
 The `models` mapping contains `ultra`, `super`, `nano`, each a `ModelSpec` with
-`model_id`, `timeout_seconds`, `capabilities`, `pricing`, `model_verified` and
-`evidence`. It is copied and made read-only. Verified flags and evidence references
+`model_id`, `timeout_seconds`, `capabilities`, `pricing`, `model_verified`,
+`evidence` and `output_cap_field`. It is copied and made read-only. Verified flags and evidence references
 must only be populated from actual reviewed probe results; the constructors
 validate their shape, not the truth of a referenced document.
+
+`ModelSpec.output_cap_field` selects exactly one wire field: `max_tokens` (legacy
+default) or `max_completion_tokens`. A nondefault selection requires saved
+evidence. The router/client's existing `max_tokens=...` argument remains the
+requested output count; the client emits that count only under the selected
+field. The field is not inferred from a model name, and two output cap fields
+are never emitted together. In a reviewed live profile, the selection comes
+from `models.<role>.billing.output_cap_field`, so the SDK payload and budget
+guard share the same explicit choice. See `docs/RUNTIME.md`.
 
 `VerifiedCapabilities` accepts these methods:
 

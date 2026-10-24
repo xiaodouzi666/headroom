@@ -21,7 +21,9 @@ def no_network(monkeypatch):
     monkeypatch.setattr(socket.socket, "connect_ex", denied)
 
 
-def fixture_runtime(tmp_path, handler, limit="0.05", prompt_ceiling=30000, profile_only=False):
+def fixture_runtime(
+    tmp_path, handler, limit="0.05", prompt_ceiling=30000, profile_only=False, cap_fields=None
+):
     env = tmp_path / ".env"
     env.write_text("NEBIUS_API_KEY=offline-placeholder\n")
     env.chmod(0o600)
@@ -45,6 +47,7 @@ def fixture_runtime(tmp_path, handler, limit="0.05", prompt_ceiling=30000, profi
                         "prompt_token_ceiling": prompt_ceiling,
                         "max_prompt_utf8_bytes": 100000,
                         "max_completion_tokens": 4000,
+                        "output_cap_field": (cap_fields or {}).get(role, "max_tokens"),
                         "output_cap_includes_reasoning": True,
                         "verified": True,
                         "evidence": "offline fixture only",
@@ -254,3 +257,152 @@ def test_provider_cap_violation_halts_even_if_total_cost_is_below_reservation(tm
     finally:
         bundle.close()
         store.close()
+
+
+def fixture_completion(request, *, output_tokens=20):
+    return httpx.Response(
+        200,
+        json={
+            "id": "fake",
+            "created": 0,
+            "object": "chat.completion",
+            "model": json.loads(request.content)["model"],
+            "choices": [
+                {
+                    "index": 0,
+                    "finish_reason": "stop",
+                    "message": {"role": "assistant", "content": "ok"},
+                }
+            ],
+            "usage": {
+                "prompt_tokens": 10,
+                "completion_tokens": output_tokens,
+                "total_tokens": 10 + output_tokens,
+                "completion_tokens_details": {"reasoning_tokens": output_tokens - 1},
+            },
+        },
+    )
+
+
+def test_profile_cap_selection_reaches_sdk_and_durable_budget_for_each_model(tmp_path):
+    from decimal import Decimal
+
+    calls = []
+
+    def respond(request):
+        calls.append(json.loads(request.content))
+        return fixture_completion(request)
+
+    bundle, budget, store = fixture_runtime(
+        tmp_path, respond, prompt_ceiling=1000, cap_fields={"super": "max_completion_tokens"}
+    )
+    try:
+        for role in ("patch", "annotate"):
+            result = bundle.router.chat(
+                role, [{"role": "user", "content": "fixture"}], max_tokens=128
+            )
+            assert result.cost.usd == Decimal("0.00005")
+        assert calls[0]["max_completion_tokens"] == 128
+        assert "max_tokens" not in calls[0]
+        assert calls[1]["max_tokens"] == 128
+        assert "max_completion_tokens" not in calls[1]
+        rows = store.llm_calls("run")
+        assert [row["output_cap_field"] for row in rows] == [
+            "max_completion_tokens",
+            "max_tokens",
+        ]
+        assert all(row["output_cap_tokens"] == 128 for row in rows)
+        assert all(row["reservation_usd"] == "0.001256" for row in rows)
+        assert Decimal(budget.snapshot("run")["conservative_charge_usd"]) == Decimal("0.0001")
+        assert not budget.snapshot("run")["billing_bound_unresolved"]
+    finally:
+        bundle.close()
+        store.close()
+
+
+@pytest.mark.parametrize("field", ["max_tokens", "max_completion_tokens"])
+def test_actual_output_is_checked_against_selected_request_cap(tmp_path, field):
+    calls = []
+
+    def exceeded(request):
+        calls.append(request)
+        return fixture_completion(request, output_tokens=129)
+
+    bundle, budget, store = fixture_runtime(tmp_path, exceeded, cap_fields={"super": field})
+    try:
+        with pytest.raises(BudgetExceeded):
+            bundle.router.chat("patch", [{"role": "user", "content": "fixture"}], max_tokens=128)
+        assert len(calls) == 1
+        assert store.llm_calls("run")[0]["output_cap_tokens"] == 128
+        assert budget.snapshot("run")["billing_bound_unresolved"]
+        # Even a second request with a lower cap must stop before transport.
+        with pytest.raises(BudgetExceeded):
+            bundle.router.chat("patch", [{"role": "user", "content": "fixture"}], max_tokens=16)
+        assert len(calls) == 1
+    finally:
+        bundle.close()
+        store.close()
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {},
+        {"max_tokens": 128},
+        {"max_tokens": 128, "max_completion_tokens": 128},
+        {"max_completion_tokens": True},
+        {"max_completion_tokens": 0},
+        {"max_completion_tokens": 4001},
+        {"max_completion_tokens": 128, "extra_body": {"max_tokens": 4096}},
+        {"max_completion_tokens": 128, "extra_body": {"max_completion_tokens": 4096}},
+    ],
+)
+def test_billing_rejects_ambiguous_or_out_of_range_output_fields(tmp_path, body):
+    profile = fixture_runtime(
+        tmp_path, None, profile_only=True, cap_fields={"super": "max_completion_tokens"}
+    )
+    spec = profile.runtime_config().models["super"]
+    with pytest.raises(RuntimeNotReady):
+        profile.models["super"].billing.upper_usd(spec, body)
+
+
+def test_changed_billing_field_is_rejected_before_transport_and_reservation(tmp_path):
+    calls = []
+    bundle, budget, store = fixture_runtime(
+        tmp_path,
+        lambda request: calls.append(request),
+        cap_fields={"super": "max_completion_tokens"},
+    )
+    # Independently replace the client selection; the billing profile still
+    # requires max_completion_tokens. This cannot silently use max_tokens.
+    from dataclasses import replace
+
+    from headroom.config import RuntimeConfig
+
+    models = dict(bundle.client.config.models)
+    models["super"] = replace(models["super"], output_cap_field="max_tokens")
+    bundle.client.config = RuntimeConfig(models=models, live_enabled=True)
+    try:
+        with pytest.raises(RuntimeNotReady, match="cap field"):
+            bundle.router.chat("patch", [{"role": "user", "content": "fixture"}], max_tokens=128)
+        assert calls == [] and store.llm_calls("run") == []
+        assert budget.snapshot("run")["unknown_attempts"] == 0
+    finally:
+        bundle.close()
+        store.close()
+
+
+def test_legacy_profile_defaults_to_max_tokens_and_bad_field_is_invalid(tmp_path):
+    from pydantic import ValidationError
+
+    profile = fixture_runtime(tmp_path, None, profile_only=True)
+    payload = profile.model_dump()
+    for item in payload["models"].values():
+        del item["billing"]["output_cap_field"]
+    legacy = LiveProfile.model_validate(payload)
+    assert all(
+        spec.output_cap_field == "max_tokens" for spec in legacy.runtime_config().models.values()
+    )
+    payload["models"]["super"]["billing"]["output_cap_field"] = "max_output_tokens"
+    with pytest.raises(ValidationError):
+        LiveProfile.model_validate(payload)

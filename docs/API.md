@@ -46,7 +46,10 @@ checks remain enforced before scheduling. The reviewed nanoGPT pin additionally
 retains only its three fixed source files and deterministic synthetic input.
 
 Every admitted API job uses max_steps=20 and max_seconds=180 for each Lab run,
-plus the independent whole-worker deadline. Returned HTTP 202 data:
+inside one admission-to-execution deadline (default/max 600 seconds). Preparation,
+queue waiting, process startup and worker execution share that deadline; no stage
+receives a fresh 600 seconds. HTTP upload and validation before admission, and
+cleanup/report finalization afterwards, are separate. Returned HTTP 202 data:
 ```json
 {"run_id":"generated-uuid-hex","status":"queued","queue_position":1,
  "run_url":"/api/runs/generated-uuid-hex",
@@ -62,17 +65,21 @@ The worker may start before the next status request.
 | GET /api/runs/{id} | Summary, usage and available artifact URLs |
 | GET /api/runs/{id}/events | Historical and live SSE |
 | GET /api/examples | {examples:[{id,title,expected_mode,root_cause,baseline_verified}]} |
-| GET /api/usage | Current-session calls, known subtotal, unknown count, nullable total, per-run usage |
-| GET /api/health | DB and queue state; explicitly unprobed GPU/model reachability |
+| GET /api/usage | Current-session calls/costs and separate read-only local authorization budget |
+| GET /api/health | DB/queue, cached GPU activity, anonymous provider reachability and local budget |
 | GET /api/replays | Server-curated public_replay rows, count and provenance note |
 
 Summaries include status, target, policy, target_met, timestamps, reason,
 provenance, elapsed_seconds, api_worker_finished and api_cleanup_verified.
+The admission boundary is explicit in api_admitted_at, api_deadline_at and
+api_execution_limit_seconds; api_cleanup_grace_seconds is the worker's TERM
+grace, not extra execution authorization or a bound on all container cleanup.
 They do not expose uploaded text or absolute host paths. Usage preserves unknown
-costs; a nullable total never silently becomes zero. Health's configured flag is
-server-supplied configuration state, not proof of working credentials or credit.
-GPU availability and Token Factory reachability remain null/not_probed; health
-does not make model requests.
+costs; a nullable total never silently becomes zero. Health's configured flag describes the reviewed runtime profile, not working
+credentials or credit. Cached GPU metadata and anonymous endpoint reachability
+distinguish observed, stale and unknown states. Health never makes inference
+requests or reads keys; local authorization budget is not account balance.
+See AVAILABILITY.md for the read-only observation contract and Home guidance.
 
 Each SSE event has id=sequence, event=kind, and JSON data:
 ```json
@@ -130,11 +137,25 @@ is being prepared. Scheduling rechecks shutdown/cleanup state after preparation.
 One scheduler serializes API workers. The Lab GPU lock separately guards against
 concurrent CLI GPU work.
 
-At 600 seconds, the supervisor sends TERM, allows a short cleanup grace, then
-KILLs a remaining owned process and joins it. The orchestrator's TERM path retains
-partial reports and budget accounting; durable pending API calls remain unknown
-after hard termination. Partial reports are regenerated from persisted state
-after cancellation/failure instead of retaining a stale success claim.
+At the shared deadline, preparation is killed in its dedicated process group;
+HTTP submission returns 504 with a safe reason and a persisted timeout/partial
+report. The failed attempt still consumes its IP admission. A separate expiry
+thread marks waiting jobs timeout and never launches their worker. Its report
+rendering cannot hold up the active worker's deadline watchdog. While that report
+is being rendered, api_report_pending keeps SSE open. api_worker_finished and
+api_report_ready are finalized only afterwards. A rendering failure exposes
+api_report_error=partial_report_generation_failed with needs_human and lets the
+stream end explicitly, without claiming a report is ready.
+
+An executing worker receives TERM at the same admission deadline, then its
+separately configured cleanup grace (default 5 seconds, maximum 10), then KILL
+and join if required. Preparation cleanup allows at most two seconds of process
+reaping/group verification after its immediate kill. These cleanup intervals,
+owned-container checks and partial-report rendering are not execution budget.
+The orchestrator's TERM path retains partial reports and budget accounting;
+durable pending API calls remain unknown after hard termination. Partial reports
+are regenerated from persisted state instead of retaining a stale success claim.
+Unverified preparation or worker cleanup freezes admission and subsequent work.
 
 Container recovery considers only Lab manifest directories under this job's
 lab/{UUID}. It inspects the manifest-derived name, verifies /source and /out
@@ -196,12 +217,27 @@ files under `.cache/reviewed/nanogpt/<exact-ref>` for policy validation; publica
 is atomic, validates existing files and never overwrites a differing baseline.
 The source profile remains restricted to the exact reviewed pin.
 
-The 600-second supervisor bounds the executing worker. Source preparation and
-queue waiting occur before that worker; Git operations have their own 120-second
-timeout. The current tests do not establish a ten-minute end-to-end guarantee for
-a repository submission, or the original public deployment acceptance. They do
-verify that slow preparation cannot hold the queue lock or block another ready
-job, and failed preparation cannot bypass the IP admission limit.
+The earlier implementation bounded only the executing worker and excluded
+source preparation/queue waiting. That limitation was corrected on 2026-10-24:
+admission creates one monotonic deadline, shared with a separately spawned,
+data-only preparation process and the executing worker. Git operations use the
+smaller of 120 seconds and the remaining budget; archive extraction and the
+reviewed-cache publication lock also check the remaining budget. The preparation
+process receives no credential environment and never executes repository code.
+
+Before preparation begins, the supervisor verifies the child handshake. On
+success/error the preparation child keeps its dedicated session leader alive
+until cleanup, so its PID cannot be recycled first. Cleanup checks the owned
+process start identity and session/group, kills only that group (including Git
+descendants), and verifies that no live group member remains. Linux parent-death
+notification kills the same owned group if the supervisor crashes; a post-arm
+parent-PID check covers death before the notification was installed. An expired or
+cancelled preparation cannot later enqueue work. Worker entry rechecks the
+deadline before calling the runtime, covering slow process startup.
+
+This establishes the admission-to-execution boundary, not a ten-minute bound on
+HTTP upload/validation or final cleanup, and does not establish original public
+deployment acceptance. Old runs and earlier test evidence remain preserved.
 
 Focused review evidence: `runs/root-integration-review-20261024-a` passed
 83 tests in 11.20 seconds (runtime/budget/repository/annotations/cost/API);
@@ -212,3 +248,20 @@ owned fake worker processes; no real model requests, GPU workloads, listener,
 public tunnel or payment was used during this review. The independently captured
 HF CUDA baseline is documented separately in WATCH_HF.md, not counted as API or
 model-repair acceptance.
+
+
+## Shared admission deadline regression
+
+The final scoped run, reports/api-admission-deadline-20261024/tests-e.log,
+passed 88 tests in 32.06 seconds across API/deadline, repository and CLI contracts.
+Owned fake processes establish cancellation of slow preparation and descendants,
+shared remaining worker time, queued expiry, report/watchdog isolation, cleanup
+uncertainty, shutdown, stale-PID refusal and supervisor-SIGKILL recovery both
+during preparation and while awaiting cleanup. Slow-report SSE tests establish
+that final artifact availability (or an explicit rendering failure) is published
+before the stream ends. Git and cache-lock tests are offline; no real provider,
+GPU workload, public listener, key read, recharge or system service change was
+performed. A fake SQLite transaction delay plus wall-clock jump verifies that
+the published admission/deadline timestamps are sampled after successful
+admission, while the IP quota retains its original attempt timestamp.
+Earlier tests-a/b/c/d logs remain present.

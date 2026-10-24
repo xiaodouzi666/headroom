@@ -1,0 +1,65 @@
+{
+  "generated_at": "2026-10-24T10:33:46.178037+00:00",
+  "scope": "T3.1 and T3.3 availability observations and Home replay guidance",
+  "provenance": "offline_mock_validation",
+  "backend": {
+    "command": ".venv/bin/python -m pytest tests/test_availability.py tests/test_api.py -q",
+    "passed": 58,
+    "duration_seconds": 12.47
+  },
+  "frontend": {
+    "command": "npm test && npm run typecheck && npm run build",
+    "passed": 33,
+    "test_files": 4,
+    "typecheck": "passed",
+    "production_build": "passed"
+  },
+  "format_lint": {
+    "ruff": "passed for availability.py and focused test modules",
+    "prettier": "formatted four changed frontend sources"
+  },
+  "external_activity": {
+    "model_inference": false,
+    "credential_reads": false,
+    "gpu_allocation": false,
+    "real_gpu_probe": false,
+    "real_provider_probe": false,
+    "tests_network": "socket/DNS blocked in availability tests; HTTP/subprocess mocked"
+  },
+  "limitations": [
+    "Anonymous provider reachability does not certify authentication, account credit, or inference.",
+    "Local authorization remaining is not the provider account balance or manual-spend reconciliation.",
+    "Full integrated repository verification is owned by the parent task.",
+    "Visual browser verification is not part of this receipt."
+  ],
+  "sources": [
+    {
+      "path": "headroom/api/availability.py",
+      "sha256": "46d96ee54d660aff7164a7b5b21c9d8baaf7d62d9295b3f89f3db8da83fe45e4"
+    },
+    {
+      "path": "tests/test_availability.py",
+      "sha256": "442323b3c91aa4b86f4c4a88f3740f51508ceb2f671fe6fd7fc40fa5c7042b56"
+    },
+    {
+      "path": "web/src/App.tsx",
+      "sha256": "751e7acfe25bb65f785f9733e00d18d35b70425926bebfe6e0fa25502584f085"
+    },
+    {
+      "path": "web/src/App.test.tsx",
+      "sha256": "e9eb2e048d2d0901285180136bade4e46f79b9af601947d4482606531dc16b06"
+    },
+    {
+      "path": "web/src/data.ts",
+      "sha256": "e6471b967d2a02300cd0538dbc9969f8bbfa4a18464f49f7748d49c0b5417117"
+    },
+    {
+      "path": "web/src/data.test.ts",
+      "sha256": "3924bf48cfe8fd68b083e6488ff975a04ef1c3fd3280b23681701d5498896343"
+    },
+    {
+      "path": "docs/AVAILABILITY.md",
+      "sha256": "153a46724c2580d5099198b3e89e177bc50b8be9905aa73e518270af5a7163ca"
+    }
+  ]
+}

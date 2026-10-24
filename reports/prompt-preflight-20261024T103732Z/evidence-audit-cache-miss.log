@@ -1,0 +1,56 @@
+Traceback (most recent call last):
+  File "/home/xiaodouzi/workspace/headroom/reports/prompt-preflight-20261024T103732Z/audit_saved_evidence.py", line 78, in <module>
+    evidence_tokens = _tokens(evidence.decode())
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/headroom/evidence.py", line 22, in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/tiktoken/registry.py", line 86, in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py", line 76, in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+                      ^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/tiktoken/load.py", line 161, in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/tiktoken/load.py", line 66, in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/tiktoken/load.py", line 17, in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/requests/api.py", line 87, in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/requests/api.py", line 71, in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/requests/sessions.py", line 651, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/requests/sessions.py", line 784, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/requests/adapters.py", line 696, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/urllib3/connectionpool.py", line 793, in urlopen
+    response = self._make_request(
+               ^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/urllib3/connectionpool.py", line 470, in _make_request
+    self._validate_conn(conn)
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/urllib3/connectionpool.py", line 1125, in _validate_conn
+    conn.connect()
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/urllib3/connection.py", line 827, in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/urllib3/connection.py", line 239, in _new_conn
+    sock = connection.create_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/urllib3/util/connection.py", line 60, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/reports/prompt-preflight-20261024T103732Z/audit_saved_evidence.py", line 11, in denied
+    raise AssertionError("Independent CPU audit guard: no network or model execution")
+AssertionError: Independent CPU audit guard: no network or model execution

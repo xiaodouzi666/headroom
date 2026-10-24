@@ -13,7 +13,7 @@ from headroom.lab.runner import PROJECT_ROOT
 
 
 def make_cache(root):
-    cache = root / ".cache/huggingface"
+    cache = root / ".cache/hf-reviewed"
     model = cache / "random-model"
     model.mkdir(parents=True)
     config = model / "config.json"
@@ -137,3 +137,47 @@ Path("/out/cache-check.json").write_text(json.dumps({"readonly": readonly, "offl
         "offline_miss": True,
     }
     assert validated_hf_cache(project)
+
+
+def test_mutable_host_hub_cache_is_never_selected_or_mounted(tmp_path):
+    hub = tmp_path / ".cache/huggingface/hub"
+    hub.mkdir(parents=True)
+    (hub / "version.txt").write_text("1")
+    (hub.parent / "token").write_text("offline-canary-not-a-real-token")
+    previous = {path: path.read_bytes() for path in hub.parent.rglob("*") if path.is_file()}
+    assert validated_hf_cache(tmp_path) is None
+    for name in (".venv", "headroom", "source", "output"):
+        (tmp_path / name).mkdir()
+    args = docker.create_arguments(
+        name="headroom-offline-cache-selection",
+        project_root=tmp_path,
+        source=tmp_path / "source",
+        output=tmp_path / "output",
+        device="cpu",
+        environment={},
+        command=["/opt/venv/bin/python", "/source/train.py"],
+    )
+    assert not any("destination=/hf-cache" in value for value in args)
+    assert previous == {path: path.read_bytes() for path in previous}
+    assert not (tmp_path / ".cache/hf-reviewed").exists()
+
+
+def test_existing_reviewed_directory_still_requires_its_own_manifest(tmp_path):
+    hub = tmp_path / ".cache/huggingface/hub"
+    hub.mkdir(parents=True)
+    (hub / "version.txt").write_text("1")
+    reviewed = tmp_path / ".cache/hf-reviewed"
+    reviewed.mkdir()
+    with pytest.raises(FileNotFoundError):
+        validated_hf_cache(tmp_path)
+    assert list(reviewed.iterdir()) == []
+
+
+def test_validated_reviewed_cache_is_separate_from_host_hub_cache(tmp_path):
+    hub = tmp_path / ".cache/huggingface/hub"
+    hub.mkdir(parents=True)
+    (hub / "version.txt").write_text("1")
+    reviewed = make_cache(tmp_path)
+    assert validated_hf_cache(tmp_path) == reviewed
+    assert reviewed != hub.parent
+    assert (hub / "version.txt").read_text() == "1"

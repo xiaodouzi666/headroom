@@ -1,0 +1,104 @@
+{
+  "timestamp_utc": "2026-10-24T10:28:46.106922+00:00",
+  "scope": "Explicit per-model output cap field in app runtime, plus exact observed Nano identity",
+  "test_files": [
+    "tests/test_runtime_budget.py",
+    "tests/test_llm_client.py",
+    "tests/test_llm_cost.py",
+    "tests/test_llm_router.py",
+    "tests/test_model_probe.py",
+    "tests/test_annotate.py",
+    "tests/test_diagnose_contract.py"
+  ],
+  "test_exit_code": 0,
+  "test_summary": "210 passed in 1.29s",
+  "network_guard": "Process-level DNS, socket connect/connect_ex and create_connection denied before pytest import; client/runtime modules add independent autouse guards",
+  "api_calls": 0,
+  "real_credentials_read": false,
+  "gpu_workloads": 0,
+  "live_profile_created": false,
+  "live_enabled_by_change": false,
+  "previous_failed_rounds": [
+    {
+      "stage": "Ruff",
+      "result": "1 I001 unsorted test-local import; fixed"
+    },
+    {
+      "stage": "tests",
+      "result": "1 failed, 69 passed in 1.12s; only new test compared Decimal output strings 0.00010 and 0.0001; corrected to Decimal value equality"
+    }
+  ],
+  "source_files": [
+    {
+      "path": "headroom/config.py",
+      "sha256": "1905ebb5c3a780c05236caa0896521e45d1f7294b403dc8a35013b1740443709"
+    },
+    {
+      "path": "headroom/runtime.py",
+      "sha256": "5fcfb358c4c4828ba66e5fd4ecd8fb7e52a4ce4a7620ae561ffa4e4a80e55b0f"
+    },
+    {
+      "path": "headroom/llm/client.py",
+      "sha256": "18c7a381347bdb2255a312c725afdda16761df3220482a6c776a2e7a474db8a7"
+    },
+    {
+      "path": "tests/test_runtime_budget.py",
+      "sha256": "a339f9fc87e886cb25fc20f7c52c96c38519b68fb7f33ee5c07bc984e27a70dd"
+    },
+    {
+      "path": "tests/test_llm_client.py",
+      "sha256": "9575e9c45e95664541dca8581da883a00d840e1fa6c0c5dd7927025c896e2652"
+    },
+    {
+      "path": "docs/LLM.md",
+      "sha256": "5fbeac9c1a947f6adc5053d26d96ee98a4c9fd99435bb4b7981477903bc0847f"
+    },
+    {
+      "path": "docs/RUNTIME.md",
+      "sha256": "eab9f81b42c8a4dd1aef3ea1ff2f0acdbe5d6ee8387f9b5081b6e02111b04abd"
+    }
+  ],
+  "acceptance_limits": [
+    "No live application repair run",
+    "No Ultra capability enabled",
+    "Full T0.4/T1.3 acceptance remains pending"
+  ],
+  "static_checks": [
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/config.py",
+        "headroom/runtime.py",
+        "headroom/llm/client.py",
+        "tests/test_runtime_budget.py",
+        "tests/test_llm_client.py"
+      ],
+      "exit_code": 0,
+      "output": "All checks passed!\n"
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/config.py",
+        "headroom/runtime.py",
+        "headroom/llm/client.py",
+        "tests/test_runtime_budget.py",
+        "tests/test_llm_client.py"
+      ],
+      "exit_code": 0,
+      "output": "5 files already formatted\n"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output": ""
+    }
+  ]
+}

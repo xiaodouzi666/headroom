@@ -2,7 +2,7 @@
 
 Autoresearch for GPU memory: capture a PyTorch workload, explain its memory use, propose a patch, and measure whether the change works.
 
-**Built with NVIDIA Nemotron 3 (Ultra/Super/Nano) on Nebius Token Factory.** The integration is implemented; authenticated model runs and repair benchmarks are still pending account setup.
+**Built with NVIDIA Nemotron 3 (Ultra/Super/Nano) on Nebius Token Factory.** The integration is implemented, and minimal authenticated Super/Nano chats have passed. Ultra capabilities and model-driven repair benchmarks remain pending; see the [bounded probe receipt](reports/tokenfactory-minimal-20261024.json).
 **Web research powered by Tavily.** Version-specific search/extraction and cache reuse have been exercised with the real service.
 
 Public demo: pending approved hostname and deployment. Local app: `headroom serve`.
@@ -30,8 +30,8 @@ Each candidate keeps its original baseline, source snapshot, logs and patch. The
 | Service | Role | Current evidence |
 |---|---|---|
 | Token Factory / Nemotron Ultra | Evidence-grounded diagnosis and repair planning | Offline SDK/schema integration; live capability, long-input and cost probes pending |
-| Token Factory / Nemotron Super | Bounded patch generation and repair | Real local diff/apply/compile checks with offline model responses |
-| Token Factory / Nemotron Nano | Top-stack labels with a 0.02 USD sub-budget | Offline labels and budget checks; eight-scenario live agreement pending |
+| Token Factory / Nemotron Super | Bounded patch generation and repair | Minimal authenticated chat passed; diff/apply/compile tested offline; real generated repair pending |
+| Token Factory / Nemotron Nano | Top-stack labels with a 0.02 USD sub-budget | Minimal authenticated chat passed; offline labels/budget checks; eight-scenario live agreement pending |
 | Tavily | Search plus exact versioned documentation extraction | Real PyTorch 2.5 checkpoint/allocator queries and zero-credit cache hits |
 
 ## Quickstart
@@ -46,7 +46,7 @@ cp .env.example .env && chmod 600 .env
 uv run headroom fix scenarios/s1_batch_too_big/train.py
 ```
 
-Without a reviewed live profile, the final command exits 78 and writes a partial report before GPU/model work. Configure the private key, confirmed credit/spending authorization and actual model/pricing/capability evidence using [Runtime setup](docs/RUNTIME.md). No payment is initiated by these commands.
+Without a reviewed live profile, the final command exits 78 and writes a partial report before GPU/model work. Configure the private key, confirmed credit/spending authorization and actual model/pricing/capability evidence using [Runtime setup](docs/RUNTIME.md). The [CPU prompt audit](docs/PROMPT_PREFLIGHT.md) can inspect complete requests without enabling model calls. No payment is initiated by these commands.
 
 For capture-only work, use `uv run headroom snapshot scenarios/s1_batch_too_big/train.py`. To validate the evaluation manifest without executing anything, use `uv run headroom eval --validate-only`; `--dry-run` actually runs all baselines on the GPU and makes no model request.
 
@@ -56,7 +56,7 @@ Build `web/` with Node 24 and `npm ci && npm run build`, then `uv run headroom s
 
 Five curated GPU **baseline** replays are available on the development server. They are labeled baseline-only: no diagnosis, patch or repair success is fabricated. Rebuild them from existing captures with `uv run python scripts/curate_baseline_replays.py`. A clean clone has no private run data and therefore no replays until evidence is generated/imported.
 
-Actual local interface, with account setup still visible:
+Earlier baseline-only interface capture (before the key was configured; it does not show current account status):
 
 ![Headroom workspace](docs/media/ui-20261024T025659Z-baseline-only/home-desktop.png)
 

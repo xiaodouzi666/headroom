@@ -53,7 +53,7 @@ describe("workspace state", () => {
     expect(
       await screen.findByRole("button", { name: /Activation memory/ }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Model access needs setup.")).toBeInTheDocument();
+    expect(screen.getByText("Live analysis is not enabled yet.")).toBeInTheDocument();
     expect(
       screen.queryByText(/verified repair succeeded/i),
     ).not.toBeInTheDocument();
@@ -108,5 +108,87 @@ describe("safe evidence rendering", () => {
   it("renders needs_human as a visible state", () => {
     render(<Status value="needs_human" />);
     expect(screen.getByText("needs human")).toBeInTheDocument();
+  });
+});
+
+describe("availability replay guidance", () => {
+  it.each([
+    [{ gpu: { status: "busy", busy: true, stale: false } }, "The GPU is busy."],
+    [
+      {
+        local_budget: {
+          scope: "local_application_authorization",
+          status: "exhausted",
+        },
+      },
+      "The local run budget is exhausted.",
+    ],
+    [
+      {
+        local_budget: {
+          scope: "local_application_authorization",
+          status: "billing_review_required",
+        },
+      },
+      "Model billing needs review.",
+    ],
+  ])(
+    "links existing evidence and prevents a blocked start",
+    async (observed, message) => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn((input: unknown) => {
+          if (input === "/api/health")
+            return response({
+              ...observed,
+              token_factory: { configured: true },
+              queue: {},
+            });
+          if (input === "/api/examples") return response({ examples: [] });
+          if (input === "/api/replays")
+            return response({
+              replays: [
+                {
+                  run_id: "a".repeat(32),
+                  status: "completed",
+                  provenance: "gpu_baseline",
+                  target_met: false,
+                },
+              ],
+            });
+          return Promise.reject(new Error("Unexpected request"));
+        }),
+      );
+      render(<App />);
+      expect(await screen.findByText(message)).toBeInTheDocument();
+      await waitFor(() =>
+        expect(
+          screen.getByRole("link", { name: /Explore saved evidence/ }),
+        ).toHaveAttribute("href", "#replays"),
+      );
+      expect(
+        screen.getByRole("button", { name: /Start analysis/ }),
+      ).toBeDisabled();
+      expect(
+        screen.queryByText(/verified repair succeeded/i),
+      ).not.toBeInTheDocument();
+    },
+  );
+  it("does not invent a replay link when there is no saved evidence", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: unknown) => {
+        if (input === "/api/health")
+          return response({ gpu: { status: "busy", busy: true } });
+        return response(
+          input === "/api/examples" ? { examples: [] } : { replays: [] },
+        );
+      }),
+    );
+    render(<App />);
+    expect(await screen.findByText("The GPU is busy.")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /Explore saved evidence/ }),
+    ).not.toBeInTheDocument();
   });
 });

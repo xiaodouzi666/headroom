@@ -371,7 +371,7 @@ def test_repository_form_is_validated_before_any_fetch(settings, monkeypatch):
 def test_repository_prepared_source_enters_same_queue(settings, monkeypatch):
     from types import SimpleNamespace
 
-    def prepared(repo, ref, command, *, destination):
+    def prepared(repo, ref, command, *, destination, deadline):
         destination.mkdir(parents=True)
         script = destination / "train.py"
         script.write_text("print('repository offline fixture')")
@@ -423,7 +423,7 @@ def test_slow_repository_preparation_does_not_hold_queue_lock(settings, monkeypa
 
     entered, release = threading.Event(), threading.Event()
 
-    def slow_prepare(repo, ref, command, *, destination):
+    def slow_prepare(repo, ref, command, *, destination, deadline):
         entered.set()
         assert release.wait(3)
         destination.mkdir(parents=True)
@@ -508,13 +508,28 @@ def test_configuration_downloads_are_fixed_and_owner_scoped(settings, tmp_path):
 
 
 def test_health_detects_reviewed_runtime_without_a_provider_request(settings, monkeypatch):
+    from types import SimpleNamespace
+
     calls = []
-    monkeypatch.setattr("headroom.api.app.read_live_profile", lambda path: calls.append("profile"))
-    monkeypatch.setattr("headroom.api.app.read_nebius_key", lambda path: calls.append("key"))
+    profile = SimpleNamespace(
+        base_url="https://api.tokenfactory.us-central1.nebius.com/v1/",
+        authorized_total_usd="1",
+    )
+
+    def load_profile(path):
+        calls.append("profile")
+        return profile
+
+    monkeypatch.setattr("headroom.api.app.read_live_profile", load_profile)
+    monkeypatch.setattr(
+        "headroom.runtime.read_nebius_key", lambda *a: pytest.fail("health read key")
+    )
     with TestClient(create_app(settings, worker=completed_worker)) as client:
         result = client.get("/api/health").json()["token_factory"]
         assert result["configured"] is True and result["reachable"] is None
-        assert calls == ["profile", "key"]
+        assert result["authentication_checked"] is False
+        assert result["configuration_scope"] == "reviewed_runtime_profile"
+        assert calls and set(calls) == {"profile"}
 
 
 def test_static_javascript_and_catalog_gzip_without_changing_payload(settings):
@@ -533,3 +548,58 @@ def test_static_javascript_and_catalog_gzip_without_changing_payload(settings):
         plain = client.get("/assets/app.js", headers={"Accept-Encoding": "identity"})
         assert "content-encoding" not in plain.headers
         assert plain.text == payload
+
+
+@pytest.mark.parametrize("render_fails", [False, True])
+def test_expired_queue_sse_waits_for_report_or_explicit_render_failure(
+    settings, monkeypatch, render_fails
+):
+    from concurrent.futures import ThreadPoolExecutor
+
+    from headroom.api import queue as module
+
+    settings.deadline_seconds = 0.1
+    worker_started, worker_release = threading.Event(), threading.Event()
+    report_started, report_release = threading.Event(), threading.Event()
+    original = module.generate_report
+
+    def worker(*args, **kwargs):
+        worker_started.set()
+        worker_release.wait(5)
+        return {"status": "needs_human"}
+
+    def slow_report(*args, **kwargs):
+        report_started.set()
+        assert report_release.wait(5)
+        if render_fails:
+            raise RuntimeError("private render details must not escape")
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(module, "generate_report", slow_report)
+    app = create_app(settings, worker=worker)
+    with TestClient(app) as client, ThreadPoolExecutor(max_workers=1) as pool:
+        first = client.post("/api/runs", json={"script_text": "pass"})
+        assert first.status_code == 202 and worker_started.wait(1)
+        second = client.post("/api/runs", json={"script_text": "pass"}).json()["run_id"]
+        try:
+            assert report_started.wait(2)
+            row = client.get(f"/api/runs/{second}").json()
+            assert row["status"] == "timeout" and row["api_report_pending"]
+            assert not row["api_worker_finished"] and not row["api_report_ready"]
+            streaming = pool.submit(client.get, f"/api/runs/{second}/events")
+            time.sleep(0.35)
+            assert not streaming.done(), "stream.end must wait for the final report state"
+            report_release.set()
+            assert "event: stream.end" in streaming.result(timeout=2).text
+            final = client.get(f"/api/runs/{second}").json()
+            assert final["api_worker_finished"] and not final["api_report_pending"]
+            assert final["api_report_ready"] is (not render_fails)
+            if render_fails:
+                assert final["status"] == "needs_human"
+                assert final["api_report_error"] == "partial_report_generation_failed"
+                assert "private render" not in json.dumps(final)
+            else:
+                assert client.get(final["artifacts"]["report.json"]).status_code == 200
+        finally:
+            report_release.set()
+            worker_release.set()

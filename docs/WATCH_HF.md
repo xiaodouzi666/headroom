@@ -112,9 +112,13 @@ telemetry and tokenizer worker parallelism. Host HOME, HF tokens, arbitrary host
 cache locations and host environment overrides are not inherited. Temporary
 cache writes disappear with the container; cache misses fail offline.
 
-An optional **operator-reviewed**, project-owned `.cache/huggingface` directory
-can be mounted read-only at `/hf-cache`. It is never automatically created or
-filled. It must contain `manifest.json` with this shape:
+The host environment in scripts/env.sh uses .cache/huggingface as its mutable
+HF_HOME Hub/account cache. Hugging Face libraries may create hub/version.txt
+there during import. That host cache is never selected or mounted into Lab.
+
+An optional **operator-reviewed**, project-owned .cache/hf-reviewed directory
+can be mounted read-only at /hf-cache. It is never automatically created or
+filled. It must contain manifest.json with this shape:
 
 ```json
 {"schema_version":1,"files":{"random-model/config.json":"<sha256 of bytes>"}}
@@ -129,6 +133,10 @@ Face cache format. Use explicit local paths such as
 Keep the reviewed directory immutable during jobs. The manifest verifies data
 integrity, not the provenance or semantics of a model. A corrupt existing cache
 fails preparation rather than silently using different files or going online.
+The former shared .cache/huggingface path is no longer a reviewed mount source.
+Existing host data stays untouched. Operators who previously staged reviewed
+data there must explicitly stage and review it under .cache/hf-reviewed before
+requesting /hf-cache paths; there is no automatic migration or fallback.
 
 ## Verification evidence and unchanged limits
 
@@ -208,3 +216,21 @@ GPU baseline was repeated in this extension. The original end-to-end repair gate
 remains separate from these command-observation tests. Non-script automatic
 repair still requires a replayable entrypoint supported by the fixer; it is not
 silently claimed complete by successful observation.
+
+
+## Host cache collision correction (2026-10-24)
+
+The complete continuation suite retained 18 CPU Lab failures because ordinary
+HF_HOME Hub metadata had created .cache/huggingface without a reviewed manifest.
+This was a production configuration collision as well as a test failure: Docker
+preparation validated that directory even for workloads not using HF models.
+The reviewed mount now uses the separate .cache/hf-reviewed path. No existing
+cache data, manifest or model weights were moved, rewritten or downloaded.
+Manifest/schema/hash/type/symlink limits remain unchanged.
+
+After sourcing scripts/env.sh, the scoped cache/runner/verify/watch rerun reports
+64 passed in 67.77 seconds, including the previously failing CPU cases and new
+host-versus-reviewed cache separation checks. Its complete log is preserved in
+reports/cache-path-separation-20261024/tests.log. The SSH connection disconnected
+while returning output, so the receipt records that transport failure separately
+from the completed pytest log. No GPU or model API acceptance is implied.
