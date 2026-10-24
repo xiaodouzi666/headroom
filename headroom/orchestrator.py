@@ -18,8 +18,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from headroom.annotate import annotate_stacks
 from headroom.budget import BudgetExceeded, BudgetLedger, money
-from headroom.diagnose import diagnose_with_router
-from headroom.evidence import build_evidence
+from headroom.diagnose import diagnose_with_router, round_verification_feedback
+from headroom.evidence import annotate_evidence_bundle, build_evidence
 from headroom.execution import prepare_local_command, replay_argv
 from headroom.lab.runner import PROJECT_ROOT, run_script
 from headroom.llm.client import LLMError
@@ -320,6 +320,7 @@ def run_fix(
     budget_open = False
     evidence, artifacts = {}, {}
     sources, points, history = [], [], []
+    verification_feedback = []
     diagnosis = verification = None
     status, reason = "failed", None
     active_round = None
@@ -331,6 +332,19 @@ def run_fix(
     def finish_round(payload):
         nonlocal active_round
         row = {**(active_round or {}), **payload}
+        feedback = round_verification_feedback(
+            row,
+            selected_result=data.get("after") or data.get("baseline"),
+            selected_round=data["kept"]["round"] if data.get("kept") else None,
+            selected_target_met=data["target_met"]
+            if data.get("kept")
+            else data["search"]["baseline_target_met"],
+        )
+        feedback_path = directory / "rounds" / f"{row['number']:02d}" / "verification-feedback.json"
+        _write(feedback_path, feedback)
+        row["verification_feedback"] = feedback
+        row["verification_feedback_artifact"] = _artifact(directory, feedback_path)
+        verification_feedback.append(feedback)
         store.add_round(run_id, row)
         history.append(
             {
@@ -440,6 +454,10 @@ def run_fix(
         data["annotations"] = _optional_annotations(
             bundle.router, initial_evidence_json, services.provenance
         )
+        current_evidence = annotate_evidence_bundle(
+            current_evidence, data["annotations"], provenance=services.provenance
+        )
+        evidence["before"] = current_evidence
         _write(directory / "annotations.json", data["annotations"])
         store.update_run(run_id, annotations=data["annotations"])
         artifacts["annotations"] = "annotations.json"
@@ -524,6 +542,7 @@ def run_fix(
                 evidence=diagnostic_evidence,
                 goal=request.target,
                 policy=policy,
+                verification_feedback=verification_feedback,
                 required_saving_gb=_required_reduction(
                     current_result,
                     request.target,
@@ -964,6 +983,22 @@ def run_fix(
                 shutil.copyfile(kept_path, temporary)
                 temporary.replace(directory / filename)
                 artifacts[key] = data["kept"]["artifacts"][key]
+        before_bundle = evidence.get("before", {})
+        before_paths = {}
+        for name, key in (("evidence.json", "evidence_json"), ("evidence.md", "evidence_md")):
+            value = before_bundle.get(key) if isinstance(before_bundle, dict) else None
+            try:
+                # Keep the selected lexical locator: API reads still reject linked
+                # ancestors/leaves and never substitute a different canonical file.
+                relative_path = (
+                    Path(value).relative_to(directory).as_posix()
+                    if isinstance(value, str)
+                    else None
+                )
+            except ValueError:
+                relative_path = None
+            before_paths[name] = relative_path
+        data["before_evidence_paths"] = before_paths
         data.update(status=status, reason=reason, elapsed_seconds=time.monotonic() - started)
         store.update_run(run_id, data)
         emit("report.started", partial=status != "completed")

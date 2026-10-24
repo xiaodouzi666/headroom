@@ -1,0 +1,193 @@
+{
+  "provenance": "offline_fixture",
+  "validation": "SDK MockTransport, synthetic Lab observations, real isolated patch application; not live API/GPU acceptance",
+  "run_dir": "/home/xiaodouzi/workspace/headroom/runs/verification-feedback-cpu-20261024/feedback-6wvxa3qq/jobs/ca310110501b48f0a420f9db9dd92967",
+  "decision_sequence": [
+    "keep",
+    "revert",
+    "keep"
+  ],
+  "model_request_count": 6,
+  "verification_count": 3,
+  "round_3_feedback_bytes": 4139,
+  "round_3_feedback": [
+    {
+      "round": 1,
+      "provenance": "offline_fixture",
+      "fix_id": "f1",
+      "change": {
+        "type": "code",
+        "title": "Fixture change",
+        "patch_artifact": "rounds/01/patches/patch-engine-55d7279a18f341f2ae6fc1593025cac6/attempt-1/patch-dfc4446755074c49967e8475912be3c3/patch.diff"
+      },
+      "decision": "keep",
+      "reason": "memory_improved_within_constraints",
+      "failure": null,
+      "verification_available": true,
+      "verification": {
+        "peak_before": null,
+        "peak_after": null,
+        "reduction_pct": null,
+        "step_ms_before": null,
+        "step_ms_after": null,
+        "max_loss_delta": null,
+        "throughput_regression_pct": null,
+        "parameter_count_before": null,
+        "parameter_count_after": null,
+        "loss_tolerance": null,
+        "completed": true,
+        "target_met": false,
+        "numerics_changed": false,
+        "observed_precision_change": null,
+        "loss_equivalence": "identical",
+        "numerical_basis": null,
+        "comparison_precision": null,
+        "acceptance_scope": null,
+        "checks": {
+          "baseline_capture": true,
+          "target_mode_valid": true,
+          "candidate_completed_required_steps": true,
+          "finite_candidate_losses": true,
+          "numerics_policy": true,
+          "same_seed": true,
+          "numerical_acceptance": true,
+          "parameter_policy": true,
+          "measured_cuda_peaks": true,
+          "same_gpu_hardware": true,
+          "parameter_count_unchanged": true,
+          "loss_tolerance": true,
+          "loss_decreases": true,
+          "throughput_limit": true,
+          "memory_target": false
+        },
+        "checks_omitted": 0,
+        "checks_available": true,
+        "failed_checks": [
+          "memory_target"
+        ],
+        "unknown_checks": [],
+        "notes": [
+          "All metrics are synthetic."
+        ],
+        "notes_omitted": 0
+      },
+      "candidate": {
+        "run_id": "candidate-1",
+        "status": "completed",
+        "reason": null,
+        "capture_complete": true,
+        "steps": 20,
+        "peak_allocated_bytes": 25000000000,
+        "peak_reserved_bytes": null,
+        "step_ms_median": 110
+      },
+      "candidate_selected": true,
+      "selected_after_round": {
+        "round": 1,
+        "basis": "retained_candidate",
+        "target_met": false,
+        "run_id": "candidate-1",
+        "status": "completed",
+        "reason": null,
+        "capture_complete": true,
+        "steps": 20,
+        "peak_allocated_bytes": 25000000000,
+        "peak_reserved_bytes": null,
+        "step_ms_median": 110
+      },
+      "truncated_fields": []
+    },
+    {
+      "round": 2,
+      "provenance": "offline_fixture",
+      "fix_id": "f2",
+      "change": {
+        "type": "code",
+        "title": "Fixture change",
+        "patch_artifact": "rounds/02/patches/patch-engine-a7f67fe5c1ac41e8be07d373be661aa3/attempt-1/patch-7b0192f14d284cafb7ff437a9a024a38/patch.diff"
+      },
+      "decision": "revert",
+      "reason": "verification_hard_constraints_unmet",
+      "failure": null,
+      "verification_available": true,
+      "verification": {
+        "peak_before": 30.0,
+        "peak_after": 20.0,
+        "reduction_pct": null,
+        "step_ms_before": null,
+        "step_ms_after": null,
+        "max_loss_delta": 0.125,
+        "throughput_regression_pct": null,
+        "parameter_count_before": null,
+        "parameter_count_after": null,
+        "loss_tolerance": 0.001,
+        "completed": true,
+        "target_met": false,
+        "numerics_changed": false,
+        "observed_precision_change": null,
+        "loss_equivalence": "changed",
+        "numerical_basis": "original_plan_full_backward_scalar_series",
+        "comparison_precision": null,
+        "acceptance_scope": null,
+        "checks": {
+          "baseline_capture": true,
+          "target_mode_valid": true,
+          "candidate_completed_required_steps": true,
+          "finite_candidate_losses": true,
+          "numerics_policy": true,
+          "same_seed": true,
+          "numerical_acceptance": false,
+          "parameter_policy": true,
+          "measured_cuda_peaks": true,
+          "same_gpu_hardware": true,
+          "parameter_count_unchanged": true,
+          "loss_tolerance": false,
+          "loss_decreases": true,
+          "throughput_limit": true,
+          "memory_target": false,
+          "same_inputs": null
+        },
+        "checks_omitted": 0,
+        "checks_available": true,
+        "failed_checks": [
+          "numerical_acceptance",
+          "loss_tolerance",
+          "memory_target"
+        ],
+        "unknown_checks": [
+          "same_inputs"
+        ],
+        "notes": [
+          "All metrics are synthetic."
+        ],
+        "notes_omitted": 0
+      },
+      "candidate": {
+        "run_id": "candidate-2",
+        "status": "completed",
+        "reason": null,
+        "capture_complete": true,
+        "steps": 20,
+        "peak_allocated_bytes": 20000000000,
+        "peak_reserved_bytes": null,
+        "step_ms_median": 115
+      },
+      "candidate_selected": false,
+      "selected_after_round": {
+        "round": 1,
+        "basis": "retained_candidate",
+        "target_met": false,
+        "run_id": "candidate-1",
+        "status": "completed",
+        "reason": null,
+        "capture_complete": true,
+        "steps": 20,
+        "peak_allocated_bytes": 25000000000,
+        "peak_reserved_bytes": null,
+        "step_ms_median": 110
+      },
+      "truncated_fields": []
+    }
+  ],
+  "fixture_target_met": true
+}

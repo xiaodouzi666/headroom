@@ -25,12 +25,20 @@ ARTIFACTS = {
 
 
 def artifact_relative(row, name):
-    """Resolve selected evidence from recorded round identity, never a client path.
+    """Resolve selected evidence from server-recorded locators, never a client path.
 
     Historical imports without selection metadata retain the original fixed layout.
     Explicitly missing/new selected evidence must never fall back to an old image.
     """
     relative, _ = ARTIFACTS[name]
+    if name in {"evidence.json", "evidence.md"} and "before_evidence_paths" in row:
+        paths = row["before_evidence_paths"]
+        selected_path = paths.get(name) if isinstance(paths, dict) else None
+        suffix = "json" if name == "evidence.json" else "md"
+        pattern = rf"evidence/before/evidence(?:\.unannotated-[0-9a-f]{{32}})?\.{suffix}"
+        if not isinstance(selected_path, str) or re.fullmatch(pattern, selected_path) is None:
+            raise ValueError("Recorded before evidence is unavailable or invalid")
+        return selected_path
     after_names = {
         "evidence-after.json": "evidence.json",
         "timeline-after.png": "timeline.png",

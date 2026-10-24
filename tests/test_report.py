@@ -674,3 +674,73 @@ def test_missing_or_linked_selected_manifest_is_not_linked(tmp_path):
     )
     assert doc["selected_configuration"]["artifacts"] == {}
     assert "Selected manifest" not in render_markdown(doc)
+
+
+def test_report_renders_bound_nano_opinions_separate_from_heuristics():
+    from headroom.annotate import annotation_fingerprint, bind_stack_annotations
+
+    original = {
+        "run_id": "captured-fixture",
+        "analysis": {
+            "peak_composition": [
+                {"stack_id": "stk_a", "bytes": 100, "category": "activations", "frames": []}
+            ],
+            "category_bytes": {"activations": 100},
+        },
+    }
+    annotations = {
+        "status": "completed",
+        "complete": True,
+        "model": "nvidia/fixture-nano",
+        "evidence_fingerprint": annotation_fingerprint(original),
+        "annotations": [
+            {
+                "stack_id": "stk_a",
+                "category": "optimizer_state",
+                "label": "Could be optimizer state <script> | hypothesis",
+            }
+        ],
+    }
+    bound = bind_stack_annotations(original, annotations, provenance="offline_fixture")
+    bound["annotation_delivery"]["prompt_stack_ids"] = ["stk_a"]
+    run = {"run_id": "fixture", "provenance": "offline_fixture", "annotations": annotations}
+    doc = build_report(run, evidence={"before": bound})
+    plain = build_report(run, evidence={"before": original})
+    markdown = render_markdown(doc)
+    row = doc["stack_annotations"][0]
+    assert row["heuristic_category"] == "activations" and row["category"] == "optimizer_state"
+    assert row["provenance"] == "offline_fixture" and row["is_measurement"] is False
+    assert doc["measurements"] == plain["measurements"]
+    assert doc["peak_composition"] == plain["peak_composition"]
+    assert "| Stack | Heuristic category | Nano model category" in markdown
+    assert "optimizer state" in markdown and "<script>" not in markdown
+    assert "eight-scenario accuracy or cost gate" in markdown
+    assert "Prepared evidence prompt: 1 label(s)" in markdown
+    assert not check_report_numbers(doc, markdown)
+
+
+def test_completed_annotation_is_not_claimed_delivered_without_bound_evidence():
+    doc = build_report(
+        {
+            "annotations": {
+                "status": "completed",
+                "annotations": [
+                    {"stack_id": "old", "category": "params", "label": "Unbound historical opinion"}
+                ],
+            }
+        },
+        evidence={
+            "before": {
+                "annotation_delivery": {
+                    "status": "not_attached",
+                    "reason": "source_evidence_mismatch",
+                }
+            }
+        },
+    )
+    markdown = render_markdown(doc)
+    assert not doc["stack_annotations"]
+    assert "not_attached" in markdown.replace(chr(92), "")
+    assert "source_evidence_mismatch" in markdown.replace(chr(92), "")
+    assert "No source-bound stack opinions" in markdown
+    assert "Unbound historical opinion" not in markdown

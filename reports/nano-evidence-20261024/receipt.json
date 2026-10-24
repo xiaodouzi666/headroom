@@ -1,0 +1,60 @@
+{
+  "created_at": "2026-10-24T13:39:15.263723+00:00",
+  "status": "frozen",
+  "source_base": "96aca1ddd47332cbb22c77008032cffcd40068bf",
+  "scope": "Original PLAN C.4.6 / T2.3 Nano opinions attached to source-bound peak evidence, prepared diagnosis input and reports",
+  "source_sha256": {
+    "headroom/annotate.py": "c9cee08e77f371f03ce3cb0d7d78d88ad4a2af7f5f95386c50eeb2931cffde91",
+    "headroom/evidence.py": "aa5929c9b9038c26b1b9744c5e13f02fa9f26d2eae7be20757c45c004b1ee16a",
+    "headroom/report.py": "ff3fd2f0abd34ecadf3ee0de3c6f6a57ec0f1da757a3d15e0ef0dccce94563c8",
+    "tests/test_annotate.py": "5cbd7e432805ef28e5e1e67c1ce194c1684e74f4fadc4a6aa0c206868950abd6",
+    "tests/test_evidence.py": "7ad2d060d09752a3c99c16b55862da01a22a37ffc1159d78ee68bb981c021f77",
+    "tests/test_report.py": "b9ba8f16e777dcf3833d585f1900823a268af0cdeeb2c47a242e6d06a524c795",
+    "web/src/App.tsx": "81546cebdc2ffcb7bc237a7d6925b111eb006dc008b721fd160da19aea17c59f",
+    "web/src/Run.test.tsx": "00e98ae8dbc874075112fc47ed360df2a927276064111cf22f5499a5772701fd",
+    "docs/NANO_ANNOTATIONS.md": "ef0de4da93c27905db93ca9aec9298e6d1e0a5eeb315a3e3f57d687cd80978b1"
+  },
+  "api_contract": {
+    "metadata_helper": "headroom.annotate.bind_stack_annotations(evidence, annotations, *, provenance)",
+    "delivery_helper": "headroom.evidence.annotate_evidence_bundle(bundle, annotations, *, provenance)",
+    "annotation_result_binding": "evidence_fingerprint includes capture ID plus Top40 stack IDs/frames/bytes/blocks/heuristic categories",
+    "stack_field": "analysis.peak_composition[].model_annotation",
+    "delivery_field": "annotation_delivery records attached IDs, prompt IDs, omissions and optional delivery errors",
+    "orchestrator_ownership": "Core agent integrates helper and owns full Ultra request/feedback regression"
+  },
+  "invariants": [
+    "Model category/label remain separate from original heuristic category, bytes, blocks, frames, source and numerical measurements.",
+    "Skipped/failed/incomplete/mismatched labels do not create new model opinions.",
+    "All inserted notes count against the existing evidence.md cl100k_base budget; no measured evidence is evicted for an optional label.",
+    "Entire original analyzer JSON remains available. Non-visible or over-budget opinions stay in JSON with omitted IDs.",
+    "Both new pair and original recovery copies are prepared before publication. Failed publication restores original pair; failed restoration returns retained original paths to diagnosis.",
+    "KeyboardInterrupt propagates after restoration attempt; optional delivery errors do not become a new pipeline hard gate.",
+    "Fresh candidate evidence does not inherit baseline labels. Actual traceback-only condition strips stack and Nano metadata.",
+    "Report/UI provenance remains explicit; completed annotation and prepared prompt do not prove an actual Ultra request."
+  ],
+  "verification": {
+    "python": "148 passed in 6.73s: tests/test_annotate.py tests/test_evidence.py tests/test_report.py tests/test_evaluation.py",
+    "python_guard": "reports/pareto-interfaces-20261024/offline_tests.py independent DNS/socket and actual project .env audit guard",
+    "web": "9 Run tests passed in 1.72s; TypeScript typecheck passed",
+    "web_guard": "reports/configuration-handoff-20261024/node-guard.cjs independent DNS/TCP/TLS/HTTP and actual project .env guard",
+    "lint": "Scoped Ruff check/format and git diff --check passed",
+    "preserved_failure": "python-focused.txt: 147 passed / 1 new assertion failed because Markdown escapes underscores. Assertion normalizes escaping; final 148 passed. No source functionality changed for that assertion fix."
+  },
+  "evidence_sha256": {
+    "initial-tests.txt": "2a9e46407adb770ae1170b1d3fe3c0242dc8d4dfb65eb19cffae8bc81179823e",
+    "python-focused.txt": "9fa1d516bf68b033e002fbc49302adac78c75d35b78b3f1cae9247969a909cba",
+    "python-focused-final.txt": "93a97d9fd566472c1966b72e3449b4290653eeb00e5748be5628f524b5de7bd3",
+    "python-focused-final.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "web-run.txt": "84c7dd5a62b860f160d2258a1b95e2191bca6e61f0d06c02080ce875015afd36",
+    "web-run.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "web-typecheck.txt": "a12e76a3ef07736622e1eb3f2943ad758b68a157f9f1d59855d2ef4b285e70b4",
+    "lint.txt": "899431ded41f52f0e596057b046dea82d3c0e3557b51b29f591e62f24ab0c713"
+  },
+  "gpu_executed": false,
+  "provider_called": false,
+  "real_env_read": false,
+  "budget_authorization_changed": false,
+  "live_profile_enabled": false,
+  "original_live_acceptance": "Pending: real Top40 labels on eight scenarios, at least 80% heuristic agreement, and original USD0.02 annotation cap. Offline fixtures do not accept this gate.",
+  "root_followup": "Root owns combined full suite and optional read-only regeneration of historical capture artifacts; no source edits pending."
+}

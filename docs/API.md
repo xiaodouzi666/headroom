@@ -295,3 +295,14 @@ mode is also returned if explicitly recorded. No mode is inferred for older
 rows or campaigns. A target-met observation does not erase a later failed or
 budget-limited terminal status. The curated publication requirement and fixture
 exclusion remain unchanged.
+
+## Original evidence after optional annotation recovery
+
+New runs record the final server-selected baseline JSON and Markdown paths in
+before_evidence_paths, including preserved original copies when optional Nano
+publication cannot restore canonical files. The existing evidence.json and
+evidence.md download aliases resolve those records. Only the fixed before
+directory and canonical or 32-hex unannotated filenames are accepted, with the
+existing nofollow regular-file checks. Explicit missing, invalid or unavailable
+records return no artifact rather than silently selecting a different file.
+Historical runs without this field retain their original fixed layout.

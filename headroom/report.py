@@ -376,7 +376,8 @@ def build_report(
     artifacts = {
         key: _relative(value) for key, value in (artifacts or {}).items() if value is not None
     }
-    before_analysis = _analysis(evidence.get("before", evidence))
+    before_evidence = evidence.get("before", evidence)
+    before_analysis = _analysis(before_evidence)
     after_analysis = _analysis(evidence.get("after", {}))
     before = _measure(run.get("baseline", verification.get("before", {})), before_analysis)
     after = _measure(verification.get("after", run.get("after", {})), after_analysis)
@@ -451,6 +452,20 @@ def build_report(
         "measurements": {"before": before, "after": after},
         "display": display,
         "peak_composition": composition,
+        "stack_annotations": [
+            {
+                "stack_id": row.get("stack_id"),
+                "heuristic_category": row.get("category"),
+                **row["model_annotation"],
+            }
+            for row in before_analysis.get("peak_composition", [])
+            if isinstance(row.get("model_annotation"), dict)
+            and row["model_annotation"].get("kind") == "model_interpretation"
+            and row["model_annotation"].get("is_measurement") is False
+        ],
+        "annotation_delivery": before_evidence.get("annotation_delivery", {})
+        if isinstance(before_evidence, dict)
+        else {},
         "diagnosis": diagnosis,
         "rounds": rounds,
         "pareto": _pareto_report(run.get("pareto")),
@@ -538,7 +553,8 @@ def render_markdown(report):
             f"{_text(cause.get('evidence_refs', []))}."
         )
     annotations = report["run"].get("annotations")
-    if isinstance(annotations, dict):
+    if isinstance(annotations, dict) or report.get("stack_annotations", []):
+        annotations = annotations if isinstance(annotations, dict) else {}
         lines += [
             "",
             "## Stack annotations",
@@ -549,6 +565,51 @@ def render_markdown(report):
         if "annotations" in report["artifacts"]:
             link = quote(_relative(report["artifacts"]["annotations"]), safe="/-._~")
             lines.append(f"[Annotation evidence]({link})")
+        delivery = report.get("annotation_delivery", {})
+        if delivery:
+            lines.append(
+                "Evidence delivery status: "
+                + _text(delivery.get("status"))
+                + "; reason: "
+                + _text(delivery.get("reason"))
+                + ". This records prepared evidence, not proof that a model request was sent."
+            )
+        if report.get("stack_annotations", []):
+            lines += [
+                "",
+                (
+                    "Source-bound Nano opinions are separate from heuristic categories and measured bytes; "
+                    "they do not establish the eight-scenario accuracy or cost gate."
+                ),
+                "",
+                "| Stack | Heuristic category | Nano model category | Model interpretation | Provenance |",
+                "| --- | --- | --- | --- | --- |",
+            ]
+            for row in report.get("stack_annotations", []):
+                lines.append(
+                    "| "
+                    + " | ".join(
+                        _text(row.get(key))
+                        for key in (
+                            "stack_id",
+                            "heuristic_category",
+                            "category",
+                            "label",
+                            "provenance",
+                        )
+                    )
+                    + " |"
+                )
+            delivery = report.get("annotation_delivery", {})
+            lines.append(
+                "Prepared evidence prompt: "
+                + str(len(delivery.get("prompt_stack_ids", [])))
+                + " label(s) included; "
+                + str(len(delivery.get("omitted_prompt_stack_ids", [])))
+                + " retained only in JSON because of visibility or token budget."
+            )
+        elif annotations.get("status") == "completed":
+            lines.append("No source-bound stack opinions are available in this report evidence.")
     lines += ["", "## Fixes", ""]
     for item in report["diagnosis"].get("plan", []):
         lines.append(

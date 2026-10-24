@@ -188,3 +188,24 @@ The tests cover the default execution guard, missing credentials, private-file
 permissions, four-request parameters, partial/malformed failures, redaction,
 unknown credits, and unique report files. Their mocks do not demonstrate service
 availability, key validity, content quality, latency, or actual credit usage.
+
+
+## Topic-specific research documentation
+
+The bitsandbytes topic searches official Hugging Face documentation as well as
+the existing allowed PyTorch/issue hosts, then extracts the pinned
+[bitsandbytes 0.50.2 optimizer guide](https://huggingface.co/docs/bitsandbytes/v0.50.2/optimizers).
+That public documentation page was checked on 2026-10-24. The topic previously
+constructed PyTorch's generic optim.html, which could not document bitsandbytes.
+Other topics still extract the observed PyTorch minor version's exact page.
+
+The context and notes explicitly say that the installed bitsandbytes version,
+dependency availability and numerical compatibility remain unverified. The
+existing source version_match field is specifically an exact PyTorch URL
+match; false for this separate library is not a measured incompatibility.
+A documentation result never installs a package or grants a precision-policy
+exception. Explicit caller-supplied search domains still take precedence.
+
+The ordinary per-run four-call limit, two-method exploration and 24-hour cache
+remain in force. Regression tests use fixture content with network blocked;
+they do not establish a new successful live Tavily extraction.

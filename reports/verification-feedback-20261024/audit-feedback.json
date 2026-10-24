@@ -1,0 +1,237 @@
+{
+  "provenance": "offline_fixture",
+  "validation": "SDK MockTransport, synthetic Lab observations, real isolated patch application; not live API/GPU acceptance",
+  "run_dir": "/home/xiaodouzi/workspace/headroom/runs/verification-feedback-cpu-20261024/feedback-_43d0tg5/jobs/dd8a800fcec045a1a15ed40d04904af5",
+  "decision_sequence": [
+    "keep",
+    "revert",
+    "keep"
+  ],
+  "model_request_count": 6,
+  "verification_count": 3,
+  "round_3_feedback_bytes": 4755,
+  "round_3_feedback": [
+    {
+      "round": 1,
+      "provenance": "offline_fixture",
+      "fix_id": "f1",
+      "change": {
+        "type": "code",
+        "title": "Fixture change",
+        "patch_artifact": "rounds/01/patches/patch-engine-c7ff6c5defe24ad09af0b20421a4525d/attempt-1/patch-c2cab551d8004c698e28d59d816a03e2/patch.diff"
+      },
+      "decision": "keep",
+      "reason": "memory_improved_within_constraints",
+      "failure": null,
+      "verification_available": true,
+      "verification": {
+        "peak_before": null,
+        "peak_after": null,
+        "reduction_pct": null,
+        "step_ms_before": null,
+        "step_ms_after": null,
+        "max_loss_delta": null,
+        "throughput_regression_pct": null,
+        "parameter_count_before": null,
+        "parameter_count_after": null,
+        "loss_tolerance": null,
+        "completed": true,
+        "target_met": false,
+        "numerics_changed": false,
+        "observed_precision_change": null,
+        "loss_equivalence": "identical",
+        "numerical_basis": null,
+        "comparison_precision": null,
+        "acceptance_scope": null,
+        "checks": {
+          "baseline_capture": true,
+          "target_mode_valid": true,
+          "candidate_completed_required_steps": true,
+          "finite_candidate_losses": true,
+          "numerics_policy": true,
+          "same_seed": true,
+          "numerical_acceptance": true,
+          "parameter_policy": true,
+          "measured_cuda_peaks": true,
+          "same_gpu_hardware": true,
+          "parameter_count_unchanged": true,
+          "loss_tolerance": true,
+          "loss_decreases": true,
+          "throughput_limit": true,
+          "memory_target": false
+        },
+        "checks_omitted": 0,
+        "checks_available": true,
+        "failed_checks": [
+          "memory_target"
+        ],
+        "unknown_checks": [],
+        "notes": [
+          "All metrics are synthetic."
+        ],
+        "notes_omitted": 0
+      },
+      "candidate": {
+        "run_id": "candidate-1",
+        "status": "completed",
+        "reason": null,
+        "error": null,
+        "exception": {
+          "type": null,
+          "message": null
+        },
+        "oom": {
+          "requested_bytes": null,
+          "free_bytes": null,
+          "requested_gb": null,
+          "free_gb": null
+        },
+        "capture_complete": true,
+        "steps": 20,
+        "peak_allocated_bytes": 25000000000,
+        "peak_reserved_bytes": null,
+        "step_ms_median": 110
+      },
+      "candidate_selected": true,
+      "selected_after_round": {
+        "round": 1,
+        "basis": "retained_candidate",
+        "target_met": false,
+        "run_id": "candidate-1",
+        "status": "completed",
+        "reason": null,
+        "error": null,
+        "exception": {
+          "type": null,
+          "message": null
+        },
+        "oom": {
+          "requested_bytes": null,
+          "free_bytes": null,
+          "requested_gb": null,
+          "free_gb": null
+        },
+        "capture_complete": true,
+        "steps": 20,
+        "peak_allocated_bytes": 25000000000,
+        "peak_reserved_bytes": null,
+        "step_ms_median": 110
+      },
+      "truncated_fields": []
+    },
+    {
+      "round": 2,
+      "provenance": "offline_fixture",
+      "fix_id": "f2",
+      "change": {
+        "type": "code",
+        "title": "Fixture change",
+        "patch_artifact": "rounds/02/patches/patch-engine-e57a0c94e6294a6f9c7e148a98d495e0/attempt-1/patch-55c66f397b1b4a28b34c25f339c9eaf5/patch.diff"
+      },
+      "decision": "revert",
+      "reason": "verification_hard_constraints_unmet",
+      "failure": null,
+      "verification_available": true,
+      "verification": {
+        "peak_before": 30.0,
+        "peak_after": 20.0,
+        "reduction_pct": null,
+        "step_ms_before": null,
+        "step_ms_after": null,
+        "max_loss_delta": 0.125,
+        "throughput_regression_pct": null,
+        "parameter_count_before": null,
+        "parameter_count_after": null,
+        "loss_tolerance": 0.001,
+        "completed": true,
+        "target_met": false,
+        "numerics_changed": false,
+        "observed_precision_change": null,
+        "loss_equivalence": "changed",
+        "numerical_basis": "original_plan_full_backward_scalar_series",
+        "comparison_precision": null,
+        "acceptance_scope": null,
+        "checks": {
+          "baseline_capture": true,
+          "target_mode_valid": true,
+          "candidate_completed_required_steps": true,
+          "finite_candidate_losses": true,
+          "numerics_policy": true,
+          "same_seed": true,
+          "numerical_acceptance": false,
+          "parameter_policy": true,
+          "measured_cuda_peaks": true,
+          "same_gpu_hardware": true,
+          "parameter_count_unchanged": true,
+          "loss_tolerance": false,
+          "loss_decreases": true,
+          "throughput_limit": true,
+          "memory_target": false,
+          "same_inputs": null
+        },
+        "checks_omitted": 0,
+        "checks_available": true,
+        "failed_checks": [
+          "numerical_acceptance",
+          "loss_tolerance",
+          "memory_target"
+        ],
+        "unknown_checks": [
+          "same_inputs"
+        ],
+        "notes": [
+          "All metrics are synthetic."
+        ],
+        "notes_omitted": 0
+      },
+      "candidate": {
+        "run_id": "candidate-2",
+        "status": "completed",
+        "reason": null,
+        "error": null,
+        "exception": {
+          "type": null,
+          "message": null
+        },
+        "oom": {
+          "requested_bytes": null,
+          "free_bytes": null,
+          "requested_gb": null,
+          "free_gb": null
+        },
+        "capture_complete": true,
+        "steps": 20,
+        "peak_allocated_bytes": 20000000000,
+        "peak_reserved_bytes": null,
+        "step_ms_median": 115
+      },
+      "candidate_selected": false,
+      "selected_after_round": {
+        "round": 1,
+        "basis": "retained_candidate",
+        "target_met": false,
+        "run_id": "candidate-1",
+        "status": "completed",
+        "reason": null,
+        "error": null,
+        "exception": {
+          "type": null,
+          "message": null
+        },
+        "oom": {
+          "requested_bytes": null,
+          "free_bytes": null,
+          "requested_gb": null,
+          "free_gb": null
+        },
+        "capture_complete": true,
+        "steps": 20,
+        "peak_allocated_bytes": 25000000000,
+        "peak_reserved_bytes": null,
+        "step_ms_median": 110
+      },
+      "truncated_fields": []
+    }
+  ],
+  "fixture_target_met": true
+}

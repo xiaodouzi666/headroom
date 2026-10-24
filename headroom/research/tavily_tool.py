@@ -26,7 +26,10 @@ TOPICS = {
     "adamw": ("torch.optim.AdamW fused optimizer memory", "generated/torch.optim.AdamW.html"),
     "compile": ("torch.compile memory overhead", "generated/torch.compile.html"),
     "fsdp": ("torch.distributed.fsdp memory", "fsdp.html"),
-    "bitsandbytes": ("bitsandbytes 8 bit optimizer memory", "optim.html"),
+    "bitsandbytes": (
+        "bitsandbytes 0.50.2 8 bit optimizer memory",
+        "https://huggingface.co/docs/bitsandbytes/v0.50.2/optimizers",
+    ),
 }
 ALIASES = {
     "torch.utils.checkpoint": "checkpoint",
@@ -501,15 +504,30 @@ class ResearchSession:
         if topic not in TOPICS:
             raise ValueError("Unsupported research topic")
         query, page = TOPICS[topic]
+        # Each library uses its own docs; torch's optim.html cannot establish
+        # bitsandbytes API behavior or installed-version compatibility.
+        library_note = None
+        if topic == "bitsandbytes":
+            if include_domains is None:
+                include_domains = (*DEFAULT_DOMAINS, "huggingface.co")
+            library_note = (
+                "This source documents bitsandbytes 0.50.2. The installed bitsandbytes "
+                "version and availability are unverified; do not assume compatibility "
+                "or unchanged numerics from a documentation lookup."
+            )
         found = self.search(
             query + " known issues",
             search_depth=search_depth,
             max_results=max_results,
             include_domains=include_domains,
         )
-        operations, notes = [found], []
+        operations, notes = [found], [library_note] if library_note else []
         if found["status"] in {"succeeded", "cached"}:
-            urls = [f"https://docs.pytorch.org/docs/{self.torch_minor}/{page}"]
+            urls = [
+                page
+                if topic == "bitsandbytes"
+                else f"https://docs.pytorch.org/docs/{self.torch_minor}/{page}"
+            ]
             issues = [row["url"] for row in found["sources"] if row["kind"] == "issue"]
             if issues:
                 urls.append(issues[0])
@@ -532,7 +550,14 @@ class ResearchSession:
             "status": "succeeded" if complete else "partial",
             "topic": topic,
             "sources": list(sources.values()),
-            "context": "\n\n".join(op["context"] for op in operations if op["context"]),
+            "context": (
+                (
+                    "RESEARCH APPLICABILITY METADATA: " + library_note + "\n\n"
+                    if library_note
+                    else ""
+                )
+                + "\n\n".join(op["context"] for op in operations if op["context"])
+            ),
             "operations": [
                 {k: v for k, v in op.items() if k not in {"context", "sources"}}
                 for op in operations

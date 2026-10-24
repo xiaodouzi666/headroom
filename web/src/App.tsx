@@ -1267,11 +1267,13 @@ function AdmissionNote({ usage }: { usage: Dict }) {
 }
 function Composition({ report, analysis }: { report: Dict; analysis: Dict }) {
   const listed = rows(report.peak_composition);
+  const annotationResult = record(record(report.run).annotations);
+  // Historical reports lack source binding. New records use only their bound stack metadata.
   const labels = new Map(
-    rows(record(record(report.run).annotations).annotations).map((row) => [
-      row.stack_id,
-      text(row.label),
-    ]),
+    (annotationResult.evidence_fingerprint
+      ? []
+      : rows(annotationResult.annotations)
+    ).map((row) => [row.stack_id, text(row.label)]),
   );
   const categories = listed.length
     ? listed
@@ -1314,12 +1316,29 @@ function Composition({ report, analysis }: { report: Dict; analysis: Dict }) {
                       <code>{text(stack.stack_id)}</code>
                       <Badge>{gb(stack.bytes)}</Badge>
                     </div>
-                    {labels.has(stack.stack_id) && (
+                    {record(stack.model_annotation).kind ===
+                      "model_interpretation" &&
+                    record(stack.model_annotation).is_measurement === false ? (
+                      <p>
+                        <Badge>Nano interpretation</Badge>{" "}
+                        {text(record(stack.model_annotation).label)}
+                        <small className="table-note">
+                          Model category:{" "}
+                          {human(record(stack.model_annotation).category)}.{" "}
+                          Separate from the heuristic category and measured
+                          bytes. Provenance:{" "}
+                          {human(record(stack.model_annotation).provenance)}.
+                        </small>
+                      </p>
+                    ) : labels.has(stack.stack_id) ? (
                       <p>
                         <Badge>Nano interpretation</Badge>{" "}
                         {labels.get(stack.stack_id)}
+                        <small className="table-note">
+                          Historical label; source binding was not recorded.
+                        </small>
                       </p>
-                    )}
+                    ) : null}
                     <pre>
                       {text(
                         stack.representative_stack,

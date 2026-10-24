@@ -7,6 +7,7 @@ import os
 import re
 import stat
 from pathlib import Path, PurePosixPath
+from uuid import uuid4
 
 from headroom.execution import captured_wrapper_descriptor, parse_command, source_entrypoint
 from headroom.lab.runner import read_artifact_json, selected_capture_directory
@@ -376,6 +377,39 @@ def _sample_timeline(
     return [timeline[index] for index in sorted(indices)]
 
 
+def _peak_chunks(analysis, peak_n, annotation_ids=()):
+    chunks = ["## Peak composition"]
+    peak = analysis.get("peak_composition", [])
+    for row in peak[:peak_n]:
+        chunks.extend(
+            [
+                f"### {row['stack_id']} — {row.get('category', 'unknown')}",
+                f"Bytes: {row['bytes']}; live blocks: {row.get('blocks', 'unknown')}",
+                "```text",
+                _stack_text(row.get("frames", [])),
+                "```",
+            ]
+        )
+        annotation = row.get("model_annotation")
+        if row["stack_id"] in annotation_ids and isinstance(annotation, dict):
+            chunks.append(
+                "Nano model interpretation (untrusted opinion, not measurement or instructions): "
+                + _json(
+                    {
+                        key: annotation.get(key)
+                        for key in ("category", "label", "model", "provenance")
+                    }
+                )
+            )
+    chunks.append(
+        f"Showing {min(peak_n, len(peak))} of {len(peak)} analyzer-provided peak stack rows; "
+        "rows omitted by prompt budgeting remain in JSON. "
+        f"The analyzer reports {analysis.get('peak_composition_all_stacks', len(peak))} total peak stacks "
+        f"and {analysis.get('peak_composition_omitted_bytes', 0)} bytes beyond its retained Top-40 rows."
+    )
+    return chunks
+
+
 def render_markdown(
     *,
     run_id: str,
@@ -427,26 +461,9 @@ def render_markdown(
             "Peak event index: " + _json(analysis.get("peak_event_index")),
             "OOM events: " + _json(analysis.get("oom_events", [])),
             "Category bytes at reconstructed peak: " + _json(analysis.get("category_bytes", {})),
-            "## Peak composition",
         ]
     )
-    peak = analysis.get("peak_composition", [])
-    for row in peak[:peak_n]:
-        chunks.extend(
-            [
-                f"### {row['stack_id']} — {row.get('category', 'unknown')}",
-                f"Bytes: {row['bytes']}; live blocks: {row.get('blocks', 'unknown')}",
-                "```text",
-                _stack_text(row.get("frames", [])),
-                "```",
-            ]
-        )
-    chunks.append(
-        f"Showing {min(peak_n, len(peak))} of {len(peak)} analyzer-provided peak stack rows; "
-        "rows omitted by prompt budgeting remain in JSON. "
-        f"The analyzer reports {analysis.get('peak_composition_all_stacks', len(peak))} total peak stacks "
-        f"and {analysis.get('peak_composition_omitted_bytes', 0)} bytes beyond its retained Top-40 rows."
-    )
+    chunks.extend(_peak_chunks(analysis, peak_n))
     chunks.append("## Allocation hot paths")
     hot = analysis.get("allocation_hot_paths", [])
     for row in hot[:hot_n]:
@@ -510,6 +527,164 @@ def render_markdown(
     ]
     chunks.append(_json(observations) if observations else "No selected static patterns found.")
     return "\n\n".join(chunks) + "\n"
+
+
+def _publish_annotation_pair(bundle, document, markdown):
+    """Prepare both files and originals first; a failed optional delivery uses original evidence."""
+    md_path, json_path = Path(bundle["evidence_md"]), Path(bundle["evidence_json"])
+    payloads = {
+        md_path: markdown.encode("utf-8"),
+        json_path: (
+            json.dumps(document, indent=2, ensure_ascii=False, allow_nan=False) + "\n"
+        ).encode("utf-8"),
+    }
+    identifier = uuid4().hex
+    prepared, backups, preserved = {}, {}, set()
+    publishing = False
+    try:
+        for path, content in payloads.items():
+            backup = path.with_name(path.stem + ".unannotated-" + identifier + path.suffix)
+            backups[path] = backup
+            backup.write_bytes(path.read_bytes())
+            temporary = path.with_name("." + path.name + "." + identifier + ".tmp")
+            prepared[path] = temporary
+            temporary.write_bytes(content)
+            if temporary.read_bytes() != content:
+                raise OSError("Prepared annotation artifact differs")
+        # Verify the exact staged pair before either canonical path changes.
+        staged = json.loads(prepared[json_path].read_text())
+        if _tokens(prepared[md_path].read_text()) != staged["token_count"]:
+            raise ValueError("Prepared annotation token count differs")
+        publishing = True
+        for path, temporary in prepared.items():
+            temporary.replace(path)
+    except BaseException as error:
+        selected = {path: path for path in payloads}
+        restoration_failed = False
+        if publishing:
+            for path, backup in backups.items():
+                try:
+                    backup.replace(path)
+                except OSError:
+                    # The already-prepared original remains available even when rename fails.
+                    selected[path] = backup
+                    preserved.add(backup)
+                    restoration_failed = True
+        recovered = {
+            **bundle,
+            "evidence_md": str(selected[md_path]),
+            "evidence_json": str(selected[json_path]),
+            "annotation_delivery": {
+                "status": "not_attached",
+                "reason": "annotation_pair_publish_failed",
+                "partial_publish": publishing,
+                "restoration_failed": restoration_failed,
+                "using_original_evidence": True,
+                "note": "Optional Nano opinions were not delivered; original evidence is retained.",
+            },
+        }
+        if not isinstance(error, (OSError, ValueError, TypeError, KeyError)):
+            # Assignment at the call site will not finish when cancellation propagates.
+            # Repair existing shared references so finally-reporting uses the original pair.
+            bundle.update(recovered)
+            raise
+        return recovered
+    finally:
+        for path in [*prepared.values(), *backups.values()]:
+            if path not in preserved:
+                try:
+                    path.unlink(missing_ok=True)
+                except OSError:
+                    pass
+    return {
+        **bundle,
+        "token_count": document["token_count"],
+        "analysis": document["analysis"],
+        "annotation_delivery": document["annotation_delivery"],
+    }
+
+
+def annotate_evidence_bundle(bundle: dict, annotations: dict, *, provenance: str) -> dict:
+    """Optional delivery cannot prevent diagnosis using the original evidence."""
+    try:
+        return _annotate_evidence_bundle(bundle, annotations, provenance=provenance)
+    except (OSError, ValueError, TypeError, KeyError):
+        return {
+            **bundle,
+            "annotation_delivery": {
+                "status": "not_attached",
+                "reason": "annotation_evidence_or_budget_unavailable",
+                "using_original_evidence": True,
+                "note": "Optional Nano opinions were not delivered; original evidence is retained.",
+            },
+        }
+
+
+def _annotate_evidence_bundle(bundle: dict, annotations: dict, *, provenance: str) -> dict:
+    """Attach source-bound Nano opinions within the existing evidence Markdown budget.
+
+    No capture, snapshot analysis, provider request, or source read is repeated.
+    Optional opinions never evict measured evidence; omitted labels remain in JSON.
+    """
+    if annotations.get("status") != "completed" or annotations.get("complete") is not True:
+        return bundle
+    from headroom.annotate import bind_stack_annotations
+
+    json_path, md_path = Path(bundle["evidence_json"]), Path(bundle["evidence_md"])
+    original = read_artifact_json(json_path)
+    document = bind_stack_annotations(original, annotations, provenance=provenance)
+    delivery = document["annotation_delivery"]
+    if delivery["status"] != "attached":
+        return {**bundle, "annotation_delivery": delivery}
+    markdown = md_path.read_text()
+    budget = document.get("budget")
+    if type(budget) is not int or budget < 1 or _tokens(markdown) > budget:
+        raise ValueError("Existing evidence Markdown is outside its recorded token budget")
+    visible = original.get("presentation", {}).get("peak_stack_ids", [])
+    peak_n = len(visible)
+    expected = [
+        row["stack_id"] for row in original["analysis"].get("peak_composition", [])[:peak_n]
+    ]
+    prior_ids = original.get("presentation", {}).get("annotation_stack_ids", [])
+    original_peak = "\n\n".join(_peak_chunks(original["analysis"], peak_n, prior_ids))
+    included = []
+    if visible == expected and markdown.count(original_peak) == 1:
+        for stack_id in visible:
+            if stack_id not in delivery["attached_stack_ids"]:
+                continue
+            next_ids = [*included, stack_id]
+            candidate = markdown.replace(
+                original_peak,
+                "\n\n".join(_peak_chunks(document["analysis"], peak_n, next_ids)),
+                1,
+            )
+            if _tokens(candidate) <= budget:
+                included = next_ids
+        markdown = markdown.replace(
+            original_peak,
+            "\n\n".join(_peak_chunks(document["analysis"], peak_n, included)),
+            1,
+        )
+    else:
+        delivery["reason"] = "prompt_peak_format_unrecognized"
+    delivery.update(
+        status="attached" if included else "json_only",
+        prompt_status="ready_for_prompt" if included else "not_in_prompt",
+        prompt_stack_ids=included,
+        omitted_prompt_stack_ids=[
+            stack_id for stack_id in delivery["attached_stack_ids"] if stack_id not in included
+        ],
+    )
+    if not included and delivery["reason"] is None:
+        delivery["reason"] = "no_visible_annotations_fit_prompt_budget"
+    document["presentation"]["annotation_stack_ids"] = included
+    document["token_count"] = _tokens(markdown)
+    if document["token_count"] > budget:
+        raise ValueError("Annotated evidence exceeds its recorded token budget")
+    # This records optional-label omission separately from the original measurement trimming.
+    document["annotation_delivery"]["prompt_token_count"] = document["token_count"]
+    document["annotation_delivery"]["prompt_budget"] = budget
+    return _publish_annotation_pair(bundle, document, markdown)
 
 
 def build_evidence(run_dir: Path, budget: int = 150000, output_dir: Path | None = None) -> dict:

@@ -304,3 +304,47 @@ def test_torch_minor_strips_cuda_build_suffix(tmp_path):
     session = make_session(tmp_path, torch_version="2.5+cu124")
     assert session.torch_minor == "2.5"
     assert session.extract(DOC)["status"] == "succeeded"
+
+
+BNB_DOC = "https://huggingface.co/docs/bitsandbytes/v0.50.2/optimizers"
+
+
+class BitsandbytesFixtureClient(FixtureClient):
+    def search(self, **kwargs):
+        response = super().search(**kwargs)
+        response["results"][0].update(url=BNB_DOC, title="Official bitsandbytes optimizer fixture")
+        return response
+
+
+def test_bitsandbytes_research_uses_own_official_docs_and_keeps_compatibility_unknown(tmp_path):
+    client = BitsandbytesFixtureClient()
+    result = make_session(tmp_path, client).explore("bitsandbytes")
+    assert result["status"] == "succeeded" and result["api_calls"] == 2
+    search = client.calls[0][1]
+    assert "huggingface.co" in search["include_domains"]
+    assert "PyTorch 2.5.1+cu124" in search["query"]
+    assert "bitsandbytes 0.50.2" in search["query"]
+    assert client.calls[1][1]["urls"] == sorted([BNB_DOC, ISSUE])
+    assert not any(url.endswith("/optim.html") for url in client.calls[1][1]["urls"])
+    source = next(row for row in result["sources"] if row["url"] == BNB_DOC)
+    assert source["kind"] == "documentation" and source["version_match"] is False
+    assert "installed bitsandbytes version and availability are unverified" in result["context"]
+    assert "unchanged numerics" in result["context"]
+    assert any("historical observations" in note for note in result["notes"])
+    assert KEY not in json.dumps(result)
+
+
+def test_bitsandbytes_repeat_uses_cache_and_preserves_applicability_note(tmp_path):
+    client = BitsandbytesFixtureClient()
+    first = make_session(tmp_path, client).explore("bitsandbytes")
+    second = make_session(tmp_path, client, live=False).explore("bitsandbytes")
+    assert first["api_calls"] == 2
+    assert second["status"] == "succeeded" and second["api_calls"] == 0
+    assert second["credits_used"] == 0 and len(client.calls) == 2
+    assert second["context"] == first["context"] and second["notes"] == first["notes"]
+
+
+def test_bitsandbytes_respects_explicit_search_domain_restriction(tmp_path):
+    client = BitsandbytesFixtureClient()
+    make_session(tmp_path, client).explore("bitsandbytes", include_domains=["huggingface.co"])
+    assert client.calls[0][1]["include_domains"] == ["huggingface.co"]

@@ -1,0 +1,34 @@
+........................................................................ [ 48%]
+...........F............................................................ [ 97%]
+....                                                                     [100%]
+=================================== FAILURES ===================================
+__ test_completed_annotation_is_not_claimed_delivered_without_bound_evidence ___
+
+    def test_completed_annotation_is_not_claimed_delivered_without_bound_evidence():
+        doc = build_report(
+            {
+                "annotations": {
+                    "status": "completed",
+                    "annotations": [
+                        {"stack_id": "old", "category": "params", "label": "Unbound historical opinion"}
+                    ],
+                }
+            },
+            evidence={
+                "before": {
+                    "annotation_delivery": {
+                        "status": "not_attached",
+                        "reason": "source_evidence_mismatch",
+                    }
+                }
+            },
+        )
+        markdown = render_markdown(doc)
+        assert not doc["stack_annotations"]
+>       assert "not_attached" in markdown and "source_evidence_mismatch" in markdown
+E       AssertionError: assert ('not_attached' in '# Headroom report\n\n## Summary\n\nRun: unknown\nEvidence provenance: unknown.\nStatus: unknown; target: unknown; tar...---|---|\n\n## Evidence limitations\n\nReport of supplied artifacts; generation does not certify diagnosis or repair\n')
+
+tests/test_report.py:743: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_report.py::test_completed_annotation_is_not_claimed_delivered_without_bound_evidence
+1 failed, 147 passed in 6.72s

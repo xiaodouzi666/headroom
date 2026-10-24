@@ -484,6 +484,7 @@ def search_run(
         path.mkdir(parents=True)
         shutil.copytree(kwargs["candidate_source_root"], path / "source")
         candidate = observed(path, plan.get("peak", 25), plan.get("ms", 110))
+        candidate.update(plan.get("candidate_extra", {}))
         checks = {
             **dict.fromkeys(HARD_CHECKS, True),
             "parameter_count_unchanged": True,
@@ -502,6 +503,7 @@ def search_run(
             "checks": checks,
             "notes": ["All metrics are synthetic."],
         }
+        result.update(plan.get("verification_extra", {}))
         verifies.append({"original": original, "candidate": candidate, "kwargs": kwargs})
         return {
             "report": result,

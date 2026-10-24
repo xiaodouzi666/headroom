@@ -481,3 +481,76 @@ it("hands off CLI-only wrapper repairs with safe selected arguments and complete
     ),
   ).toBe(true);
 });
+
+it("shows a bound Nano opinion separately from the unchanged heuristic category", async () => {
+  const reportPath = detailPath + "/report.json";
+  const report = {
+    run: {
+      annotations: {
+        status: "completed",
+        evidence_fingerprint: "a".repeat(64),
+        annotations: [{ stack_id: "stk_a", label: "Stale unbound label" }],
+      },
+    },
+    peak_composition: [{ category: "activations", bytes: 100, gb: "0.000 GB" }],
+    evidence: {
+      before: {
+        analysis: {
+          category_bytes: { activations: 100 },
+          peak_composition: [
+            {
+              stack_id: "stk_a",
+              category: "activations",
+              bytes: 100,
+              frames: [],
+              model_annotation: {
+                kind: "model_interpretation",
+                is_measurement: false,
+                category: "optimizer_state",
+                label: "Bound Nano hypothesis",
+                provenance: "offline_fixture",
+              },
+            },
+          ],
+        },
+      },
+    },
+  };
+  window.history.replaceState({}, "", `/runs/${id}`);
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((input: unknown) =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify(
+            input === detailPath
+              ? {
+                  run_id: id,
+                  status: "completed",
+                  target: "reclaim",
+                  provenance: "offline_fixture",
+                  artifacts: { "report.json": reportPath },
+                  usage: {},
+                }
+              : input === reportPath
+                ? report
+                : {},
+          ),
+          { status: 200 },
+        ),
+      ),
+    ),
+  );
+  OfflineEvents.instances = [];
+  vi.stubGlobal("EventSource", OfflineEvents);
+  render(<App />);
+  expect(await screen.findByText(/Bound Nano hypothesis/)).toBeInTheDocument();
+  expect(
+    screen.getByText(/Model category: optimizer state/),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText(/Separate from the heuristic category and measured bytes/),
+  ).toBeInTheDocument();
+  expect(screen.getByText("activations")).toBeInTheDocument();
+  expect(screen.queryByText("Stale unbound label")).not.toBeInTheDocument();
+});

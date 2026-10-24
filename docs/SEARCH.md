@@ -207,3 +207,28 @@ before importing pytest. Tests use the real SDK/router with MockTransport,
 synthetic measurements and the existing isolated patch checks; no model API or
 GPU acceptance is claimed. The report directory preserves test logs and a
 source-hashed receipt.
+
+
+## Recorded verification feedback between rounds
+
+Later Ultra diagnosis requests now include a separate verification_feedback
+array from completed orchestration rounds. It preserves the original
+VerifyReport's finite peak/timing/loss metrics, numerical basis and tolerance,
+boolean/null checks, explicit failed/unknown checks and bounded notes. Missing
+verification is null with its recorded failure reason, never an empty passing
+report. Candidate observations and selected_after_round are distinct: a reverted
+candidate cannot replace the retained source, metrics or target state in this
+feedback. fix_id and the relative patch artifact identify the attempted change.
+
+Each round's summary is saved as rounds/NN/verification-feedback.json and in the
+round record. There are at most six summaries; a request rejects more than six
+or more than 64,000 UTF-8 bytes. Ordinary summaries are much smaller. Notes are
+limited to eight entries of 320 UTF-8 bytes; omissions/truncation are explicit.
+No raw snapshots, tensor values, complete Lab results or full diffs are copied.
+The final full request still passes the existing admission/budget guard. Feedback
+adds no model calls and cannot change policy, numerical thresholds, round limits
+or deadlines. Synthetic fixture provenance remains visible.
+
+Offline SDK mock tests check keep/revert/keep feedback, exact measured scalar
+preservation, unavailable and unknown fields, bounded content, and six rounds
+without additional calls. They establish wiring, not live model effectiveness.

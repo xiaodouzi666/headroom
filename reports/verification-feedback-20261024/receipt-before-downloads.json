@@ -1,0 +1,44 @@
+{
+  "timestamp_utc": "2026-10-24T13:48:39.078288+00:00",
+  "phase": "Before-evidence API download locator consistency; source/tests frozen",
+  "supersedes_owned_hashes_in": "receipt.json (earlier verification feedback evidence preserved)",
+  "source_sha256": {
+    "headroom/orchestrator.py": "b53bc7b8491f280820522fe20e23e4524e69dd14db35cd62857871324e1a8cf2",
+    "headroom/api/security.py": "3173752b6c8d28d9805780f3f16a16fdb3a9d7005a5143854b6778cc5e037587",
+    "tests/test_before_evidence_downloads.py": "dd10a7cc174e275b22951e29729bd002b515f299608f8504f9f174535ba2a028",
+    "docs/PLAN.md": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56"
+  },
+  "changes": [
+    "orchestrator finally records before_evidence_paths from the evidence bundle actually used by reporting, including shared recovery updates before RunCancelled propagates.",
+    "Server-generated lexical run-relative paths are preserved; no link resolution silently substitutes a different file.",
+    "API only accepts evidence/before/evidence(.unannotated-32 lowercase hex)?.json or .md with the requested suffix; existing nofollow traversal applies.",
+    "Historical rows without the field retain fixed-layout fallback. Explicit missing/invalid metadata or missing selected files never falls back."
+  ],
+  "validation": {
+    "log": "pytest-before-downloads.log",
+    "result": "87 passed in 22.69s",
+    "modules": [
+      "tests/test_before_evidence_downloads.py",
+      "tests/test_api.py",
+      "tests/test_orchestrator.py",
+      "tests/test_verification_feedback.py"
+    ],
+    "basis": "Real orchestrator with SDK mock plus in-process ASGI downloads; synthetic publisher recovery injection for ordinary return and RunCancelled; no API/GPU calls.",
+    "coverage": [
+      "backup pair download matches report and stored locators",
+      "shared recovery assignment interrupted",
+      "legacy fixed layout",
+      "recorded canonical layout",
+      "invalid/missing path rejection",
+      "missing file no fallback",
+      "leaf/ancestor symlink refusal"
+    ],
+    "lint": "Scoped Ruff check and format passed"
+  },
+  "guard": "Independent DNS/socket denial and actual project .env read denial installed before pytest imports.",
+  "limits": "Publisher recovery internals are separately tested by the Nano evidence agent; this suite verifies their return/shared-mutation contract through production orchestration and downloads.",
+  "report_sha256": {
+    "pytest-before-downloads.log": "a3c16beaffef0cab62998f5060680e6283040a383263c58cf4eb28bcde3b23c5",
+    "offline_tests.py": "11df05cc17c9bd1ce6bec45fa26adef9460b402518a9dc3cadeecf4df24164aa"
+  }
+}

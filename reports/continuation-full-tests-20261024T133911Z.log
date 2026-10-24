@@ -1,0 +1,1114 @@
+........................................................................ [  5%]
+........................................................................ [ 10%]
+........................................................................ [ 15%]
+........................................................................ [ 21%]
+....................................................................FFF. [ 26%]
+...F...FFFFFFFFFF....................................................... [ 31%]
+..........................................................
+=================================== FAILURES ===================================
+__________ test_budget_trims_prompt_without_discarding_complete_json ___________
+
+captured_run = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-60/test_budget_trims_prompt_witho0/run')
+
+    def test_budget_trims_prompt_without_discarding_complete_json(captured_run):
+>       result = build_evidence(captured_run, budget=2000)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_evidence.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/evidence.py:705: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:323: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:24: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('openaipublic.blob.core.windows.net', 443, <AddressFamily.AF_UNSPEC: 0>, <SocketKind.SOCK_STREAM: 1>)
+kwargs = {}
+
+    def denied(*args, **kwargs):
+>       raise AssertionError("Independent offline guard denied real DNS/INET connection")
+E       AssertionError: Independent offline guard denied real DNS/INET connection
+
+.cache/setup/run_full_guarded.py:20: AssertionError
+____________ test_large_budget_keeps_full_main_and_imported_module _____________
+
+captured_run = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-60/test_large_budget_keeps_full_m0/run')
+
+    def test_large_budget_keeps_full_main_and_imported_module(captured_run):
+>       result = build_evidence(captured_run, budget=30000)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_evidence.py:130: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/evidence.py:705: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:323: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:24: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('openaipublic.blob.core.windows.net', 443, <AddressFamily.AF_UNSPEC: 0>, <SocketKind.SOCK_STREAM: 1>)
+kwargs = {}
+
+    def denied(*args, **kwargs):
+>       raise AssertionError("Independent offline guard denied real DNS/INET connection")
+E       AssertionError: Independent offline guard denied real DNS/INET connection
+
+.cache/setup/run_full_guarded.py:20: AssertionError
+__________ test_unsafe_small_budget_refuses_instead_of_empty_success ___________
+
+captured_run = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-60/test_unsafe_small_budget_refus0/run')
+
+    def test_unsafe_small_budget_refuses_instead_of_empty_success(captured_run):
+        with pytest.raises(ValueError, match="cannot safely represent core evidence"):
+>           build_evidence(captured_run, budget=100)
+
+tests/test_evidence.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/evidence.py:705: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:323: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:24: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('openaipublic.blob.core.windows.net', 443, <AddressFamily.AF_UNSPEC: 0>, <SocketKind.SOCK_STREAM: 1>)
+kwargs = {}
+
+    def denied(*args, **kwargs):
+>       raise AssertionError("Independent offline guard denied real DNS/INET connection")
+E       AssertionError: Independent offline guard denied real DNS/INET connection
+
+.cache/setup/run_full_guarded.py:20: AssertionError
+__________________ test_plot_receives_analyzer_aligned_steps ___________________
+
+captured_run = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-60/test_plot_receives_analyzer_al0/run')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76e2b04b7f20>
+
+    def test_plot_receives_analyzer_aligned_steps(captured_run, monkeypatch):
+        import headroom.timeline_plot as plotting
+    
+        aligned = [
+            {"step": 1, "event_index": 12, "alignment": "last allocator event before optimizer hook"}
+        ]
+        analyzer = analysis_fixture()
+        analyzer["step_boundaries"] = aligned
+        monkeypatch.setitem(
+            sys.modules,
+            "headroom.evidence_analysis",
+            SimpleNamespace(analyze_snapshot=lambda *args, **kwargs: analyzer),
+        )
+        observed = {}
+    
+        def render(timeline, output_path, oom_events=None, step_boundaries=None):
+            observed["steps"] = step_boundaries
+            Path(output_path).write_bytes(b"fixture-only")
+    
+        monkeypatch.setattr(plotting, "render_timeline", render)
+>       result = build_evidence(captured_run, budget=30000)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_evidence.py:212: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/evidence.py:705: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:323: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:24: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('openaipublic.blob.core.windows.net', 443, <AddressFamily.AF_UNSPEC: 0>, <SocketKind.SOCK_STREAM: 1>)
+kwargs = {}
+
+    def denied(*args, **kwargs):
+>       raise AssertionError("Independent offline guard denied real DNS/INET connection")
+E       AssertionError: Independent offline guard denied real DNS/INET connection
+
+.cache/setup/run_full_guarded.py:20: AssertionError
+___ test_nano_attaches_to_visible_stacks_without_changing_original_evidence ____
+
+captured_run = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-60/test_nano_attaches_to_visible_0/run')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76e2b04e2c90>
+
+    def test_nano_attaches_to_visible_stacks_without_changing_original_evidence(
+        captured_run, monkeypatch
+    ):
+        from headroom.evidence import annotate_evidence_bundle
+    
+>       bundle, original, annotations = _annotated_fixture(captured_run, monkeypatch)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_evidence.py:288: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_evidence.py:269: in _annotated_fixture
+    bundle = build_evidence(captured_run, budget=budget)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:705: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:323: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:24: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('openaipublic.blob.core.windows.net', 443, <AddressFamily.AF_UNSPEC: 0>, <SocketKind.SOCK_STREAM: 1>)
+kwargs = {}
+
+    def denied(*args, **kwargs):
+>       raise AssertionError("Independent offline guard denied real DNS/INET connection")
+E       AssertionError: Independent offline guard denied real DNS/INET connection
+
+.cache/setup/run_full_guarded.py:20: AssertionError
+_____________ test_nano_optional_labels_fit_only_remaining_budget ______________
+
+captured_run = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-60/test_nano_optional_labels_fit_0/run')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76e2b04e05c0>
+
+    def test_nano_optional_labels_fit_only_remaining_budget(captured_run, monkeypatch):
+        from headroom.evidence import annotate_evidence_bundle
+    
+>       bundle, original, annotations = _annotated_fixture(
+            captured_run, monkeypatch, budget=2000, label="界" * 180
+        )
+
+tests/test_evidence.py:323: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_evidence.py:269: in _annotated_fixture
+    bundle = build_evidence(captured_run, budget=budget)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:705: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:323: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:24: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('openaipublic.blob.core.windows.net', 443, <AddressFamily.AF_UNSPEC: 0>, <SocketKind.SOCK_STREAM: 1>)
+kwargs = {}
+
+    def denied(*args, **kwargs):
+>       raise AssertionError("Independent offline guard denied real DNS/INET connection")
+E       AssertionError: Independent offline guard denied real DNS/INET connection
+
+.cache/setup/run_full_guarded.py:20: AssertionError
+________ test_skipped_annotations_leave_bundle_and_artifacts_unchanged _________
+
+captured_run = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-60/test_skipped_annotations_leave0/run')
+
+    def test_skipped_annotations_leave_bundle_and_artifacts_unchanged(captured_run):
+        from headroom.evidence import annotate_evidence_bundle
+    
+>       bundle = build_evidence(captured_run, budget=2000)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_evidence.py:346: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/evidence.py:705: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:323: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:24: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('openaipublic.blob.core.windows.net', 443, <AddressFamily.AF_UNSPEC: 0>, <SocketKind.SOCK_STREAM: 1>)
+kwargs = {}
+
+    def denied(*args, **kwargs):
+>       raise AssertionError("Independent offline guard denied real DNS/INET connection")
+E       AssertionError: Independent offline guard denied real DNS/INET connection
+
+.cache/setup/run_full_guarded.py:20: AssertionError
+_____________ test_completed_annotations_cannot_match_new_capture ______________
+
+captured_run = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-60/test_completed_annotations_can0/run')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76e2b0485cd0>
+
+    def test_completed_annotations_cannot_match_new_capture(captured_run, monkeypatch):
+        from headroom.evidence import annotate_evidence_bundle
+    
+>       bundle, _, annotations = _annotated_fixture(captured_run, monkeypatch)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_evidence.py:361: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_evidence.py:269: in _annotated_fixture
+    bundle = build_evidence(captured_run, budget=budget)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:705: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:323: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:24: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('openaipublic.blob.core.windows.net', 443, <AddressFamily.AF_UNSPEC: 0>, <SocketKind.SOCK_STREAM: 1>)
+kwargs = {}
+
+    def denied(*args, **kwargs):
+>       raise AssertionError("Independent offline guard denied real DNS/INET connection")
+E       AssertionError: Independent offline guard denied real DNS/INET connection
+
+.cache/setup/run_full_guarded.py:20: AssertionError
+__________ test_traceback_ablation_excludes_real_bound_nano_metadata ___________
+
+captured_run = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-60/test_traceback_ablation_exclud0/run')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76e2b0103b00>
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-60/test_traceback_ablation_exclud0')
+
+    def test_traceback_ablation_excludes_real_bound_nano_metadata(captured_run, monkeypatch, tmp_path):
+        import headroom.diagnose as diagnosis
+        from headroom.evaluation import condition_services
+        from headroom.evidence import annotate_evidence_bundle
+    
+>       bundle, _, annotations = _annotated_fixture(
+            captured_run, monkeypatch, label="NANO_SECRET_OPINION_FIXTURE"
+        )
+
+tests/test_evidence.py:374: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_evidence.py:269: in _annotated_fixture
+    bundle = build_evidence(captured_run, budget=budget)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:705: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:323: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:24: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('openaipublic.blob.core.windows.net', 443, <AddressFamily.AF_UNSPEC: 0>, <SocketKind.SOCK_STREAM: 1>)
+kwargs = {}
+
+    def denied(*args, **kwargs):
+>       raise AssertionError("Independent offline guard denied real DNS/INET connection")
+E       AssertionError: Independent offline guard denied real DNS/INET connection
+
+.cache/setup/run_full_guarded.py:20: AssertionError
+____ test_optional_annotation_write_failure_restores_original_pair[prepare] ____
+
+captured_run = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-60/test_optional_annotation_write0/run')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76e2ab756930>
+fail_stage = 'prepare'
+
+    @pytest.mark.parametrize("fail_stage", ["prepare", "second_publish"])
+    def test_optional_annotation_write_failure_restores_original_pair(
+        captured_run, monkeypatch, fail_stage
+    ):
+        from headroom.evidence import annotate_evidence_bundle
+    
+>       bundle, _, annotations = _annotated_fixture(captured_run, monkeypatch)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_evidence.py:412: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_evidence.py:269: in _annotated_fixture
+    bundle = build_evidence(captured_run, budget=budget)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:705: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:323: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:24: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('openaipublic.blob.core.windows.net', 443, <AddressFamily.AF_UNSPEC: 0>, <SocketKind.SOCK_STREAM: 1>)
+kwargs = {}
+
+    def denied(*args, **kwargs):
+>       raise AssertionError("Independent offline guard denied real DNS/INET connection")
+E       AssertionError: Independent offline guard denied real DNS/INET connection
+
+.cache/setup/run_full_guarded.py:20: AssertionError
+_ test_optional_annotation_write_failure_restores_original_pair[second_publish] _
+
+captured_run = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-60/test_optional_annotation_write1/run')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76e2ab71d940>
+fail_stage = 'second_publish'
+
+    @pytest.mark.parametrize("fail_stage", ["prepare", "second_publish"])
+    def test_optional_annotation_write_failure_restores_original_pair(
+        captured_run, monkeypatch, fail_stage
+    ):
+        from headroom.evidence import annotate_evidence_bundle
+    
+>       bundle, _, annotations = _annotated_fixture(captured_run, monkeypatch)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_evidence.py:412: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_evidence.py:269: in _annotated_fixture
+    bundle = build_evidence(captured_run, budget=budget)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:705: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:323: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:24: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('openaipublic.blob.core.windows.net', 443, <AddressFamily.AF_UNSPEC: 0>, <SocketKind.SOCK_STREAM: 1>)
+kwargs = {}
+
+    def denied(*args, **kwargs):
+>       raise AssertionError("Independent offline guard denied real DNS/INET connection")
+E       AssertionError: Independent offline guard denied real DNS/INET connection
+
+.cache/setup/run_full_guarded.py:20: AssertionError
+________ test_failed_restore_uses_retained_original_pair_for_diagnosis _________
+
+captured_run = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-60/test_failed_restore_uses_retai0/run')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76e2ab3bab70>
+
+    def test_failed_restore_uses_retained_original_pair_for_diagnosis(captured_run, monkeypatch):
+        from headroom.evidence import annotate_evidence_bundle
+    
+>       bundle, _, annotations = _annotated_fixture(captured_run, monkeypatch)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_evidence.py:440: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_evidence.py:269: in _annotated_fixture
+    bundle = build_evidence(captured_run, budget=budget)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:705: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:323: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:24: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('openaipublic.blob.core.windows.net', 443, <AddressFamily.AF_UNSPEC: 0>, <SocketKind.SOCK_STREAM: 1>)
+kwargs = {}
+
+    def denied(*args, **kwargs):
+>       raise AssertionError("Independent offline guard denied real DNS/INET connection")
+E       AssertionError: Independent offline guard denied real DNS/INET connection
+
+.cache/setup/run_full_guarded.py:20: AssertionError
+____ test_optional_annotation_budget_failure_does_not_block_original_bundle ____
+
+captured_run = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-60/test_optional_annotation_budge0/run')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76e2ab3bbdd0>
+
+    def test_optional_annotation_budget_failure_does_not_block_original_bundle(
+        captured_run, monkeypatch
+    ):
+        from headroom.evidence import annotate_evidence_bundle
+    
+>       bundle, document, annotations = _annotated_fixture(captured_run, monkeypatch)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_evidence.py:463: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_evidence.py:269: in _annotated_fixture
+    bundle = build_evidence(captured_run, budget=budget)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:705: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:323: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:24: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('openaipublic.blob.core.windows.net', 443, <AddressFamily.AF_UNSPEC: 0>, <SocketKind.SOCK_STREAM: 1>)
+kwargs = {}
+
+    def denied(*args, **kwargs):
+>       raise AssertionError("Independent offline guard denied real DNS/INET connection")
+E       AssertionError: Independent offline guard denied real DNS/INET connection
+
+.cache/setup/run_full_guarded.py:20: AssertionError
+____________ test_annotation_interrupt_restores_pair_and_propagates ____________
+
+captured_run = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-60/test_annotation_interrupt_rest0/run')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76e2b0306ba0>
+
+    def test_annotation_interrupt_restores_pair_and_propagates(captured_run, monkeypatch):
+        from headroom.evidence import annotate_evidence_bundle
+    
+>       bundle, _, annotations = _annotated_fixture(captured_run, monkeypatch)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_evidence.py:476: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_evidence.py:269: in _annotated_fixture
+    bundle = build_evidence(captured_run, budget=budget)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:705: in build_evidence
+    selected = _source_within_budget(sources, int(budget * 0.3))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:323: in _source_within_budget
+    if _tokens(_render_sources(sources, priority)) <= budget:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/evidence.py:24: in _tokens
+    return len(tiktoken.get_encoding("cl100k_base").encode(text, disallowed_special=()))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/registry.py:86: in get_encoding
+    enc = Encoding(**constructor())
+                     ^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken_ext/openai_public.py:76: in cl100k_base
+    mergeable_ranks = load_tiktoken_bpe(
+.venv/lib/python3.12/site-packages/tiktoken/load.py:161: in load_tiktoken_bpe
+    contents = read_file_cached(tiktoken_bpe_file, expected_hash)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:66: in read_file_cached
+    contents = read_file(blobpath)
+               ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/tiktoken/load.py:17: in read_file
+    resp = requests.get(blobpath)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:87: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/api.py:71: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:651: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/sessions.py:784: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/requests/adapters.py:696: in send
+    resp = conn.urlopen(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:793: in urlopen
+    response = self._make_request(
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:470: in _make_request
+    self._validate_conn(conn)
+.venv/lib/python3.12/site-packages/urllib3/connectionpool.py:1125: in _validate_conn
+    conn.connect()
+.venv/lib/python3.12/site-packages/urllib3/connection.py:827: in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/urllib3/connection.py:239: in _new_conn
+    sock = connection.create_connection(
+.venv/lib/python3.12/site-packages/urllib3/util/connection.py:60: in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('openaipublic.blob.core.windows.net', 443, <AddressFamily.AF_UNSPEC: 0>, <SocketKind.SOCK_STREAM: 1>)
+kwargs = {}
+
+    def denied(*args, **kwargs):
+>       raise AssertionError("Independent offline guard denied real DNS/INET connection")
+E       AssertionError: Independent offline guard denied real DNS/INET connection
+
+.cache/setup/run_full_guarded.py:20: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_evidence.py::test_budget_trims_prompt_without_discarding_complete_json
+FAILED tests/test_evidence.py::test_large_budget_keeps_full_main_and_imported_module
+FAILED tests/test_evidence.py::test_unsafe_small_budget_refuses_instead_of_empty_success
+FAILED tests/test_evidence.py::test_plot_receives_analyzer_aligned_steps - As...
+FAILED tests/test_evidence.py::test_nano_attaches_to_visible_stacks_without_changing_original_evidence
+FAILED tests/test_evidence.py::test_nano_optional_labels_fit_only_remaining_budget
+FAILED tests/test_evidence.py::test_skipped_annotations_leave_bundle_and_artifacts_unchanged
+FAILED tests/test_evidence.py::test_completed_annotations_cannot_match_new_capture
+FAILED tests/test_evidence.py::test_traceback_ablation_excludes_real_bound_nano_metadata
+FAILED tests/test_evidence.py::test_optional_annotation_write_failure_restores_original_pair[prepare]
+FAILED tests/test_evidence.py::test_optional_annotation_write_failure_restores_original_pair[second_publish]
+FAILED tests/test_evidence.py::test_failed_restore_uses_retained_original_pair_for_diagnosis
+FAILED tests/test_evidence.py::test_optional_annotation_budget_failure_does_not_block_original_bundle
+FAILED tests/test_evidence.py::test_annotation_interrupt_restores_pair_and_propagates
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/usr/lib/python3.12/selectors.py:415: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)
+14 failed, 476 passed in 140.06s (0:02:20)

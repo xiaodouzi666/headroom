@@ -1,0 +1,76 @@
+{
+  "timestamp_utc": "2026-10-24T13:36:37.976361+00:00",
+  "base_commit": "96aca1ddd47332cbb22c77008032cffcd40068bf",
+  "scope": "Bounded real verification feedback to subsequent Ultra diagnosis requests; core forwarding of separately validated/budgeted Nano evidence bundle.",
+  "source_frozen": true,
+  "source_sha256": {
+    "headroom/diagnose.py": "cf9ac691a047813f39797b25f69d5a5273c554c3edacce0b22880dabdb4154eb",
+    "headroom/orchestrator.py": "9cb0503fed578434f10179cd18d52a87928a2b251d01ab079f79e6ae237a330c",
+    "headroom/prompts/diagnose.md": "8f972c09da744b7b30c2336a91be32fe4bd90c8bc98d11247c00dd947855ccfc",
+    "tests/test_verification_feedback.py": "bf923a0e525630b8cf4cc194759c12c34975597a509cb95dec9439ea3afb4336",
+    "tests/test_orchestrator.py": "a9b27051c9f36513038b0c96ec81d1923fac9d7a5bac01c51b340ab731887198",
+    "docs/DIAGNOSE.md": "430e8aad3c8630a8e79e6b51f7cb6b0c31f8da9fc1a7c8c362d5af6e4034695f",
+    "docs/SEARCH.md": "1b7d8b819b4833c58108fd0f11ca59fa3a38d399f959cf5288b4cbe89771456a",
+    "docs/PLAN.md": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56"
+  },
+  "verification": [
+    {
+      "log": "pytest-first.log",
+      "result": "74 passed in 10.40s"
+    },
+    {
+      "log": "pytest-integrated.log",
+      "result": "75 passed in 10.94s"
+    },
+    {
+      "log": "pytest-final.log",
+      "result": "76 passed in 10.83s"
+    },
+    {
+      "log": "audit-feedback.log",
+      "result": "Independent guarded SDK MockTransport reproduction succeeded: keep, revert, keep; 3 verification runs, 6 mock model requests; round 3 feedback 4755 UTF-8 bytes."
+    },
+    {
+      "result": "Final scoped Ruff check and format passed; early unused report-script noqa was removed before final checks."
+    }
+  ],
+  "independent_guard": "offline_tests.py denies DNS/socket and opening actual project .env before app/test imports; no GPU/API calls or new credentials.",
+  "raw_fixture_run": "/home/xiaodouzi/workspace/headroom/runs/verification-feedback-cpu-20261024/feedback-_43d0tg5/jobs/dd8a800fcec045a1a15ed40d04904af5",
+  "request_evidence": "request-round-3.json",
+  "feedback_bounds": {
+    "rounds": 6,
+    "request_utf8_bytes": 64000,
+    "checks_per_round": 64,
+    "notes_per_round": 8,
+    "note_utf8_bytes": 320,
+    "candidate_exception_message_utf8_bytes": 512
+  },
+  "changes": [
+    "Each round stores verification-feedback.json and the identical structured summary in the round record.",
+    "Candidate observations remain distinct from selected_after_round; failed/unknown checks and original finite VerifyReport scalar values are retained.",
+    "Missing verification is null with the real failure reason. Candidate error/exception and small OOM numeric fields are bounded; raw snapshot/traceback/full diff are excluded.",
+    "Next diagnosis receives verification_feedback as a separate user data field; prompt explains evidence/provenance and rejects treating error text as instructions.",
+    "Existing policy, keep/revert gates, round cap, call count, budget/admission and deadlines are unchanged.",
+    "Core now uses annotate_evidence_bundle return for baseline evidence; later fresh captures do not inherit previous Nano labels."
+  ],
+  "independent_review": "payment_readiness read the final feedback flow and found no unresolved blocker; did not rerun tests or modify files.",
+  "limitations": [
+    "Offline SDK mocks and synthetic Lab measurements establish wiring, not live Ultra reasoning, GPU repair or accuracy/cost acceptance.",
+    "Nano core forwarding regression uses an explicit helper test double; real binding/token-budget/ablation checks are owned by the annotation agent.",
+    "Tavily research is host-orchestrated topic selection and explore calls. PLAN A5 line75 model tool-calling loop is not implemented; client/router tools support alone does not establish it."
+  ],
+  "report_sha256": {
+    "__pycache__/offline_tests.cpython-312.pyc": "a36253934ea2cc00c7a329d07ae97624c86a366a1fb3ff5dfac599e83f708814",
+    "audit-feedback-first.json": "40346c809fb98daddcb343414eface2cf0130e3b585aea442ba3ca4524abfafc",
+    "audit-feedback-first.log": "6a74de276486eb68e19d14d657d6054bf2dce96538573803f31d81be68bdb07f",
+    "audit-feedback.json": "9214aa7241efb774821046d27bcfb1f2c3b3c4f8645aab2ae1d31e438b4b8ff1",
+    "audit-feedback.log": "7fdd260cfed5e2b527b606deac33bdfd586ff0f1cc3e5de782b3d5e2a2902b89",
+    "audit_feedback.py": "6d2d8ca41b902c38e3b36e6e307bbf07a780dcbe85739925599e7335b1d23f70",
+    "offline_tests.py": "11df05cc17c9bd1ce6bec45fa26adef9460b402518a9dc3cadeecf4df24164aa",
+    "pytest-final.log": "91d84a1b900e39181421aadeeb270792a69eb5078906a351050b0a933e13ae79",
+    "pytest-first.log": "1fb6bdc5f3796e6f4c93d884e739bd938b25577c5af3b294bc69f67241c91f13",
+    "pytest-integrated.log": "921e00406c17cdb56bcfd7d223f298f72693c8a7fa58e08c5481b6c01518916e",
+    "request-round-3-first.json": "b6f08b15c28e96a25ed9a358a01fc97db4b045f1b60aa5bba00e6575c8361040",
+    "request-round-3.json": "849d677eabec59ce5822ef80142b817e308537bd211824145c737c869aaa1c6a"
+  }
+}
