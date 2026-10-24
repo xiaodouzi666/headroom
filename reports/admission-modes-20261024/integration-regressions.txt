@@ -1,0 +1,536 @@
+........................................................................ [ 45%]
+.......................................................F..FF............ [ 90%]
+.FFF.F......FF.                                                          [100%]
+=================================== FAILURES ===================================
+_ test_spawn_worker_deadline_kills_ignoring_process_and_preserves_partial_report _
+
+settings = ApiSettings(project_root=PosixPath('/home/xiaodouzi/workspace/headroom'), data_root=PosixPath('/tmp/pytest-of-xiaodouz..., shutdown_grace_seconds=0.2, event_poll_seconds=0.01, allowed_hosts=('localhost', '127.0.0.1', '[::1]', 'testserver'))
+
+    def test_spawn_worker_deadline_kills_ignoring_process_and_preserves_partial_report(settings):
+        settings.deadline_seconds = 4
+        settings.shutdown_grace_seconds = 0.2
+        app = create_app(settings, worker=process_deadline_worker, worker_mode="process")
+        with TestClient(app) as client:
+>           run_id = client.post("/api/runs", json={"script_text": "print('slow')"}).json()["run_id"]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'run_id'
+
+tests/test_api.py:222: KeyError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 285, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/<stdin>'
+_______ test_unverified_cleanup_halts_queue_and_does_not_start_next_job ________
+
+settings = ApiSettings(project_root=PosixPath('/home/xiaodouzi/workspace/headroom'), data_root=PosixPath('/tmp/pytest-of-xiaodouz...=4, shutdown_grace_seconds=5, event_poll_seconds=0.01, allowed_hosts=('localhost', '127.0.0.1', '[::1]', 'testserver'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b9b5fbce90>
+
+    def test_unverified_cleanup_halts_queue_and_does_not_start_next_job(settings, monkeypatch):
+        from headroom.api import queue as queue_module
+    
+        monkeypatch.setattr(queue_module, "cleanup_owned_lab", lambda *args: False)
+        settings.deadline_seconds = 4
+        app = create_app(settings, worker=process_deadline_worker, worker_mode="process")
+        with TestClient(app) as client:
+>           first = client.post("/api/runs", json={"script_text": "print('FAST')"}).json()["run_id"]
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'run_id'
+
+tests/test_api.py:285: KeyError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 285, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/<stdin>'
+__ test_server_shutdown_cancels_the_owned_process_and_finishes_partial_report __
+
+settings = ApiSettings(project_root=PosixPath('/home/xiaodouzi/workspace/headroom'), data_root=PosixPath('/tmp/pytest-of-xiaodouz..., shutdown_grace_seconds=0.2, event_poll_seconds=0.01, allowed_hosts=('localhost', '127.0.0.1', '[::1]', 'testserver'))
+
+    def test_server_shutdown_cancels_the_owned_process_and_finishes_partial_report(settings):
+        from headroom.store.db import Store
+    
+        settings.deadline_seconds = 30
+        settings.shutdown_grace_seconds = 0.2
+        app = create_app(settings, worker=process_deadline_worker, worker_mode="process")
+        with TestClient(app) as client:
+>           run_id = client.post("/api/runs", json={"script_text": "print('slow')"}).json()["run_id"]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'run_id'
+
+tests/test_api.py:305: KeyError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 285, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/<stdin>'
+___ test_preparation_deadline_kills_owned_group_and_never_dispatches_worker ____
+
+queue = (<headroom.api.queue.RunQueue object at 0x70b9b7aa8320>, PosixPath('/tmp/pytest-of-xiaodouzi/pytest-53/test_preparation_deadline_kill0/train.py'))
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-53/test_preparation_deadline_kill0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b9b5ebb8c0>
+
+    def test_preparation_deadline_kills_owned_group_and_never_dispatches_worker(
+        queue, tmp_path, monkeypatch
+    ):
+        monkeypatch.setenv("NEBIUS_API_KEY", "offline-sentinel-never-a-real-key")
+        monkeypatch.setenv("TAVILY_API_KEY", "offline-sentinel-never-a-real-key")
+        jobs, script = queue
+        marker, descendant = tmp_path / "preparing", tmp_path / "descendant"
+        with pytest.raises(AdmissionError) as failure:
+>           submit(jobs, script, delay=30, marker=marker, descendant=descendant)
+
+tests/test_api_deadline.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_api_deadline.py:74: in submit
+    queue.submit(
+headroom/api/queue.py:447: in submit
+    prepared, _ = self._prepare(prepare, deadline)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <headroom.api.queue.RunQueue object at 0x70b9b7aa8320>
+prepare = functools.partial(<function fake_prepare at 0x70b9b85ed580>, PosixPath('/tmp/pytest-of-xiaodouzi/pytest-53/test_prepar...ll0/preparing'), descendant=PosixPath('/tmp/pytest-of-xiaodouzi/pytest-53/test_preparation_deadline_kill0/descendant'))
+deadline = 1399791.211718397
+
+    def _prepare(self, prepare, deadline):
+        if self.mode == "thread":
+            # Trusted in-process fixtures only. Production always uses spawn.
+            return prepare(deadline=deadline), True
+        receiver, sender = multiprocessing.get_context("spawn").Pipe(duplex=True)
+        process = multiprocessing.get_context("spawn").Process(
+            target=_prepare_entry, args=(prepare, deadline, sender, os.getpid()), daemon=True
+        )
+        result, outcome, identity, ready = None, None, None, False
+        try:
+            process.start()
+            identity = _preparation_identity(process.pid)
+            sender.close()
+            while not self.closing and time.monotonic() < deadline:
+                if receiver.poll(min(0.05, max(0, deadline - time.monotonic()))):
+                    try:
+                        kind, payload = receiver.recv()
+                    except EOFError:
+                        break
+                    if kind == "ready":
+                        ready = True
+                        receiver.send("proceed")
+                    else:
+                        outcome = kind
+                        result = payload
+                        break
+    
+        except (OSError, EOFError):
+            outcome = "error"
+        finally:
+            cleaned = (
+                _stop_preparation(process, identity, ready) if process.pid is not None else True
+            )
+            sender.close()
+            receiver.close()
+        if not cleaned:
+            with self.condition:
+                self.halted = True
+                self.condition.notify_all()
+            raise AdmissionError("Source preparation cleanup could not be verified", 503)
+        if self.closing:
+            raise AdmissionError("Queue stopped while source was being prepared", 503)
+        if outcome == "timeout" or time.monotonic() >= deadline:
+            raise AdmissionError("Source preparation exceeded its admission deadline", 504)
+        if outcome != "result":
+>           raise ValueError("Source preparation failed")
+E           ValueError: Source preparation failed
+
+headroom/api/queue.py:376: ValueError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 285, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/<stdin>'
+____________ test_worker_receives_only_time_left_after_preparation _____________
+
+queue = (<headroom.api.queue.RunQueue object at 0x70b9b5e998b0>, PosixPath('/tmp/pytest-of-xiaodouzi/pytest-53/test_worker_receives_only_time0/train.py'))
+
+    def test_worker_receives_only_time_left_after_preparation(queue):
+        jobs, script = queue
+        admitted = time.monotonic()
+>       run_id = submit(jobs, script, delay=1.5)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_api_deadline.py:119: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_api_deadline.py:74: in submit
+    queue.submit(
+headroom/api/queue.py:447: in submit
+    prepared, _ = self._prepare(prepare, deadline)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <headroom.api.queue.RunQueue object at 0x70b9b5e998b0>
+prepare = functools.partial(<function fake_prepare at 0x70b9b85ed580>, PosixPath('/tmp/pytest-of-xiaodouzi/pytest-53/test_worker_receives_only_time0/train.py'), delay=1.5)
+deadline = 1399791.304579037
+
+    def _prepare(self, prepare, deadline):
+        if self.mode == "thread":
+            # Trusted in-process fixtures only. Production always uses spawn.
+            return prepare(deadline=deadline), True
+        receiver, sender = multiprocessing.get_context("spawn").Pipe(duplex=True)
+        process = multiprocessing.get_context("spawn").Process(
+            target=_prepare_entry, args=(prepare, deadline, sender, os.getpid()), daemon=True
+        )
+        result, outcome, identity, ready = None, None, None, False
+        try:
+            process.start()
+            identity = _preparation_identity(process.pid)
+            sender.close()
+            while not self.closing and time.monotonic() < deadline:
+                if receiver.poll(min(0.05, max(0, deadline - time.monotonic()))):
+                    try:
+                        kind, payload = receiver.recv()
+                    except EOFError:
+                        break
+                    if kind == "ready":
+                        ready = True
+                        receiver.send("proceed")
+                    else:
+                        outcome = kind
+                        result = payload
+                        break
+    
+        except (OSError, EOFError):
+            outcome = "error"
+        finally:
+            cleaned = (
+                _stop_preparation(process, identity, ready) if process.pid is not None else True
+            )
+            sender.close()
+            receiver.close()
+        if not cleaned:
+            with self.condition:
+                self.halted = True
+                self.condition.notify_all()
+            raise AdmissionError("Source preparation cleanup could not be verified", 503)
+        if self.closing:
+            raise AdmissionError("Queue stopped while source was being prepared", 503)
+        if outcome == "timeout" or time.monotonic() >= deadline:
+            raise AdmissionError("Source preparation exceeded its admission deadline", 504)
+        if outcome != "result":
+>           raise ValueError("Source preparation failed")
+E           ValueError: Source preparation failed
+
+headroom/api/queue.py:376: ValueError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 285, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/<stdin>'
+_ test_waiting_job_expires_without_starting_and_slow_report_does_not_delay_watchdog _
+
+queue = (<headroom.api.queue.RunQueue object at 0x70b9b607d070>, PosixPath('/tmp/pytest-of-xiaodouzi/pytest-53/test_waiting_job_expires_witho0/train.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70b9b5ee2ed0>
+
+    def test_waiting_job_expires_without_starting_and_slow_report_does_not_delay_watchdog(
+        queue, monkeypatch
+    ):
+        from headroom.api import queue as module
+    
+        jobs, script = queue
+>       first = submit(jobs, script)
+                ^^^^^^^^^^^^^^^^^^^^
+
+tests/test_api_deadline.py:137: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_api_deadline.py:74: in submit
+    queue.submit(
+headroom/api/queue.py:447: in submit
+    prepared, _ = self._prepare(prepare, deadline)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <headroom.api.queue.RunQueue object at 0x70b9b607d070>
+prepare = functools.partial(<function fake_prepare at 0x70b9b85ed580>, PosixPath('/tmp/pytest-of-xiaodouzi/pytest-53/test_waiting_job_expires_witho0/train.py'))
+deadline = 1399791.395827798
+
+    def _prepare(self, prepare, deadline):
+        if self.mode == "thread":
+            # Trusted in-process fixtures only. Production always uses spawn.
+            return prepare(deadline=deadline), True
+        receiver, sender = multiprocessing.get_context("spawn").Pipe(duplex=True)
+        process = multiprocessing.get_context("spawn").Process(
+            target=_prepare_entry, args=(prepare, deadline, sender, os.getpid()), daemon=True
+        )
+        result, outcome, identity, ready = None, None, None, False
+        try:
+            process.start()
+            identity = _preparation_identity(process.pid)
+            sender.close()
+            while not self.closing and time.monotonic() < deadline:
+                if receiver.poll(min(0.05, max(0, deadline - time.monotonic()))):
+                    try:
+                        kind, payload = receiver.recv()
+                    except EOFError:
+                        break
+                    if kind == "ready":
+                        ready = True
+                        receiver.send("proceed")
+                    else:
+                        outcome = kind
+                        result = payload
+                        break
+    
+        except (OSError, EOFError):
+            outcome = "error"
+        finally:
+            cleaned = (
+                _stop_preparation(process, identity, ready) if process.pid is not None else True
+            )
+            sender.close()
+            receiver.close()
+        if not cleaned:
+            with self.condition:
+                self.halted = True
+                self.condition.notify_all()
+            raise AdmissionError("Source preparation cleanup could not be verified", 503)
+        if self.closing:
+            raise AdmissionError("Queue stopped while source was being prepared", 503)
+        if outcome == "timeout" or time.monotonic() >= deadline:
+            raise AdmissionError("Source preparation exceeded its admission deadline", 504)
+        if outcome != "result":
+>           raise ValueError("Source preparation failed")
+E           ValueError: Source preparation failed
+
+headroom/api/queue.py:376: ValueError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 285, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/<stdin>'
+______________ test_shutdown_terminates_preparation_before_return ______________
+
+queue = (<headroom.api.queue.RunQueue object at 0x70b9b7d93740>, PosixPath('/tmp/pytest-of-xiaodouzi/pytest-53/test_shutdown_terminates_prepa0/train.py'))
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-53/test_shutdown_terminates_prepa0')
+
+    def test_shutdown_terminates_preparation_before_return(queue, tmp_path):
+        jobs, script = queue
+        jobs.deadline = 30
+        marker = tmp_path / "preparing"
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            task = pool.submit(submit, jobs, script, delay=30, marker=marker)
+>           wait_until(marker.exists)
+
+tests/test_api_deadline.py:193: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+predicate = <bound method Path.exists of PosixPath('/tmp/pytest-of-xiaodouzi/pytest-53/test_shutdown_terminates_prepa0/preparing')>
+timeout = 8
+
+    def wait_until(predicate, timeout=8):
+        until = time.monotonic() + timeout
+        while time.monotonic() < until:
+            value = predicate()
+            if value:
+                return value
+            time.sleep(0.02)
+>       raise AssertionError("Offline condition did not arrive")
+E       AssertionError: Offline condition did not arrive
+
+tests/test_api_deadline.py:91: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 285, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/<stdin>'
+_________ test_supervisor_death_cleans_preparation_and_descendants[0] __________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-53/test_supervisor_death_cleans_p0')
+delay = 0
+
+    @pytest.mark.parametrize("delay", [0, 30])
+    def test_supervisor_death_cleans_preparation_and_descendants(tmp_path, delay):
+        from headroom.api.queue import _preparation_identity
+    
+        script = tmp_path / "train.py"
+        script.write_text("pass")
+        marker, descendant, idle = (tmp_path / name for name in ("preparing", "descendant", "idle"))
+        supervisor = multiprocessing.get_context("spawn").Process(
+            target=orphan_supervisor, args=(script, marker, descendant, idle, delay)
+        )
+        supervisor.start()
+        preparation_pid = identity = None
+        try:
+>           wait_until(lambda: marker.exists() and descendant.exists(), timeout=5)
+
+tests/test_api_deadline.py:347: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+predicate = <function test_supervisor_death_cleans_preparation_and_descendants.<locals>.<lambda> at 0x70b9b7d487c0>
+timeout = 5
+
+    def wait_until(predicate, timeout=8):
+        until = time.monotonic() + timeout
+        while time.monotonic() < until:
+            value = predicate()
+            if value:
+                return value
+            time.sleep(0.02)
+>       raise AssertionError("Offline condition did not arrive")
+E       AssertionError: Offline condition did not arrive
+
+tests/test_api_deadline.py:91: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 285, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/<stdin>'
+_________ test_supervisor_death_cleans_preparation_and_descendants[30] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-53/test_supervisor_death_cleans_p1')
+delay = 30
+
+    @pytest.mark.parametrize("delay", [0, 30])
+    def test_supervisor_death_cleans_preparation_and_descendants(tmp_path, delay):
+        from headroom.api.queue import _preparation_identity
+    
+        script = tmp_path / "train.py"
+        script.write_text("pass")
+        marker, descendant, idle = (tmp_path / name for name in ("preparing", "descendant", "idle"))
+        supervisor = multiprocessing.get_context("spawn").Process(
+            target=orphan_supervisor, args=(script, marker, descendant, idle, delay)
+        )
+        supervisor.start()
+        preparation_pid = identity = None
+        try:
+>           wait_until(lambda: marker.exists() and descendant.exists(), timeout=5)
+
+tests/test_api_deadline.py:347: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+predicate = <function test_supervisor_death_cleans_preparation_and_descendants.<locals>.<lambda> at 0x70b9b7bd5b20>
+timeout = 5
+
+    def wait_until(predicate, timeout=8):
+        until = time.monotonic() + timeout
+        while time.monotonic() < until:
+            value = predicate()
+            if value:
+                return value
+            time.sleep(0.02)
+>       raise AssertionError("Offline condition did not arrive")
+E       AssertionError: Offline condition did not arrive
+
+tests/test_api_deadline.py:91: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 285, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/<stdin>'
+=========================== short test summary info ============================
+FAILED tests/test_api.py::test_spawn_worker_deadline_kills_ignoring_process_and_preserves_partial_report
+FAILED tests/test_api.py::test_unverified_cleanup_halts_queue_and_does_not_start_next_job
+FAILED tests/test_api.py::test_server_shutdown_cancels_the_owned_process_and_finishes_partial_report
+FAILED tests/test_api_deadline.py::test_preparation_deadline_kills_owned_group_and_never_dispatches_worker
+FAILED tests/test_api_deadline.py::test_worker_receives_only_time_left_after_preparation
+FAILED tests/test_api_deadline.py::test_waiting_job_expires_without_starting_and_slow_report_does_not_delay_watchdog
+FAILED tests/test_api_deadline.py::test_shutdown_terminates_preparation_before_return
+FAILED tests/test_api_deadline.py::test_supervisor_death_cleans_preparation_and_descendants[0]
+FAILED tests/test_api_deadline.py::test_supervisor_death_cleans_preparation_and_descendants[30]
+9 failed, 150 passed in 24.99s

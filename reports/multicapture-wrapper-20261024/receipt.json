@@ -1,0 +1,92 @@
+{
+  "format_version": 1,
+  "base_commit": "5a03502d3853f940fd11c02c75516bbc4ea49be5",
+  "scope": "Multi-capture unique CUDA OOM target selection and exact replay, CPU-only verification",
+  "frozen": true,
+  "source_sha256": {
+    "headroom/lab/runner.py": "4362e348fdc0f8e26dd24a812feec76f30aa88513e83e9c4ee14449f75e4884b",
+    "headroom/execution.py": "400d5c782dc6269818a1d5f63d7ab0ea1a85a8c15c05ef7543b7116245e256ea",
+    "headroom/evidence.py": "6aec6ff0b3ac57b5dd6c00d5b59ff3fc3684b69ea032d563f142cf673f6fbc00",
+    "headroom/watch.py": "48cd1a0e68735899617e6383fda77bd67941d66f99ee1791f8ae7cccd3dfb075",
+    "tests/test_multicapture.py": "160dc7149212fa3023c2e54ebf139c601e16b10a0a09ad1178a373b07530bec6",
+    "tests/test_wrapper_execution.py": "a095e6a254098f9b3708c8489ec808987807425177990617c59525dc4116007d",
+    "docs/COMMAND_MODE.md": "64912938fde7a8375d76b5d720ee03b3f0bb9924acc4ee56493f15d0bfcd693c",
+    "docs/WATCH_HF.md": "457c21f8088e69556663c8968f019b836b8e461c535fa5359ba2bf032dbd0f99",
+    "docs/PLAN.md": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56"
+  },
+  "tests": [
+    {
+      "command": ".venv/bin/python reports/multicapture-wrapper-20261024/run_tests.py tests/test_multicapture.py tests/test_wrapper_execution.py",
+      "log": "pytest-first.log",
+      "result": "44 passed in 102.96s"
+    },
+    {
+      "command": ".venv/bin/python reports/multicapture-wrapper-20261024/run_tests.py tests/test_multicapture.py::test_real_cpu_python_parent_watch_hands_off_child_source tests/test_watch.py tests/test_command_replay.py tests/test_evidence.py tests/test_cli.py tests/test_verify_runner.py",
+      "log": "pytest-regression.log",
+      "result": "103 passed in 39.06s"
+    },
+    {
+      "command": ".venv/bin/python reports/multicapture-wrapper-20261024/run_tests.py tests/test_multicapture.py::test_legacy_manifest_multicapture_without_children_is_not_primary",
+      "log": "pytest-legacy-manifest.log",
+      "result": "1 passed in 0.11s"
+    }
+  ],
+  "assurance": [
+    "Network guard installed before pytest imports; target invocations explicitly CPU Docker with original network-none isolation.",
+    "Real CPU helper-before/helper-after replays completed 20 optimizer updates for candidate and small-batch reference.",
+    "Real Python parent propagation captured completed parent and failed child; Watch handed off the child source/args with full original parent argv.",
+    "Offline SDK fixture Watch-to-run_fix-to-patch-to-report test covered both single and multi capture.",
+    "All original primary/child artifacts remain in each Lab run; selected_capture_relative does not overwrite or relocate raw records.",
+    "Raw CPU artifacts for the parent test are copied under cpu-parent-evidence; original result.cpu.json and manifest.cpu.json distinguish observed CPU failure from synthetic CUDA classification."
+  ],
+  "not_claimed": [
+    "No GPU or model API invoked by this work.",
+    "CUDA OOM labels and verification success verdict in fixture tests are synthetic; not GPU memory saving or model repair acceptance.",
+    "No aggregation of multi-process/distributed training; no proof uninstrumented helpers are absent.",
+    "No acceptance of multiple OOMs, duplicate selected startup identities, missing or failed helpers, incompatible root exit/timeout/cleanup."
+  ],
+  "review_fixes": [
+    "No selected target in multi-capture cannot fall back to successful primary.",
+    "Legacy missing locator rejects known multiple owners from result, manifest, or disk.",
+    "Selected raw capture binding includes precision_observation, parameters, pairing and every raw field except host status/reason/shared_gpu overrides."
+  ],
+  "report_files_sha256": {
+    "cpu-parent-evidence/parent-source/launcher.py": "04694330f542b34c4703721f38a6e4689770f53e77ddaf8206f8f54eaeb3e0f2",
+    "cpu-parent-evidence/parent-source/train.py": "1d28af730814b8f12122656db115311c8541eec31d3cd816dcd715430d7fbb41",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/.capture-owner.json": "7f78f8f5decf62d5dd1cf6ea85bfc5acf3ee415c54c6861b3545f87ae1478dea",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/capture-ready.json": "6bb6c6325ef8c00cbf4b20a5100ed9d5e5ebf39d6a6d0790aa835a4f41dd8aa9",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/env.json": "28785425cea3a55f47c1db5c4a309b7d4f80dfc3ab6741e483eaf759cf29ac59",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/memory_stats.json": "38e0b9de817f645c4bec37c0d4a3e58baecccb040f5718dc069a72c7385a0bed",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/memory_summary.txt": "e8d01f8772a91f33738580872a37759b63cf8d87b4de776bca4bfc9bb2986ec4",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/processes/10/capture-ready.json": "7f3cb2ece09f9855ea3e79c43598976e5bba12faa565028a807ccb8dcd29052e",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/processes/10/env.json": "e05f15da8c32665e25ad12ff0b08bd974d2756360b58de040793167011bba21b",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/processes/10/memory_stats.json": "38e0b9de817f645c4bec37c0d4a3e58baecccb040f5718dc069a72c7385a0bed",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/processes/10/memory_summary.txt": "e8d01f8772a91f33738580872a37759b63cf8d87b4de776bca4bfc9bb2986ec4",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/processes/10/result.cpu.json": "327693819883c0013905f90c00c8a53e06bc71db01a04571d4689c7293988709",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/processes/10/result.json": "ef20a12855d19fcd93c8621c941e57f3900fd31208f87b92730584532cf2e54b",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/processes/10/snapshot.json": "38e0b9de817f645c4bec37c0d4a3e58baecccb040f5718dc069a72c7385a0bed",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/processes/10/snapshot.pickle": "9c298d589a2158eb513cb52191144518a2acab2cb0c04f1df14fca0f712fa4a1",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/processes/10/traceback.txt": "d9e15ec23238194897193fbd9cdc519231eebd0e95ca8b20ab5fcf56de0a1484",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/result.json": "81457096002c9e1182fbc545f06dd94a07899746285e4a837f82c4a1196d9737",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/snapshot.json": "38e0b9de817f645c4bec37c0d4a3e58baecccb040f5718dc069a72c7385a0bed",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/snapshot.pickle": "9c298d589a2158eb513cb52191144518a2acab2cb0c04f1df14fca0f712fa4a1",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/artifacts/traceback.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/docker-create.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/gpu-after.json": "c55612fb233f2cb4106c20f7e81bd71465ca7b6f219620257d883d48d30f1b62",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/gpu-before.json": "c55612fb233f2cb4106c20f7e81bd71465ca7b6f219620257d883d48d30f1b62",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/manifest.cpu.json": "c4f63e4ee4273dc85f956960b1c5003a6497e86348c175da0a84f1ce132992fa",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/manifest.json": "75b25defead3e387153551150503c66d321b491389ad603b776b2c7d6c418120",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/result.cpu.json": "b3908a756ea8d8d8474660687e309dda9e068c5d5e1753ddad985d9651647067",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/result.json": "111f28a418f1d212a1ae87916714cfc1f4ae723b029d16e6d61564dbf046dd90",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/source/launcher.py": "04694330f542b34c4703721f38a6e4689770f53e77ddaf8206f8f54eaeb3e0f2",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/source/train.py": "1d28af730814b8f12122656db115311c8541eec31d3cd816dcd715430d7fbb41",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/stderr.log": "d9e15ec23238194897193fbd9cdc519231eebd0e95ca8b20ab5fcf56de0a1484",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/lab/000f926456c84813b8737f22858574af/stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/watch.json": "f0275a06c981ecbdcc4f4b6f3f0a8a85bd185a2dfb4c915bec406794e755ce46",
+    "cpu-parent-evidence/watch/faa193d1cfaa413c9ff9c0fbf4affc39/watch.md": "1fa41fddb3dce9f0fd3e55457979792f46f3ae06959368fca99a39d8e9f0d101",
+    "pytest-first.log": "e1547961fbd70b3bfe3990ef1053f1e8771cb6542c90687e814733c51d47a3bf",
+    "pytest-legacy-manifest.log": "c91dad03511eb111dba9f317cdb7962c64ec389c7d259de488e167c78aac1b31",
+    "pytest-regression.log": "020f76cc18c0487ca8f32439485af75e7547bc23b16e0751b14828ba741235bd",
+    "run_tests.py": "036ac817bad440f8b6431b2b8fc28a046ff1d54bf0474ec40a6ccae9b42e4cc1"
+  }
+}

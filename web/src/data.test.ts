@@ -218,6 +218,14 @@ describe("availability evidence", () => {
     ).toBe("billing_review_required");
     expect(
       availabilityBlocks({
+        local_budget: {
+          status: "pending_charge",
+          scope: "local_application_authorization",
+        },
+      }).budgetReason,
+    ).toBe("pending_charge");
+    expect(
+      availabilityBlocks({
         local_budget: { status: "unknown", remaining_usd: null },
       }).budgetBlocked,
     ).toBe(false);

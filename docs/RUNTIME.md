@@ -9,7 +9,7 @@ Live work requires all of the following:
 3. Confirmed available credit and an explicit authorized total spending amount.
 4. A reviewed `.cache/tokenfactory-runtime.json` matching `headroom.runtime.LiveProfile`.
 
-A profile is an operator-reviewed record, not a self-verifying assertion. Do not set its verified flags merely to bypass preflight. Each model needs a proven input token ceiling for its permitted prompt byte domain, output-token limit semantics that include billed reasoning, and verified current prices. An approximate tiktoken count is not a spending guarantee. Profiles and keys stay ignored. No live profile has been enabled by the development tests.
+A profile is an operator-reviewed record, not a self-verifying assertion. Do not set its verified flags merely to bypass preflight. The default `verified_provider_bound` mode needs a proven input token ceiling for its permitted prompt byte domain. The explicitly selected `local_estimate` mode below uses a local estimate with risk margins instead, and cannot promise a hard spending ceiling. Both require reviewed output-token limit semantics that include billed reasoning and verified current prices. An approximate tiktoken count is not a spending guarantee. Profiles and keys stay ignored. No live profile has been enabled by the development tests.
 
 
 Each model's `output_cap_field` within `billing` explicitly selects `max_tokens`
@@ -47,9 +47,9 @@ repair/evaluation. No live runtime profile is created by this code change.
 
 ## Accounting
 
-The SQLite budget ledger reserves each run's cap against the daily and authorized-total budgets. Each actual network attempt, including a retry, reserves a conservative price bound before dispatch. Successful known usage settles that reservation; missing usage, network errors and interrupted attempts retain an unknown charge with its conservative bound. Unknown is never displayed as zero.
+The SQLite budget ledger reserves each run's cap against the daily and authorized-total budgets. Each actual network attempt reserves an explicitly labeled provider bound or local estimate before dispatch. Successful known usage settles that reservation. Missing usage, network errors and interrupted attempts retain unknown actual charges and block every later dispatch through the same ledger, including other open runs and after restart. Unknown is never displayed as zero or as a proven finite maximum debt.
 
-The default CLI run cap is 0.6 USD and daily cap is 12 USD. Environment caps `HEADROOM_RUN_BUDGET_USD` and `HEADROOM_DAILY_BUDGET_USD` can only lower a request's caps. The verified authorized-total balance is a separate all-time ceiling, including across day boundaries. Nano annotations share a 0.02 USD per-run sub-budget across retries. A response identity mismatch or violated billing bound halts further billable work.
+The default CLI run cap is 0.6 USD and daily cap is 12 USD. Environment caps `HEADROOM_RUN_BUDGET_USD` and `HEADROOM_DAILY_BUDGET_USD` can only lower a request's caps. The confirmed authorized total is a separate all-time admission limit, including across day boundaries. An estimated admission can overshoot its reservation and therefore cannot guarantee actual provider charges remain below that limit. Nano annotations share a 0.02 USD per-run sub-budget across retries. A response identity mismatch or violated billing bound halts further billable work.
 
 These local controls govern this application only. They are not a guarantee about Nebius account charges made elsewhere. A card top-up is not an account-level spending cap.
 
@@ -66,7 +66,10 @@ Official sources checked on 2026-10-24:
 The user's billing question is not authorization to pay or to use paid models. The current implementation remains disabled until the missing account/usage gates are verified.
 
 
-## Independent runtime review on 2026-10-24
+## Earlier runtime review on 2026-10-24
+
+The later admission/unknown-charge changes below supersede this review's use of
+"upper bound" for every reservation and its retry behavior after unknown billing.
 
 Direct `build_live_runtime` construction now enforces the same live-enabled,
 credit-confirmed and authorized-credit bounds as reading a profile from disk.
@@ -102,3 +105,117 @@ contract regressions, with Ruff clean. Details and paths are in API.md. This
 review did not use real API credentials, send a model request, top up credit or
 activate a reviewed live profile. T0.4 and the original live repair/accuracy/cost
 acceptance gates remain pending.
+
+
+## Explicit local estimate admission (offline-verified foundation)
+
+Existing profiles omit `billing.mode` and retain `verified_provider_bound`; the
+old strict calculation and selected output-cap field are unchanged. An estimate
+must use the distinct `LocalEstimateAdmission` schema. Neither its presence nor
+its risk acknowledgement enables live use or grants spending permission. Existing
+`live_enabled`, credit confirmation, reviewed prices/output caps and authorized
+total checks still apply. This change creates no runtime profile and does not
+expand the user's existing $0.10 trial connectivity-only authorization.
+
+This is a **partial configuration fragment**, not an enabled profile. Every value
+and its risk margin needs review for the intended request; the sample multiplier
+and allowance are not a calibrated provider guarantee:
+
+~~~json
+{
+  "mode": "local_estimate",
+  "tokenizer_assets_dir": "/absolute/local/tokenizer-assets",
+  "token_multiplier": "2",
+  "additive_tokens": 1024,
+  "max_prompt_utf8_bytes": 1000000,
+  "max_completion_tokens": 4000,
+  "output_cap_field": "max_completion_tokens",
+  "output_cap_includes_reasoning": true,
+  "output_cap_verified": true,
+  "output_cap_evidence": "reference to separately reviewed output-cap evidence",
+  "risk_acknowledged": true,
+  "evidence": "reference to reviewed estimation policy and its limitations"
+}
+~~~
+
+Only the Ultra role and exact pinned `nvidia/Nemotron-3-Ultra-550b-a55b` model ID
+support this mode. Super/Nano remain strict. The estimator sees the **final**
+client SDK payload before each request, including router-added schema text,
+messages, tools and template switches. It reuses `PromptAuditor` without changing
+that tool's diagnostic-only claims. It never uses evidence-only cl100k counts as
+billable input. The request must fit the explicit byte domain and local template
+length. Provider-only fields (including `response_format`, reasoning budgets,
+reasoning effort and tool choice) and ignored historical tool IDs are refused.
+Unknown fields and multimodal inputs are refused by the existing auditor.
+
+Consequently a profile selecting native `json_object` or `json_schema` output
+will reject that request in local-estimate mode. The current supported structured
+route is the router's **text fallback**, which includes the schema in a system
+message. This does not claim native structured output is unsupported by Nebius;
+feature evidence remains separate, and the runtime does not silently change the
+selected JSON or reasoning method just to pass admission.
+
+The local estimate reservation uses exact Decimal arithmetic:
+
+`estimated_input = ceil(local_template_tokens * token_multiplier) + additive_tokens`
+
+`reservation = (estimated_input * max(input_price, cached_input_price) + output_cap * output_price) / 1000000`
+
+The multiplier must be a decimal string greater than one, and the additive token
+allowance must be positive. These are explicit risk margins, not proof of a
+provider tokenizer/template match. A saved call includes `admission_kind`, the
+reservation, local count, margins, hashes and tokenizer revision. The request hash
+and byte count describe the normalized SDK argument domain (including transport
+controls such as timeout), not byte-for-byte HTTP serialization; the template
+count covers only the rendered input. It does not save
+prompt content or the private tokenizer directory. In estimate mode
+`provider_cost_upper_usd` and `provider_prompt_token_ceiling` remain null. Actual
+cost still comes only from returned usage and reviewed pricing. Usage summaries
+add `admission_counts` without including estimates in actual-cost totals. Reports
+label local estimates as reservations that may be exceeded.
+
+### Dependencies and already-local assets
+
+No package or asset download runs during admission. `pyproject.toml` already
+pins `transformers==4.46.3`; its existing locked dependencies supply
+`tokenizers==0.20.3` and `jinja2==3.1.6` in the validated environment. No dependency
+change was needed. Optional tokenizer imports occur only when an estimate is
+requested, so legacy strict use does not load tokenizer assets.
+
+`tokenizer_assets_dir` must be an absolute, existing local directory containing
+`tokenizer.json`, `tokenizer_config.json`, and `chat_template.jinja`. The approved
+cache layout is `.cache/tokenizers/nemotron-3-ultra/<TOKENIZER_REVISION>` beneath
+the server project, resolved to an absolute path by the operator. The revision
+and SHA-256 values are fixed in `headroom/llm/preflight.py`. Files must be regular,
+bounded files and match those hashes; missing files, symlinks, FIFOs, modified
+assets or unavailable dependencies stop admission before dispatch. The loader
+does not use `AutoTokenizer`, model weights, remote code, credentials or network.
+The first successful load is reused in memory for that runtime; later file edits
+do not alter the already verified tokenizer instance.
+
+### Durable unknown-charge rule and dispatch boundary
+
+All live admission modes now halt on **unknown actual billing**, including a
+response with missing/invalid usage, network/SDK failure, interruption, and
+ordinary 429/5xx without verified zero-charge evidence. Such errors are not
+assumed free. A pending reservation also blocks other requests through the same
+ledger. This deliberately limits the older automatic retry policy: a later
+attempt cannot be dispatched until the prior charge is known. Legacy unknown
+rows are retained and treated as blocking during migration/read-only status;
+they are never reset because the day changed or a process restarted.
+
+`reserve`, global pending/unknown checks, and new commitments share SQLite
+`BEGIN IMMEDIATE` transactions. Actual settlement, reservation adjustment and
+halt on unknown/overrun share one transaction. An estimate overrun records the
+full actual amount, even beyond a run limit, then halts all later calls. Output
+cap violations still halt in both modes even if the dollar total fits.
+
+Before the SDK is called, the runtime saves a pending call and atomically marks
+its attempt for dispatch, checking that the run is still open. A cancellation
+is releasable only while the attempt remains explicitly undispatched. Once that
+mark commits, interruption before SDK entry is conservatively retained as
+pending because dispatch cannot be disproved. No timeout or restart releases it.
+If the separate call store fails after a response, the authoritative budget
+ledger retains the settled actual fee and blocks further work for accounting
+review. Reconciliation requires evidence and a separate reviewed procedure;
+this change adds no automatic reset or release of uncertain charges.

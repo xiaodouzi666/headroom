@@ -176,9 +176,10 @@ def test_nano_attempts_share_two_cent_sub_budget(tmp_path):
     try:
         with pytest.raises(BudgetExceeded):
             bundle.router.chat("annotate", [{"role": "user", "content": "stack"}])
-        assert len(calls) == 2
-        assert store.usage("run")["unknown_cost_calls"] == 2
-        assert budget.snapshot("run")["conservative_charge_usd"] == "0.018"
+        assert len(calls) == 1
+        assert store.usage("run")["unknown_cost_calls"] == 1
+        assert budget.snapshot("run")["conservative_charge_usd"] == "0.009"
+        assert budget.snapshot("run")["halt_reason"] == "provider_charge_unknown"
     finally:
         bundle.close()
         store.close()
@@ -406,3 +407,61 @@ def test_legacy_profile_defaults_to_max_tokens_and_bad_field_is_invalid(tmp_path
     payload["models"]["super"]["billing"]["output_cap_field"] = "max_output_tokens"
     with pytest.raises(ValidationError):
         LiveProfile.model_validate(payload)
+
+
+def test_interruption_after_dispatch_mark_commit_preserves_original_and_unknown(
+    tmp_path, monkeypatch
+):
+    calls = []
+    bundle, budget, store = fixture_runtime(tmp_path, lambda req: calls.append(req))
+    original = budget.mark_dispatched
+
+    def interrupted(run_id, attempt_id):
+        original(run_id, attempt_id)
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(budget, "mark_dispatched", interrupted)
+    try:
+        with pytest.raises(KeyboardInterrupt):
+            bundle.router.chat("diagnose", [{"role": "user", "content": "fixture"}])
+        assert calls == []
+        state = budget.snapshot("run")
+        assert state["pending_attempts"] == 1 and state["total_actual_usd"] is None
+        assert state["dispatch_blocked"]
+    finally:
+        bundle.close()
+        store.close()
+
+
+def test_store_failure_before_dispatch_can_release_but_not_after_response(tmp_path, monkeypatch):
+    calls = []
+
+    def respond(request):
+        calls.append(request)
+        return fixture_completion(request)
+
+    bundle, budget, store = fixture_runtime(tmp_path, respond)
+    original = store.add_llm_call
+
+    def failed(*args, **kwargs):
+        raise OSError("fixture persistence failure")
+
+    monkeypatch.setattr(store, "add_llm_call", failed)
+    try:
+        with pytest.raises(OSError):
+            bundle.router.chat("diagnose", [{"role": "user", "content": "fixture"}])
+        assert calls == [] and budget.snapshot("run")["total_actual_usd"] == "0"
+        monkeypatch.setattr(store, "add_llm_call", original)
+        monkeypatch.setattr(store, "update_llm_call", failed)
+        with pytest.raises(OSError):
+            bundle.router.chat("diagnose", [{"role": "user", "content": "fixture"}])
+        assert len(calls) == 1
+        state = budget.snapshot("run")
+        assert state["known_charge_usd"] == "0.00005"
+        assert state["halt_reason"] == "local_accounting_incomplete"
+        with pytest.raises(BudgetExceeded):
+            bundle.router.chat("diagnose", [{"role": "user", "content": "fixture"}])
+        assert len(calls) == 1
+    finally:
+        bundle.close()
+        store.close()

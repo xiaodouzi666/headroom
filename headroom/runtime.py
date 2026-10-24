@@ -13,19 +13,18 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from headroom.budget import BudgetExceeded, money
 from headroom.config import ROLE_MODELS, ModelSpec, RuntimeConfig, VerifiedCapabilities
+from headroom.llm.admission import LocalEstimateAdmission, RuntimeNotReady, output_limit
 from headroom.llm.client import TokenFactoryClient
 from headroom.llm.cost import Pricing
+from headroom.llm.preflight import MODEL_ID
 from headroom.llm.router import LLMRouter
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
-class RuntimeNotReady(RuntimeError):
-    pass
-
-
 class BillingBound(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
+    mode: Literal["verified_provider_bound"] = "verified_provider_bound"
     prompt_token_ceiling: int = Field(gt=0)
     max_prompt_utf8_bytes: int = Field(gt=0)
     max_completion_tokens: int = Field(gt=0)
@@ -38,20 +37,7 @@ class BillingBound(BaseModel):
         """Accept exactly the reviewed top-level cap, never an SDK override."""
         if not self.verified or not self.output_cap_includes_reasoning:
             raise RuntimeNotReady("Billing token ceiling/cap semantics are not verified")
-        cap_fields = {"max_tokens", "max_completion_tokens"}
-        if (
-            self.output_cap_field != spec.output_cap_field
-            or set(body).intersection(cap_fields) != {self.output_cap_field}
-            or (
-                isinstance(body.get("extra_body"), dict)
-                and set(body["extra_body"]).intersection(cap_fields)
-            )
-        ):
-            raise RuntimeNotReady("Output cap field differs from the reviewed billing field")
-        limit = body[self.output_cap_field]
-        if type(limit) is not int or not 0 < limit <= self.max_completion_tokens:
-            raise RuntimeNotReady("Requested output exceeds the reviewed billing cap")
-        return limit
+        return output_limit(self, spec, body)
 
     def upper_usd(self, spec, body):
         max_tokens = self.output_limit(spec, body)
@@ -84,7 +70,7 @@ class ProfileModel(BaseModel):
     output_usd_per_million: str
     cached_input_usd_per_million: str | None = None
     capabilities: dict = Field(default_factory=dict)
-    billing: BillingBound
+    billing: BillingBound | LocalEstimateAdmission
     evidence: str = Field(min_length=1)
 
 
@@ -111,6 +97,10 @@ class LiveProfile(BaseModel):
             raise RuntimeNotReady("Reviewed profile requires Ultra, Super and Nano")
         models = {}
         for role, item in self.models.items():
+            if isinstance(item.billing, LocalEstimateAdmission) and (
+                role != "ultra" or item.model_id != MODEL_ID
+            ):
+                raise RuntimeNotReady("Local estimate is only available for the pinned Ultra role")
             models[role] = ModelSpec(
                 item.model_id,
                 item.timeout_seconds,
@@ -179,10 +169,24 @@ def build_live_runtime(
     """No request on construction; each actual retry reserves before transport."""
     config = profile.runtime_config()
     pending = {}
+    auditors = {}
 
     def before_attempt(role, spec, attempt, body):
         name = ROLE_MODELS[role]
-        upper = profile.models[name].billing.upper_usd(spec, body)
+        policy = profile.models[name].billing
+        if isinstance(policy, LocalEstimateAdmission):
+            if name not in auditors:
+                auditors[name] = policy.load_auditor()
+            upper, admission = policy.decide(spec, body, auditors[name])
+            prompt_ceiling = None
+        else:
+            upper = policy.upper_usd(spec, body)
+            prompt_ceiling = policy.prompt_token_ceiling
+            admission = {
+                "admission_kind": "verified_provider_bound",
+                "provider_cost_upper_usd": str(upper),
+                "provider_prompt_token_ceiling": prompt_ceiling,
+            }
         if name == "nano":
             reserved = Decimal(0)
             for row in store.llm_calls(run_id):
@@ -202,39 +206,77 @@ def build_live_runtime(
             if exceeds_nano:
                 raise BudgetExceeded("Nano annotation budget would exceed 0.02 USD")
         attempt_id = uuid.uuid4().hex
-        budget.reserve(run_id, attempt_id, upper)
+        budget.reserve(run_id, attempt_id, upper, admission_kind=policy.mode, dispatched=False)
         pending["id"] = attempt_id
-        pending["prompt_ceiling"] = profile.models[name].billing.prompt_token_ceiling
-        pending["completion_ceiling"] = profile.models[name].billing.output_limit(spec, body)
-        pending["record_id"] = store.add_llm_call(
-            run_id,
-            {
-                "model": spec.model_id,
-                "role": role,
-                "attempt": attempt,
-                "outcome": "pending",
-                "settled": False,
-                "reservation_usd": str(upper),
-                "output_cap_field": spec.output_cap_field,
-                "output_cap_tokens": pending["completion_ceiling"],
-                "cost_usd": None,
-            },
-        )["id"]
+        pending["prompt_ceiling"] = prompt_ceiling
+        pending["completion_ceiling"] = policy.output_limit(spec, body)
+        try:
+            pending["record_id"] = store.add_llm_call(
+                run_id,
+                {
+                    **admission,
+                    "model": spec.model_id,
+                    "role": role,
+                    "attempt": attempt,
+                    "outcome": "pending",
+                    "settled": False,
+                    "reservation_usd": str(upper),
+                    "output_cap_field": spec.output_cap_field,
+                    "output_cap_tokens": pending["completion_ceiling"],
+                    "cost_usd": None,
+                },
+            )["id"]
+            budget.mark_dispatched(run_id, attempt_id)
+        except BaseException:
+            # The SDK has not been called while this before-attempt callback runs.
+            # Only reservations still marked undispatched may be released.
+            try:
+                budget.cancel_undispatched(run_id, attempt_id)
+            except BaseException:  # noqa: BLE001, S110 - preserve the original cancellation.
+                # mark_dispatched may have committed before interruption. Preserve that
+                # uncertain reservation and the original exception; never force-release it.
+                pass
+            else:
+                if "record_id" in pending:
+                    try:
+                        store.update_llm_call(
+                            pending["record_id"],
+                            {
+                                "outcome": "not_dispatched",
+                                "settled": True,
+                                "cost_usd": "0",
+                                "charge_basis": "confirmed_not_dispatched",
+                            },
+                        )
+                    except BaseException:  # noqa: BLE001 - preserve the outer failure.
+                        budget.halt(run_id, "local_accounting_incomplete")
+            pending.clear()
+            raise
 
     def after_record(record):
         data = asdict(record)
         data["cost"] = record.cost.as_dict()
         data["settled"] = True
-        store.update_llm_call(pending.pop("record_id"), data)
+        record_id = pending.pop("record_id")
         invalid = record.cost.reason in {"response_model_mismatch", "missing_cached_input_price"}
         prompt_ceiling = pending.pop("prompt_ceiling")
         completion_ceiling = pending.pop("completion_ceiling")
         if record.usage is not None:
             invalid = invalid or (
-                record.usage.prompt_tokens > prompt_ceiling
+                (prompt_ceiling is not None and record.usage.prompt_tokens > prompt_ceiling)
                 or record.usage.completion_tokens > completion_ceiling
             )
-        budget.settle(run_id, pending.pop("id"), record.cost.usd, bound_invalid=invalid)
+        try:
+            budget.settle(run_id, pending.pop("id"), record.cost.usd, bound_invalid=invalid)
+        finally:
+            # The authoritative ledger commits the actual charge and halt atomically first.
+            try:
+                store.update_llm_call(record_id, data)
+            except BaseException:
+                budget.halt(run_id, "local_accounting_incomplete")
+                raise
+        if record.cost.usd is None and record.outcome == "response":
+            raise BudgetExceeded("Provider charge is unknown; further calls stopped")
 
     client = TokenFactoryClient(
         api_key=read_nebius_key(env_file),

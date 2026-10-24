@@ -365,6 +365,12 @@ class Store:
                 "unknown_cost_calls": unknown,
                 "complete": unknown == 0,
             }
+            if rows:
+                counts = {"verified_provider_bound": 0, "local_estimate": 0, "unknown": 0}
+                for row in rows:
+                    kind = json.loads(row.data_json).get("admission_kind", "unknown")
+                    counts[kind if kind in counts else "unknown"] += 1
+                result["admission_counts"] = counts
             for column in ("input_tokens", "output_tokens"):
                 counts = [getattr(r, column) for r in rows]
                 result[column] = None if any(v is None for v in counts) else sum(counts)

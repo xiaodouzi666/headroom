@@ -274,11 +274,15 @@ function Home() {
           <strong>
             {availability.budgetReason === "exhausted"
               ? "The local run budget is exhausted."
-              : "Model billing needs review."}
+              : availability.budgetReason === "pending_charge"
+                ? "Waiting for the current model charge."
+                : "Model billing needs review."}
           </strong>{" "}
           {availability.budgetReason === "exhausted"
             ? "The application's authorized limit has been reached."
-            : "An earlier call has an unresolved billing bound."}{" "}
+            : availability.budgetReason === "pending_charge"
+              ? "Further calls pause until it settles. Availability refreshes automatically."
+              : "An earlier call has an unresolved charge or exceeded its budget reservation."}{" "}
           {replays.length > 0 && (
             <a href="#replays">Explore saved evidence instead →</a>
           )}
@@ -1080,6 +1084,7 @@ function RunPage({ runId }: { runId: string }) {
                 <Sources sources={rows(report.sources)} />
               </Section>
               <Section title="Model usage">
+                <AdmissionNote usage={usage} />
                 <div className="usage-total">
                   <span>Total recorded cost</span>
                   <strong>{costTotal(usage)}</strong>
@@ -1119,6 +1124,18 @@ function RunPage({ runId }: { runId: string }) {
         </>
       )}
     </main>
+  );
+}
+function AdmissionNote({ usage }: { usage: Dict }) {
+  const estimated = numeric(record(usage.admission_counts).local_estimate);
+  if (estimated === null || !Number.isInteger(estimated) || estimated <= 0)
+    return null;
+  return (
+    <p className="caption" role="note">
+      Budget reservations for {estimated}{" "}
+      {estimated === 1 ? "call used" : "calls used"} local estimates. Actual
+      cost comes from reported usage; a call can exceed its estimate.
+    </p>
   );
 }
 function Composition({ report, analysis }: { report: Dict; analysis: Dict }) {

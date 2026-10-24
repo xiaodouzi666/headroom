@@ -638,6 +638,15 @@ def render_markdown(report):
             )
             + " |"
         )
+    admissions = usage.get("admission_counts", {})
+    if admissions.get("local_estimate", 0):
+        lines += [
+            "",
+            (
+                "Admission used a local token estimate with a risk margin. This reservation is not "
+                "a provider billing upper bound or an actual charge; actual charges may exceed it."
+            ),
+        ]
     lines += ["", "## Evidence limitations", "", _text(report["scope"])]
     lines += ["- " + _text(warning) for warning in report["warnings"]]
     if before["shared_gpu"] or after["shared_gpu"]:

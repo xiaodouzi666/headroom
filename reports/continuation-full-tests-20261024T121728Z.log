@@ -1,0 +1,91 @@
+........................................................................ [  6%]
+.........................................................F.............. [ 12%]
+........................................................................ [ 18%]
+........................................................................ [ 24%]
+........................................................................ [ 30%]
+........................................................................ [ 37%]
+........................................................................ [ 43%]
+........................................................................ [ 49%]
+........................................................................ [ 55%]
+........................................................................ [ 61%]
+........................................................................ [ 67%]
+........................................................................ [ 74%]
+........................................................................ [ 80%]
+........................................................................ [ 86%]
+........................................................................ [ 92%]
+........................................................................ [ 98%]
+...............                                                          [100%]
+=================================== FAILURES ===================================
+_____________ test_legacy_migration_is_serialized_across_processes _____________
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-41/test_legacy_migration_is_seria0')
+
+    def test_legacy_migration_is_serialized_across_processes(tmp_path):
+        import multiprocessing
+        import sqlite3
+    
+        path = tmp_path / "legacy.db"
+        with sqlite3.connect(path) as conn:
+            conn.executescript("""
+                CREATE TABLE budget_runs (id TEXT PRIMARY KEY,day TEXT,limit_usd TEXT,status TEXT,halt_reason TEXT);
+                CREATE TABLE budget_attempts (id TEXT PRIMARY KEY,run_id TEXT,upper_usd TEXT,charged_usd TEXT,actual_usd TEXT,settled INTEGER);
+                INSERT INTO budget_runs VALUES ('old','2026-10-24','0.6','closed',NULL);
+                INSERT INTO budget_attempts VALUES ('old-call','old','0.04','0.01','0.01',1);
+            """)
+        ctx = multiprocessing.get_context("spawn")
+        go, results = ctx.Event(), ctx.Queue()
+        workers = [ctx.Process(target=_migrate_in_child, args=(path, go, results)) for _ in range(2)]
+        try:
+            for worker in workers:
+                worker.start()
+            go.set()
+>           assert [results.get(timeout=15) for _ in workers] == ["0.01", "0.01"]
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_budget.py:272: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <multiprocessing.queues.Queue object at 0x7da9d410ab10>, block = True
+timeout = 14.99999844096601
+
+    def get(self, block=True, timeout=None):
+        if self._closed:
+            raise ValueError(f"Queue {self!r} is closed")
+        if block and timeout is None:
+            with self._rlock:
+                res = self._recv_bytes()
+            self._sem.release()
+        else:
+            if block:
+                deadline = time.monotonic() + timeout
+            if not self._rlock.acquire(block, timeout):
+                raise Empty
+            try:
+                if block:
+                    timeout = deadline - time.monotonic()
+                    if not self._poll(timeout):
+>                       raise Empty
+E                       _queue.Empty
+
+/usr/lib/python3.12/multiprocessing/queues.py:114: Empty
+----------------------------- Captured stderr call -----------------------------
+Process SpawnProcess-22:
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/xiaodouzi/workspace/headroom/tests/test_budget.py", line 249, in _migrate_in_child
+    ledger = BudgetLedger(path, daily_limit="2")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/headroom/budget.py", line 39, in __init__
+    with self._transaction() as conn:
+  File "/usr/lib/python3.12/contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/headroom/budget.py", line 82, in _transaction
+    conn.execute("PRAGMA journal_mode=WAL")
+sqlite3.OperationalError: database is locked
+=========================== short test summary info ============================
+FAILED tests/test_budget.py::test_legacy_migration_is_serialized_across_processes
+1 failed, 1166 passed in 344.67s (0:05:44)

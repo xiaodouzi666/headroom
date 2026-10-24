@@ -268,11 +268,15 @@ def test_real_cpu_multiple_python_entries_are_explicitly_ambiguous(wrapper_sourc
     command = ["/bin/sh", "launch.sh"]
     result = run_argv(wrapper_source, command, run_root=tmp_path / "runs", device="cpu")
     assert result["execution_capture"]["captured_process_count"] == 2
-    assert result["execution_capture"]["reason"] == "MULTIPLE_PYTHON_ENTRYPOINTS"
+    assert result["execution_capture"]["reason"] == "NO_UNIQUE_CUDA_OOM_TARGET"
+    assert result["status"] == "error"
     assert result["execution"]["state"]["ExitCode"] == 0
 
 
-def test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_report(tmp_path):
+@pytest.mark.parametrize("multiple", [False, True])
+def test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_report(
+    tmp_path, multiple
+):
     """Synthetic CUDA/memory verdicts; actual capture and candidate argv are CPU Docker."""
     from dataclasses import replace
     from decimal import Decimal
@@ -290,7 +294,9 @@ def test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_repo
 
     source = tmp_path / "flow-source"
     source.mkdir()
-    (source / "launch.sh").write_text('exec python -O train.py "$@"\n')
+    (source / "launch.sh").write_text(
+        ('python -c "print(123)"\n' if multiple else "") + 'exec python -O train.py "$@"\n'
+    )
     (source / "train.py").write_text(
         "VALUE = 1\nimport json, sys\n"
         "print('FLOW:' + json.dumps({'value': VALUE, 'args': sys.argv[1:]}))\n"
@@ -393,7 +399,12 @@ def test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_repo
 
     def watch_lab(root, argv, **options):
         options["device"] = "cpu"
-        return synthetic_oom(run_argv(root, argv, **options), watch=True)
+        raw = run_argv(root, argv, **options)
+        if multiple:
+            from test_multicapture import synthesize_unique_target_oom
+
+            raw = synthesize_unique_target_oom(raw)
+        return synthetic_oom(raw, watch=True)
 
     def baseline(script, **options):
         assert options["execution_argv"] == command

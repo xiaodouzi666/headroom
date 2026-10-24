@@ -6,11 +6,15 @@ repos:
         entry: .venv/bin/ruff check
         language: system
         types_or: [python, pyi]
+        # Archived target inputs retain their original source hashes.
+        exclude: ^reports/multicapture-wrapper-20261024/cpu-parent-evidence/
       - id: ruff-format
         name: ruff-format
         entry: .venv/bin/ruff format --check
         language: system
         types_or: [python, pyi]
+        # Archived target inputs retain their original source hashes.
+        exclude: ^reports/multicapture-wrapper-20261024/cpu-parent-evidence/
       - id: gitleaks
         name: gitleaks
         entry: .tools/bin/gitleaks protect --staged --redact --no-banner

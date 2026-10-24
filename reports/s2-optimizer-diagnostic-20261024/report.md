@@ -72,3 +72,18 @@ Artifacts: receipt.json, preflight-failure.json, run_experiment.py,
 candidate.diff, candidate-source/train.py, original-train.py,
 evidence/evidence.json, evidence/evidence.md, evidence/timeline.png.
 The previous record remains at /home/xiaodouzi/workspace/headroom/runs/scenario-design/s2-single-adamw-20261024T114329Z-35547beb.
+
+## Joint threshold constraint
+
+For the current unchanged 1,074,200,576 parameters, the two fp32 AdamW
+moment tensors total 8,593,604,608 bytes. Requiring those tensors to be
+at least 40% of baseline peak implies a peak of at most
+21.484011520 GB, which already fits the separate 22 GB target.
+Thus changing foreach alone cannot simultaneously make this current-size fixture
+meet the 40% baseline gate and require a capacity repair to reach 22 GB.
+
+This is a constraint on the current fixture, not a reason to lower either original
+threshold. A future separately versioned fixture calibration would need to satisfy
+both constraints before model repair evaluation, and retain all existing baseline
+results. The separate default-policy versus bf16 Pareto requirement also remains
+unresolved; this experiment does not change numerical permissions.

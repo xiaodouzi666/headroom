@@ -1,0 +1,99 @@
+{
+  "format_version": 1,
+  "created_at": "2026-10-24T12:15:42.244921+00:00",
+  "base_commit": "5a03502d3853f940fd11c02c75516bbc4ea49be5",
+  "objective": "Explicit provider-bound vs local-estimate admission; durable cross-run unknown-charge stop",
+  "status": "offline_verified_sources_frozen",
+  "live_enabled_by_this_change": false,
+  "live_authorized": false,
+  "real_model_calls": 0,
+  "paid_calls": 0,
+  "gpu_workloads": 0,
+  "real_credentials_read": false,
+  "assets_downloaded": false,
+  "enabled_profiles_created": false,
+  "current_authorization_unchanged": "Existing user trial connectivity-only authorization, at most USD 0.10; no new calls authorized or made",
+  "implementation": [
+    "Legacy profiles default to verified_provider_bound; explicit local_estimate supported only for pinned Ultra role/model",
+    "Final SDK payload audited using existing local hash-pinned tokenizer/template; multiplier/additive margin required; unmodeled domains refused",
+    "Estimated provider_cost_upper_usd/provider_prompt_token_ceiling remain null; actual usage/cost separate",
+    "SQLite migrations/commitments/settlement+halt use BEGIN IMMEDIATE; cross-run pending/unknown stop every live mode and survive restart",
+    "Only confirmed undispatched cancellation may release; dispatch mark commit interruption remains unknown; closed run cannot be dispatched",
+    "Actual overrun is fully committed before halt; failed call-store settlement retains authoritative ledger cost and halts",
+    "Usage adds admission_counts; reports label estimate risk; read-only API distinguishes pending_charge from settled unknown billing review"
+  ],
+  "dependencies": {
+    "pyproject_changed": false,
+    "transformers": "4.46.3",
+    "tokenizers": "0.20.3",
+    "jinja2": "3.1.6",
+    "asset_source": "existing local pinned cache; no network/download/AutoTokenizer/remote code"
+  },
+  "validation": [
+    {
+      "scope": "admission/budget/runtime/availability/report/prompt preflight/store",
+      "passed": 199,
+      "seconds": 38.75,
+      "log": "focused-final.txt"
+    },
+    {
+      "scope": "additional legacy DB concurrent migration and refined profile roundtrip/default/auth checks",
+      "passed": 2,
+      "seconds": 0.84,
+      "log": "migration-profile-revision.txt",
+      "overlap_note": "Profile case repeats one focused test with added roundtrip/missing-mode checks; migration case is additional"
+    },
+    {
+      "scope": "LLM client/cost/router, annotations, orchestrator, API/deadline integration with process-wide DNS/socket refusal",
+      "passed": 159,
+      "seconds": 34.59,
+      "log": "integration-regressions-revision-1.txt"
+    },
+    {
+      "scope": "Owned production/test sources Ruff and git diff --check",
+      "result": "passed",
+      "log": "lint-final.txt"
+    }
+  ],
+  "retained_failures": [
+    {
+      "log": "integration-regressions.txt",
+      "passed": 150,
+      "failed": 9,
+      "reason": "Test driver used python stdin; multiprocessing spawn could not load <stdin> main file. Same checks passed using offline_regressions.py. No application change for this driver error."
+    },
+    {
+      "reason": "Initial final-payload test incorrectly equated normalized SDK JSON hash (including timeout/order) with HTTP JSON hash. Fixed test checks complete SDK audit and wire semantic/template equality; metadata explicitly labels request_input_form. Original diagnostic meaning unchanged."
+    }
+  ],
+  "limitations": [
+    "Local estimate remains a prediction, not a provider billing ceiling or guarantee against one-request overshoot",
+    "Native response_format/reasoning provider-only fields and ignored historical tool IDs rejected; no silent method downgrade",
+    "Output cap semantics/prices/auth still require separate review; no live profile enabled",
+    "Unknown actual charge stops automatic retries in every live mode; reconciliation is not automated",
+    "Account-side charges outside this application are outside local ledger scope"
+  ],
+  "logs": {
+    "focused-final.txt": "199 passed in 38.75s",
+    "migration-profile-revision.txt": "2 passed in 0.84s",
+    "integration-regressions.txt": "9 failed, 150 passed in 24.99s",
+    "integration-regressions-revision-1.txt": "159 passed in 34.59s",
+    "lint-final.txt": "All checks passed!"
+  },
+  "source_sha256": {
+    "headroom/runtime.py": "3e06894de5a054accf43534fd6eabce274d0c6d284244fb9f9d21baabf5c4a5b",
+    "headroom/budget.py": "13cb1f7598c51ff413c3581274d33d0ffeb73024190d3c0008dc34b4484ef142",
+    "headroom/llm/admission.py": "a218e98d8c39fbebc1233ccc48b8fc7cfd196c33698692aaeb8de62c0ec3bb5c",
+    "headroom/store/db.py": "279ac5621009373b91ba5ecb351c0f0ac1f68f7a8ab1f677919dcd8f9a9f5912",
+    "headroom/api/availability.py": "02633477a7b518426ba4c2a8a8d3e63554df8a86b3de3845ebb8cb41945441cb",
+    "headroom/report.py": "3aff6dda8f58651de28eda886fdb0dda3aac1f2f3d2a3469ecc717cd2ce2b910",
+    "tests/test_admission.py": "bec632bf68980cf14779e674262cad8f7ee86c44fd6ec726f3d18594ffbf9acb",
+    "tests/test_budget.py": "5da628026e7c9a0414747e54a72d898834e4cb76a5e056624ef8a1250def028a",
+    "tests/test_runtime_budget.py": "a66aa2c8e506a914a6d111f5a8c869c5749972916d9be0225421c02361efffc3",
+    "tests/test_availability.py": "844cb40802e9ff6cce8bb3386d70cd9517b38d7496eacd3042bb99da51fe30cf",
+    "tests/test_report.py": "9c6897494ac46d6cbcdc2a5e6166878c26313c41348b3d81364cc5f43f567a78",
+    "docs/RUNTIME.md": "acc6b41242c4b3f4fb9ff3563e4d267455c70cc4c1dd66747d5f445bc4081346",
+    "docs/PROMPT_PREFLIGHT.md": "d4c0d72c1bc678b83c5f22b2c1b2138174a5be14cc56855542173b7a2fbc2dfc"
+  },
+  "replay_driver": "offline_regressions.py"
+}

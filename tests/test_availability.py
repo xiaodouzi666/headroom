@@ -189,12 +189,16 @@ def test_unknown_usage_retains_conservative_reservation_and_pending_state(tmp_pa
     assert result["unknown_attempts"] == result["pending_attempts"] == 1
     assert result["total_actual_usd"] is None
     assert result["committed_usd"] == "0.5" and result["remaining_usd"] == "0.5"
-    assert result["status"] == "available"
+    assert result["status"] == "pending_charge" and result["dispatch_blocked"]
+    assert result["settled_unknown_attempts"] == 0
 
 
 @pytest.mark.parametrize(
     "halt,total,expected",
-    [(None, ".5", "exhausted"), ("private billing detail", "10", "billing_review_required")],
+    [
+        (None, ".5", "billing_review_required"),
+        ("private billing detail", "10", "billing_review_required"),
+    ],
 )
 def test_budget_exhaustion_and_unresolved_bound(tmp_path, halt, total, expected):
     path = tmp_path / "budget.db"
@@ -539,3 +543,17 @@ def test_health_and_usage_share_safe_global_observations(tmp_path):
         assert usage["local_budget"] == health["local_budget"]
         assert str(project) not in json.dumps(health)
     assert monitor.closed
+
+
+def test_real_ledger_pending_status_recovers_after_settlement(tmp_path):
+    from headroom.budget import BudgetLedger
+
+    path = tmp_path / "budget.db"
+    b = BudgetLedger(path, daily_limit="2", day="2026-10-24")
+    b.open_run("run", "0.6")
+    b.reserve("run", "call", "0.04", admission_kind="local_estimate")
+    assert read_budget(path)["status"] == "pending_charge"
+    b.settle("run", "call", "0.01")
+    result = read_budget(path)
+    assert result["status"] == "available" and result["dispatch_blocked"] is False
+    assert result["total_actual_usd"] == "0.01"

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "revision": "wal-initialization-retry-1",
+  "recorded_at": "2026-10-24T12:26:45.152942+00:00",
+  "scope": "Budget SQLite initialization only; previous budget-mode and full-suite receipts retained unchanged",
+  "trigger": {
+    "receipt": "reports/continuation-full-tests-20261024T121728Z.json",
+    "result": "1 failed, 1166 passed in 344.67s",
+    "test": "tests/test_budget.py::test_legacy_migration_is_serialized_across_processes",
+    "error": "sqlite3.OperationalError: database is locked at PRAGMA journal_mode=WAL"
+  },
+  "changed_files": {
+    "headroom/budget.py": "e29ace2cd320ebec535865f98caed064d3c3f48ff07f9c5352894f59dd7a5d09",
+    "tests/test_budget.py": "dcff91e532c7894e52136e6c2e218d86ce9632c18fe94cc35aa2078d0fce0927",
+    "tests/test_budget_initialization.py": "c89e35375cc276beefc4d67ee38967ef6615e434644d20567d8ef5a3bfcf26c6"
+  },
+  "behavior": [
+    "Only SQLITE_BUSY/SQLITE_LOCKED base or extended codes before yielding may retry",
+    "One 30-second monotonic initialization deadline includes SQLite busy waits; 50ms bounded pause",
+    "Failed connections are rolled back when in a transaction, then closed before a fresh attempt",
+    "Transaction body and commit are never replayed",
+    "Other SQL errors and interrupts propagate unchanged"
+  ],
+  "validation": [
+    {
+      "log": "reports/admission-modes-20261024/wal-initialization-regression.txt",
+      "result": "37 passed in 1.02s"
+    },
+    {
+      "log": "reports/admission-modes-20261024/wal-runtime-regression.txt",
+      "result": "27 passed in 1.04s"
+    },
+    {
+      "log": "reports/admission-modes-20261024/wal-lint-revision-1.txt",
+      "result": "All checks passed!"
+    }
+  ],
+  "coverage": [
+    "Deterministic WAL and BEGIN retry for BUSY/LOCKED/extended BUSY",
+    "Non-busy errors and KeyboardInterrupt/SystemExit preserved",
+    "Body and commit BUSY execute only once",
+    "SQLite wait charged to common deadline; deadline checked even after setup success",
+    "Four independently created legacy databases migrated by two spawned processes each",
+    "Existing runtime budget regression suite"
+  ],
+  "guard": "Spawn-compatible offline_regressions.py blocks process-wide DNS/socket outbound access",
+  "boundaries": {
+    "gpu_tasks": false,
+    "model_api_calls": false,
+    "credential_reads": false,
+    "asset_downloads": false,
+    "enabled_profiles_created": false,
+    "committed": false,
+    "full_suite_rerun": "pending root integration"
+  },
+  "review": "payment_readiness read-only review found no new P1/P2",
+  "frozen": true
+}

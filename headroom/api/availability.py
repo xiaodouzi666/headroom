@@ -130,7 +130,8 @@ def read_local_budget(path, *, daily_limit, total_limit, day=None):
         "checked_at": timestamp(),
         "status": "unknown",
         "remaining_usd": None,
-        "note": "Local reservations only; not the provider account balance.",
+        "note": "Local reservations only; not provider balance or a billing guarantee. "
+        "Actual charges may exceed local estimates.",
     }
     try:
         daily, total = money(daily_limit), money(total_limit)
@@ -166,7 +167,11 @@ def read_local_budget(path, *, daily_limit, total_limit, day=None):
             context.prec = 256
             known = Decimal(0)
             for run_id, charge, actual, settled in attempts:
-                if run_id not in run_ids or settled not in {0, 1}:
+                if (
+                    run_id not in run_ids
+                    or settled not in {0, 1}
+                    or (not settled and actual is not None)
+                ):
                     raise ValueError
                 charged[run_id] = charged.get(run_id, Decimal(0)) + money(charge)
                 if actual is None:
@@ -190,7 +195,9 @@ def read_local_budget(path, *, daily_limit, total_limit, day=None):
             remaining = min(total_remaining, daily_remaining)
         result.update(
             status="billing_review_required"
-            if halted
+            if halted or unknown > pending
+            else "pending_charge"
+            if pending
             else "exhausted"
             if remaining == 0
             else "available",
@@ -203,8 +210,10 @@ def read_local_budget(path, *, daily_limit, total_limit, day=None):
             known_charge_usd=str(known),
             total_actual_usd=None if unknown else str(known),
             unknown_attempts=unknown,
+            settled_unknown_attempts=unknown - pending,
             pending_attempts=pending,
             billing_bound_unresolved=halted,
+            dispatch_blocked=halted or bool(unknown),
             ledger_initialized=initialized,
         )
     except (OSError, sqlite3.Error, ValueError, TypeError, ArithmeticError):

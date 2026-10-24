@@ -150,7 +150,9 @@ def watch_command(
             stderr_path=str(lab_directory / "stderr.log"),
         )
     wrapper = None
-    if parsed.kind == "command" and valid_directory:
+    inventory = result.get("execution_capture", {})
+    has_multiple = (inventory.get("captured_process_count") or 0) > 1
+    if (parsed.kind == "command" or has_multiple) and valid_directory:
         try:
             wrapper = prepare_captured_command(
                 lab_directory / "source",
@@ -159,7 +161,7 @@ def watch_command(
                 read_artifact_json(lab_directory / "manifest.json"),
             )
         except (OSError, ValueError, TypeError, KeyError) as error:
-            parsed = replace(parsed, repair_reason=str(error))
+            parsed = replace(parsed, repair_supported=False, repair_reason=str(error))
         else:
             parsed = replace(
                 parsed,

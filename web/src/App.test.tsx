@@ -53,7 +53,9 @@ describe("workspace state", () => {
     expect(
       await screen.findByRole("button", { name: /Activation memory/ }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Live analysis is not enabled yet.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Live analysis is not enabled yet."),
+    ).toBeInTheDocument();
     expect(
       screen.queryByText(/verified repair succeeded/i),
     ).not.toBeInTheDocument();
@@ -114,6 +116,15 @@ describe("safe evidence rendering", () => {
 describe("availability replay guidance", () => {
   it.each([
     [{ gpu: { status: "busy", busy: true, stale: false } }, "The GPU is busy."],
+    [
+      {
+        local_budget: {
+          scope: "local_application_authorization",
+          status: "pending_charge",
+        },
+      },
+      "Waiting for the current model charge.",
+    ],
     [
       {
         local_budget: {

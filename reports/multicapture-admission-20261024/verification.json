@@ -1,0 +1,93 @@
+{
+  "recorded_at": "2026-10-24T12:33:06.435709+00:00",
+  "base_commit": "5a03502d3853f940fd11c02c75516bbc4ea49be5",
+  "scope": "Multi-process target replay and explicit estimate-based admission; original full goal remains active",
+  "backend": {
+    "passed": 1186,
+    "seconds": 315.96,
+    "receipt": "reports/continuation-full-tests-20261024T122659Z.json",
+    "source_files_unchanged": true
+  },
+  "frontend": {
+    "passed": 42,
+    "build": "passed",
+    "logs": "reports/multicapture-admission-20261024/"
+  },
+  "gpu": {
+    "receipt": "reports/multicapture-manual-gpu-20261024T121728Z.json",
+    "passed": true,
+    "checks": {
+      "runtime_unchanged": true,
+      "canonical_unchanged": true,
+      "real_cuda_oom": true,
+      "child_snapshot_peak_matches": true,
+      "child_artifacts_selected_each": true,
+      "candidate_completed_twenty": true,
+      "reference_completed_twenty": true,
+      "two_captures_each": true,
+      "original_wrapper_retained": true,
+      "capture_cleanup_complete": true,
+      "gpu_sampling_unshared": true,
+      "target_met": true,
+      "parameter_count_unchanged": true,
+      "original_fp32_tolerance": true,
+      "numerical_acceptance": true
+    },
+    "candidate_reference_updates": 20,
+    "parameter_count": 101007360,
+    "observed_peak_before_gb": 24.750424064,
+    "observed_peak_after_gb": 4.51654912,
+    "loss_max_delta": 0.0,
+    "model_generated": false,
+    "counts_as_model_benchmark_success": false
+  },
+  "gpu_provenance": {
+    "only_source_changed_after_run": [
+      "headroom/budget.py"
+    ],
+    "reason": "Subsequent budget-only WAL initialization fix; GPU execution/capture/verification sources unchanged"
+  },
+  "preserved_failures": [
+    {
+      "receipt": "reports/continuation-full-tests-20261024T121728Z.json",
+      "result": "1 failed,1166 passed; real concurrent legacy WAL setup race, fixed and covered by final full suite"
+    },
+    {
+      "log": "reports/admission-modes-20261024/integration-regressions.txt",
+      "result": "stdin/spawn driver failure; corrected saved-driver159 passed"
+    }
+  ],
+  "admission": {
+    "default": "verified_provider_bound",
+    "optional_mode": "local_estimate",
+    "supported_estimate_model": "pinned Ultra tokenizer/template only",
+    "estimate_is_provider_bound": false,
+    "unknown_or_pending_blocks_dispatch": true,
+    "live_profile_enabled": false
+  },
+  "quality": {
+    "ruff_check": "passed",
+    "ruff_format": "passed",
+    "pre_commit": "passed",
+    "gitleaks_history_and_staged": "no findings",
+    "archived_inputs": "Raw captured target programs retain exact bytes; only their archive path is excluded from style hooks; secret scanning still applies"
+  },
+  "preview": {
+    "listen": "127.0.0.1:8765",
+    "mac_ssh_forward": "127.0.0.1:9876",
+    "server_pid": 3407644,
+    "health": "ok",
+    "queue": "idle",
+    "public_deployment": false
+  },
+  "new_model_calls": 0,
+  "new_model_cost_usd": "0",
+  "original_plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "remaining_independent_work": "Explicit bounded Pareto exploration and versioned s2 calibration preparation; see reports/next-search-work-20261024.md",
+  "remaining_external_gates": [
+    "Verified promotional credit and approved live evaluation budget",
+    "Real model diagnosis/patch/MVP/evaluation/ablation evidence",
+    "Original s2 and default-bf16 policy acceptance tensions",
+    "Owner design, public deployment, video/submission, future health checks"
+  ]
+}

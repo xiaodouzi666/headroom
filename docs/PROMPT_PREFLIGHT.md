@@ -183,3 +183,17 @@ Primary sources: [Ultra cookbook](https://github.com/nebius/token-factory-cookbo
 Account balance is not treated as a provider hard stop; the billing documentation
 describes negative balances and automatic payment. No API inference, credential
 read, payment or account mutation was performed for this audit.
+
+
+## Optional local-estimate admission integration
+
+The runtime now reuses the final-payload audit for an explicitly configured
+Ultra-only `local_estimate` admission policy. This does not promote the audit to
+a provider billable-input upper bound: the provider ceiling remains null, risk
+margins are explicit, and actual usage is recorded separately. Native provider
+response-format/reasoning controls and other unmodeled domains are refused.
+The original `verified_provider_bound` mode remains the default. No profile is
+enabled, authorization is expanded, or asset is downloaded by this integration.
+See [RUNTIME.md](RUNTIME.md#explicit-local-estimate-admission-offline-verified-foundation)
+for the schema, already-local dependencies/assets, unknown-charge stop rule and
+limitations. The historical audit receipts above remain unchanged.

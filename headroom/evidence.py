@@ -9,7 +9,7 @@ import stat
 from pathlib import Path, PurePosixPath
 
 from headroom.execution import captured_wrapper_descriptor, parse_command, source_entrypoint
-from headroom.lab.runner import read_artifact_json
+from headroom.lab.runner import read_artifact_json, selected_capture_directory
 
 MAX_SNAPSHOT_BYTES = 512 * 1024 * 1024
 MAX_SOURCE_FILE_BYTES = 1024 * 1024
@@ -66,14 +66,25 @@ def _wrapper_command(command: list[str]) -> bool:
     return command[1:3] == ["-m", "headroom.lab.run_target"]
 
 
+def _runtime_descriptor(manifest):
+    command = manifest.get("command", [])
+    selection = manifest.get("execution_capture", {}).get("selection", {})
+    if parse_command(command).kind == "command" or selection.get("status") in {
+        "unique_oom",
+        "matched_replay",
+    }:
+        return captured_wrapper_descriptor(command, manifest, manifest)
+    return None
+
+
 def _main_source(manifest: dict) -> str | None:
     command = manifest.get("command", [])
     available = set(manifest.get("source", {}).get("files", {}))
     if _wrapper_command(command) and "--script" in command:
         index = command.index("--script") + 1
         candidate = command[index] if index < len(command) else ""
-    elif parse_command(command).kind == "command":
-        candidate = captured_wrapper_descriptor(command, manifest, manifest)["source_relative"]
+    elif (runtime := _runtime_descriptor(manifest)) is not None:
+        candidate = runtime["source_relative"]
     else:
         candidate = source_entrypoint(parse_command(command), available)
         if candidate is None:
@@ -88,8 +99,7 @@ def _source_import_roots(manifest: dict, primary: str) -> tuple[PurePosixPath, .
         # run_target inserts script.parent before the /source cwd used to launch its -m wrapper.
         return tuple(dict.fromkeys((script_directory, PurePosixPath("."))))
     parsed = parse_command(command)
-    if parsed.kind == "command":
-        entry = captured_wrapper_descriptor(command, manifest, manifest)
+    if (entry := _runtime_descriptor(manifest)) is not None:
         return (
             (PurePosixPath(entry["startup_cwd_relative"]),)
             if entry["module"]
@@ -182,10 +192,8 @@ def collect_sources(run_dir: Path, manifest: dict, analysis: dict) -> tuple[list
     entry_package_sources = []
     command = manifest.get("command", [])
     parsed = parse_command(command)
-    module_entry = parsed.kind == "python_module" or (
-        parsed.kind == "command"
-        and captured_wrapper_descriptor(command, manifest, manifest)["module"] is not None
-    )
+    runtime = _runtime_descriptor(manifest)
+    module_entry = runtime["module"] is not None if runtime else parsed.kind == "python_module"
     if not _wrapper_command(command) and module_entry:
         entry_package_sources = [
             str(parent / "__init__.py")
@@ -513,7 +521,8 @@ def build_evidence(run_dir: Path, budget: int = 150000, output_dir: Path | None 
     run_dir = Path(run_dir).resolve(strict=True)
     result = read_artifact_json(run_dir / "result.json")
     manifest = read_artifact_json(run_dir / "manifest.json")
-    snapshot = read_artifact_json(run_dir / "artifacts" / "snapshot.json", MAX_SNAPSHOT_BYTES)
+    artifacts = selected_capture_directory(run_dir, result, manifest)
+    snapshot = read_artifact_json(artifacts / "snapshot.json", MAX_SNAPSHOT_BYTES)
     if snapshot is None:
         raise ValueError(
             "CUDA snapshot JSON is unavailable; CPU captures cannot provide CUDA evidence"

@@ -4,6 +4,7 @@ import fcntl
 import hashlib
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -199,9 +200,9 @@ def read_artifact_json(path: str | Path, max_bytes: int = 32 * 1024 * 1024):
         return json.loads(data, parse_constant=reject_constant)
 
 
-def read_capture(path: Path) -> dict:
+def read_capture(path: Path, *, max_bytes: int = 32 * 1024 * 1024) -> dict:
     """Validate the hook protocol, without treating target-written JSON as authenticated."""
-    result = read_artifact_json(path)
+    result = read_artifact_json(path, max_bytes)
     if not isinstance(result, dict) or result.get("status") not in {
         "completed",
         "oom",
@@ -221,37 +222,262 @@ def read_capture(path: Path) -> dict:
     return result
 
 
-def _entrypoint_inventory(artifacts: Path, capture: dict) -> dict:
-    """Count observed capture owners; a second process is not silently selected."""
-    processes = artifacts / "processes"
+MAX_CAPTURE_OWNERS = 64
+MAX_CAPTURE_RESULT_BYTES = 4 * 1024 * 1024
+MAX_CAPTURE_ROSTER_BYTES = 32 * 1024 * 1024
+
+
+def capture_artifact_directory(run_dir: Path, relative: str) -> Path:
+    """Resolve only original capture directories, rejecting linked ancestors."""
+    if not isinstance(relative, str) or not re.fullmatch(
+        r"artifacts(?:/processes/[0-9]+(?:-[0-9]+)?)?", relative
+    ):
+        raise ValueError("INVALID_CAPTURE_RELATIVE_PATH")
+    root = Path(run_dir).resolve(strict=True)
+    current = root
+    for component in Path(relative).parts:
+        current = current / component
+        info = current.lstat()
+        if not stat.S_ISDIR(info.st_mode) or current.is_symlink():
+            raise ValueError("CAPTURE_DIRECTORY_LINK_OR_SPECIAL")
+    return current
+
+
+def _read_capture_roster(run_dir: Path, manifest: dict) -> tuple[list[dict], dict]:
+    from headroom.execution import command_argv, observed_python_descriptor
+
+    relatives = ["artifacts"]
+    records, errors, total_bytes = [], [], 0
     try:
-        if processes.is_symlink():
-            raise ValueError("linked process inventory")
-        children = list(processes.iterdir()) if processes.exists() else []
-        count = 1 + len(children)
-        entry = capture.get("execution_entrypoint") or {}
-        if children:
-            reason = "MULTIPLE_PYTHON_ENTRYPOINTS"
-        elif capture.get("is_primary") is not True:
-            reason = "CAPTURE_PRIMARY_UNCONFIRMED"
-        elif entry.get("entry_observation") == "existing_profiler_unsupported":
-            reason = "CAPTURE_PROFILER_UNSUPPORTED"
-        elif entry.get("complete") is not True or entry.get("pid") != capture.get("pid"):
-            reason = "CAPTURE_ENTRYPOINT_INCOMPLETE"
+        base = capture_artifact_directory(run_dir, "artifacts")
+        processes = base / "processes"
+        if processes.exists() or processes.is_symlink():
+            info = processes.lstat()
+            if not stat.S_ISDIR(info.st_mode) or processes.is_symlink():
+                raise ValueError("CAPTURE_PROCESS_DIRECTORY_INVALID")
+            with os.scandir(processes) as children:
+                for child in children:
+                    if len(relatives) >= MAX_CAPTURE_OWNERS:
+                        raise ValueError("CAPTURE_OWNER_LIMIT")
+                    relative = "artifacts/processes/" + child.name
+                    capture_artifact_directory(run_dir, relative)
+                    relatives.append(relative)
+        relatives.sort()
+    except (OSError, ValueError) as error:
+        errors.append(str(error))
+    for relative in relatives:
+        row = {
+            "capture_relative": relative,
+            "capture": None,
+            "descriptor": None,
+            "invocation_complete": False,
+            "error": None,
+        }
+        try:
+            directory = capture_artifact_directory(run_dir, relative)
+            path = directory / "result.json"
+            info = path.lstat()
+            if not stat.S_ISREG(info.st_mode) or info.st_size > MAX_CAPTURE_RESULT_BYTES:
+                raise ValueError("CAPTURE_RESULT_SIZE_OR_TYPE")
+            total_bytes += info.st_size
+            if total_bytes > MAX_CAPTURE_ROSTER_BYTES:
+                raise ValueError("CAPTURE_ROSTER_SIZE_LIMIT")
+            capture = read_capture(path, max_bytes=MAX_CAPTURE_RESULT_BYTES)
+            row["capture"] = capture
+            if capture.get("capture_complete") is not True:
+                raise ValueError("CAPTURE_INCOMPLETE")
+            pid = capture.get("pid")
+            if type(pid) is not int or pid < 1:
+                raise ValueError("CAPTURE_PID_INVALID")
+            if relative == "artifacts":
+                if capture.get("is_primary") is not True:
+                    raise ValueError("CAPTURE_PRIMARY_UNCONFIRMED")
+            elif (
+                capture.get("is_primary") is not False
+                or str(pid) != Path(relative).name.split("-")[0]
+            ):
+                raise ValueError("CAPTURE_OWNER_MISMATCH")
+            entry = capture.get("execution_entrypoint") or {}
+            if not isinstance(entry, dict):
+                entry = {}
+            row["entry"] = entry
+            if (
+                isinstance(entry, dict)
+                and entry.get("pid") == pid
+                and isinstance(entry.get("startup_cwd"), str)
+                and entry["startup_cwd"].startswith("/")
+            ):
+                command_argv(entry.get("orig_argv"))
+                row["invocation_complete"] = True
+            try:
+                row["descriptor"] = observed_python_descriptor(manifest["command"], entry, manifest)
+            except (ValueError, TypeError, KeyError) as error:
+                row["mapping_reason"] = str(error)
+        except (OSError, ValueError, TypeError, KeyError, RecursionError) as error:
+            row["error"] = str(error)
+        records.append(row)
+    complete = not errors and bool(records) and all(row["error"] is None for row in records)
+    single = (
+        complete
+        and len(records) == 1
+        and records[0]["descriptor"] is not None
+        and records[0]["invocation_complete"]
+    )
+    inventory = {
+        "captured_process_count": len(records),
+        "single_python_entrypoint": single,
+        "complete": complete,
+        "invocations_complete": all(row["invocation_complete"] for row in records),
+        "errors": errors,
+        "records": [
+            {
+                "capture_relative": row["capture_relative"],
+                "pid": (row["capture"] or {}).get("pid"),
+                "status": (row["capture"] or {}).get("status"),
+                "termination_reason": (row["capture"] or {}).get("termination_reason"),
+                "source_relative": (row["descriptor"] or {}).get("source_relative"),
+                "startup_cwd": row.get("entry", {}).get("startup_cwd"),
+                "orig_argv": row.get("entry", {}).get("orig_argv"),
+                "error": row["error"],
+                "mapping_reason": row.get("mapping_reason"),
+            }
+            for row in records
+        ],
+        "basis": "instrumented capture owners; not proof of absent uninstrumented processes",
+    }
+    return records, inventory
+
+
+def _select_capture(records: list[dict], inventory: dict, expected=None, *, script_mode=False):
+    from headroom.execution import same_capture_target, same_target_invocation
+
+    selection = {
+        "status": "unavailable",
+        "matching_target_count": 0,
+        "selected_capture_relative": None,
+        "reason": None,
+    }
+    selected = None
+    if not inventory["complete"]:
+        selection["reason"] = "CAPTURE_ROSTER_INCOMPLETE"
+    elif script_mode and len(records) == 1:
+        selected = records[0]
+        selection["status"] = "primary_script"
+    elif not inventory["invocations_complete"]:
+        selection["reason"] = "CAPTURE_INVOCATION_INCOMPLETE"
+    elif expected is not None:
+        matches = [
+            row
+            for row in records
+            if same_target_invocation(expected, row["capture"].get("execution_entrypoint"))
+        ]
+        selection["matching_target_count"] = len(matches)
+        if len(matches) != 1:
+            selection.update(
+                status="ambiguous" if matches else "unavailable",
+                reason="CAPTURE_TARGET_DUPLICATE" if matches else "CAPTURE_TARGET_MISSING",
+            )
+        elif not same_capture_target(expected, matches[0]["descriptor"]):
+            selection["reason"] = "CAPTURE_TARGET_IDENTITY_MISMATCH"
         else:
-            reason = None
-        return {
-            "captured_process_count": count,
-            "single_python_entrypoint": reason is None,
-            "reason": reason,
-            "basis": "instrumented capture owners, not a proof of absent uninstrumented processes",
-        }
-    except (OSError, ValueError):
-        return {
-            "captured_process_count": None,
-            "single_python_entrypoint": False,
-            "reason": "CAPTURE_PROCESS_INVENTORY_UNAVAILABLE",
-        }
+            selected = matches[0]
+            selection["status"] = "matched_replay"
+    elif len(records) == 1:
+        if records[0]["descriptor"] is not None:
+            selected = records[0]
+            selection["status"] = "single"
+        else:
+            selection["reason"] = (
+                records[0].get("mapping_reason") or "CAPTURE_ENTRYPOINT_INCOMPLETE"
+            )
+    else:
+        ooms = [
+            row
+            for row in records
+            if (
+                row["capture"].get("status") == "oom"
+                and row["capture"].get("termination_reason") == "oom"
+                and row["capture"].get("env", {}).get("device") == "cuda"
+                and isinstance(row["capture"].get("oom"), dict)
+            )
+        ]
+        if len(ooms) != 1:
+            selection.update(
+                status="ambiguous" if ooms else "unavailable",
+                reason="MULTIPLE_CUDA_OOM_TARGETS" if ooms else "NO_UNIQUE_CUDA_OOM_TARGET",
+            )
+        elif ooms[0]["descriptor"] is None:
+            selection["reason"] = ooms[0].get("mapping_reason") or "CAPTURE_ENTRYPOINT_INCOMPLETE"
+        else:
+            descriptor = ooms[0]["descriptor"]
+            matches = [
+                row
+                for row in records
+                if same_target_invocation(descriptor, row["capture"].get("execution_entrypoint"))
+            ]
+            selection["matching_target_count"] = len(matches)
+            if len(matches) != 1:
+                selection.update(status="ambiguous", reason="CAPTURE_TARGET_DUPLICATE")
+            else:
+                selected = ooms[0]
+                selection["status"] = "unique_oom"
+    if selected is not None:
+        other_failures = [
+            row
+            for row in records
+            if row is not selected and row["capture"].get("status") != "completed"
+        ]
+        if other_failures:
+            selected = None
+            selection.update(status="unavailable", reason="NON_TARGET_CAPTURE_FAILED")
+        else:
+            selection.update(
+                matching_target_count=1, selected_capture_relative=selected["capture_relative"]
+            )
+    inventory["selection"] = selection
+    inventory["reason"] = selection["reason"]
+    return selected, inventory
+
+
+def selected_capture_directory(run_dir: Path, result: dict, manifest: dict) -> Path:
+    """Bind selected metrics and source metadata to the same preserved capture."""
+    result_relative = result.get("selected_capture_relative")
+    manifest_relative = manifest.get("selected_capture_relative")
+    if result_relative is None and manifest_relative is None:
+        directory = capture_artifact_directory(run_dir, "artifacts")
+        processes = directory / "processes"
+        if (
+            (result.get("execution_capture", {}).get("captured_process_count") or 0) > 1
+            or (manifest.get("execution_capture", {}).get("captured_process_count") or 0) > 1
+            or processes.is_symlink()
+            or (
+                processes.exists()
+                and (not processes.is_dir() or next(processes.iterdir(), None) is not None)
+            )
+        ):
+            raise ValueError("CAPTURE_SELECTION_REQUIRED_FOR_MULTIPLE_OWNERS")
+        return directory  # legacy evidence without child captures
+    if result_relative != manifest_relative or not isinstance(result_relative, str):
+        raise ValueError("CAPTURE_SELECTION_MANIFEST_MISMATCH")
+    selection = result.get("execution_capture", {}).get("selection", {})
+    if (
+        selection != manifest.get("execution_capture", {}).get("selection", {})
+        or selection.get("status")
+        not in {"primary_script", "single", "unique_oom", "matched_replay"}
+        or selection.get("selected_capture_relative") != result_relative
+        or selection.get("matching_target_count") != 1
+    ):
+        raise ValueError("CAPTURE_SELECTION_UNAVAILABLE_OR_MISMATCH")
+    directory = capture_artifact_directory(run_dir, result_relative)
+    capture = read_capture(directory / "result.json", max_bytes=MAX_CAPTURE_RESULT_BYTES)
+    # Preserve the whole target evidence contract, including precision,
+    # parameter counts and pairing. Only these host-level fields may differ.
+    for key, value in capture.items():
+        if key not in {"status", "reason", "shared_gpu"} and result.get(key) != value:
+            raise ValueError("CAPTURE_SELECTION_RESULT_MISMATCH:" + key)
+    if manifest.get("execution_entrypoint") != capture.get("execution_entrypoint"):
+        raise ValueError("CAPTURE_SELECTION_ENTRYPOINT_MISMATCH")
+    return directory
 
 
 def merge_gpu_observations(
@@ -292,6 +518,7 @@ def _run(
     device: str,
     allocator_conf: str | None,
     target_argv_override: dict | None = None,
+    capture_target: dict | None = None,
 ) -> dict:
     validate_options(device, max_steps, max_seconds, seed)
     environment = container_environment(
@@ -337,6 +564,7 @@ def _run(
                 "source": source,
                 "command": command,
                 "target_argv_override": target_argv_override,
+                "expected_capture_target": capture_target,
                 "environment": environment,
                 "image": docker.IMAGE,
                 "device": device,
@@ -367,19 +595,32 @@ def _run(
                 execution = docker.execute(
                     create_args=args, name=name, run_dir=directory, max_seconds=max_seconds
                 )
-                try:
-                    capture = read_capture(artifacts / "result.json")
-                except (OSError, ValueError, RecursionError) as error:
-                    capture = {
+                manifest = read_artifact_json(directory / "manifest.json")
+                records, inventory = _read_capture_roster(directory, manifest)
+                selected, inventory = _select_capture(
+                    records, inventory, capture_target, script_mode=script_relative is not None
+                )
+                primary = next(
+                    (row["capture"] for row in records if row["capture_relative"] == "artifacts"),
+                    None,
+                )
+                capture = dict(
+                    (selected or {}).get("capture")
+                    or primary
+                    or {
                         "status": "error",
                         "reason": "CAPTURE_RESULT_MISSING_OR_INVALID",
-                        "capture_error": str(error),
                     }
-                capture["execution_capture"] = _entrypoint_inventory(artifacts, capture)
-                manifest = read_artifact_json(directory / "manifest.json")
+                )
+                selected_relative = selected["capture_relative"] if selected else "artifacts"
+                capture.update(
+                    execution_capture=inventory,
+                    selected_capture_relative=selected_relative,
+                )
                 manifest.update(
                     execution_entrypoint=capture.get("execution_entrypoint"),
-                    execution_capture=capture["execution_capture"],
+                    execution_capture=inventory,
+                    selected_capture_relative=selected_relative,
                 )
                 _write_json(directory / "manifest.json", manifest)
                 captured_shared = capture.get("shared_gpu")
@@ -389,7 +630,14 @@ def _run(
                     "execution": execution,
                     "cleanup_verified": execution["cleanup_verified"],
                     "gpu_before": before,
+                    "target_artifact_dir": str(
+                        capture_artifact_directory(directory, selected_relative)
+                    ),
                 }
+                if selected is None and (capture_target is not None or len(records) > 1):
+                    result.update(status="error", reason=inventory["reason"])
+                elif not inventory["complete"]:
+                    result.update(status="error", reason="CAPTURE_ROSTER_INCOMPLETE")
                 state = execution.get("state", {})
                 actual_exit = state.get("ExitCode")
                 controlled_limit = (
@@ -488,8 +736,26 @@ def run_script(
             seed=seed,
             device=device,
             allocator_conf=allocator_conf,
-            **({"target_argv_override": override} if override is not None else {}),
+            **(
+                {"target_argv_override": override, "capture_target": execution_entrypoint}
+                if override is not None
+                else {}
+            ),
         )
+        if execution_entrypoint is None and result.get("selected_capture_relative") not in {
+            None,
+            "artifacts",
+        }:
+            entry = result.get("execution_entrypoint") or {}
+            sent = replay_argv(execution_argv, script_args)
+            original = entry.get("orig_argv") or []
+            if (
+                original[1:] != sent[1:]
+                or entry.get("startup_cwd") != "/source"
+                or entry.get("main_file") != f"/source/{relative}"
+            ):
+                result.update(status="error", reason="CAPTURE_TARGET_REQUIRES_WATCH_MAPPING")
+                _write_json(Path(result["run_dir"]) / "result.json", result)
         if execution_entrypoint is not None:
             try:
                 manifest = read_artifact_json(Path(result["run_dir"]) / "manifest.json")
@@ -583,6 +849,7 @@ def run_argv(
     device: str = "cuda",
     allocator_conf: str | None = None,
     target_argv_override: dict | None = None,
+    capture_target: dict | None = None,
 ) -> dict:
     """Observe arbitrary argv inside Docker; never interpret a host shell command.
 
@@ -615,4 +882,5 @@ def run_argv(
         device=device,
         allocator_conf=allocator_conf,
         target_argv_override=target_argv_override,
+        capture_target=capture_target,
     )

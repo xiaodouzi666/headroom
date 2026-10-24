@@ -46,7 +46,10 @@ Options `-E`, `-I` and `-S` can prevent sitecustomize capture. Non-Python runtim
 may also produce no allocator evidence. Such runs retain the real container exit
 and logs, mark `capture_status=unknown`, and return `needs_human`; stderr containing
 "CUDA out of memory" is never treated as authoritative OOM evidence. Interactive
-stdin/TTY forwarding is not implemented. Multiple observed Python entrypoints are ambiguous: one primary capture is not
+stdin/TTY forwarding is not implemented. Multiple observed Python entrypoints require a unique mapped CUDA OOM target and
+a unique startup identity; completed helpers are retained. Replays select that
+identity after success and reject failed helpers or ambiguous/missing captures.
+One primary capture is not
 a verified aggregate memory profile. The wrapper path selects no arbitrary worker.
 
 Every observed command uses Lab's no-network, read-only-source Docker container,

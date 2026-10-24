@@ -51,7 +51,8 @@ runtime, billing and verification gates remain in the production flow.
 
 ## Shell and executable wrappers
 
-Watch can repair a wrapper with one observed, mapped Python entrypoint, for example:
+Watch can repair a wrapper with one mapped Python target, including a completed
+helper followed or preceded by one CUDA OOM training target, for example:
 
 ```sh
 headroom watch --source-root /absolute/project -- /bin/sh launch.sh --batch=8
@@ -72,8 +73,24 @@ original Python argv and original target arguments all match the captured
 descriptor. Interpreter flags, `-m`, and the wrapper remain unchanged. Other
 Python launches do not match and are not modified. The result records whether
 the override matched/applied and what arguments actually entered the main.
-A missing match, changed entrypoint, or multiple observed Python capture owners
-cannot pass replay verification.
+A missing match, changed entrypoint, duplicate startup identity or failed helper
+cannot pass replay verification. The first multi-process capture requires exactly
+one CUDA OOM record and exactly one process with that target's startup cwd and
+original Python argv. The target must map to captured source; completed inline
+helpers may have no editable main file if their startup identities are known.
+Candidate and reference runs select that same target identity even after it
+succeeds. Every other captured process must complete successfully.
+
+execution_capture records the full bounded owner inventory and selection reason;
+single_python_entrypoint stays false for multi-process runs.
+selected_capture_relative in both result and manifest points to the preserved
+target directory (artifacts or artifacts/processes/<pid>). The evidence builder
+binds target metrics, precision/parameter/pairing observations, entrypoint and
+snapshot to that directory. No child files replace the original primary files.
+Missing records, linked directories/files, oversized records, duplicate targets
+and multiple OOMs stop selection. Container timeout, OOM kill, cleanup failure or
+an incompatible root exit status still fails the run. A captured OOM is accepted
+only with root exit 1 or 42; an OOM swallowed by a root exit 0 is not repaired.
 
 `FixRequest.execution_entrypoint` carries this captured descriptor. It cannot
 be inferred from an arbitrary shell string at source-preparation time:
@@ -102,8 +119,12 @@ reproduces CLI changes.
 - `-E`, `-I` and `-S` disable the configured injection path.
 - Inline `-c`, stdin or non-Python runtimes without a source-backed Python main
   cannot be mapped to an editable repair target.
-- Multiple observed Python entrypoints are reported as ambiguous; one primary
-  process is not silently treated as a complete distributed workload.
+- Multiple OOM targets or repeated identical target invocations are ambiguous.
+  This selects one observed training process; it does not aggregate a distributed
+  workload or infer that uninstrumented subprocesses are absent.
+- Python parents that propagate a child's exit may be replayable when their own
+  capture is complete and successful. An independent parent/helper exception,
+  missing capture or inconsistent container exit remains a failure.
 - Module/source/cwd must resolve inside the copied source. Runtime capture is
   observed process data, not authentication against deliberately falsified code
   or proof that no uninstrumented process existed.
@@ -112,7 +133,7 @@ reproduces CLI changes.
 ## Reproduction
 
 ```sh
-.venv/bin/python reports/wrapper-replay-20261024/run_tests.py
+.venv/bin/python reports/multicapture-wrapper-20261024/run_tests.py
 ```
 
 The script installs a network-denial guard before importing pytest, uses the

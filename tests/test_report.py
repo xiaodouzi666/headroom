@@ -502,3 +502,19 @@ def test_loss_summary_exposes_original_comparison_basis_and_limit():
     assert report["summary"]["numerical_basis"] == "original_plan_full_backward_scalar_series"
     assert "Observed full backward-loss sequence" in rendered
     assert "does not prove identical inputs" in rendered
+
+
+def test_estimated_admission_warning_does_not_replace_actual_or_unknown_cost():
+    usage = {
+        "calls": 1,
+        "known_cost_usd": "0.02",
+        "total_cost_usd": None,
+        "unknown_cost_calls": 1,
+        "complete": False,
+        "admission_counts": {"verified_provider_bound": 0, "local_estimate": 1, "unknown": 0},
+    }
+    doc = build_report({"run_id": "fixture"}, usage=usage)
+    text = render_markdown(doc)
+    assert "not a provider billing upper bound or an actual charge" in text
+    assert doc["usage"]["total_cost_usd"] is None
+    assert doc["usage"]["known_cost_usd"] == "0.02"

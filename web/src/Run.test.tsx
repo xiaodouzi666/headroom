@@ -232,3 +232,62 @@ it("renders per-round verification and only downloads complete retained or rever
   expect(revoke).toHaveBeenCalledWith("blob:offline");
   click.mockRestore();
 });
+
+describe("estimated admission disclosure", () => {
+  it.each([true, false])(
+    "keeps reported cost independent of reservations (known=%s)",
+    async (known) => {
+      window.history.replaceState({}, "", `/runs/${id}`);
+      const reportPath = detailPath + "/report.json";
+      const usage = {
+        calls: 1,
+        admission_counts: {
+          verified_provider_bound: 0,
+          local_estimate: 1,
+          unknown: 0,
+        },
+        reservation_usd: "0.3456",
+        total_cost_usd: known ? "0.0213" : null,
+        known_cost_usd: known ? "0.0213" : "0",
+        unknown_cost_calls: known ? 0 : 1,
+        complete: known,
+      };
+      vi.stubGlobal(
+        "fetch",
+        vi.fn((input: unknown) => {
+          if (input === detailPath)
+            return Promise.resolve(
+              new Response(
+                JSON.stringify({
+                  run_id: id,
+                  status: "needs_human",
+                  usage,
+                  artifacts: { "report.json": reportPath },
+                }),
+              ),
+            );
+          if (input === reportPath)
+            return Promise.resolve(
+              new Response(JSON.stringify({ usage, rounds: [] })),
+            );
+          return Promise.reject(new Error("Unexpected offline request"));
+        }),
+      );
+      vi.stubGlobal("EventSource", OfflineEvents);
+      render(<App />);
+      const total = await screen.findByText("Total recorded cost");
+      expect(total.parentElement).toHaveTextContent(
+        known ? "$0.0213" : "Unknown",
+      );
+      expect(await screen.findByRole("note")).toHaveTextContent(
+        "1 call used local estimates",
+      );
+      expect(screen.getByRole("note")).toHaveTextContent(
+        "a call can exceed its estimate",
+      );
+      expect(screen.queryByText("$0.3456")).not.toBeInTheDocument();
+      if (!known)
+        expect(screen.getByText(/unresolved charge/)).toBeInTheDocument();
+    },
+  );
+});

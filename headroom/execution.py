@@ -248,14 +248,38 @@ def _container_path(cwd, value):
 
 
 def captured_wrapper_descriptor(command, capture, manifest):
-    """Resolve a single captured Python main, never parse or execute a shell program."""
-    argv = command_argv(command)
-    if parse_command(argv).kind != "command":
-        raise ValueError("CAPTURE_WRAPPER_REQUIRED")
+    """Resolve an explicitly selected Python target, preserving its root launcher."""
     inventory = capture.get("execution_capture", {})
-    entry = capture.get("execution_entrypoint") or {}
-    if inventory.get("single_python_entrypoint") is not True:
-        raise ValueError(inventory.get("reason") or "CAPTURE_ENTRYPOINT_AMBIGUOUS")
+    selection = inventory.get("selection", {})
+    selected = capture.get("selected_capture_relative")
+    approved = (
+        inventory.get("complete") is True
+        and selection.get("status") in {"single", "unique_oom", "matched_replay"}
+        and selection.get("matching_target_count") == 1
+        and selection.get("selected_capture_relative") == selected
+        and isinstance(selected, str)
+    )
+    legacy_single = (
+        not selection
+        and inventory.get("single_python_entrypoint") is True
+        and inventory.get("captured_process_count") == 1
+    )
+    if not approved and not legacy_single:
+        raise ValueError(
+            selection.get("reason") or inventory.get("reason") or "CAPTURE_ENTRYPOINT_AMBIGUOUS"
+        )
+    descriptor = observed_python_descriptor(
+        command, capture.get("execution_entrypoint") or {}, manifest
+    )
+    descriptor["selected_capture_relative"] = selected or "artifacts"
+    return descriptor
+
+
+def observed_python_descriptor(command, entry, manifest):
+    """Map one observed process; this alone does not select it for repair."""
+    argv = command_argv(command)
+    if not isinstance(entry, dict):
+        raise TypeError("CAPTURE_ENTRYPOINT_INCOMPLETE")
     if entry.get("schema_version") != 1 or entry.get("complete") is not True:
         raise ValueError("CAPTURE_ENTRYPOINT_INCOMPLETE")
     original = command_argv(entry.get("orig_argv"))
@@ -330,7 +354,6 @@ def _wrapper_target(source, argv, descriptor):
         or tuple(descriptor.get("root_argv", ())) != argv
         or descriptor.get("cli_changes_supported") is not True
         or descriptor.get("argv_override_supported") is not True
-        or parse_command(argv).kind != "command"
     ):
         raise ValueError("WRAPPER_EXECUTION_DESCRIPTOR_MISMATCH")
     relative = descriptor.get("source_relative")
@@ -393,6 +416,23 @@ def same_wrapper_entrypoint(expected, observed):
         "cli_changes_supported",
         "argv_override_supported",
     )
+    return isinstance(observed, dict) and all(
+        expected.get(key) == observed.get(key) for key in keys
+    )
+
+
+def same_target_invocation(expected, entry):
+    """Match startup identity even when a duplicate process has no editable main."""
+    cwd = expected.get("startup_cwd_relative")
+    return (
+        isinstance(entry, dict)
+        and entry.get("startup_cwd") == ("/source" if cwd == "." else f"/source/{cwd}")
+        and entry.get("orig_argv") == expected.get("python_argv")
+    )
+
+
+def same_capture_target(expected, observed):
+    keys = ("source_relative", "startup_cwd_relative", "python_argv", "script_args", "module")
     return isinstance(observed, dict) and all(
         expected.get(key) == observed.get(key) for key in keys
     )
