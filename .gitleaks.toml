@@ -85,3 +85,152 @@ condition = "AND"
 regexTarget = "secret"
 paths = ['''^reports/evaluation\-outcomes\-20261024/backend/receipt\-revision\-1\.json$''']
 regexes = ['''^0bee5be7ac85b1d09adb7694666f87a2db657ca1c18fa5d0e81caa8c70e5c805$''']
+
+# Proposed additions only: append to the existing generic-api-key rule after review.
+# Keep [extend].useDefault=true and every existing rule/allowlist unchanged.
+# Every block requires BOTH an exact anchored report path AND an exact verified SHA256.
+# The final sources-after block is conditional: first confirm the completed before/after
+# inventories agree for all five source keys. An absent after file is not acceptance.
+
+[[rules.allowlists]]
+description = "Individually verified nonsecret source SHA256 in one report"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/actual\-usage\-budget\-20261025/full\-regression\-20261024T211141Z\-1717235b\-sources\-after\.json$''']
+regexes = [
+    '''^06372b6065e49ba70b10af3276c71aef9a22e2dbde6ae32b1c88c3171085411d$''',
+    '''^39dad6e84796addf88c8cf7a63a98baba4370e2443b71ce707ec74a320fb05a3$''',
+    '''^3f3b7590863929549b0c91a3991df49e7cf78247ad35c7d87613cc5802a40d02$''',
+    '''^c2e0f2c6eeb2b80863ef558661a19e56f545cede91ae732178fc27f0f5a09a32$''',
+    '''^f3d5e9050c7d2c91e3f0b95199c9be9f6ae8457fba04ecb3e9095017fab3ff64$''',
+]
+
+[[rules.allowlists]]
+description = "Individually verified nonsecret source SHA256 in one report"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/actual\-usage\-budget\-20261025/full\-regression\-20261024T211141Z\-1717235b\-sources\-before\.json$''']
+regexes = [
+    '''^06372b6065e49ba70b10af3276c71aef9a22e2dbde6ae32b1c88c3171085411d$''',
+    '''^39dad6e84796addf88c8cf7a63a98baba4370e2443b71ce707ec74a320fb05a3$''',
+    '''^3f3b7590863929549b0c91a3991df49e7cf78247ad35c7d87613cc5802a40d02$''',
+    '''^c2e0f2c6eeb2b80863ef558661a19e56f545cede91ae732178fc27f0f5a09a32$''',
+    '''^f3d5e9050c7d2c91e3f0b95199c9be9f6ae8457fba04ecb3e9095017fab3ff64$''',
+]
+
+[[rules.allowlists]]
+description = "Individually verified nonsecret source SHA256 in one report"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/actual\-usage\-budget\-20261025/full\-regression\-20261024T212521Z\-e116b982\-sources\-after\.json$''']
+regexes = [
+    '''^06372b6065e49ba70b10af3276c71aef9a22e2dbde6ae32b1c88c3171085411d$''',
+    '''^39dad6e84796addf88c8cf7a63a98baba4370e2443b71ce707ec74a320fb05a3$''',
+    '''^3f3b7590863929549b0c91a3991df49e7cf78247ad35c7d87613cc5802a40d02$''',
+    '''^c2e0f2c6eeb2b80863ef558661a19e56f545cede91ae732178fc27f0f5a09a32$''',
+    '''^f3d5e9050c7d2c91e3f0b95199c9be9f6ae8457fba04ecb3e9095017fab3ff64$''',
+]
+
+[[rules.allowlists]]
+description = "Individually verified nonsecret source SHA256 in one report"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/actual\-usage\-budget\-20261025/full\-regression\-20261024T212521Z\-e116b982\-sources\-before\.json$''']
+regexes = [
+    '''^06372b6065e49ba70b10af3276c71aef9a22e2dbde6ae32b1c88c3171085411d$''',
+    '''^39dad6e84796addf88c8cf7a63a98baba4370e2443b71ce707ec74a320fb05a3$''',
+    '''^3f3b7590863929549b0c91a3991df49e7cf78247ad35c7d87613cc5802a40d02$''',
+    '''^c2e0f2c6eeb2b80863ef558661a19e56f545cede91ae732178fc27f0f5a09a32$''',
+    '''^f3d5e9050c7d2c91e3f0b95199c9be9f6ae8457fba04ecb3e9095017fab3ff64$''',
+]
+
+[[rules.allowlists]]
+description = "Individually verified nonsecret source SHA256 in one report"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/actual\-usage\-budget\-20261025/full\-regression\-20261024T213756Z\-648bd7ce\-sources\-after\.json$''']
+regexes = [
+    '''^06372b6065e49ba70b10af3276c71aef9a22e2dbde6ae32b1c88c3171085411d$''',
+    '''^39dad6e84796addf88c8cf7a63a98baba4370e2443b71ce707ec74a320fb05a3$''',
+    '''^3f3b7590863929549b0c91a3991df49e7cf78247ad35c7d87613cc5802a40d02$''',
+    '''^c2e0f2c6eeb2b80863ef558661a19e56f545cede91ae732178fc27f0f5a09a32$''',
+    '''^d3098ef67676752fbb0648c1291f28ae032d8cdbd78fb0b00c8ac20806afaa33$''',
+]
+
+[[rules.allowlists]]
+description = "Individually verified nonsecret source SHA256 in one report"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/actual\-usage\-budget\-20261025/full\-regression\-20261024T213756Z\-648bd7ce\-sources\-before\.json$''']
+regexes = [
+    '''^06372b6065e49ba70b10af3276c71aef9a22e2dbde6ae32b1c88c3171085411d$''',
+    '''^39dad6e84796addf88c8cf7a63a98baba4370e2443b71ce707ec74a320fb05a3$''',
+    '''^3f3b7590863929549b0c91a3991df49e7cf78247ad35c7d87613cc5802a40d02$''',
+    '''^c2e0f2c6eeb2b80863ef558661a19e56f545cede91ae732178fc27f0f5a09a32$''',
+    '''^d3098ef67676752fbb0648c1291f28ae032d8cdbd78fb0b00c8ac20806afaa33$''',
+]
+
+[[rules.allowlists]]
+description = "Individually verified nonsecret source SHA256 in one report"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/bounded\-billing\-reporting\-20261025/receipt\.json$''']
+regexes = [
+    '''^e2634c3c2a2c0fbf4a2c1c98fe6fc347ec5f5c340b5d4ebb3cf0549d670786a0$''',
+    '''^f4552e94af1ab49c3eee849a5894f7464092b06fd7a8ab0f9f3f8e4e2440f753$''',
+]
+
+# CONDITIONAL future path; five exact values verified from its completed sources-before inventory.
+[[rules.allowlists]]
+description = "Individually verified nonsecret source SHA256 in one report"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/final\-verification\-20261025/full\-regression\-20261024T222341Z\-d83e26d0\-sources\-after\.json$''']
+regexes = [
+    '''^06372b6065e49ba70b10af3276c71aef9a22e2dbde6ae32b1c88c3171085411d$''',
+    '''^39dad6e84796addf88c8cf7a63a98baba4370e2443b71ce707ec74a320fb05a3$''',
+    '''^3f3b7590863929549b0c91a3991df49e7cf78247ad35c7d87613cc5802a40d02$''',
+    '''^6e78c46022ed02d4960d1f21d3df12742dd2885f3ed13b5ec2c056daf2c10bcf$''',
+    '''^e2634c3c2a2c0fbf4a2c1c98fe6fc347ec5f5c340b5d4ebb3cf0549d670786a0$''',
+]
+
+[[rules.allowlists]]
+description = "Individually verified nonsecret source SHA256 in one report"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/final\-verification\-20261025/full\-regression\-20261024T222341Z\-d83e26d0\-sources\-before\.json$''']
+regexes = [
+    '''^06372b6065e49ba70b10af3276c71aef9a22e2dbde6ae32b1c88c3171085411d$''',
+    '''^39dad6e84796addf88c8cf7a63a98baba4370e2443b71ce707ec74a320fb05a3$''',
+    '''^3f3b7590863929549b0c91a3991df49e7cf78247ad35c7d87613cc5802a40d02$''',
+    '''^6e78c46022ed02d4960d1f21d3df12742dd2885f3ed13b5ec2c056daf2c10bcf$''',
+    '''^e2634c3c2a2c0fbf4a2c1c98fe6fc347ec5f5c340b5d4ebb3cf0549d670786a0$''',
+]
+
+[[rules.allowlists]]
+description = "Individually verified nonsecret source SHA256 in one report"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/live\-campaign\-20261025/diagnosis\-attempt2\-review\.json$''']
+regexes = [
+    '''^a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c$''',
+]
+
+[[rules.allowlists]]
+description = "Individually verified nonsecret source SHA256 in one report"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/live\-campaign\-20261025/mvp\-v2\-cap\-budget\-review\.json$''']
+regexes = [
+    '''^a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c$''',
+]
+
+[[rules.allowlists]]
+description = "Individually verified nonsecret source SHA256 in one report"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/serve\-runtime\-profile\-20261025/receipt\.json$''']
+regexes = [
+    '''^6e78c46022ed02d4960d1f21d3df12742dd2885f3ed13b5ec2c056daf2c10bcf$''',
+    '''^ff08fbc91b3b1d1da222317baf1faf8aaaa4970ddf75b44391fd70c88f5270dc$''',
+]

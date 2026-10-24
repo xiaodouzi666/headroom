@@ -15,7 +15,8 @@ import re
 import threading
 import time
 import uuid
-from decimal import Decimal
+from collections.abc import Mapping
+from decimal import Decimal, localcontext
 from pathlib import Path
 from typing import Any
 
@@ -113,6 +114,24 @@ class Price:
     output_per_million: Decimal
     prompt_token_ceiling: int
     output_cap_field: str
+    cached_input_per_million: Decimal | None = None
+    reviewed_cache_price_evidence: str | None = None
+    allow_catalogue_cache_price_missing: bool = False
+
+    def __post_init__(self):
+        if type(self.allow_catalogue_cache_price_missing) is not bool:
+            raise Refused("cache-price fallback requires an explicit boolean")
+        if self.cached_input_per_million is not None:
+            cached = money(self.cached_input_per_million)
+            if cached > money(self.input_per_million):
+                raise Refused("reviewed cache price exceeds conservative input price")
+            object.__setattr__(self, "cached_input_per_million", cached)
+        if self.allow_catalogue_cache_price_missing and (
+            self.cached_input_per_million is None
+            or not isinstance(self.reviewed_cache_price_evidence, str)
+            or not self.reviewed_cache_price_evidence.strip()
+        ):
+            raise Refused("cache-price fallback requires a reviewed price and independent evidence")
 
     def cost(self, prompt: int, completion: int) -> Decimal:
         return (prompt * self.input_per_million + completion * self.output_per_million) / 1000000
@@ -211,8 +230,165 @@ def validate_prices(
             money(item["output_usd_per_million"]),
             ceiling,
             cap,
+            money(item["cached_input_usd_per_million"])
+            if item.get("cached_input_usd_per_million") is not None
+            else None,
+            item.get("reviewed_cache_price_evidence"),
+            item.get("allow_catalogue_cache_price_missing", False),
         )
     return output
+
+
+# The verbose Token Factory catalogue advertises token rates per token.
+# These non-token fees are present in the reviewed catalogue schema and are not
+# included in Price.cost. Missing/null fields cannot establish a zero charge.
+CATALOGUE_ZERO_FEES = frozenset({"request", "image", "price_per_video_second", "price_per_minute"})
+
+
+def catalogue_guard(probe: Probe, price: Price | None, catalogue: dict | None) -> dict:
+    """Validate this execution's exact endpoint/model snapshot before paid admission.
+
+    Price remains the old reviewed conservative schema (including any margin);
+    lower live rates are safe. This is consistency evidence, not a price lock,
+    new capability verification or a model-tokenizer measurement.
+    """
+    result = {
+        "endpoint": probe.endpoint,
+        "model": probe.model,
+        "status": "refused",
+        "detail": "catalogue_unavailable",
+        "reviewed": None,
+        "observed": None,
+    }
+    if price is None:
+        result["detail"] = "reviewed_price_missing"
+        return result
+    result["reviewed"] = {
+        "input_usd_per_million": str(price.input_per_million),
+        "output_usd_per_million": str(price.output_per_million),
+        "prompt_token_ceiling": price.prompt_token_ceiling,
+        "cached_input_usd_per_million": (
+            str(price.cached_input_per_million)
+            if price.cached_input_per_million is not None
+            else None
+        ),
+        "allow_catalogue_cache_price_missing": price.allow_catalogue_cache_price_missing,
+    }
+    if not isinstance(catalogue, dict) or catalogue.get("endpoint") != probe.endpoint:
+        return result
+    if (
+        probe.endpoint not in ENDPOINTS
+        or catalogue.get("http_status") != 200
+        or catalogue.get("error")
+        or not isinstance(catalogue.get("models"), list)
+    ):
+        result["detail"] = "live_endpoint_catalogue_unavailable"
+        return result
+    matches = [
+        row for row in catalogue["models"] if isinstance(row, dict) and row.get("id") == probe.model
+    ]
+    if len(matches) != 1:
+        result["detail"] = (
+            "model_not_in_live_endpoint_catalogue"
+            if not matches
+            else "duplicate_model_in_live_endpoint_catalogue"
+        )
+        return result
+    metadata = matches[0].get("advertised_metadata")
+    if not isinstance(metadata, dict):
+        result["detail"] = "catalogue_billing_metadata_missing"
+        return result
+    result["observed"] = {
+        key: metadata[key]
+        for key in ("context_length", "max_model_len", "pricing", "price")
+        if key in metadata
+    }
+    context = metadata.get("context_length")
+    if type(context) is not int or context <= 0:
+        result["detail"] = "catalogue_context_missing_or_invalid"
+        return result
+    contexts = [context]
+    if "max_model_len" in metadata:
+        if type(metadata["max_model_len"]) is not int or metadata["max_model_len"] <= 0:
+            result["detail"] = "catalogue_context_missing_or_invalid"
+            return result
+        contexts.append(metadata["max_model_len"])
+    if max(contexts) > price.prompt_token_ceiling:
+        result["detail"] = "catalogue_context_exceeds_reviewed_ceiling"
+        return result
+    pricing = metadata.get("pricing")
+    if not isinstance(pricing, dict):
+        result["detail"] = "catalogue_pricing_missing"
+        return result
+    if metadata.get("price") is not None:
+        result["detail"] = "catalogue_additional_price_schema_unmodeled"
+        return result
+    cache_missing = pricing.get("input_cache_read") is None
+    fallback = cache_missing and price.allow_catalogue_cache_price_missing
+    required = {"prompt", "completion"} | CATALOGUE_ZERO_FEES
+    if not fallback:
+        required.add("input_cache_read")
+    missing = sorted(required - set(pricing))
+    if missing:
+        result.update(detail="catalogue_pricing_field_missing", fields=missing)
+        return result
+    parsed = {}
+    for field_name, value in pricing.items():
+        if field_name == "input_cache_read" and fallback:
+            continue
+        try:
+            if value is None or isinstance(value, bool):
+                raise Refused("unknown catalogue price")
+            parsed[field_name] = money(value)
+        except Refused:
+            result.update(detail="catalogue_pricing_field_invalid", field=field_name)
+            return result
+    if fallback:
+        with localcontext() as context:
+            context.prec = max(28, len(price.cached_input_per_million.as_tuple().digits) + 10)
+            parsed["input_cache_read"] = price.cached_input_per_million / 1_000_000
+        result.update(
+            cache_price_basis="reviewed_external_fallback",
+            reviewed_cache_price_evidence=price.reviewed_cache_price_evidence,
+            adopted_cache_usd_per_million=str(price.cached_input_per_million),
+            catalogue_cache_price_missing=True,
+        )
+    else:
+        result["cache_price_basis"] = "live_catalogue"
+    for field_name in sorted(set(parsed) - {"prompt", "completion", "input_cache_read"}):
+        if parsed[field_name] != 0:
+            result.update(detail="catalogue_unmodeled_fee_nonzero", field=field_name)
+            return result
+    token_rates = {}
+    for field_name, limit in (
+        ("prompt", price.input_per_million),
+        (
+            "input_cache_read",
+            min(price.input_per_million, price.cached_input_per_million)
+            if price.cached_input_per_million is not None
+            else price.input_per_million,
+        ),
+        ("completion", price.output_per_million),
+    ):
+        # Avoid rounding a long exact decimal down before its admission comparison.
+        with localcontext() as context:
+            context.prec = max(28, len(parsed[field_name].as_tuple().digits) + 10)
+            per_million = parsed[field_name] * 1_000_000
+        token_rates[field_name] = str(per_million)
+        if per_million > limit:
+            result.update(
+                detail="catalogue_token_price_exceeds_reviewed_bound",
+                field=field_name,
+                observed_usd_per_million=token_rates,
+            )
+            return result
+    result.update(
+        status="matched",
+        detail="catalogue_within_reviewed_billing_bounds",
+        observed_usd_per_million=token_rates,
+        non_token_fees="all_advertised_zero",
+    )
+    return result
 
 
 class Budget:
@@ -421,6 +597,64 @@ def classify(probe: Probe, observation: dict, metadata: dict) -> tuple[str, str]
     return "unknown", "request_accepted_but_parameter_effect_requires_review"
 
 
+RATE_LIMIT_COUNT_HEADERS = frozenset(
+    f"x-ratelimit-{kind}-{unit}"
+    for kind in ("limit", "remaining")
+    for unit in ("requests", "tokens")
+)
+RATE_LIMIT_RESET_HEADERS = frozenset(f"x-ratelimit-reset-{unit}" for unit in ("requests", "tokens"))
+RATE_LIMIT_HEADERS = (
+    RATE_LIMIT_COUNT_HEADERS
+    | RATE_LIMIT_RESET_HEADERS
+    | {
+        "x-ratelimit-over-limit",
+        "retry-after",
+    }
+)
+
+
+def sanitized_rate_limit_headers(headers: Any, *, secret: str | None = None) -> dict[str, str]:
+    """Observe only bounded rate-limit response fields; never schedule retries from them.
+
+    Duplicate names are ambiguous and omitted. Reset values are provider seconds;
+    Retry-After is retained as text because HTTP also permits a date. Absence or
+    rejection is unknown, never a zero limit or permission for another request.
+    """
+    if not isinstance(headers, Mapping):
+        return {}
+    multi_items = getattr(headers, "multi_items", None)
+    items = multi_items() if callable(multi_items) else headers.items()
+    selected = {}
+    repeated = set()
+    for name, value in items:
+        if type(name) is not str or name.lower() not in RATE_LIMIT_HEADERS:
+            continue
+        name = name.lower()
+        if name in selected:
+            repeated.add(name)
+        selected[name] = value
+    result = {}
+    for name, value in selected.items():
+        if (
+            name in repeated
+            or type(value) is not str
+            or not 1 <= len(value) <= 128
+            or any(not 32 <= ord(char) <= 126 for char in value)
+            or (secret and secret in value)
+        ):
+            continue
+        if name in RATE_LIMIT_COUNT_HEADERS and not re.fullmatch(r"[0-9]+", value):
+            continue
+        if name in RATE_LIMIT_RESET_HEADERS and not re.fullmatch(r"[0-9]+(?:\.[0-9]+)?", value):
+            continue
+        if name == "x-ratelimit-over-limit" and value not in {"yes", "no"}:
+            continue
+        if name == "retry-after" and not value.strip():
+            continue
+        result[name] = value
+    return result
+
+
 class HTTPTransport:
     """Official HTTPS only; absolute deadlines, no redirects, no raw-body logging."""
 
@@ -441,6 +675,7 @@ class HTTPTransport:
 
         start = time.monotonic()
         http_status = None
+        rate_limit_headers = {}
         try:
             async with (
                 asyncio.timeout(OTHER_TIMEOUT),
@@ -454,8 +689,10 @@ class HTTPTransport:
                     headers={"Authorization": f"Bearer {self.key}"},
                 )
                 http_status = response.status_code
+                rate_limit_headers = sanitized_rate_limit_headers(response.headers, secret=self.key)
                 result = {
                     "http_status": http_status,
+                    "rate_limit_headers": rate_limit_headers,
                     "elapsed_ms": (time.monotonic() - start) * 1000,
                 }
                 if response.status_code == 200:
@@ -494,6 +731,7 @@ class HTTPTransport:
         except (TimeoutError, httpx.HTTPError, ValueError, TypeError, KeyError) as exc:
             return {
                 "http_status": http_status,
+                "rate_limit_headers": rate_limit_headers,
                 "error": type(exc).__name__,
                 "elapsed_ms": (time.monotonic() - start) * 1000,
             }
@@ -516,6 +754,7 @@ class HTTPTransport:
             "response_model": None,
             "response_model_ids": [],
             "response_model_missing_events": 0,
+            "rate_limit_headers": {},
         }
         calls = {}
         response_bytes = 0
@@ -533,6 +772,9 @@ class HTTPTransport:
                 ) as response,
             ):
                 result["http_status"] = response.status_code
+                result["rate_limit_headers"] = sanitized_rate_limit_headers(
+                    response.headers, secret=self.key
+                )
                 if response.status_code != 200:
                     result["error"] = f"http_{response.status_code}"
                     return result
@@ -631,9 +873,34 @@ def probe_attempts(
     sleep=time.sleep,
     encoder=None,
     already_reserved=False,
+    catalogue=None,
 ) -> dict:
     upper = price.cost(price.prompt_token_ceiling, max_output)
     reserved = upper * (retries + 1)
+    if catalogue is None:
+        # Independent callers must pass the same live guard; the normal plan
+        # supplies its just-fetched endpoint record so it performs only two GETs.
+        try:
+            observed = transport.catalogue(
+                Probe("catalogue-for-" + probe.id, probe.endpoint, None, "catalogue")
+            )
+            catalogue = {**observed, "endpoint": probe.endpoint}
+        except Exception as error:  # noqa: BLE001 - no provider exception text is persisted
+            catalogue = {
+                "endpoint": probe.endpoint,
+                "error": "catalogue_exception_" + type(error).__name__,
+            }
+    guard = catalogue_guard(probe, price, catalogue)
+    if guard["status"] != "matched":
+        if already_reserved:
+            budget.settle(reserved, Decimal(0), Decimal(0))
+        return {
+            "id": probe.id,
+            "status": "refused",
+            "detail": guard["detail"],
+            "attempts": [],
+            "catalogue_guard": guard,
+        }
     if not already_reserved:
         budget.reserve(reserved)
     charged = Decimal(0)
@@ -649,6 +916,7 @@ def probe_attempts(
                 if budget.violated or budget.halt_reason:
                     return {
                         "id": probe.id,
+                        "catalogue_guard": guard,
                         "status": "refused",
                         "detail": budget.halt_reason or "shared_provider_bound_violation",
                         "attempts": attempts,
@@ -690,6 +958,9 @@ def probe_attempts(
                 "status": status,
                 "detail": detail,
                 "http_status": observation.get("http_status"),
+                "rate_limit_headers": sanitized_rate_limit_headers(
+                    observation.get("rate_limit_headers")
+                ),
                 "usage": usage,
                 "requested_model": probe.model,
                 "response_model": observation.get("response_model"),
@@ -723,6 +994,7 @@ def probe_attempts(
             sleep(2**attempt)
         return {
             "id": probe.id,
+            "catalogue_guard": guard,
             "model": probe.model,
             "requested_model": probe.model,
             "response_model": attempts[-1]["response_model"],
@@ -737,10 +1009,17 @@ def probe_attempts(
             **public_metadata,
         }
     except Refused as exc:
-        return {"id": probe.id, "status": "refused", "detail": str(exc), "attempts": attempts}
+        return {
+            "id": probe.id,
+            "status": "refused",
+            "detail": str(exc),
+            "attempts": attempts,
+            "catalogue_guard": guard,
+        }
     except Exception as exc:  # noqa: BLE001 - preserve charged reservation and redact exception text.
         return {
             "id": probe.id,
+            "catalogue_guard": guard,
             "status": "fail",
             "detail": "probe_exception_" + type(exc).__name__,
             "attempts": attempts,
@@ -815,6 +1094,8 @@ def execute_plan(
         "live": True,
         "timestamp_utc": dt.datetime.now(dt.UTC).isoformat(),
         "catalogues": [],
+        "catalogue_guards": [],
+        "catalogue_consistency_passed": None,
         "selected_models": {p.role: p.model for p in plan if p.role},
         "probes": [],
         "config_proposal": {},
@@ -824,12 +1105,13 @@ def execute_plan(
             "Root-reviewed configuration update and T0.4 acceptance",
         ],
     }
-    models_available = {}
+    catalogues = {}
     for probe in [p for p in plan if p.method == "catalogue"]:
         observation = transport.catalogue(probe)
-        row = {"id": probe.id, "endpoint": probe.endpoint, **observation}
+        row = {**observation, "id": probe.id, "endpoint": probe.endpoint}
         report["catalogues"].append(row)
-        models_available[probe.endpoint] = {x["id"] for x in observation.get("models", [])}
+        catalogues[probe.endpoint] = row
+
         if on_result:
             on_result(report)
     paid = [p for p in plan if p.method != "catalogue"]
@@ -838,7 +1120,16 @@ def execute_plan(
         [[p for p in paid if p.concurrency_group]] if any(p.concurrency_group for p in paid) else []
     )
     for group in [[p] for p in sequential] + groups:
-        if any(p.model not in models_available.get(p.endpoint, set()) for p in group):
+        guards = [catalogue_guard(p, prices.get(p.role), catalogues.get(p.endpoint)) for p in group]
+        report["catalogue_guards"].extend(
+            {"id": p.id, **guard} for p, guard in zip(group, guards, strict=True)
+        )
+        report["catalogue_consistency_passed"] = all(
+            guard["status"] == "matched" for guard in report["catalogue_guards"]
+        )
+        if on_result:
+            on_result(report)  # Consistency evidence is durable before any paid reservation.
+        if any(guard["status"] != "matched" for guard in guards):
             report["probes"].extend(
                 {
                     "id": p.id,
@@ -846,15 +1137,25 @@ def execute_plan(
                     "model": p.model,
                     "endpoint": p.endpoint,
                     "status": "refused",
-                    "detail": "model_not_in_live_endpoint_catalogue",
+                    "detail": guard["detail"]
+                    if guard["status"] != "matched"
+                    else "catalogue_group_refused",
                 }
-                for p in group
+                for p, guard in zip(group, guards, strict=True)
             )
             continue
         if len(group) == 1:
             p = group[0]
             try:
-                row = probe_attempts(p, prices[p.role], budget, transport, max_output, retries)
+                row = probe_attempts(
+                    p,
+                    prices[p.role],
+                    budget,
+                    transport,
+                    max_output,
+                    retries,
+                    catalogue=catalogues[p.endpoint],
+                )
             except Refused as exc:
                 row = {"id": p.id, "status": "refused", "detail": str(exc)}
             report["probes"].append(row)
@@ -881,6 +1182,7 @@ def execute_plan(
                             max_output,
                             retries,
                             already_reserved=True,
+                            catalogue=catalogues[p.endpoint],
                         )
                         for p in group
                     ]
@@ -1065,6 +1367,7 @@ def main(argv=None) -> int:
             if not (
                 report["budget"]["provider_bound_violation"]
                 or report["budget"]["billing_bound_unresolved"]
+                or report["catalogue_consistency_passed"] is False
             )
             else 2
         )

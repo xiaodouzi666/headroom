@@ -285,3 +285,58 @@ No artifact is rewritten to add these facts.
 fixtures are excluded. No new acceptance rate or relaxed original threshold is
 introduced. Historical absent fields remain unknown even if workflow status or
 target success was recorded.
+
+
+## Live evaluation wall-clock supervision
+
+Every live campaign case now runs in its own spawned Headroom process under a
+480-second monotonic deadline, matching the T1.12 eight-minute acceptance line.
+The deadline starts before local source/data preparation. Preparation, condition
+setup, baseline, model calls, verification, and the worker's report generation
+share this one deadline. The original Lab still owns each no-network Docker
+target; spawning Headroom does not introduce host execution of user programs.
+
+On expiry the parent sends SIGTERM so the orchestrator can save its partial
+report, permits at most five seconds for that cleanup, then sends SIGKILL if
+necessary. It reuses the existing owned-container cleanup check for this case's
+generated run ID and stops the campaign if cleanup cannot be verified. Cleanup
+time is recorded separately and does not extend the execution deadline or make
+an over-eight-minute run pass. Every row retains measured wall_seconds; the new
+evaluation_timing records the limit, worker exit, deadline, and cleanup outcome.
+
+A timed-out or failed worker cannot retain an overall target-success claim.
+Saved candidate verification, diffs, snapshots and existing run history remain
+available. The parent reads persisted Store/worker artifacts to produce the
+partial report; it never infers zero billing from a killed process, cancels a
+provider reservation, or releases an unknown/pending charge. These charges keep
+the ordinary shared ledger blocked. A normal worker returns its complete result
+through a bounded atomic local JSON file, avoiding a large result blocking an
+unread multiprocessing pipe.
+
+This supervision applies to the live headroom eval path. Pure planning,
+baseline-only runs, and run_fixture_campaign do not silently acquire a worker.
+The separate headroom fix CLI is unchanged by this integration. A completed
+case still needs all original target, cost, numerical and wall-clock checks;
+this implementation is not live MVP acceptance.
+
+## Conservative billing coverage and unchanged cost thresholds
+
+A campaign row keeps `cost_usd=null` when actual billing is unknown. A newly
+runtime-certified bound adds `billing_complete=true`, `cost_upper_usd`, and
+`cost_basis=verified_upper_bound`. The ordinary cost mean and exact total never
+substitute this bound for a measured actual amount.
+
+The campaign charges its remaining envelope conservatively using exact cost or
+that certified bound, and proceeds only while the next whole run reservation
+fits. Unresolved charges still stop dispatch. A bound above the per-run limit
+sets `cost_limit_certified=false` and stops the campaign with
+`cost_upper_bound_does_not_certify_run_limit`; it is not labeled actual overspend.
+Original run/campaign/daily/global limits remain unchanged.
+
+Summaries retain exact `total_cost_usd`, known subtotal and `unknown_cost_runs`,
+and separately expose `billing_complete`, `bounded_cost_runs`,
+`unresolved_cost_runs` and `conservative_total_usd`. Bounds are displayed in their
+own JSON/Markdown/public Results column, not in the actual-cost column. Existing
+unknown rows without explicit certification remain unknown. A later review that
+retains an old full reservation in the shared ledger does not retroactively turn
+the original failed campaign into a pass.

@@ -1,0 +1,23 @@
+........................................................................ [ 58%]
+................F..................................                      [100%]
+=================================== FAILURES ===================================
+_______ test_actual_mode_reserves_full_global_bound_then_releases_unused _______
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-137/test_actual_mode_reserves_full0')
+
+    def test_actual_mode_reserves_full_global_bound_then_releases_unused(tmp_path):
+        b = ledger(tmp_path)
+        b.open_run("a", "0.6", budget_mode="actual_usage")
+        b.reserve("a", "first", "1.060576")
+        pending = b.snapshot("a")
+        assert pending["reserved_or_actual_usd"] == "1.060576"
+>       assert pending["remaining_usd"] == "0.6"
+E       AssertionError: assert '0' == '0.6'
+E         
+E         - 0.6
+E         + 0
+
+tests/test_actual_usage_budget.py:53: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_actual_usage_budget.py::test_actual_mode_reserves_full_global_bound_then_releases_unused
+1 failed, 122 passed in 6.60s

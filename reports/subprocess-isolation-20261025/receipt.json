@@ -1,0 +1,169 @@
+{
+  "schema": "headroom.t2.7-independent-subprocess-implementation.v1",
+  "created_at": "2026-10-24T22:20:13.599069+00:00",
+  "status": "implementation_validated_cuda_acceptance_pending",
+  "owned_files": [
+    "headroom/lab/subprocess_reference.py",
+    "headroom/acceptance/isolation.py",
+    "scripts/check_docker_subprocess_parity.py",
+    "tests/test_subprocess_reference.py",
+    "docs/SUBPROCESS_PARITY.md"
+  ],
+  "source_hashes": {
+    "headroom/lab/subprocess_reference.py": "5b64c4ec9e4a2addadbf8bc28bd3092011cdb08ca7178c10311ab5952ee3effb",
+    "headroom/acceptance/isolation.py": "6c868e4871539d2e4c2ee27eed3a847efda6e7b70b64f53e0e5382900cb5961c",
+    "scripts/check_docker_subprocess_parity.py": "bd67190db5f6f5b24d677a2d84f241455530f75a69f54203e24e824fefd669ec",
+    "tests/test_subprocess_reference.py": "104fe2d5f3f9f43b3ddf77f0df4ceef7e96c3f57dc1cc7c5ed9536f084afad51",
+    "docs/SUBPROCESS_PARITY.md": "017215c9fb4cf38b49968cdc2d6dad00ee854ea39d7e0a75d4cabc2045d40ad2",
+    "headroom/lab/hooks.py": "9be7e0adb7ef30a3cb6ad888098f50954944af8db3d09c7a198208ce5556bcc7",
+    "headroom/lab/sitecustomize.py": "1549611160fcee36ae8e68053eda752fb38a0dc21f0dbe08246832ce2d71e150",
+    "headroom/lab/runner.py": "d16869bb52730917c398fa85e8d6baa1e3df8e48c92fe880af286e4ebae013aa",
+    "headroom/lab/docker.py": "8276b44a6332ab466978216d7171036a522cbb192aa6bf23bdde3921308be899",
+    "headroom/lab/envs.py": "a0d71fcbc4acc2eed00ea3613c79c7bfe0fb0e474435d49db72807af2f05434a",
+    "headroom/lab/deadline.py": "b01e85b63eeac8ef27f1f300cee15dda5656345332d0d67592366e4ec4726de9",
+    "headroom/lab/cache.py": "b2366f2bf6fc5722167e7cc7cb78aa84e8f0da3fe28dbcfb57cc3319eb0b4932",
+    "headroom/lab/runtime_image.py": "938be05da0d96f00bf7cb40c82c0931e0854eda811c4c1386895cc4b09281e45",
+    "uv.lock": "9ef946a38727f9a18c1b951067b5c5c40d154a7bb8f973ab2ed6500cbdd1d1df",
+    "docs/PLAN.md": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56"
+  },
+  "guarded_validation": {
+    "log": "reports/subprocess-isolation-20261025/focused-final-accepted.log",
+    "log_sha256": "397c0c80452d9ce3bb226211e7a8ec2f13f53ad4c89aa5a853082f239d89c94e",
+    "summary": "44 passed in 42.64s",
+    "command": ".venv/bin/python reports/health-notifier-20261024/offline_tests.py -q tests/test_subprocess_reference.py --basetemp=runs/subprocess-reference-cpu-final-accepted",
+    "host_dns_inet_blocked": true,
+    "credential_reads_blocked": true,
+    "all_real_containers_cpu_network_none": true
+  },
+  "cpu_pairs": [
+    {
+      "path": "runs/subprocess-reference-cpu-final-accepted/test_three_real_cpu_pairs_use_0/cpu-parity.json",
+      "sha256": "ac874384f64c8a57f2ea54b9404ee0def5ef992f99243621323d9613567e1c30",
+      "component_parity_pass": true,
+      "t2_7_case_accepted": false,
+      "steps": 4,
+      "status": "completed",
+      "image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7",
+      "controller_pid": 1,
+      "child_pid": 7,
+      "group_cleanup_verified": true,
+      "container_cleanup_verified": true,
+      "runtime_env": {
+        "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4",
+        "device": "cpu",
+        "seed": 1337,
+        "max_steps": 4,
+        "max_seconds": 60.0
+      },
+      "no_secret_env_keys": true,
+      "network_none": true,
+      "readonly_root": true
+    },
+    {
+      "path": "runs/subprocess-reference-cpu-final-accepted/test_three_real_cpu_pairs_use_1/cpu-parity.json",
+      "sha256": "1b77ec321b9b8792529d32c77eb4b314d83b3abc93734e03937bc313fe30be17",
+      "component_parity_pass": true,
+      "t2_7_case_accepted": false,
+      "steps": 4,
+      "status": "completed",
+      "image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7",
+      "controller_pid": 1,
+      "child_pid": 7,
+      "group_cleanup_verified": true,
+      "container_cleanup_verified": true,
+      "runtime_env": {
+        "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4",
+        "device": "cpu",
+        "seed": 1337,
+        "max_steps": 4,
+        "max_seconds": 60.0
+      },
+      "no_secret_env_keys": true,
+      "network_none": true,
+      "readonly_root": true
+    },
+    {
+      "path": "runs/subprocess-reference-cpu-final-accepted/test_three_real_cpu_pairs_use_2/cpu-parity.json",
+      "sha256": "eb10717515aca527e6258ecd269b522963932368a63de8124bf5f569c89fa1c3",
+      "component_parity_pass": true,
+      "t2_7_case_accepted": false,
+      "steps": 20,
+      "status": "completed",
+      "image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7",
+      "controller_pid": 1,
+      "child_pid": 7,
+      "group_cleanup_verified": true,
+      "container_cleanup_verified": true,
+      "runtime_env": {
+        "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4",
+        "device": "cpu",
+        "seed": 1337,
+        "max_steps": 20,
+        "max_seconds": 60.0
+      },
+      "no_secret_env_keys": true,
+      "network_none": true,
+      "readonly_root": true
+    }
+  ],
+  "new_model_api_calls": 0,
+  "model_cost_usd": "0",
+  "cuda_runs": 0,
+  "t2_7_accepted": false,
+  "independence": {
+    "reference_does_not_call": [
+      "headroom.lab.runner._run",
+      "headroom.lab.runner.run_script",
+      "headroom.lab.runner.run_command",
+      "headroom.lab.docker.execute"
+    ],
+    "shared_primitives": [
+      "isolation argv constructor",
+      "immutable runtime image validator",
+      "bounded source copier",
+      "reviewed HF cache validator",
+      "GPU lock and observation combiner",
+      "environment whitelist",
+      "read-only monotonic deadline contract",
+      "original capture hooks/sitecustomize"
+    ],
+    "scope": "Docker is the unchanged outer safety envelope; the child scheduling/timeout/exit/group cleanup implementation is separate. This is not a repaired bare-host backend or independent validation of shared capture internals."
+  },
+  "additional_real_cpu_checks": [
+    "no outbound network and no secret environment propagation",
+    "source/runtime/control/root/HF-cache writes refused",
+    "offline local HF config readable",
+    "ignored SIGALRM/SIGTERM killed by unchanged hard deadline and container removed",
+    "arbitrary exit7 retained as error",
+    "normal exit reaps background process group"
+  ],
+  "review_fixes": [
+    "last inspect crossing hard deadline cannot pass",
+    "nonempty valid source manifests plus frozen script SHA",
+    "GPU observations explicit and complete, no observed sharing, no claim of continuous exclusivity"
+  ],
+  "prior_logs_preserved": [
+    "offline-first.log",
+    "cpu-first.log",
+    "focused-final.log",
+    "focused-reviewed.log",
+    "offline-reviewed-final.log"
+  ],
+  "prior_failure_note": "focused-reviewed.log retained two failed synthetic positive comparison fixtures after the new required source pin; explicit fixture pin corrected; final complete44-case run passed.",
+  "default_plan": "reports/subprocess-isolation-20261025/cuda-plan.json",
+  "future_cuda_command": "source scripts/env.sh && uv run --offline python scripts/check_docker_subprocess_parity.py --execute --output runs/t2.7-independent-subprocess-UNIQUE --max-seconds 180",
+  "future_gate": "Three pinned CUDA cases, two arms each, original positive allocated-byte peak delta <=1%; expected OOM step counts retained; complete capture/configuration/source/cleanup and GPU observation checks. Cost0 model API.",
+  "limits": [
+    "No original PLAN/threshold/fixture changed.",
+    "No GPU run or actual T2.7 acceptance was performed.",
+    "No real credentials read, system service or policy changed, privileged container, install, public listener or commit/push.",
+    "Creation and cleanup bounds are separately recorded; the execution timer never restarts for the child.",
+    "GPU point samples do not prove continuous exclusive use; no throughput acceptance claim."
+  ]
+}

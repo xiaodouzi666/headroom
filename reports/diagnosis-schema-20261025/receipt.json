@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "completed_at_utc": "2026-10-24T21:59:19.821517+00:00",
+  "status": "implemented_and_offline_verified_not_yet_integrated",
+  "interface": "headroom.diagnosis_schema.build_diagnosis_schema(*, evidence, policy) -> dict",
+  "pre_dispatch_error": "DiagnosisSchemaError (ValueError subclass); sanitized fixed reasons",
+  "input_shapes": [
+    "full bundle: evidence.analysis.stack_catalog",
+    "direct analysis: evidence.stack_catalog"
+  ],
+  "constraints": {
+    "runtime_catalog": "nonempty Mapping with nonempty unpadded valid-UTF8 string IDs; no fixed ID naming convention",
+    "evidence_refs": "enum of current catalog IDs, sorted; frames and source excluded",
+    "requires_policy": "enum of policy keys whose values are exactly True; maxItems=0 when no key is allowed; never an empty enum",
+    "numerics_impact": "enum=[none] unless allow_numerics_change is exactly True",
+    "other_schema_fields": "unchanged deep copy of Diagnosis.model_json_schema()",
+    "wire_data": "strict JSON serialization with allow_nan=False and UTF8; no stringification fallback"
+  },
+  "validation": {
+    "tests": 63,
+    "seconds": 0.87,
+    "test_files": [
+      "tests/test_diagnosis_schema_constraints.py",
+      "tests/test_llm_router.py",
+      "tests/test_diagnose_contract.py"
+    ],
+    "test_log": "reports/diagnosis-schema-20261025/pytest.log",
+    "source_unchanged_during_tests": true,
+    "ruff": {
+      "exit_code": 0,
+      "log": "reports/diagnosis-schema-20261025/ruff.log"
+    },
+    "format": {
+      "exit_code": 0,
+      "log": "reports/diagnosis-schema-20261025/format.log"
+    },
+    "diff": {
+      "exit_code": 0,
+      "log": "reports/diagnosis-schema-20261025/diff.log"
+    }
+  },
+  "files_sha256": {
+    "headroom/diagnosis_schema.py": "194f900ce1bf741566014af6de89f988954e3bd8f7bdd3ba01bd6b7175d32875",
+    "tests/test_diagnosis_schema_constraints.py": "bd57447d22aad5464831109d4afd0f260a6f32b625aa575b9c4c284b4a7f8efc"
+  },
+  "guard_sha256": "546a4459fb04b2f9e32062d8a385cc5fa4a829734a27367190d6b431aa651507",
+  "guard": "Real project .env reads and DNS/INET denied, including spawn; new tests additionally refuse all .env opens. Real SDK/router uses MockTransport only.",
+  "production_changes_outside_owned_module": false,
+  "existing_schema_or_postvalidator_changed": false,
+  "score_or_threshold_changes": false,
+  "scenario_truth_used": false,
+  "credential_reads": 0,
+  "real_api_calls": 0,
+  "gpu_runs": 0,
+  "root_integration_note": "Build once from the actual current evidence and effective policy before router.chat, pass returned schema mapping; keep existing Diagnosis model and validate_diagnosis postvalidation unchanged. No diagnose.py edit was made by this task."
+}

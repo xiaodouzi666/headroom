@@ -35,6 +35,12 @@ def main(argv=None):
     parser.add_argument("--admission-cap-usd", default=None)
     parser.add_argument("--campaign-cap-usd", default=None)
     parser.add_argument("--daily-cap-usd", default=None)
+    parser.add_argument(
+        "--min-case-interval-seconds",
+        type=float,
+        default=0,
+        help="Minimum start-to-start interval for independent cases, from 0 to 60 seconds",
+    )
     args = parser.parse_args(argv)
     try:
         if args.execute:
@@ -57,6 +63,7 @@ def main(argv=None):
                 run_limit_usd=args.admission_cap_usd,
                 campaign_limit_usd=args.campaign_cap_usd,
                 daily_limit_usd=args.daily_cap_usd,
+                min_case_interval_seconds=args.min_case_interval_seconds,
                 execute=True,
                 live_authorized=True,
             )
@@ -73,7 +80,12 @@ def main(argv=None):
                 )
             )
             return 0 if report["accepted"] else 1
-        if args.live_authorized or args.prepared or args.runtime_profile:
+        if (
+            args.live_authorized
+            or args.prepared
+            or args.runtime_profile
+            or args.min_case_interval_seconds != 0
+        ):
             raise DiagnosisAcceptanceRefused("PREPARATION_DOES_NOT_USE_LIVE_OPTIONS")
         if bool(args.captures) == bool(args.from_baselines) or not args.output:
             raise DiagnosisAcceptanceRefused("ONE_CAPTURE_INPUT_AND_NEW_OUTPUT_REQUIRED")

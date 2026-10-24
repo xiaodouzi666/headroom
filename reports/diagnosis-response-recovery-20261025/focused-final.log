@@ -1,0 +1,597 @@
+........................................................................ [ 46%]
+...............................................................F.FFFFFF. [ 92%]
+...........                                                              [100%]
+=================================== FAILURES ===================================
+___ test_original_small_run_and_daily_guards_write_real_partial_report[3-1] ____
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-114/test_original_small_run_and_da0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7974f6e83560>
+daily = '3', expected_calls = 1
+
+    @pytest.mark.parametrize("daily,expected_calls", [("3", 1), ("0.1", 0)])
+    def test_original_small_run_and_daily_guards_write_real_partial_report(
+        tmp_path, monkeypatch, daily, expected_calls
+    ):
+        from headroom import orchestrator
+        from headroom.orchestrator import FixRequest, Services, run_fix
+    
+        project = tmp_path / "project"
+        project.mkdir()
+        profile = reviewed_fixture(project)
+        path = project / "profile.json"
+        path.write_text(profile.model_dump_json())
+        source = project / "source"
+        source.mkdir()
+        script = source / "train.py"
+        script.write_text("VALUE = 1\n")
+        monkeypatch.setattr(orchestrator, "PROJECT_ROOT", project)
+        if daily == "3":
+            monkeypatch.setenv("HEADROOM_RUN_BUDGET_USD", "0.05")
+        else:
+            monkeypatch.setenv("HEADROOM_DAILY_BUDGET_USD", "0.1")
+        calls = []
+    
+        def runtime(run_id, **kwargs):
+            kwargs.update(
+                env_file=project / ".env",
+                transport=httpx.MockTransport(
+                    lambda request: calls.append(request) or response(request, 50000)
+                ),
+            )
+            return build_live_runtime(run_id, **kwargs)
+    
+        monkeypatch.setattr(orchestrator, "build_live_runtime", runtime)
+    
+        def baseline(script, **kwargs):
+            directory = Path(kwargs["run_root"]) / "fixture"
+            directory.mkdir(parents=True)
+            shutil.copytree(source, directory / "source")
+            return {
+                "run_id": "fixture",
+                "run_dir": str(directory),
+                "status": "oom",
+                "peak_alloc_gb": 2.0,
+                "env": {"seed": 1337},
+                "loss_series": [],
+            }
+    
+        def evidence(run, *, output_dir, **kwargs):
+            output_dir.mkdir(parents=True)
+            analysis = {"stack_catalog": {"stk_fixture": []}}
+            (output_dir / "evidence.json").write_text(json.dumps({"analysis": analysis}))
+            (output_dir / "evidence.md").write_text("Offline fixture stk_fixture.")
+            return {
+                "analysis": analysis,
+                "token_count": 10,
+                "evidence_json": str(output_dir / "evidence.json"),
+                "evidence_md": str(output_dir / "evidence.md"),
+            }
+    
+        store = Store(project / "store.db")
+        try:
+            result = run_fix(
+                FixRequest(script=str(script), runtime_profile=str(path), research_enabled=False),
+                store=store,
+                run_root=project / "jobs",
+                services=Services(baseline=baseline, evidence=evidence, provenance="offline_fixture"),
+            )
+>           assert result["status"] == "budget_exceeded"
+E           AssertionError: assert 'needs_human' == 'budget_exceeded'
+E             
+E             - budget_exceeded
+E             + needs_human
+
+tests/test_actual_usage_budget.py:321: AssertionError
+______ test_kept_success_then_unverified_cost_is_not_run_success[overrun] ______
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-114/test_kept_success_then_unverif0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7974f70263c0>
+fault = 'overrun'
+
+    @pytest.mark.parametrize(
+        "fault", ["overrun", "missing_usage", "http_429", "network", "pending", "bound_invalid"]
+    )
+    def test_kept_success_then_unverified_cost_is_not_run_success(tmp_path, monkeypatch, fault):
+        import test_orchestrator as fixtures
+    
+        from headroom import orchestrator
+        from headroom.orchestrator import RunCancelled
+    
+        profile = reviewed_fixture(tmp_path)
+        monkeypatch.setattr(orchestrator, "PROJECT_ROOT", tmp_path)
+        monkeypatch.setattr(orchestrator, "read_live_profile", lambda *args: profile)
+        real_services = fixtures.Services
+        factory = {}
+        count = []
+    
+        def services(**kwargs):
+            factory["make"] = kwargs.pop("runtime_factory")
+            return real_services(**kwargs)
+    
+        monkeypatch.setattr(fixtures, "Services", services)
+    
+        def runtime(run_id, **kwargs):
+            fixture = factory["make"](
+                run_id, kwargs["store"], Path(kwargs["store"].get_run(run_id)["run_dir"])
+            )
+            original_settle = kwargs["budget"].settle
+    
+            def settle(*args, **values):
+                if len(count) == 3 and fault == "pending":
+                    raise RunCancelled("Offline interruption before ledger settlement")
+                return original_settle(*args, **values)
+    
+            kwargs["budget"].settle = settle
+    
+            def respond(request):
+                result = fixture.client._transport.handle_request(request)
+                payload = result.json()
+                count.append(request)
+                if len(count) == 3:
+                    if fault == "overrun":
+                        payload["usage"] = {
+                            "prompt_tokens": 600000,
+                            "completion_tokens": 10,
+                            "total_tokens": 600010,
+                        }
+                    elif fault == "missing_usage":
+                        payload.pop("usage")
+                    elif fault == "http_429":
+                        return httpx.Response(429, json={"error": {"message": "offline fixture"}})
+                    elif fault == "network":
+                        raise httpx.ConnectError("offline fixture", request=request)
+                    elif fault == "bound_invalid":
+                        payload["usage"] = {
+                            "prompt_tokens": 10,
+                            "completion_tokens": 4001,
+                            "total_tokens": 4011,
+                        }
+                return httpx.Response(200, json=payload)
+    
+            bundle = build_live_runtime(
+                run_id, **kwargs, env_file=tmp_path / ".env", transport=httpx.MockTransport(respond)
+            )
+            bundle.client._sleep = lambda _: None
+            return bundle
+    
+        monkeypatch.setattr(orchestrator, "build_live_runtime", runtime)
+        result, store, _, verifies, _ = fixtures.search_run(
+            tmp_path,
+            [{"before": "VALUE = 1\n", "after": "VALUE = 2\n", "peak": 20, "target": True}],
+            search_mode="bounded_pareto",
+        )
+        try:
+>           assert len(count) == 3 and len(verifies) == 1
+E           assert (0 == 3)
+E            +  where 0 = len([])
+
+tests/test_actual_usage_budget.py:410: AssertionError
+___ test_kept_success_then_unverified_cost_is_not_run_success[missing_usage] ___
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-114/test_kept_success_then_unverif1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7974f428a090>
+fault = 'missing_usage'
+
+    @pytest.mark.parametrize(
+        "fault", ["overrun", "missing_usage", "http_429", "network", "pending", "bound_invalid"]
+    )
+    def test_kept_success_then_unverified_cost_is_not_run_success(tmp_path, monkeypatch, fault):
+        import test_orchestrator as fixtures
+    
+        from headroom import orchestrator
+        from headroom.orchestrator import RunCancelled
+    
+        profile = reviewed_fixture(tmp_path)
+        monkeypatch.setattr(orchestrator, "PROJECT_ROOT", tmp_path)
+        monkeypatch.setattr(orchestrator, "read_live_profile", lambda *args: profile)
+        real_services = fixtures.Services
+        factory = {}
+        count = []
+    
+        def services(**kwargs):
+            factory["make"] = kwargs.pop("runtime_factory")
+            return real_services(**kwargs)
+    
+        monkeypatch.setattr(fixtures, "Services", services)
+    
+        def runtime(run_id, **kwargs):
+            fixture = factory["make"](
+                run_id, kwargs["store"], Path(kwargs["store"].get_run(run_id)["run_dir"])
+            )
+            original_settle = kwargs["budget"].settle
+    
+            def settle(*args, **values):
+                if len(count) == 3 and fault == "pending":
+                    raise RunCancelled("Offline interruption before ledger settlement")
+                return original_settle(*args, **values)
+    
+            kwargs["budget"].settle = settle
+    
+            def respond(request):
+                result = fixture.client._transport.handle_request(request)
+                payload = result.json()
+                count.append(request)
+                if len(count) == 3:
+                    if fault == "overrun":
+                        payload["usage"] = {
+                            "prompt_tokens": 600000,
+                            "completion_tokens": 10,
+                            "total_tokens": 600010,
+                        }
+                    elif fault == "missing_usage":
+                        payload.pop("usage")
+                    elif fault == "http_429":
+                        return httpx.Response(429, json={"error": {"message": "offline fixture"}})
+                    elif fault == "network":
+                        raise httpx.ConnectError("offline fixture", request=request)
+                    elif fault == "bound_invalid":
+                        payload["usage"] = {
+                            "prompt_tokens": 10,
+                            "completion_tokens": 4001,
+                            "total_tokens": 4011,
+                        }
+                return httpx.Response(200, json=payload)
+    
+            bundle = build_live_runtime(
+                run_id, **kwargs, env_file=tmp_path / ".env", transport=httpx.MockTransport(respond)
+            )
+            bundle.client._sleep = lambda _: None
+            return bundle
+    
+        monkeypatch.setattr(orchestrator, "build_live_runtime", runtime)
+        result, store, _, verifies, _ = fixtures.search_run(
+            tmp_path,
+            [{"before": "VALUE = 1\n", "after": "VALUE = 2\n", "peak": 20, "target": True}],
+            search_mode="bounded_pareto",
+        )
+        try:
+>           assert len(count) == 3 and len(verifies) == 1
+E           assert (0 == 3)
+E            +  where 0 = len([])
+
+tests/test_actual_usage_budget.py:410: AssertionError
+_____ test_kept_success_then_unverified_cost_is_not_run_success[http_429] ______
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-114/test_kept_success_then_unverif2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7974f75fca40>
+fault = 'http_429'
+
+    @pytest.mark.parametrize(
+        "fault", ["overrun", "missing_usage", "http_429", "network", "pending", "bound_invalid"]
+    )
+    def test_kept_success_then_unverified_cost_is_not_run_success(tmp_path, monkeypatch, fault):
+        import test_orchestrator as fixtures
+    
+        from headroom import orchestrator
+        from headroom.orchestrator import RunCancelled
+    
+        profile = reviewed_fixture(tmp_path)
+        monkeypatch.setattr(orchestrator, "PROJECT_ROOT", tmp_path)
+        monkeypatch.setattr(orchestrator, "read_live_profile", lambda *args: profile)
+        real_services = fixtures.Services
+        factory = {}
+        count = []
+    
+        def services(**kwargs):
+            factory["make"] = kwargs.pop("runtime_factory")
+            return real_services(**kwargs)
+    
+        monkeypatch.setattr(fixtures, "Services", services)
+    
+        def runtime(run_id, **kwargs):
+            fixture = factory["make"](
+                run_id, kwargs["store"], Path(kwargs["store"].get_run(run_id)["run_dir"])
+            )
+            original_settle = kwargs["budget"].settle
+    
+            def settle(*args, **values):
+                if len(count) == 3 and fault == "pending":
+                    raise RunCancelled("Offline interruption before ledger settlement")
+                return original_settle(*args, **values)
+    
+            kwargs["budget"].settle = settle
+    
+            def respond(request):
+                result = fixture.client._transport.handle_request(request)
+                payload = result.json()
+                count.append(request)
+                if len(count) == 3:
+                    if fault == "overrun":
+                        payload["usage"] = {
+                            "prompt_tokens": 600000,
+                            "completion_tokens": 10,
+                            "total_tokens": 600010,
+                        }
+                    elif fault == "missing_usage":
+                        payload.pop("usage")
+                    elif fault == "http_429":
+                        return httpx.Response(429, json={"error": {"message": "offline fixture"}})
+                    elif fault == "network":
+                        raise httpx.ConnectError("offline fixture", request=request)
+                    elif fault == "bound_invalid":
+                        payload["usage"] = {
+                            "prompt_tokens": 10,
+                            "completion_tokens": 4001,
+                            "total_tokens": 4011,
+                        }
+                return httpx.Response(200, json=payload)
+    
+            bundle = build_live_runtime(
+                run_id, **kwargs, env_file=tmp_path / ".env", transport=httpx.MockTransport(respond)
+            )
+            bundle.client._sleep = lambda _: None
+            return bundle
+    
+        monkeypatch.setattr(orchestrator, "build_live_runtime", runtime)
+        result, store, _, verifies, _ = fixtures.search_run(
+            tmp_path,
+            [{"before": "VALUE = 1\n", "after": "VALUE = 2\n", "peak": 20, "target": True}],
+            search_mode="bounded_pareto",
+        )
+        try:
+>           assert len(count) == 3 and len(verifies) == 1
+E           assert (0 == 3)
+E            +  where 0 = len([])
+
+tests/test_actual_usage_budget.py:410: AssertionError
+______ test_kept_success_then_unverified_cost_is_not_run_success[network] ______
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-114/test_kept_success_then_unverif3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7974f71590d0>
+fault = 'network'
+
+    @pytest.mark.parametrize(
+        "fault", ["overrun", "missing_usage", "http_429", "network", "pending", "bound_invalid"]
+    )
+    def test_kept_success_then_unverified_cost_is_not_run_success(tmp_path, monkeypatch, fault):
+        import test_orchestrator as fixtures
+    
+        from headroom import orchestrator
+        from headroom.orchestrator import RunCancelled
+    
+        profile = reviewed_fixture(tmp_path)
+        monkeypatch.setattr(orchestrator, "PROJECT_ROOT", tmp_path)
+        monkeypatch.setattr(orchestrator, "read_live_profile", lambda *args: profile)
+        real_services = fixtures.Services
+        factory = {}
+        count = []
+    
+        def services(**kwargs):
+            factory["make"] = kwargs.pop("runtime_factory")
+            return real_services(**kwargs)
+    
+        monkeypatch.setattr(fixtures, "Services", services)
+    
+        def runtime(run_id, **kwargs):
+            fixture = factory["make"](
+                run_id, kwargs["store"], Path(kwargs["store"].get_run(run_id)["run_dir"])
+            )
+            original_settle = kwargs["budget"].settle
+    
+            def settle(*args, **values):
+                if len(count) == 3 and fault == "pending":
+                    raise RunCancelled("Offline interruption before ledger settlement")
+                return original_settle(*args, **values)
+    
+            kwargs["budget"].settle = settle
+    
+            def respond(request):
+                result = fixture.client._transport.handle_request(request)
+                payload = result.json()
+                count.append(request)
+                if len(count) == 3:
+                    if fault == "overrun":
+                        payload["usage"] = {
+                            "prompt_tokens": 600000,
+                            "completion_tokens": 10,
+                            "total_tokens": 600010,
+                        }
+                    elif fault == "missing_usage":
+                        payload.pop("usage")
+                    elif fault == "http_429":
+                        return httpx.Response(429, json={"error": {"message": "offline fixture"}})
+                    elif fault == "network":
+                        raise httpx.ConnectError("offline fixture", request=request)
+                    elif fault == "bound_invalid":
+                        payload["usage"] = {
+                            "prompt_tokens": 10,
+                            "completion_tokens": 4001,
+                            "total_tokens": 4011,
+                        }
+                return httpx.Response(200, json=payload)
+    
+            bundle = build_live_runtime(
+                run_id, **kwargs, env_file=tmp_path / ".env", transport=httpx.MockTransport(respond)
+            )
+            bundle.client._sleep = lambda _: None
+            return bundle
+    
+        monkeypatch.setattr(orchestrator, "build_live_runtime", runtime)
+        result, store, _, verifies, _ = fixtures.search_run(
+            tmp_path,
+            [{"before": "VALUE = 1\n", "after": "VALUE = 2\n", "peak": 20, "target": True}],
+            search_mode="bounded_pareto",
+        )
+        try:
+>           assert len(count) == 3 and len(verifies) == 1
+E           assert (0 == 3)
+E            +  where 0 = len([])
+
+tests/test_actual_usage_budget.py:410: AssertionError
+______ test_kept_success_then_unverified_cost_is_not_run_success[pending] ______
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-114/test_kept_success_then_unverif4')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7974f42892b0>
+fault = 'pending'
+
+    @pytest.mark.parametrize(
+        "fault", ["overrun", "missing_usage", "http_429", "network", "pending", "bound_invalid"]
+    )
+    def test_kept_success_then_unverified_cost_is_not_run_success(tmp_path, monkeypatch, fault):
+        import test_orchestrator as fixtures
+    
+        from headroom import orchestrator
+        from headroom.orchestrator import RunCancelled
+    
+        profile = reviewed_fixture(tmp_path)
+        monkeypatch.setattr(orchestrator, "PROJECT_ROOT", tmp_path)
+        monkeypatch.setattr(orchestrator, "read_live_profile", lambda *args: profile)
+        real_services = fixtures.Services
+        factory = {}
+        count = []
+    
+        def services(**kwargs):
+            factory["make"] = kwargs.pop("runtime_factory")
+            return real_services(**kwargs)
+    
+        monkeypatch.setattr(fixtures, "Services", services)
+    
+        def runtime(run_id, **kwargs):
+            fixture = factory["make"](
+                run_id, kwargs["store"], Path(kwargs["store"].get_run(run_id)["run_dir"])
+            )
+            original_settle = kwargs["budget"].settle
+    
+            def settle(*args, **values):
+                if len(count) == 3 and fault == "pending":
+                    raise RunCancelled("Offline interruption before ledger settlement")
+                return original_settle(*args, **values)
+    
+            kwargs["budget"].settle = settle
+    
+            def respond(request):
+                result = fixture.client._transport.handle_request(request)
+                payload = result.json()
+                count.append(request)
+                if len(count) == 3:
+                    if fault == "overrun":
+                        payload["usage"] = {
+                            "prompt_tokens": 600000,
+                            "completion_tokens": 10,
+                            "total_tokens": 600010,
+                        }
+                    elif fault == "missing_usage":
+                        payload.pop("usage")
+                    elif fault == "http_429":
+                        return httpx.Response(429, json={"error": {"message": "offline fixture"}})
+                    elif fault == "network":
+                        raise httpx.ConnectError("offline fixture", request=request)
+                    elif fault == "bound_invalid":
+                        payload["usage"] = {
+                            "prompt_tokens": 10,
+                            "completion_tokens": 4001,
+                            "total_tokens": 4011,
+                        }
+                return httpx.Response(200, json=payload)
+    
+            bundle = build_live_runtime(
+                run_id, **kwargs, env_file=tmp_path / ".env", transport=httpx.MockTransport(respond)
+            )
+            bundle.client._sleep = lambda _: None
+            return bundle
+    
+        monkeypatch.setattr(orchestrator, "build_live_runtime", runtime)
+        result, store, _, verifies, _ = fixtures.search_run(
+            tmp_path,
+            [{"before": "VALUE = 1\n", "after": "VALUE = 2\n", "peak": 20, "target": True}],
+            search_mode="bounded_pareto",
+        )
+        try:
+>           assert len(count) == 3 and len(verifies) == 1
+E           assert (0 == 3)
+E            +  where 0 = len([])
+
+tests/test_actual_usage_budget.py:410: AssertionError
+___ test_kept_success_then_unverified_cost_is_not_run_success[bound_invalid] ___
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-114/test_kept_success_then_unverif5')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7974f42c4470>
+fault = 'bound_invalid'
+
+    @pytest.mark.parametrize(
+        "fault", ["overrun", "missing_usage", "http_429", "network", "pending", "bound_invalid"]
+    )
+    def test_kept_success_then_unverified_cost_is_not_run_success(tmp_path, monkeypatch, fault):
+        import test_orchestrator as fixtures
+    
+        from headroom import orchestrator
+        from headroom.orchestrator import RunCancelled
+    
+        profile = reviewed_fixture(tmp_path)
+        monkeypatch.setattr(orchestrator, "PROJECT_ROOT", tmp_path)
+        monkeypatch.setattr(orchestrator, "read_live_profile", lambda *args: profile)
+        real_services = fixtures.Services
+        factory = {}
+        count = []
+    
+        def services(**kwargs):
+            factory["make"] = kwargs.pop("runtime_factory")
+            return real_services(**kwargs)
+    
+        monkeypatch.setattr(fixtures, "Services", services)
+    
+        def runtime(run_id, **kwargs):
+            fixture = factory["make"](
+                run_id, kwargs["store"], Path(kwargs["store"].get_run(run_id)["run_dir"])
+            )
+            original_settle = kwargs["budget"].settle
+    
+            def settle(*args, **values):
+                if len(count) == 3 and fault == "pending":
+                    raise RunCancelled("Offline interruption before ledger settlement")
+                return original_settle(*args, **values)
+    
+            kwargs["budget"].settle = settle
+    
+            def respond(request):
+                result = fixture.client._transport.handle_request(request)
+                payload = result.json()
+                count.append(request)
+                if len(count) == 3:
+                    if fault == "overrun":
+                        payload["usage"] = {
+                            "prompt_tokens": 600000,
+                            "completion_tokens": 10,
+                            "total_tokens": 600010,
+                        }
+                    elif fault == "missing_usage":
+                        payload.pop("usage")
+                    elif fault == "http_429":
+                        return httpx.Response(429, json={"error": {"message": "offline fixture"}})
+                    elif fault == "network":
+                        raise httpx.ConnectError("offline fixture", request=request)
+                    elif fault == "bound_invalid":
+                        payload["usage"] = {
+                            "prompt_tokens": 10,
+                            "completion_tokens": 4001,
+                            "total_tokens": 4011,
+                        }
+                return httpx.Response(200, json=payload)
+    
+            bundle = build_live_runtime(
+                run_id, **kwargs, env_file=tmp_path / ".env", transport=httpx.MockTransport(respond)
+            )
+            bundle.client._sleep = lambda _: None
+            return bundle
+    
+        monkeypatch.setattr(orchestrator, "build_live_runtime", runtime)
+        result, store, _, verifies, _ = fixtures.search_run(
+            tmp_path,
+            [{"before": "VALUE = 1\n", "after": "VALUE = 2\n", "peak": 20, "target": True}],
+            search_mode="bounded_pareto",
+        )
+        try:
+>           assert len(count) == 3 and len(verifies) == 1
+E           assert (0 == 3)
+E            +  where 0 = len([])
+
+tests/test_actual_usage_budget.py:410: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_actual_usage_budget.py::test_original_small_run_and_daily_guards_write_real_partial_report[3-1]
+FAILED tests/test_actual_usage_budget.py::test_kept_success_then_unverified_cost_is_not_run_success[overrun]
+FAILED tests/test_actual_usage_budget.py::test_kept_success_then_unverified_cost_is_not_run_success[missing_usage]
+FAILED tests/test_actual_usage_budget.py::test_kept_success_then_unverified_cost_is_not_run_success[http_429]
+FAILED tests/test_actual_usage_budget.py::test_kept_success_then_unverified_cost_is_not_run_success[network]
+FAILED tests/test_actual_usage_budget.py::test_kept_success_then_unverified_cost_is_not_run_success[pending]
+FAILED tests/test_actual_usage_budget.py::test_kept_success_then_unverified_cost_is_not_run_success[bound_invalid]
+7 failed, 148 passed in 18.61s

@@ -1,0 +1,26 @@
+diff --git a/tests/test_api.py b/tests/test_api.py
+index b99327d..7e9cb83 100644
+--- a/tests/test_api.py
++++ b/tests/test_api.py
+@@ -19,8 +19,20 @@ from headroom.lab.runner import PROJECT_ROOT
+ 
+ @pytest.fixture
+ def settings(tmp_path):
++    # Only the public example catalogue belongs in this fixture. Runtime profiles,
++    # account state and the shared budget ledger must stay outside the test root.
++    project = tmp_path / "project"
++    scenarios = project / "scenarios"
++    scenarios.mkdir(parents=True)
++    index = (PROJECT_ROOT / "scenarios/INDEX.yaml").read_bytes()
++    (scenarios / "INDEX.yaml").write_bytes(index)
++    for row in json.loads(index)["scenarios"]:
++        relative = Path(row["script"])
++        target = project / relative
++        target.parent.mkdir(parents=True, exist_ok=True)
++        target.write_bytes((PROJECT_ROOT / relative).read_bytes())
+     return ApiSettings(
+-        project_root=PROJECT_ROOT,
++        project_root=project,
+         data_root=tmp_path / "api",
+         db_path=tmp_path / "store.db",
+         run_root=tmp_path / "jobs",

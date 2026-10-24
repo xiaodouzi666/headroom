@@ -86,3 +86,27 @@ def test_router_output_requires_runtime_evidence(reference, ready):
     assert verdict.ready_for_patch is ready
     if not ready:
         assert [issue.code for issue in verdict.issues] == ["UNKNOWN_STACK_REFERENCE"]
+
+
+def test_prompt_defines_generic_categories_post_step_and_fixed_verification():
+    from headroom.diagnose import PROMPT_PATH
+
+    prompt = PROMPT_PATH.read_text()
+    for category in (
+        "params",
+        "grads",
+        "optimizer_state",
+        "activations",
+        "temporaries",
+        "retained_graph",
+        "cache",
+        "fragmentation_candidate",
+        "unknown",
+    ):
+        assert f"- {category}:" in prompt
+    assert "origin heuristics, not causal ground truth" in prompt
+    assert "post-step observations" in prompt
+    assert "before" in prompt and "completion marker" in prompt
+    assert '{"max_steps": 20, "compare_loss": true, "tolerance": 0.001}' in prompt
+    assert "selected by the host" in prompt
+    assert not any(f"s{number}_" in prompt for number in range(1, 9))

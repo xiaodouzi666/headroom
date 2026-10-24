@@ -1,0 +1,957 @@
+{
+  "schema_version": 1,
+  "reviewed_at_utc": "2026-10-24T21:46:02.268024+00:00",
+  "scope": "Independent read-only audit of T1.4 second live attempt, v3 execution on byte-identical v2 preparation",
+  "accepted": false,
+  "original_plan_thresholds_unchanged": true,
+  "v2_v3_preparation_json_equal": true,
+  "v2_preparation": "runs/acceptance/diagnosis-prepared-20261024-v2/preparation.json",
+  "v3_preparation": "runs/acceptance/diagnosis-prepared-20261025-v3/preparation.json",
+  "verified_capture_count": 8,
+  "same_capture_source_evidence_truth_target_and_threshold_pins": true,
+  "all_pinned_files_rehashed": true,
+  "result": {
+    "accepted": false,
+    "provenance": "live",
+    "first_cause_matches": 3,
+    "denominator": 8,
+    "required_matches": 6,
+    "complete": false,
+    "structural_gates_passed": false,
+    "stop_reason": null,
+    "known_cost_usd": "0.35631912",
+    "total_cost_usd": "0.35631912",
+    "admission_cap_per_case_usd": "0.35",
+    "actual_acceptance_limit_per_call_usd": "0.35",
+    "diagnosis_max_completion_tokens": 8192,
+    "min_case_interval_seconds": 20.0
+  },
+  "exit_status_expected_from_cli_contract": 1,
+  "exit_status_basis": "Persisted accepted=false; original shell exit1 reported by root, not separately reconstructed from a missing exit artifact.",
+  "rows": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "run_id": "e0a60ccefac94d1ebf03e15ae0b7a937",
+      "same_v2_v3_pins": true,
+      "raw_status": "responded",
+      "raw_first_cause_match": true,
+      "raw_row_pass": true,
+      "raw_first_cause": "activations",
+      "raw_expected_category": "activations",
+      "raw_truth": {
+        "declared_category": "activations",
+        "truth_status": "authored",
+        "scoreable_category": "activations",
+        "readme_path": "/home/xiaodouzi/workspace/headroom/scenarios/s1_batch_too_big/README.md",
+        "readme_sha256": "e9ebc3ab2698a8093537949ec855d08ae81e037fd5a827168317ced690f466fb",
+        "readme_copy": "README.truth.md",
+        "basis": "Exact manifest category checked against the original INDEX; accompanying README is retained verbatim.",
+        "limitations": [
+          "Authored fixture intent is the scoring reference, not a new causal proof from the model."
+        ]
+      },
+      "raw_validation_reason": null,
+      "raw_error_type": null,
+      "raw_complete_diagnosis": true,
+      "raw_requires_supplement": false,
+      "raw_issues": [],
+      "raw_actual_stack_references": [
+        {
+          "cause_id": "RC-01",
+          "references": [
+            "stk_4430da1ac52c9939",
+            "stk_796dca8a08bef83a",
+            "stk_577b0802d3400b42",
+            "stk_a2fe9e7b390e3a9b"
+          ],
+          "valid_stack_ids": [
+            "stk_4430da1ac52c9939",
+            "stk_796dca8a08bef83a",
+            "stk_577b0802d3400b42",
+            "stk_a2fe9e7b390e3a9b"
+          ],
+          "invalid_references": []
+        },
+        {
+          "cause_id": "RC-02",
+          "references": [
+            "stk_4430da1ac52c9939",
+            "stk_796dca8a08bef83a",
+            "stk_577b0802d3400b42",
+            "stk_a2fe9e7b390e3a9b"
+          ],
+          "valid_stack_ids": [
+            "stk_4430da1ac52c9939",
+            "stk_796dca8a08bef83a",
+            "stk_577b0802d3400b42",
+            "stk_a2fe9e7b390e3a9b"
+          ],
+          "invalid_references": []
+        }
+      ],
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 29409,
+        "completion_tokens": 3764,
+        "total_tokens": 33173,
+        "cached_tokens": 21760,
+        "reasoning_tokens": 3010
+      },
+      "known_cost_usd": "0.0215522",
+      "ledger_clear": true,
+      "response_artifact_utf8_bytes": 6235,
+      "response_artifact_mode": "0600",
+      "response_artifact_sha256": "c7cce943fbb845de0db2a5a671ea622099724bf4df4489377f2161e6ffb00225"
+    },
+    {
+      "scenario_id": "s2_fp32_adamw_1b",
+      "run_id": "97b384ec1265489b855b0dadd3839235",
+      "same_v2_v3_pins": true,
+      "raw_status": "failed",
+      "raw_first_cause_match": null,
+      "raw_row_pass": false,
+      "raw_first_cause": null,
+      "raw_expected_category": null,
+      "raw_truth": {
+        "declared_category": "optimizer_state",
+        "truth_status": "authored",
+        "scoreable_category": "optimizer_state",
+        "readme_path": "/home/xiaodouzi/workspace/headroom/scenarios/s2_fp32_adamw_1b/README.md",
+        "readme_sha256": "50b2414af268694f1792f32198c1e3c1ab5a4d684ade3df893e37b66d0f28e43",
+        "readme_copy": "README.truth.md",
+        "basis": "Exact manifest category checked against the original INDEX; accompanying README is retained verbatim.",
+        "limitations": [
+          "Authored fixture intent is the scoring reference, not a new causal proof from the model."
+        ]
+      },
+      "raw_validation_reason": "truncated",
+      "raw_error_type": "ResponseValidationError",
+      "raw_complete_diagnosis": null,
+      "raw_requires_supplement": null,
+      "raw_issues": null,
+      "raw_actual_stack_references": null,
+      "finish_reason": "length",
+      "usage": {
+        "prompt_tokens": 40648,
+        "completion_tokens": 8192,
+        "total_tokens": 48840,
+        "cached_tokens": 34816,
+        "reasoning_tokens": 8192
+      },
+      "known_cost_usd": "0.03458592",
+      "ledger_clear": true,
+      "response_artifact_utf8_bytes": 29721,
+      "response_artifact_mode": "0600",
+      "response_artifact_sha256": "2b6fa14d09bb14db4e0e759cd35444a444c6e6eba0b7b90ba7207473aac7d2e6"
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "run_id": "bbdf4cb1ed4e460abdb2bd456f873e5e",
+      "same_v2_v3_pins": true,
+      "raw_status": "failed",
+      "raw_first_cause_match": null,
+      "raw_row_pass": false,
+      "raw_first_cause": null,
+      "raw_expected_category": null,
+      "raw_truth": {
+        "declared_category": "activations",
+        "truth_status": "authored",
+        "scoreable_category": "activations",
+        "readme_path": "/home/xiaodouzi/workspace/headroom/scenarios/s3_eval_no_grad_missing/README.md",
+        "readme_sha256": "bc045fce13a50740804319d09c9f3cd59eb123fbc32210c1c3e47b6a3a06c212",
+        "readme_copy": "README.truth.md",
+        "basis": "Exact manifest category checked against the original INDEX; accompanying README is retained verbatim.",
+        "limitations": [
+          "Authored fixture intent is the scoring reference, not a new causal proof from the model."
+        ]
+      },
+      "raw_validation_reason": "truncated",
+      "raw_error_type": "ResponseValidationError",
+      "raw_complete_diagnosis": null,
+      "raw_requires_supplement": null,
+      "raw_issues": null,
+      "raw_actual_stack_references": null,
+      "finish_reason": "length",
+      "usage": {
+        "prompt_tokens": 43488,
+        "completion_tokens": 8192,
+        "total_tokens": 51680,
+        "cached_tokens": 0,
+        "reasoning_tokens": 7644
+      },
+      "known_cost_usd": "0.068064",
+      "ledger_clear": true,
+      "response_artifact_utf8_bytes": 1999,
+      "response_artifact_mode": "0600",
+      "response_artifact_sha256": "8162377f47034cc331d9d1331324441182d3e6bb6ca95c5c25ae1d911d2fed22"
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "run_id": "46cccae6efaf4c38954eab6b2545d0a6",
+      "same_v2_v3_pins": true,
+      "raw_status": "responded",
+      "raw_first_cause_match": false,
+      "raw_row_pass": false,
+      "raw_first_cause": "graph_retention",
+      "raw_expected_category": "retained_graph",
+      "raw_truth": {
+        "declared_category": "retained_graph",
+        "truth_status": "authored",
+        "scoreable_category": "retained_graph",
+        "readme_path": "/home/xiaodouzi/workspace/headroom/scenarios/s4_loss_accumulation_graph/README.md",
+        "readme_sha256": "97182f02f6a24574c6348de90ed48ed4cd540857a96a50bbde234a0e300a86a4",
+        "readme_copy": "README.truth.md",
+        "basis": "Exact manifest category checked against the original INDEX; accompanying README is retained verbatim.",
+        "limitations": [
+          "Authored fixture intent is the scoring reference, not a new causal proof from the model."
+        ]
+      },
+      "raw_validation_reason": null,
+      "raw_error_type": null,
+      "raw_complete_diagnosis": true,
+      "raw_requires_supplement": false,
+      "raw_issues": [],
+      "raw_actual_stack_references": [
+        {
+          "cause_id": "rc1",
+          "references": [
+            "stk_1293304742f78035",
+            "stk_5ed9c0ba3e3a73bc",
+            "stk_475a8a032e2b85b6",
+            "stk_3ff389741c61cf2e"
+          ],
+          "valid_stack_ids": [
+            "stk_1293304742f78035",
+            "stk_5ed9c0ba3e3a73bc",
+            "stk_475a8a032e2b85b6",
+            "stk_3ff389741c61cf2e"
+          ],
+          "invalid_references": []
+        },
+        {
+          "cause_id": "rc2",
+          "references": [
+            "stk_22ff4334945e956a",
+            "stk_f1b742b2cfb31fc6",
+            "stk_68392dae6c8f38a6"
+          ],
+          "valid_stack_ids": [
+            "stk_22ff4334945e956a",
+            "stk_f1b742b2cfb31fc6",
+            "stk_68392dae6c8f38a6"
+          ],
+          "invalid_references": []
+        }
+      ],
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 39606,
+        "completion_tokens": 2220,
+        "total_tokens": 41826,
+        "cached_tokens": 0,
+        "reasoning_tokens": 1437
+      },
+      "known_cost_usd": "0.046266",
+      "ledger_clear": true,
+      "response_artifact_utf8_bytes": 6139,
+      "response_artifact_mode": "0600",
+      "response_artifact_sha256": "3f4d3d6bd0e8de0f729e582fc80ac2cc011cb6287c6cdb8c496f82a1246c093b"
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "run_id": "8e900195816440bbb601027fbad9a4e6",
+      "same_v2_v3_pins": true,
+      "raw_status": "responded",
+      "raw_first_cause_match": null,
+      "raw_row_pass": false,
+      "raw_first_cause": "allocator_behavior",
+      "raw_expected_category": null,
+      "raw_truth": {
+        "declared_category": "fragmentation_candidate",
+        "truth_status": "unverified",
+        "scoreable_category": null,
+        "readme_path": "/home/xiaodouzi/workspace/headroom/scenarios/s5_fragmentation_varlen/README.md",
+        "readme_sha256": "1b2ad48efa0a028085df544da14237acc402814fc8e02c9bc34f74c5ffac1d2e",
+        "readme_copy": "README.truth.md",
+        "basis": "Exact manifest category checked against the original INDEX; accompanying README is retained verbatim.",
+        "limitations": [
+          "Harmful fragmentation is unconfirmed; reserved minus allocated includes cache. No automatic adjudication."
+        ]
+      },
+      "raw_validation_reason": null,
+      "raw_error_type": null,
+      "raw_complete_diagnosis": false,
+      "raw_requires_supplement": false,
+      "raw_issues": [],
+      "raw_actual_stack_references": [
+        {
+          "cause_id": "rc1",
+          "references": [
+            "stk_78f49a605829cf0a",
+            "stk_e40f7cf9f8ce8d88",
+            "stk_9bb5a0af368c58f6"
+          ],
+          "valid_stack_ids": [
+            "stk_78f49a605829cf0a",
+            "stk_e40f7cf9f8ce8d88",
+            "stk_9bb5a0af368c58f6"
+          ],
+          "invalid_references": []
+        },
+        {
+          "cause_id": "rc2",
+          "references": [
+            "stk_78f49a605829cf0a",
+            "stk_e40f7cf9f8ce8d88",
+            "stk_e38eb18c0b0e9e5e"
+          ],
+          "valid_stack_ids": [
+            "stk_78f49a605829cf0a",
+            "stk_e40f7cf9f8ce8d88",
+            "stk_e38eb18c0b0e9e5e"
+          ],
+          "invalid_references": []
+        },
+        {
+          "cause_id": "rc3",
+          "references": [
+            "stk_78f49a605829cf0a",
+            "stk_fa0937f88c4eb0d3"
+          ],
+          "valid_stack_ids": [
+            "stk_78f49a605829cf0a",
+            "stk_fa0937f88c4eb0d3"
+          ],
+          "invalid_references": []
+        }
+      ],
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 34048,
+        "completion_tokens": 2029,
+        "total_tokens": 36077,
+        "cached_tokens": 0,
+        "reasoning_tokens": 883
+      },
+      "known_cost_usd": "0.040135",
+      "ledger_clear": true,
+      "response_artifact_utf8_bytes": 9396,
+      "response_artifact_mode": "0600",
+      "response_artifact_sha256": "b9dc2fb366248adc7e078c9fe3580324c90fc0990cc07239823323bf9f569bc4"
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "run_id": "f21bdee5af39445cb7428106d6911d7d",
+      "same_v2_v3_pins": true,
+      "raw_status": "responded",
+      "raw_first_cause_match": false,
+      "raw_row_pass": false,
+      "raw_first_cause": "activations",
+      "raw_expected_category": "temporaries",
+      "raw_truth": {
+        "declared_category": "temporaries",
+        "truth_status": "authored",
+        "scoreable_category": "temporaries",
+        "readme_path": "/home/xiaodouzi/workspace/headroom/scenarios/s6_full_vocab_logits_fp32/README.md",
+        "readme_sha256": "f267b40beec1fb43c628b66e52186ec12fa49848008a84da752a99b03815bff8",
+        "readme_copy": "README.truth.md",
+        "basis": "Exact manifest category checked against the original INDEX; accompanying README is retained verbatim.",
+        "limitations": [
+          "Authored fixture intent is the scoring reference, not a new causal proof from the model."
+        ]
+      },
+      "raw_validation_reason": null,
+      "raw_error_type": null,
+      "raw_complete_diagnosis": true,
+      "raw_requires_supplement": false,
+      "raw_issues": [],
+      "raw_actual_stack_references": [
+        {
+          "cause_id": "rc_oom_fp32_logits",
+          "references": [
+            "stk_0e7629e2fc44d407"
+          ],
+          "valid_stack_ids": [
+            "stk_0e7629e2fc44d407"
+          ],
+          "invalid_references": []
+        },
+        {
+          "cause_id": "rc_oom_ce_intermediates",
+          "references": [
+            "stk_8d56e4be05244233"
+          ],
+          "valid_stack_ids": [
+            "stk_8d56e4be05244233"
+          ],
+          "invalid_references": []
+        },
+        {
+          "cause_id": "rc_oom_linear_activations",
+          "references": [
+            "stk_1b23371d44718c70"
+          ],
+          "valid_stack_ids": [
+            "stk_1b23371d44718c70"
+          ],
+          "invalid_references": []
+        }
+      ],
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 26675,
+        "completion_tokens": 3336,
+        "total_tokens": 30011,
+        "cached_tokens": 0,
+        "reasoning_tokens": 2381
+      },
+      "known_cost_usd": "0.036683",
+      "ledger_clear": true,
+      "response_artifact_utf8_bytes": 7612,
+      "response_artifact_mode": "0600",
+      "response_artifact_sha256": "b84223359d3ccc89ac9390aa18a9a35e4a8f8837d5b47552c19e5291c8a4b1b8"
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "run_id": "d88d8d4356f64e28a9b0dc4491f05457",
+      "same_v2_v3_pins": true,
+      "raw_status": "responded",
+      "raw_first_cause_match": true,
+      "raw_row_pass": true,
+      "raw_first_cause": "optimizer_state",
+      "raw_expected_category": "optimizer_state",
+      "raw_truth": {
+        "declared_category": "optimizer_state",
+        "truth_status": "authored",
+        "scoreable_category": "optimizer_state",
+        "readme_path": "/home/xiaodouzi/workspace/headroom/scenarios/s7_frozen_params_optimizer_state/README.md",
+        "readme_sha256": "1ab9dcb3e35083cea2dd508b8b74bfbf5b2b796b26389e243c506465573fb214",
+        "readme_copy": "README.truth.md",
+        "basis": "Exact manifest category checked against the original INDEX; accompanying README is retained verbatim.",
+        "limitations": [
+          "Authored fixture intent is the scoring reference, not a new causal proof from the model."
+        ]
+      },
+      "raw_validation_reason": null,
+      "raw_error_type": null,
+      "raw_complete_diagnosis": true,
+      "raw_requires_supplement": false,
+      "raw_issues": [],
+      "raw_actual_stack_references": [
+        {
+          "cause_id": "rc_optimizer_state_full_model",
+          "references": [
+            "stk_6dcc8c179bbfad96",
+            "stk_a3fff95313823c9d"
+          ],
+          "valid_stack_ids": [
+            "stk_6dcc8c179bbfad96",
+            "stk_a3fff95313823c9d"
+          ],
+          "invalid_references": []
+        },
+        {
+          "cause_id": "rc_spurious_empty_tensors",
+          "references": [
+            "stk_19a542c038b8b878"
+          ],
+          "valid_stack_ids": [
+            "stk_19a542c038b8b878"
+          ],
+          "invalid_references": []
+        },
+        {
+          "cause_id": "rc_temporaries_optimizer_step",
+          "references": [
+            "stk_47a33c87f8ad78dd",
+            "stk_6c0f1dab1c8dd86a"
+          ],
+          "valid_stack_ids": [
+            "stk_47a33c87f8ad78dd",
+            "stk_6c0f1dab1c8dd86a"
+          ],
+          "invalid_references": []
+        }
+      ],
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 34896,
+        "completion_tokens": 6238,
+        "total_tokens": 41134,
+        "cached_tokens": 0,
+        "reasoning_tokens": 5205
+      },
+      "known_cost_usd": "0.05361",
+      "ledger_clear": true,
+      "response_artifact_utf8_bytes": 8314,
+      "response_artifact_mode": "0600",
+      "response_artifact_sha256": "2c136797f7392a578aecafe53d6f49cebe265e6b642345837c91772d75f4a9c5"
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "run_id": "c2eefb7e7b5847ca9ffe2c827dd4bd52",
+      "same_v2_v3_pins": true,
+      "raw_status": "responded",
+      "raw_first_cause_match": true,
+      "raw_row_pass": true,
+      "raw_first_cause": "params",
+      "raw_expected_category": "params",
+      "raw_truth": {
+        "declared_category": "params",
+        "truth_status": "authored",
+        "scoreable_category": "params",
+        "readme_path": "/home/xiaodouzi/workspace/headroom/scenarios/s8_two_models_resident/README.md",
+        "readme_sha256": "0c883431a250f6b050507dc1c432218c09a4297f0d5777c3a9f03b7af3708386",
+        "readme_copy": "README.truth.md",
+        "basis": "Exact manifest category checked against the original INDEX; accompanying README is retained verbatim.",
+        "limitations": [
+          "Authored fixture intent is the scoring reference, not a new causal proof from the model."
+        ]
+      },
+      "raw_validation_reason": null,
+      "raw_error_type": null,
+      "raw_complete_diagnosis": true,
+      "raw_requires_supplement": false,
+      "raw_issues": [],
+      "raw_actual_stack_references": [
+        {
+          "cause_id": "rc_teacher_resident",
+          "references": [
+            "stk_76cef9988e80368c"
+          ],
+          "valid_stack_ids": [
+            "stk_76cef9988e80368c"
+          ],
+          "invalid_references": []
+        }
+      ],
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 40591,
+        "completion_tokens": 4944,
+        "total_tokens": 45535,
+        "cached_tokens": 0,
+        "reasoning_tokens": 4500
+      },
+      "known_cost_usd": "0.055423",
+      "ledger_clear": true,
+      "response_artifact_utf8_bytes": 4116,
+      "response_artifact_mode": "0600",
+      "response_artifact_sha256": "f81ae8fb5d09b285d6197aa9445abd27494640fd3f227a1e0601419da75c86b1"
+    }
+  ],
+  "failure_interpretation": [
+    "s2 and s3 retain observed finish_reason=length at8192 completion tokens and ResponseValidationError(truncated); no reconstructed diagnosis or paid retry.",
+    "s4 graph_retention does not exactly equal retained_graph; no synonym mapping changes the failed score.",
+    "s6 activations does not equal temporaries.",
+    "s5 remains unknown truth, not a confirmed fragmentation success; original denominator8 is retained.",
+    "Three matching first categories (s1,s7,s8) do not satisfy the original minimum6/8."
+  ],
+  "runtime_ledger": {
+    "read_only": true,
+    "runs": [
+      {
+        "id": "0c8c953098bc45128f615ff81c5d0870",
+        "day": "2026-10-24",
+        "limit_usd": "0.35",
+        "status": "closed",
+        "halt_reason": null,
+        "budget_mode": "actual_usage"
+      },
+      {
+        "id": "11a527aa82884589805b45f9bc6aab24",
+        "day": "2026-10-24",
+        "limit_usd": "0.6",
+        "status": "closed",
+        "halt_reason": null,
+        "budget_mode": "actual_usage"
+      },
+      {
+        "id": "3c4ea30601fe4d3dbff03ea061e04a01",
+        "day": "2026-10-24",
+        "limit_usd": "0.35",
+        "status": "closed",
+        "halt_reason": null,
+        "budget_mode": "actual_usage"
+      },
+      {
+        "id": "46cccae6efaf4c38954eab6b2545d0a6",
+        "day": "2026-10-24",
+        "limit_usd": "0.35",
+        "status": "closed",
+        "halt_reason": null,
+        "budget_mode": "actual_usage"
+      },
+      {
+        "id": "8e900195816440bbb601027fbad9a4e6",
+        "day": "2026-10-24",
+        "limit_usd": "0.35",
+        "status": "closed",
+        "halt_reason": null,
+        "budget_mode": "actual_usage"
+      },
+      {
+        "id": "97b384ec1265489b855b0dadd3839235",
+        "day": "2026-10-24",
+        "limit_usd": "0.35",
+        "status": "closed",
+        "halt_reason": null,
+        "budget_mode": "actual_usage"
+      },
+      {
+        "id": "bbdf4cb1ed4e460abdb2bd456f873e5e",
+        "day": "2026-10-24",
+        "limit_usd": "0.35",
+        "status": "closed",
+        "halt_reason": null,
+        "budget_mode": "actual_usage"
+      },
+      {
+        "id": "c2eefb7e7b5847ca9ffe2c827dd4bd52",
+        "day": "2026-10-24",
+        "limit_usd": "0.35",
+        "status": "closed",
+        "halt_reason": null,
+        "budget_mode": "actual_usage"
+      },
+      {
+        "id": "d88d8d4356f64e28a9b0dc4491f05457",
+        "day": "2026-10-24",
+        "limit_usd": "0.35",
+        "status": "closed",
+        "halt_reason": null,
+        "budget_mode": "actual_usage"
+      },
+      {
+        "id": "dfe34aec582a4aa59771fc8df0b170d8",
+        "day": "2026-10-24",
+        "limit_usd": "0.6",
+        "status": "closed",
+        "halt_reason": null,
+        "budget_mode": "actual_usage"
+      },
+      {
+        "id": "e0a60ccefac94d1ebf03e15ae0b7a937",
+        "day": "2026-10-24",
+        "limit_usd": "0.35",
+        "status": "closed",
+        "halt_reason": null,
+        "budget_mode": "actual_usage"
+      },
+      {
+        "id": "f21bdee5af39445cb7428106d6911d7d",
+        "day": "2026-10-24",
+        "limit_usd": "0.35",
+        "status": "closed",
+        "halt_reason": null,
+        "budget_mode": "actual_usage"
+      }
+    ],
+    "attempts": [
+      {
+        "id": "11e357eeae564728a5184373816128cf",
+        "run_id": "f21bdee5af39445cb7428106d6911d7d",
+        "upper_usd": "1.073152",
+        "charged_usd": "0.036683",
+        "actual_usd": "0.036683",
+        "settled": 1,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1
+      },
+      {
+        "id": "4f9b0e94a8f04ba7aac95ca5af1f852c",
+        "run_id": "e0a60ccefac94d1ebf03e15ae0b7a937",
+        "upper_usd": "1.073152",
+        "charged_usd": "0.0215522",
+        "actual_usd": "0.0215522",
+        "settled": 1,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1
+      },
+      {
+        "id": "739c44a5fa0647998b440b56a3939736",
+        "run_id": "c2eefb7e7b5847ca9ffe2c827dd4bd52",
+        "upper_usd": "1.073152",
+        "charged_usd": "0.055423",
+        "actual_usd": "0.055423",
+        "settled": 1,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1
+      },
+      {
+        "id": "9245841dd3f340fc855ab2b20afa0577",
+        "run_id": "8e900195816440bbb601027fbad9a4e6",
+        "upper_usd": "1.073152",
+        "charged_usd": "0.040135",
+        "actual_usd": "0.040135",
+        "settled": 1,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1
+      },
+      {
+        "id": "a641978127da4ad4b79198dd93c45fbe",
+        "run_id": "dfe34aec582a4aa59771fc8df0b170d8",
+        "upper_usd": "0.079104",
+        "charged_usd": "0.0001344",
+        "actual_usd": "0.0001344",
+        "settled": 1,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1
+      },
+      {
+        "id": "a9c9179a80434bb7b8df90c7b9801a59",
+        "run_id": "46cccae6efaf4c38954eab6b2545d0a6",
+        "upper_usd": "1.073152",
+        "charged_usd": "0.046266",
+        "actual_usd": "0.046266",
+        "settled": 1,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1
+      },
+      {
+        "id": "c70efe5c0d7d44289b22f79894e99354",
+        "run_id": "bbdf4cb1ed4e460abdb2bd456f873e5e",
+        "upper_usd": "1.073152",
+        "charged_usd": "0.068064",
+        "actual_usd": "0.068064",
+        "settled": 1,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1
+      },
+      {
+        "id": "cb6f2a4fa13c43e2bd2db5764ad325d9",
+        "run_id": "3c4ea30601fe4d3dbff03ea061e04a01",
+        "upper_usd": "1.060576",
+        "charged_usd": "0.035469",
+        "actual_usd": "0.035469",
+        "settled": 1,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1
+      },
+      {
+        "id": "ef12827a232c4d05bd4c9a8e0e921e4d",
+        "run_id": "11a527aa82884589805b45f9bc6aab24",
+        "upper_usd": "1.050112",
+        "charged_usd": "0.269367",
+        "actual_usd": "0.269367",
+        "settled": 1,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1
+      },
+      {
+        "id": "f34f43611a3d4dcd956db34151c57be4",
+        "run_id": "97b384ec1265489b855b0dadd3839235",
+        "upper_usd": "1.073152",
+        "charged_usd": "0.03458592",
+        "actual_usd": "0.03458592",
+        "settled": 1,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1
+      },
+      {
+        "id": "f384c58d038f4759b743ffbd428aa735",
+        "run_id": "d88d8d4356f64e28a9b0dc4491f05457",
+        "upper_usd": "1.073152",
+        "charged_usd": "0.05361",
+        "actual_usd": "0.05361",
+        "settled": 1,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1
+      },
+      {
+        "id": "ff1d0fc3a26a458fa19725fd915c31e3",
+        "run_id": "0c8c953098bc45128f615ff81c5d0870",
+        "upper_usd": "1.060576",
+        "charged_usd": "0.052648",
+        "actual_usd": "0.052648",
+        "settled": 1,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1
+      }
+    ],
+    "closed_runs": 12,
+    "pending_attempts": 0,
+    "unknown_actual_attempts": 0,
+    "halted_runs": 0,
+    "known_actual_usd": "0.71393752",
+    "this_attempt_known_actual_usd": "0.35631912",
+    "prior_known_actual_usd": "0.35761840",
+    "canonical_rows_sha256": "34f998ee5912b346b6131f8ce943cc387c70360cd9389bb0b04af75854d8d644"
+  },
+  "current_profile": {
+    "path": ".cache/tokenfactory-runtime.json",
+    "sha256": "a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c",
+    "live_enabled": true,
+    "run_budget_mode": "actual_usage",
+    "same_hash_as_all_eight_runtime_receipts": true
+  },
+  "evidence_sha256": {
+    "runs/acceptance/diagnosis-prepared-20261024-v2/preparation.json": "0ab26a228041c57318b6b81fd6e1a9d0c97892986eaab48c5cb667cce68513a0",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/preparation.json": "0ab26a228041c57318b6b81fd6e1a9d0c97892986eaab48c5cb667cce68513a0",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/result.json": "d75cb6aaefe8ae4b5045cbbf3a0fa8c372a9ba3e3e1bb50fc5ce734a997e3525",
+    "eval/mvp_phase1.yaml": "3bb919336829754a52ec8c90ccc4a5181f33986f9e300e99211bec6678849e88",
+    "scenarios/INDEX.yaml": "a65cfe38c6e6a0d8eeee2493b5df126c9e78d04aa923f0032859e4083ab271ab",
+    "headroom/prompts/diagnose.md": "8f972c09da744b7b30c2336a91be32fe4bd90c8bc98d11247c00dd947855ccfc",
+    "scenarios/s1_batch_too_big/train.py": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+    "scenarios/s1_batch_too_big/README.md": "e9ebc3ab2698a8093537949ec855d08ae81e037fd5a827168317ced690f466fb",
+    "scenarios/s2_fp32_adamw_1b/train.py": "bb1d12c69ce5525e6eab67e709740cb2d578c070afa8b094b5f4b6906648bc5b",
+    "scenarios/s2_fp32_adamw_1b/README.md": "50b2414af268694f1792f32198c1e3c1ab5a4d684ade3df893e37b66d0f28e43",
+    "scenarios/s3_eval_no_grad_missing/train.py": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+    "scenarios/s3_eval_no_grad_missing/README.md": "bc045fce13a50740804319d09c9f3cd59eb123fbc32210c1c3e47b6a3a06c212",
+    "scenarios/s4_loss_accumulation_graph/train.py": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+    "scenarios/s4_loss_accumulation_graph/README.md": "97182f02f6a24574c6348de90ed48ed4cd540857a96a50bbde234a0e300a86a4",
+    "scenarios/s5_fragmentation_varlen/train.py": "627d24ee9e62601455e37f29166df8abe73a43b9e82382a293feec3a6b558169",
+    "scenarios/s5_fragmentation_varlen/README.md": "1b2ad48efa0a028085df544da14237acc402814fc8e02c9bc34f74c5ffac1d2e",
+    "scenarios/s6_full_vocab_logits_fp32/train.py": "4f5d7e0f4331a4efcda2039c8ac8a421b2a1923778379896e2658553619b1bba",
+    "scenarios/s6_full_vocab_logits_fp32/README.md": "f267b40beec1fb43c628b66e52186ec12fa49848008a84da752a99b03815bff8",
+    "scenarios/s7_frozen_params_optimizer_state/train.py": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+    "scenarios/s7_frozen_params_optimizer_state/README.md": "1ab9dcb3e35083cea2dd508b8b74bfbf5b2b796b26389e243c506465573fb214",
+    "scenarios/s8_two_models_resident/train.py": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+    "scenarios/s8_two_models_resident/README.md": "0c883431a250f6b050507dc1c432218c09a4297f0d5777c3a9f03b7af3708386",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/3da11308215443ba9b4e0fed3c3c84d3/result.json": "059298c7e4a0308e08974f9ca632a73163df40badbb523a42b80bf36b3dca1c2",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/3da11308215443ba9b4e0fed3c3c84d3/manifest.json": "3928085d968f92219cdad728807aee33b140a14c00271563cf900091361061e2",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/3da11308215443ba9b4e0fed3c3c84d3/source/train.py": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/3da11308215443ba9b4e0fed3c3c84d3/artifacts/result.json": "d395e35fe1d12547e5294759d5d64fdd1364ac1061b08ad632735c9d1f878a04",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/3da11308215443ba9b4e0fed3c3c84d3/artifacts/env.json": "20c793587eb41a385b2d46d9d0231c5eef30abec983ec81a73b0d7d2a80947a0",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/3da11308215443ba9b4e0fed3c3c84d3/artifacts/snapshot.json": "292115e638004990a7e8ed6439d28586d9d9b49562c5b5b54986465ed4039e1b",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s1_batch_too_big/evidence/evidence.md": "cd70eed07a75a4b2e86dcba5bb224ae615fb0b11184b436bd5b3e3bbf5d045b0",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s1_batch_too_big/evidence/evidence.md": "cd70eed07a75a4b2e86dcba5bb224ae615fb0b11184b436bd5b3e3bbf5d045b0",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s1_batch_too_big/evidence/evidence.json": "bf4ed930fe818d13105a93460ce40b5f3bec89e69ad95fc7cb26fcd3d8c0052f",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s1_batch_too_big/evidence/evidence.json": "bf4ed930fe818d13105a93460ce40b5f3bec89e69ad95fc7cb26fcd3d8c0052f",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s1_batch_too_big/messages.json": "f390a3c9b2152aac1034b719ae1377cbce4165afbee8a793863e439de2a71dc6",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s1_batch_too_big/messages.json": "f390a3c9b2152aac1034b719ae1377cbce4165afbee8a793863e439de2a71dc6",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s1_batch_too_big/README.truth.md": "e9ebc3ab2698a8093537949ec855d08ae81e037fd5a827168317ced690f466fb",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s1_batch_too_big/README.truth.md": "e9ebc3ab2698a8093537949ec855d08ae81e037fd5a827168317ced690f466fb",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s1_batch_too_big/runtime.json": "72ac3ebe2afcdb29cc4b8b5113df071199d8fce7b5f7118a6eada265006c2cab",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s1_batch_too_big/model-response.json": "c7cce943fbb845de0db2a5a671ea622099724bf4df4489377f2161e6ffb00225",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s1_batch_too_big/diagnosis.json": "420947b2fd833ec97399a40284613cd506c7b62fc27531a679b16fb97214c39d",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/b4b14202cf304cf7838b07bb16649942/result.json": "80def0c9dbfd94a7305e033b0b70fcb03986d937bf939496ed558171005ca862",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/b4b14202cf304cf7838b07bb16649942/manifest.json": "ec19a3601b472a7c2170c3215d082142fdb746451106ccb333e908922c3ce5e1",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/b4b14202cf304cf7838b07bb16649942/source/train.py": "bb1d12c69ce5525e6eab67e709740cb2d578c070afa8b094b5f4b6906648bc5b",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/b4b14202cf304cf7838b07bb16649942/artifacts/result.json": "03ee027908a9a54aeecf01da5ddea744bcc4e0bc9c7aa74898aea3a7982ddc2b",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/b4b14202cf304cf7838b07bb16649942/artifacts/env.json": "20c793587eb41a385b2d46d9d0231c5eef30abec983ec81a73b0d7d2a80947a0",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/b4b14202cf304cf7838b07bb16649942/artifacts/snapshot.json": "78fb0a928060a42338451858f40cca45fb9c1677d6937521297a28221c0c3555",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s2_fp32_adamw_1b/evidence/evidence.md": "dc1798363fcb01574e458ee8ca48013097118d536b6dc7b934843cb94c01b18b",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s2_fp32_adamw_1b/evidence/evidence.md": "dc1798363fcb01574e458ee8ca48013097118d536b6dc7b934843cb94c01b18b",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s2_fp32_adamw_1b/evidence/evidence.json": "a9028f05552601fc9033a6ec6096a7e0966a7d4963eb4efc8d1aa4e20a400c42",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s2_fp32_adamw_1b/evidence/evidence.json": "a9028f05552601fc9033a6ec6096a7e0966a7d4963eb4efc8d1aa4e20a400c42",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s2_fp32_adamw_1b/messages.json": "b32dff858157b1c43854c4cd6e7b5fd9afd5b1589ab25260b7dc77772dd49f5d",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s2_fp32_adamw_1b/messages.json": "b32dff858157b1c43854c4cd6e7b5fd9afd5b1589ab25260b7dc77772dd49f5d",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s2_fp32_adamw_1b/README.truth.md": "50b2414af268694f1792f32198c1e3c1ab5a4d684ade3df893e37b66d0f28e43",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s2_fp32_adamw_1b/README.truth.md": "50b2414af268694f1792f32198c1e3c1ab5a4d684ade3df893e37b66d0f28e43",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s2_fp32_adamw_1b/runtime.json": "583b233275aa1a3ad506dd0d8bda0ce9ec0a9b4130fc6bd091618f2e9acc8244",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s2_fp32_adamw_1b/model-response.json": "2b6fa14d09bb14db4e0e759cd35444a444c6e6eba0b7b90ba7207473aac7d2e6",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s2_fp32_adamw_1b/diagnosis.json": "e333ad6e3797672cc4e25890b574a8ef676962d400cba9ebccd3bf1cb4896957",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/f8159c6fff8e44cab1bcc0b8e42275f7/result.json": "1a4b9d66e8a39f5376031d2a31f3a0b9d0bb0458ebeba1be8394b791d81ebd81",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/f8159c6fff8e44cab1bcc0b8e42275f7/manifest.json": "abe170149a17797b545a9326065a44f5d0a9e85df92025bc882cfb57b288da51",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/f8159c6fff8e44cab1bcc0b8e42275f7/source/train.py": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/f8159c6fff8e44cab1bcc0b8e42275f7/artifacts/result.json": "94d0db4de7f6eec96f83171ae337caadd6d93c9785876a18c91df9acc2cb2f56",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/f8159c6fff8e44cab1bcc0b8e42275f7/artifacts/env.json": "20c793587eb41a385b2d46d9d0231c5eef30abec983ec81a73b0d7d2a80947a0",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/f8159c6fff8e44cab1bcc0b8e42275f7/artifacts/snapshot.json": "564a5151c5e07bf3a61c5b523e88b87f0804925a7d4b49178b42379dfe4d7723",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s3_eval_no_grad_missing/evidence/evidence.md": "c0bf864da74f2730aefdf2a0913372b95d0f907dcfac54f77b7b7356b3f3f988",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s3_eval_no_grad_missing/evidence/evidence.md": "c0bf864da74f2730aefdf2a0913372b95d0f907dcfac54f77b7b7356b3f3f988",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s3_eval_no_grad_missing/evidence/evidence.json": "176e9fd6661e2fcf2846baea4daa49fec3cdc359d7509fa9c39e77f12ca435db",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s3_eval_no_grad_missing/evidence/evidence.json": "176e9fd6661e2fcf2846baea4daa49fec3cdc359d7509fa9c39e77f12ca435db",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s3_eval_no_grad_missing/messages.json": "07fa66437848398ed4b265efb74c41e2a9a9627813312609bd1d9e2fb0da1580",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s3_eval_no_grad_missing/messages.json": "07fa66437848398ed4b265efb74c41e2a9a9627813312609bd1d9e2fb0da1580",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s3_eval_no_grad_missing/README.truth.md": "bc045fce13a50740804319d09c9f3cd59eb123fbc32210c1c3e47b6a3a06c212",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s3_eval_no_grad_missing/README.truth.md": "bc045fce13a50740804319d09c9f3cd59eb123fbc32210c1c3e47b6a3a06c212",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s3_eval_no_grad_missing/runtime.json": "82be6dae4e19836c0c5487c80e813597607edb4beedf32c62fbcbe7d99127eea",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s3_eval_no_grad_missing/model-response.json": "8162377f47034cc331d9d1331324441182d3e6bb6ca95c5c25ae1d911d2fed22",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s3_eval_no_grad_missing/diagnosis.json": "cf354d00d3eb5081a3be461c030c59cfb75d07565a7bcbe7ac999a5b0d900802",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/5319e0a91b834950bcac2530c6ac0def/result.json": "652ca02c32741471eafcbb9e5d213e125e0a5d68a7f39a717adc0169c38d3573",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/5319e0a91b834950bcac2530c6ac0def/manifest.json": "017da784c699ff1f9433d248458af25d00ddb31c2f1c3cffa5e30559d1c1eafa",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/5319e0a91b834950bcac2530c6ac0def/source/train.py": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/5319e0a91b834950bcac2530c6ac0def/artifacts/result.json": "5f18be8e3b303d64f09421f79048cf1d02bfb55d5981ce934b5f73a260080f28",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/5319e0a91b834950bcac2530c6ac0def/artifacts/env.json": "20c793587eb41a385b2d46d9d0231c5eef30abec983ec81a73b0d7d2a80947a0",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/5319e0a91b834950bcac2530c6ac0def/artifacts/snapshot.json": "24734202ee68f041a006f1f49761ec26bc6cdd6a05faa2989d875e11806b42b7",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s4_loss_accumulation_graph/evidence/evidence.md": "75405d265d50042814d2384bfaef112e15d4cea07ea1fd0b5ffa8897d07d49a7",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s4_loss_accumulation_graph/evidence/evidence.md": "75405d265d50042814d2384bfaef112e15d4cea07ea1fd0b5ffa8897d07d49a7",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s4_loss_accumulation_graph/evidence/evidence.json": "7533aae184852325920ea2b9ebb70f277c15bc9e5e8296967d42aefca7d2602d",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s4_loss_accumulation_graph/evidence/evidence.json": "7533aae184852325920ea2b9ebb70f277c15bc9e5e8296967d42aefca7d2602d",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s4_loss_accumulation_graph/messages.json": "11cdd1d62efa22dbe3e995492de686888ffdd0dbc1953de89beb2cb2b2d1156a",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s4_loss_accumulation_graph/messages.json": "11cdd1d62efa22dbe3e995492de686888ffdd0dbc1953de89beb2cb2b2d1156a",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s4_loss_accumulation_graph/README.truth.md": "97182f02f6a24574c6348de90ed48ed4cd540857a96a50bbde234a0e300a86a4",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s4_loss_accumulation_graph/README.truth.md": "97182f02f6a24574c6348de90ed48ed4cd540857a96a50bbde234a0e300a86a4",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s4_loss_accumulation_graph/runtime.json": "21777b0f1688f99f52b539af97209b53c78b668a2fbe019590b3bf80d2dde7dd",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s4_loss_accumulation_graph/model-response.json": "3f4d3d6bd0e8de0f729e582fc80ac2cc011cb6287c6cdb8c496f82a1246c093b",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s4_loss_accumulation_graph/diagnosis.json": "e59a5fa9478fe671a44435c6ab40012d31b1df9cb0c117e17263f056187a22b4",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/81f981c9462d4b7a96bdd6d34f7c5569/result.json": "5677d855627731f33bfef51b51480d5ee6081c7c420908d4d7be0e23dbea2d48",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/81f981c9462d4b7a96bdd6d34f7c5569/manifest.json": "4ed7fc7a5c2d340580062c560b9262b0fa54d86bc19c549865fea8428ca57c69",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/81f981c9462d4b7a96bdd6d34f7c5569/source/train.py": "627d24ee9e62601455e37f29166df8abe73a43b9e82382a293feec3a6b558169",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/81f981c9462d4b7a96bdd6d34f7c5569/artifacts/result.json": "600d3cc2cbf7f40eb7d1c3c67a4fa6611ef439c4cef01422b1471e23e398594a",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/81f981c9462d4b7a96bdd6d34f7c5569/artifacts/env.json": "20c793587eb41a385b2d46d9d0231c5eef30abec983ec81a73b0d7d2a80947a0",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/81f981c9462d4b7a96bdd6d34f7c5569/artifacts/snapshot.json": "c79050f77df419101f62d00cad7f54b970259d045df1a874455755f90f2f488d",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s5_fragmentation_varlen/evidence/evidence.md": "fd2c5aa87b909b4228200dcd34489d73140702ba2e6078ecedd8640c0fa0b476",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s5_fragmentation_varlen/evidence/evidence.md": "fd2c5aa87b909b4228200dcd34489d73140702ba2e6078ecedd8640c0fa0b476",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s5_fragmentation_varlen/evidence/evidence.json": "a42596a128cccfa97bfc11ea4e27cbf820cfb34cb3d240084b3e6f92cb97a99c",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s5_fragmentation_varlen/evidence/evidence.json": "a42596a128cccfa97bfc11ea4e27cbf820cfb34cb3d240084b3e6f92cb97a99c",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s5_fragmentation_varlen/messages.json": "9d595f84cc69d797c3123332ac57b2c0b122486deec75d9e6541fcf6c2fc5a6a",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s5_fragmentation_varlen/messages.json": "9d595f84cc69d797c3123332ac57b2c0b122486deec75d9e6541fcf6c2fc5a6a",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s5_fragmentation_varlen/README.truth.md": "1b2ad48efa0a028085df544da14237acc402814fc8e02c9bc34f74c5ffac1d2e",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s5_fragmentation_varlen/README.truth.md": "1b2ad48efa0a028085df544da14237acc402814fc8e02c9bc34f74c5ffac1d2e",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s5_fragmentation_varlen/runtime.json": "11671c2e2063f2fa0b42be37735f501ab4008f4605e0145eff39040dc81b0ffe",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s5_fragmentation_varlen/model-response.json": "b9dc2fb366248adc7e078c9fe3580324c90fc0990cc07239823323bf9f569bc4",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s5_fragmentation_varlen/diagnosis.json": "d14c177bc30c5630abc552f3b7a5f674be5808e621917309693b99cc48fe6e61",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/eb3af4ffa3a944bcb5f32428fbf9dade/result.json": "17d7596b002bd4a3ba5fe4ae32c2333506196786045bcdc61ad4ee62d978953e",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/eb3af4ffa3a944bcb5f32428fbf9dade/manifest.json": "49520bf22f563e2811b73c5a4bba712f9368e388b95f36b8a70c5f3b1ff8600a",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/eb3af4ffa3a944bcb5f32428fbf9dade/source/train.py": "4f5d7e0f4331a4efcda2039c8ac8a421b2a1923778379896e2658553619b1bba",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/eb3af4ffa3a944bcb5f32428fbf9dade/artifacts/result.json": "75d357dcccf0232739712c2bfc39e4f166dd73e4f75cbe157dd4c97d788182f1",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/eb3af4ffa3a944bcb5f32428fbf9dade/artifacts/env.json": "20c793587eb41a385b2d46d9d0231c5eef30abec983ec81a73b0d7d2a80947a0",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/eb3af4ffa3a944bcb5f32428fbf9dade/artifacts/snapshot.json": "c47b0050f7bf62259c93a98ada1df97ce23136bfc9a743babfa61fda65c029f2",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s6_full_vocab_logits_fp32/evidence/evidence.md": "e2fb1cb090016aae175da5b5eda37a5e3c512a2c4e8a3dd101e742fbd873eac4",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s6_full_vocab_logits_fp32/evidence/evidence.md": "e2fb1cb090016aae175da5b5eda37a5e3c512a2c4e8a3dd101e742fbd873eac4",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s6_full_vocab_logits_fp32/evidence/evidence.json": "7af8360f31ae67e35f0fce58378a3df07fabdb1f154e40e812e9b9205272b8d4",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s6_full_vocab_logits_fp32/evidence/evidence.json": "7af8360f31ae67e35f0fce58378a3df07fabdb1f154e40e812e9b9205272b8d4",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s6_full_vocab_logits_fp32/messages.json": "e42d925537a890e90117fd728b3844405d9357e715ebbc64bf0e50854c59fb00",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s6_full_vocab_logits_fp32/messages.json": "e42d925537a890e90117fd728b3844405d9357e715ebbc64bf0e50854c59fb00",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s6_full_vocab_logits_fp32/README.truth.md": "f267b40beec1fb43c628b66e52186ec12fa49848008a84da752a99b03815bff8",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s6_full_vocab_logits_fp32/README.truth.md": "f267b40beec1fb43c628b66e52186ec12fa49848008a84da752a99b03815bff8",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s6_full_vocab_logits_fp32/runtime.json": "9364ecc491506efc3321810e594caf6878e56b91ce26dbef3f4bb5afaedeebf1",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s6_full_vocab_logits_fp32/model-response.json": "b84223359d3ccc89ac9390aa18a9a35e4a8f8837d5b47552c19e5291c8a4b1b8",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s6_full_vocab_logits_fp32/diagnosis.json": "66e05e3c914b9fd2d07ecf0e0d9fa9565f9b134c448e632d1e278ea226d12a58",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/37068d1305064d7b8ab05e08d67fb2de/result.json": "d98e25c48d60fd0a838d088ae29db8ed525b7e681ee16f203c3d26f3e6d1dd93",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/37068d1305064d7b8ab05e08d67fb2de/manifest.json": "be7b6eba2c9987807c0b4f17a306fb5c7441da2233f39db2cd7941ff2e9a8b80",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/37068d1305064d7b8ab05e08d67fb2de/source/train.py": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/37068d1305064d7b8ab05e08d67fb2de/artifacts/result.json": "c44ad2e5bddfc5dcaa1de7fc0f2b42ce68b896696e1ad7ef8262ae1d5d4b8ec2",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/37068d1305064d7b8ab05e08d67fb2de/artifacts/env.json": "20c793587eb41a385b2d46d9d0231c5eef30abec983ec81a73b0d7d2a80947a0",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/37068d1305064d7b8ab05e08d67fb2de/artifacts/snapshot.json": "68178c0587798b39c364674b4f37700c1a070c7b87809d3f72bb88885a1c0d3c",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s7_frozen_params_optimizer_state/evidence/evidence.md": "65224268b1db8289aa2e659eba52880832c3e064845e55d0c27334951b01b728",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s7_frozen_params_optimizer_state/evidence/evidence.md": "65224268b1db8289aa2e659eba52880832c3e064845e55d0c27334951b01b728",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s7_frozen_params_optimizer_state/evidence/evidence.json": "bf328d54939980c11afb404b269a7bc69f4774c2b270c4965afe51a3938b0047",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s7_frozen_params_optimizer_state/evidence/evidence.json": "bf328d54939980c11afb404b269a7bc69f4774c2b270c4965afe51a3938b0047",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s7_frozen_params_optimizer_state/messages.json": "b86cad20ed016d4832e4d15049524e6a570e8ed26242b5bb40e4ae3b05a8856b",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s7_frozen_params_optimizer_state/messages.json": "b86cad20ed016d4832e4d15049524e6a570e8ed26242b5bb40e4ae3b05a8856b",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s7_frozen_params_optimizer_state/README.truth.md": "1ab9dcb3e35083cea2dd508b8b74bfbf5b2b796b26389e243c506465573fb214",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s7_frozen_params_optimizer_state/README.truth.md": "1ab9dcb3e35083cea2dd508b8b74bfbf5b2b796b26389e243c506465573fb214",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s7_frozen_params_optimizer_state/runtime.json": "25dbbc564f8fcd867de1050122493befd9797755f8704503a86af109971ff079",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s7_frozen_params_optimizer_state/model-response.json": "2c136797f7392a578aecafe53d6f49cebe265e6b642345837c91772d75f4a9c5",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s7_frozen_params_optimizer_state/diagnosis.json": "f8c7b973b8c8a6c36ed58d6cc43c660d3b8ea1da22c13c417e46c940778da3f9",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/2645ed312030450b9055179ea957f48c/result.json": "95f0d33f4ae42987dd9259d0bdd9284434b02a8966c5600f72248af10937b795",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/2645ed312030450b9055179ea957f48c/manifest.json": "9d8cce0aa2d356733c9594fbb57e2053d31fa384db114854d64952bcb766df73",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/2645ed312030450b9055179ea957f48c/source/train.py": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/2645ed312030450b9055179ea957f48c/artifacts/result.json": "a18f1fc68dbfa8302095ee0111bb22723b94c9931d9e119ac864fa2f5b1d49bc",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/2645ed312030450b9055179ea957f48c/artifacts/env.json": "20c793587eb41a385b2d46d9d0231c5eef30abec983ec81a73b0d7d2a80947a0",
+    "runs/evaluation/baselines/20261024T023317672107Z-69b2d798/lab/2645ed312030450b9055179ea957f48c/artifacts/snapshot.json": "f89170ff1169fb1c64765a7090bbc8110c7c7e3d4ffe089de7515ad55675566f",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s8_two_models_resident/evidence/evidence.md": "b661ce1970fc7e6943a558c4aebe494f681591a2b9279b36b2178e8d8269b024",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s8_two_models_resident/evidence/evidence.md": "b661ce1970fc7e6943a558c4aebe494f681591a2b9279b36b2178e8d8269b024",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s8_two_models_resident/evidence/evidence.json": "31af606f80553da011fb80490c2b91c00dd005fc3a52549276197f649e9264a9",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s8_two_models_resident/evidence/evidence.json": "31af606f80553da011fb80490c2b91c00dd005fc3a52549276197f649e9264a9",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s8_two_models_resident/messages.json": "b9be697d50ab2f0033d8de54642b5502ace870d6b620764d38f75ab060654d5c",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s8_two_models_resident/messages.json": "b9be697d50ab2f0033d8de54642b5502ace870d6b620764d38f75ab060654d5c",
+    "runs/acceptance/diagnosis-prepared-20261024-v2/cases/s8_two_models_resident/README.truth.md": "0c883431a250f6b050507dc1c432218c09a4297f0d5777c3a9f03b7af3708386",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/cases/s8_two_models_resident/README.truth.md": "0c883431a250f6b050507dc1c432218c09a4297f0d5777c3a9f03b7af3708386",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s8_two_models_resident/runtime.json": "cc2f88ee15f8918ecd53e06bb5465792ca2bbf744040f5e77980057ff6086cce",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s8_two_models_resident/model-response.json": "f81ae8fb5d09b285d6197aa9445abd27494640fd3f227a1e0601419da75c86b1",
+    "runs/acceptance/diagnosis-prepared-20261025-v3/execution/s8_two_models_resident/diagnosis.json": "43be5af6773055d558f857b703b66fc8bd24b7628a72dcdad485514a52ad9c63",
+    ".cache/tokenfactory-runtime.json": "a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c"
+  },
+  "reviewer_actions": {
+    "new_model_or_http_requests": 0,
+    "gpu_runs": 0,
+    "credential_reads": 0,
+    "source_code_changes": 0,
+    "historical_artifact_changes": 0
+  },
+  "financial_scope_note": "Runtime ledger is settled; external probe429 retains1.049344USD separately and is not released or relabeled by this review. Known usage-priced charges are not an invoice reconciliation."
+}

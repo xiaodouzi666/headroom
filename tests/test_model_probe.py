@@ -1,5 +1,6 @@
 """No network, credentials or GPU access: every transport/tokenizer is a local fake."""
 
+import copy
 import importlib.util
 import json
 import sys
@@ -57,6 +58,24 @@ def verified_prices():
     }
 
 
+def catalogue_model(model, *, context=1_000_000):
+    return {
+        "id": model,
+        "advertised_metadata": {
+            "context_length": context,
+            "pricing": {
+                "prompt": "0.000001",
+                "completion": "0.000003",
+                "input_cache_read": "0.0000001",
+                "request": "0",
+                "image": "0",
+                "price_per_video_second": "0",
+                "price_per_minute": "0",
+            },
+        },
+    }
+
+
 class FakeTransport:
     def __init__(self, observations=None, available=True):
         self.observations = list(observations or [])
@@ -66,7 +85,9 @@ class FakeTransport:
     def catalogue(self, spec):
         return {
             "http_status": 200,
-            "models": [{"id": model} for model in probe.MODELS.values()] if self.available else [],
+            "models": [catalogue_model(model) for model in probe.MODELS.values()]
+            if self.available
+            else [],
         }
 
     def chat(self, spec, payload):
@@ -370,7 +391,7 @@ def test_nonofficial_endpoint_refused():
 
 
 def test_unexpected_transport_failure_retains_charge_and_redacts_exception():
-    class BrokenTransport:
+    class BrokenTransport(FakeTransport):
         def chat(self, spec, payload):
             raise RuntimeError("secret-must-not-appear")
 
@@ -804,7 +825,7 @@ class ExactNanoCatalogue(FakeTransport):
         return {
             "http_status": 200,
             "models": (
-                [{"id": self.catalogue_model}]
+                [catalogue_model(self.catalogue_model, context=1000)]
                 if self.catalogue_endpoint is None or spec.endpoint == self.catalogue_endpoint
                 else []
             ),
@@ -1089,3 +1110,493 @@ def test_catalogue_helper_validates_entire_plan_before_first_get(plan):
 
     with pytest.raises(probe.Refused):
         probe.execute_catalogue_plan(plan, NoRequests())
+
+
+class GuardCatalogue(FakeTransport):
+    def __init__(self, mutate=None, *, duplicate=False, http_status=200, error=None):
+        super().__init__()
+        self.mutate, self.duplicate = mutate, duplicate
+        self.http_status, self.error = http_status, error
+        self.gets = []
+
+    def catalogue(self, spec):
+        self.gets.append(spec.endpoint)
+        row = catalogue_model(probe.MODELS["super"])
+        if self.mutate:
+            self.mutate(row["advertised_metadata"])
+        return {
+            "http_status": self.http_status,
+            "models": [row, copy.deepcopy(row)] if self.duplicate else [row],
+            **({"error": self.error} if self.error else {}),
+        }
+
+
+def super_chat_plan():
+    return probe.build_plan(["capabilities"], ["super"], capability_methods=["chat"])
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("prompt", "0.00000100000000000000000000000000001"),
+        ("completion", "0.0000031"),
+        ("input_cache_read", "0.0000011"),
+        ("input_cache_read", None),
+        ("input_cache_read", "NaN"),
+        ("request", "0.01"),
+        ("image", "0.01"),
+        ("price_per_video_second", "0.01"),
+        ("price_per_minute", "0.01"),
+        ("unknown_service_fee", "0.00001"),
+        ("input_cache_write", "0.00001"),
+        ("request", None),
+        ("prompt", True),
+    ],
+)
+def test_live_catalogue_rate_or_fee_disagreement_blocks_plan_and_direct_probe(field, value):
+    def change(metadata):
+        metadata["pricing"][field] = value
+
+    for direct in (False, True):
+        transport = GuardCatalogue(change)
+        budget = probe.Budget(Decimal(3))
+        if direct:
+            row = probe.probe_attempts(super_chat_plan()[-1], price(), budget, transport, 128, 0)
+            guard = row["catalogue_guard"]
+        else:
+            report = probe.execute_plan(
+                super_chat_plan(), {"super": price()}, budget, transport, 128, 0
+            )
+            row, guard = report["probes"][0], report["catalogue_guards"][0]
+            assert report["catalogue_consistency_passed"] is False
+            assert (
+                report["catalogues"][0]["models"][0]["advertised_metadata"]["pricing"][field]
+                == value
+            )
+        assert row["status"] == guard["status"] == "refused"
+        assert transport.calls == [] and budget.charged == budget.outstanding == 0
+        assert len(transport.gets) == (1 if direct else 2)
+
+
+@pytest.mark.parametrize("context", [None, 0, True, 1_000_001])
+def test_context_must_be_known_positive_and_no_larger_than_reviewed(context):
+    transport = GuardCatalogue(lambda metadata: metadata.update(context_length=context))
+    report = probe.execute_plan(
+        super_chat_plan(), {"super": price()}, probe.Budget(Decimal(3)), transport, 128, 0
+    )
+    assert not transport.calls
+    assert "context" in report["catalogue_guards"][0]["detail"]
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "prompt",
+        "completion",
+        "input_cache_read",
+        "request",
+        "image",
+        "price_per_video_second",
+        "price_per_minute",
+    ],
+)
+def test_required_price_and_zero_fee_fields_may_not_disappear(field):
+    transport = GuardCatalogue(lambda metadata: metadata["pricing"].pop(field))
+    row = probe.probe_attempts(
+        super_chat_plan()[-1], price(), probe.Budget(Decimal(3)), transport, 128, 0
+    )
+    assert row["status"] == "refused" and transport.calls == []
+    assert row["catalogue_guard"]["detail"] == "catalogue_pricing_field_missing"
+    assert field in row["catalogue_guard"]["fields"]
+
+
+@pytest.mark.parametrize(
+    "kwargs", [{"duplicate": True}, {"http_status": 503}, {"error": "fixture_directory_error"}]
+)
+def test_model_identity_is_not_enough_when_catalogue_response_is_invalid(kwargs):
+    transport = GuardCatalogue(**kwargs)
+    report = probe.execute_plan(
+        super_chat_plan(), {"super": price()}, probe.Budget(Decimal(3)), transport, 128, 0
+    )
+    assert report["probes"][0]["status"] == "refused" and transport.calls == []
+
+
+def test_guard_preserves_legacy_reviewed_schema_and_safe_price_margin():
+    prices = probe.validate_prices(verified_prices(), {"super"})
+    transport = GuardCatalogue(
+        lambda metadata: metadata["pricing"].update(prompt="0.0000009", unknown_fee="0")
+    )
+    saved = []
+
+    def record(report):
+        saved.append(copy.deepcopy(report))
+
+    report = probe.execute_plan(
+        super_chat_plan(), prices, probe.Budget(Decimal(3)), transport, 128, 0, record
+    )
+    assert len(transport.calls) == 1 and len(transport.gets) == 2
+    assert report["catalogue_consistency_passed"] is True
+    assert report["probes"][0]["catalogue_guard"]["status"] == "matched"
+    assert any(row["catalogue_guards"] and not row["probes"] for row in saved)
+    assert report["accepted"] is False and report["config_proposal"]["applied"] is False
+
+
+def fallback_document():
+    document = verified_prices()
+    document["models"][probe.MODELS["super"]].update(
+        {
+            "cached_input_usd_per_million": "0.1",
+            "reviewed_cache_price_evidence": "offline independent Prices UI receipt",
+            "allow_catalogue_cache_price_missing": True,
+        }
+    )
+    return document
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"cached_input_usd_per_million": None},
+        {"cached_input_usd_per_million": "NaN"},
+        {"cached_input_usd_per_million": "-0.1"},
+        {"cached_input_usd_per_million": "1.01"},
+        {"reviewed_cache_price_evidence": ""},
+        {"reviewed_cache_price_evidence": "  "},
+        {"reviewed_cache_price_evidence": None},
+        {"allow_catalogue_cache_price_missing": 1},
+    ],
+)
+def test_missing_cache_fallback_requires_explicit_valid_review(change):
+    document = fallback_document()
+    document["models"][probe.MODELS["super"]].update(change)
+    with pytest.raises(probe.Refused):
+        probe.validate_prices(document, {"super"})
+
+
+@pytest.mark.parametrize("missing", [True, False])
+def test_explicit_reviewed_fallback_preserves_null_or_missing_catalogue(missing):
+    def mutate(metadata):
+        if missing:
+            metadata["pricing"].pop("input_cache_read")
+        else:
+            metadata["pricing"]["input_cache_read"] = None
+
+    prices = probe.validate_prices(fallback_document(), {"super"})
+    transport = GuardCatalogue(mutate)
+    report = probe.execute_plan(
+        super_chat_plan(), prices, probe.Budget(Decimal(3)), transport, 128, 0
+    )
+    guard = report["catalogue_guards"][0]
+    assert len(transport.calls) == 1 and guard["status"] == "matched"
+    assert guard["cache_price_basis"] == "reviewed_external_fallback"
+    assert guard["adopted_cache_usd_per_million"] == "0.1"
+    assert guard["reviewed_cache_price_evidence"] == "offline independent Prices UI receipt"
+    raw = guard["observed"]["pricing"]
+    assert ("input_cache_read" not in raw) if missing else raw["input_cache_read"] is None
+    assert report["accepted"] is False
+
+
+def test_cache_price_and_evidence_without_flag_do_not_authorize_missing_value():
+    document = fallback_document()
+    document["models"][probe.MODELS["super"]].pop("allow_catalogue_cache_price_missing")
+    prices = probe.validate_prices(document, {"super"})
+    transport = GuardCatalogue(lambda metadata: metadata["pricing"].update(input_cache_read=None))
+    report = probe.execute_plan(
+        super_chat_plan(), prices, probe.Budget(Decimal(3)), transport, 128, 0
+    )
+    assert transport.calls == [] and report["probes"][0]["status"] == "refused"
+
+
+def test_real_catalogue_cache_price_must_not_be_replaced_by_fallback():
+    prices = probe.validate_prices(fallback_document(), {"super"})
+    transport = GuardCatalogue(
+        lambda metadata: metadata["pricing"].update(input_cache_read="0.00000011")
+    )
+    report = probe.execute_plan(
+        super_chat_plan(), prices, probe.Budget(Decimal(3)), transport, 128, 0
+    )
+    guard = report["catalogue_guards"][0]
+    assert guard["cache_price_basis"] == "live_catalogue"
+    assert guard["field"] == "input_cache_read" and transport.calls == []
+
+
+def test_http_adapter_catalogue_mismatch_exits_nonzero_without_post_and_saves_evidence(
+    tmp_path, monkeypatch, capsys
+):
+    import httpx
+
+    monkeypatch.setenv("NEBIUS_API_KEY", "offline-placeholder-not-real")
+    path = tmp_path / "pricing.json"
+    path.write_text(json.dumps(verified_prices()))
+    real_client = httpx.AsyncClient
+    requests = []
+
+    def handler(request):
+        requests.append(request)
+        assert request.method == "GET"
+        row = catalogue_model(probe.MODELS["super"])
+        metadata = row["advertised_metadata"]
+        metadata["pricing"]["request"] = "0.25"
+        return httpx.Response(200, json={"data": [{"id": row["id"], **metadata}]})
+
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        lambda **kwargs: real_client(transport=httpx.MockTransport(handler), **kwargs),
+    )
+    directory = tmp_path / "execute"
+    assert (
+        probe.main(
+            [
+                "--execute",
+                "--allow-paid-requests",
+                "--credit-confirmed",
+                "--budget-usd",
+                "3",
+                "--available-credit-usd",
+                "3",
+                "--pricing-file",
+                str(path),
+                "--suite",
+                "capabilities",
+                "--roles",
+                "super",
+                "--capability-method",
+                "chat",
+                "--output-dir",
+                str(directory),
+            ]
+        )
+        == 2
+    )
+    output = json.loads(capsys.readouterr().out)
+    report = json.loads((directory / "report.json").read_text())
+    assert len(requests) == 2 and output["accepted"] is False
+    assert report["budget"]["actual_known_usd"] == "0"
+    assert report["catalogue_guards"][0]["detail"] == "catalogue_unmodeled_fee_nonzero"
+    assert report["catalogue_guards"][0]["field"] == "request"
+    assert (
+        report["catalogues"][0]["models"][0]["advertised_metadata"]["pricing"]["request"] == "0.25"
+    )
+
+
+def rate_limit_fixture():
+    return {
+        "x-ratelimit-limit-requests": "100",
+        "x-ratelimit-remaining-requests": "9",
+        "x-ratelimit-reset-requests": "0.25",
+        "x-ratelimit-limit-tokens": "1000000",
+        "x-ratelimit-remaining-tokens": "900000",
+        "x-ratelimit-reset-tokens": "60",
+        "x-ratelimit-over-limit": "yes",
+        "retry-after": "Wed, 21 Oct 2026 07:28:00 GMT",
+    }
+
+
+def test_rate_limit_whitelist_preserves_only_eight_bounded_response_fields():
+    expected = rate_limit_fixture()
+    supplied = {
+        **{key.upper(): value for key, value in expected.items()},
+        "authorization": "Bearer private-value",
+        "set-cookie": "private-value",
+        "x-request-id": "private-value",
+        "location": "https://private-value.invalid",
+        "x-ratelimit-reset-unreviewed": "private-value",
+        "x-ratelimit-limit-requests-extra": "100",
+    }
+    assert probe.sanitized_rate_limit_headers(supplied) == expected
+    assert len(probe.RATE_LIMIT_HEADERS) == 8
+
+
+@pytest.mark.parametrize(
+    "name,value",
+    [
+        ("x-ratelimit-limit-tokens", 123),
+        ("x-ratelimit-remaining-requests", True),
+        ("x-ratelimit-limit-requests", "1.5"),
+        ("x-ratelimit-remaining-tokens", "-1"),
+        ("x-ratelimit-limit-tokens", "1e6"),
+        ("x-ratelimit-reset-requests", "NaN"),
+        ("x-ratelimit-reset-tokens", "Infinity"),
+        ("x-ratelimit-reset-tokens", "2s"),
+        ("x-ratelimit-reset-tokens", "-0.1"),
+        ("x-ratelimit-over-limit", "true"),
+        ("retry-after", ""),
+        ("retry-after", "   "),
+        ("retry-after", "x" * 129),
+        ("retry-after", "1\r\nAuthorization: private-value"),
+        ("retry-after", "1\t"),
+        ("retry-after", "\x7f"),
+        ("retry-after", "\u00a0"),
+        ("retry-after", ["1"]),
+    ],
+)
+def test_rate_limit_rejects_invalid_type_format_length_and_controls(name, value):
+    assert probe.sanitized_rate_limit_headers({name: value}) == {}
+
+
+def test_rate_limit_duplicate_case_and_reflected_key_are_omitted():
+    import httpx
+
+    headers = httpx.Headers(
+        [
+            ("retry-after", "1"),
+            ("Retry-After", "2"),
+            ("x-ratelimit-remaining-tokens", "123"),
+        ]
+    )
+    assert probe.sanitized_rate_limit_headers(headers) == {"x-ratelimit-remaining-tokens": "123"}
+    assert (
+        probe.sanitized_rate_limit_headers(
+            {"x-ratelimit-limit-tokens": "100", "X-Ratelimit-Limit-Tokens": "100"}
+        )
+        == {}
+    )
+    assert (
+        probe.sanitized_rate_limit_headers(
+            {"retry-after": "private-placeholder"}, secret="private-placeholder"
+        )
+        == {}
+    )
+    assert probe.sanitized_rate_limit_headers(None) == {}
+
+
+@pytest.mark.parametrize("status", [200, 429])
+def test_http_rate_limit_headers_reach_saved_report_on_success_and_failure(monkeypatch, status):
+    import httpx
+
+    real_client = httpx.AsyncClient
+    requests = []
+    expected = rate_limit_fixture()
+
+    def handler(request):
+        requests.append(request)
+        headers = {
+            **expected,
+            "authorization": "Bearer private-response",
+            "set-cookie": "private-response",
+            "x-request-id": "private-response",
+        }
+        if request.method == "GET":
+            row = catalogue_model(probe.MODELS["super"])
+            return httpx.Response(
+                200,
+                headers=headers,
+                json={"data": [{"id": row["id"], **row["advertised_metadata"]}]},
+            )
+        if status == 429:
+            return httpx.Response(429, headers=headers, text="private-error-body")
+        event = {
+            "model": probe.MODELS["super"],
+            "choices": [{"delta": {"content": "headroom"}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 2},
+        }
+        return httpx.Response(
+            200, headers=headers, text="data: " + json.dumps(event) + "\n\ndata: [DONE]\n\n"
+        )
+
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        lambda **kwargs: real_client(transport=httpx.MockTransport(handler), **kwargs),
+    )
+    saved = []
+    report = probe.execute_plan(
+        super_chat_plan(),
+        {"super": price()},
+        probe.Budget(Decimal(3)),
+        probe.HTTPTransport("offline-placeholder"),
+        128,
+        0,
+        lambda value: saved.append(copy.deepcopy(value)),
+    )
+    assert [request.method for request in requests] == ["GET", "GET", "POST"]
+    assert all(row["rate_limit_headers"] == expected for row in report["catalogues"])
+    attempt = report["probes"][0]["attempts"][0]
+    assert attempt["http_status"] == status
+    assert attempt["rate_limit_headers"] == expected
+    assert saved[-1]["probes"][0]["attempts"][0]["rate_limit_headers"] == expected
+    public = json.dumps(report)
+    assert "private-response" not in public and "private-error-body" not in public
+    assert "offline-placeholder" not in public
+    if status == 429:
+        assert attempt["cost_status"] == "unknown_reserved_upper_bound"
+        assert report["budget"]["charged_or_conservatively_retained_usd"] == "1.000384"
+    else:
+        assert attempt["status"] == "ok"
+
+
+def test_rate_limit_headers_survive_midstream_read_timeout(monkeypatch):
+    import httpx
+
+    class InterruptedStream(httpx.AsyncByteStream):
+        async def __aiter__(self):
+            yield b": heartbeat\n\n"
+            raise httpx.ReadTimeout("private-exception")
+
+    real_client = httpx.AsyncClient
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        lambda **kwargs: real_client(
+            transport=httpx.MockTransport(
+                lambda request: httpx.Response(
+                    200,
+                    headers={"x-ratelimit-reset-tokens": "0.125"},
+                    stream=InterruptedStream(),
+                )
+            ),
+            **kwargs,
+        ),
+    )
+    spec = super_chat_plan()[-1]
+    payload, _ = probe.make_payload(spec, price(), 128)
+    result = probe.HTTPTransport("offline-placeholder").chat(spec, payload)
+    assert result["error"] == "ReadTimeout"
+    assert result["rate_limit_headers"] == {"x-ratelimit-reset-tokens": "0.125"}
+    assert "private-exception" not in json.dumps(result)
+
+
+def test_catalogue_rate_limit_headers_survive_invalid_json(monkeypatch):
+    import httpx
+
+    real_client = httpx.AsyncClient
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        lambda **kwargs: real_client(
+            transport=httpx.MockTransport(
+                lambda request: httpx.Response(
+                    200, headers={"retry-after": "2"}, text="private-invalid-json"
+                )
+            ),
+            **kwargs,
+        ),
+    )
+    result = probe.HTTPTransport("offline-placeholder").catalogue(
+        probe.build_plan(["catalogue"])[0]
+    )
+    assert result["error"] == "JSONDecodeError"
+    assert result["rate_limit_headers"] == {"retry-after": "2"}
+    assert "private-invalid-json" not in json.dumps(result)
+
+
+def test_attempt_publication_resanitizes_transport_metadata():
+    transport = FakeTransport(
+        [
+            {
+                "http_status": 429,
+                "error": "http_429",
+                "rate_limit_headers": {
+                    "retry-after": "3",
+                    "authorization": "private-value",
+                    "x-ratelimit-reset-tokens": "not-seconds",
+                },
+            }
+        ]
+    )
+    row = probe.probe_attempts(
+        super_chat_plan()[-1], price(), probe.Budget(Decimal(3)), transport, 128, 0
+    )
+    assert row["attempts"][0]["rate_limit_headers"] == {"retry-after": "3"}
+    assert "private-value" not in json.dumps(row)

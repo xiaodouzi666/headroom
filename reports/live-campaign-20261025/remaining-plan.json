@@ -1,0 +1,210 @@
+{
+  "created_at_utc": "2026-10-24T21:02:47.355835+00:00",
+  "read_only_preparation": true,
+  "network_requests": 0,
+  "prior_completed_probe_ids": [
+    "nano-chat",
+    "super-chat",
+    "super-json_schema",
+    "super-tools",
+    "ultra-chat"
+  ],
+  "remaining_original_probes": 55,
+  "groups": [
+    {
+      "id": "super-remaining-capabilities",
+      "suite": "capabilities",
+      "role": "super",
+      "methods": [
+        "json_object",
+        "fenced",
+        "template_on",
+        "template_off",
+        "prefix_on",
+        "prefix_off",
+        "effort_high",
+        "effort_none",
+        "reasoning_budget",
+        "max_thinking_tokens"
+      ],
+      "expected_probe_ids": [
+        "super-json_object",
+        "super-fenced",
+        "super-template_on",
+        "super-template_off",
+        "super-prefix_on",
+        "super-prefix_off",
+        "super-effort_high",
+        "super-effort_none",
+        "super-reasoning_budget",
+        "super-max_thinking_tokens"
+      ],
+      "output_token_cap": 1024,
+      "retries": 0,
+      "inference_request_count": 10
+    },
+    {
+      "id": "ultra-remaining-capabilities",
+      "suite": "capabilities",
+      "role": "ultra",
+      "methods": [
+        "json_object",
+        "json_schema",
+        "fenced",
+        "tools",
+        "template_on",
+        "template_off",
+        "prefix_on",
+        "prefix_off",
+        "effort_high",
+        "effort_none",
+        "reasoning_budget",
+        "max_thinking_tokens"
+      ],
+      "expected_probe_ids": [
+        "ultra-json_object",
+        "ultra-json_schema",
+        "ultra-fenced",
+        "ultra-tools",
+        "ultra-template_on",
+        "ultra-template_off",
+        "ultra-prefix_on",
+        "ultra-prefix_off",
+        "ultra-effort_high",
+        "ultra-effort_none",
+        "ultra-reasoning_budget",
+        "ultra-max_thinking_tokens"
+      ],
+      "output_token_cap": 1024,
+      "retries": 0,
+      "inference_request_count": 12
+    },
+    {
+      "id": "nano-remaining-capabilities",
+      "suite": "capabilities",
+      "role": "nano",
+      "methods": [
+        "json_object",
+        "json_schema",
+        "fenced",
+        "tools",
+        "template_on",
+        "template_off",
+        "prefix_on",
+        "prefix_off",
+        "effort_high",
+        "effort_none",
+        "reasoning_budget",
+        "max_thinking_tokens"
+      ],
+      "expected_probe_ids": [
+        "nano-json_object",
+        "nano-json_schema",
+        "nano-fenced",
+        "nano-tools",
+        "nano-template_on",
+        "nano-template_off",
+        "nano-prefix_on",
+        "nano-prefix_off",
+        "nano-effort_high",
+        "nano-effort_none",
+        "nano-reasoning_budget",
+        "nano-max_thinking_tokens"
+      ],
+      "output_token_cap": 1024,
+      "retries": 0,
+      "inference_request_count": 12
+    },
+    {
+      "id": "lightning-remaining-capabilities",
+      "suite": "capabilities",
+      "role": "lightning",
+      "methods": [
+        "chat",
+        "json_object",
+        "json_schema",
+        "fenced",
+        "tools",
+        "template_on",
+        "template_off",
+        "prefix_on",
+        "prefix_off",
+        "effort_high",
+        "effort_none",
+        "reasoning_budget",
+        "max_thinking_tokens"
+      ],
+      "expected_probe_ids": [
+        "lightning-chat",
+        "lightning-json_object",
+        "lightning-json_schema",
+        "lightning-fenced",
+        "lightning-tools",
+        "lightning-template_on",
+        "lightning-template_off",
+        "lightning-prefix_on",
+        "lightning-prefix_off",
+        "lightning-effort_high",
+        "lightning-effort_none",
+        "lightning-reasoning_budget",
+        "lightning-max_thinking_tokens"
+      ],
+      "output_token_cap": 1024,
+      "retries": 0,
+      "inference_request_count": 13
+    },
+    {
+      "id": "ultra-long-64000",
+      "suite": "long",
+      "role": "ultra",
+      "long_input_tokens": 64000,
+      "output_token_cap": 256,
+      "retries": 0,
+      "inference_request_count": 1
+    },
+    {
+      "id": "ultra-long-200000",
+      "suite": "long",
+      "role": "ultra",
+      "long_input_tokens": 200000,
+      "output_token_cap": 256,
+      "retries": 0,
+      "inference_request_count": 1
+    },
+    {
+      "id": "ultra-long-500000",
+      "suite": "long",
+      "role": "ultra",
+      "long_input_tokens": 500000,
+      "output_token_cap": 256,
+      "retries": 0,
+      "inference_request_count": 1
+    },
+    {
+      "id": "ultra-long-900000",
+      "suite": "long",
+      "role": "ultra",
+      "long_input_tokens": 900000,
+      "output_token_cap": 256,
+      "retries": 0,
+      "inference_request_count": 1
+    },
+    {
+      "id": "super-concurrency-4",
+      "suite": "concurrency",
+      "role": "super",
+      "output_token_cap": 256,
+      "retries": 0,
+      "inference_request_count": 4
+    }
+  ],
+  "root_review_between_groups": true,
+  "capability_probe_output_note": "New capabilities uniformly use max_completion_tokens=1024, including reasoning. Historical completed examples retain their original128/256/1024 caps.",
+  "stop_rules": [
+    "Unknown model identity, violated provider bound or missing final process report stops every subsequent group.",
+    "Unsupported methods and truncated known-billed outputs are preserved as capability fail, not silently retried.",
+    "Transport/HTTP unknown usage retains the full conservative reservation; root reviews before any subsequent group. Never release it merely because an error is expected.",
+    "The new probe pool is6USD inclusive of every retained/reserved charge. Group allocation is at most the pool remainder, never6USD afresh."
+  ],
+  "source_frozen_for_plan_sha256": "8f084e0fdd1feeae0bf8435b2dda09f5c383d7b5357b2c538127758d6ff220ff"
+}

@@ -65,7 +65,10 @@ def test_exact_settlement_releases_unused_reservation(tmp_path):
 
 
 @pytest.mark.parametrize("actual,invalid", [("0.2", False), (None, True)])
-def test_unresolved_provider_bound_stops_same_and_future_day(tmp_path, actual, invalid):
+def test_unresolved_provider_bound_stops_same_and_future_day(
+    tmp_path, actual, invalid, monkeypatch
+):
+    monkeypatch.setattr("headroom.budget.current_utc_day", lambda: "2026-10-24")
     path = tmp_path / "budget.db"
     b = BudgetLedger(path, daily_limit="1", day="2026-10-24")
     b.open_run("run", "0.5")
@@ -88,7 +91,8 @@ def test_crash_before_settlement_keeps_full_upper_bound(tmp_path):
     assert state["total_actual_usd"] is None
 
 
-def test_total_authorization_does_not_reset_on_next_day(tmp_path):
+def test_total_authorization_does_not_reset_on_next_day(tmp_path, monkeypatch):
+    monkeypatch.setattr("headroom.budget.current_utc_day", lambda: "2026-10-24")
     path = tmp_path / "budget.db"
     b = BudgetLedger(path, daily_limit="1", total_limit="0.1", day="2026-10-24")
     b.open_run("first", "0.06")

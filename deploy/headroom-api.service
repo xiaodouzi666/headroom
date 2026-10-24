@@ -10,6 +10,9 @@ ExecStart=/home/xiaodouzi/workspace/headroom/.venv/bin/python -m headroom.api.ap
 Environment=PYTHONDONTWRITEBYTECODE=1
 Environment=HEADROOM_RUN_BUDGET_USD=0.6
 Environment=HEADROOM_DAILY_BUDGET_USD=12
+# Optional explicit reviewed profile; unset retains the existing default lookup.
+# Environment=HEADROOM_RUNTIME_PROFILE=/home/xiaodouzi/workspace/headroom/.cache/tokenfactory-runtime.json
+# The path does not enable a profile or change the reviewed budget allocation.
 # Add HEADROOM_PUBLIC_HOST and HEADROOM_TRUST_CLOUDFLARED only after tunnel review.
 Restart=on-failure
 RestartSec=3

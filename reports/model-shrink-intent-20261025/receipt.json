@@ -1,0 +1,46 @@
+{
+  "created_at": "2026-10-24T21:59:26.728015+00:00",
+  "status": "focused_passed_source_frozen",
+  "purpose": "Fix direct-object model-shrink intent false positive in real v4 s3 channels-last workspace plan",
+  "changes": [
+    "Replace arbitrary 60-character jump with bounded explicit structure-object phrases",
+    "Recognize original structure names plus existing model/config dimension aliases",
+    "Ignore a memory/cache/workspace head after a layer qualifier",
+    "Treat negation locally per action; later or double-negated shrink actions still forbidden"
+  ],
+  "unchanged": [
+    "Prompt files",
+    "8192 output cap",
+    "reasoning=False settings",
+    "Other diagnosis validator gates",
+    "Patch source/AST policy",
+    "Measured parameter-count checks",
+    "Original PLAN thresholds"
+  ],
+  "validation": {
+    "exit_code": 0,
+    "tests": [
+      "tests/test_diagnose_schema.py",
+      "tests/test_diagnose_contract.py",
+      "tests/test_diagnosis_acceptance.py",
+      "tests/test_honesty.py"
+    ],
+    "external_access_attempts": [],
+    "elapsed_seconds": 19.359202275052667,
+    "live_api_calls": 0,
+    "gpu_tasks": 0
+  },
+  "validation_log": "reports/model-shrink-intent-20261025/validated.log",
+  "lint": "Scoped Ruff and format passed",
+  "source_sha256": {
+    "headroom/diagnose.py": "c7f866672452046c17ee5e3130b54bba2ea07ca7f972f9cab0cbc295f55aa77a",
+    "tests/test_diagnose_schema.py": "17404d0973b5b2c905a78e986ce6594d771a3a01e98b567993501722f6a1d60f",
+    "reports/model-shrink-intent-20261025/offline_driver.py": "676fc480a8c15b156536bb0b65f0abd34b46283a4d44b206f561591074e2a86b"
+  },
+  "plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "live_provider_calls": 0,
+  "gpu_tasks": 0,
+  "real_env_reads": 0,
+  "full_suite_restarted": false,
+  "limits": "This remains a bounded natural-language intent heuristic, not a substitute for source and runtime verification."
+}

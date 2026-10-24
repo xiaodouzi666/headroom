@@ -4,6 +4,8 @@ import {
   availabilityBlocks,
   artifactLink,
   costTotal,
+  costUpperBound,
+  usdUpper,
   configurationLink,
   displayMetric,
   externalLink,
@@ -246,4 +248,18 @@ it("exposes only API-advertised selected CLI and configuration downloads", () =>
       artifactLink(id, name, { [name]: "https://other.invalid/" + name }),
     ).toBeNull();
   }
+});
+
+it("keeps certified cost bounds separate and never rounds them downward", () => {
+  const usage = {
+    total_cost_usd: null,
+    complete: false,
+    unknown_cost_calls: 1,
+    billing_complete: true,
+    conservative_total_usd: "0.00033378",
+  };
+  expect(costTotal(usage)).toBe("Unknown");
+  expect(costUpperBound(usage)).toBe("$0.00033378");
+  expect(costUpperBound({ ...usage, billing_complete: false })).toBe("Unknown");
+  expect(usdUpper("-0.1")).toBe("Unknown");
 });

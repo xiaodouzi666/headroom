@@ -1,0 +1,45 @@
+........................................................................ [ 22%]
+.....................................................F.................. [ 44%]
+....F................................................................... [ 67%]
+........................................................................ [ 89%]
+..................................                                       [100%]
+=================================== FAILURES ===================================
+____ test_wrong_invalid_or_incomplete_diagnosis_never_passes[bad_reference] ____
+
+project = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-127/test_wrong_invalid_or_incompl...tmp/pytest-of-xiaodouzi/pytest-127/test_wrong_invalid_or_incomple0/project/captures/s4_loss_accumulation_graph'), ...})
+mode = 'bad_reference'
+
+    @pytest.mark.parametrize("mode", ["bad_reference", "wrong", "needs_more"])
+    def test_wrong_invalid_or_incomplete_diagnosis_never_passes(project, mode):
+        prepared, path = prepare(project)
+        result, calls = execute(project, prepared, path, mode=mode)
+        assert len(calls) == 8
+        assert not result["fixture_gates_passed"] and not result["accepted"]
+        if mode == "bad_reference":
+>           assert result["rows"][0]["actual_stack_references"][0]["invalid_references"] == [
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                "stk_invented"
+            ]
+E           KeyError: 'actual_stack_references'
+
+tests/test_diagnosis_acceptance.py:449: KeyError
+___________ test_raw_valid_model_verdict_is_retained_before_scoring ____________
+
+project = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-127/test_raw_valid_model_verdict_...tmp/pytest-of-xiaodouzi/pytest-127/test_raw_valid_model_verdict_i0/project/captures/s4_loss_accumulation_graph'), ...})
+
+    def test_raw_valid_model_verdict_is_retained_before_scoring(project):
+        prepared, path = prepare(project)
+        result, _ = execute(project, prepared, path, mode="bad_reference")
+        raw = json.loads(
+            (path.parent / "execution" / SCENARIO_IDS[0] / "model-response.json").read_text()
+        )
+        assert "stk_invented" in raw["text"]
+>       assert raw["parsed"]["root_causes"][0]["evidence_refs"] == ["stk_invented"]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: 'NoneType' object is not subscriptable
+
+tests/test_diagnosis_acceptance.py:684: TypeError
+=========================== short test summary info ============================
+FAILED tests/test_diagnosis_acceptance.py::test_wrong_invalid_or_incomplete_diagnosis_never_passes[bad_reference]
+FAILED tests/test_diagnosis_acceptance.py::test_raw_valid_model_verdict_is_retained_before_scoring
+2 failed, 320 passed in 34.80s

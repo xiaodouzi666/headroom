@@ -10,6 +10,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from headroom.diagnosis_schema import build_diagnosis_schema
 from headroom.schemas import Diagnosis
 
 PROMPT_PATH = Path(__file__).parent / "prompts" / "diagnose.md"
@@ -26,11 +27,55 @@ BATCH_CHANGE = re.compile(
     r"\b(?:reduce|change|decrease|increase|shrink|lower|set)\s+(?:the\s+)?batch\b",
     re.IGNORECASE,
 )
+# Match the grammatical object of a shrinking action, not a later mention of
+# a layer whose *memory/workspace* is being reduced. These are intent hints;
+# applied source and measured parameter-count checks remain authoritative.
 MODEL_SHRINK = re.compile(
-    r"\b(?:delete|remove|halve|reduce|shrink|truncate|cut)\b.{0,60}"
-    r"\b(?:layers?|blocks?|hidden[\s_-]+size|vocab(?:ulary)?|sequence[\s_-]+length)\b",
+    r"\b(?:delete|deleting|remove|removing|halve|halving|reduce|reducing|shrink|shrinking|"
+    r"decrease|decreasing|truncate|truncating|cut|cutting)\s+"
+    r"(?:(?:the|a|an|all|some|any|half|one|two|first|last|every|other|few|total|"
+    r"remaining|unused|redundant|input|training|maximum|model(?:[\'’]s)?|"
+    r"network(?:[\'’]s)?|transformer|encoder|decoder|attention|\d+)(?:\s+of)?\s+){0,6}"
+    r"(?:(?:number|count)\s+of\s+(?:(?:the|model(?:[\'’]s)?|network(?:[\'’]s)?|"
+    r"transformer|encoder|decoder)\s+){0,3})?"
+    r"(?:layers?|blocks?|width|(?:hidden|embedding)[\s_-]+(?:size|dim(?:ension)?)|"
+    r"n_layer|num_layers|num_hidden_layers|n_embd|d_model|"
+    r"vocab(?:ulary)?(?:[\s_-]+size)?|(?:sequence|context)[\s_-]+length|"
+    r"seq_len|max_seq_len|max_seq_length|block_size|model[\s_-]+depth)\b",
     re.IGNORECASE,
 )
+_MODEL_SHRINK_NEGATION = re.compile(
+    r"\b(?:do\s+not|does\s+not|did\s+not|should\s+not|must\s+not|"
+    r"would\s+not|could\s+not|cannot|can['’]t|don['’]t|"
+    r"never|not|without|avoid|avoiding|instead\s+of|rather\s+than)"
+    r"\s+(?:(?:ever|actually|directly)\s+)?$",
+    re.IGNORECASE,
+)
+_MODEL_MEMORY_OBJECT = re.compile(
+    r"(?:['’]s?)?\s+(?:(?:activation|temporary|peak|GPU|CUDA|allocated|cached)\s+){0,3}"
+    r"(?:memory|workspace|allocations?|buffers?|caches?|overhead|footprint|storage|usage)\b",
+    re.IGNORECASE,
+)
+
+
+def _proposes_model_shrink(text: str) -> bool:
+    for match in MODEL_SHRINK.finditer(text):
+        if _MODEL_MEMORY_OBJECT.match(text, match.end()):
+            continue
+        # Negation belongs to this action only. "Do not reduce layers; halve
+        # hidden_size" still contains a forbidden second action.
+        prefix = re.split(r"[.;!?\n]", text[: match.start()])[-1]
+        negation = _MODEL_SHRINK_NEGATION.search(prefix)
+        # Do not let "do not avoid reducing layers" hide positive intent.
+        if (
+            negation is not None
+            and _MODEL_SHRINK_NEGATION.search(prefix[: negation.start()]) is None
+        ):
+            continue
+        return True
+    return False
+
+
 TRAINING_TRUNCATION = re.compile(
     r"\b(?:train|run|execute)\s+(?:for\s+)?(?:only|just)\s+(?:one|1)\s+"
     r"(?:step|iteration)\b|\b(?:skip|truncate)\s+(?:the\s+)?(?:training|dataset|data)\b",
@@ -303,7 +348,7 @@ def validate_diagnosis(
                     f"Step {step.fix_id} proposes batch/accumulation changes without permission.",
                 )
             )
-        if MODEL_SHRINK.search(text) and policy.get("allow_model_change") is not True:
+        if _proposes_model_shrink(text) and policy.get("allow_model_change") is not True:
             issues.append(
                 DiagnosisIssue(
                     "MODEL_CHANGE_FORBIDDEN",
@@ -362,6 +407,9 @@ def validate_diagnosis(
     )
 
 
+DIAGNOSIS_MAX_COMPLETION_TOKENS = 8192
+
+
 def diagnose_with_router(
     router,
     evidence_markdown: str,
@@ -387,8 +435,15 @@ def diagnose_with_router(
         required_saving_gb=required_saving_gb,
         verification_feedback=verification_feedback,
     )
+    schema = build_diagnosis_schema(evidence=evidence, policy=policy)
     for attempt in range(max_supplements + 1):
-        response = router.chat("diagnose", messages, Diagnosis, max_tokens=4000)
+        response = router.chat(
+            "diagnose",
+            messages,
+            schema,
+            max_tokens=DIAGNOSIS_MAX_COMPLETION_TOKENS,
+            reasoning=False,
+        )
         result = validate_diagnosis(
             response.parsed,
             evidence=evidence,

@@ -17,6 +17,26 @@ shutdown_grace_seconds (default 5, max 10), event_poll_seconds, allowed_hosts,
 public_host and trust_cloudflared.
 Defaults use runs/headroom.db, runs/jobs and runs/api inside the project.
 
+Startup profile selection is explicit and ordered: `headroom serve
+--runtime-profile PATH` (or `ApiSettings(runtime_profile=...)`) takes precedence
+over `HEADROOM_RUNTIME_PROFILE`. If neither is supplied, `runtime_profile`
+remains unset and the existing reviewed default-profile lookup is preserved.
+Merely starting the server never activates or rewrites a profile. Disabled,
+invalid or missing selected profiles still fail the existing `read_live_profile`
+validation; selecting an invalid override does not fall back to another file.
+`configured` describes that reviewed configuration, not authenticated account
+access or permission to spend beyond the existing guards. No key is loaded by
+this startup path; the runtime keeps its existing credential/budget checks.
+
+For a reviewed local preview, choose a profile without changing binding rules:
+```sh
+headroom serve --port 8765 --runtime-profile .cache/tokenfactory-runtime.json
+```
+Both CLI and module startup disable Uvicorn proxy-header rewriting. Paths are
+interpreted relative to the server's working directory; use an absolute path in
+service overrides. An already running process must be restarted to load new
+source or startup configuration. These examples do not restart the preview.
+
 The explicit local launch command is:
 ```sh
 python -m headroom.api.app
@@ -328,3 +348,20 @@ true/false/unknown/known counters for the three top-level Boolean outcomes.
 Offline fixture publications remain explicitly labelled and contribute no live
 outcome scores. Publication is still read-only and requires the existing explicit
 curation registry; no campaign becomes public automatically.
+
+## Bounded billing facts
+
+`GET /api/usage` keeps exact-cost fields unchanged and adds
+`billing_complete`, `bounded_cost_calls`, `unresolved_cost_calls`, and
+`conservative_total_usd` for the current session and its runs. A bounded charge
+still has unknown actual cost; `complete` remains false and `total_cost_usd`
+remains null. Public evaluation rows add the explicitly certified
+`cost_upper_usd` and `cost_basis`; fixture exclusion and all public path
+redaction remain unchanged.
+
+Read-only local budget status distinguishes settled certified/reviewed bounded
+attempts from pending or unresolved charges. Reviewed retained attempts still
+occupy their original complete reservation, and actual totals remain unknown.
+Only covered billing can cease to block dispatch; pending/unknown unreviewed,
+invalid bounds and accounting failures retain their blocking state. These local
+figures are not the provider account balance.

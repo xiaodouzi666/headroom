@@ -1,0 +1,112 @@
+{
+  "task": "T0.4",
+  "accepted": true,
+  "accepted_at_utc": "2026-10-24T21:21:50.545511+00:00",
+  "interpretation": "Required matrix, prescribed long staircase including error outcomes, concurrency, reviewed config and genuine feedback completed; not every capability/sample succeeded.",
+  "executed_unique_samples": 60,
+  "fresh_samples": 55,
+  "historical_samples_reused": 5,
+  "largest_successful_server_prompt_tokens": 500029,
+  "exact_provider_maximum_known": false,
+  "evidence_token_budget": 150000,
+  "json_method": "json_schema",
+  "reasoning_method": "chat_template_kwargs",
+  "token_budget_method": null,
+  "super_json_and_tools": true,
+  "nano_tools": false,
+  "long_input_staircase": [
+    {
+      "requested_size": 64000,
+      "local_cl100k_count": 51211,
+      "provider_prompt_tokens": 64031,
+      "status": "ok",
+      "detail": "needle_exact",
+      "ttft_ms": 5487.630470888689,
+      "elapsed_ms": 5612.5025630462915,
+      "actual_cost_usd": "0.064493",
+      "charged_or_retained_usd": "0.064493",
+      "source": "reports/live-campaign-20261025/ultra-long-64000/report.json",
+      "sha256": "df7ab0aec785b8d870e514ffe113097a4a059897b4dd2fb4eb4f0e017794f4d1"
+    },
+    {
+      "requested_size": 200000,
+      "local_cl100k_count": 160011,
+      "provider_prompt_tokens": 200031,
+      "status": "ok",
+      "detail": "needle_exact",
+      "ttft_ms": 7064.964083954692,
+      "elapsed_ms": 7411.894662072882,
+      "actual_cost_usd": "0.200514",
+      "charged_or_retained_usd": "0.200514",
+      "source": "reports/live-campaign-20261025/ultra-long-200000/report.json",
+      "sha256": "3ee36e9ab3f0089cdfc5d52d9724cddb225317abe158917296d27e2f44c1178e"
+    },
+    {
+      "requested_size": 500000,
+      "local_cl100k_count": 400011,
+      "provider_prompt_tokens": 500029,
+      "status": "ok",
+      "detail": "needle_exact",
+      "ttft_ms": 16365.88044394739,
+      "elapsed_ms": 17979.662153869867,
+      "actual_cost_usd": "0.500512",
+      "charged_or_retained_usd": "0.500512",
+      "source": "reports/live-campaign-20261025/ultra-long-500000/report.json",
+      "sha256": "f9f786140b4ca183a80589e7eea6c4023103e7db07e569f4538b222399aa1d3c"
+    },
+    {
+      "requested_size": 900000,
+      "local_cl100k_count": 720011,
+      "provider_prompt_tokens": null,
+      "status": "fail",
+      "detail": "http_429",
+      "ttft_ms": null,
+      "elapsed_ms": 7796.63899098523,
+      "actual_cost_usd": null,
+      "charged_or_retained_usd": "1.049344",
+      "source": "reports/live-campaign-20261025/ultra-long-900000/report.json",
+      "sha256": "651753b08393a4febc0ad3cba38a1fe4a8459a1bf3bc4d90845c224b80e8f041"
+    }
+  ],
+  "four_way_super_passed": true,
+  "new_feedback_entries": [
+    "TF-009",
+    "TF-010",
+    "TF-011",
+    "TF-012",
+    "TF-013",
+    "TF-014",
+    "TF-015",
+    "TF-016"
+  ],
+  "known_usage_cost_usd": "0.77289846",
+  "unknown_actual_cost_count": 1,
+  "permanently_retained_unknown_upper_usd": "1.049344",
+  "total_known_or_retained_usd": "1.82224246",
+  "cost_is_invoice": false,
+  "original_gates_unchanged": true,
+  "runtime_profile_enabled": false,
+  "source_sha256": {
+    "docs/PLAN.md": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+    "headroom/config.py": "32e448f6480e10373c4310e9677c84977c9fb0b26035d9840708dcd60a68fea7",
+    "scripts/probe_models.py": "ca4eafdb316e5b43cdb8cbb66f040d366c6bca44d03d01503bb7b5d7dcf5c03b",
+    "tests/test_model_probe.py": "5b4037b0a224eeb6a9ecd247d1565e67a8de9e4fc26b85d06cef09eebb3d5997",
+    "docs/MODELS.md": "b7fcffa89103b38e96efccf10488a3d655917a48fb9a0f14e28a1f6f12550c9e",
+    "docs/FEEDBACK.md": "5d259ddec3cc17e174f86784652199f43eb52a13eb5aba6107987d937a695e2a",
+    "reports/live-campaign-20261025/capability-review.json": "0d3ea7dc484cb8efe86181e2a6dc8ed5363b618d465bd54971e9da5d932a2f3e",
+    "reports/live-campaign-20261025/allocation.json": "d3acd0f6e31f9b410740ce83ab0fb66ca806f43396d556d1010cacf56742c6d9",
+    "reports/live-campaign-20261025/retained-429-review.json": "c02138911262f6458799a9b026689382af057f1b8e692727c5152c57e9fa9892",
+    "reports/live-campaign-20261025/claims/ultra-long-900000-continuation-review.json": "b1937a1ddbfa6b9bf05b2a559122f20ef27d9b1082e9250c47137a91f16e1cd7"
+  },
+  "limitations": [
+    "500029 is an observed lower bound, not an exact maximum;900k hit rate limiting and was not retried.",
+    "Nano tool generation failed and is disabled.",
+    "Thinking-budget parameters remain disabled; unverified methods are failed adoption, not advertised support.",
+    "JSON fixtures do not certify real Diagnosis/Patch schema reliability.",
+    "Actual900k charge remains unknown and full bound is retained; runtime unknown-charge protections are unchanged."
+  ],
+  "source_snapshot_paths": {
+    "docs/FEEDBACK.md": "reports/live-campaign-20261025/t0.4-source-snapshots/5d259ddec3cc17e174f86784652199f43eb52a13eb5aba6107987d937a695e2a.md",
+    "reports/live-campaign-20261025/allocation.json": "reports/live-campaign-20261025/t0.4-source-snapshots/d3acd0f6e31f9b410740ce83ab0fb66ca806f43396d556d1010cacf56742c6d9.json"
+  }
+}

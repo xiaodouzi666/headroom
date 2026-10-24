@@ -1,0 +1,78 @@
+...................F.................................................... [ 75%]
+........................                                                 [100%]
+=================================== FAILURES ===================================
+__ test_real_runtime_mock_pipeline_retains_target_with_certified_unknown_cost __
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-139/test_real_runtime_mock_pipelin0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a4ee87ad700>
+
+    def test_real_runtime_mock_pipeline_retains_target_with_certified_unknown_cost(
+        tmp_path, monkeypatch
+    ):
+        import test_orchestrator as fixtures
+        from test_actual_usage_budget import reviewed_fixture
+    
+        from headroom import orchestrator
+        from headroom.runtime import LiveProfile, build_live_runtime
+    
+        data = reviewed_fixture(tmp_path).model_dump()
+        for model in data["models"].values():
+            model["cached_input_usd_per_million"] = "0.01"
+        profile = LiveProfile.model_validate(data)
+        monkeypatch.setattr(orchestrator, "PROJECT_ROOT", tmp_path)
+        monkeypatch.setattr(orchestrator, "read_live_profile", lambda *a: profile)
+        original_services, factory, calls = fixtures.Services, {}, []
+    
+        def services(**kwargs):
+            factory["make"] = kwargs.pop("runtime_factory")
+            return original_services(**kwargs)
+    
+        monkeypatch.setattr(fixtures, "Services", services)
+    
+        def runtime(run_id, **kwargs):
+            fixture = factory["make"](
+                run_id, kwargs["store"], Path(kwargs["store"].get_run(run_id)["run_dir"])
+            )
+    
+            def respond(request):
+                calls.append(request)
+                payload = fixture.client._transport.handle_request(request).json()
+                payload["usage"].pop("prompt_tokens_details", None)
+                return httpx.Response(200, json=payload)
+    
+            return build_live_runtime(
+                run_id,
+                **kwargs,
+                env_file=tmp_path / ".env",
+                transport=httpx.MockTransport(respond),
+            )
+    
+        monkeypatch.setattr(orchestrator, "build_live_runtime", runtime)
+        result, store, _, verifies, _ = fixtures.search_run(
+            tmp_path,
+            [{"before": "VALUE = 1\n", "after": "VALUE = 2\n", "peak": 20, "target": True}],
+            search_mode="until_target",
+        )
+        try:
+            assert len(calls) == 2 and len(verifies) == 1
+            assert result["target_met"] is True and result["status"] == "completed"
+            assert result["budget"]["billing_complete"]
+            assert result["budget"]["total_actual_usd"] is None
+            assert result["report"]["summary"]["target_met"] is True
+            usage = store.usage(result["run_id"])
+            assert usage["bounded_cost_calls"] == 2 and usage["total_cost_usd"] is None
+            assert Decimal(usage["conservative_total_usd"]) == Decimal(
+                result["budget"]["conservative_total_usd"]
+            )
+            from test_evaluation import manifest
+    
+            case_root = tmp_path / "manifest"
+            case_root.mkdir()
+>           case = load_manifest(manifest(case_root), project_root=case_root)[0]
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: 'Manifest' object is not subscriptable
+
+tests/test_bounded_billing_reporting.py:314: TypeError
+=========================== short test summary info ============================
+FAILED tests/test_bounded_billing_reporting.py::test_real_runtime_mock_pipeline_retains_target_with_certified_unknown_cost
+1 failed, 95 passed in 3.35s

@@ -1,0 +1,59 @@
+{
+  "created_at": "2026-10-24T21:10:24.406774+00:00",
+  "base_commit": "7d54abe37defcec1755add13b1c1f27da3781bb7",
+  "status": "complete_frozen",
+  "files": {
+    "headroom/budget.py": "0f95f317359b013f7c8e79899d98c957a4dd1a88dfb5d9a2798415dc46b74018",
+    "headroom/runtime.py": "3e0a9b9b144111b29f0a83b3c87078e1d954a76a001be622f3382b8bd4719cf0",
+    "headroom/orchestrator.py": "bb76c26ec6eec5371f40a3c708d09e9f5d6bd3af35847184bde14dbdc9eca620",
+    "headroom/acceptance/common.py": "a66a6eb47a497cdc1e4bd27b1d2e90ad01e6c03e9baa27a8762bb883520c3c0d",
+    "headroom/report.py": "1fa703f0773de004c8ead5d21c2627298c0572888c72d0beee131da784082c3a",
+    "tests/test_actual_usage_budget.py": "1bb1c5d128c2bbc1015a02bf0405901f804f4dec345ec5c1037030129a9861c4",
+    "docs/RUNTIME.md": "db19617767c50ad212e84094e6ef1a20eb8fc36997485547053ade46a49dca91",
+    "docs/CLI.md": "7f241af2d817e768c24025d6c2822eaa2b839fd9c074e63232461b9963816b52"
+  },
+  "plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "validation": {
+    "exit_code": 0,
+    "tests": [
+      "tests/test_actual_usage_budget.py",
+      "tests/test_budget.py",
+      "tests/test_budget_initialization.py",
+      "tests/test_runtime_budget.py",
+      "tests/test_admission.py",
+      "tests/test_orchestrator.py",
+      "tests/test_report.py",
+      "tests/test_client_acceptance.py",
+      "tests/test_diagnosis_acceptance.py",
+      "tests/test_cli.py"
+    ],
+    "external_access_attempts": [],
+    "elapsed_seconds": 47.36200367612764,
+    "live_api_calls": 0,
+    "gpu_tasks": 0
+  },
+  "tests_summary": "293 passed in 47.06s",
+  "lint": "scoped Ruff check and format --check passed; git diff --check passed",
+  "initial_regressions": [
+    {
+      "path": "focused.log",
+      "result": "4 report legacy-text assertions failed; 259 passed"
+    },
+    {
+      "path": "focused-final.log",
+      "result": "263 passed; legacy report wording preserved outside actual_usage"
+    }
+  ],
+  "runtime_profile_created": false,
+  "real_env_read": false,
+  "real_provider_requests": 0,
+  "gpu_tasks": 0,
+  "mode": "explicit profile run_budget_mode=actual_usage; default strict_reservation unchanged",
+  "limits": [
+    "Run actual stop limit is not a per-request hard cost ceiling; overrun is failed cost acceptance.",
+    "Global/day pools reserve full verified provider bounds before each dispatch.",
+    "After actual_usage is enabled once, the shared ledger disallows future local_estimate attempts across profiles.",
+    "Unknown charges keep reservations and globally block further dispatch after close/restart.",
+    "Token-charge pool still needs operator tax/fee and external-spending allowance."
+  ]
+}

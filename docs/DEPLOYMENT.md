@@ -6,6 +6,27 @@ No public tunnel, hostname, service installation, persistent timer, or notificat
 
 The API admits at most three total preparing/running/queued jobs and two new runs per client IP per hour. Session cookies separate private uploads. Repository preparation happens after admission checks. Uploaded code still runs only in the read-only, no-network Lab.
 
+## Explicit reviewed runtime profile
+
+The module entrypoint and service template accept an optional environment
+override, `HEADROOM_RUNTIME_PROFILE`. A reviewed user-service drop-in can contain:
+
+```ini
+[Service]
+Environment=HEADROOM_RUNTIME_PROFILE=/home/xiaodouzi/workspace/headroom/.cache/tokenfactory-runtime.json
+```
+
+This is a profile path, not an API key. Do not use `EnvironmentFile=.env` to wire
+this option. Profile validation and all existing credential, credit and budget
+guards remain in force. Leave the variable unset to retain the existing default
+reviewed-profile lookup; no profile is created or enabled by service startup.
+For CLI previews, `headroom serve --runtime-profile PATH` overrides this variable.
+Use the currently reviewed `HEADROOM_RUN_BUDGET_USD` /
+`HEADROOM_DAILY_BUDGET_USD` deployment limits; a profile path does not change
+the allocation. Both launchers stay on loopback with `proxy_headers=False`.
+No service installation, preview restart, public bind or model call was performed
+while adding this startup routing.
+
 ## Public tunnel prerequisites
 
 The owner must supply an approved hostname, an existing Cloudflare tunnel and its private credentials. Keep origin listening on 127.0.0.1:8000. Fill the Cloudflared template and set `HEADROOM_PUBLIC_HOST` to that exact bare hostname plus `HEADROOM_TRUST_CLOUDFLARED=true` on the API service. This enables Secure cookies and uses validated `CF-Connecting-IP` only from loopback requests. The trust assumption is that Cloudflared overwrites this header and is the only public path to the origin. Direct Internet binding or arbitrary reverse proxies do not satisfy it.

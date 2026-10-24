@@ -1,0 +1,287 @@
+I001 [*] Import block is un-sorted or un-formatted
+ --> reports/bounded-billing-20261025/run_guarded.py:2:1
+  |
+1 |   """Private test runner: no real account keys or INET sockets, including spawn children."""
+2 | / import builtins
+3 | | import io
+4 | | import os
+5 | | import socket
+6 | | from pathlib import Path
+  | |________________________^
+7 |   PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+8 |   _real_open, _io_open = builtins.open, io.open
+  |
+help: Organize imports
+  |
+6 | from pathlib import Path
+7 +
+8 | PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+  |
+
+SIM102 Use a single `if` statement instead of nested `if` statements
+  --> reports/bounded-billing-20261025/run_guarded.py:11:9
+   |
+ 9 |   def safe_open(original):
+10 |       def guarded(file, *args, **kwargs):
+11 | /         if isinstance(file, (str, bytes, os.PathLike)):
+12 | |             if Path(os.fsdecode(file)).resolve() == PROJECT / ".env":
+   | |_____________________________________________________________________^
+13 |                   raise PermissionError("Offline suite cannot read real project credentials")
+14 |           return original(file, *args, **kwargs)
+   |
+help: Combine `if` statements using `and`
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> reports/bounded-billing-20261025/run_guarded.py:32:1
+   |
+30 |   socket.socket.connect_ex = connect_ex
+31 |
+32 | / import sys
+33 | | from urllib.parse import urlparse, unquote
+   | |__________________________________________^
+34 |   def no_production_sqlite(event, args):
+35 |       if event == "sqlite3.connect":
+   |
+help: Organize imports
+   |
+32 | import sys
+   - from urllib.parse import urlparse, unquote
+33 + from urllib.parse import unquote, urlparse
+34 +
+35 +
+36 | def no_production_sqlite(event, args):
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> reports/diagnosis-schema-20261025/run_cpu_chain_guarded.py:2:1
+  |
+1 |   """Private test runner: no real account keys or INET sockets, including spawn children."""
+2 | / import builtins
+3 | | import io
+4 | | import os
+5 | | import socket
+6 | | from pathlib import Path
+  | |________________________^
+7 |   PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+8 |   _real_open, _io_open = builtins.open, io.open
+  |
+help: Organize imports
+  |
+6 | from pathlib import Path
+7 +
+8 | PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+  |
+
+SIM102 Use a single `if` statement instead of nested `if` statements
+  --> reports/diagnosis-schema-20261025/run_cpu_chain_guarded.py:11:9
+   |
+ 9 |   def safe_open(original):
+10 |       def guarded(file, *args, **kwargs):
+11 | /         if isinstance(file, (str, bytes, os.PathLike)):
+12 | |             if Path(os.fsdecode(file)).resolve() == PROJECT / ".env":
+   | |_____________________________________________________________________^
+13 |                   raise PermissionError("Offline suite cannot read real project credentials")
+14 |           return original(file, *args, **kwargs)
+   |
+help: Combine `if` statements using `and`
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> reports/diagnosis-schema-20261025/run_evaluation_guarded.py:2:1
+  |
+1 |   """Private test runner: no real account keys or INET sockets, including spawn children."""
+2 | / import builtins
+3 | | import io
+4 | | import os
+5 | | import socket
+6 | | from pathlib import Path
+  | |________________________^
+7 |   PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+8 |   _real_open, _io_open = builtins.open, io.open
+  |
+help: Organize imports
+  |
+6 | from pathlib import Path
+7 +
+8 | PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+  |
+
+SIM102 Use a single `if` statement instead of nested `if` statements
+  --> reports/diagnosis-schema-20261025/run_evaluation_guarded.py:11:9
+   |
+ 9 |   def safe_open(original):
+10 |       def guarded(file, *args, **kwargs):
+11 | /         if isinstance(file, (str, bytes, os.PathLike)):
+12 | |             if Path(os.fsdecode(file)).resolve() == PROJECT / ".env":
+   | |_____________________________________________________________________^
+13 |                   raise PermissionError("Offline suite cannot read real project credentials")
+14 |           return original(file, *args, **kwargs)
+   |
+help: Combine `if` statements using `and`
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> reports/diagnosis-schema-20261025/run_guarded.py:2:1
+  |
+1 |   """Private test runner: no real account keys or INET sockets, including spawn children."""
+2 | / import builtins
+3 | | import io
+4 | | import os
+5 | | import socket
+6 | | from pathlib import Path
+  | |________________________^
+7 |   PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+8 |   _real_open, _io_open = builtins.open, io.open
+  |
+help: Organize imports
+  |
+6 | from pathlib import Path
+7 +
+8 | PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+  |
+
+SIM102 Use a single `if` statement instead of nested `if` statements
+  --> reports/diagnosis-schema-20261025/run_guarded.py:11:9
+   |
+ 9 |   def safe_open(original):
+10 |       def guarded(file, *args, **kwargs):
+11 | /         if isinstance(file, (str, bytes, os.PathLike)):
+12 | |             if Path(os.fsdecode(file)).resolve() == PROJECT / ".env":
+   | |_____________________________________________________________________^
+13 |                   raise PermissionError("Offline suite cannot read real project credentials")
+14 |           return original(file, *args, **kwargs)
+   |
+help: Combine `if` statements using `and`
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> reports/diagnosis-schema-20261025/run_integration_guarded.py:2:1
+  |
+1 |   """Private test runner: no real account keys or INET sockets, including spawn children."""
+2 | / import builtins
+3 | | import io
+4 | | import os
+5 | | import socket
+6 | | from pathlib import Path
+  | |________________________^
+7 |   PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+8 |   _real_open, _io_open = builtins.open, io.open
+  |
+help: Organize imports
+  |
+6 | from pathlib import Path
+7 +
+8 | PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+  |
+
+SIM102 Use a single `if` statement instead of nested `if` statements
+  --> reports/diagnosis-schema-20261025/run_integration_guarded.py:11:9
+   |
+ 9 |   def safe_open(original):
+10 |       def guarded(file, *args, **kwargs):
+11 | /         if isinstance(file, (str, bytes, os.PathLike)):
+12 | |             if Path(os.fsdecode(file)).resolve() == PROJECT / ".env":
+   | |_____________________________________________________________________^
+13 |                   raise PermissionError("Offline suite cannot read real project credentials")
+14 |           return original(file, *args, **kwargs)
+   |
+help: Combine `if` statements using `and`
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> reports/model-shrink-width-20261025/run_guarded.py:2:1
+  |
+1 |   """Private test runner: no real account keys or INET sockets, including spawn children."""
+2 | / import builtins
+3 | | import io
+4 | | import os
+5 | | import socket
+6 | | from pathlib import Path
+  | |________________________^
+7 |   PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+8 |   _real_open, _io_open = builtins.open, io.open
+  |
+help: Organize imports
+  |
+6 | from pathlib import Path
+7 +
+8 | PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+  |
+
+SIM102 Use a single `if` statement instead of nested `if` statements
+  --> reports/model-shrink-width-20261025/run_guarded.py:11:9
+   |
+ 9 |   def safe_open(original):
+10 |       def guarded(file, *args, **kwargs):
+11 | /         if isinstance(file, (str, bytes, os.PathLike)):
+12 | |             if Path(os.fsdecode(file)).resolve() == PROJECT / ".env":
+   | |_____________________________________________________________________^
+13 |                   raise PermissionError("Offline suite cannot read real project credentials")
+14 |           return original(file, *args, **kwargs)
+   |
+help: Combine `if` statements using `and`
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> reports/serve-runtime-profile-20261025/run_guarded.py:2:1
+  |
+1 |   """Private test runner: no real account keys or INET sockets, including spawn children."""
+2 | / import builtins
+3 | | import io
+4 | | import os
+5 | | import socket
+6 | | from pathlib import Path
+  | |________________________^
+7 |   PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+8 |   _real_open, _io_open = builtins.open, io.open
+  |
+help: Organize imports
+  |
+6 | from pathlib import Path
+7 +
+8 | PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+  |
+
+SIM102 Use a single `if` statement instead of nested `if` statements
+  --> reports/serve-runtime-profile-20261025/run_guarded.py:11:9
+   |
+ 9 |   def safe_open(original):
+10 |       def guarded(file, *args, **kwargs):
+11 | /         if isinstance(file, (str, bytes, os.PathLike)):
+12 | |             if Path(os.fsdecode(file)).resolve() == PROJECT / ".env":
+   | |_____________________________________________________________________^
+13 |                   raise PermissionError("Offline suite cannot read real project credentials")
+14 |           return original(file, *args, **kwargs)
+   |
+help: Combine `if` statements using `and`
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> reports/serve-runtime-profile-20261025/run_incremental_guarded.py:2:1
+  |
+1 |   """Private test runner: no real account keys or INET sockets, including spawn children."""
+2 | / import builtins
+3 | | import io
+4 | | import os
+5 | | import socket
+6 | | from pathlib import Path
+  | |________________________^
+7 |   PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+8 |   _real_open, _io_open = builtins.open, io.open
+  |
+help: Organize imports
+  |
+6 | from pathlib import Path
+7 +
+8 | PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+  |
+
+SIM102 Use a single `if` statement instead of nested `if` statements
+  --> reports/serve-runtime-profile-20261025/run_incremental_guarded.py:11:9
+   |
+ 9 |   def safe_open(original):
+10 |       def guarded(file, *args, **kwargs):
+11 | /         if isinstance(file, (str, bytes, os.PathLike)):
+12 | |             if Path(os.fsdecode(file)).resolve() == PROJECT / ".env":
+   | |_____________________________________________________________________^
+13 |                   raise PermissionError("Offline suite cannot read real project credentials")
+14 |           return original(file, *args, **kwargs)
+   |
+help: Combine `if` statements using `and`
+
+Found 17 errors.
+[*] 9 fixable with `--fix`.

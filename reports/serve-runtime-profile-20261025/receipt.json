@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "completed_at_utc": "2026-10-24T21:53:37.207477+00:00",
+  "scope": "Explicit CLI/module/systemd runtime-profile path routing; existing reviewed default fallback preserved",
+  "source_frozen": true,
+  "files_sha256": {
+    "headroom/cli.py": "64c5b2dc5abc1311e967182dd38f3c6388ab98474c6be8444f2487f9aa6e9eeb",
+    "headroom/api/app.py": "5bc31b8bb065412f99f5df461d35d8feaf5118381d0a8f9c431ca1d808fa0803",
+    "tests/test_cli.py": "fa6f1e8aeab85386d28daa1d3bab5d477bea3676a6d2fda2957f7b01017d4cdd",
+    "tests/test_serve_profile.py": "a74f2e8677221d89d5d45dc9a3f263c602ba8506c17d6a52bf96b55ee5dd9706",
+    "docs/API.md": "ff08fbc91b3b1d1da222317baf1faf8aaaa4970ddf75b44391fd70c88f5270dc",
+    "docs/DEPLOYMENT.md": "fba76175e15f0124807b68a1ac0c58ffc54a9df608f37f389c0e43e911180072",
+    "deploy/headroom-api.service": "6e78c46022ed02d4960d1f21d3df12742dd2885f3ed13b5ec2c056daf2c10bcf"
+  },
+  "git_head": "7d54abe37defcec1755add13b1c1f27da3781bb7",
+  "plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "behavior": {
+    "cli_option": "headroom serve --runtime-profile PATH",
+    "environment_option": "HEADROOM_RUNTIME_PROFILE",
+    "precedence": [
+      "explicit ApiSettings/CLI profile",
+      "HEADROOM_RUNTIME_PROFILE",
+      "existing reviewed default lookup"
+    ],
+    "existing_default_fallback_preserved": true,
+    "profile_activation_or_rewrite": false,
+    "runtime_configured_override": false,
+    "proxy_headers": false,
+    "loopback_binding_policy_unchanged": true,
+    "keys_read_by_startup_wiring": false
+  },
+  "validation": {
+    "targeted_suite": {
+      "passed": 117,
+      "seconds": 17.27,
+      "files": [
+        "tests/test_serve_profile.py",
+        "tests/test_cli.py",
+        "tests/test_api.py",
+        "tests/test_availability.py"
+      ],
+      "log": "reports/serve-runtime-profile-20261025/pytest.log"
+    },
+    "incremental_worker_request_wiring": {
+      "passed": 2,
+      "log": "reports/serve-runtime-profile-20261025/pytest-incremental.log"
+    },
+    "ruff": {
+      "exit_code": 0,
+      "log": "reports/serve-runtime-profile-20261025/ruff.log"
+    },
+    "format": {
+      "exit_code": 0,
+      "log": "reports/serve-runtime-profile-20261025/format.log"
+    },
+    "diff": {
+      "exit_code": 0,
+      "log": "reports/serve-runtime-profile-20261025/diff.log"
+    }
+  },
+  "guard": {
+    "source": ".cache/setup/run_full_guarded_v2.py",
+    "derived_scoped_driver": "reports/serve-runtime-profile-20261025/run_guarded.py",
+    "driver_sha256": "fc1330ba0e52d29cdd08f73f32210c7d52685c964edcf6555cfc46965540e900",
+    "real_project_env_reads_denied": true,
+    "dns_and_inet_connections_denied": true,
+    "guards_apply_to_spawn_children": true,
+    "new_startup_tests_block_subprocess_and_all_env_paths": true
+  },
+  "actions_not_performed": [
+    "model/provider requests",
+    "GPU workload",
+    "current preview restart or process signal",
+    "systemd installation or restart",
+    "public bind/tunnel creation",
+    "credential or profile modification",
+    "commit or push"
+  ],
+  "remaining_acceptance": "Root will restart the already identified project preview with an explicit reviewed profile and current daily budget, then verify actual health/UI. Old process configured=false is not a failure of the current default-profile loader."
+}

@@ -1,0 +1,119 @@
+{
+  "status": "passed",
+  "frozen_at": "2026-10-24T22:21:10.943550+00:00",
+  "scope": "Verified missing-cache token upper bounds and explicitly reviewed historical full reservation retention",
+  "source_sha256": {
+    "headroom/llm/cost.py": "b8199ad73c930f68689aea4b24bd3848ff69f62925ee624ea67b0acfd47c72c7",
+    "headroom/budget.py": "55df4929cc5e1798e16b90e4fae0b0bb82cb231224fc2e17092c4c0d39bc306d",
+    "headroom/runtime.py": "cc8c933c987560b43ef776cdecb88953a85a8e23c4c1a6bd087674dd2fe8de63",
+    "headroom/billing_review.py": "a8b03826dcd5fc349e1414875555092e528dca2506d3b05f1c6dcd267b24acb8",
+    "tests/test_bounded_billing.py": "e73444c5314fb8b06e7d6be8187b7fabfbc6f69f7e3247390e58cbf82dde86cb"
+  },
+  "checks": [
+    {
+      "argv": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/llm/cost.py",
+        "headroom/budget.py",
+        "headroom/runtime.py",
+        "headroom/billing_review.py",
+        "tests/test_bounded_billing.py"
+      ],
+      "exit_code": 0,
+      "output": "All checks passed!\n"
+    },
+    {
+      "argv": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/llm/cost.py",
+        "headroom/budget.py",
+        "headroom/runtime.py",
+        "headroom/billing_review.py",
+        "tests/test_bounded_billing.py"
+      ],
+      "exit_code": 0,
+      "output": "5 files already formatted\n"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output": ""
+    }
+  ],
+  "artifacts": {
+    "reports/bounded-billing-20261025/pytest-second.log": "4f5a41f0d3fa1ef501f5c4dde584fa67d05dbe5fc18d137b6715ccdda9b81e31",
+    "reports/bounded-billing-20261025/run_guarded.py": "4e37dc83ce2796453fa8b23cc95a65599d2fc75ead651338ca97a22b346faf4f",
+    "reports/bounded-billing-20261025/pytest-fourth.log": "22af9602c5b327b1c4da0639a976f7d5e32ef7e27d35d558d7ce266b83e7b644",
+    "reports/bounded-billing-20261025/pytest-final.log": "4a6640b52fda6a079d75b4e327f8649aadc43208aa273640a456ebc819ee06a1",
+    "reports/bounded-billing-20261025/pytest-third.log": "5ea3a0cb074c05c16e93352ba53bfb2857c536ee010437c50cc5a0235b17aea8",
+    "reports/bounded-billing-20261025/pytest-first.log": "5ab17a8d93cdda1400ff28e2bc019a54ba9efdf3c213af5044451f3b01e9f0db"
+  },
+  "final_tests": {
+    "summary": "130 passed in 7.20s",
+    "driver": "reports/bounded-billing-20261025/run_guarded.py",
+    "tests": [
+      "test_bounded_billing",
+      "test_budget",
+      "test_runtime_budget",
+      "test_llm_cost",
+      "test_actual_usage_budget"
+    ]
+  },
+  "initial_failure_preserved": {
+    "log": "pytest-first.log",
+    "passed": 122,
+    "failed": 1,
+    "reason": "Pending full-context reservation initially reduced actual-mode remaining; corrected to count settled known+verified bounds while pending remains dispatch-blocking."
+  },
+  "intermediate_runs": {
+    "pytest-second.log": "123 passed",
+    "pytest-third.log": "126 passed",
+    "pytest-fourth.log": "128 passed"
+  },
+  "contracts": {
+    "actual_unknown_preserved": true,
+    "unknown_not_zero": true,
+    "cost_status": "upper_bound",
+    "cost_actual_usd": null,
+    "cost_basis": "verified_tariff_missing_cache_count",
+    "runtime_billing_tag_only_after_commit": true,
+    "exact_usage_with_invalid_bound_is_unresolved": true,
+    "new_call_budget_attempt_id_persisted": true,
+    "historical_review_keeps_original_full_upper": true,
+    "historical_review_requires_explicit_receipt_sha_and_reviewer": true,
+    "historical_review_one_call_attempt_mapping_only": true,
+    "other_unknown_pending_identity_cap_issues_still_block": true,
+    "global_and_daily_pools_continue_conservative_counting": true,
+    "actual_usage_stop_counts_verified_bounds_without_claiming_actual": true
+  },
+  "not_changed": [
+    "real runtime profile",
+    "actual budget ledger",
+    "historical MVPv1 failure",
+    "historical v5 result",
+    "PLAN thresholds",
+    "provider retries"
+  ],
+  "no_real_operations": {
+    "api_requests": 0,
+    "gpu_runs": 0,
+    "key_reads": 0,
+    "production_ledger_migrations": 0,
+    "review_executions": 0
+  },
+  "isolation": "Guard denies real credentials, DNS/INET, and connections to production budget/Store DBs; only tmp fixture DBs and MockTransport.",
+  "client_note": "Existing client identity check already replaces any mismatched model cost with unknown; no client.py edit was necessary.",
+  "pending_parent_steps": [
+    "independent code review",
+    "combined integration tests",
+    "explicit preparation/review/execution of current Nano retention by root only",
+    "live continuation only after verified ledger/preflight"
+  ]
+}

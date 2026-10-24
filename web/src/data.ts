@@ -29,6 +29,17 @@ export const gb = (value: unknown) =>
     : `${(Number(value) / 1e9).toFixed(2)} GB`;
 export const usd = (value: unknown) =>
   decimal(value) === null ? "Unknown" : `$${decimal(value)!.toFixed(4)}`;
+// Preserve the exact decimal for an upper bound: rounding down would weaken it.
+export function usdUpper(value: unknown): string {
+  const amount = decimal(value);
+  return amount === null || amount < 0 ? "Unknown" : "$" + String(value);
+}
+export function costUpperBound(usage: unknown): string {
+  const u = record(usage);
+  return u.billing_complete === true
+    ? usdUpper(u.conservative_total_usd)
+    : "Unknown";
+}
 export function costTotal(usage: unknown): string {
   const u = record(usage);
   if (u.complete === false || (numeric(u.unknown_cost_calls) ?? 0) > 0)

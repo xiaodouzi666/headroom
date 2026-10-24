@@ -1,0 +1,572 @@
+unformatted: File would be reformatted
+  --> reports/bounded-billing-20261025/run_guarded.py:2:1
+   |
+1  | """Private test runner: no real account keys or INET sockets, including spawn children."""
+2  +
+3  | import builtins
+--------------------------------------------------------------------------------
+7  | from pathlib import Path
+8  +
+9  | PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+10 | _real_open, _io_open = builtins.open, io.open
+11 +
+12 +
+13 | def safe_open(original):
+--------------------------------------------------------------------------------
+18 |         return original(file, *args, **kwargs)
+19 +
+20 |     return guarded
+21 +
+22 +
+23 | builtins.open, io.open = safe_open(_real_open), safe_open(_io_open)
+24 | os.open = safe_open(os.open)
+25 | for key in ("NEBIUS_API_KEY", "TAVILY_API_KEY"):
+26 |     os.environ.pop(key, None)
+27 +
+28 +
+29 | def denied(*args, **kwargs):
+30 |     raise AssertionError("Independent offline guard denied real DNS/INET connection")
+31 +
+32 +
+33 | _real_connect, _real_connect_ex = socket.socket.connect, socket.socket.connect_ex
+34 +
+35 +
+36 | def connect(self, address):
+   -     return denied() if self.family in (socket.AF_INET, socket.AF_INET6) else _real_connect(self, address)
+37 +     return (
+38 +         denied()
+39 +         if self.family in (socket.AF_INET, socket.AF_INET6)
+40 +         else _real_connect(self, address)
+41 +     )
+42 +
+43 +
+44 | def connect_ex(self, address):
+   -     return denied() if self.family in (socket.AF_INET, socket.AF_INET6) else _real_connect_ex(self, address)
+45 +     return (
+46 +         denied()
+47 +         if self.family in (socket.AF_INET, socket.AF_INET6)
+48 +         else _real_connect_ex(self, address)
+49 +     )
+50 +
+51 +
+52 | socket.getaddrinfo = denied
+--------------------------------------------------------------------------------
+58 | from urllib.parse import urlparse, unquote
+59 +
+60 +
+61 | def no_production_sqlite(event, args):
+--------------------------------------------------------------------------------
+66 |         if value != ":memory:" and Path(value).resolve() in {
+   -             PROJECT / ".cache/budget.db", PROJECT / "runs/headroom.db",
+67 +             PROJECT / ".cache/budget.db",
+68 +             PROJECT / "runs/headroom.db",
+69 |             PROJECT / "runs/acceptance/headroom.db",
+70 |         }:
+71 |             raise PermissionError("Offline bounded suite cannot access production databases")
+72 +
+73 +
+74 | sys.addaudithook(no_production_sqlite)
+75 |
+76 | if __name__ == "__main__":
+77 |     import pytest
+   -     raise SystemExit(pytest.main(["-q", "tests/test_bounded_billing.py", "tests/test_budget.py", "tests/test_runtime_budget.py", "tests/test_llm_cost.py", "tests/test_actual_usage_budget.py"]))
+78 +
+79 +     raise SystemExit(
+80 +         pytest.main(
+81 +             [
+82 +                 "-q",
+83 +                 "tests/test_bounded_billing.py",
+84 +                 "tests/test_budget.py",
+85 +                 "tests/test_runtime_budget.py",
+86 +                 "tests/test_llm_cost.py",
+87 +                 "tests/test_actual_usage_budget.py",
+88 +             ]
+89 +         )
+90 +     )
+   |
+
+unformatted: File would be reformatted
+  --> reports/diagnosis-schema-20261025/run_cpu_chain_guarded.py:2:1
+   |
+1  | """Private test runner: no real account keys or INET sockets, including spawn children."""
+2  +
+3  | import builtins
+--------------------------------------------------------------------------------
+7  | from pathlib import Path
+8  +
+9  | PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+10 | _real_open, _io_open = builtins.open, io.open
+11 +
+12 +
+13 | def safe_open(original):
+--------------------------------------------------------------------------------
+18 |         return original(file, *args, **kwargs)
+19 +
+20 |     return guarded
+21 +
+22 +
+23 | builtins.open, io.open = safe_open(_real_open), safe_open(_io_open)
+24 | os.open = safe_open(os.open)
+25 | for key in ("NEBIUS_API_KEY", "TAVILY_API_KEY"):
+26 |     os.environ.pop(key, None)
+27 +
+28 +
+29 | def denied(*args, **kwargs):
+30 |     raise AssertionError("Independent offline guard denied real DNS/INET connection")
+31 +
+32 +
+33 | _real_connect, _real_connect_ex = socket.socket.connect, socket.socket.connect_ex
+34 +
+35 +
+36 | def connect(self, address):
+   -     return denied() if self.family in (socket.AF_INET, socket.AF_INET6) else _real_connect(self, address)
+37 +     return (
+38 +         denied()
+39 +         if self.family in (socket.AF_INET, socket.AF_INET6)
+40 +         else _real_connect(self, address)
+41 +     )
+42 +
+43 +
+44 | def connect_ex(self, address):
+   -     return denied() if self.family in (socket.AF_INET, socket.AF_INET6) else _real_connect_ex(self, address)
+45 +     return (
+46 +         denied()
+47 +         if self.family in (socket.AF_INET, socket.AF_INET6)
+48 +         else _real_connect_ex(self, address)
+49 +     )
+50 +
+51 +
+52 | socket.getaddrinfo = denied
+--------------------------------------------------------------------------------
+57 |     import pytest
+   -     raise SystemExit(pytest.main(['-q', 'tests/test_wrapper_execution.py::test_real_cpu_wrapper_candidate_and_reference_apply_target_args_and_collect_sources', 'tests/test_wrapper_execution.py::test_real_cpu_verify_runner_overrides_wrapper_candidate_and_small_batch_reference']))
+58 +
+59 +     raise SystemExit(
+60 +         pytest.main(
+61 +             [
+62 +                 "-q",
+63 +                 "tests/test_wrapper_execution.py::test_real_cpu_wrapper_candidate_and_reference_apply_target_args_and_collect_sources",
+64 +                 "tests/test_wrapper_execution.py::test_real_cpu_verify_runner_overrides_wrapper_candidate_and_small_batch_reference",
+65 +             ]
+66 +         )
+67 +     )
+   |
+
+unformatted: File would be reformatted
+  --> reports/diagnosis-schema-20261025/run_evaluation_guarded.py:2:1
+   |
+1  | """Private test runner: no real account keys or INET sockets, including spawn children."""
+2  +
+3  | import builtins
+--------------------------------------------------------------------------------
+7  | from pathlib import Path
+8  +
+9  | PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+10 | _real_open, _io_open = builtins.open, io.open
+11 +
+12 +
+13 | def safe_open(original):
+--------------------------------------------------------------------------------
+18 |         return original(file, *args, **kwargs)
+19 +
+20 |     return guarded
+21 +
+22 +
+23 | builtins.open, io.open = safe_open(_real_open), safe_open(_io_open)
+24 | os.open = safe_open(os.open)
+25 | for key in ("NEBIUS_API_KEY", "TAVILY_API_KEY"):
+26 |     os.environ.pop(key, None)
+27 +
+28 +
+29 | def denied(*args, **kwargs):
+30 |     raise AssertionError("Independent offline guard denied real DNS/INET connection")
+31 +
+32 +
+33 | _real_connect, _real_connect_ex = socket.socket.connect, socket.socket.connect_ex
+34 +
+35 +
+36 | def connect(self, address):
+   -     return denied() if self.family in (socket.AF_INET, socket.AF_INET6) else _real_connect(self, address)
+37 +     return (
+38 +         denied()
+39 +         if self.family in (socket.AF_INET, socket.AF_INET6)
+40 +         else _real_connect(self, address)
+41 +     )
+42 +
+43 +
+44 | def connect_ex(self, address):
+   -     return denied() if self.family in (socket.AF_INET, socket.AF_INET6) else _real_connect_ex(self, address)
+45 +     return (
+46 +         denied()
+47 +         if self.family in (socket.AF_INET, socket.AF_INET6)
+48 +         else _real_connect_ex(self, address)
+49 +     )
+50 +
+51 +
+52 | socket.getaddrinfo = denied
+--------------------------------------------------------------------------------
+57 |     import pytest
+   -     raise SystemExit(pytest.main(["-q", "tests/test_diagnosis_schema_constraints.py", "tests/test_evaluation.py"]))
+58 +
+59 +     raise SystemExit(
+60 +         pytest.main(
+61 +             ["-q", "tests/test_diagnosis_schema_constraints.py", "tests/test_evaluation.py"]
+62 +         )
+63 +     )
+   |
+
+unformatted: File would be reformatted
+  --> reports/diagnosis-schema-20261025/run_guarded.py:2:1
+   |
+1  | """Private test runner: no real account keys or INET sockets, including spawn children."""
+2  +
+3  | import builtins
+--------------------------------------------------------------------------------
+7  | from pathlib import Path
+8  +
+9  | PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+10 | _real_open, _io_open = builtins.open, io.open
+11 +
+12 +
+13 | def safe_open(original):
+--------------------------------------------------------------------------------
+18 |         return original(file, *args, **kwargs)
+19 +
+20 |     return guarded
+21 +
+22 +
+23 | builtins.open, io.open = safe_open(_real_open), safe_open(_io_open)
+24 | os.open = safe_open(os.open)
+25 | for key in ("NEBIUS_API_KEY", "TAVILY_API_KEY"):
+26 |     os.environ.pop(key, None)
+27 +
+28 +
+29 | def denied(*args, **kwargs):
+30 |     raise AssertionError("Independent offline guard denied real DNS/INET connection")
+31 +
+32 +
+33 | _real_connect, _real_connect_ex = socket.socket.connect, socket.socket.connect_ex
+34 +
+35 +
+36 | def connect(self, address):
+   -     return denied() if self.family in (socket.AF_INET, socket.AF_INET6) else _real_connect(self, address)
+37 +     return (
+38 +         denied()
+39 +         if self.family in (socket.AF_INET, socket.AF_INET6)
+40 +         else _real_connect(self, address)
+41 +     )
+42 +
+43 +
+44 | def connect_ex(self, address):
+   -     return denied() if self.family in (socket.AF_INET, socket.AF_INET6) else _real_connect_ex(self, address)
+45 +     return (
+46 +         denied()
+47 +         if self.family in (socket.AF_INET, socket.AF_INET6)
+48 +         else _real_connect_ex(self, address)
+49 +     )
+50 +
+51 +
+52 | socket.getaddrinfo = denied
+--------------------------------------------------------------------------------
+57 |     import pytest
+   -     raise SystemExit(pytest.main(["-q", "tests/test_diagnosis_schema_constraints.py", "tests/test_llm_router.py", "tests/test_diagnose_contract.py"]))
+58 +
+59 +     raise SystemExit(
+60 +         pytest.main(
+61 +             [
+62 +                 "-q",
+63 +                 "tests/test_diagnosis_schema_constraints.py",
+64 +                 "tests/test_llm_router.py",
+65 +                 "tests/test_diagnose_contract.py",
+66 +             ]
+67 +         )
+68 +     )
+   |
+
+unformatted: File would be reformatted
+  --> reports/diagnosis-schema-20261025/run_integration_guarded.py:2:1
+   |
+1  | """Private test runner: no real account keys or INET sockets, including spawn children."""
+2  +
+3  | import builtins
+--------------------------------------------------------------------------------
+7  | from pathlib import Path
+8  +
+9  | PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+10 | _real_open, _io_open = builtins.open, io.open
+11 +
+12 +
+13 | def safe_open(original):
+--------------------------------------------------------------------------------
+18 |         return original(file, *args, **kwargs)
+19 +
+20 |     return guarded
+21 +
+22 +
+23 | builtins.open, io.open = safe_open(_real_open), safe_open(_io_open)
+24 | os.open = safe_open(os.open)
+25 | for key in ("NEBIUS_API_KEY", "TAVILY_API_KEY"):
+26 |     os.environ.pop(key, None)
+27 +
+28 +
+29 | def denied(*args, **kwargs):
+30 |     raise AssertionError("Independent offline guard denied real DNS/INET connection")
+31 +
+32 +
+33 | _real_connect, _real_connect_ex = socket.socket.connect, socket.socket.connect_ex
+34 +
+35 +
+36 | def connect(self, address):
+   -     return denied() if self.family in (socket.AF_INET, socket.AF_INET6) else _real_connect(self, address)
+37 +     return (
+38 +         denied()
+39 +         if self.family in (socket.AF_INET, socket.AF_INET6)
+40 +         else _real_connect(self, address)
+41 +     )
+42 +
+43 +
+44 | def connect_ex(self, address):
+   -     return denied() if self.family in (socket.AF_INET, socket.AF_INET6) else _real_connect_ex(self, address)
+45 +     return (
+46 +         denied()
+47 +         if self.family in (socket.AF_INET, socket.AF_INET6)
+48 +         else _real_connect_ex(self, address)
+49 +     )
+50 +
+51 +
+52 | socket.getaddrinfo = denied
+--------------------------------------------------------------------------------
+57 |     import pytest
+   -     raise SystemExit(pytest.main(['-q', 'tests/test_diagnosis_schema_constraints.py', 'tests/test_diagnose_schema.py', 'tests/test_diagnose_contract.py', 'tests/test_diagnosis_acceptance.py', 'tests/test_llm_router.py', 'tests/test_orchestrator.py', 'tests/test_bounded_search.py', 'tests/test_actual_usage_budget.py', 'tests/test_verification_feedback.py', 'tests/test_runtime_budget.py']))
+58 +
+59 +     raise SystemExit(
+60 +         pytest.main(
+61 +             [
+62 +                 "-q",
+63 +                 "tests/test_diagnosis_schema_constraints.py",
+64 +                 "tests/test_diagnose_schema.py",
+65 +                 "tests/test_diagnose_contract.py",
+66 +                 "tests/test_diagnosis_acceptance.py",
+67 +                 "tests/test_llm_router.py",
+68 +                 "tests/test_orchestrator.py",
+69 +                 "tests/test_bounded_search.py",
+70 +                 "tests/test_actual_usage_budget.py",
+71 +                 "tests/test_verification_feedback.py",
+72 +                 "tests/test_runtime_budget.py",
+73 +             ]
+74 +         )
+75 +     )
+   |
+
+unformatted: File would be reformatted
+  --> reports/final-verification-20261025/full_regression_driver.py:32:17
+   |
+31 |             not name
+   -             or (name.lower().endswith(".md") and not name.startswith(("headroom/prompts/", "scenarios/", "tests/")))
+32 +             or (
+33 +                 name.lower().endswith(".md")
+34 +                 and not name.startswith(("headroom/prompts/", "scenarios/", "tests/"))
+35 +             )
+36 |             or name.startswith(("docs/", "reports/", "runs/", ".cache/", ".env"))
+   |
+
+unformatted: File would be reformatted
+  --> reports/model-shrink-width-20261025/run_guarded.py:2:1
+   |
+1  | """Private test runner: no real account keys or INET sockets, including spawn children."""
+2  +
+3  | import builtins
+--------------------------------------------------------------------------------
+7  | from pathlib import Path
+8  +
+9  | PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+10 | _real_open, _io_open = builtins.open, io.open
+11 +
+12 +
+13 | def safe_open(original):
+--------------------------------------------------------------------------------
+18 |         return original(file, *args, **kwargs)
+19 +
+20 |     return guarded
+21 +
+22 +
+23 | builtins.open, io.open = safe_open(_real_open), safe_open(_io_open)
+24 | os.open = safe_open(os.open)
+25 | for key in ("NEBIUS_API_KEY", "TAVILY_API_KEY"):
+26 |     os.environ.pop(key, None)
+27 +
+28 +
+29 | def denied(*args, **kwargs):
+30 |     raise AssertionError("Independent offline guard denied real DNS/INET connection")
+31 +
+32 +
+33 | _real_connect, _real_connect_ex = socket.socket.connect, socket.socket.connect_ex
+34 +
+35 +
+36 | def connect(self, address):
+   -     return denied() if self.family in (socket.AF_INET, socket.AF_INET6) else _real_connect(self, address)
+37 +     return (
+38 +         denied()
+39 +         if self.family in (socket.AF_INET, socket.AF_INET6)
+40 +         else _real_connect(self, address)
+41 +     )
+42 +
+43 +
+44 | def connect_ex(self, address):
+   -     return denied() if self.family in (socket.AF_INET, socket.AF_INET6) else _real_connect_ex(self, address)
+45 +     return (
+46 +         denied()
+47 +         if self.family in (socket.AF_INET, socket.AF_INET6)
+48 +         else _real_connect_ex(self, address)
+49 +     )
+50 +
+51 +
+52 | socket.getaddrinfo = denied
+--------------------------------------------------------------------------------
+57 |     import pytest
+   -     raise SystemExit(pytest.main(["-q", "tests/test_model_shrink_width.py", "tests/test_diagnose_schema.py", "tests/test_diagnose_contract.py", "tests/test_compare.py"]))
+58 +
+59 +     raise SystemExit(
+60 +         pytest.main(
+61 +             [
+62 +                 "-q",
+63 +                 "tests/test_model_shrink_width.py",
+64 +                 "tests/test_diagnose_schema.py",
+65 +                 "tests/test_diagnose_contract.py",
+66 +                 "tests/test_compare.py",
+67 +             ]
+68 +         )
+69 +     )
+   |
+
+unformatted: File would be reformatted
+  --> reports/serve-runtime-profile-20261025/run_guarded.py:2:1
+   |
+1  | """Private test runner: no real account keys or INET sockets, including spawn children."""
+2  +
+3  | import builtins
+--------------------------------------------------------------------------------
+7  | from pathlib import Path
+8  +
+9  | PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+10 | _real_open, _io_open = builtins.open, io.open
+11 +
+12 +
+13 | def safe_open(original):
+--------------------------------------------------------------------------------
+18 |         return original(file, *args, **kwargs)
+19 +
+20 |     return guarded
+21 +
+22 +
+23 | builtins.open, io.open = safe_open(_real_open), safe_open(_io_open)
+24 | os.open = safe_open(os.open)
+25 | for key in ("NEBIUS_API_KEY", "TAVILY_API_KEY"):
+26 |     os.environ.pop(key, None)
+27 +
+28 +
+29 | def denied(*args, **kwargs):
+30 |     raise AssertionError("Independent offline guard denied real DNS/INET connection")
+31 +
+32 +
+33 | _real_connect, _real_connect_ex = socket.socket.connect, socket.socket.connect_ex
+34 +
+35 +
+36 | def connect(self, address):
+   -     return denied() if self.family in (socket.AF_INET, socket.AF_INET6) else _real_connect(self, address)
+37 +     return (
+38 +         denied()
+39 +         if self.family in (socket.AF_INET, socket.AF_INET6)
+40 +         else _real_connect(self, address)
+41 +     )
+42 +
+43 +
+44 | def connect_ex(self, address):
+   -     return denied() if self.family in (socket.AF_INET, socket.AF_INET6) else _real_connect_ex(self, address)
+45 +     return (
+46 +         denied()
+47 +         if self.family in (socket.AF_INET, socket.AF_INET6)
+48 +         else _real_connect_ex(self, address)
+49 +     )
+50 +
+51 +
+52 | socket.getaddrinfo = denied
+--------------------------------------------------------------------------------
+57 |     import pytest
+   -     raise SystemExit(pytest.main(["-q", "tests/test_serve_profile.py", "tests/test_cli.py", "tests/test_api.py", "tests/test_availability.py"]))
+58 +
+59 +     raise SystemExit(
+60 +         pytest.main(
+61 +             [
+62 +                 "-q",
+63 +                 "tests/test_serve_profile.py",
+64 +                 "tests/test_cli.py",
+65 +                 "tests/test_api.py",
+66 +                 "tests/test_availability.py",
+67 +             ]
+68 +         )
+69 +     )
+   |
+
+unformatted: File would be reformatted
+  --> reports/serve-runtime-profile-20261025/run_incremental_guarded.py:2:1
+   |
+1  | """Private test runner: no real account keys or INET sockets, including spawn children."""
+2  +
+3  | import builtins
+--------------------------------------------------------------------------------
+7  | from pathlib import Path
+8  +
+9  | PROJECT = Path("/home/xiaodouzi/workspace/headroom")
+10 | _real_open, _io_open = builtins.open, io.open
+11 +
+12 +
+13 | def safe_open(original):
+--------------------------------------------------------------------------------
+18 |         return original(file, *args, **kwargs)
+19 +
+20 |     return guarded
+21 +
+22 +
+23 | builtins.open, io.open = safe_open(_real_open), safe_open(_io_open)
+24 | os.open = safe_open(os.open)
+25 | for key in ("NEBIUS_API_KEY", "TAVILY_API_KEY"):
+26 |     os.environ.pop(key, None)
+27 +
+28 +
+29 | def denied(*args, **kwargs):
+30 |     raise AssertionError("Independent offline guard denied real DNS/INET connection")
+31 +
+32 +
+33 | _real_connect, _real_connect_ex = socket.socket.connect, socket.socket.connect_ex
+34 +
+35 +
+36 | def connect(self, address):
+   -     return denied() if self.family in (socket.AF_INET, socket.AF_INET6) else _real_connect(self, address)
+37 +     return (
+38 +         denied()
+39 +         if self.family in (socket.AF_INET, socket.AF_INET6)
+40 +         else _real_connect(self, address)
+41 +     )
+42 +
+43 +
+44 | def connect_ex(self, address):
+   -     return denied() if self.family in (socket.AF_INET, socket.AF_INET6) else _real_connect_ex(self, address)
+45 +     return (
+46 +         denied()
+47 +         if self.family in (socket.AF_INET, socket.AF_INET6)
+48 +         else _real_connect_ex(self, address)
+49 +     )
+50 +
+51 +
+52 | socket.getaddrinfo = denied
+--------------------------------------------------------------------------------
+57 |     import pytest
+   -     raise SystemExit(pytest.main(["-q", "tests/test_serve_profile.py", "-k", "startup_override_is_preserved"]))
+58 +
+59 +     raise SystemExit(
+60 +         pytest.main(["-q", "tests/test_serve_profile.py", "-k", "startup_override_is_preserved"])
+61 +     )
+   |
+
+9 files would be reformatted, 300 files already formatted

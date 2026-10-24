@@ -283,7 +283,7 @@ def test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_repo
 
     import httpx
 
-    from headroom.config import RuntimeConfig, candidate_models
+    from headroom.config import RuntimeConfig, VerifiedCapabilities, candidate_models
     from headroom.llm.client import TokenFactoryClient
     from headroom.llm.cost import Pricing
     from headroom.llm.router import LLMRouter
@@ -351,6 +351,13 @@ def test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_repo
             )
             for name, spec in candidate_models().items()
         }
+
+        models["ultra"] = replace(
+            models["ultra"],
+            capabilities=VerifiedCapabilities(
+                reasoning_method="chat_template_kwargs", evidence="offline mock only"
+            ),
+        )
 
         def respond(request):
             body = json.loads(request.content)

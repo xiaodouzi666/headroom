@@ -1,0 +1,30 @@
+{
+  "created_at": "2026-10-24T21:24:17.223290+00:00",
+  "base_commit": "7d54abe37defcec1755add13b1c1f27da3781bb7",
+  "status": "complete_frozen",
+  "files": {
+    "headroom/evaluation_worker.py": "36da6af0dac60df2c00e2c455311fc297709a07b509744a260c7774070800007",
+    "headroom/evaluation.py": "a198692bc0025aa198a341093aba0e944728c97576996e75dd7a395db5efed07",
+    "tests/test_evaluation_worker.py": "8cee83e1992571cd00c5470ab496114bd76c33b53337543aa579a901a68682a0",
+    "docs/EVALUATION.md": "9be0b1ca45678b7d220e3b0a80b7abbc6c6b093700623d535de8285cf17d0c02"
+  },
+  "plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "test_command": ".venv/bin/python reports/health-notifier-20261024/offline_tests.py -q tests/test_evaluation_worker.py tests/test_evaluation.py tests/test_evaluation_outcomes.py tests/test_cli.py tests/test_published_evaluations.py",
+  "test_log": "reports/evaluation-deadline-20261025/focused.log",
+  "tests_summary": "179 passed in 16.98s",
+  "prior_focused_summary": "117 passed in 16.68s",
+  "initial_regression": "One test expected a second pending case but fixture default contained one; corrected test fixture to count=2. Initial run: 1 failed, 115 passed.",
+  "validation_kind": "guarded offline real-spawn tests and existing CLI/evaluation/publication regressions",
+  "independent_guards": "Existing spawn-safe runner blocks DNS, INET sockets and real project .env access before imports; CUDA_VISIBLE_DEVICES empty.",
+  "independent_review": "payment_readiness read-only review found no remaining blockers; verification measurements and pending charges retained.",
+  "live_provider_calls": 0,
+  "gpu_workloads": 0,
+  "real_env_read": false,
+  "limits": [
+    "480 seconds bounds execution including preparation; termination grace, owned-container cleanup and parent partial report generation can finish later and are not accepted as an eight-minute success.",
+    "Campaign wall_seconds includes cleanup/publication overhead and is checked separately; no guarantee total CLI command returns by 480 seconds.",
+    "Existing strict global/day monetary guards and unresolved pending charges remain unchanged.",
+    "Only live evaluation uses the worker; direct fix CLI and offline fixture execution paths remain unchanged.",
+    "No genuine MVP repair or CUDA acceptance is established by these offline tests."
+  ]
+}

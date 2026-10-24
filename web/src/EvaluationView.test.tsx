@@ -143,7 +143,7 @@ describe("published evaluation results", () => {
       "Step-time change %",
       "Numerics",
       "Rounds",
-      "Cost USD",
+      "Actual cost USD",
       "Wall seconds",
     ])
       expect(
@@ -435,7 +435,7 @@ describe("recorded patch and completion outcomes", () => {
     });
     const allRows = within(table).getAllByRole("row");
     const columnCount = within(table).getAllByRole("columnheader").length;
-    expect(columnCount).toBe(22);
+    expect(columnCount).toBe(23);
     for (const row of allRows) expect(row.children).toHaveLength(columnCount);
     expect(outcomeCell(table, "Any patch/config applied", 2)).toHaveTextContent(
       "2 Yes / 1 No; 3 Unknown",
@@ -481,4 +481,34 @@ describe("recorded patch and completion outcomes", () => {
       "Round attempts: Unknown.",
     );
   });
+});
+
+it("shows certified upper bounds separately from unknown actual charges", async () => {
+  const document = fixture("live");
+  Object.assign(document.rows[0], {
+    cost_usd: null,
+    cost_upper_usd: "0.00033378",
+    billing_complete: true,
+    cost_basis: "verified_upper_bound",
+  });
+  Object.assign(document.summary, {
+    total_cost_usd: null,
+    known_cost_usd: "0",
+    billing_complete: true,
+    conservative_total_usd: "0.00033378",
+    bounded_cost_runs: 1,
+    unresolved_cost_runs: 0,
+  });
+  setup(document);
+  render(<App />);
+  const table = await screen.findByRole("table", {
+    name: "Main evaluation results",
+  });
+  expect(outcomeCell(table, "Actual cost USD")).toHaveTextContent("Unknown");
+  expect(outcomeCell(table, "Cost upper bound USD")).toHaveTextContent(
+    "$0.00033378",
+  );
+  expect(
+    screen.getByText(/An upper bound is not a confirmed actual charge/),
+  ).toBeInTheDocument();
 });

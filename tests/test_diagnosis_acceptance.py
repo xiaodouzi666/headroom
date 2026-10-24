@@ -12,6 +12,7 @@ import httpx
 import pytest
 
 from headroom.acceptance.diagnosis import (
+    MAX_RESPONSE_ARTIFACT_BYTES,
     SCENARIO_IDS,
     DiagnosisAcceptanceRefused,
     prepare_diagnosis_acceptance,
@@ -193,7 +194,7 @@ def project(tmp_path, monkeypatch):
 
 def prepare(project, output=None):
     root, captures = project
-    output = output or root / "prepared"
+    output = output or root / "runs" / "prepared"
     report = prepare_diagnosis_acceptance(captures, output, project_root=root)
     return report, output / "preparation.json"
 
@@ -217,10 +218,18 @@ def profile(root, *, ceiling=30000, enabled=True):
                     "input_usd_per_million": "1",
                     "output_usd_per_million": "2",
                     "evidence": "offline fixture",
+                    "capabilities": (
+                        {
+                            "reasoning_method": "chat_template_kwargs",
+                            "evidence": "offline fixture only, not provider verification",
+                        }
+                        if role == "ultra"
+                        else {}
+                    ),
                     "billing": {
                         "prompt_token_ceiling": ceiling,
                         "max_prompt_utf8_bytes": 1000000,
-                        "max_completion_tokens": 4000,
+                        "max_completion_tokens": 8192,
                         "output_cap_field": "max_completion_tokens",
                         "output_cap_includes_reasoning": True,
                         "verified": True,
@@ -275,6 +284,8 @@ def transport_for(prepared, *, mode=None):
         body = json.loads(request.content)
         index = len(calls)
         calls.append(body)
+        if mode == "http_429":
+            return httpx.Response(429, json={"error": {"message": "offline rate limit"}})
         row = prepared["rows"][index]
         answer = payload(CATEGORIES[index], row["stack_ids"][0])
         if mode == "bad_reference" and index == 0:
@@ -301,7 +312,7 @@ def transport_for(prepared, *, mode=None):
         }
         if mode == "unknown":
             response.pop("usage")
-        if mode == "expensive":
+        if mode in {"expensive", "truncated_expensive"}:
             response["usage"] = {
                 "prompt_tokens": 400000,
                 "completion_tokens": 120,
@@ -309,8 +320,25 @@ def transport_for(prepared, *, mode=None):
             }
         if mode == "identity":
             response["model"] = "unapproved-model"
-        if mode == "truncated":
-            response["choices"][0]["finish_reason"] = "length"
+        if index == 0:
+            if mode in {"truncated", "truncated_expensive", "truncated_unknown", "truncated_bound"}:
+                response["choices"][0]["finish_reason"] = "length"
+            if mode == "truncated_unknown":
+                response.pop("usage")
+            if mode == "truncated_bound":
+                response["usage"] = {
+                    "prompt_tokens": 200,
+                    "completion_tokens": 8193,
+                    "total_tokens": 8393,
+                }
+            if mode in {"empty", "schema_invalid", "malformed", "large_invalid"}:
+                response["choices"][0]["message"]["content"] = {
+                    "empty": "",
+                    "schema_invalid": "{}",
+                    "malformed": "untrusted-not-json",
+                    "large_invalid": ("私密\x01" * 100000),
+                }[mode]
+                response["choices"][0]["message"]["reasoning_content"] = "never-save-reasoning"
         return httpx.Response(200, json=response)
 
     return httpx.MockTransport(handler), calls
@@ -318,7 +346,9 @@ def transport_for(prepared, *, mode=None):
 
 def execute(project, prepared, path, *, mode=None, **kwargs):
     root, _ = project
-    price, env = profile(root, ceiling=500000 if mode == "expensive" else 30000)
+    price, env = profile(
+        root, ceiling=500000 if mode in {"expensive", "truncated_expensive"} else 30000
+    )
     transport, calls = transport_for(prepared, mode=mode)
     result = execute_diagnosis_acceptance(
         path,
@@ -364,7 +394,9 @@ def test_real_router_runtime_chain_scores_seven_without_fake_live_acceptance(pro
     assert result["rows"][4]["first_cause_match"] is None
     assert all(row["references_valid"] and row["response_identity_valid"] for row in result["rows"])
     assert all(row["runtime"]["usage"]["unknown_cost_calls"] == 0 for row in result["rows"])
-    assert all(body["max_completion_tokens"] == 4000 for body in calls)
+    assert all(body["max_completion_tokens"] == 8192 for body in calls)
+    assert all(body["chat_template_kwargs"] == {"enable_thinking": False} for body in calls)
+    assert result["diagnosis_reasoning"] is False
     assert all(
         "root_causes" in body["messages"][0]["content"] for body in calls
     )  # Actual router-added schema.
@@ -381,10 +413,10 @@ def test_real_router_runtime_chain_scores_seven_without_fake_live_acceptance(pro
     [
         ("unknown", "UNKNOWN_BILLING"),
         ("identity", "UNKNOWN_BILLING"),
-        ("truncated", "ResponseValidationError"),
+        ("http_429", "UNKNOWN_BILLING"),
     ],
 )
-def test_uncertain_billing_identity_or_truncation_stops_before_next_case(project, mode, stop):
+def test_uncertain_billing_or_identity_stops_before_next_case(project, mode, stop):
     prepared, path = prepare(project)
     result, calls = execute(project, prepared, path, mode=mode)
     assert len(calls) == 1 and not result["accepted"]
@@ -414,9 +446,12 @@ def test_wrong_invalid_or_incomplete_diagnosis_never_passes(project, mode):
     assert len(calls) == 8
     assert not result["fixture_gates_passed"] and not result["accepted"]
     if mode == "bad_reference":
-        assert result["rows"][0]["actual_stack_references"][0]["invalid_references"] == [
-            "stk_invented"
-        ]
+        row = result["rows"][0]
+        assert row["status"] == "failed" and row["row_pass"] is False
+        assert row["error_type"] == "ResponseValidationError"
+        assert row["validation_reason"] == "schema_mismatch"
+        assert row["ledger_clear"] is True
+        assert "actual_stack_references" not in row  # Rejected before diagnosis parsing.
     if mode == "wrong":
         assert result["first_cause_matches"] == 5
     if mode == "needs_more":
@@ -523,7 +558,7 @@ def test_existing_unknown_charge_blocks_a_new_package(project):
     first, path = prepare(project)
     result, calls = execute(project, first, path, mode="unknown")
     assert len(calls) == 1 and result["stop_reason"] == "UNKNOWN_BILLING"
-    second, other = prepare(project, output=project[0] / "second")
+    second, other = prepare(project, output=project[0] / "runs" / "second")
     result, calls = execute(project, second, other)
     assert not calls and not result["accepted"]
     assert result["stop_reason"] == "BudgetExceeded"
@@ -642,15 +677,18 @@ def test_failure_to_persist_final_runtime_receipt_does_not_claim_zero_charge(pro
     assert not result["accepted"]
 
 
-def test_raw_valid_model_verdict_is_retained_before_scoring(project):
+def test_raw_schema_rejected_model_verdict_is_retained_before_scoring(project):
     prepared, path = prepare(project)
     result, _ = execute(project, prepared, path, mode="bad_reference")
     raw = json.loads(
         (path.parent / "execution" / SCENARIO_IDS[0] / "model-response.json").read_text()
     )
     assert "stk_invented" in raw["text"]
-    assert raw["parsed"]["root_causes"][0]["evidence_refs"] == ["stk_invented"]
-    assert result["rows"][0]["references_valid"] is False
+    assert json.loads(raw["text"])["root_causes"][0]["evidence_refs"] == ["stk_invented"]
+    assert raw["parsed"] is None and raw["validation"] == "failed"
+    assert raw["validation_reason"] == "schema_mismatch"
+    assert result["rows"][0]["row_pass"] is False
+    assert result["rows"][0]["first_cause_match"] is None
 
 
 def test_total_cost_preserves_high_precision_decimal_usage(project):
@@ -689,3 +727,237 @@ def test_prepare_output_cannot_modify_original_capture_or_canonical_source(proje
     with pytest.raises(DiagnosisAcceptanceRefused, match="OUTPUT_MUST_NOT_MODIFY"):
         prepare_diagnosis_acceptance(captures, output, project_root=root)
     assert not output.exists()
+
+
+@pytest.mark.parametrize(
+    "mode,reason,finish",
+    [
+        ("truncated", "truncated", "length"),
+        ("empty", "empty_json", "stop"),
+        ("schema_invalid", "schema_mismatch", "stop"),
+        ("malformed", "invalid_json", "stop"),
+    ],
+)
+def test_known_billed_validation_failure_is_saved_and_next_independent_cases_run(
+    project, mode, reason, finish
+):
+    prepared, path = prepare(project)
+    result, calls = execute(project, prepared, path, mode=mode)
+    assert len(calls) == 8  # No paid retry of the failed first case.
+    assert result["stop_reason"] is None
+    assert not result["accepted"] and not result["fixture_gates_passed"]
+    failed, *rest = result["rows"]
+    assert failed["status"] == "failed" and failed["row_pass"] is False
+    assert failed["first_cause_match"] is None
+    assert failed["validation_reason"] == reason
+    assert failed["continued_after_validation_failure"] is True
+    assert failed["ledger_clear"] and failed["response_identity_valid"]
+    assert failed["actual_cost_within_035"] is True
+    assert all(row["status"] == "responded" for row in rest)
+    artifact = path.parent / "execution" / SCENARIO_IDS[0] / "model-response.json"
+    raw = json.loads(artifact.read_text())
+    assert artifact.stat().st_mode & 0o777 == 0o600
+    assert raw["finish_reason"] == finish and raw["validation_reason"] == reason
+    assert raw["validation"] == "failed" and raw["parsed"] is None
+    assert raw["usage"]["completion_tokens"] == 120
+    assert raw["cost"]["status"] == "known"
+    assert raw["text_sha256"] == hashlib.sha256(raw["text"].encode()).hexdigest()
+    assert raw["text_truncated"] is False
+    assert "never-save-reasoning" not in artifact.read_text()
+    saved = json.loads(artifact.with_name("diagnosis.json").read_text())
+    assert saved == failed  # The final closed receipt and failed state agree.
+
+
+def test_failed_assistant_artifact_is_bounded_and_keeps_full_text_digest(project):
+    prepared, path = prepare(project)
+    result, calls = execute(project, prepared, path, mode="large_invalid")
+    assert len(calls) == 8 and result["rows"][0]["row_pass"] is False
+    artifact = path.parent / "execution" / SCENARIO_IDS[0] / "model-response.json"
+    assert artifact.stat().st_size <= MAX_RESPONSE_ARTIFACT_BYTES
+    raw = json.loads(artifact.read_text())
+    text = "私密\x01" * 100000
+    assert raw["text_truncated"] is True
+    assert raw["text_utf8_bytes"] == len(text.encode())
+    assert raw["text_sha256"] == hashlib.sha256(text.encode()).hexdigest()
+    assert text.startswith(raw["text"]) and raw["text"] != text
+    assert artifact.stat().st_mode & 0o777 == 0o600
+
+
+@pytest.mark.parametrize(
+    "mode,stop",
+    [
+        ("truncated_unknown", "UNKNOWN_BILLING"),
+        ("truncated_expensive", "ACTUAL_CALL_COST_EXCEEDS_035"),
+        ("truncated_bound", "LEDGER_NOT_CLEAR"),
+    ],
+)
+def test_invalid_structured_output_cannot_bypass_financial_stop(project, mode, stop):
+    prepared, path = prepare(project)
+    result, calls = execute(project, prepared, path, mode=mode, run_limit_usd="1")
+    assert len(calls) == 1
+    assert result["stop_reason"] == stop
+    assert result["rows"][0]["row_pass"] is False
+    assert all(row["status"] == "not_executed" for row in result["rows"][1:])
+
+
+@pytest.mark.parametrize("mode", [None, "truncated"])
+def test_unconfirmed_lifecycle_cleanup_blocks_following_cases(project, monkeypatch, mode):
+    from headroom.budget import BudgetLedger
+
+    original = BudgetLedger.close_run
+
+    def close_then_fail(self, run_id):
+        original(self, run_id)
+        raise OSError("offline cleanup failure")
+
+    monkeypatch.setattr(BudgetLedger, "close_run", close_then_fail)
+    prepared, path = prepare(project)
+    result, calls = execute(project, prepared, path, mode=mode)
+    assert len(calls) == 1
+    assert result["stop_reason"] == "LEDGER_NOT_CLEAR"
+    assert result["rows"][0]["ledger_clear"] is False
+    assert result["rows"][0]["row_pass"] is False
+    assert not result["accepted"]
+
+
+def test_execution_outside_private_runs_is_rejected_before_dispatch(project):
+    prepared, path = prepare(project, output=project[0] / "public-output")
+    with pytest.raises(DiagnosisAcceptanceRefused, match="PRIVATE_RUNS_DIRECTORY_REQUIRED"):
+        execute(project, prepared, path)
+    assert not (path.parent / "execution").exists()
+
+
+@pytest.mark.parametrize("interval", [0, 20, 60])
+def test_optional_case_start_spacing_excludes_wait_from_case_elapsed(
+    project, monkeypatch, interval
+):
+    from types import SimpleNamespace
+
+    from headroom.acceptance import diagnosis
+
+    current = [0.0]
+    sleeps = []
+
+    def sleep(seconds):
+        sleeps.append(seconds)
+        current[0] += seconds
+
+    monkeypatch.setattr(
+        diagnosis, "time", SimpleNamespace(monotonic=lambda: current[0], sleep=sleep)
+    )
+    prepared, path = prepare(project)
+    price, env = profile(project[0])
+    transport, calls = transport_for(prepared)
+    original = transport.handler
+
+    def delayed_response(request):
+        current[0] += 3
+        return original(request)
+
+    result = execute_diagnosis_acceptance(
+        path,
+        profile_path=price,
+        env_file=env,
+        transport=httpx.MockTransport(delayed_response),
+        execute=True,
+        live_authorized=True,
+        min_case_interval_seconds=interval,
+    )
+    assert len(calls) == 8
+    rows = result["rows"]
+    assert result["min_case_interval_seconds"] == interval
+    assert [row["case_start_offset_seconds"] for row in rows] == [
+        index * max(3, interval) for index in range(8)
+    ]
+    assert [row["interval_wait_seconds"] for row in rows] == [0] + [max(0, interval - 3)] * 7
+    assert all(row["elapsed_seconds"] == 3 for row in rows)
+    assert sleeps == ([interval - 3] * 7 if interval > 3 else [])
+
+
+@pytest.mark.parametrize("interval", [-1, 60.01, float("nan"), float("inf"), True, "20"])
+def test_invalid_case_interval_refuses_before_creating_execution(project, interval):
+    prepared, path = prepare(project)
+    with pytest.raises(DiagnosisAcceptanceRefused, match="CASE_INTERVAL"):
+        execute(project, prepared, path, min_case_interval_seconds=interval)
+    assert not (path.parent / "execution").exists()
+
+
+def test_cli_forwards_explicit_case_interval_without_changing_budget(tmp_path, monkeypatch):
+    import importlib.util
+
+    script = Path(__file__).resolve().parents[1] / "scripts/check_diagnosis_acceptance.py"
+    spec = importlib.util.spec_from_file_location("diagnosis_spacing_cli", script)
+    cli = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cli)
+    captured = []
+
+    def execute(*args, **kwargs):
+        captured.append(kwargs)
+        return {"accepted": False, "first_cause_matches": 0, "stop_reason": None}
+
+    monkeypatch.setattr(cli, "execute_diagnosis_acceptance", execute)
+    assert (
+        cli.main(
+            [
+                "--execute",
+                "--live-authorized",
+                "--prepared",
+                str(tmp_path / "preparation.json"),
+                "--runtime-profile",
+                str(tmp_path / "profile.fixture.json"),
+                "--admission-cap-usd",
+                "0.35",
+                "--campaign-cap-usd",
+                "2.8",
+                "--daily-cap-usd",
+                "4",
+                "--min-case-interval-seconds",
+                "20",
+            ]
+        )
+        == 1
+    )
+    assert captured[0]["min_case_interval_seconds"] == 20
+    assert captured[0]["run_limit_usd"] == "0.35"
+    assert captured[0]["campaign_limit_usd"] == "2.8"
+
+
+def test_missing_verified_reasoning_toggle_refuses_before_dispatch(project):
+    prepared, path = prepare(project)
+    price, env = profile(project[0])
+    configuration = json.loads(price.read_text())
+    configuration["models"]["ultra"]["capabilities"] = {}
+    write(price, configuration)
+    transport, calls = transport_for(prepared)
+    result = execute_diagnosis_acceptance(
+        path,
+        profile_path=price,
+        env_file=env,
+        transport=transport,
+        execute=True,
+        live_authorized=True,
+    )
+    assert calls == []
+    assert result["stop_reason"] == "CapabilityNotVerified"
+    assert not result["accepted"]
+    assert result["total_cost_usd"] == "0"
+    assert not (path.parent / "execution" / SCENARIO_IDS[0] / "model-response.json").exists()
+
+
+@pytest.mark.parametrize("reasoning", [None, True, 0, "false"])
+def test_prepared_wrapper_rejects_changed_reasoning_choice_before_call(tmp_path, reasoning):
+    from types import SimpleNamespace
+
+    from headroom.acceptance.diagnosis import _prepared_router
+
+    calls = []
+    router = _prepared_router(
+        SimpleNamespace(chat=lambda *a, **k: calls.append((a, k))),
+        [],
+        tmp_path / "unused.json",
+        evidence={"stack_catalog": {"stk_fixture": []}},
+        policy={},
+    )
+    with pytest.raises(DiagnosisAcceptanceRefused, match="ONLY_ONE_PREPARED"):
+        router.chat("diagnose", [], {}, max_tokens=8192, reasoning=reasoning)
+    assert not calls

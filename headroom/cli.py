@@ -296,15 +296,16 @@ def replay(run_id: str) -> None:
 
 
 @app.command()
-def serve(host: str = "127.0.0.1", port: int = 8000) -> None:
+def serve(host: str = "127.0.0.1", port: int = 8000, runtime_profile: Path | None = None) -> None:
     """Serve the local app. Public deployment requires its separate setup."""
     import uvicorn
 
-    from headroom.api.app import create_app
+    from headroom.api.app import ApiSettings, create_app
 
     if host not in {"127.0.0.1", "localhost", "::1"}:
         raise typer.BadParameter("Use the reviewed deployment configuration for public binding")
-    uvicorn.run(create_app(), host=host, port=port)
+    settings = ApiSettings(runtime_profile=str(runtime_profile) if runtime_profile else None)
+    uvicorn.run(create_app(settings), host=host, port=port, proxy_headers=False)
 
 
 @app.command(context_settings={"allow_extra_args": True, "ignore_unknown_options": True})

@@ -1,0 +1,84 @@
+{
+  "schema": "headroom.diagnosis-response-recovery.v1",
+  "timestamp_utc": "2026-10-24T21:37:42.842220+00:00",
+  "status": "implemented_offline_validated_frozen",
+  "scope": {
+    "diagnosis_completion_cap": 8192,
+    "other_role_defaults_unchanged": true,
+    "reasoning_control_unchanged": true,
+    "schema_and_actual_035_gate_unchanged": true,
+    "private_response_artifact_max_bytes": 262144,
+    "private_response_artifact_mode": "0600",
+    "raw_reasoning_request_headers_environment_saved": false,
+    "independent_case_continuation": "ResponseValidationError only, exact single settled Ultra response, known actual <= 0.35, finalized ledger clear and no cleanup errors",
+    "case_spacing_seconds": {
+      "default": 0,
+      "minimum": 0,
+      "maximum": 60,
+      "basis": "monotonic case start to case start; not guaranteed HTTP POST spacing",
+      "wait_excluded_from_case_elapsed": true
+    }
+  },
+  "source_hashes": {
+    "headroom/llm/router.py": "eb8f8bc0528c2cc94eb0ab2a87b9d27ba4a17d1ceefb8d75882aabf070c99292",
+    "headroom/diagnose.py": "1c43f5230ada324d39f2fdc930312bf605a6bcd83a007948bea207f951e18961",
+    "headroom/acceptance/diagnosis.py": "adb81bcbf2125278c60e1fe476a3f84605d46fa586047c33b31a846177c5ab96",
+    "scripts/check_diagnosis_acceptance.py": "316fae304729101cb36e2d11c014f7f4f42b3ca71e52531dedbbd6c36dec1f6d",
+    "tests/test_diagnosis_acceptance.py": "8e53aac2c446bf4755e03ae888a6a9c0da1e5c43262915617161f86b5a7ffc3e",
+    "tests/test_llm_router.py": "2f00e1ae1a09e22d45f246b794794469e373addc3ff3f582e4e8b1cdc5562847",
+    "tests/test_actual_usage_budget.py": "3b9af240a0d5597e4cf6b99808e0a13d7b6657e1b21ef03392f5cac49970c799",
+    "docs/DIAGNOSIS_ACCEPTANCE.md": "6f657682986cc9911c991bcef56488f84064b36f1fc514a5e722878ef76a6ebf",
+    "docs/DIAGNOSE.md": "aac7ca5c9996bb2cf38d7be8a48b0aa33c4f7dd174d61d7e38ea17336c98adf1"
+  },
+  "plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "validation": {
+    "command": ".venv/bin/python reports/health-notifier-20261024/offline_tests.py -q tests/test_diagnosis_acceptance.py tests/test_llm_router.py tests/test_diagnose_contract.py tests/test_diagnose_schema.py tests/test_verification_feedback.py tests/test_actual_usage_budget.py",
+    "passed": 156,
+    "elapsed_seconds": 21.14,
+    "exit_code": 0,
+    "log": "focused-final-revision-3.log",
+    "independent_guards": [
+      "real credential read blocked",
+      "DNS blocked",
+      "INET blocked",
+      "mock transport only",
+      "no GPU"
+    ],
+    "lint": "Ruff check passed; seven Python files formatted; git diff --check passed",
+    "review": "payment_readiness read-only review of raw response, finalized financial gates and pacing: no blocking finding"
+  },
+  "retained_failed_test_attempts": [
+    {
+      "log": "focused-first.log",
+      "result": "5 failed, 94 passed",
+      "cause": "New router test incorrectly expected verified pricing from an unverified candidate fixture; corrected to preserved unknown cost."
+    },
+    {
+      "log": "focused-final.log",
+      "result": "7 failed, 148 passed",
+      "cause": "Expanded actual-usage fixtures still capped Ultra output at 4000; production correctly refused new 8192 diagnosis."
+    },
+    {
+      "log": "focused-final-revision-2.log",
+      "result": "12 failed, 144 passed",
+      "cause": "Fixture update used role key diagnose instead of model key ultra; fixed only test configuration."
+    }
+  ],
+  "historical_live_evidence": {
+    "path": "runs/acceptance/diagnosis-prepared-20261024-v2/execution/result.json",
+    "preserved_unchanged": true,
+    "observed_s2_usage": {
+      "prompt_tokens": 40648,
+      "completion_tokens": 4000,
+      "reasoning_tokens": 4000,
+      "known_cost_usd": "0.052648"
+    },
+    "finish_reason": "not retained historically; not reconstructed"
+  },
+  "limits": [
+    "No provider request, real credential read, GPU execution or account/profile modification was performed by this work.",
+    "Offline tests establish wiring and stop behavior, not live diagnosis accuracy or a guarantee that 8192 completes every answer.",
+    "Schema-invalid rows remain failed and cannot satisfy full T1.4 acceptance even when later independent cases execute.",
+    "Any further real execution requires a new private preparation/execution package; old live attempt is not overwritten."
+  ]
+}

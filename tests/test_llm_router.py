@@ -169,3 +169,32 @@ def test_dict_schema_cannot_accept_nonfinite_decoded_number():
             LLMRouter(client).chat("patch", [{"role": "user", "content": "answer"}], schema)
         assert len(client.ledger.entries) == 1
         assert client.ledger.entries[0].usage is not None
+
+
+@pytest.mark.parametrize(
+    "text,finish,reason",
+    [
+        ('{"count": 2, "label": "private-assistant-text"}', "length", "truncated"),
+        ('{"count": 2, "label": "private-assistant-text"}', "content_filter", "filtered"),
+        ("", "stop", "empty_json"),
+        ("private-assistant-text", "stop", "invalid_json"),
+        ('{"label": "private-assistant-text"}', "stop", "schema_mismatch"),
+    ],
+)
+def test_validation_error_retains_response_without_leaking_it_in_exception(text, finish, reason):
+    with TokenFactoryClient(
+        transport=httpx.MockTransport(lambda _: response(text, finish))
+    ) as client:
+        with pytest.raises(ResponseValidationError) as caught:
+            LLMRouter(client).chat("patch", [{"role": "user", "content": "answer"}], Answer)
+        error = caught.value
+        assert error.reason == reason
+        assert error.response.text == text
+        assert error.response.finish_reason == finish
+        assert error.response.response_model == SUPER_MODEL
+        assert error.response.usage.completion_tokens == 10
+        assert error.response.cost == client.ledger.entries[0].cost
+        assert error.response.cost.status == "unknown"  # This fixture has no verified prices.
+        assert "private-assistant-text" not in str(error)
+        assert "private-assistant-text" not in repr(error)
+        assert len(client.ledger.entries) == 1

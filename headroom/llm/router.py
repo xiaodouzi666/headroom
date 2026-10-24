@@ -15,7 +15,12 @@ from headroom.llm.client import ClientResponse, LLMError, TokenFactoryClient
 
 
 class ResponseValidationError(LLMError):
-    pass
+    """Validation failure with optional response evidence, never response text in str()."""
+
+    def __init__(self, message, *, reason="invalid_json", response=None):
+        super().__init__(message)
+        self.reason = reason
+        self.response = response
 
 
 def _reject_constant(_):
@@ -50,7 +55,7 @@ def parse_json(text: str):
     Duplicate keys, nonfinite numbers and multiple JSON objects are rejected.
     """
     if not isinstance(text, str) or not text.strip():
-        raise ResponseValidationError("Model returned no JSON text")
+        raise ResponseValidationError("Model returned no JSON text", reason="empty_json")
     text = text.strip()
     fenced = re.fullmatch(r"```(?:json)?\s*\n?(.*?)\n?```", text, flags=re.DOTALL | re.IGNORECASE)
     if fenced:
@@ -132,20 +137,31 @@ class LLMRouter:
             temperature=temperature,
         )
         parsed = None
-        if schema is not None:
-            if response.finish_reason in {"length", "content_filter"}:
-                raise ResponseValidationError("Structured response was truncated or filtered")
-            parsed = parse_json(response.text)
-            # Both validation paths return data, not a Pydantic instance, for downstream use.
-            if model_type is not None:
-                try:
-                    model_type.model_validate(parsed, strict=True)
-                except ValidationError:
+        try:
+            if schema is not None:
+                if response.finish_reason in {"length", "content_filter"}:
                     raise ResponseValidationError(
-                        "Model JSON does not match the requested schema"
-                    ) from None
-            if next(Draft202012Validator(schema).iter_errors(parsed), None) is not None:
-                raise ResponseValidationError("Model JSON does not match the requested schema")
+                        "Structured response was truncated or filtered",
+                        reason="truncated" if response.finish_reason == "length" else "filtered",
+                    )
+                parsed = parse_json(response.text)
+                # Both validation paths return data, not a Pydantic instance, for downstream use.
+                if model_type is not None:
+                    try:
+                        model_type.model_validate(parsed, strict=True)
+                    except ValidationError:
+                        raise ResponseValidationError(
+                            "Model JSON does not match the requested schema",
+                            reason="schema_mismatch",
+                        ) from None
+                if next(Draft202012Validator(schema).iter_errors(parsed), None) is not None:
+                    raise ResponseValidationError(
+                        "Model JSON does not match the requested schema", reason="schema_mismatch"
+                    )
+        except ResponseValidationError as error:
+            # Preserve paid response evidence without weakening validation or making another call.
+            error.response = response
+            raise
         return ChatResult(**vars(response), parsed=parsed)
 
 

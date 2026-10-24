@@ -1,0 +1,68 @@
+{
+  "schema": "headroom.diagnosis-protocol-change.v1",
+  "timestamp_utc": "2026-10-24T21:50:31.618133+00:00",
+  "status": "offline_validated_frozen",
+  "source_hashes": {
+    "headroom/diagnose.py": "5ef34d84e3bf0997d349c8f47f8bad6bae17d08b9ccff8387d43880fbb0a9f50",
+    "headroom/acceptance/diagnosis.py": "cc121b5cb126f9ee35e72ed65200e6ce9a24bf1d65455297125e02390b938b10",
+    "headroom/prompts/diagnose.md": "1baf32a7427d203ecd0db49bfc8c8e631af508b3925d77dea38a0f954d1c51b0",
+    "tests/test_diagnosis_acceptance.py": "3bc4fdc9235a8cd13884e8cb844b1eca5094dde17e7c759de877b201dab4e3b0",
+    "tests/test_actual_usage_budget.py": "b9fdea1f1deec86dcf02c7b61abb23b50fb58866023884a00c7dd094b9d943ad",
+    "tests/test_orchestrator.py": "c153cba8e7755827b996a895b9785c306715869cf0cc1aee59cddc0cac02c581",
+    "tests/test_wrapper_execution.py": "ae0bd0ef130fd1927af025c04a5dc3faf55786a39dc0fc24c71aef2b71d4d9d4",
+    "tests/test_diagnose_contract.py": "e9ed1d5697e440561e6be4006b709992e5d18edeb8ad3a49ed5e97356e3404ee",
+    "docs/DIAGNOSE.md": "21e9cd5350a749caf2175acabcf2e3b18ec877fe0bcfb0c3aefa7c056b533b25"
+  },
+  "original_plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "change": {
+    "diagnosis_reasoning": false,
+    "completion_cap": 8192,
+    "prepared_wrapper": "requires exact reasoning=False and completion cap, passes both through the same budgeted router",
+    "capability_missing": "refused before dispatch; no fallback to provider default",
+    "prompt": "stable generic category definitions, physical vs causal distinction, post-optimizer-step marker semantics, host-controlled verification defaults",
+    "schema_scoring_thresholds_captures_changed": false
+  },
+  "validation": [
+    {
+      "log": "focused.log",
+      "result": "205 passed in 29.85s",
+      "exit_code": 0,
+      "command": ".venv/bin/python reports/health-notifier-20261024/offline_tests.py -q tests/test_diagnosis_acceptance.py tests/test_diagnose_contract.py tests/test_diagnose_schema.py tests/test_llm_router.py tests/test_actual_usage_budget.py tests/test_orchestrator.py tests/test_verification_feedback.py tests/test_bounded_search.py"
+    },
+    {
+      "log": "wrapper-focused.log",
+      "result": "2 passed, 18 deselected in 22.75s",
+      "exit_code": 0,
+      "command": ".venv/bin/python reports/health-notifier-20261024/offline_tests.py -q tests/test_wrapper_execution.py -k test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_report",
+      "provenance": "Synthetic OOM/verdicts, SDK MockTransport and real no-network CPU Docker only; not a GPU or model result."
+    }
+  ],
+  "static_checks": "Ruff check, seven Python files format check and git diff --check passed",
+  "guards": [
+    "DNS blocked",
+    "INET blocked",
+    "real credential reads blocked",
+    "no provider API",
+    "no GPU",
+    "no live profile or account change"
+  ],
+  "last_prompt_revision": {
+    "after_tests": true,
+    "root_review_requested": true,
+    "change": "Clarifies retained_graph requires references beyond intended step/lifetime; a single grad-enabled evaluation released on return is activation working set.",
+    "scope": "prompt wording only; root explicitly requested no repeat of 205 tests; final prompt hash is recorded"
+  },
+  "historical_evidence": "runs/acceptance/diagnosis-prepared-20261025-v3/execution/result.json",
+  "historical_result_preserved": {
+    "matches": 3,
+    "denominator": 8,
+    "known_cost_usd": "0.35631912",
+    "accepted": false
+  },
+  "related_read_only_audit": "reports/t1.2-optimizer-fraction-audit-20261025.json",
+  "limitations": [
+    "Offline tests prove request wiring and guards, not live root-cause accuracy.",
+    "Schema remains compatible with historical arbitrary category strings; the prompt teaches vocabulary but exact scoring is unchanged.",
+    "Observed v3 failures remain failures; no regrading, category aliasing or fixture changes were performed."
+  ]
+}

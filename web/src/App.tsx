@@ -20,6 +20,7 @@ import {
   availabilityBlocks,
   artifactLink,
   costTotal,
+  costUpperBound,
   configurationLink,
   displayMetric,
   EVENT_KINDS,
@@ -1212,6 +1213,7 @@ function RunPage({ runId }: { runId: string }) {
               </Section>
               <Section title="Model usage">
                 <AdmissionNote usage={usage} />
+                <BoundedCostNote usage={usage} />
                 <div className="usage-total">
                   <span>Total recorded cost</span>
                   <strong>{costTotal(usage)}</strong>
@@ -1231,9 +1233,11 @@ function RunPage({ runId }: { runId: string }) {
                 ))}
                 {(numeric(usage.unknown_cost_calls) ?? 0) > 0 && (
                   <p className="caption">
-                    {String(usage.unknown_cost_calls)} call(s) have an
-                    unresolved charge. The known subtotal is not the final
-                    total.
+                    {String(usage.unknown_cost_calls)} call(s) have an{" "}
+                    {(numeric(usage.bounded_cost_calls) ?? 0) > 0
+                      ? "unconfirmed actual charge"
+                      : "unresolved charge"}
+                    . The known subtotal is not the final total.
                   </p>
                 )}
               </Section>
@@ -1251,6 +1255,16 @@ function RunPage({ runId }: { runId: string }) {
         </>
       )}
     </main>
+  );
+}
+function BoundedCostNote({ usage }: { usage: Dict }) {
+  if ((numeric(usage.bounded_cost_calls) ?? 0) <= 0) return null;
+  return (
+    <p className="caption" role="note">
+      Actual cost is unconfirmed for {String(usage.bounded_cost_calls)} call(s).
+      Verified cost upper bound: {costUpperBound(usage)}. This bound is not a
+      confirmed actual charge.
+    </p>
   );
 }
 function AdmissionNote({ usage }: { usage: Dict }) {
@@ -1593,6 +1607,7 @@ function Results() {
           note={`Known subtotal ${usd(usage.known_cost_usd)}`}
         />
       </div>
+      <BoundedCostNote usage={usage} />
       <Section
         title="Your runs"
         action={

@@ -1,0 +1,32 @@
+................FF..........................                             [100%]
+=================================== FAILURES ===================================
+___________ test_original_one_percent_cuda_gate_is_exact[9900-True] ____________
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/runs/subprocess-reference-cpu-reviewed/test_original_one_percent_cuda0')
+peak = 9900, accepted = True
+
+    @pytest.mark.parametrize("peak,accepted", [(9900, True), (10100, True), (10101, False)])
+    def test_original_one_percent_cuda_gate_is_exact(tmp_path, peak, accepted):
+        pair = comparison_fixture(tmp_path, peak=peak)
+        result = isolation.compare_pair(*pair, expected_status="completed", max_steps=20, device="cuda")
+>       assert result["t2_7_case_accepted"] is accepted
+E       assert False is True
+
+tests/test_subprocess_reference.py:208: AssertionError
+___________ test_original_one_percent_cuda_gate_is_exact[10100-True] ___________
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/runs/subprocess-reference-cpu-reviewed/test_original_one_percent_cuda1')
+peak = 10100, accepted = True
+
+    @pytest.mark.parametrize("peak,accepted", [(9900, True), (10100, True), (10101, False)])
+    def test_original_one_percent_cuda_gate_is_exact(tmp_path, peak, accepted):
+        pair = comparison_fixture(tmp_path, peak=peak)
+        result = isolation.compare_pair(*pair, expected_status="completed", max_steps=20, device="cuda")
+>       assert result["t2_7_case_accepted"] is accepted
+E       assert False is True
+
+tests/test_subprocess_reference.py:208: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_subprocess_reference.py::test_original_one_percent_cuda_gate_is_exact[9900-True]
+FAILED tests/test_subprocess_reference.py::test_original_one_percent_cuda_gate_is_exact[10100-True]
+2 failed, 42 passed in 41.63s

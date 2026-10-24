@@ -1,0 +1,34 @@
+{
+  "recorded_at_utc": "2026-10-24T21:00:23.994371+00:00",
+  "human_authorization": "允许后续模型调用，只用现有赠送额度，不充值、不超额。你继续按原计划把剩下的开发和验收做完。",
+  "scope": "Remaining model calls and development/acceptance in original PLAN, within existing gifted credit only",
+  "no_recharge": true,
+  "no_exceed_credit": true,
+  "acceptance_threshold_changes_authorized": false,
+  "local_estimate_overshoot_authorized": false,
+  "plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "observed_credit": {
+    "billing": "Active",
+    "gross_balance_usd": "30.25",
+    "trial_separate_usd": "1.00",
+    "gift_face_usd": "25.00",
+    "trial_not_counted": true
+  },
+  "working_envelope": {
+    "all_model_token_cost_ceiling_usd": "16.00",
+    "prior_known_token_cost_usd": "0.00035096",
+    "reference_tax_multiplier": "1.21",
+    "worst_reference_gross_usd": "19.36",
+    "unallocated_rounding_fee_buffer_usd": "0.89",
+    "judging_credit_reserve_gross_usd": "10.00",
+    "daily_token_cap_usd": "12.00"
+  },
+  "controls": [
+    "Only root dispatches paid requests.",
+    "Every pending dispatch gets exclusive persisted claim before transmission; never rerun merely because observation is interrupted.",
+    "Known usage plus retained worst-case charges plus next maximum must fit remaining envelope; unknown identity/bound violation halts all dispatch.",
+    "Recheck account credit before stages; compare exact model/price/context/fees against current catalogue before every dispatch.",
+    "Unsupported methods may be recorded as fail per original T0.4; failed samples are not silently retried.",
+    "Retain original PLAN, failed gates and old runs; no public ports, notifications, recharge or submission inferred."
+  ]
+}

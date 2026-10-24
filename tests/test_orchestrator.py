@@ -133,6 +133,13 @@ def test_sdk_patch_and_report_pipeline_keeps_fixture_provenance(tmp_path, execut
                 pricing=Pricing(Decimal(1), Decimal(2), verified=True, source="offline fixture"),
             )
 
+        models["ultra"] = replace(
+            models["ultra"],
+            capabilities=VerifiedCapabilities(
+                reasoning_method="chat_template_kwargs", evidence="offline mock only"
+            ),
+        )
+
         def respond(request):
             body = json.loads(request.content)
             calls.append(body["model"])
@@ -336,6 +343,13 @@ def search_run(
             )
             for name, spec in candidate_models().items()
         }
+
+        models["ultra"] = replace(
+            models["ultra"],
+            capabilities=VerifiedCapabilities(
+                reasoning_method="chat_template_kwargs", evidence="offline mock only"
+            ),
+        )
 
         if research_enabled and research_capabilities:
             models["super"] = replace(

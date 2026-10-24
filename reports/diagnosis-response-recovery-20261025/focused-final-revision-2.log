@@ -1,0 +1,371 @@
+........................................................................ [ 46%]
+...........................................................FFF..FFFFFFFF [ 92%]
+F...........                                                             [100%]
+=================================== FAILURES ===================================
+_ test_real_router_records_response_even_when_settlement_stops_run[599980-False] _
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_real_router_records_respo0')
+actual_tokens = 599980, exceeded = False
+
+    @pytest.mark.parametrize("actual_tokens,exceeded", [(599980, False), (600000, True)])
+    def test_real_router_records_response_even_when_settlement_stops_run(
+        tmp_path, actual_tokens, exceeded
+    ):
+>       profile = reviewed_fixture(tmp_path)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_actual_usage_budget.py:154: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_real_router_records_respo0')
+
+    def reviewed_fixture(tmp_path):
+        profile = fixture_runtime(tmp_path, None, profile_only=True, prompt_ceiling=1048576)
+        data = profile.model_dump()
+        data.update(run_budget_mode="actual_usage", available_credit_usd="3", authorized_total_usd="3")
+>       data["models"]["diagnose"]["billing"]["max_completion_tokens"] = 8192
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'diagnose'
+
+tests/test_actual_usage_budget.py:146: KeyError
+_ test_real_router_records_response_even_when_settlement_stops_run[600000-True] _
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_real_router_records_respo1')
+actual_tokens = 600000, exceeded = True
+
+    @pytest.mark.parametrize("actual_tokens,exceeded", [(599980, False), (600000, True)])
+    def test_real_router_records_response_even_when_settlement_stops_run(
+        tmp_path, actual_tokens, exceeded
+    ):
+>       profile = reviewed_fixture(tmp_path)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_actual_usage_budget.py:154: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_real_router_records_respo1')
+
+    def reviewed_fixture(tmp_path):
+        profile = fixture_runtime(tmp_path, None, profile_only=True, prompt_ceiling=1048576)
+        data = profile.model_dump()
+        data.update(run_budget_mode="actual_usage", available_credit_usd="3", authorized_total_usd="3")
+>       data["models"]["diagnose"]["billing"]["max_completion_tokens"] = 8192
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'diagnose'
+
+tests/test_actual_usage_budget.py:146: KeyError
+______ test_profile_rejects_unverified_bound_and_mode_mismatch_before_key ______
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_profile_rejects_unverifie0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7373599ba960>
+
+    def test_profile_rejects_unverified_bound_and_mode_mismatch_before_key(tmp_path, monkeypatch):
+>       profile = reviewed_fixture(tmp_path)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_actual_usage_budget.py:214: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_profile_rejects_unverifie0')
+
+    def reviewed_fixture(tmp_path):
+        profile = fixture_runtime(tmp_path, None, profile_only=True, prompt_ceiling=1048576)
+        data = profile.model_dump()
+        data.update(run_budget_mode="actual_usage", available_credit_usd="3", authorized_total_usd="3")
+>       data["models"]["diagnose"]["billing"]["max_completion_tokens"] = 8192
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'diagnose'
+
+tests/test_actual_usage_budget.py:146: KeyError
+___ test_original_small_run_and_daily_guards_write_real_partial_report[3-1] ____
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_original_small_run_and_da0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x73735b65d250>
+daily = '3', expected_calls = 1
+
+    @pytest.mark.parametrize("daily,expected_calls", [("3", 1), ("0.1", 0)])
+    def test_original_small_run_and_daily_guards_write_real_partial_report(
+        tmp_path, monkeypatch, daily, expected_calls
+    ):
+        from headroom import orchestrator
+        from headroom.orchestrator import FixRequest, Services, run_fix
+    
+        project = tmp_path / "project"
+        project.mkdir()
+>       profile = reviewed_fixture(project)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_actual_usage_budget.py:264: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_original_small_run_and_da0/project')
+
+    def reviewed_fixture(tmp_path):
+        profile = fixture_runtime(tmp_path, None, profile_only=True, prompt_ceiling=1048576)
+        data = profile.model_dump()
+        data.update(run_budget_mode="actual_usage", available_credit_usd="3", authorized_total_usd="3")
+>       data["models"]["diagnose"]["billing"]["max_completion_tokens"] = 8192
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'diagnose'
+
+tests/test_actual_usage_budget.py:146: KeyError
+__ test_original_small_run_and_daily_guards_write_real_partial_report[0.1-0] ___
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_original_small_run_and_da1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7373599ba630>
+daily = '0.1', expected_calls = 0
+
+    @pytest.mark.parametrize("daily,expected_calls", [("3", 1), ("0.1", 0)])
+    def test_original_small_run_and_daily_guards_write_real_partial_report(
+        tmp_path, monkeypatch, daily, expected_calls
+    ):
+        from headroom import orchestrator
+        from headroom.orchestrator import FixRequest, Services, run_fix
+    
+        project = tmp_path / "project"
+        project.mkdir()
+>       profile = reviewed_fixture(project)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_actual_usage_budget.py:264: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_original_small_run_and_da1/project')
+
+    def reviewed_fixture(tmp_path):
+        profile = fixture_runtime(tmp_path, None, profile_only=True, prompt_ceiling=1048576)
+        data = profile.model_dump()
+        data.update(run_budget_mode="actual_usage", available_credit_usd="3", authorized_total_usd="3")
+>       data["models"]["diagnose"]["billing"]["max_completion_tokens"] = 8192
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'diagnose'
+
+tests/test_actual_usage_budget.py:146: KeyError
+______ test_kept_success_then_unverified_cost_is_not_run_success[overrun] ______
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_kept_success_then_unverif0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7373599b8980>
+fault = 'overrun'
+
+    @pytest.mark.parametrize(
+        "fault", ["overrun", "missing_usage", "http_429", "network", "pending", "bound_invalid"]
+    )
+    def test_kept_success_then_unverified_cost_is_not_run_success(tmp_path, monkeypatch, fault):
+        import test_orchestrator as fixtures
+    
+        from headroom import orchestrator
+        from headroom.orchestrator import RunCancelled
+    
+>       profile = reviewed_fixture(tmp_path)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_actual_usage_budget.py:347: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_kept_success_then_unverif0')
+
+    def reviewed_fixture(tmp_path):
+        profile = fixture_runtime(tmp_path, None, profile_only=True, prompt_ceiling=1048576)
+        data = profile.model_dump()
+        data.update(run_budget_mode="actual_usage", available_credit_usd="3", authorized_total_usd="3")
+>       data["models"]["diagnose"]["billing"]["max_completion_tokens"] = 8192
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'diagnose'
+
+tests/test_actual_usage_budget.py:146: KeyError
+___ test_kept_success_then_unverified_cost_is_not_run_success[missing_usage] ___
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_kept_success_then_unverif1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7373599c64b0>
+fault = 'missing_usage'
+
+    @pytest.mark.parametrize(
+        "fault", ["overrun", "missing_usage", "http_429", "network", "pending", "bound_invalid"]
+    )
+    def test_kept_success_then_unverified_cost_is_not_run_success(tmp_path, monkeypatch, fault):
+        import test_orchestrator as fixtures
+    
+        from headroom import orchestrator
+        from headroom.orchestrator import RunCancelled
+    
+>       profile = reviewed_fixture(tmp_path)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_actual_usage_budget.py:347: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_kept_success_then_unverif1')
+
+    def reviewed_fixture(tmp_path):
+        profile = fixture_runtime(tmp_path, None, profile_only=True, prompt_ceiling=1048576)
+        data = profile.model_dump()
+        data.update(run_budget_mode="actual_usage", available_credit_usd="3", authorized_total_usd="3")
+>       data["models"]["diagnose"]["billing"]["max_completion_tokens"] = 8192
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'diagnose'
+
+tests/test_actual_usage_budget.py:146: KeyError
+_____ test_kept_success_then_unverified_cost_is_not_run_success[http_429] ______
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_kept_success_then_unverif2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x737359a04860>
+fault = 'http_429'
+
+    @pytest.mark.parametrize(
+        "fault", ["overrun", "missing_usage", "http_429", "network", "pending", "bound_invalid"]
+    )
+    def test_kept_success_then_unverified_cost_is_not_run_success(tmp_path, monkeypatch, fault):
+        import test_orchestrator as fixtures
+    
+        from headroom import orchestrator
+        from headroom.orchestrator import RunCancelled
+    
+>       profile = reviewed_fixture(tmp_path)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_actual_usage_budget.py:347: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_kept_success_then_unverif2')
+
+    def reviewed_fixture(tmp_path):
+        profile = fixture_runtime(tmp_path, None, profile_only=True, prompt_ceiling=1048576)
+        data = profile.model_dump()
+        data.update(run_budget_mode="actual_usage", available_credit_usd="3", authorized_total_usd="3")
+>       data["models"]["diagnose"]["billing"]["max_completion_tokens"] = 8192
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'diagnose'
+
+tests/test_actual_usage_budget.py:146: KeyError
+______ test_kept_success_then_unverified_cost_is_not_run_success[network] ______
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_kept_success_then_unverif3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x737359a05e80>
+fault = 'network'
+
+    @pytest.mark.parametrize(
+        "fault", ["overrun", "missing_usage", "http_429", "network", "pending", "bound_invalid"]
+    )
+    def test_kept_success_then_unverified_cost_is_not_run_success(tmp_path, monkeypatch, fault):
+        import test_orchestrator as fixtures
+    
+        from headroom import orchestrator
+        from headroom.orchestrator import RunCancelled
+    
+>       profile = reviewed_fixture(tmp_path)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_actual_usage_budget.py:347: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_kept_success_then_unverif3')
+
+    def reviewed_fixture(tmp_path):
+        profile = fixture_runtime(tmp_path, None, profile_only=True, prompt_ceiling=1048576)
+        data = profile.model_dump()
+        data.update(run_budget_mode="actual_usage", available_credit_usd="3", authorized_total_usd="3")
+>       data["models"]["diagnose"]["billing"]["max_completion_tokens"] = 8192
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'diagnose'
+
+tests/test_actual_usage_budget.py:146: KeyError
+______ test_kept_success_then_unverified_cost_is_not_run_success[pending] ______
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_kept_success_then_unverif4')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x737359a07050>
+fault = 'pending'
+
+    @pytest.mark.parametrize(
+        "fault", ["overrun", "missing_usage", "http_429", "network", "pending", "bound_invalid"]
+    )
+    def test_kept_success_then_unverified_cost_is_not_run_success(tmp_path, monkeypatch, fault):
+        import test_orchestrator as fixtures
+    
+        from headroom import orchestrator
+        from headroom.orchestrator import RunCancelled
+    
+>       profile = reviewed_fixture(tmp_path)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_actual_usage_budget.py:347: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_kept_success_then_unverif4')
+
+    def reviewed_fixture(tmp_path):
+        profile = fixture_runtime(tmp_path, None, profile_only=True, prompt_ceiling=1048576)
+        data = profile.model_dump()
+        data.update(run_budget_mode="actual_usage", available_credit_usd="3", authorized_total_usd="3")
+>       data["models"]["diagnose"]["billing"]["max_completion_tokens"] = 8192
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'diagnose'
+
+tests/test_actual_usage_budget.py:146: KeyError
+___ test_kept_success_then_unverified_cost_is_not_run_success[bound_invalid] ___
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_kept_success_then_unverif5')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x737359a06180>
+fault = 'bound_invalid'
+
+    @pytest.mark.parametrize(
+        "fault", ["overrun", "missing_usage", "http_429", "network", "pending", "bound_invalid"]
+    )
+    def test_kept_success_then_unverified_cost_is_not_run_success(tmp_path, monkeypatch, fault):
+        import test_orchestrator as fixtures
+    
+        from headroom import orchestrator
+        from headroom.orchestrator import RunCancelled
+    
+>       profile = reviewed_fixture(tmp_path)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_actual_usage_budget.py:347: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_kept_success_then_unverif5')
+
+    def reviewed_fixture(tmp_path):
+        profile = fixture_runtime(tmp_path, None, profile_only=True, prompt_ceiling=1048576)
+        data = profile.model_dump()
+        data.update(run_budget_mode="actual_usage", available_credit_usd="3", authorized_total_usd="3")
+>       data["models"]["diagnose"]["billing"]["max_completion_tokens"] = 8192
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'diagnose'
+
+tests/test_actual_usage_budget.py:146: KeyError
+________________ test_actual_profile_cannot_mix_local_estimate _________________
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_actual_profile_cannot_mix0')
+
+    def test_actual_profile_cannot_mix_local_estimate(tmp_path):
+>       profile = reviewed_fixture(tmp_path).model_dump()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_actual_usage_budget.py:441: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-115/test_actual_profile_cannot_mix0')
+
+    def reviewed_fixture(tmp_path):
+        profile = fixture_runtime(tmp_path, None, profile_only=True, prompt_ceiling=1048576)
+        data = profile.model_dump()
+        data.update(run_budget_mode="actual_usage", available_credit_usd="3", authorized_total_usd="3")
+>       data["models"]["diagnose"]["billing"]["max_completion_tokens"] = 8192
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'diagnose'
+
+tests/test_actual_usage_budget.py:146: KeyError
+=========================== short test summary info ============================
+FAILED tests/test_actual_usage_budget.py::test_real_router_records_response_even_when_settlement_stops_run[599980-False]
+FAILED tests/test_actual_usage_budget.py::test_real_router_records_response_even_when_settlement_stops_run[600000-True]
+FAILED tests/test_actual_usage_budget.py::test_profile_rejects_unverified_bound_and_mode_mismatch_before_key
+FAILED tests/test_actual_usage_budget.py::test_original_small_run_and_daily_guards_write_real_partial_report[3-1]
+FAILED tests/test_actual_usage_budget.py::test_original_small_run_and_daily_guards_write_real_partial_report[0.1-0]
+FAILED tests/test_actual_usage_budget.py::test_kept_success_then_unverified_cost_is_not_run_success[overrun]
+FAILED tests/test_actual_usage_budget.py::test_kept_success_then_unverified_cost_is_not_run_success[missing_usage]
+FAILED tests/test_actual_usage_budget.py::test_kept_success_then_unverified_cost_is_not_run_success[http_429]
+FAILED tests/test_actual_usage_budget.py::test_kept_success_then_unverified_cost_is_not_run_success[network]
+FAILED tests/test_actual_usage_budget.py::test_kept_success_then_unverified_cost_is_not_run_success[pending]
+FAILED tests/test_actual_usage_budget.py::test_kept_success_then_unverified_cost_is_not_run_success[bound_invalid]
+FAILED tests/test_actual_usage_budget.py::test_actual_profile_cannot_mix_local_estimate
+12 failed, 144 passed in 19.13s

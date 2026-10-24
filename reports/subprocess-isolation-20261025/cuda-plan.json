@@ -1,0 +1,33 @@
+{
+  "schema": "headroom.t2.7-plan.v1",
+  "cases": [
+    {
+      "id": "s1",
+      "script": "scenarios/s1_batch_too_big/train.py",
+      "script_args": [],
+      "expected_status": "oom",
+      "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28"
+    },
+    {
+      "id": "s3",
+      "script": "scenarios/s3_eval_no_grad_missing/train.py",
+      "script_args": [],
+      "expected_status": "completed",
+      "source_sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67"
+    },
+    {
+      "id": "hf_trainer",
+      "script": "repos/hf_trainer/train.py",
+      "script_args": [],
+      "expected_status": "oom",
+      "source_sha256": "7d3a714264fc76371c1183da125ec0ffa550bc78c68bbe2acd7868870684923a"
+    }
+  ],
+  "max_steps": 20,
+  "seed": 1337,
+  "device": "cuda",
+  "peak_delta_pct_limit": 1,
+  "model_api_calls": 0,
+  "cost_usd": "0",
+  "reference_scope": "independent subprocess enclosed by Docker; not a bare-host backend"
+}

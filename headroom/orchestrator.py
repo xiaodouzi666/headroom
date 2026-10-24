@@ -10,14 +10,14 @@ import time
 import uuid
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
-from decimal import Decimal
+from decimal import Decimal, localcontext
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from headroom.annotate import annotate_stacks
-from headroom.budget import BudgetExceeded, BudgetLedger, money
+from headroom.budget import BudgetExceeded, BudgetLedger, RunBudgetReached, money
 from headroom.diagnose import diagnose_with_router, round_verification_feedback
 from headroom.evidence import annotate_evidence_bundle, build_evidence
 from headroom.execution import prepare_local_command, replay_argv
@@ -37,7 +37,7 @@ from headroom.search import (
     write_cumulative_patch,
     write_pareto,
 )
-from headroom.store.db import Store
+from headroom.store.db import Store, _bounded_cost
 from headroom.verify.compare import parse_target
 from headroom.verify.policy import nanogpt_cli, scan_source_forbidden
 from headroom.verify.runner import verify_script
@@ -137,7 +137,8 @@ def _llm_phase(store, run_id, start):
     records = store.llm_calls(run_id)[start:]
     details = []
     for row in records:
-        cost = row.get("cost", {}).get("usd") if isinstance(row.get("cost"), dict) else None
+        cost = row.get("cost_usd")
+        upper = _bounded_cost(row) if cost is None else None
         elapsed = row.get("elapsed_seconds")
         elapsed = elapsed if type(elapsed) in (int, float) and elapsed >= 0 else None
         details.append(
@@ -146,7 +147,14 @@ def _llm_phase(store, run_id, start):
                 "role": row.get("role"),
                 "elapsed_seconds": elapsed,
                 "cost_usd": cost,
+                "cost_upper_usd": str(upper) if upper is not None else None,
+                "cost_basis": "actual"
+                if cost is not None
+                else "verified_upper_bound"
+                if upper is not None
+                else None,
                 "outcome": row.get("outcome"),
+                "billing_status": row.get("billing_status"),
             }
         )
     models = list(
@@ -154,12 +162,33 @@ def _llm_phase(store, run_id, start):
     )
     known_cost = bool(details) and all(row["cost_usd"] is not None for row in details)
     known_time = bool(details) and all(row["elapsed_seconds"] is not None for row in details)
+    covered = bool(details) and all(
+        (row["cost_usd"] is not None or row["cost_upper_usd"] is not None)
+        and row["billing_status"] not in {"unresolved", "pending"}
+        for row in details
+    )
+    with localcontext() as context:
+        context.prec = 256
+        conservative = (
+            sum(
+                (
+                    money(row["cost_usd"] if row["cost_usd"] is not None else row["cost_upper_usd"])
+                    for row in details
+                ),
+                Decimal(0),
+            )
+            if covered
+            else None
+        )
     return {
         "models": models,
         "model": models[0] if len(models) == 1 else None,
         "cost_usd": str(sum((money(row["cost_usd"]) for row in details), Decimal(0)))
         if known_cost
         else None,
+        "cost_upper_usd": str(conservative) if covered and not known_cost else None,
+        "cost_basis": "actual" if known_cost else "verified_upper_bound" if covered else None,
+        "billing_complete": covered,
         "elapsed_seconds": sum(row["elapsed_seconds"] for row in details) if known_time else None,
         "llm_calls": details,
     }
@@ -399,12 +428,17 @@ def run_fix(
                 daily_limit=daily,
                 total_limit=profile.authorized_total_usd,
             )
-            budget.open_run(run_id, limit)
+            budget.open_run(run_id, limit, budget_mode=profile.run_budget_mode)
             budget_open = True
             bundle = build_live_runtime(run_id, profile=profile, budget=budget, store=store)
         else:
             bundle = services.runtime_factory(run_id, store, directory)
-        emit("budget.reserved", limit_usd=str(limit), live=services.provenance == "live")
+        emit(
+            "budget.reserved",
+            limit_usd=str(limit),
+            live=services.provenance == "live",
+            run_budget_mode=profile.run_budget_mode if budget_open else None,
+        )
         emit("baseline.started", script=str(relative), device=request.device)
         baseline = services.baseline(
             source_script,
@@ -944,6 +978,10 @@ def run_fix(
         emit("run.failed", reason=reason)
     except BudgetExceeded as error:
         status, reason = "budget_exceeded", str(error)
+        if isinstance(error, RunBudgetReached) and error.exceeded:
+            # Preserve retained candidate/verification facts, but this run did not
+            # certify its cost constraint (actual or conservative bound).
+            data["target_met"] = False
         data["search"]["stop_reason"] = "budget_exceeded"
         emit("budget.exceeded", reason=reason)
     except RuntimeNotReady as error:
@@ -978,6 +1016,25 @@ def run_fix(
                 data.setdefault("cleanup_errors", []).append("runtime:" + type(error).__name__)
         if budget_open:
             data["budget"] = budget.close_run(run_id)
+            final_budget = data["budget"]
+            if final_budget["run_budget_mode"] == "actual_usage" and (
+                final_budget["run_budget_exceeded"]
+                or final_budget["billing_bound_unresolved"]
+                or final_budget.get("billing_complete") is not True
+                or final_budget["pending_attempts"]
+                or final_budget.get("conservative_total_usd") is None
+                or money(final_budget["conservative_total_usd"]) > money(final_budget["limit_usd"])
+            ):
+                # A retained configuration may still meet its memory target, but
+                # unresolved or failed run cost cannot certify overall success.
+                data["target_met"] = False
+                if status == "completed":
+                    status, reason = (
+                        "budget_exceeded",
+                        "Run cost is unresolved or its upper bound cannot establish its limit",
+                    )
+                    data["search"]["stop_reason"] = "budget_exceeded"
+                    emit("budget.exceeded", reason=reason)
         if data.get("kept"):
             data["pareto"] = write_pareto(directory, data["pareto"]["points"])
             for key, filename in (("patch", "patch.diff"), ("env", "env.sh"), ("cli", "cli.json")):
@@ -1024,6 +1081,7 @@ def run_fix(
             "status": status,
             "target_met": data["target_met"],
             "reason": reason,
+            "budget": data.get("budget"),
             "run_dir": str(directory),
             "report_json": str(directory / "report.json"),
             "report_md": str(directory / "report.md"),

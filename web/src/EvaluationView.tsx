@@ -7,6 +7,7 @@ import {
   decimal,
   gb,
   usd,
+  usdUpper,
   human,
   searchModeLabel,
   type Dict,
@@ -34,7 +35,8 @@ const columns: [string, string][] = [
   ["step_time_change_pct", "Step-time change %"],
   ["loss_equivalence", "Numerics"],
   ["rounds", "Rounds"],
-  ["cost_usd", "Cost USD"],
+  ["cost_usd", "Actual cost USD"],
+  ["cost_upper_usd", "Cost upper bound USD"],
   ["wall_seconds", "Wall seconds"],
   ["run_id", "Source run"],
 ];
@@ -93,7 +95,9 @@ const metric = (key: string, v: unknown) =>
         ? gb(v)
         : key === "cost_usd"
           ? usd(v)
-          : value(v);
+          : key === "cost_upper_usd"
+            ? usdUpper(v)
+            : value(v);
 
 function RoundOutcomes({ row }: { row: Dict }) {
   const outcomes = rows(row.round_outcomes);
@@ -217,6 +221,10 @@ export default function EvaluationView() {
     loss_equivalence: `${value(comparable.equivalent)}/${value(comparable.comparable_count)} comparable`,
     rounds: value(record(measured.rounds).mean),
     cost_usd: usd(summary.total_cost_usd),
+    cost_upper_usd:
+      summary.total_cost_usd == null && summary.billing_complete === true
+        ? usdUpper(summary.conservative_total_usd)
+        : "—",
     wall_seconds: value(record(measured.wall_seconds).mean),
     run_id: "—",
   };
@@ -391,7 +399,14 @@ export default function EvaluationView() {
             completed counts are recorded facts, not additional acceptance
             rates. Fixture rows excluded:{" "}
             {value(summary.offline_fixture_rows_excluded)}. Known cost subtotal:{" "}
-            {usd(summary.known_cost_usd)}; total: {usd(summary.total_cost_usd)}.
+            {usd(summary.known_cost_usd)}; actual total:{" "}
+            {usd(summary.total_cost_usd)}. Verified cost upper bound:{" "}
+            {summary.billing_complete === true
+              ? usdUpper(summary.conservative_total_usd)
+              : "Unknown"}
+            . Bounded runs: {value(summary.bounded_cost_runs)}; unresolved runs:{" "}
+            {value(summary.unresolved_cost_runs)}. An upper bound is not a
+            confirmed actual charge.
           </p>
           <div className="table-wrap">
             <table aria-label="Evaluation summary">

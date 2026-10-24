@@ -117,6 +117,23 @@ def _public_row(row, provenance):
         )
     except (TypeError, ValueError, ArithmeticError):
         result["cost_usd"] = None
+    result["billing_complete"] = row.get("billing_complete", result["cost_usd"] is not None) is True
+    result["cost_upper_usd"] = None
+    result["cost_basis"] = "actual" if result["cost_usd"] is not None else None
+    if (
+        result["cost_usd"] is None
+        and result["billing_complete"]
+        and row.get("cost_basis") == "verified_upper_bound"
+    ):
+        try:
+            upper = row.get("cost_upper_usd")
+            if upper is not None:
+                result["cost_upper_usd"] = str(money(upper))
+                result["cost_basis"] = "verified_upper_bound"
+        except (TypeError, ValueError, ArithmeticError):
+            pass
+    if result["cost_usd"] is None and result["cost_upper_usd"] is None:
+        result["billing_complete"] = False
     for name, length in (("run_id", 32), ("source_sha256", 64)):
         value = row.get(name)
         result[name] = (

@@ -1,0 +1,183 @@
+..................................................................FFFFF. [ 72%]
+...........................                                              [100%]
+=================================== FAILURES ===================================
+_ test_validation_error_retains_response_without_leaking_it_in_exception[{"count": 2, "label": "private-assistant-text"}-length-truncated] _
+
+text = '{"count": 2, "label": "private-assistant-text"}', finish = 'length'
+reason = 'truncated'
+
+    @pytest.mark.parametrize(
+        "text,finish,reason",
+        [
+            ('{"count": 2, "label": "private-assistant-text"}', "length", "truncated"),
+            ('{"count": 2, "label": "private-assistant-text"}', "content_filter", "filtered"),
+            ("", "stop", "empty_json"),
+            ("private-assistant-text", "stop", "invalid_json"),
+            ('{"label": "private-assistant-text"}', "stop", "schema_mismatch"),
+        ],
+    )
+    def test_validation_error_retains_response_without_leaking_it_in_exception(text, finish, reason):
+        with TokenFactoryClient(
+            transport=httpx.MockTransport(lambda _: response(text, finish))
+        ) as client:
+            with pytest.raises(ResponseValidationError) as caught:
+                LLMRouter(client).chat("patch", [{"role": "user", "content": "answer"}], Answer)
+            error = caught.value
+            assert error.reason == reason
+            assert error.response.text == text
+            assert error.response.finish_reason == finish
+            assert error.response.response_model == SUPER_MODEL
+            assert error.response.usage.completion_tokens == 10
+>           assert error.response.cost.status == "known"
+E           AssertionError: assert 'unknown' == 'known'
+E             
+E             - known
+E             + unknown
+E             ? ++
+
+tests/test_llm_router.py:196: AssertionError
+_ test_validation_error_retains_response_without_leaking_it_in_exception[{"count": 2, "label": "private-assistant-text"}-content_filter-filtered] _
+
+text = '{"count": 2, "label": "private-assistant-text"}'
+finish = 'content_filter', reason = 'filtered'
+
+    @pytest.mark.parametrize(
+        "text,finish,reason",
+        [
+            ('{"count": 2, "label": "private-assistant-text"}', "length", "truncated"),
+            ('{"count": 2, "label": "private-assistant-text"}', "content_filter", "filtered"),
+            ("", "stop", "empty_json"),
+            ("private-assistant-text", "stop", "invalid_json"),
+            ('{"label": "private-assistant-text"}', "stop", "schema_mismatch"),
+        ],
+    )
+    def test_validation_error_retains_response_without_leaking_it_in_exception(text, finish, reason):
+        with TokenFactoryClient(
+            transport=httpx.MockTransport(lambda _: response(text, finish))
+        ) as client:
+            with pytest.raises(ResponseValidationError) as caught:
+                LLMRouter(client).chat("patch", [{"role": "user", "content": "answer"}], Answer)
+            error = caught.value
+            assert error.reason == reason
+            assert error.response.text == text
+            assert error.response.finish_reason == finish
+            assert error.response.response_model == SUPER_MODEL
+            assert error.response.usage.completion_tokens == 10
+>           assert error.response.cost.status == "known"
+E           AssertionError: assert 'unknown' == 'known'
+E             
+E             - known
+E             + unknown
+E             ? ++
+
+tests/test_llm_router.py:196: AssertionError
+_ test_validation_error_retains_response_without_leaking_it_in_exception[-stop-empty_json] _
+
+text = '', finish = 'stop', reason = 'empty_json'
+
+    @pytest.mark.parametrize(
+        "text,finish,reason",
+        [
+            ('{"count": 2, "label": "private-assistant-text"}', "length", "truncated"),
+            ('{"count": 2, "label": "private-assistant-text"}', "content_filter", "filtered"),
+            ("", "stop", "empty_json"),
+            ("private-assistant-text", "stop", "invalid_json"),
+            ('{"label": "private-assistant-text"}', "stop", "schema_mismatch"),
+        ],
+    )
+    def test_validation_error_retains_response_without_leaking_it_in_exception(text, finish, reason):
+        with TokenFactoryClient(
+            transport=httpx.MockTransport(lambda _: response(text, finish))
+        ) as client:
+            with pytest.raises(ResponseValidationError) as caught:
+                LLMRouter(client).chat("patch", [{"role": "user", "content": "answer"}], Answer)
+            error = caught.value
+            assert error.reason == reason
+            assert error.response.text == text
+            assert error.response.finish_reason == finish
+            assert error.response.response_model == SUPER_MODEL
+            assert error.response.usage.completion_tokens == 10
+>           assert error.response.cost.status == "known"
+E           AssertionError: assert 'unknown' == 'known'
+E             
+E             - known
+E             + unknown
+E             ? ++
+
+tests/test_llm_router.py:196: AssertionError
+_ test_validation_error_retains_response_without_leaking_it_in_exception[private-assistant-text-stop-invalid_json] _
+
+text = 'private-assistant-text', finish = 'stop', reason = 'invalid_json'
+
+    @pytest.mark.parametrize(
+        "text,finish,reason",
+        [
+            ('{"count": 2, "label": "private-assistant-text"}', "length", "truncated"),
+            ('{"count": 2, "label": "private-assistant-text"}', "content_filter", "filtered"),
+            ("", "stop", "empty_json"),
+            ("private-assistant-text", "stop", "invalid_json"),
+            ('{"label": "private-assistant-text"}', "stop", "schema_mismatch"),
+        ],
+    )
+    def test_validation_error_retains_response_without_leaking_it_in_exception(text, finish, reason):
+        with TokenFactoryClient(
+            transport=httpx.MockTransport(lambda _: response(text, finish))
+        ) as client:
+            with pytest.raises(ResponseValidationError) as caught:
+                LLMRouter(client).chat("patch", [{"role": "user", "content": "answer"}], Answer)
+            error = caught.value
+            assert error.reason == reason
+            assert error.response.text == text
+            assert error.response.finish_reason == finish
+            assert error.response.response_model == SUPER_MODEL
+            assert error.response.usage.completion_tokens == 10
+>           assert error.response.cost.status == "known"
+E           AssertionError: assert 'unknown' == 'known'
+E             
+E             - known
+E             + unknown
+E             ? ++
+
+tests/test_llm_router.py:196: AssertionError
+_ test_validation_error_retains_response_without_leaking_it_in_exception[{"label": "private-assistant-text"}-stop-schema_mismatch] _
+
+text = '{"label": "private-assistant-text"}', finish = 'stop'
+reason = 'schema_mismatch'
+
+    @pytest.mark.parametrize(
+        "text,finish,reason",
+        [
+            ('{"count": 2, "label": "private-assistant-text"}', "length", "truncated"),
+            ('{"count": 2, "label": "private-assistant-text"}', "content_filter", "filtered"),
+            ("", "stop", "empty_json"),
+            ("private-assistant-text", "stop", "invalid_json"),
+            ('{"label": "private-assistant-text"}', "stop", "schema_mismatch"),
+        ],
+    )
+    def test_validation_error_retains_response_without_leaking_it_in_exception(text, finish, reason):
+        with TokenFactoryClient(
+            transport=httpx.MockTransport(lambda _: response(text, finish))
+        ) as client:
+            with pytest.raises(ResponseValidationError) as caught:
+                LLMRouter(client).chat("patch", [{"role": "user", "content": "answer"}], Answer)
+            error = caught.value
+            assert error.reason == reason
+            assert error.response.text == text
+            assert error.response.finish_reason == finish
+            assert error.response.response_model == SUPER_MODEL
+            assert error.response.usage.completion_tokens == 10
+>           assert error.response.cost.status == "known"
+E           AssertionError: assert 'unknown' == 'known'
+E             
+E             - known
+E             + unknown
+E             ? ++
+
+tests/test_llm_router.py:196: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_llm_router.py::test_validation_error_retains_response_without_leaking_it_in_exception[{"count": 2, "label": "private-assistant-text"}-length-truncated]
+FAILED tests/test_llm_router.py::test_validation_error_retains_response_without_leaking_it_in_exception[{"count": 2, "label": "private-assistant-text"}-content_filter-filtered]
+FAILED tests/test_llm_router.py::test_validation_error_retains_response_without_leaking_it_in_exception[-stop-empty_json]
+FAILED tests/test_llm_router.py::test_validation_error_retains_response_without_leaking_it_in_exception[private-assistant-text-stop-invalid_json]
+FAILED tests/test_llm_router.py::test_validation_error_retains_response_without_leaking_it_in_exception[{"label": "private-assistant-text"}-stop-schema_mismatch]
+5 failed, 94 passed in 13.29s

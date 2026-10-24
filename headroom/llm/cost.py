@@ -81,13 +81,18 @@ class Cost:
     usd: Decimal | None
     status: str
     reason: str | None = None
+    upper_usd: Decimal | None = None
+    basis: str | None = None
 
     def as_dict(self):
-        return {
+        value = {
             "usd": str(self.usd) if self.usd is not None else None,
             "status": self.status,
             "reason": self.reason,
         }
+        if self.upper_usd is not None:
+            value.update(upper_usd=str(self.upper_usd), basis=self.basis)
+        return value
 
 
 def calculate_cost(usage: Usage | None, pricing: Pricing | None) -> Cost:
@@ -97,7 +102,22 @@ def calculate_cost(usage: Usage | None, pricing: Pricing | None) -> Cost:
         return Cost(None, "unknown", "missing_or_unverified_pricing")
     cached = usage.cached_tokens
     if cached is None and pricing.cached_input_per_million is not None:
-        return Cost(None, "unknown", "missing_cached_token_usage")
+        with localcontext() as context:
+            context.prec = 256 + max(
+                len(str(usage.prompt_tokens)), len(str(usage.completion_tokens))
+            )
+            upper = (
+                usage.prompt_tokens
+                * max(pricing.input_per_million, pricing.cached_input_per_million)
+                + usage.completion_tokens * pricing.output_per_million
+            ) / Decimal(1_000_000)
+        return Cost(
+            None,
+            "upper_bound",
+            "missing_cached_token_usage",
+            upper,
+            "verified_tariff_missing_cache_count",
+        )
     if cached and pricing.cached_input_per_million is None:
         return Cost(None, "unknown", "missing_cached_input_price")
     cached = cached or 0

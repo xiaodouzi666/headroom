@@ -64,6 +64,10 @@ class ApiSettings:
     allowed_hosts: tuple[str, ...] = ("localhost", "127.0.0.1", "[::1]", "testserver")
 
     def __post_init__(self):
+        # A deployment may explicitly select a reviewed profile; never activate or rewrite it.
+        self.runtime_profile = (
+            self.runtime_profile or os.environ.get("HEADROOM_RUNTIME_PROFILE") or None
+        )
         self.public_host = self.public_host or os.environ.get("HEADROOM_PUBLIC_HOST")
         self.trust_cloudflared = (
             self.trust_cloudflared or os.environ.get("HEADROOM_TRUST_CLOUDFLARED") == "true"
@@ -528,9 +532,16 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
         rows = [row for row in store.list_runs(1000) if row.get("api_owner") == request.state.owner]
         items = [{"run_id": row["run_id"], **store.usage(row["run_id"])} for row in rows]
         unknown = sum(item["unknown_cost_calls"] for item in items)
+        bounded = sum(item["bounded_cost_calls"] for item in items)
+        unresolved = sum(item["unresolved_cost_calls"] for item in items)
         with localcontext() as context:
             context.prec = 220
             subtotal = sum((Decimal(item["known_cost_usd"]) for item in items), Decimal(0))
+            conservative = (
+                None
+                if unresolved
+                else sum((Decimal(item["conservative_total_usd"]) for item in items), Decimal(0))
+            )
         return {
             "runs": items,
             "scope": "current_session",
@@ -539,6 +550,10 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
             "total_cost_usd": None if unknown else str(subtotal),
             "unknown_cost_calls": unknown,
             "complete": unknown == 0,
+            "billing_complete": unresolved == 0,
+            "bounded_cost_calls": bounded,
+            "unresolved_cost_calls": unresolved,
+            "conservative_total_usd": str(conservative) if conservative is not None else None,
             "local_budget": availability.snapshot()["local_budget"],
         }
 

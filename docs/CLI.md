@@ -23,6 +23,19 @@ headroom fix ./train.py --target fix-oom \
 The existing `--budget`, `--daily-budget`, `--runtime-profile` and `--research`
 controls remain CLI controls; a project file cannot set them.
 
+Run-budget interpretation comes from the explicitly selected reviewed runtime
+profile. Its optional run_budget_mode defaults to strict_reservation.
+actual_usage keeps the --budget 0.6 value as an actual-cost stop line while
+requiring full provider-bound reservations in the shared authorized and daily
+pools. It rejects local estimates. A single request can cross the run line;
+that run stops with a partial report and fails its cost requirement. Equality
+stops further calls but does not itself fail the cost <= limit check. Unknown,
+pending or invalid billing also prevents an overall success claim while keeping
+the earlier candidate's verification facts. A run crossing UTC midnight must be
+restarted as a new run before any further model request.
+See [runtime accounting](RUNTIME.md#explicit-actual-usage-run-stop-mode).
+No new profile, credential, or spending authorization is created by this option.
+
 ## Local repository command
 
 ```sh

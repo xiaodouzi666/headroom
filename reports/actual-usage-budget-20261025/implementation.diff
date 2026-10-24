@@ -1,0 +1,976 @@
+diff --git a/docs/CLI.md b/docs/CLI.md
+index e8fa3f0..04acc5e 100644
+--- a/docs/CLI.md
++++ b/docs/CLI.md
+@@ -23,6 +23,16 @@ headroom fix ./train.py --target fix-oom \
+ The existing `--budget`, `--daily-budget`, `--runtime-profile` and `--research`
+ controls remain CLI controls; a project file cannot set them.
+ 
++Run-budget interpretation comes from the explicitly selected reviewed runtime
++profile. Its optional run_budget_mode defaults to strict_reservation.
++actual_usage keeps the --budget 0.6 value as an actual-cost stop line while
++requiring full provider-bound reservations in the shared authorized and daily
++pools. It rejects local estimates. A single request can cross the run line;
++that run stops with a partial report and fails its cost requirement. Equality
++stops further calls but does not itself fail the cost <= limit check.
++See [runtime accounting](RUNTIME.md#explicit-actual-usage-run-stop-mode).
++No new profile, credential, or spending authorization is created by this option.
++
+ ## Local repository command
+ 
+ ```sh
+diff --git a/docs/RUNTIME.md b/docs/RUNTIME.md
+index 48d4b98..2838d55 100644
+--- a/docs/RUNTIME.md
++++ b/docs/RUNTIME.md
+@@ -47,12 +47,62 @@ repair/evaluation. No live runtime profile is created by this code change.
+ 
+ ## Accounting
+ 
+-The SQLite budget ledger reserves each run's cap against the daily and authorized-total budgets. Each actual network attempt reserves an explicitly labeled provider bound or local estimate before dispatch. Successful known usage settles that reservation. Missing usage, network errors and interrupted attempts retain unknown actual charges and block every later dispatch through the same ledger, including other open runs and after restart. Unknown is never displayed as zero or as a proven finite maximum debt.
++The SQLite budget ledger reserves each open run's limit as a floor against the daily and authorized-total budgets. The default run_budget_mode=strict_reservation also requires every request reservation to fit inside that run's remaining limit. Each actual network attempt reserves an explicitly labeled provider bound or local estimate before dispatch. Successful known usage settles that reservation. Missing usage, network errors and interrupted attempts retain unknown actual charges and block every later dispatch through the same ledger, including other open runs and after restart. Unknown is never displayed as zero or as a proven finite maximum debt.
+ 
+-The default CLI run cap is 0.6 USD and daily cap is 12 USD. Environment caps `HEADROOM_RUN_BUDGET_USD` and `HEADROOM_DAILY_BUDGET_USD` can only lower a request's caps. The confirmed authorized total is a separate all-time admission limit, including across day boundaries. An estimated admission can overshoot its reservation and therefore cannot guarantee actual provider charges remain below that limit. Nano annotations share a 0.02 USD per-run sub-budget across retries. A response identity mismatch or violated billing bound halts further billable work.
++The default CLI run limit is 0.6 USD and daily limit is 12 USD. Its admission meaning is controlled by the reviewed profile as described below. Environment caps `HEADROOM_RUN_BUDGET_USD` and `HEADROOM_DAILY_BUDGET_USD` can only lower a request's caps. The confirmed authorized total is a separate all-time admission limit, including across day boundaries. An estimated admission can overshoot its reservation and therefore cannot guarantee actual provider charges remain below that limit. Nano annotations share a 0.02 USD per-run sub-budget across retries. A response identity mismatch or violated billing bound halts further billable work.
+ 
+ These local controls govern this application only. They are not a guarantee about Nebius account charges made elsewhere. A card top-up is not an account-level spending cap.
+ 
++## Explicit actual-usage run stop mode
++
++A reviewed runtime profile may explicitly set "run_budget_mode": "actual_usage".
++Omitting it preserves "strict_reservation" for old profiles and migrated ledger
++rows. This is a run accounting choice, not the local_estimate admission policy:
++all three model roles must have verified BillingBound records, and every
++attempt must use verified_provider_bound. Mixing local estimates is refused.
++Finite positive authorized-total and daily pools are required. Once the shared
++ledger contains an actual_usage run, all later attempts through that ledger
++must use provider bounds, including older strict_reservation runs and after
++close/restart. This prevents another profile's local estimate from invalidating
++the shared pool protection. Previously settled known estimate costs remain
++recorded; no historical charges or reservations are reset.
++
++The CLI keeps --budget 0.6; no project YAML can select this financial mode.
++--runtime-profile selects the reviewed profile for fix/watch/evaluation, and
++the acceptance drivers use the same ledger lifecycle. Before every POST, one
++SQLite transaction accounts for other open-run floors, all outstanding/actual
++charges and the next request's **full** provider upper bound in both shared
++pools. Thus a $1.060576 Ultra reservation can fit a sufficient shared pool while
++the run still has a $0.6 actual-cost stop line. Unused reservation is released
++only after known usage is settled. This changes neither provider prices nor
++the original actual-cost acceptance threshold.
++
++Once known run usage reaches its limit, settlement commits the actual charge,
++updates the call record and raises RunBudgetReached. No subsequent request in
++that run may dispatch, including after restart. Exact equality is a stop and
++still satisfies the cost <= limit check; strictly greater usage fails that
++cost check and the run's top-level target-success claim is false. Retained
++patches, candidate verification and measurements remain available in its
++partial report. A run stop does not globally halt unrelated runs; unknown
++billing, response identity mismatch, provider-bound violations and incomplete
++local accounting still do.
++
++**The run stop line is not a hard maximum charge for one request.** A request
++admitted while actual usage is below $0.6 may settle above $0.6, in which case
++the run fails the unchanged cost requirement. Hard admission protects the
++shared pool of model charges. The operator must set that pool below available
++promotional credit after separately allowing for taxes/fees and prior spending
++outside this ledger; this mode does not perform that conversion. The application
++cannot protect against independent account spending by other clients.
++
++HEADROOM_RUN_BUDGET_USD still only lowers the run stop line, and reaching a
++0.05 line produces budget.exceeded plus a partial report. Daily pool 0.1
++still rejects opening the default 0.6 run immediately; lowering the run line
++does not let a full Ultra reservation bypass that daily pool. Reports/CLI
++results record run_budget_mode, run_limit_basis, settled actual usage,
++and separate run_budget_reached/run_budget_exceeded flags. Historical
++reports without these fields remain unknown, not inferred.
++
+ ## Billing while promotional approval is pending
+ 
+ Nebius ordinary Token Factory billing is separate from Builders or hackathon promotional approval. If only promotional approval is pending, an ordinarily onboarded account can use paid billing and an API key first. Account verification restrictions still apply. Current billing may allow a negative balance followed by automatic card charges; a 25 USD top-up does not cap total spending at 25 USD.
+diff --git a/headroom/acceptance/common.py b/headroom/acceptance/common.py
+index d8ce5a5..4c448b5 100644
+--- a/headroom/acceptance/common.py
++++ b/headroom/acceptance/common.py
+@@ -179,6 +179,7 @@ def acceptance_run(
+         if file_record(profile_path, 256 * 1024)["sha256"] != profile_hash:
+             raise ValueError("Runtime profile changed during verification")
+         record["profile_sha256"] = profile_hash
++        record["run_budget_mode"] = profile.run_budget_mode
+         budget = BudgetLedger(
+             project_root / ".cache/budget.db",
+             daily_limit=daily,
+@@ -196,7 +197,7 @@ def acceptance_run(
+                 "accepted": False,
+             },
+         )
+-        budget.open_run(run_id, limit)
++        budget.open_run(run_id, limit, budget_mode=profile.run_budget_mode)
+         opened = True
+         bundle = build_live_runtime(
+             run_id,
+diff --git a/headroom/budget.py b/headroom/budget.py
+index c7e6c93..8603473 100644
+--- a/headroom/budget.py
++++ b/headroom/budget.py
+@@ -15,6 +15,21 @@ class BudgetExceeded(RuntimeError):
+     pass
+ 
+ 
++class RunBudgetReached(BudgetExceeded):
++    """Actual usage reached a run stop line; the shared billing bound remains valid."""
++
++    def __init__(self, *, exceeded):
++        self.exceeded = exceeded
++        super().__init__(
++            "Actual run cost exceeded its limit; further calls stopped"
++            if exceeded
++            else "Actual run cost reached its limit; further calls stopped"
++        )
++
++
++RUN_BUDGET_MODES = {"strict_reservation", "actual_usage"}
++
++
+ def money(value):
+     if isinstance(value, (float, bool)):
+         raise TypeError("Dollar values require Decimal or decimal strings")
+@@ -27,7 +42,11 @@ def money(value):
+ 
+ 
+ class BudgetLedger:
+-    """Reserve whole run limits across processes, then reserve each network attempt.
++    """Reserve open-run floors and each network attempt across processes.
++
++    Strict run mode also bounds each reservation by the run limit. Actual-usage
++    mode uses that limit as a settled-cost stop line while shared pools reserve
++    the full provider bound.
+ 
+     An attempt records either a provider-bound reservation or an explicit local
+     estimate, never an asserted actual charge. Unknown/pending charges block further
+@@ -45,7 +64,8 @@ class BudgetLedger:
+             conn.execute("""
+                 CREATE TABLE IF NOT EXISTS budget_runs (
+                     id TEXT PRIMARY KEY, day TEXT NOT NULL, limit_usd TEXT NOT NULL,
+-                    status TEXT NOT NULL, halt_reason TEXT
++                    status TEXT NOT NULL, halt_reason TEXT,
++                    budget_mode TEXT NOT NULL DEFAULT 'strict_reservation'
+                 )
+             """)
+             conn.execute("""
+@@ -57,6 +77,12 @@ class BudgetLedger:
+                     dispatched INTEGER NOT NULL DEFAULT 1
+                 )
+             """)
++            run_columns = {row[1] for row in conn.execute("PRAGMA table_info(budget_runs)")}
++            if "budget_mode" not in run_columns:
++                conn.execute(
++                    "ALTER TABLE budget_runs ADD COLUMN budget_mode TEXT "
++                    "NOT NULL DEFAULT 'strict_reservation'"
++                )
+             columns = {row[1] for row in conn.execute("PRAGMA table_info(budget_attempts)")}
+             if "admission_kind" not in columns:
+                 conn.execute(
+@@ -163,14 +189,49 @@ class BudgetLedger:
+         ).fetchone():
+             raise BudgetExceeded("Pending or unknown provider charge blocks further calls")
+ 
+-    def open_run(self, run_id, run_limit):
++    @staticmethod
++    def _strict_pool(conn):
++        # Run history is durable: closing a run must not silently re-enable
++        # estimates that could invalidate this shared pool's hard admission.
++        return (
++            conn.execute(
++                "SELECT 1 FROM budget_runs WHERE budget_mode='actual_usage' LIMIT 1"
++            ).fetchone()
++            is not None
++        )
++
++    def require_actual_pool(self):
++        if self.total_limit is None or self.total_limit <= 0 or self.daily_limit <= 0:
++            raise BudgetExceeded(
++                "Actual-usage mode requires finite positive global and daily pools"
++            )
++
++    def _committed(self, conn, *, day=None, run_id=None, additional=Decimal(0)):
++        """Open-run floors plus outstanding/actual charges, including a proposed attempt."""
++        total = Decimal(0)
++        for row in conn.execute("SELECT * FROM budget_runs"):
++            if day is not None and row["day"] != day:
++                continue
++            used = self._charged(conn, row["id"])
++            if row["id"] == run_id:
++                used += additional
++            total += max(money(row["limit_usd"]), used) if row["status"] == "open" else used
++        return total
++
++    def open_run(self, run_id, run_limit, *, budget_mode="strict_reservation"):
+         limit = money(run_limit)
++        if budget_mode not in RUN_BUDGET_MODES:
++            raise ValueError("Unsupported run budget mode")
++        if budget_mode == "actual_usage":
++            self.require_actual_pool()
+         if not run_id or limit <= 0:
+             raise ValueError("A run needs a nonempty ID and positive budget")
+         with self._transaction() as conn:
+             if conn.execute("SELECT 1 FROM budget_runs WHERE id=?", (run_id,)).fetchone():
+                 raise ValueError("Run budget already exists; do not silently reset it")
+             self._require_clear(conn)
++            if self._strict_pool(conn):
++                self.require_actual_pool()
+             total_committed = Decimal(0)
+             for row in conn.execute("SELECT * FROM budget_runs"):
+                 used = self._charged(conn, row["id"])
+@@ -186,8 +247,9 @@ class BudgetLedger:
+             if committed + limit > self.daily_limit:
+                 raise BudgetExceeded("Daily budget cannot reserve this run")
+             conn.execute(
+-                "INSERT INTO budget_runs VALUES (?,?,?,?,?)",
+-                (run_id, self.day, str(limit), "open", None),
++                "INSERT INTO budget_runs (id,day,limit_usd,status,halt_reason,budget_mode) "
++                "VALUES (?,?,?,?,?,?)",
++                (run_id, self.day, str(limit), "open", None, budget_mode),
+             )
+         return self.snapshot(run_id)
+ 
+@@ -213,8 +275,31 @@ class BudgetLedger:
+             if run["status"] != "open" or run["halt_reason"]:
+                 raise BudgetExceeded("Run budget is closed or halted")
+             self._require_clear(conn)
+-            if self._charged(conn, run_id) + upper > money(run["limit_usd"]):
++            if self._strict_pool(conn):
++                self.require_actual_pool()
++                if admission_kind != "verified_provider_bound":
++                    raise BudgetExceeded("Shared strict pool does not permit local estimates")
++            charged = self._charged(conn, run_id)
++            limit = money(run["limit_usd"])
++            if run["budget_mode"] == "actual_usage":
++                self.require_actual_pool()
++                if admission_kind != "verified_provider_bound":
++                    raise BudgetExceeded("Actual-usage mode requires a verified provider bound")
++                # _require_clear established that every existing charge is settled and known.
++                if charged >= limit:
++                    raise RunBudgetReached(exceeded=charged > limit)
++            elif charged + upper > limit:
+                 raise BudgetExceeded("Run budget cannot reserve the next model attempt")
++            if (
++                self.total_limit is not None
++                and self._committed(conn, run_id=run_id, additional=upper) > self.total_limit
++            ):
++                raise BudgetExceeded("Total authorized pool cannot reserve the next model attempt")
++            if (
++                self._committed(conn, day=run["day"], run_id=run_id, additional=upper)
++                > self.daily_limit
++            ):
++                raise BudgetExceeded("Daily pool cannot reserve the next model attempt")
+             if conn.execute("SELECT 1 FROM budget_attempts WHERE id=?", (attempt_id,)).fetchone():
+                 raise ValueError("Attempt reservation already exists")
+             conn.execute(
+@@ -261,6 +346,7 @@ class BudgetLedger:
+     def settle(self, run_id, attempt_id, actual_usd, *, bound_invalid=False):
+         actual = None if actual_usd is None else money(actual_usd)
+         exceeded = False
++        run_reached = run_exceeded = False
+         with self._transaction() as conn:
+             row = conn.execute(
+                 "SELECT * FROM budget_attempts WHERE id=? AND run_id=?", (attempt_id, run_id)
+@@ -288,8 +374,30 @@ class BudgetLedger:
+                         run_id,
+                     ),
+                 )
++            if actual is not None and not exceeded and not bound_invalid:
++                run = conn.execute(
++                    "SELECT limit_usd,budget_mode FROM budget_runs WHERE id=?", (run_id,)
++                ).fetchone()
++                if run["budget_mode"] == "actual_usage":
++                    known = sum(
++                        (
++                            money(item[0])
++                            for item in conn.execute(
++                                "SELECT actual_usd FROM budget_attempts "
++                                "WHERE run_id=? AND actual_usd IS NOT NULL",
++                                (run_id,),
++                            )
++                        ),
++                        Decimal(0),
++                    )
++                    run_reached = known >= money(run["limit_usd"])
++                    run_exceeded = known > money(run["limit_usd"])
+         if exceeded or bound_invalid:
+             raise BudgetExceeded("Provider billing requires review; further calls stopped")
++        if run_reached:
++            # Raise after committing actual usage. This is a local run stop, not a
++            # global billing incident; other runs may use the remaining strict pool.
++            raise RunBudgetReached(exceeded=run_exceeded)
+ 
+     def halt(self, run_id, reason):
+         if reason != "local_accounting_incomplete":
+@@ -320,9 +428,18 @@ class BudgetLedger:
+                 Decimal(0),
+             )
+             unknown = sum(row["actual_usd"] is None for row in attempts)
++            actual_mode = run["budget_mode"] == "actual_usage"
++            run_reached = actual_mode and known >= money(run["limit_usd"])
++            run_exceeded = actual_mode and known > money(run["limit_usd"])
+             return {
+                 "run_id": run_id,
+                 "limit_usd": run["limit_usd"],
++                "run_budget_mode": run["budget_mode"],
++                "shared_pool_requires_provider_bounds": self._strict_pool(conn),
++                "run_limit_basis": "actual_usage" if actual_mode else "attempt_reservations",
++                "run_budget_reached": run_reached,
++                "run_budget_exceeded": run_exceeded,
++                "remaining_basis": "actual_usage" if actual_mode else "reserved_or_actual",
+                 "conservative_charge_usd": str(charged),  # Legacy alias, not a provider guarantee.
+                 "reserved_or_actual_usd": str(charged),
+                 "contains_local_estimate": any(
+@@ -332,12 +449,15 @@ class BudgetLedger:
+                 "total_actual_usd": None if unknown else str(known),
+                 "unknown_attempts": unknown,
+                 "pending_attempts": sum(not row["settled"] for row in attempts),
+-                "remaining_usd": str(max(Decimal(0), money(run["limit_usd"]) - charged)),
++                "remaining_usd": str(
++                    max(Decimal(0), money(run["limit_usd"]) - (known if actual_mode else charged))
++                ),
+                 "status": run["status"],
+                 "halt_reason": run["halt_reason"],
+                 "billing_bound_unresolved": run["halt_reason"] is not None,
+                 "dispatch_blocked": bool(
+                     unknown
++                    or run_reached
+                     or conn.execute(
+                         "SELECT 1 FROM budget_runs WHERE halt_reason IS NOT NULL LIMIT 1"
+                     ).fetchone()
+diff --git a/headroom/orchestrator.py b/headroom/orchestrator.py
+index 07d9bf6..dbc9895 100644
+--- a/headroom/orchestrator.py
++++ b/headroom/orchestrator.py
+@@ -17,7 +17,7 @@ from typing import Literal
+ from pydantic import BaseModel, ConfigDict, Field
+ 
+ from headroom.annotate import annotate_stacks
+-from headroom.budget import BudgetExceeded, BudgetLedger, money
++from headroom.budget import BudgetExceeded, BudgetLedger, RunBudgetReached, money
+ from headroom.diagnose import diagnose_with_router, round_verification_feedback
+ from headroom.evidence import annotate_evidence_bundle, build_evidence
+ from headroom.execution import prepare_local_command, replay_argv
+@@ -399,12 +399,17 @@ def run_fix(
+                 daily_limit=daily,
+                 total_limit=profile.authorized_total_usd,
+             )
+-            budget.open_run(run_id, limit)
++            budget.open_run(run_id, limit, budget_mode=profile.run_budget_mode)
+             budget_open = True
+             bundle = build_live_runtime(run_id, profile=profile, budget=budget, store=store)
+         else:
+             bundle = services.runtime_factory(run_id, store, directory)
+-        emit("budget.reserved", limit_usd=str(limit), live=services.provenance == "live")
++        emit(
++            "budget.reserved",
++            limit_usd=str(limit),
++            live=services.provenance == "live",
++            run_budget_mode=profile.run_budget_mode if budget_open else None,
++        )
+         emit("baseline.started", script=str(relative), device=request.device)
+         baseline = services.baseline(
+             source_script,
+@@ -944,6 +949,10 @@ def run_fix(
+         emit("run.failed", reason=reason)
+     except BudgetExceeded as error:
+         status, reason = "budget_exceeded", str(error)
++        if isinstance(error, RunBudgetReached) and error.exceeded:
++            # Preserve retained candidate/verification facts, but this run did not
++            # satisfy its actual cost constraint and must not advertise success.
++            data["target_met"] = False
+         data["search"]["stop_reason"] = "budget_exceeded"
+         emit("budget.exceeded", reason=reason)
+     except RuntimeNotReady as error:
+@@ -978,6 +987,8 @@ def run_fix(
+                 data.setdefault("cleanup_errors", []).append("runtime:" + type(error).__name__)
+         if budget_open:
+             data["budget"] = budget.close_run(run_id)
++            if data["budget"].get("run_budget_exceeded") is True:
++                data["target_met"] = False
+         if data.get("kept"):
+             data["pareto"] = write_pareto(directory, data["pareto"]["points"])
+             for key, filename in (("patch", "patch.diff"), ("env", "env.sh"), ("cli", "cli.json")):
+@@ -1024,6 +1035,7 @@ def run_fix(
+             "status": status,
+             "target_met": data["target_met"],
+             "reason": reason,
++            "budget": data.get("budget"),
+             "run_dir": str(directory),
+             "report_json": str(directory / "report.json"),
+             "report_md": str(directory / "report.md"),
+diff --git a/headroom/report.py b/headroom/report.py
+index e07b372..ab4625d 100644
+--- a/headroom/report.py
++++ b/headroom/report.py
+@@ -393,6 +393,19 @@ def build_report(
+     if target_met is True and after["status"] != "completed":
+         target_met = None
+         warnings.append("A target-met claim without a completed after-run is unverified")
++    budget = run.get("budget") if isinstance(run.get("budget"), dict) else {}
++    mode = budget.get("run_budget_mode")
++    if mode not in ("strict_reservation", "actual_usage"):
++        mode = None
++    actual, limit = _decimal(budget.get("total_actual_usd")), _decimal(budget.get("limit_usd"))
++    within_limit = actual <= limit if actual is not None and limit is not None else None
++    if mode == "actual_usage" and (
++        budget.get("run_budget_exceeded") is True or within_limit is False
++    ):
++        target_met = False
++        warnings.append(
++            "Actual run cost exceeded its stop limit; retained measurements are not run success"
++        )
+     reduction = None
+     b, a = before["peak_allocated_bytes"], after["peak_allocated_bytes"]
+     if b and a is not None and before["peak_is_exact"] and after["peak_is_exact"]:
+@@ -443,6 +456,7 @@ def build_report(
+         "summary": {
+             "target": run.get("target"),
+             "target_met": target_met,
++            "cost_within_run_limit": within_limit,
+             "loss_equivalence": verification.get("loss_equivalence", "unknown"),
+             "numerical_basis": verification.get("numerical_basis", "unavailable"),
+             "numerical_basis_label": numerical_basis_label(verification.get("numerical_basis")),
+@@ -480,6 +494,13 @@ def build_report(
+             "note": "A reserved-minus-allocated gap alone does not prove fragmentation.",
+         },
+         "sources": sources,
++        "budget": {
++            "run_budget_mode": mode,
++            "limit_usd": budget.get("limit_usd"),
++            "actual_usd": budget.get("total_actual_usd"),
++            "run_budget_reached": budget.get("run_budget_reached"),
++            "run_budget_exceeded": budget.get("run_budget_exceeded"),
++        },
+         "usage": usage,
+         "artifacts": artifacts,
+         "evidence": evidence,
+@@ -537,10 +558,37 @@ def render_markdown(report):
+         + _text(search.get("first_target_met_round"))
+         + ".",
+         "Baseline target met: " + _text(search.get("baseline_target_met")) + ".",
+-        "Target success describes the selected verified configuration. A later exploration stop does not invalidate it.",
++        (
++            "Retained configuration measurements survive a later exploration stop; "
++            "run cost requirements still apply."
++            if report.get("budget", {}).get("run_budget_mode") == "actual_usage"
++            else "Target success describes the selected verified configuration. "
++            "A later exploration stop does not invalidate it."
++        ),
+         "Each retained configuration has its own verification and downloads below.",
+         "",
+     ]
++    budget = report.get("budget", {})
++    if budget.get("run_budget_mode") == "actual_usage":
++        search_lines.extend(
++            [
++                (
++                    "Run budget mode: actual_usage. The run limit is an actual-cost stop line, "
++                    "not a hard maximum charge for one request."
++                ),
++                "Run stop limit (USD): "
++                + _text(budget.get("limit_usd"))
++                + "; settled actual cost (USD): "
++                + _text(budget.get("actual_usd"))
++                + ".",
++                (
++                    "Each request requires its full verified provider bound in the shared global "
++                    "and daily pools. Reaching the run line stops further calls; exceeding it "
++                    "fails the run cost requirement. Unknown billing remains blocked."
++                ),
++                "",
++            ]
++        )
+     root_index = lines.index("## Root causes")
+     lines[root_index:root_index] = search_lines
+     causes = report["diagnosis"].get("root_causes", [])
+diff --git a/headroom/runtime.py b/headroom/runtime.py
+index 6068dc3..8a953f7 100644
+--- a/headroom/runtime.py
++++ b/headroom/runtime.py
+@@ -84,6 +84,7 @@ class LiveProfile(BaseModel):
+     evidence: str = Field(min_length=1)
+     base_url: str
+     evidence_token_budget: int = Field(gt=0, le=150000)
++    run_budget_mode: Literal["strict_reservation", "actual_usage"] = "strict_reservation"
+     models: dict[str, ProfileModel]
+ 
+     def runtime_config(self):
+@@ -95,6 +96,15 @@ class LiveProfile(BaseModel):
+             raise RuntimeNotReady("Each reviewed model role must have a distinct model ID")
+         if set(self.models) != {"ultra", "super", "nano"}:
+             raise RuntimeNotReady("Reviewed profile requires Ultra, Super and Nano")
++        if self.run_budget_mode == "actual_usage" and any(
++            not isinstance(item.billing, BillingBound)
++            or not item.billing.verified
++            or not item.billing.output_cap_includes_reasoning
++            for item in self.models.values()
++        ):
++            raise RuntimeNotReady(
++                "Actual-usage run mode requires strict provider bounds for all roles"
++            )
+         models = {}
+         for role, item in self.models.items():
+             if isinstance(item.billing, LocalEstimateAdmission) and (
+@@ -168,6 +178,11 @@ def build_live_runtime(
+ ):
+     """No request on construction; each actual retry reserves before transport."""
+     config = profile.runtime_config()
++    state = budget.snapshot(run_id)
++    if state["run_budget_mode"] != profile.run_budget_mode:
++        raise RuntimeNotReady("Run budget mode differs from its reviewed runtime profile")
++    if profile.run_budget_mode == "actual_usage":
++        budget.require_actual_pool()
+     pending = {}
+     auditors = {}
+ 
+diff --git a/tests/test_actual_usage_budget.py b/tests/test_actual_usage_budget.py
+new file mode 100644
+index 0000000..1c5a1d2
+--- /dev/null
++++ b/tests/test_actual_usage_budget.py
+@@ -0,0 +1,440 @@
++"""Offline end-to-end accounting: a run stop line is not a per-request hard cap."""
++
++import json
++import shutil
++import socket
++from concurrent.futures import ThreadPoolExecutor
++from pathlib import Path
++
++import httpx
++import pytest
++from test_runtime_budget import fixture_runtime
++
++from headroom.budget import BudgetExceeded, BudgetLedger, RunBudgetReached
++from headroom.report import build_report, render_markdown
++from headroom.runtime import LiveProfile, RuntimeNotReady, build_live_runtime
++from headroom.store.db import Store
++
++
++@pytest.fixture(autouse=True)
++def offline(monkeypatch):
++    def denied(*args, **kwargs):
++        pytest.fail("Real DNS/INET is forbidden")
++
++    monkeypatch.setattr(socket, "getaddrinfo", denied)
++    monkeypatch.setattr(socket.socket, "connect", denied)
++    monkeypatch.setattr(socket.socket, "connect_ex", denied)
++
++
++def ledger(tmp_path, *, total="3", daily="3"):
++    return BudgetLedger(tmp_path / "ledger.db", total_limit=total, daily_limit=daily)
++
++
++def test_default_strict_still_rejects_full_ultra_bound(tmp_path):
++    b = ledger(tmp_path)
++    b.open_run("strict", "0.6")
++    with pytest.raises(BudgetExceeded, match="Run budget"):
++        b.reserve("strict", "no", "1.060576")
++    assert b.snapshot("strict")["run_budget_mode"] == "strict_reservation"
++
++
++@pytest.mark.parametrize("total,daily", [(None, "3"), ("0", "3"), ("3", "0")])
++def test_actual_mode_requires_positive_global_and_daily_pools(tmp_path, total, daily):
++    with pytest.raises(BudgetExceeded, match="pools"):
++        ledger(tmp_path, total=total, daily=daily).open_run("a", "0.6", budget_mode="actual_usage")
++
++
++def test_actual_mode_reserves_full_global_bound_then_releases_unused(tmp_path):
++    b = ledger(tmp_path)
++    b.open_run("a", "0.6", budget_mode="actual_usage")
++    b.reserve("a", "first", "1.060576")
++    pending = b.snapshot("a")
++    assert pending["reserved_or_actual_usd"] == "1.060576"
++    assert pending["remaining_usd"] == "0.6"
++    assert pending["dispatch_blocked"]
++    b.settle("a", "first", "0.03")
++    b.reserve("a", "second", "1.060576")
++    b.settle("a", "second", "0.04")
++    result = b.close_run("a")
++    assert result["total_actual_usd"] == "0.07"
++    assert not result["run_budget_reached"]
++
++
++@pytest.mark.parametrize("total,daily", [("1", "3"), ("3", "1")])
++def test_full_bound_must_fit_each_pool_before_dispatch(tmp_path, total, daily):
++    b = ledger(tmp_path, total=total, daily=daily)
++    b.open_run("a", "0.6", budget_mode="actual_usage")
++    with pytest.raises(BudgetExceeded, match="pool"):
++        b.reserve("a", "too-large", "1.060576")
++    assert b.snapshot("a")["pending_attempts"] == 0
++
++
++def test_other_open_run_floor_is_not_spent_by_actual_mode(tmp_path):
++    b = ledger(tmp_path, total="1.5")
++    b.open_run("a", "0.6", budget_mode="actual_usage")
++    b.open_run("b", "0.6")
++    with pytest.raises(BudgetExceeded, match="Total"):
++        b.reserve("a", "too-large", "1.060576")
++    b.close_run("b")
++    b.reserve("a", "allowed", "1.060576")
++
++
++def test_actual_mode_cannot_reserve_estimate(tmp_path):
++    b = ledger(tmp_path)
++    b.open_run("a", "0.6", budget_mode="actual_usage")
++    with pytest.raises(BudgetExceeded, match="local estimates"):
++        b.reserve("a", "estimate", "0.05", admission_kind="local_estimate")
++
++
++@pytest.mark.parametrize("actual,exceeded", [("0.6", False), ("0.600001", True)])
++def test_reaching_line_commits_actual_then_stops_only_that_run(tmp_path, actual, exceeded):
++    b = ledger(tmp_path)
++    b.open_run("a", "0.6", budget_mode="actual_usage")
++    b.open_run("b", "0.6", budget_mode="actual_usage")
++    b.reserve("a", "one", "1.060576")
++    with pytest.raises(RunBudgetReached) as error:
++        b.settle("a", "one", actual)
++    assert error.value.exceeded is exceeded
++    state = b.close_run("a")
++    assert state["run_budget_reached"] and state["run_budget_exceeded"] is exceeded
++    assert state["total_actual_usd"] == actual and state["halt_reason"] is None
++    b.reserve("b", "other", "1.060576")
++
++
++def test_restarted_run_cannot_continue_after_actual_limit(tmp_path):
++    b = ledger(tmp_path)
++    b.open_run("a", "0.05", budget_mode="actual_usage")
++    b.reserve("a", "one", "1.060576")
++    with pytest.raises(RunBudgetReached):
++        b.settle("a", "one", "0.05")
++    with pytest.raises(RunBudgetReached):
++        ledger(tmp_path).reserve("a", "again", "1.060576")
++
++
++def test_actual_unknown_closed_and_restarted_still_blocks_all_runs(tmp_path):
++    b = ledger(tmp_path)
++    b.open_run("a", "0.6", budget_mode="actual_usage")
++    b.open_run("b", "0.6")
++    b.reserve("a", "one", "1.060576")
++    b.settle("a", "one", None)
++    b.close_run("a")
++    with pytest.raises(BudgetExceeded, match="billing"):
++        ledger(tmp_path).reserve("b", "another", "0.01")
++    assert b.snapshot("a")["reserved_or_actual_usd"] == "1.060576"
++
++
++def test_actual_mode_atomic_competing_instances(tmp_path):
++    b = ledger(tmp_path)
++    for run in ("a", "b"):
++        b.open_run(run, "0.6", budget_mode="actual_usage")
++
++    def attempt(run):
++        try:
++            ledger(tmp_path).reserve(run, run, "1.060576")
++            return True
++        except BudgetExceeded:
++            return False
++
++    with ThreadPoolExecutor(max_workers=2) as pool:
++        assert sum(pool.map(attempt, ("a", "b"))) == 1
++
++
++def reviewed_fixture(tmp_path):
++    profile = fixture_runtime(tmp_path, None, profile_only=True, prompt_ceiling=1048576)
++    data = profile.model_dump()
++    data.update(run_budget_mode="actual_usage", available_credit_usd="3", authorized_total_usd="3")
++    return LiveProfile.model_validate(data)
++
++
++@pytest.mark.parametrize("actual_tokens,exceeded", [(599980, False), (600000, True)])
++def test_real_router_records_response_even_when_settlement_stops_run(
++    tmp_path, actual_tokens, exceeded
++):
++    profile = reviewed_fixture(tmp_path)
++    calls = []
++
++    def respond(request):
++        calls.append(request)
++        return response(request, actual_tokens)
++
++    b = ledger(tmp_path)
++    b.open_run("a", "0.6", budget_mode="actual_usage")
++    store = Store(tmp_path / "store.db")
++    store.create_run("a")
++    bundle = build_live_runtime(
++        "a",
++        profile=profile,
++        budget=b,
++        store=store,
++        env_file=tmp_path / ".env",
++        transport=httpx.MockTransport(respond),
++    )
++    try:
++        with pytest.raises(RunBudgetReached) as error:
++            bundle.router.chat("diagnose", [{"role": "user", "content": "offline"}])
++        assert error.value.exceeded is exceeded
++        rows = store.llm_calls("a")
++        assert len(rows) == len(calls) == 1
++        assert rows[0]["outcome"] == "response" and rows[0]["settled"] is True
++        assert store.usage("a")["total_cost_usd"] == b.snapshot("a")["total_actual_usd"]
++        with pytest.raises(RunBudgetReached):
++            bundle.router.chat("diagnose", [{"role": "user", "content": "no second call"}])
++        assert len(calls) == 1
++    finally:
++        bundle.close()
++        store.close()
++
++
++def response(request, prompt_tokens):
++    return httpx.Response(
++        200,
++        json={
++            "id": "offline",
++            "object": "chat.completion",
++            "created": 0,
++            "model": json.loads(request.content)["model"],
++            "choices": [
++                {
++                    "index": 0,
++                    "finish_reason": "stop",
++                    "message": {"role": "assistant", "content": "{}"},
++                }
++            ],
++            "usage": {
++                "prompt_tokens": prompt_tokens,
++                "completion_tokens": 10,
++                "total_tokens": prompt_tokens + 10,
++            },
++        },
++    )
++
++
++def test_profile_rejects_unverified_bound_and_mode_mismatch_before_key(tmp_path, monkeypatch):
++    profile = reviewed_fixture(tmp_path)
++    profile.models["ultra"].billing.verified = False
++    with pytest.raises(RuntimeNotReady, match="strict provider"):
++        profile.runtime_config()
++    profile.models["ultra"].billing.verified = True
++    b = ledger(tmp_path)
++    b.open_run("a", "0.6")
++    monkeypatch.setattr(
++        "headroom.runtime.read_nebius_key",
++        lambda *args: pytest.fail("Must reject before credential read"),
++    )
++    with pytest.raises(RuntimeNotReady, match="mode differs"):
++        build_live_runtime("a", profile=profile, budget=b, store=None)
++
++
++@pytest.mark.parametrize("cost,accepted", [("0.6", True), ("0.60002", False)])
++def test_report_distinguishes_reached_from_exceeded_and_retains_candidate(cost, accepted):
++    doc = build_report(
++        {
++            "status": "budget_exceeded",
++            "target_met": True,
++            "budget": {
++                "run_budget_mode": "actual_usage",
++                "limit_usd": "0.6",
++                "total_actual_usd": cost,
++                "run_budget_reached": True,
++                "run_budget_exceeded": not accepted,
++            },
++        },
++        verification={
++            "target_met": True,
++            "completed": True,
++            "after": {"status": "completed", "peak_allocated_bytes": 100},
++        },
++    )
++    assert doc["summary"]["target_met"] is accepted
++    assert doc["summary"]["cost_within_run_limit"] is accepted
++    assert doc["verification"]["target_met"] is True
++    assert "not a hard maximum charge" in render_markdown(doc)
++
++
++@pytest.mark.parametrize("daily,expected_calls", [("3", 1), ("0.1", 0)])
++def test_original_small_run_and_daily_guards_write_real_partial_report(
++    tmp_path, monkeypatch, daily, expected_calls
++):
++    from headroom import orchestrator
++    from headroom.orchestrator import FixRequest, Services, run_fix
++
++    project = tmp_path / "project"
++    project.mkdir()
++    profile = reviewed_fixture(project)
++    path = project / "profile.json"
++    path.write_text(profile.model_dump_json())
++    source = project / "source"
++    source.mkdir()
++    script = source / "train.py"
++    script.write_text("VALUE = 1\n")
++    monkeypatch.setattr(orchestrator, "PROJECT_ROOT", project)
++    if daily == "3":
++        monkeypatch.setenv("HEADROOM_RUN_BUDGET_USD", "0.05")
++    else:
++        monkeypatch.setenv("HEADROOM_DAILY_BUDGET_USD", "0.1")
++    calls = []
++
++    def runtime(run_id, **kwargs):
++        kwargs.update(
++            env_file=project / ".env",
++            transport=httpx.MockTransport(
++                lambda request: calls.append(request) or response(request, 50000)
++            ),
++        )
++        return build_live_runtime(run_id, **kwargs)
++
++    monkeypatch.setattr(orchestrator, "build_live_runtime", runtime)
++
++    def baseline(script, **kwargs):
++        directory = Path(kwargs["run_root"]) / "fixture"
++        directory.mkdir(parents=True)
++        shutil.copytree(source, directory / "source")
++        return {
++            "run_id": "fixture",
++            "run_dir": str(directory),
++            "status": "oom",
++            "peak_alloc_gb": 2.0,
++            "env": {"seed": 1337},
++            "loss_series": [],
++        }
++
++    def evidence(run, *, output_dir, **kwargs):
++        output_dir.mkdir(parents=True)
++        analysis = {"stack_catalog": {"stk_fixture": []}}
++        (output_dir / "evidence.json").write_text(json.dumps({"analysis": analysis}))
++        (output_dir / "evidence.md").write_text("Offline fixture stk_fixture.")
++        return {
++            "analysis": analysis,
++            "token_count": 10,
++            "evidence_json": str(output_dir / "evidence.json"),
++            "evidence_md": str(output_dir / "evidence.md"),
++        }
++
++    store = Store(project / "store.db")
++    try:
++        result = run_fix(
++            FixRequest(script=str(script), runtime_profile=str(path), research_enabled=False),
++            store=store,
++            run_root=project / "jobs",
++            services=Services(baseline=baseline, evidence=evidence, provenance="offline_fixture"),
++        )
++        assert result["status"] == "budget_exceeded"
++        assert result["target_met"] is False
++        assert len(calls) == expected_calls
++        assert "budget.exceeded" in [event["kind"] for event in store.events(result["run_id"])]
++        assert Path(result["report_md"]).is_file()
++        if expected_calls:
++            doc = json.loads(Path(result["report_json"]).read_text())
++            assert doc["budget"]["actual_usd"] == "0.05002"
++            assert result["budget"]["total_actual_usd"] == "0.05002"
++            assert doc["summary"]["cost_within_run_limit"] is False
++            assert store.usage(result["run_id"])["total_cost_usd"] == "0.05002"
++            assert doc["usage"]["calls"] == 1
++    finally:
++        store.close()
++
++
++def test_kept_success_then_actual_overrun_is_not_reported_as_success(tmp_path, monkeypatch):
++    import test_orchestrator as fixtures
++
++    from headroom import orchestrator
++
++    profile = reviewed_fixture(tmp_path)
++    monkeypatch.setattr(orchestrator, "PROJECT_ROOT", tmp_path)
++    monkeypatch.setattr(orchestrator, "read_live_profile", lambda *args: profile)
++    real_services = fixtures.Services
++    factory = {}
++    count = []
++
++    def services(**kwargs):
++        factory["make"] = kwargs.pop("runtime_factory")
++        return real_services(**kwargs)
++
++    monkeypatch.setattr(fixtures, "Services", services)
++
++    def runtime(run_id, **kwargs):
++        fixture = factory["make"](
++            run_id, kwargs["store"], Path(kwargs["store"].get_run(run_id)["run_dir"])
++        )
++
++        def respond(request):
++            result = fixture.client._transport.handle_request(request)
++            payload = result.json()
++            count.append(request)
++            if len(count) == 3:
++                payload["usage"] = {
++                    "prompt_tokens": 600000,
++                    "completion_tokens": 10,
++                    "total_tokens": 600010,
++                }
++            return httpx.Response(200, json=payload)
++
++        return build_live_runtime(
++            run_id, **kwargs, env_file=tmp_path / ".env", transport=httpx.MockTransport(respond)
++        )
++
++    monkeypatch.setattr(orchestrator, "build_live_runtime", runtime)
++    result, store, _, verifies, _ = fixtures.search_run(
++        tmp_path,
++        [{"before": "VALUE = 1\n", "after": "VALUE = 2\n", "peak": 20, "target": True}],
++        search_mode="bounded_pareto",
++    )
++    try:
++        assert len(count) == 3 and len(verifies) == 1
++        assert result["status"] == "budget_exceeded" and result["target_met"] is False
++        assert result["kept"]["round"] == 1
++        assert "+VALUE = 2" in Path(result["run_dir"], "patch.diff").read_text()
++        assert result["budget"]["total_actual_usd"] == "0.60008"
++        assert result["report"]["summary"]["target_met"] is False
++        assert result["report"]["summary"]["cost_within_run_limit"] is False
++        assert result["report"]["verification"]["target_met"] is True
++        assert store.usage(result["run_id"])["total_cost_usd"] == "0.60008"
++        assert len(store.llm_calls(result["run_id"])) == 3
++    finally:
++        store.close()
++
++
++def test_actual_profile_cannot_mix_local_estimate(tmp_path):
++    profile = reviewed_fixture(tmp_path).model_dump()
++    profile["models"]["ultra"]["billing"] = {
++        "mode": "local_estimate",
++        "tokenizer_assets_dir": str(tmp_path),
++        "token_multiplier": "1.5",
++        "additive_tokens": 100,
++        "max_prompt_utf8_bytes": 10000,
++        "max_completion_tokens": 4000,
++        "output_cap_field": "max_completion_tokens",
++        "output_cap_includes_reasoning": True,
++        "output_cap_verified": True,
++        "output_cap_evidence": "offline fixture",
++        "risk_acknowledged": True,
++        "evidence": "offline fixture",
++    }
++    with pytest.raises(RuntimeNotReady, match="strict provider"):
++        LiveProfile.model_validate(profile).runtime_config()
++
++
++def test_shared_strict_pool_cannot_be_bypassed_by_other_profile_after_restart(tmp_path):
++    b = ledger(tmp_path)
++    b.open_run("legacy", "0.6")
++    b.open_run("actual", "0.6", budget_mode="actual_usage")
++    b.close_run("actual")
++    other = ledger(tmp_path)
++    assert other.snapshot("legacy")["shared_pool_requires_provider_bounds"]
++    with pytest.raises(BudgetExceeded, match="local estimates"):
++        other.reserve("legacy", "estimate", "0.01", admission_kind="local_estimate")
++    with pytest.raises(BudgetExceeded, match="pools"):
++        ledger(tmp_path, total=None).reserve("legacy", "unfunded", "0.01")
++    other.reserve("legacy", "verified", "0.01")
++    other.settle("legacy", "verified", "0.001")
++
++
++def test_estimate_settled_before_strict_pool_activation_remains_real_cost(tmp_path):
++    b = ledger(tmp_path)
++    b.open_run("legacy", "0.6")
++    b.reserve("legacy", "old-estimate", "0.01", admission_kind="local_estimate")
++    b.settle("legacy", "old-estimate", "0.005")
++    b.close_run("legacy")
++    b.open_run("actual", "0.6", budget_mode="actual_usage")
++    assert b.snapshot("legacy")["total_actual_usd"] == "0.005"
++    b.reserve("actual", "strict", "1.060576")

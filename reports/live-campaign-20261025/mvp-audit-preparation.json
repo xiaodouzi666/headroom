@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-24T21:53:23.232690+00:00",
+  "status": "prepared_not_executed",
+  "mvp_executed_by_this_task": false,
+  "mvp_passed": false,
+  "reason": "No live MVP campaign has been supplied to this audit. Offline fixture contracts are not real acceptance.",
+  "script": {
+    "path": ".cache/setup/audit_mvp_acceptance.py",
+    "bytes": 35081,
+    "sha256": "875d75aade6d192602f87968bdd02d5e77b97281cc43e85bd79e288ee844ce3b"
+  },
+  "private_test_driver": {
+    "path": ".cache/setup/test_mvp_audit.py",
+    "bytes": 11716,
+    "sha256": "911625790f90f540baf28229e6c15f6d5c3b6976c94e608a82b0fe15b46aaea5"
+  },
+  "plan": {
+    "path": "docs/PLAN.md",
+    "bytes": 55643,
+    "sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56"
+  },
+  "manifest": {
+    "path": "eval/mvp_phase1.yaml",
+    "bytes": 6484,
+    "sha256": "3bb919336829754a52ec8c90ccc4a5181f33986f9e300e99211bec6678849e88"
+  },
+  "prices": {
+    "path": "reports/live-campaign-20261025/pricing-reviewed.json",
+    "bytes": 2840,
+    "sha256": "635c6b90216acfe0505e4f53f0685c8183bc3bc632fff376c3bfcefd7e7eb829"
+  },
+  "offline_validation": {
+    "mode": "offline_fixture_only",
+    "acceptance": "not_executed",
+    "fixture_directory": ".cache/setup/mvp-audit-fixtures/40c1e52363a3428eae1977a17408b834",
+    "checks": [
+      {
+        "name": "complete_synthetic_contract_only",
+        "passed": true,
+        "audit_exit_code": 0
+      },
+      {
+        "name": "cost_usd_over_limit",
+        "passed": true,
+        "audit_exit_code": 2
+      },
+      {
+        "name": "wall_seconds_over_limit",
+        "passed": true,
+        "audit_exit_code": 2
+      },
+      {
+        "name": "real_child_nonzero",
+        "passed": true,
+        "audit_exit_code": 2
+      },
+      {
+        "name": "fixed_denominator_rejects_missing_case",
+        "passed": true,
+        "audit_exit_code": 2
+      },
+      {
+        "name": "duplicate_scenario_rejected",
+        "passed": true,
+        "audit_exit_code": 2
+      },
+      {
+        "name": "pending_ledger_never_accepts",
+        "passed": true,
+        "audit_exit_code": 2
+      },
+      {
+        "name": "keep_1_revert_2_preserves_selected",
+        "passed": true,
+        "audit_exit_code": 0
+      },
+      {
+        "name": "raw_verification_overrides_claimed_target",
+        "passed": true,
+        "audit_exit_code": 0
+      },
+      {
+        "name": "known_ledger_cost_mismatch",
+        "passed": true,
+        "audit_exit_code": 2
+      },
+      {
+        "name": "provider_identity_mismatch",
+        "passed": true,
+        "audit_exit_code": 2
+      },
+      {
+        "name": "contradictory_selected_revert_is_unknown",
+        "passed": true,
+        "audit_exit_code": 0
+      },
+      {
+        "name": "os_open_env",
+        "passed": true
+      },
+      {
+        "name": "network",
+        "passed": true
+      },
+      {
+        "name": "write",
+        "passed": true
+      }
+    ],
+    "passed": 15,
+    "provider_requests": 0,
+    "gpu_tasks": 0,
+    "audit_sha256": "875d75aade6d192602f87968bdd02d5e77b97281cc43e85bd79e288ee844ce3b"
+  },
+  "limits": {
+    "denominator": 9,
+    "target_minimum": 6,
+    "first_cause_minimum": 6,
+    "per_run_cost_usd": "0.6",
+    "per_run_wall_seconds": 480,
+    "reports": 9,
+    "mvp_reclaim_reduction_pct": 20
+  },
+  "expected_cases": [
+    "s1_batch_too_big",
+    "s2_fp32_adamw_1b",
+    "s3_eval_no_grad_missing",
+    "s4_loss_accumulation_graph",
+    "s5_fragmentation_varlen",
+    "s6_full_vocab_logits_fp32",
+    "s7_frozen_params_optimizer_state",
+    "s8_two_models_resident",
+    "nanogpt"
+  ],
+  "read_only_boundaries": {
+    "production_files_modified_by_this_task": false,
+    "live_capture_or_runs_rewritten": false,
+    "reads_environment_files": false,
+    "provider_requests": 0,
+    "gpu_tasks": 0,
+    "new_full_suite_runs": 0,
+    "network_and_subprocesses": "Blocked by script audit hook",
+    "writes": "Script blocks file writes and emits JSON only on stdout; caller may redirect stdout to a new receipt",
+    "sqlite": "sqlite3 mode=ro + query_only + read transaction; no Store/BudgetLedger construction or migrations",
+    "artifacts": "Root-contained non-symlink bounded regular files; SHA256/size of each JSON/Markdown/diff actually read"
+  },
+  "database_inputs": {
+    "store": "runs/headroom.db",
+    "ledger": ".cache/budget.db",
+    "note": "Shared live ledger is read-only and is never reset. Store/ledger attempt UUID joins are unavailable; audit explicitly compares run sums, counts, charge multisets and settlement states."
+  },
+  "api_data": {
+    "root": "runs/api",
+    "public_selection": "runs/api/public-evaluations.json",
+    "published_directory": "runs/api/published-evaluations",
+    "publication": "Not changed; audit output is private evidence and contains local artifact paths."
+  },
+  "command": {
+    "working_directory": "/home/xiaodouzi/workspace/headroom",
+    "prepare": "source scripts/env.sh; uv run --no-sync python .cache/setup/audit_mvp_acceptance.py",
+    "audit": "source scripts/env.sh; uv run --no-sync python .cache/setup/audit_mvp_acceptance.py --campaign /absolute/path/to/campaign.json > reports/live-campaign-20261025/mvp-audit-UNIQUE.json",
+    "exit_codes": {
+      "0": "Preparation succeeded, or every automated observed campaign gate passed; inspect status to distinguish.",
+      "2": "At least one observed campaign gate is false or unknown; does not invoke or retry anything."
+    },
+    "precondition": "Use the completed campaign JSON after its worker and cleanup have finished; supply exact path, never merge different campaigns or retry selections into a reduced denominator."
+  },
+  "checklist": [
+    {
+      "plan": "T1.12 lines 284-291",
+      "checks": [
+        "Exactly the pinned original 9 IDs, default policy, full_ultra, until_target; manifest and PLAN hashes unchanged",
+        "At least 6/9 selected targets from raw round verification, actual completed capture, selected identity and numerical acceptance",
+        "At least 6/9 validated first diagnosis categories match authored truth; s5/nanoGPT unverified truth remains unknown within denominator9",
+        "Nine report JSON/Markdown pairs; recorded child exit0 and cleanup true agree across campaign/report/Store",
+        "Every run actual cost <=0.6, wall <=480 seconds, complete provider identities/usage/known cost and ledger consistency"
+      ]
+    },
+    {
+      "plan": "T1.5 lines 257-259",
+      "checks": [
+        "8 synthetic denominator; >=6 applied source patches with git apply --3way, compile exit0 and <=3 repairs",
+        "Per Super response completion_tokens <=4000; attempted/reverted application distinct from selected patch",
+        "Forbidden precision negative test requires separate reviewed receipt and remains unknown here"
+      ]
+    },
+    {
+      "plan": "T1.6 lines 261-263",
+      "checks": [
+        "s1 completed, peak<24GB, identical/within_tol from selected actual verification",
+        "s3 actual reduction>=30%; MVP20% does not replace this requirement",
+        "Model-shrink negative control and full four-state numerical test receipt remain separately required"
+      ]
+    },
+    {
+      "plan": "T1.7 lines 265-267",
+      "checks": [
+        "s1 ordered baseline.oom→evidence.built→diagnose.done→patch.applied→verify.done→run.done, >=15 stored events, >=2 calls",
+        "Exact Decimal call cost sum agrees with report/campaign usage and shared ledger",
+        "Actual harness child process exit is recorded; CLI frontend invocation is not observed, never inferred"
+      ]
+    },
+    {
+      "plan": "T1.8 lines 269-271",
+      "checks": [
+        "At least7 Markdown ## sections and every GB/GiB/% token has report.json provenance",
+        "Final selected patch.diff retained; original-source git apply --check requires separate read-only command receipt, not run by this script"
+      ]
+    },
+    {
+      "plan": "T1.9 lines 273-275",
+      "checks": [
+        "nanoGPT completed, peak<=22GB, equivalence !=changed (n/a permitted only as recorded), <=60 changed diff lines, train.py/config paths only",
+        "Independent cost<=0.8 is shown separately; MVP still requires <=0.6",
+        "Exact pinned source profile hash comes from current original MVP manifest"
+      ]
+    }
+  ],
+  "independent_remaining_evidence": [
+    "Actual live MVP campaign not yet audited by this task",
+    "Original-source final patch apply --check receipt",
+    "T1.5/T1.6 negative-control and current-source pytest/ruff/gitleaks receipts",
+    "docs/RESULTS.md and reports/phase-1-summary.md content review, including failures and model experience"
+  ],
+  "honesty_notes": [
+    "Unknown is never zero or passed. No threshold or default precision permission is changed.",
+    "No last reverted candidate is substituted for final selected configuration.",
+    "A successful audit of the test fixture only validates audit logic and cannot satisfy real-provider/GPU acceptance.",
+    "Current earlier full-regression receipt excluded all Markdown, including production prompts. It is preserved. Future full inventories must include headroom/prompts/*.md while excluding ordinary documentation."
+  ]
+}

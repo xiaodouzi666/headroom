@@ -160,3 +160,26 @@ The JSON preview is an audit aid, not an automatic execution tool or a new
 repair acceptance claim. Offline tests cover CLI-only selection, retained
 selection after a later reverted round, descriptor/argument display, unknown
 historical fields, file links and HTML escaping.
+
+## Verified cost bounds with unknown actual charges
+
+A runtime-certified missing-cache-count response can carry `billing_status=bounded`,
+`cost_upper_usd` and `cost_basis=verified_tariff_missing_cache_count`. Store accepts it
+only as settled billing under `verified_provider_bound` admission. A nested candidate
+Cost upper bound, an ordinary reservation, a local estimate, or an unresolved runtime
+decision is insufficient.
+
+`cost_usd` and the exact `total_cost_usd` remain null; known subtotals exclude bounded
+charges. The existing `complete` flag remains false when any actual charge is unknown.
+New `billing_complete` means every call has an exact amount or an explicitly verified
+upper bound. `bounded_cost_calls`, `unresolved_cost_calls`, and
+`conservative_total_usd` expose that distinction; the conservative total is absent
+if any call remains unresolved. Per-model aggregates follow the same rules.
+
+An established run-cost upper bound at or below the original limit can certify the
+cost inequality without claiming an actual invoice amount. An upper bound above
+the limit cannot establish compliance and stops overall success; it does not prove
+actual overspending. Retained verification/patch facts remain visible. Historical
+unknown reports and the first failed MVP campaign are not rewritten or upgraded by
+an operator's later ledger review. The UI displays exact bound decimals separately
+from unconfirmed actual costs.

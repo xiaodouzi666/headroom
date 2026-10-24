@@ -11,7 +11,7 @@ from typing import Literal
 from dotenv import dotenv_values
 from pydantic import BaseModel, ConfigDict, Field
 
-from headroom.budget import BudgetExceeded, money
+from headroom.budget import BudgetExceeded, RunBudgetReached, money
 from headroom.config import ROLE_MODELS, ModelSpec, RuntimeConfig, VerifiedCapabilities
 from headroom.llm.admission import LocalEstimateAdmission, RuntimeNotReady, output_limit
 from headroom.llm.client import TokenFactoryClient
@@ -84,6 +84,7 @@ class LiveProfile(BaseModel):
     evidence: str = Field(min_length=1)
     base_url: str
     evidence_token_budget: int = Field(gt=0, le=150000)
+    run_budget_mode: Literal["strict_reservation", "actual_usage"] = "strict_reservation"
     models: dict[str, ProfileModel]
 
     def runtime_config(self):
@@ -95,6 +96,15 @@ class LiveProfile(BaseModel):
             raise RuntimeNotReady("Each reviewed model role must have a distinct model ID")
         if set(self.models) != {"ultra", "super", "nano"}:
             raise RuntimeNotReady("Reviewed profile requires Ultra, Super and Nano")
+        if self.run_budget_mode == "actual_usage" and any(
+            not isinstance(item.billing, BillingBound)
+            or not item.billing.verified
+            or not item.billing.output_cap_includes_reasoning
+            for item in self.models.values()
+        ):
+            raise RuntimeNotReady(
+                "Actual-usage run mode requires strict provider bounds for all roles"
+            )
         models = {}
         for role, item in self.models.items():
             if isinstance(item.billing, LocalEstimateAdmission) and (
@@ -168,6 +178,11 @@ def build_live_runtime(
 ):
     """No request on construction; each actual retry reserves before transport."""
     config = profile.runtime_config()
+    state = budget.snapshot(run_id)
+    if state["run_budget_mode"] != profile.run_budget_mode:
+        raise RuntimeNotReady("Run budget mode differs from its reviewed runtime profile")
+    if profile.run_budget_mode == "actual_usage":
+        budget.require_actual_pool()
     pending = {}
     auditors = {}
 
@@ -193,6 +208,14 @@ def build_live_runtime(
                 if row.get("model") != spec.model_id:
                     continue
                 cost = row.get("cost_usd")
+                if (
+                    cost is None
+                    and row.get("billing_status") == "bounded"
+                    and row.get("settled") is True
+                    and row.get("admission_kind") == "verified_provider_bound"
+                    and row.get("cost_basis") == "verified_tariff_missing_cache_count"
+                ):
+                    cost = row.get("cost_upper_usd")
                 if cost is None:
                     cost = row.get("reservation_usd")
                 if cost is None:
@@ -209,12 +232,15 @@ def build_live_runtime(
         budget.reserve(run_id, attempt_id, upper, admission_kind=policy.mode, dispatched=False)
         pending["id"] = attempt_id
         pending["prompt_ceiling"] = prompt_ceiling
+        pending["strict_provider_bound"] = isinstance(policy, BillingBound)
+        pending["model_id"] = spec.model_id
         pending["completion_ceiling"] = policy.output_limit(spec, body)
         try:
             pending["record_id"] = store.add_llm_call(
                 run_id,
                 {
                     **admission,
+                    "budget_attempt_id": attempt_id,
                     "model": spec.model_id,
                     "role": role,
                     "attempt": attempt,
@@ -257,25 +283,74 @@ def build_live_runtime(
         data = asdict(record)
         data["cost"] = record.cost.as_dict()
         data["settled"] = True
+        data["budget_attempt_id"] = pending["id"]
         record_id = pending.pop("record_id")
         invalid = record.cost.reason in {"response_model_mismatch", "missing_cached_input_price"}
         prompt_ceiling = pending.pop("prompt_ceiling")
         completion_ceiling = pending.pop("completion_ceiling")
+        strict_bound = pending.pop("strict_provider_bound")
+        expected_model = pending.pop("model_id")
         if record.usage is not None:
             invalid = invalid or (
                 (prompt_ceiling is not None and record.usage.prompt_tokens > prompt_ceiling)
                 or record.usage.completion_tokens > completion_ceiling
             )
+        bounded = (
+            record.cost.status == "upper_bound"
+            and record.cost.usd is None
+            and record.cost.reason == "missing_cached_token_usage"
+            and record.cost.basis == "verified_tariff_missing_cache_count"
+            and record.cost.upper_usd is not None
+            and strict_bound
+            and record.outcome == "response"
+            and record.http_status == 200
+            and record.response_model == record.model == expected_model
+            and record.usage is not None
+            and record.usage.cached_tokens is None
+            and not invalid
+        )
+        data["billing_status"] = "unresolved"
+        bounded_settled = False
+
+        def record_bound_commit():
+            nonlocal bounded_settled
+            bounded_settled = True
+            data.update(
+                billing_status="bounded",
+                cost_upper_usd=str(record.cost.upper_usd),
+                cost_basis=record.cost.basis,
+            )
+
         try:
-            budget.settle(run_id, pending.pop("id"), record.cost.usd, bound_invalid=invalid)
+            if bounded:
+                try:
+                    budget.settle_upper_bound(
+                        run_id, pending.pop("id"), record.cost.upper_usd, basis=record.cost.basis
+                    )
+                except RunBudgetReached:
+                    # This exception is raised only after committing the bounded settlement.
+                    record_bound_commit()
+                    raise
+                else:
+                    record_bound_commit()
+            else:
+                try:
+                    budget.settle(run_id, pending.pop("id"), record.cost.usd, bound_invalid=invalid)
+                except RunBudgetReached:
+                    if record.cost.usd is not None and not invalid:
+                        data["billing_status"] = "known"
+                    raise
+                else:
+                    if record.cost.usd is not None and not invalid:
+                        data["billing_status"] = "known"
         finally:
-            # The authoritative ledger commits the actual charge and halt atomically first.
+            # Store can mark bounded only after the authoritative ledger commit.
             try:
                 store.update_llm_call(record_id, data)
             except BaseException:
                 budget.halt(run_id, "local_accounting_incomplete")
                 raise
-        if record.cost.usd is None and record.outcome == "response":
+        if record.cost.usd is None and record.outcome == "response" and not bounded_settled:
             raise BudgetExceeded("Provider charge is unknown; further calls stopped")
 
     client = TokenFactoryClient(

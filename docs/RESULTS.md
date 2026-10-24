@@ -5,10 +5,57 @@ manifest run reproduced five CUDA OOMs and completed twenty steps in seven workl
 All captures and cleanup checks passed. This is baseline acceptance, not automated
 repair or model-quality evidence.
 
-No authenticated Nemotron repair, main repair benchmark or ablation score has
-been measured. Nebius account/key and two minimal chats are now verified; full
-capabilities, long-input testing and a larger authorized evaluation budget remain
-required. Tavily real API and cache checks have passed.
+No model-generated repair has yet passed the original acceptance gates, and
+there is no accepted main repair benchmark or ablation score. Authenticated
+capability probing and the real long-evidence client gate are now complete.
+Diagnosis v5 has partial measured success; MVP v1 stopped safely after its first
+Nano call. **MVP v2 has not been executed at this documentation snapshot.**
+Tavily API/cache component evidence and the independent T2.7 GPU execution-path
+comparison have passed. These facts do not substitute for a successful repair.
+
+## 2026-10-25 model and isolation evidence
+
+| Gate | Recorded observation | Acceptance boundary |
+|---|---|---|
+| T0.4 capability matrix | 60 prescribed samples, including five reused historical samples; Super native schema/tools and four-way concurrency passed; Ultra successful server input up to 500,029 tokens | Matrix execution and recorded results accepted; 500,029 is a tested lower bound, not the exact provider maximum. The 900k probe returned 429 and was not retried; Nano tools and unverified thinking-budget methods remain disabled |
+| T1.3 client/router | Super strict schema and Ultra authentic evidence with 268,920 provider input tokens from 53 unique source records; one attempt each | Accepted transport/schema/usage gate; no filler. The free-text Ultra response overclaimed fragmentation, so this is not diagnosis correctness |
+| T1.4 diagnosis v5 | 7/8 first-cause matches, 8/8 valid references, eight stop responses with zero reasoning tokens; usage-priced total USD 0.328770 | Full acceptance remains false: s1/s6 contain forbidden proposals, s7 requests more information, and s5 truth remains unverified. The fixed denominator is eight |
+| T1.12 MVP v1 | One of nine attempted: real s1 baseline, then one Nano response; no applied repair and eight unexecuted cases | Failed campaign remains preserved. Its unknown actual Nano charge was not treated as zero or retroactively accepted |
+| T2.7 isolation parity | Six real CUDA arms: s1, s3 and HF through production Docker and an independent subprocess controller; allocated/reserved peak differences 0% | Accepted original <=1% gate. s3 completed 20 updates in each arm with identical losses; s1 and HF genuinely OOM before the first update, not 20-step successes |
+
+The T0.4 receipt records USD 0.77289846 in known usage-priced charges and
+USD 1.049344 permanently retained for the unknown 900k/429 outcome, for a
+conservative occupied amount of USD 1.82224246. The T1.3 calls cost
+USD 0.0001344 (Super) and USD 0.269367 (Ultra), totaling USD 0.2695014.
+These are scoped observations, not an account invoice or additive account-wide
+totals; aggregate receipts may already include individual calls.
+
+MVP v1's Nano usage was 3,643 prompt plus 480 completion tokens, with exact
+model identity and HTTP 200, but no cache-token count. Its actual charge remains
+null. A formal reviewed-retention audit keeps the **original full USD 0.01644864
+reservation permanently occupied**. This clears only that reviewed billing
+block for future dispatch: the old Store call, report and failed campaign remain
+unchanged. At the saved pre-v2 review, runtime known charges were USD 1.37040652
+and known-or-retained occupation was USD 1.38685516; the actual total remained
+null. These are saved audit values, not a fresh balance reading.
+
+New missing-cache responses can be reported with a verified conservative upper
+only after strict identity, tariff, usage, output-cap and ledger settlement checks.
+The UI and results keep actual cost unknown, known subtotal separate and the
+bound explicit. A verified upper no greater than the original cost threshold
+proves that inequality; a larger upper does not prove actual overspending and
+cannot certify the threshold. Unreviewed unknown charges still block dispatch.
+No original cost, accuracy, numerical or timing gate is lowered.
+
+Sources: [T0.4 receipt](../reports/t0.4-acceptance-20261025.json),
+[T1.3 receipt](../reports/t1.3-acceptance-20261025.json),
+[diagnosis v5 review](../reports/live-campaign-20261025/diagnosis-attempt4-review.json),
+[failed MVP v1 audit](../reports/live-campaign-20261025/mvp-v1-audit.json),
+[pre-v2 retained-charge review](../reports/live-campaign-20261025/mvp-v2-cap-budget-review.json),
+and [T2.7 independent review](../reports/t2.7-acceptance-20261025.json).
+The T2.7 reference runs inside the same Docker isolation envelope, with shared
+capture instrumentation/image/source/clock checks; it is not a bare-host backend
+or independent allocator instrumentation. It makes no throughput claim.
 
 ## Manual GPU verification regression (not model-driven repair)
 
@@ -60,7 +107,7 @@ This also contributes zero model-generated repair successes.
 | CUDA toolchain | torch 2.5.1+cu124 recognizes 3090 Ti; snapshot API returns traces | Small allocation only |
 | Synthetic scenarios | 8/8 CPU tiny checks completed 20 steps; full GPU baselines below | CPU smoke itself is not GPU acceptance |
 | nanoGPT | Pinned source; tiny CPU run exit 0; full GPU CUDA OOM reproduced below | Exact allocator peak unavailable from upstream output |
-| Minimal live model calls | Super and Nano each returned HTTP200, matched identity and stop | Two short chats only; Ultra/structured output/repair/long-context acceptance pending |
+| Historical minimal live model calls | Super and Nano each returned HTTP200, matched identity and stop | Two short chats only at that checkpoint; later capability/long-evidence results are recorded above, repair remains unaccepted |
 | Tavily | Real search/extract and versioned cache checks passed | Provider-reported credits are separate from account counters |
 
 ## T0.6 full default GPU baselines
@@ -198,9 +245,11 @@ differences are not memory improvements.
 - No authenticated model-generated GPU repair has been demonstrated.
   CPU numerical-pairing checks and offline Pareto/search/report tests exist,
   but do not establish real repaired-GPU memory savings or end-to-end acceptance.
-- Nebius model probes still await a reviewed live runtime, available credits
-  and a confirmed spending boundary. Tavily's separate live probe and research
-  component are recorded below; offline model tests and dry runs remain distinct.
+- Capability and long-evidence client gates are accepted as recorded above.
+  The reviewed runtime and gifted-credit authorization are available; actual
+  repair, main evaluation and ablation acceptance are still pending. No recharge
+  or exceeding the shared global/day pools is authorized. Tavily component
+  evidence remains distinct from Sources on a complete model-generated repair.
 
 ## Historical CPU source smoke evidence
 
@@ -272,10 +321,10 @@ completed the remaining rows.
 
 | Evaluation | State | Success / diagnosis / cost claims |
 |---|---|---|
-| Ten original workloads, original two-policy requirement | Explicit matrix support; actual campaign awaits reviewed Nebius runtime | Not measured; current default/strict are equivalent and original wording remains unresolved |
-| Full evidence + Ultra | Awaiting reviewed Nebius runtime | Not measured |
-| Traceback + memory_summary + Ultra diagnosis | Awaiting reviewed Nebius runtime | Not measured |
-| Full evidence + Super diagnosis | Awaiting reviewed Nebius runtime | Not measured |
+| Ten original workloads, original two-policy requirement | Runtime available; original full matrix not yet executed | Not measured; current default/strict are equivalent and original wording remains unresolved |
+| Full evidence + Ultra | Diagnosis-only v5 and failed first MVP attempt recorded above; no accepted repair main table | No repair success or ablation advantage claimed |
+| Traceback + memory_summary + Ultra diagnosis | Not yet executed under a fixed comparable protocol | Not measured |
+| Full evidence + Super diagnosis | Not yet executed under a fixed comparable protocol | Not measured |
 
 The evaluator records first-round diagnosis, all failure/unknown charges, source
 pins and per-condition evidence provenance. Unverified root-cause labels remain
@@ -305,7 +354,8 @@ invalidate an applied argv/environment change.
 
 This is reporting functionality, not a new model benchmark. Offline fixtures and
 the manually authored GPU regressions above do not add live repair successes.
-The actual MVP, main evaluation and ablation results remain pending.
+MVP v1 failed before repair; MVP v2 is not yet executed. Accepted main evaluation
+and ablation results remain pending.
 
 ## First Token Factory connectivity measurements — not repair results
 
@@ -321,4 +371,6 @@ Both finish_reason=stop, identity matched, no retry, max_completion_tokens=128.
 Total0.00003666USD; with21% tax reserve0.0000443586USD. Pricing uses ordinary
 input conservatively and is not an independently reconciled invoice. These are
 single observations, not model speed benchmarks or completed repair scores.
-Full T0.4, original long-context/JSON/tools gates and all repair gates remain open.
+At that historical checkpoint all later gates remained open. T0.4 and T1.3 are
+now accepted with the limitations recorded above; original repair gates remain
+open. This historical two-chat record is not rewritten as later acceptance.

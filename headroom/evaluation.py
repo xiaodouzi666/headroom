@@ -273,6 +273,7 @@ def campaign_plan(
             "policies": len(policies),
         },
         "planned_pipeline_runs": count,
+        "run_wall_limit_seconds": 480,
         "provider_api_attempts": None,
         "provider_api_attempts_note": (
             "Pipeline count is not API-call count: annotation, diagnosis supplements, "
@@ -363,6 +364,7 @@ def _policy_summary(rows):
         "total_cost_usd": str(known) if rows and not unknown else None,
         "unknown_cost_runs": unknown,
         "metrics": _metric_summary(rows),
+        **_billing_summary(rows),
     }
 
 
@@ -587,6 +589,68 @@ def _cost(usage):
         return str(money(total)) if total is not None else None
     except (ValueError, TypeError, ArithmeticError):
         return None
+
+
+def _conservative_cost(usage):
+    """Return exact cost or a fully certified upper bound; never a reservation."""
+    if _dict(usage).get("billing_complete") is False:
+        return None
+    exact = _cost(usage)
+    if exact is not None:
+        return exact
+    usage = _dict(usage)
+    if usage.get("billing_complete") is not True or usage.get("unresolved_cost_calls") != 0:
+        return None
+    try:
+        value = usage.get("conservative_total_usd")
+        return str(money(value)) if value is not None else None
+    except (ValueError, TypeError, ArithmeticError):
+        return None
+
+
+def _billing_fields(usage):
+    actual, conservative = _cost(usage), _conservative_cost(usage)
+    return {
+        "billing_complete": conservative is not None,
+        "cost_upper_usd": conservative if actual is None else None,
+        "cost_basis": "actual"
+        if actual is not None
+        else "verified_upper_bound"
+        if conservative is not None
+        else None,
+    }
+
+
+def _row_charge(row):
+    if row.get("billing_complete") is False:
+        return None
+    value = row.get("cost_usd")
+    if value is None:
+        if (
+            row.get("billing_complete") is not True
+            or row.get("cost_basis") != "verified_upper_bound"
+        ):
+            return None
+        value = row.get("cost_upper_usd")
+    try:
+        return money(value) if value is not None else None
+    except (ValueError, TypeError, ArithmeticError):
+        return None
+
+
+def _billing_summary(rows):
+    charges = [_row_charge(row) for row in rows]
+    unresolved = sum(value is None for value in charges)
+    bounded = sum(
+        row.get("cost_usd") is None and value is not None
+        for row, value in zip(rows, charges, strict=True)
+    )
+    return {
+        "billing_complete": not unresolved,
+        "bounded_cost_runs": bounded,
+        "unresolved_cost_runs": unresolved,
+        "conservative_total_usd": (None if unresolved else str(_decimal_sum(charges))),
+    }
 
 
 def _first_diagnosis(directory):
@@ -891,6 +955,7 @@ def result_row(case, condition, result, usage, *, provenance):
         "elapsed_seconds": _number(_dict(document.get("run")).get("elapsed_seconds")),
         "usage": usage,
         "cost_usd": _cost(usage),
+        **_billing_fields(usage),
         "evidence": {
             side: _dict(_dict(document.get("evidence")).get(side)).get("evidence_json")
             for side in ("before", "after")
@@ -948,6 +1013,7 @@ def summarize(rows):
         "known_cost_usd": str(known_cost),
         "total_cost_usd": None if unresolved or not measured else str(known_cost),
         "unknown_cost_runs": unresolved,
+        **_billing_summary(measured),
         "failed_or_partial_runs": sum(r.get("status") != "completed" for r in measured),
         "measured_metrics": _metric_summary(measured),
         "outcomes": _outcome_summary(measured),
@@ -1115,7 +1181,8 @@ CAMPAIGN_COLUMNS = (
     ("step_time_change_pct", "Step-time change %"),
     ("loss_equivalence", "Loss equivalence"),
     ("rounds", "Rounds"),
-    ("cost_usd", "USD"),
+    ("cost_usd", "Actual USD"),
+    ("cost_upper_usd", "Cost upper bound USD"),
     ("wall_seconds", "Wall seconds"),
     ("run_id", "Source run"),
 )
@@ -1245,6 +1312,9 @@ def render_campaign(document):
         "loss_equivalence": f"{equivalence['equivalent']}/{equivalence['comparable_count']} comparable",
         "rounds": metrics["rounds"]["mean"],
         "cost_usd": summary["total_cost_usd"],
+        "cost_upper_usd": summary["conservative_total_usd"]
+        if summary["total_cost_usd"] is None
+        else None,
         "wall_seconds": metrics["wall_seconds"]["mean"],
     }
     for key in OUTCOME_FIELDS:
@@ -1306,6 +1376,11 @@ def render_campaign(document):
         f"| Numerical equivalence | {_rate(equivalence['rate_among_comparable'])} | {equivalence['comparable_count']} | {equivalence['not_comparable_or_unknown']} |",
         "",
         f"Known cost subtotal USD: {_cell(summary['known_cost_usd'])}; total USD: {_cell(summary['total_cost_usd'])}.",
+        (
+            f"Verified cost upper bound USD: {_cell(summary['conservative_total_usd'])}; "
+            f"bounded runs: {summary['bounded_cost_runs']}; unresolved runs: {summary['unresolved_cost_runs']}. "
+            "An upper bound is not a confirmed actual charge."
+        ),
         f"Offline fixture rows excluded: {summary['offline_fixture_rows_excluded']}.",
         "",
         "## Paired diagnosis ablation",
@@ -1406,7 +1481,12 @@ def _campaign(
         "provenance": provenance,
         "status": "running",
         "manifest_sha256": hashlib.sha256(Path(manifest_path).read_bytes()).hexdigest(),
-        "limits": {"per_run_usd": str(per_run), "campaign_usd": str(cap), "daily_usd": str(daily)},
+        "limits": {
+            "per_run_usd": str(per_run),
+            "campaign_usd": str(cap),
+            "daily_usd": str(daily),
+            "run_wall_seconds": 480,
+        },
         "plan": plan,
         "rows": [
             {
@@ -1453,8 +1533,17 @@ def _campaign(
             started = time.monotonic()
             try:
                 input_dir = directory / ("input-" + run_id)
-                input_dir.mkdir()
-                script, source, args, execution = _prepare(case, project_root, input_dir)
+                if provenance == "live":
+                    # Preparation runs inside the same supervised process/deadline.
+                    script, source = (
+                        Path(project_root) / case.script,
+                        Path(project_root) / case.source_root,
+                    )
+                    args = list(case.script_args)
+                    execution = {"execution_argv": None, "repository_mode": False}
+                else:
+                    input_dir.mkdir()
+                    script, source, args, execution = _prepare(case, project_root, input_dir)
                 request = FixRequest(
                     script=str(script),
                     source_root=str(source),
@@ -1471,19 +1560,42 @@ def _campaign(
                     runtime_profile=str(runtime_profile) if runtime_profile else None,
                     research_enabled=True,
                 )
-                services = services_factory(condition, directory / ("condition-" + run_id))
-                result = runner(
-                    request,
-                    store=store,
-                    run_root=directory / "jobs",
-                    run_id=run_id,
-                    services=services,
-                )
+                if provenance == "live":
+                    from headroom.evaluation_worker import supervise_evaluation_run
+
+                    result = supervise_evaluation_run(
+                        request,
+                        store=store,
+                        run_root=directory / "jobs",
+                        run_id=run_id,
+                        condition=condition,
+                        audit_dir=directory / ("condition-" + run_id),
+                        started=started,
+                        preparation={
+                            "case": case.model_dump(),
+                            "project_root": str(project_root),
+                            "input_dir": str(input_dir),
+                        },
+                    )
+                else:
+                    services = services_factory(condition, directory / ("condition-" + run_id))
+                    result = runner(
+                        request,
+                        store=store,
+                        run_root=directory / "jobs",
+                        run_id=run_id,
+                        services=services,
+                    )
                 usage = store.usage(run_id) if store.get_run(run_id) is not None else None
                 row = result_row(case, condition, result, usage, provenance=provenance)
-                row["source_sha256"] = _source_hash(script)
-                row["execution"] = execution
+                prepared = _dict(result.get("evaluation_preparation"))
+                row["source_sha256"] = (
+                    prepared.get("source_sha256") if provenance == "live" else _source_hash(script)
+                )
+                row["execution"] = prepared.get("execution") if provenance == "live" else execution
                 row["condition_audit_dir"] = str(directory / ("condition-" + run_id))
+                if provenance == "live":
+                    row["evaluation_timing"] = result.get("evaluation_timing")
             except (OSError, ValueError, TypeError, RuntimeError) as error:
                 usage = store.usage(run_id) if store.get_run(run_id) is not None else None
                 row = {
@@ -1495,6 +1607,7 @@ def _campaign(
                     "error_type": type(error).__name__,
                     "usage": usage,
                     "cost_usd": _cost(usage),
+                    **_billing_fields(usage),
                 }
             row["search_mode"] = plan["search_mode"]
             row["target"] = case.target
@@ -1503,15 +1616,33 @@ def _campaign(
             row["policy"] = policy.model_dump()
             row["group"] = case.group
             row["wall_seconds"] = time.monotonic() - started
+            if provenance == "live":
+                row["run_wall_limit_seconds"] = 480
+                row["within_wall_limit"] = row["wall_seconds"] <= 480
+                if not row["within_wall_limit"]:
+                    row["target_met"] = False
             document["rows"][index] = row
-            if row.get("cost_usd") is None:
+            if (
+                provenance == "live"
+                and _dict(row.get("evaluation_timing")).get("cleanup_verified") is not True
+            ):
+                document["halt_reason"] = "evaluation_cleanup_unverified"
+                persist()
+                break
+            charged = _row_charge(row)
+            if charged is None:
                 document["halt_reason"] = "unresolved_cost_requires_review"
                 persist()
                 break
-            charged = money(row["cost_usd"])
             spent = _decimal_sum((spent, charged))
+            row["cost_limit_certified"] = charged <= per_run
             if charged > per_run:
-                document["halt_reason"] = "recorded_charge_exceeded_run_reservation"
+                row["target_met"] = False
+                document["halt_reason"] = (
+                    "recorded_charge_exceeded_run_reservation"
+                    if row.get("cost_usd") is not None
+                    else "cost_upper_bound_does_not_certify_run_limit"
+                )
                 persist()
                 break
             persist()

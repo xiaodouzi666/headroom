@@ -1,0 +1,200 @@
+{
+  "reviewed_at_utc": "2026-10-24T21:58:13.836139+00:00",
+  "accepted": false,
+  "first_cause_matches": 7,
+  "denominator": 8,
+  "required_matches": 6,
+  "all_schema_responses_observed": true,
+  "all_cases_completed": true,
+  "known_cost_usd": "0.327699",
+  "total_cost_usd": "0.327699",
+  "source_result": "runs/acceptance/diagnosis-prepared-20261025-v4/execution/result.json",
+  "source_result_sha256": "a4ff82ef253e157859a4b95c1801798455456b8059e5a9a561bfdeb11648fcc4",
+  "rows": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "status": "responded",
+      "row_pass": true,
+      "first_cause": "activations",
+      "first_cause_match": true,
+      "issues": [],
+      "references_valid": true,
+      "complete_diagnosis": true,
+      "elapsed_seconds": 5.406243975972757,
+      "run_id": "07e6b3404a0047229b45658e049aaa10",
+      "cost_usd": "0.033263",
+      "finish_reason": "stop",
+      "reasoning_tokens": 0,
+      "response_sha256": "40d8b31475be14f4b219fa4d74230d494a4f97821619d92e35eab7a9d0263132"
+    },
+    {
+      "scenario_id": "s2_fp32_adamw_1b",
+      "status": "responded",
+      "row_pass": false,
+      "first_cause": "optimizer_state",
+      "first_cause_match": true,
+      "issues": [
+        {
+          "code": "POLICY_PERMISSION_DENIED",
+          "message": "Step adamw_foreach_false requires an absent or disabled policy permission."
+        },
+        {
+          "code": "NUMERICS_CHANGE_FORBIDDEN",
+          "message": "Step adamw_foreach_false changes numerics or names a disallowed precision method."
+        }
+      ],
+      "references_valid": true,
+      "complete_diagnosis": false,
+      "elapsed_seconds": 7.8873604570981115,
+      "run_id": "6224d9939d29444eb640c3fe7caade5a",
+      "cost_usd": "0.046188",
+      "finish_reason": "stop",
+      "reasoning_tokens": 0,
+      "response_sha256": "0d0a9a22f09f8d15ae48c7ce8ff4b64eb9502d7b0286de6143b52260a2a41432"
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "status": "responded",
+      "row_pass": false,
+      "first_cause": "activations",
+      "first_cause_match": true,
+      "issues": [
+        {
+          "code": "MODEL_CHANGE_FORBIDDEN",
+          "message": "Step f4 proposes shrinking the model or its inputs."
+        }
+      ],
+      "references_valid": true,
+      "complete_diagnosis": false,
+      "elapsed_seconds": 7.025309562915936,
+      "run_id": "ecc23745d1834105be18ddc0dd22b0af",
+      "cost_usd": "0.048227",
+      "finish_reason": "stop",
+      "reasoning_tokens": 0,
+      "response_sha256": "17848d032cfd72d08ce7cc88ef14408dc41faa6f00ec5b6311b047afde23febe"
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "status": "responded",
+      "row_pass": true,
+      "first_cause": "retained_graph",
+      "first_cause_match": true,
+      "issues": [],
+      "references_valid": true,
+      "complete_diagnosis": true,
+      "elapsed_seconds": 5.715202838182449,
+      "run_id": "63e4d5806d274b198d831df6b6e4f4b4",
+      "cost_usd": "0.043346",
+      "finish_reason": "stop",
+      "reasoning_tokens": 0,
+      "response_sha256": "f77b5563aea33fafcc3c6300596e9531d8e73c0b665759d4bd56383051631df0"
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "status": "responded",
+      "row_pass": false,
+      "first_cause": "activations",
+      "first_cause_match": null,
+      "issues": [
+        {
+          "code": "POLICY_PERMISSION_DENIED",
+          "message": "Step f3 requires an absent or disabled policy permission."
+        },
+        {
+          "code": "NUMERICS_CHANGE_FORBIDDEN",
+          "message": "Step f3 changes numerics or names a disallowed precision method."
+        }
+      ],
+      "references_valid": true,
+      "complete_diagnosis": false,
+      "elapsed_seconds": 6.547425191150978,
+      "run_id": "30a8459ac3384545b483c9c9a7b9c894",
+      "cost_usd": "0.039126",
+      "finish_reason": "stop",
+      "reasoning_tokens": 0,
+      "response_sha256": "6f43547cdb042cb6b7d95c19ec513955c2f6161dbb7cf8a0eeb4342bdf337e93"
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "status": "responded",
+      "row_pass": false,
+      "first_cause": "temporaries",
+      "first_cause_match": true,
+      "issues": [
+        {
+          "code": "NUMERICS_CHANGE_FORBIDDEN",
+          "message": "Step fix_avoid_fp32_copy changes numerics or names a disallowed precision method."
+        }
+      ],
+      "references_valid": true,
+      "complete_diagnosis": false,
+      "elapsed_seconds": 5.5977388811297715,
+      "run_id": "54b26cb114354a929197e0e4efe0cf89",
+      "cost_usd": "0.029953",
+      "finish_reason": "stop",
+      "reasoning_tokens": 0,
+      "response_sha256": "c87de486622b56f0bcf2b1a7b1b9fc8ab98398127621d65799692d3cbc1b5ccd"
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "status": "responded",
+      "row_pass": false,
+      "first_cause": "optimizer_state",
+      "first_cause_match": true,
+      "issues": [
+        {
+          "code": "UNKNOWN_STACK_REFERENCE",
+          "message": "Cause rc4 references a stack outside the runtime evidence catalog."
+        },
+        {
+          "code": "POLICY_PERMISSION_DENIED",
+          "message": "Step f4 requires an absent or disabled policy permission."
+        }
+      ],
+      "references_valid": false,
+      "complete_diagnosis": false,
+      "elapsed_seconds": 8.403265811037272,
+      "run_id": "4a9d7b63f0b54e66a5185240be73e6ff",
+      "cost_usd": "0.041561",
+      "finish_reason": "stop",
+      "reasoning_tokens": 0,
+      "response_sha256": "eab46ec859c330245e63b6a383ab32f30221e0587773177dab2b5cdf10e4c98f"
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "status": "responded",
+      "row_pass": false,
+      "first_cause": "params",
+      "first_cause_match": true,
+      "issues": [
+        {
+          "code": "UNKNOWN_STACK_REFERENCE",
+          "message": "Cause rc_teacher_resident references a stack outside the runtime evidence catalog."
+        },
+        {
+          "code": "UNKNOWN_STACK_REFERENCE",
+          "message": "Cause rc_activations_working_set references a stack outside the runtime evidence catalog."
+        }
+      ],
+      "references_valid": false,
+      "complete_diagnosis": false,
+      "elapsed_seconds": 7.671655966900289,
+      "run_id": "f076a21a7acb49cb8fdb139a00a75b01",
+      "cost_usd": "0.046035",
+      "finish_reason": "stop",
+      "reasoning_tokens": 0,
+      "response_sha256": "c7a3a39277a397f809da38bcbd40dc3245ae4a17a4cf2e7937edbf95683dfae6"
+    }
+  ],
+  "runtime_ledger_known_total_usd": "1.04163652",
+  "runtime_remaining_usd": "8.95801252",
+  "pending_attempts": 0,
+  "unknown_runtime_attempts": 0,
+  "external_unknown_probe_retained_usd": "1.049344",
+  "limitations": [
+    "First-cause accuracy passed its numerical threshold; complete diagnosis acceptance remains false because original policy/reference checks rejected several plans.",
+    "s3 MODEL_CHANGE_FORBIDDEN is a confirmed matcher false positive on reducing workspace allocations, not model layers. The historical failed result is preserved.",
+    "No cost is a reconciled provider invoice; costs use returned usage and reviewed pricing."
+  ],
+  "recharge": false
+}

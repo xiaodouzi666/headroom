@@ -222,12 +222,12 @@ def test_serve_rejects_public_bind_and_preserves_loopback(monkeypatch):
 
     captured = []
     sentinel = object()
-    monkeypatch.setattr(headroom.api.app, "create_app", lambda: sentinel)
+    monkeypatch.setattr(headroom.api.app, "create_app", lambda settings: sentinel)
     monkeypatch.setattr(uvicorn, "run", lambda app, **kwargs: captured.append((app, kwargs)))
     assert runner.invoke(app, ["serve", "--host", "0.0.0.0"]).exit_code == 2
     assert not captured
     assert runner.invoke(app, ["serve", "--host", "127.0.0.1", "--port", "8765"]).exit_code == 0
-    assert captured == [(sentinel, {"host": "127.0.0.1", "port": 8765})]
+    assert captured == [(sentinel, {"host": "127.0.0.1", "port": 8765, "proxy_headers": False})]
 
 
 def test_eval_plan_only_displays_matrix_without_live_profile(monkeypatch):

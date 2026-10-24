@@ -1,4 +1,4 @@
-"""Candidate plan settings. Defaults are not Token Factory probe results."""
+"""Reviewed probe constants and disabled-by-default candidate runtime settings."""
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -16,10 +16,13 @@ SUPER_MODEL = "nvidia/nemotron-3-super-120b-a12b"
 # Selecting this ID does not enable live use or certify the full capability suite.
 NANO_MODEL = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
 LIGHTNING_MODEL = "nvidia/Nemotron-3_5-Lightning"
-ULTRA_MAX_INPUT_TOKENS = None
-EVIDENCE_TOKEN_BUDGET = None  # T0.4 must determine min(150000, floor(0.6 * measured maximum)).
-REASONING_METHOD = None
-JSON_METHOD = None
+# T0.4 observed server prompt tokens in the largest successful prescribed sample.
+# This is a tested lower bound, not the exact provider context maximum;900k hit429.
+# Evidence: reports/live-campaign-20261025/ultra-long-500000/report.json.
+ULTRA_MAX_INPUT_TOKENS = 500029
+EVIDENCE_TOKEN_BUDGET = min(150000, (3 * ULTRA_MAX_INPUT_TOKENS) // 5)
+REASONING_METHOD = "chat_template_kwargs"
+JSON_METHOD = "json_schema"
 
 ROLE_MODELS = MappingProxyType(
     {

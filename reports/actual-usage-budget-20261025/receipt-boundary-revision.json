@@ -1,0 +1,71 @@
+{
+  "created_at": "2026-10-24T21:22:58.873040+00:00",
+  "status": "boundary_revision_complete_frozen",
+  "previous_receipt_preserved": "receipt.json",
+  "previous_full_suite_preserved": "full-regression-20261024T211141Z-1717235b-receipt.json",
+  "previous_full_suite_summary": "1674 passed in 475.95s",
+  "previous_full_suite_hash_review": "Only root PROGRESS.md changed; 219 other inventory files unchanged",
+  "files": {
+    "headroom/budget.py": "8fb674a905e5c50117257b43ab775e6ebc386010c76c12b2cce1fc1862e758b8",
+    "headroom/runtime.py": "3e0a9b9b144111b29f0a83b3c87078e1d954a76a001be622f3382b8bd4719cf0",
+    "headroom/orchestrator.py": "cbeab13fc5c227d03a97a1db8b120f73745b5ccda4715d7005402c546404e073",
+    "headroom/acceptance/common.py": "a66a6eb47a497cdc1e4bd27b1d2e90ad01e6c03e9baa27a8762bb883520c3c0d",
+    "headroom/report.py": "4203545f6eb834b78606c8b2d1805ca7d78e7b9cfb2949d86c918c9a442f4ed7",
+    "tests/test_actual_usage_budget.py": "e999fce55d1fe1446891c0a9dd99866e970f131f88d9f93126f12012ac556e9e",
+    "tests/test_budget.py": "ceed529ddc83261b09ebc9e1e12acbc1d8b836cdfc0f139360a0edd23fb2cf44",
+    "tests/test_availability.py": "af928a4df00c818d1bab53db2e8accbea275eea171744726085bcfaeef4124bb",
+    "docs/RUNTIME.md": "f495d2ac5a1d828c4932271568a225706ce5a3bb2e84b4d81f99d69017d6d2af",
+    "docs/CLI.md": "8c143419dbc9af3799f3426aad35c7bffe517caab9c4a9bc97b7680b584d6a02"
+  },
+  "validation": [
+    {
+      "summary": "218 passed in 10.68s",
+      "receipt": {
+        "exit_code": 0,
+        "tests": [
+          "tests/test_actual_usage_budget.py",
+          "tests/test_budget.py",
+          "tests/test_budget_initialization.py",
+          "tests/test_runtime_budget.py",
+          "tests/test_orchestrator.py",
+          "tests/test_report.py",
+          "tests/test_availability.py"
+        ],
+        "external_access_attempts": [],
+        "elapsed_seconds": 10.875897234072909,
+        "live_api_calls": 0,
+        "gpu_tasks": 0
+      },
+      "log": "boundary-first.log"
+    },
+    {
+      "summary": "65 passed in 14.46s",
+      "receipt": {
+        "exit_code": 0,
+        "tests": [
+          "tests/test_client_acceptance.py",
+          "tests/test_diagnosis_acceptance.py"
+        ],
+        "external_access_attempts": [],
+        "elapsed_seconds": 14.66737814201042,
+        "live_api_calls": 0,
+        "gpu_tasks": 0
+      },
+      "log": "boundary-compat.log"
+    }
+  ],
+  "lint": "scoped Ruff check/format --check passed; git diff --check passed",
+  "changes": [
+    "Actual-usage pending/unknown/invalid billing revokes overall run/report target success; retained verification/patch remains.",
+    "Fresh trusted UTC day checked under reserve and mark_dispatched transactions for both ledger and run day.",
+    "Previously dispatched attempts still settle across midnight; callers cannot override trusted clock with day label.",
+    "Two existing historic-day test fixtures now inject the trusted clock explicitly."
+  ],
+  "full_suite_after_boundary_revision": false,
+  "plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "provider_requests_by_this_agent": 0,
+  "gpu_tasks_by_this_agent": 0,
+  "real_env_read_by_this_agent": false,
+  "runtime_profile_created_by_this_agent": false,
+  "committed": false
+}

@@ -1,0 +1,128 @@
+{
+  "status": "passed",
+  "scope": "dynamic diagnosis request schema production and prepared acceptance integration",
+  "frozen_at": "2026-10-24T22:05:00.471251+00:00",
+  "production_source_unchanged_during_tests": true,
+  "protected_prompt_and_historical_schema_unchanged": true,
+  "source_sha256": {
+    "headroom/diagnosis_schema.py": "194f900ce1bf741566014af6de89f988954e3bd8f7bdd3ba01bd6b7175d32875",
+    "headroom/diagnose.py": "e9b6f7a1991b75ec031c9ada30348797f8c721eadbe116a87979327234c97529",
+    "headroom/acceptance/diagnosis.py": "5a0599ce624b6761b96e2bc40af690220f4c439a410cbc1e9ef55286b6df6d57",
+    "tests/test_diagnosis_acceptance.py": "22e6979e7ff03d04e6cef9e31a1b622360dfb6e4c9a205f1137e0ce5cdaaa771",
+    "tests/test_diagnosis_schema_constraints.py": "2463b311e8e3c8076414e47818bbcb75708a381dd7dfc390d89041b63e8ecb70",
+    "headroom/prompts/diagnose.md": "861c4cfaecd9462fd1550d313f875249d64ae1a047234c26c404a10273be0871",
+    "headroom/schemas.py": "b4d6f8c27a7047b46bd8d4b82f7a109f6f858c741b0c28385d4b3aa03df7a364"
+  },
+  "initial_test_run": {
+    "passed": 320,
+    "failed": 2,
+    "seconds": 34.8,
+    "log": "pytest-integration-first.log",
+    "reason": "Two prior assertions expected invented refs to survive router schema validation. New dynamic schema correctly rejects them earlier; original visible response and financial failure evidence remain saved. Assertions adapted without changing fixture replies, truth, score, or thresholds."
+  },
+  "final_focused": {
+    "passed": 322,
+    "failed": 0,
+    "seconds": 34.87,
+    "log": "pytest-integration-final.log"
+  },
+  "real_cpu_wrapper_chain": {
+    "passed": 4,
+    "failed": 0,
+    "seconds": 51.7,
+    "log": "pytest-cpu-chain.log",
+    "scope": "Two parameterized existing CPU Docker chain nodes; no GPU"
+  },
+  "evaluation_followup": {
+    "passed": 109,
+    "failed": 0,
+    "seconds": 2.35,
+    "log": "pytest-evaluation.log",
+    "scope": "Schema constraints plus evaluation suite, with native SDK MockTransport full_super and traceback_ultra tests. Traceback schema includes only memory_summary and traceback IDs, never hidden snapshot IDs."
+  },
+  "test_source_note": "After the first full focused and CPU run, two condition integration tests and a fixture model_role selector were added and covered by evaluation_followup. A final unused import removal followed that run; no production changes.",
+  "checks": [
+    {
+      "argv": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/diagnosis_schema.py",
+        "headroom/diagnose.py",
+        "headroom/acceptance/diagnosis.py",
+        "tests/test_diagnosis_acceptance.py",
+        "tests/test_diagnosis_schema_constraints.py"
+      ],
+      "returncode": 0,
+      "output": "5 files already formatted\n"
+    },
+    {
+      "argv": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/diagnosis_schema.py",
+        "headroom/diagnose.py",
+        "headroom/acceptance/diagnosis.py",
+        "tests/test_diagnosis_acceptance.py",
+        "tests/test_diagnosis_schema_constraints.py"
+      ],
+      "returncode": 0,
+      "output": "All checks passed!\n"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "returncode": 0,
+      "output": ""
+    }
+  ],
+  "artifacts": {
+    "reports/diagnosis-schema-20261025/pytest-integration-first.log": {
+      "sha256": "5b75da29db689a7171f9159f1d8c23acae51f127409cea61f94a3af270b3537b"
+    },
+    "reports/diagnosis-schema-20261025/pytest-integration-final.log": {
+      "sha256": "0bec613480365c3bb58c5659fdd073c81f1c9469440e1b692b567eaa1dae33a3"
+    },
+    "reports/diagnosis-schema-20261025/pytest-cpu-chain.log": {
+      "sha256": "3910d50c49df52d92c8f31d8fdff0e6b083531618e43b6d110ce6896e870906b"
+    },
+    "reports/diagnosis-schema-20261025/pytest-evaluation.log": {
+      "sha256": "65914322cfb9073a493e4cc176926f707a7849ef0bb93d2ba583d5a948728834"
+    },
+    "reports/diagnosis-schema-20261025/run_integration_guarded.py": {
+      "sha256": "51042b545d022a268fb5472dcbfe2e92ce406d5dec7d3d1e5ffd88a6f2eb620b"
+    },
+    "reports/diagnosis-schema-20261025/run_cpu_chain_guarded.py": {
+      "sha256": "32528563b06db14ef37cb7b44fe70e9e92c29d2a32153b047613010b6dbc89aa"
+    },
+    "reports/diagnosis-schema-20261025/run_evaluation_guarded.py": {
+      "sha256": "26e326119cfe49673e94757577b7cd5e49c77d8e03b0b9096888b94166b1bf50"
+    }
+  },
+  "preserved_contracts": [
+    "8192 output cap",
+    "reasoning=False",
+    "all supplements reuse original schema",
+    "original postvalidator and matcher",
+    "prepared messages and one-call bound",
+    "raw rejected response preservation",
+    "original financial ledger and unknown-charge gates",
+    "PLAN, truth fixtures, acceptance score and thresholds"
+  ],
+  "isolation": {
+    "real_provider_calls": 0,
+    "real_gpu_runs": 0,
+    "real_env_reads": 0,
+    "dns_inet_guard": true,
+    "transport": "httpx.MockTransport only",
+    "historical_capture_mutation": false
+  },
+  "review": {
+    "availability_status": "No blocking findings; production hashes match reviewed e9b6f7a1 and 5a0599ce",
+    "nebius_cap_semantics": "Pure schema module reviewed, no blocking findings"
+  },
+  "live_acceptance": "not executed by this agent; v5 remains parent-owned and must be assessed from real results"
+}

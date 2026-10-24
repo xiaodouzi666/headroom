@@ -545,7 +545,8 @@ def test_health_and_usage_share_safe_global_observations(tmp_path):
     assert monitor.closed
 
 
-def test_real_ledger_pending_status_recovers_after_settlement(tmp_path):
+def test_real_ledger_pending_status_recovers_after_settlement(tmp_path, monkeypatch):
+    monkeypatch.setattr("headroom.budget.current_utc_day", lambda: "2026-10-24")
     from headroom.budget import BudgetLedger
 
     path = tmp_path / "budget.db"

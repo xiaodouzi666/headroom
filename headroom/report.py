@@ -388,11 +388,47 @@ def build_report(
             if group.get("total_cost_usd") is not None:
                 warnings.append("A total cost with unknown calls was replaced by unknown")
             group["total_cost_usd"] = None
+        if group.get("billing_complete") is not True or group.get("unresolved_cost_calls", 0):
+            group["conservative_total_usd"] = None
     target_met = verification.get("target_met", run.get("target_met"))
     target_met = target_met if isinstance(target_met, bool) else None
     if target_met is True and after["status"] != "completed":
         target_met = None
         warnings.append("A target-met claim without a completed after-run is unverified")
+    budget = run.get("budget") if isinstance(run.get("budget"), dict) else {}
+    mode = budget.get("run_budget_mode")
+    if mode not in ("strict_reservation", "actual_usage"):
+        mode = None
+    actual, limit = _decimal(budget.get("total_actual_usd")), _decimal(budget.get("limit_usd"))
+    conservative = _decimal(budget.get("conservative_total_usd"))
+    legacy_complete = actual is not None and not any(
+        type(budget.get(key)) is int and budget[key] > 0
+        for key in ("unknown_attempts", "pending_attempts")
+    )
+    billing_complete = budget.get("billing_complete", legacy_complete) is True
+    cost_basis = "actual" if actual is not None else "verified_upper_bound"
+    certified_cost = actual if actual is not None else conservative if billing_complete else None
+    limit_certified = (
+        certified_cost <= limit
+        if certified_cost is not None and certified_cost >= 0 and limit is not None
+        else None
+    )
+    # An excessive upper bound cannot establish actual overspending.
+    within_limit = limit_certified if actual is not None or limit_certified is True else None
+    billing_unverified = (
+        budget.get("billing_bound_unresolved") is True
+        or not billing_complete
+        or bool(budget.get("pending_attempts"))
+        or bool(budget.get("unresolved_attempts"))
+    )
+    if mode == "actual_usage" and (
+        budget.get("run_budget_exceeded") is True or within_limit is not True or billing_unverified
+    ):
+        target_met = False
+        warnings.append(
+            "Run cost is unresolved or its upper bound cannot establish the stop limit; "
+            "retained measurements are not run success"
+        )
     reduction = None
     b, a = before["peak_allocated_bytes"], after["peak_allocated_bytes"]
     if b and a is not None and before["peak_is_exact"] and after["peak_is_exact"]:
@@ -443,6 +479,7 @@ def build_report(
         "summary": {
             "target": run.get("target"),
             "target_met": target_met,
+            "cost_within_run_limit": within_limit,
             "loss_equivalence": verification.get("loss_equivalence", "unknown"),
             "numerical_basis": verification.get("numerical_basis", "unavailable"),
             "numerical_basis_label": numerical_basis_label(verification.get("numerical_basis")),
@@ -480,6 +517,27 @@ def build_report(
             "note": "A reserved-minus-allocated gap alone does not prove fragmentation.",
         },
         "sources": sources,
+        "budget": {
+            "run_budget_mode": mode,
+            "limit_usd": budget.get("limit_usd"),
+            "actual_usd": budget.get("total_actual_usd"),
+            "conservative_total_usd": budget.get("conservative_total_usd"),
+            "billing_complete": billing_complete,
+            "within_limit": within_limit,
+            "cost_limit_certified": limit_certified,
+            "cost_limit_basis": cost_basis if certified_cost is not None else None,
+            "bounded_attempts": budget.get("bounded_attempts"),
+            "unresolved_attempts": budget.get("unresolved_attempts"),
+            "run_budget_reached": budget.get("run_budget_reached"),
+            "run_budget_exceeded": budget.get("run_budget_exceeded"),
+            "run_budget_basis": budget.get("run_budget_basis"),
+            "actual_cost_exceeded": actual > limit
+            if actual is not None and limit is not None
+            else None,
+            "unknown_attempts": budget.get("unknown_attempts"),
+            "pending_attempts": budget.get("pending_attempts"),
+            "billing_bound_unresolved": budget.get("billing_bound_unresolved"),
+        },
         "usage": usage,
         "artifacts": artifacts,
         "evidence": evidence,
@@ -537,10 +595,37 @@ def render_markdown(report):
         + _text(search.get("first_target_met_round"))
         + ".",
         "Baseline target met: " + _text(search.get("baseline_target_met")) + ".",
-        "Target success describes the selected verified configuration. A later exploration stop does not invalidate it.",
+        (
+            "Retained configuration measurements survive a later exploration stop; "
+            "run cost requirements still apply."
+            if report.get("budget", {}).get("run_budget_mode") == "actual_usage"
+            else "Target success describes the selected verified configuration. "
+            "A later exploration stop does not invalidate it."
+        ),
         "Each retained configuration has its own verification and downloads below.",
         "",
     ]
+    budget = report.get("budget", {})
+    if budget.get("run_budget_mode") == "actual_usage":
+        search_lines.extend(
+            [
+                (
+                    "Run budget mode: actual_usage. The run limit is an actual-cost stop line, "
+                    "not a hard maximum charge for one request."
+                ),
+                "Run stop limit (USD): "
+                + _text(budget.get("limit_usd"))
+                + "; settled actual cost (USD): "
+                + _text(budget.get("actual_usd"))
+                + ".",
+                (
+                    "Each request requires its full verified provider bound in the shared global "
+                    "and daily pools. Reaching the run line stops further calls; exceeding it "
+                    "fails the run cost requirement. Unknown billing remains blocked."
+                ),
+                "",
+            ]
+        )
     root_index = lines.index("## Root causes")
     lines[root_index:root_index] = search_lines
     causes = report["diagnosis"].get("root_causes", [])
@@ -831,15 +916,29 @@ def render_markdown(report):
             f"unknown-cost calls: {_text(usage.get('unknown_cost_calls'))}."
         ),
         "",
-        "| Model | Calls | Input tokens | Output tokens | Total USD |",
-        "|---|---|---|---|---|",
+        (
+            f"Verified cost upper bound USD: {_text(usage.get('conservative_total_usd'))}; "
+            f"bounded-cost calls: {_text(usage.get('bounded_cost_calls'))}; "
+            f"unresolved-cost calls: {_text(usage.get('unresolved_cost_calls'))}. "
+            "An upper bound is not a confirmed actual charge."
+        ),
+        "",
+        "| Model | Calls | Input tokens | Output tokens | Actual total USD | Cost upper bound USD |",
+        "|---|---|---|---|---|---|",
     ]
     for row in usage.get("by_model", []):
         lines.append(
             "| "
             + " | ".join(
                 _text(row.get(k))
-                for k in ("model", "calls", "input_tokens", "output_tokens", "total_cost_usd")
+                for k in (
+                    "model",
+                    "calls",
+                    "input_tokens",
+                    "output_tokens",
+                    "total_cost_usd",
+                    "conservative_total_usd",
+                )
             )
             + " |"
         )

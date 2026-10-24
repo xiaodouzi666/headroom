@@ -1,0 +1,42 @@
+{
+  "schema": "headroom.repair-replay-curation.validation.v1",
+  "created_at": "2026-10-24T22:06:25.702932+00:00",
+  "revision": "transaction-recovery",
+  "previous_receipt": "reports/repair-replay-curation-20261025/receipt.json",
+  "source_hashes": {
+    "headroom/replay_curation.py": "3a52683dc9b0af2f2f73cc0bae231bca492daaf780dbdc1441b8bdb1c06e9f9b",
+    "scripts/curate_repair_replays.py": "df1e73dc12a8759369dd33ae5328481fc3f3494b448ac9fc56defa7e008b90d2",
+    "tests/test_repair_replay_curation.py": "bbcad4dd30655950c245aba14e49ba3aa8bf48114f94df3e63b1074926aeda3e",
+    "docs/REPAIR_REPLAYS.md": "c2f66906c5c98e8a25e99e1b102ca6751200eaa177f43547457140674d6efd55"
+  },
+  "plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "test": {
+    "command": ".venv/bin/python reports/health-notifier-20261024/offline_tests.py -q tests/test_repair_replay_curation.py",
+    "log": "reports/repair-replay-curation-20261025/focused-transaction-recovery.log",
+    "log_sha256": "1969c176647f0279bc4ee7204d41f798a5bcd80c8a88eda480bb87f31c4b1118",
+    "passed": 29,
+    "seconds": 3.11
+  },
+  "static": {
+    "ruff_check": "passed",
+    "ruff_format_check": "3 files already formatted",
+    "git_diff_check": "passed"
+  },
+  "added_regressions": [
+    "commit succeeds then OSError/KeyboardInterrupt: public flag and mirror retained, exact-ID retry idempotent",
+    "commit fails before commit: confirmed rollback removes owned mirror",
+    "rollback cannot be confirmed: complete assets/manifest retained, original exception preserved",
+    "native API job manifest partial-write/chmod failure: new partial file removed, source files and DB unchanged, retry succeeds",
+    "exclusive open of preexisting file: original bytes retained"
+  ],
+  "independent_review": "availability_status read-only review: both findings closed, no new blocking finding; reviewer did not run tests",
+  "execution": {
+    "real_run_ids_curated": [],
+    "public_replay_flags_changed": 0,
+    "real_api_calls": 0,
+    "gpu_runs": 0,
+    "external_publication": false,
+    "commit_or_push": false
+  },
+  "note": "All curation fixtures are synthetic live-shaped offline records. Original receipt and logs retained."
+}

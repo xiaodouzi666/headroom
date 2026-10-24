@@ -47,11 +47,74 @@ repair/evaluation. No live runtime profile is created by this code change.
 
 ## Accounting
 
-The SQLite budget ledger reserves each run's cap against the daily and authorized-total budgets. Each actual network attempt reserves an explicitly labeled provider bound or local estimate before dispatch. Successful known usage settles that reservation. Missing usage, network errors and interrupted attempts retain unknown actual charges and block every later dispatch through the same ledger, including other open runs and after restart. Unknown is never displayed as zero or as a proven finite maximum debt.
+The SQLite budget ledger reserves each open run's limit as a floor against the daily and authorized-total budgets. The default run_budget_mode=strict_reservation also requires every request reservation to fit inside that run's remaining limit. Each actual network attempt reserves an explicitly labeled provider bound or local estimate before dispatch. Successful known usage settles that reservation. Missing usage, network errors and interrupted attempts retain unknown actual charges and block every later dispatch through the same ledger, including other open runs and after restart. Unknown is never displayed as zero or as a proven finite maximum debt.
 
-The default CLI run cap is 0.6 USD and daily cap is 12 USD. Environment caps `HEADROOM_RUN_BUDGET_USD` and `HEADROOM_DAILY_BUDGET_USD` can only lower a request's caps. The confirmed authorized total is a separate all-time admission limit, including across day boundaries. An estimated admission can overshoot its reservation and therefore cannot guarantee actual provider charges remain below that limit. Nano annotations share a 0.02 USD per-run sub-budget across retries. A response identity mismatch or violated billing bound halts further billable work.
+The default CLI run limit is 0.6 USD and daily limit is 12 USD. Its admission meaning is controlled by the reviewed profile as described below. Environment caps `HEADROOM_RUN_BUDGET_USD` and `HEADROOM_DAILY_BUDGET_USD` can only lower a request's caps. The confirmed authorized total is a separate all-time admission limit, including across day boundaries. An estimated admission can overshoot its reservation and therefore cannot guarantee actual provider charges remain below that limit. Nano annotations share a 0.02 USD per-run sub-budget across retries. A response identity mismatch or violated billing bound halts further billable work.
 
 These local controls govern this application only. They are not a guarantee about Nebius account charges made elsewhere. A card top-up is not an account-level spending cap.
+
+## Explicit actual-usage run stop mode
+
+A reviewed runtime profile may explicitly set "run_budget_mode": "actual_usage".
+Omitting it preserves "strict_reservation" for old profiles and migrated ledger
+rows. This is a run accounting choice, not the local_estimate admission policy:
+all three model roles must have verified BillingBound records, and every
+attempt must use verified_provider_bound. Mixing local estimates is refused.
+Finite positive authorized-total and daily pools are required. Once the shared
+ledger contains an actual_usage run, all later attempts through that ledger
+must use provider bounds, including older strict_reservation runs and after
+close/restart. This prevents another profile's local estimate from invalidating
+the shared pool protection. Previously settled known estimate costs remain
+recorded; no historical charges or reservations are reset.
+
+The CLI keeps --budget 0.6; no project YAML can select this financial mode.
+--runtime-profile selects the reviewed profile for fix/watch/evaluation, and
+the acceptance drivers use the same ledger lifecycle. Before every POST, one
+SQLite transaction accounts for other open-run floors, all outstanding/actual
+charges and the next request's **full** provider upper bound in both shared
+pools. Thus a $1.060576 Ultra reservation can fit a sufficient shared pool while
+the run still has a $0.6 actual-cost stop line. Unused reservation is released
+only after known usage is settled. This changes neither provider prices nor
+the original actual-cost acceptance threshold.
+
+Once known run usage reaches its limit, settlement commits the actual charge,
+updates the call record and raises RunBudgetReached. No subsequent request in
+that run may dispatch, including after restart. Exact equality is a stop and
+still satisfies the cost <= limit check; strictly greater usage fails that
+cost check and the run's top-level target-success claim is false. Retained
+patches, candidate verification and measurements remain available in its
+partial report. A run stop does not globally halt unrelated runs; unknown
+billing, response identity mismatch, provider-bound violations and incomplete
+local accounting still do. A run with pending/unknown billing or an invalid
+provider bound cannot claim overall target success even if an earlier retained
+configuration verified successfully; its original verification remains visible.
+
+**The run stop line is not a hard maximum charge for one request.** A request
+admitted while actual usage is below $0.6 may settle above $0.6, in which case
+the run fails the unchanged cost requirement. Hard admission protects the
+shared pool of model charges. The operator must set that pool below available
+promotional credit after separately allowing for taxes/fees and prior spending
+outside this ledger; this mode does not perform that conversion. The application
+cannot protect against independent account spending by other clients.
+
+HEADROOM_RUN_BUDGET_USD still only lowers the run stop line, and reaching a
+0.05 line produces budget.exceeded plus a partial report. Daily pool 0.1
+still rejects opening the default 0.6 run immediately; lowering the run line
+does not let a full Ultra reservation bypass that daily pool. Reports/CLI
+results record run_budget_mode, run_limit_basis, settled actual usage,
+and separate run_budget_reached/run_budget_exceeded flags. Historical
+reports without these fields remain unknown, not inferred.
+
+## UTC day boundary
+
+Before reservation and again before marking a request dispatched, the ledger
+checks the run's accounting day and the ledger instance's day against a fresh,
+trusted UTC date. An old run or long-lived ledger crossing midnight cannot send
+new requests against yesterday's day pool. Start a new run with a fresh ledger
+instance instead. A caller-supplied day label cannot override this dispatch
+clock. Already-dispatched requests may settle after midnight, preserving their
+original run/day and full known or unresolved charge. Confirmed unsent
+reservations may still be cancelled; no dispatched reservation is erased.
 
 ## Billing while promotional approval is pending
 

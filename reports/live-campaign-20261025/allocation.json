@@ -1,0 +1,73 @@
+{
+  "created_at_utc": "2026-10-24T21:02:16.451115+00:00",
+  "all_time_net_ceiling_usd": "16",
+  "historical_probe_known_usd": "0.00035096",
+  "new_probe_pool_usd": "6",
+  "runtime_all_time_ceiling_usd": "9.99964904",
+  "pending_probe_claims": [],
+  "new_probe_charged_or_retained_usd": "1.82189150",
+  "runtime_enabled": true,
+  "invariant": "history + new probe pool + runtime all-time ceiling = 16; current price fees and tax buffer independently checked",
+  "authorization": "authorization.json",
+  "combined_daily_cap_usd": "12",
+  "probe_daily_reserved_pool_usd": "6",
+  "runtime_initial_daily_cap_usd": "5.99964904",
+  "day_basis": "UTC",
+  "daily_reallocation_rule": "After all probes finalize, runtime daily ceiling may be reviewed as12 minus every known/retained same-UTC-day probe cost; no outstanding dispatch can be released. Any later probe requires reassessing this before either subsystem sends.",
+  "new_probe_known_usd": "0.77254750",
+  "new_probe_unknown_retained_usd": "1.049344",
+  "new_probe_pool_remaining_usd": "4.17810850",
+  "total_external_probe_known_or_retained_usd": "1.82224246",
+  "retained_unknown_probe_charges": [
+    {
+      "group": "ultra-long-900000",
+      "probe_id": "ultra-long-900000",
+      "actual_cost_usd": null,
+      "retained_upper_usd": "1.049344",
+      "permanent_for_current_campaign": true,
+      "release_authorized": false,
+      "report": "reports/live-campaign-20261025/ultra-long-900000/report.json",
+      "report_sha256": "651753b08393a4febc0ad3cba38a1fe4a8459a1bf3bc4d90845c224b80e8f041",
+      "original_stop_review": "reports/live-campaign-20261025/claims/ultra-long-900000-review.json",
+      "original_stop_review_sha256": "344e6da8255db0ae1a5cde61ef860c74c5b648afcc13b7a750ada47a70f6e235",
+      "continuation_review": "reports/live-campaign-20261025/retained-429-review.json",
+      "continuation_review_sha256": "c02138911262f6458799a9b026689382af057f1b8e692727c5152c57e9fa9892"
+    }
+  ],
+  "current_accounting_updated_at_utc": "2026-10-24T21:18:31.200614+00:00",
+  "next_model_post_not_before_utc": "2026-10-24T21:17:23.615810+00:00",
+  "accounting_revision_history": [
+    {
+      "recorded_at_utc": "2026-10-24T21:15:31.299533+00:00",
+      "previous_allocation_sha256": "07ecb3369cf5eb3ad21cd6786e5a876ed8ab4075ece3c26d13f35d485b2fcdb2",
+      "review": "reports/live-campaign-20261025/retained-429-review.json",
+      "review_sha256": "c02138911262f6458799a9b026689382af057f1b8e692727c5152c57e9fa9892",
+      "reason": "Record known probe costs and permanently retained unknown 429 charge without changing funding limits."
+    },
+    {
+      "recorded_at_utc": "2026-10-24T21:18:31.200614+00:00",
+      "previous_allocation_sha256": "50295e965e47f5c8c1dc8e698f10718c6eff3847bb010e606bfe93536a47d56b",
+      "reason": "All55 new planned samples complete; add four-way concurrency known usage, preserve the permanent 429 full bound; no pool ceiling changes."
+    },
+    {
+      "recorded_at_utc": "2026-10-24T21:23:50.181302+00:00",
+      "previous_allocation_sha256": "d3acd0f6e31f9b410740ce83ab0fb66ca806f43396d556d1010cacf56742c6d9",
+      "snapshot": "reports/live-campaign-20261025/allocation-revisions/d3acd0f6e31f9b410740ce83ab0fb66ca806f43396d556d1010cacf56742c6d9.json",
+      "reason": "Activate reviewed runtime within unchanged all-time/day partitions."
+    },
+    {
+      "recorded_at_utc": "2026-10-24T21:31:30.419893+00:00",
+      "previous_allocation_sha256": "25e91746037ee328d90a01d9813ad0bb497e445c0ae65362779fde49171b22bd",
+      "snapshot": "reports/live-campaign-20261025/allocation-revisions/25e91746037ee328d90a01d9813ad0bb497e445c0ae65362779fde49171b22bd.json",
+      "review": "reports/live-campaign-20261025/daily-reallocation-review.json",
+      "review_sha256": "799374dff85faec18d48ae861333fe9a92c1f7887157d1e7286807b9dd389d64",
+      "reason": "All 60 original T0.4 samples finalized; reallocate only current UTC-day runtime ceiling after full known and permanently retained probe costs, without raising all-time limits."
+    }
+  ],
+  "runtime_activation_receipt": "reports/live-campaign-20261025/runtime-activation.json",
+  "current_runtime_daily_cap_usd": "9.99964904",
+  "runtime_daily_cap_effective_utc_day": "2026-10-24",
+  "runtime_daily_cap_review": "reports/live-campaign-20261025/daily-reallocation-review.json",
+  "runtime_daily_cap_review_sha256": "799374dff85faec18d48ae861333fe9a92c1f7887157d1e7286807b9dd389d64",
+  "runtime_daily_cap_updated_at_utc": "2026-10-24T21:31:30.419893+00:00"
+}

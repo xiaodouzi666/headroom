@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "reviewed_at_utc": "2026-10-24T21:15:31.299533+00:00",
+  "kind": "independent_review_of_completed_429_with_permanent_full_bound_retention",
+  "scope": "A reviewed continuation condition for other original-plan calls; not a retry or a zero-charge finding",
+  "not_before_utc": "2026-10-24T21:17:23.615810+00:00",
+  "not_before_basis": "Process completed 2026-10-24T21:13:08.615810+00:00 plus observed Retry-After 255 seconds; use this conservative later boundary.",
+  "prior_stop_review": {
+    "path": "reports/live-campaign-20261025/claims/ultra-long-900000-review.json",
+    "sha256": "344e6da8255db0ae1a5cde61ef860c74c5b648afcc13b7a750ada47a70f6e235",
+    "safe_to_continue": false,
+    "preserved_unchanged": true
+  },
+  "failed_report": {
+    "path": "reports/live-campaign-20261025/ultra-long-900000/report.json",
+    "sha256": "651753b08393a4febc0ad3cba38a1fe4a8459a1bf3bc4d90845c224b80e8f041",
+    "http_status": 429,
+    "usage": null,
+    "actual_cost_usd": null,
+    "response_model": null,
+    "inference_attempts": 1,
+    "retries": 0,
+    "preserved_unchanged": true
+  },
+  "retention": {
+    "retained_upper_usd": "1.049344",
+    "permanent_for_current_campaign": true,
+    "release_authorized": false,
+    "actual_charge_known": false,
+    "zero_charge_claim": false,
+    "basis": "Pre-dispatch exact requested Ultra catalogue guard: 1048576 maximum input tokens at 1 USD/M plus 256 max_completion_tokens at 3 USD/M, all advertised extra fees zero. Error response has no usage; no observed provider-bound violation.",
+    "response_identity_verified": false
+  },
+  "accounting": {
+    "new_probe_known_usd": "0.77243620",
+    "new_probe_unknown_retained_usd": "1.049344",
+    "new_probe_charged_or_retained_usd": "1.82178020",
+    "historical_probe_known_usd": "0.00035096",
+    "total_external_probe_known_or_retained_usd": "1.82213116",
+    "new_probe_pool_remaining_usd": "4.17821980",
+    "runtime_pool_unchanged": true,
+    "day_and_all_time_limits_unchanged": true
+  },
+  "continuation_conditions": [
+    "Do not issue any new POST before not_before_utc.",
+    "Root must refresh Active account status and available promotional balance, and independently verify the next requested model price/context/output bound and advertised fees before dispatch.",
+    "The retained 1.049344 USD remains charged against both the probe pool and its UTC-day accounting; keep actual_cost_usd null.",
+    "Maintain the existing all-time and UTC-day allocations; only root may dispatch and must persist the next exclusive claim.",
+    "Do not retry the 900k sample, modify its failure, reset its prior stop review, or reinterpret UI balance stability as zero charge.",
+    "This exception does not bypass runtime unknown-charge guards or authorize local-estimate overshoot."
+  ],
+  "release_evidence_boundary": "No release authorized here. A later release would require independently reviewed provider usage/invoice linked to this request, or explicit authoritative zero-charge evidence covering this exact request; delayed or unchanged aggregate UI balance and Retry-After alone are insufficient.",
+  "unknown_charge_and_context_limit_still_unaccepted": true,
+  "review_decision": "conditional_continuation_for_other_calls_after_not_before_and_root_account_price_checks",
+  "source_sha256": {
+    "reports/live-campaign-20261025/lightning-remaining-capabilities/report.json": "9a7cfd28bf9eb72461138a57241ad911463e3209128cc0866de479fb29ece4bd",
+    "reports/live-campaign-20261025/nano-remaining-capabilities/report.json": "c0165d5da2a206eba9f2900e4bdf7be7cdaa61e3deea29a49de2667226d0f84a",
+    "reports/live-campaign-20261025/super-remaining-capabilities/report.json": "03ba33efb1c086a8b6f84248d25057df0b7666131364b36b8050055d54ca736b",
+    "reports/live-campaign-20261025/ultra-long-200000/report.json": "3ee36e9ab3f0089cdfc5d52d9724cddb225317abe158917296d27e2f44c1178e",
+    "reports/live-campaign-20261025/ultra-long-500000/report.json": "f9f786140b4ca183a80589e7eea6c4023103e7db07e569f4538b222399aa1d3c",
+    "reports/live-campaign-20261025/ultra-long-64000/report.json": "df7ab0aec785b8d870e514ffe113097a4a059897b4dd2fb4eb4f0e017794f4d1",
+    "reports/live-campaign-20261025/ultra-long-900000/report.json": "651753b08393a4febc0ad3cba38a1fe4a8459a1bf3bc4d90845c224b80e8f041",
+    "reports/live-campaign-20261025/ultra-remaining-capabilities/report.json": "ec3c7954228d74352abbb4882d129b025c2294e66d97895ce1c163c719977243",
+    "reports/live-campaign-20261025/claims/ultra-long-900000-dispatch.json": "a054c9dba6f1c3ba32b7c07c74b28bf01f00edf99a4ab232a8f26f8340420fcf",
+    "reports/live-campaign-20261025/claims/ultra-long-900000-exit.json": "28811540994282921d3f32f1343d07aafffe2b98a8b566c598b112363ae7f8cf"
+  },
+  "allocation_before_sha256": "07ecb3369cf5eb3ad21cd6786e5a876ed8ab4075ece3c26d13f35d485b2fcdb2",
+  "reviewer_provider_calls": 0,
+  "reviewer_real_env_reads": false,
+  "reviewer_gpu_jobs": 0
+}

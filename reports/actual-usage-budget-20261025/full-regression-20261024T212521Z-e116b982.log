@@ -1,0 +1,30 @@
+........................................................................ [  4%]
+...F.................................................................... [  8%]
+........................................................................ [ 12%]
+........................................................................ [ 16%]
+........................................................................ [ 21%]
+........................................................................ [ 25%]
+........................................................................ [ 29%]
+........................................................................ [ 33%]
+........................................................................ [ 38%]
+........................................................................ [ 42%]
+
+=================================== FAILURES ===================================
+_______________ test_upload_socket_rejected_and_health_is_honest _______________
+
+settings = ApiSettings(project_root=PosixPath('/home/xiaodouzi/workspace/headroom'), data_root=PosixPath('/home/xiaodouzi/workspa...00, shutdown_grace_seconds=5, event_poll_seconds=0.01, allowed_hosts=('localhost', '127.0.0.1', '[::1]', 'testserver'))
+
+    def test_upload_socket_rejected_and_health_is_honest(settings):
+        with TestClient(create_app(settings, worker=completed_worker)) as client:
+            health = client.get("/api/health").json()
+            assert health["status"] == "ok" and health["token_factory"]["reachable"] is None
+>           assert not health["token_factory"]["configured"]
+E           assert not True
+
+tests/test_api.py:70: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_api.py::test_upload_socket_rejected_and_health_is_honest - ...
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/usr/lib/python3.12/selectors.py:468: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)
+1 failed, 719 passed in 169.99s (0:02:49)

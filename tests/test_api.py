@@ -19,8 +19,20 @@ from headroom.lab.runner import PROJECT_ROOT
 
 @pytest.fixture
 def settings(tmp_path):
+    # Only the public example catalogue belongs in this fixture. Runtime profiles,
+    # account state and the shared budget ledger must stay outside the test root.
+    project = tmp_path / "project"
+    scenarios = project / "scenarios"
+    scenarios.mkdir(parents=True)
+    index = (PROJECT_ROOT / "scenarios/INDEX.yaml").read_bytes()
+    (scenarios / "INDEX.yaml").write_bytes(index)
+    for row in json.loads(index)["scenarios"]:
+        relative = Path(row["script"])
+        target = project / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((PROJECT_ROOT / relative).read_bytes())
     return ApiSettings(
-        project_root=PROJECT_ROOT,
+        project_root=project,
         data_root=tmp_path / "api",
         db_path=tmp_path / "store.db",
         run_root=tmp_path / "jobs",
@@ -749,3 +761,26 @@ def test_selected_evidence_and_manifest_never_follow_symlinks(settings, tmp_path
         url = f"/api/runs/{run_id}"
         assert client.get(url + "/timeline-after.png").status_code == 404
         assert client.get(url + "/configuration.json").status_code == 404
+
+
+def test_session_usage_keeps_certified_bound_separate_from_actual(settings):
+    from test_bounded_billing_reporting import bounded_record
+
+    app = create_app(settings, worker=completed_worker)
+    with TestClient(app) as client:
+        accepted = client.post("/api/runs", json={"script_text": "print('fixture')\n"})
+        assert accepted.status_code == 202
+        run_id = accepted.json()["run_id"]
+        wait_done(client, run_id)
+        app.state.store.add_llm_call(run_id, bounded_record())
+        usage = client.get("/api/usage").json()
+        assert usage["total_cost_usd"] is None and usage["complete"] is False
+        assert usage["known_cost_usd"] == "0"
+        assert usage["billing_complete"] and usage["bounded_cost_calls"] == 1
+        assert usage["unresolved_cost_calls"] == 0
+        assert usage["conservative_total_usd"] == "0.00033378"
+        other = TestClient(app)
+        try:
+            assert other.get("/api/usage").json()["calls"] == 0
+        finally:
+            other.close()

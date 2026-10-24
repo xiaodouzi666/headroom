@@ -1,0 +1,103 @@
+{
+  "schema": "headroom.remaining-delivery-preflight.v1",
+  "recorded_at": "2026-10-24T22:18:05.585531+00:00",
+  "scope": "Read-only source/environment/evidence inspection; no browser audit, model call or GPU workload was performed by this preflight.",
+  "plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "requirements": {
+    "T3.2": "PLAN328-330: browser-started live run through final report; Lighthouse Performance>=70; no mobile page overflow",
+    "T3.3": "PLAN332-333: >=5 real repair replays including s2 two-round, nanoGPT and reclaim; starts within2s; budget/GPU-busy banner",
+    "T3.6": "PLAN341-342: >=8 screenshots showing timeline/composition/diagnosis/diff/verification"
+  },
+  "available_tools": {
+    "node": "v24.22.1",
+    "npm": "11.19.1",
+    "google_chrome": "151.0.7922.173",
+    "lighthouse": "13.5.0",
+    "puppeteer_core": "25.16.0",
+    "chrome_binary": "/usr/bin/google-chrome",
+    "lighthouse_cli": ".tools/lighthouse/node_modules/lighthouse/cli/index.js",
+    "puppeteer_module": ".tools/lighthouse/node_modules/puppeteer-core/lib/puppeteer/puppeteer-core.js"
+  },
+  "frontend_evidence": {
+    "receipt": "reports/evaluation-outcomes-20261024/frontend/receipt-layout-revision-1.json",
+    "tests_passed": 66,
+    "typecheck": "passed",
+    "build": "passed",
+    "source_inventory_count": 21,
+    "source_hash_mismatches": [
+      "web/src/App.tsx",
+      "web/src/EvaluationView.test.tsx",
+      "web/src/EvaluationView.tsx",
+      "web/src/data.test.ts",
+      "web/src/data.ts"
+    ],
+    "current_dist_sha256": {
+      "web/dist/favicon.svg": "1a5a5455c2e36b55a5da8b21f5b3e5d4b0772fb835f5da6475d36a4195984269",
+      "web/dist/index.html": "81df0c5d35de00ed8e9c9d6fb5745a16ff250ba5816536394acbd2fe0f4c1c01",
+      "web/dist/assets/DiffView-BHwmQUU7.js": "59533a98380d975c6e96a77f5ed495d755977dec387a3d5ca676aa07d2ad8996",
+      "web/dist/assets/index-CIKoOuIu.js": "c032a1809a909c8ff3a7540a9bcb66c4fef2c4e3e9ae42735a2044d33a2148b5",
+      "web/dist/assets/MemoryChart-M1Qgg8jT.js": "d3bda844ecfd9b35b2c8556acbc351de2e4a1d4628d5a549ba11d876a9ad723f",
+      "web/dist/assets/index-drYlxMcO.css": "2b660f66bf6a7062adbfc210594d7931f3f2508569571e18c020a2ee02fa2767"
+    }
+  },
+  "historical_lighthouse": {
+    "receipt": "reports/lighthouse-20261024.json",
+    "home_scores": [
+      90,
+      90,
+      90
+    ],
+    "baseline_run_scores": [
+      89,
+      98,
+      89
+    ],
+    "current_dist_matches_historical": false,
+    "current_performance_acceptance": "requires fresh measurement; old score is not current-build proof"
+  },
+  "existing_drivers": {
+    "lighthouse": "reports/runs/lighthouse-20261024T025553Z-final/run_lighthouse.py",
+    "screenshots": "reports/runs/lighthouse-20261024T025553Z-final/capture_ui.mjs",
+    "reuse_rule": "Do not execute unchanged: fixed historical target/output paths would reuse old evidence. Create a new report-local driver with explicit real repair URLs and new output directory; preserve normal Chrome sandbox, disable GPU, fresh server-only profile, localhost GET/HEAD interception for replay/screenshots."
+  },
+  "remaining_real_repair_inputs": [
+    "An actual browser-originated authorized run with observed live SSE, final report and downloads (CLI MVP plus replay alone does not meet this interaction check).",
+    "Explicit eligible real repair IDs for default-dry-run curation; current five public rows are recorded_baseline only.",
+    "A genuine s2 two-round repair; MVP manifest uses s2 reclaim and explicitly does not replace original fit:22GB two-round requirement.",
+    "A saved nanoGPT repair and a real reclaim repair among at least five chosen repair replays.",
+    "Real repair before/after, diagnosis, patch and verification screenshots; old eight screenshots are baseline-only.",
+    "Measure navigation-to-first-history-event within2s on the actual chosen repair pages; current source opens EventSource after initial report/artifact refresh, so timing cannot be inferred from code."
+  ],
+  "independent_preparable_items": [
+    "Fresh Home Lighthouse and desktop/mobile overflow check; no model calls required.",
+    "Existing frontend tests/typecheck/build can run offline from web/ with existing node_modules; no dependency installation needed.",
+    "Read-only replay timing, screenshot and download validation once explicit real IDs are curated."
+  ],
+  "external_inputs": [
+    "T3.4 design package and Frank approval remain absent.",
+    "T3.5 approved hostname/Cloudflare credentials, public phone-network test, service installation/restart and explicitly authorized notification receiver remain separate; no service/timer/tunnel was changed."
+  ],
+  "T2.7": {
+    "historical_host_probe": "reports/t2.7-isolation-preflight-20261024.json",
+    "host_userns_clone": 1,
+    "host_apparmor_restrict_unprivileged_userns": 1,
+    "host_bwrap_mode": "0755, not setuid",
+    "docker_security_options": [
+      "apparmor",
+      "builtin seccomp",
+      "cgroupns"
+    ],
+    "verified_image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7",
+    "conclusion": "Host namespace attempt remains failed; PLAN does not require bare-host execution. Root approved a separate container-enclosed subprocess controller, now developed separately with CPU-only evidence. Existing run_script/run_command CPU dual-entry tests alone do not satisfy T2.7. Three actual CUDA pairs with original<=1% gate still required.",
+    "root_approved_driver": "scripts/check_docker_subprocess_parity.py",
+    "gpu_execution_performed": false
+  },
+  "actions": {
+    "source_modified_by_preflight": false,
+    "real_env_read": false,
+    "model_api_calls": 0,
+    "gpu_runs": 0,
+    "service_changes": false,
+    "browser_launched": false
+  }
+}

@@ -72,7 +72,13 @@ def _record(row):
     if isinstance(row, Event):
         result["data"] = json.loads(row.data_json)
     if isinstance(row, LLMCall):
-        result["cost_status"] = "unknown" if row.cost_usd is None else "known"
+        result["cost_status"] = (
+            "known"
+            if row.cost_usd is not None
+            else "upper_bound"
+            if _bounded_cost(result) is not None
+            else "unknown"
+        )
     return result
 
 
@@ -93,6 +99,21 @@ def _cost(value):
     return format(amount, "f")
 
 
+def _bounded_cost(payload):
+    """Only a settled, runtime-certified bound counts; a reservation never does."""
+    if payload.get("billing_status") != "bounded" or payload.get("settled") is not True:
+        return None
+    if payload.get("admission_kind") != "verified_provider_bound":
+        return None
+    if payload.get("cost_basis") != "verified_tariff_missing_cache_count":
+        return None
+    try:
+        value = _cost(payload.get("cost_upper_usd"))
+        return Decimal(value) if value is not None else None
+    except (ValueError, TypeError, ArithmeticError):
+        return None
+
+
 def _tokens(value):
     if value is not None and (type(value) is not int or value < 0):
         raise ValueError("Token counts must be nonnegative integers or null")
@@ -109,8 +130,8 @@ def _call_data(data, fields):
     if amount is None and isinstance(cost_payload, dict):
         amount = cost_payload.get("usd")
     amount = _cost(amount)
-    cost_unknown = original.get("cost_status") == "unknown" or (
-        isinstance(cost_payload, dict) and cost_payload.get("status") == "unknown"
+    cost_unknown = original.get("cost_status") in {"unknown", "upper_bound"} or (
+        isinstance(cost_payload, dict) and cost_payload.get("status") in {"unknown", "upper_bound"}
     )
     if cost_unknown and amount is not None:
         raise ValueError("Unknown cost cannot carry a known amount")
@@ -120,6 +141,12 @@ def _call_data(data, fields):
     if type(settled) is not bool or settled == pending or (pending and amount is not None):
         raise ValueError("Pending attempts must be unsettled with unknown cost")
     payload["settled"] = settled
+    if payload.get("billing_status") == "bounded":
+        if amount is not None or _bounded_cost(payload) is None:
+            raise ValueError(
+                "A bounded charge needs a settled verified upper bound and unknown actual"
+            )
+        payload["cost_upper_usd"] = _cost(payload["cost_upper_usd"])
     usage = payload.get("usage") or {}
     if not isinstance(usage, dict):
         raise TypeError("Usage must be a dictionary or null")
@@ -297,6 +324,9 @@ class Store:
                 "cost",
                 "cost_usd",
                 "cost_status",
+                "cost_upper_usd",
+                "cost_basis",
+                "billing_status",
                 "usage",
                 "input_tokens",
                 "output_tokens",
@@ -358,12 +388,29 @@ class Store:
                     (Decimal(r.cost_usd) for r in rows if r.cost_usd is not None), Decimal(0)
                 )
             unknown = sum(r.cost_usd is None for r in rows)
+            bounded = [_bounded_cost(json.loads(r.data_json)) for r in rows if r.cost_usd is None]
+            bounded_count = sum(value is not None for value in bounded)
+            rejected_known = sum(
+                r.cost_usd is not None
+                and json.loads(r.data_json).get("billing_status") in {"unresolved", "pending"}
+                for r in rows
+            )
+            unresolved = unknown - bounded_count + rejected_known
+            with localcontext() as context:
+                context.prec = 256 + len(str(len(rows)))
+                conservative = subtotal + sum(
+                    (value for value in bounded if value is not None), Decimal(0)
+                )
             result = {
                 "calls": len(rows),
                 "known_cost_usd": format(subtotal, "f"),
                 "total_cost_usd": None if unknown else format(subtotal, "f"),
                 "unknown_cost_calls": unknown,
                 "complete": unknown == 0,
+                "billing_complete": unresolved == 0,
+                "bounded_cost_calls": bounded_count,
+                "unresolved_cost_calls": unresolved,
+                "conservative_total_usd": None if unresolved else format(conservative, "f"),
             }
             if rows:
                 counts = {"verified_provider_bound": 0, "local_estimate": 0, "unknown": 0}

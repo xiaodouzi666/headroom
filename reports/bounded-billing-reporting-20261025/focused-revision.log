@@ -1,0 +1,142 @@
+........................................................................ [ 23%]
+........................................................................ [ 47%]
+........................................................................ [ 70%]
+....F................................................................... [ 94%]
+.................F                                                       [100%]
+=================================== FAILURES ===================================
+_ test_budget_exhaustion_and_unresolved_bound[None-.5-billing_review_required] _
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-143/test_budget_exhaustion_and_unr0')
+halt = None, total = '.5', expected = 'billing_review_required'
+
+    @pytest.mark.parametrize(
+        "halt,total,expected",
+        [
+            (None, ".5", "billing_review_required"),
+            ("private billing detail", "10", "billing_review_required"),
+        ],
+    )
+    def test_budget_exhaustion_and_unresolved_bound(tmp_path, halt, total, expected):
+        path = tmp_path / "budget.db"
+        ledger(path, [("run", "2026-10-24", ".5", "closed", halt)], [("run", ".5", None, 1)])
+        result = read_budget(path, total=total)
+        assert result["status"] == expected and result["total_actual_usd"] is None
+>       assert result["billing_bound_unresolved"] is (halt is not None)
+E       assert True is (None is not None)
+
+tests/test_availability.py:208: AssertionError
+________ test_session_usage_keeps_certified_bound_separate_from_actual _________
+
+settings = ApiSettings(project_root=PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-143/test_...00, shutdown_grace_seconds=5, event_poll_seconds=0.01, allowed_hosts=('localhost', '127.0.0.1', '[::1]', 'testserver'))
+
+    def test_session_usage_keeps_certified_bound_separate_from_actual(settings):
+        from test_bounded_billing_reporting import bounded_record
+    
+        app = create_app(settings, worker=completed_worker)
+        with TestClient(app) as client:
+            accepted = client.post("/api/runs", json={"script_text": "print('fixture')\n"})
+            assert accepted.status_code == 202
+            run_id = accepted.json()["run_id"]
+            wait_done(client, run_id)
+            app.state.store.add_llm_call(run_id, bounded_record())
+            usage = client.get("/api/usage").json()
+            assert usage["total_cost_usd"] is None and usage["complete"] is False
+            assert usage["known_cost_usd"] == "0"
+            assert usage["billing_complete"] and usage["bounded_cost_calls"] == 1
+            assert usage["unresolved_cost_calls"] == 0
+            assert usage["conservative_total_usd"] == "0.00033378"
+>           with TestClient(app) as other:
+
+tests/test_api.py:782: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/starlette/testclient.py:572: in __enter__
+    portal.call(self.wait_startup)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:608: in wait_startup
+    await receive()
+.venv/lib/python3.12/site-packages/starlette/testclient.py:599: in receive
+    self.task.result()
+/usr/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:589: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1181: in __call__
+    await lifespan(
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_runtime.py:238: in lifespan
+    await app(scope, wrapped_receive, wrapped_send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:103: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:37: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/gzip.py:63: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:49: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:678: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2798: in app
+    await self.lifespan(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:656: in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:248: in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+headroom/api/app.py:240: in lifespan
+    queue.start()
+headroom/api/queue.py:276: in start
+    self.thread.start()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Thread(headroom-api-queue, stopped daemon 136773652944576)>
+
+    def start(self):
+        """Start the thread's activity.
+    
+        It must be called at most once per thread object. It arranges for the
+        object's run() method to be invoked in a separate thread of control.
+    
+        This method will raise a RuntimeError if called more than once on the
+        same thread object.
+    
+        """
+        if not self._initialized:
+            raise RuntimeError("thread.__init__() not called")
+    
+        if self._started.is_set():
+>           raise RuntimeError("threads can only be started once")
+E           RuntimeError: threads can only be started once
+
+/usr/lib/python3.12/threading.py:987: RuntimeError
+=========================== short test summary info ============================
+FAILED tests/test_availability.py::test_budget_exhaustion_and_unresolved_bound[None-.5-billing_review_required]
+FAILED tests/test_api.py::test_session_usage_keeps_certified_bound_separate_from_actual
+2 failed, 304 passed in 24.32s

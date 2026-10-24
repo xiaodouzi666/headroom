@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import time
 from collections.abc import Mapping
 from dataclasses import asdict
@@ -27,12 +28,15 @@ from headroom.acceptance.common import (
 from headroom.budget import money
 from headroom.config import ULTRA_MODEL
 from headroom.diagnose import (
+    DIAGNOSIS_MAX_COMPLETION_TOKENS,
     PROMPT_PATH,
     build_diagnosis_messages,
     diagnose_with_router,
 )
+from headroom.diagnosis_schema import build_diagnosis_schema
 from headroom.evidence import MAX_SNAPSHOT_BYTES, _main_source, _tokens, build_evidence
 from headroom.lab.runner import read_capture, selected_capture_directory
+from headroom.llm.router import ResponseValidationError
 from headroom.orchestrator import Policy, _required_reduction
 from headroom.runtime import PROJECT_ROOT
 
@@ -51,6 +55,7 @@ ACTUAL_CALL_LIMIT_USD = Decimal("0.35")
 REQUIRED_MATCHES = 6
 MAX_DOCUMENT_BYTES = 32 * 1024 * 1024
 MAX_METADATA_BYTES = 4 * 1024 * 1024
+MAX_RESPONSE_ARTIFACT_BYTES = 256 * 1024
 
 
 class DiagnosisAcceptanceRefused(ValueError):
@@ -485,34 +490,141 @@ def _case_payload(package, row):
     )
 
 
-def _prepared_router(router, expected_messages, response_path):
+def _save_response(path, response, *, validation_error=None):
+    """Private, bounded assistant-content evidence; never request headers or reasoning text."""
+    raw = response.text.encode("utf-8")
+    record = {
+        "model": response.model,
+        "response_model": response.response_model,
+        "text": response.text,
+        "text_utf8_bytes": len(raw),
+        "text_sha256": _digest(raw),
+        "text_truncated": False,
+        "parsed": getattr(response, "parsed", None),
+        "parsed_omitted": False,
+        "finish_reason": response.finish_reason,
+        "usage": asdict(response.usage) if response.usage is not None else None,
+        "cost": response.cost.as_dict(),
+        "elapsed_seconds": response.elapsed_seconds,
+        "validation": "failed" if validation_error is not None else "passed",
+        "validation_reason": validation_error.reason if validation_error is not None else None,
+        "content_is_untrusted_data": True,
+    }
+
+    def serialized_size():
+        return (
+            len(json.dumps(record, ensure_ascii=False, indent=2, allow_nan=False).encode("utf-8"))
+            + 1
+        )
+
+    if serialized_size() > MAX_RESPONSE_ARTIFACT_BYTES:
+        record["parsed_omitted"] = record["parsed"] is not None
+        record["parsed"] = None
+    if serialized_size() > MAX_RESPONSE_ARTIFACT_BYTES:
+        record["text_truncated"] = True
+        low, high = 0, len(raw)
+        while low < high:
+            middle = (low + high + 1) // 2
+            record["text"] = raw[:middle].decode("utf-8", errors="ignore")
+            if serialized_size() <= MAX_RESPONSE_ARTIFACT_BYTES:
+                low = middle
+            else:
+                high = middle - 1
+        record["text"] = raw[:low].decode("utf-8", errors="ignore")
+        _require(serialized_size() <= MAX_RESPONSE_ARTIFACT_BYTES, "RESPONSE_METADATA_TOO_LARGE")
+    write_json(path, record)
+
+
+def _prepared_router(router, expected_messages, response_path, *, evidence, policy):
+    # Build independently from the revalidated frozen case, not the caller's schema.
+    expected_schema = json.dumps(
+        build_diagnosis_schema(evidence=evidence, policy=policy),
+        sort_keys=True,
+        ensure_ascii=False,
+        allow_nan=False,
+    )
     calls = 0
 
-    def chat(role, messages, schema, *, max_tokens):
+    def chat(role, messages, schema, *, max_tokens, reasoning):
         nonlocal calls
         _require(
-            calls == 0 and role == "diagnose" and max_tokens == 4000,
+            calls == 0
+            and role == "diagnose"
+            and max_tokens == DIAGNOSIS_MAX_COMPLETION_TOKENS
+            and reasoning is False,
             "ONLY_ONE_PREPARED_DIAGNOSIS_ALLOWED",
         )
         _require(messages == expected_messages, "DIAGNOSIS_REQUEST_CHANGED")
-        calls += 1
-        response = router.chat(role, messages, schema, max_tokens=max_tokens)
-        write_json(
-            response_path,
-            {
-                "model": response.model,
-                "response_model": response.response_model,
-                "text": response.text,
-                "parsed": response.parsed,
-                "finish_reason": response.finish_reason,
-                "usage": asdict(response.usage) if response.usage is not None else None,
-                "cost": response.cost.as_dict(),
-                "elapsed_seconds": response.elapsed_seconds,
-            },
+        try:
+            actual_schema = json.dumps(schema, sort_keys=True, ensure_ascii=False, allow_nan=False)
+        except (TypeError, ValueError):
+            raise DiagnosisAcceptanceRefused("DIAGNOSIS_SCHEMA_CHANGED") from None
+        _require(
+            isinstance(schema, dict) and actual_schema == expected_schema,
+            "DIAGNOSIS_SCHEMA_CHANGED",
         )
+        calls += 1
+        try:
+            response = router.chat(
+                role, messages, schema, max_tokens=max_tokens, reasoning=reasoning
+            )
+        except ResponseValidationError as error:
+            if error.response is not None:
+                _save_response(response_path, error.response, validation_error=error)
+            raise
+        _save_response(response_path, response)
         return response
 
     return SimpleNamespace(chat=chat)
+
+
+def _financial_checks(snapshot):
+    """The same post-finalization checks apply to valid and rejected structured output."""
+    calls = snapshot.get("calls")
+    usage = snapshot.get("usage")
+    budget = snapshot.get("budget")
+    identity = (
+        isinstance(calls, list)
+        and len(calls) == 1
+        and calls[0].get("outcome") == "response"
+        and calls[0].get("http_status") == 200
+        and calls[0].get("model") == ULTRA_MODEL
+        and calls[0].get("response_model") == ULTRA_MODEL
+        and calls[0].get("settled") is True
+    )
+    cost = usage.get("total_cost_usd") if isinstance(usage, dict) else None
+    within_cost = money(cost) <= ACTUAL_CALL_LIMIT_USD if cost is not None else None
+    clear = (
+        isinstance(budget, dict)
+        and budget.get("unknown_attempts") == 0
+        and budget.get("pending_attempts") == 0
+        and budget.get("total_actual_usd") is not None
+        and budget.get("halt_reason") is None
+        and budget.get("billing_bound_unresolved") is False
+        and budget.get("dispatch_blocked") is False
+        and budget.get("run_budget_exceeded") is False
+        and budget.get("status") == "closed"
+        and snapshot.get("cleanup_errors") == []
+        and cost is not None
+        and money(budget["total_actual_usd"]) == money(cost)
+    )
+    if not isinstance(usage, dict):
+        reason = "ACCOUNTING_UNAVAILABLE"
+    elif usage.get("complete") is not True or usage.get("unknown_cost_calls") != 0 or cost is None:
+        reason = "UNKNOWN_BILLING"
+    elif not identity:
+        reason = "RESPONSE_IDENTITY_OR_CALL_COUNT_INVALID"
+    elif within_cost is not True:
+        reason = "ACTUAL_CALL_COST_EXCEEDS_035"
+    elif not clear:
+        reason = "LEDGER_NOT_CLEAR"
+    else:
+        reason = None
+    return {
+        "response_identity_valid": bool(identity),
+        "actual_cost_within_035": within_cost,
+        "ledger_clear": bool(clear),
+    }, reason
 
 
 def execute_diagnosis_acceptance(
@@ -522,6 +634,7 @@ def execute_diagnosis_acceptance(
     run_limit_usd,
     campaign_limit_usd,
     daily_limit_usd,
+    min_case_interval_seconds=0,
     execute=False,
     live_authorized=False,
     transport=None,
@@ -533,11 +646,21 @@ def execute_diagnosis_acceptance(
         transport is None or isinstance(transport, httpx.MockTransport),
         "ONLY_OFFLINE_MOCK_TRANSPORT_ALLOWED",
     )
+    _require(
+        type(min_case_interval_seconds) in {int, float}
+        and 0 <= min_case_interval_seconds <= 60
+        and math.isfinite(min_case_interval_seconds),
+        "CASE_INTERVAL_MUST_BE_FINITE_0_TO_60_SECONDS",
+    )
     run_cap, campaign_cap = money(run_limit_usd), money(campaign_limit_usd)
     _require(
         run_cap > 0 and campaign_cap > 0 and money(daily_limit_usd) > 0, "POSITIVE_BUDGETS_REQUIRED"
     )
     package, prepared = _verify_preparation(prepared_path)
+    _require(
+        package.is_relative_to(Path(prepared["project_root"]) / "runs"),
+        "PRIVATE_RUNS_DIRECTORY_REQUIRED",
+    )
     execution = package / "execution"
     execution.mkdir(mode=0o700, exist_ok=False)
     provenance = "offline_fixture" if transport is not None else "live"
@@ -550,6 +673,9 @@ def execute_diagnosis_acceptance(
         "admission_cap_per_case_usd": str(run_cap),
         "campaign_admission_limit_usd": str(campaign_cap),
         "actual_acceptance_limit_per_call_usd": "0.35",
+        "diagnosis_max_completion_tokens": DIAGNOSIS_MAX_COMPLETION_TOKENS,
+        "diagnosis_reasoning": False,
+        "min_case_interval_seconds": min_case_interval_seconds,
         "rows": [],
         "stop_reason": None,
         "first_cause_matches": 0,
@@ -565,6 +691,8 @@ def execute_diagnosis_acceptance(
     write_json(execution / "result.json", result)
     known = Decimal(0)
     all_costs_known = True
+    last_case_started = None
+    execution_started = time.monotonic()
     for prepared_row in prepared["rows"]:
         case_id = prepared_row["scenario_id"]
         row = {
@@ -586,8 +714,18 @@ def execute_diagnosis_acceptance(
             continue
         cap = min(run_cap, remaining)
         active = None
-        started = time.monotonic()
+        case_error = None
+        started = None
+        wait_started = time.monotonic()
         try:
+            if last_case_started is not None:
+                while (
+                    delay := last_case_started + min_case_interval_seconds - time.monotonic()
+                ) > 0:
+                    time.sleep(delay)
+            started = time.monotonic()
+            last_case_started = started
+            row["case_start_offset_seconds"] = started - execution_started
             markdown, document, expected_messages = _case_payload(package, prepared_row)
             with acceptance_run(
                 case_id="diagnosis-" + case_id,
@@ -614,6 +752,8 @@ def execute_diagnosis_acceptance(
                         active.router,
                         expected_messages,
                         execution / case_id / "model-response.json",
+                        evidence=document,
+                        policy=prepared["policy"],
                     ),
                     markdown,
                     evidence=document,
@@ -629,23 +769,28 @@ def execute_diagnosis_acceptance(
                 write_json(execution / case_id / "diagnosis.json", row)
                 active.store.update_run(active.run_id, status="completed", acceptance_case=case_id)
         except (Exception, KeyboardInterrupt) as error:  # noqa: BLE001 - persist sanitized partial acceptance
+            case_error = error
             row.update(status="failed", error_type=type(error).__name__)
+            if isinstance(error, ResponseValidationError):
+                row["validation_reason"] = error.reason
             if isinstance(error, DiagnosisAcceptanceRefused):
                 row["reason"] = str(error)
-            # Common lifecycle retains accounting even when entry/profile preflight failed.
-            receipt = execution / case_id / "runtime.json"
-            if receipt.exists():
-                row["runtime_receipt"] = str(receipt)
-                try:
-                    row["runtime"] = read_json(receipt, max_bytes=MAX_DOCUMENT_BYTES)
-                except (OSError, ValueError, TypeError):
-                    row["accounting_available"] = False
             result["stop_reason"] = (
                 str(error)
                 if isinstance(error, DiagnosisAcceptanceRefused)
                 else type(error).__name__
             )
-        row["elapsed_seconds"] = time.monotonic() - started
+        receipt = execution / case_id / "runtime.json"
+        if receipt.exists():
+            row["runtime_receipt"] = str(receipt)
+            try:
+                row["runtime"] = read_json(receipt, max_bytes=MAX_DOCUMENT_BYTES)
+            except (OSError, ValueError, TypeError):
+                row["accounting_available"] = False
+                row.pop("runtime", None)
+        now = time.monotonic()
+        row["interval_wait_seconds"] = (started if started is not None else now) - wait_started
+        row["elapsed_seconds"] = now - started if started is not None else 0.0
         snapshot = row.get("runtime", {})
         usage = snapshot.get("usage") or {}
         total = usage.get("total_cost_usd")
@@ -661,14 +806,26 @@ def execute_diagnosis_acceptance(
             with localcontext() as decimal_context:
                 decimal_context.prec = 256
                 known += money(usage["known_cost_usd"])
-        if row.get("response_identity_valid") is False:
-            result["stop_reason"] = "RESPONSE_IDENTITY_OR_CALL_COUNT_INVALID"
-        if row.get("actual_cost_within_035") is False:
-            result["stop_reason"] = "ACTUAL_CALL_COST_EXCEEDS_035"
+        if (
+            snapshot.get("calls")
+            or case_error is None
+            or isinstance(case_error, ResponseValidationError)
+        ):
+            financial, financial_reason = _financial_checks(snapshot)
+            row.update(financial)
+            row["row_pass"] = row["row_pass"] and financial_reason is None
+            if financial_reason is not None:
+                result["stop_reason"] = financial_reason
+            elif isinstance(case_error, ResponseValidationError):
+                # A known-billed invalid answer fails this case, not the independent next one.
+                result["stop_reason"] = None
+                row["continued_after_validation_failure"] = True
         if known > campaign_cap:
             result["stop_reason"] = "ACTUAL_CAMPAIGN_COST_EXCEEDED"
         result["known_cost_usd"] = str(known)
         result["total_cost_usd"] = str(known) if all_costs_known else None
+        if (execution / case_id).is_dir():
+            write_json(execution / case_id / "diagnosis.json", row)
         write_json(execution / "result.json", result)
     matches = sum(row.get("first_cause_match") is True for row in result["rows"])
     complete = len(result["rows"]) == 8 and all(

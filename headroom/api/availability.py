@@ -151,8 +151,18 @@ def read_local_budget(path, *, daily_limit, total_limit, day=None):
                 runs = conn.execute(
                     "SELECT id,day,limit_usd,status,halt_reason FROM budget_runs LIMIT 100001"
                 ).fetchall()
+                columns = {row[1] for row in conn.execute("PRAGMA table_info(budget_attempts)")}
+                charge_status = "charge_status" if "charge_status" in columns else "NULL"
+                admission = "admission_kind" if "admission_kind" in columns else "NULL"
+                upper = "upper_usd" if "upper_usd" in columns else "NULL"
                 attempts = conn.execute(
-                    "SELECT run_id,charged_usd,actual_usd,settled FROM budget_attempts LIMIT 100001"
+                    "SELECT run_id,charged_usd,actual_usd,settled,"
+                    + charge_status
+                    + ","
+                    + upper
+                    + ","
+                    + admission
+                    + " FROM budget_attempts LIMIT 100001"
                 ).fetchall()
                 if len(runs) > 100000 or len(attempts) > 100000:
                     raise ValueError
@@ -162,11 +172,11 @@ def read_local_budget(path, *, daily_limit, total_limit, day=None):
             raise ValueError
         run_ids = {row[0] for row in runs}
         charged = {}
-        unknown = pending = 0
+        unknown = pending = bounded = reviewed = 0
         with localcontext() as context:
             context.prec = 256
             known = Decimal(0)
-            for run_id, charge, actual, settled in attempts:
+            for run_id, charge, actual, settled, charge_status, upper, admission in attempts:
                 if (
                     run_id not in run_ids
                     or settled not in {0, 1}
@@ -176,6 +186,17 @@ def read_local_budget(path, *, daily_limit, total_limit, day=None):
                 charged[run_id] = charged.get(run_id, Decimal(0)) + money(charge)
                 if actual is None:
                     unknown += 1
+                    if charge_status in {"upper_bound", "reviewed_retained"}:
+                        if (
+                            not settled
+                            or admission != "verified_provider_bound"
+                            or money(charge) > money(upper)
+                        ):
+                            raise ValueError
+                        if charge_status == "reviewed_retained" and money(charge) != money(upper):
+                            raise ValueError
+                        bounded += charge_status == "upper_bound"
+                        reviewed += charge_status == "reviewed_retained"
                 else:
                     known += money(actual)
                 pending += not settled
@@ -193,9 +214,12 @@ def read_local_budget(path, *, daily_limit, total_limit, day=None):
             total_remaining = max(Decimal(0), total - committed)
             daily_remaining = max(Decimal(0), daily - committed_today)
             remaining = min(total_remaining, daily_remaining)
+            conservative = sum(charged.values(), Decimal(0))
+        unresolved = unknown - bounded - reviewed
+        billing_complete = not halted and unresolved == 0 and pending == 0
         result.update(
             status="billing_review_required"
-            if halted or unknown > pending
+            if halted or unresolved > pending
             else "pending_charge"
             if pending
             else "exhausted"
@@ -211,9 +235,14 @@ def read_local_budget(path, *, daily_limit, total_limit, day=None):
             total_actual_usd=None if unknown else str(known),
             unknown_attempts=unknown,
             settled_unknown_attempts=unknown - pending,
+            bounded_attempts=bounded,
+            reviewed_retained_attempts=reviewed,
+            unresolved_attempts=unresolved,
+            billing_complete=billing_complete,
+            conservative_total_usd=str(conservative) if billing_complete else None,
             pending_attempts=pending,
             billing_bound_unresolved=halted,
-            dispatch_blocked=halted or bool(unknown),
+            dispatch_blocked=halted or bool(unresolved) or bool(pending),
             ledger_initialized=initialized,
         )
     except (OSError, sqlite3.Error, ValueError, TypeError, ArithmeticError):

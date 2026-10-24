@@ -208,3 +208,96 @@ def test_empty_plan_information_request_does_not_demand_invented_savings(payload
     assert result.valid and not result.ready_for_patch
     assert result.requires_supplement is False
     assert result.supplement_request is None
+
+
+@pytest.mark.parametrize(
+    "description",
+    [
+        (
+            "Reduce temporary workspace allocations in convolutions/linear layers by using NHWC "
+            "layout; requires model compatibility check."
+        ),
+        "Reduce activation memory in transformer blocks with checkpointing.",
+        "Free temporary memory used by lower layers through recomputation.",
+        "Remove cached gradients for frozen layers from temporary GPU buffers.",
+        "Reduce transformer layer memory usage using checkpointing.",
+        "Reduce layers' activation memory using recomputation.",
+        "Remove hidden_size allocations from an unused temporary buffer.",
+        "Do not reduce layers; use checkpointing.",
+        "Never halve hidden_size.",
+        "Don't reduce the model's layer count.",
+        "Avoid reducing the number of transformer layers.",
+        "Use checkpointing without shrinking hidden size.",
+        "Checkpoint the model rather than reducing vocab_size.",
+        "Use recomputation instead of truncating seq_len.",
+    ],
+)
+def test_memory_optimizations_and_local_negative_advice_do_not_shrink_model(payload, description):
+    payload["plan"][0]["description"] = description
+    assert validate(payload).valid
+
+
+@pytest.mark.parametrize(
+    "description",
+    [
+        "Delete half the transformer blocks.",
+        "Remove the last two decoder layers.",
+        "Remove every other transformer layer.",
+        "Delete a few network layers.",
+        "Remove redundant transformer blocks.",
+        "Reduce half of the model's layers.",
+        "Reduce the number of the network's layers.",
+        "Truncate input sequence length.",
+        "Reduce maximum sequence length.",
+        "Reduce the number of transformer layers by half.",
+        "Cut the count of encoder blocks to 6.",
+        "Halve hidden_size from 1024 to 512.",
+        "Reduce hidden size to 512.",
+        "Shrink vocabulary size to 1000.",
+        "Reduce vocab_size from 50000 to 1000.",
+        "Truncate sequence length to 128.",
+        "Reduce seq_len from 1024 to 128.",
+        "Reduce n_layer to 12.",
+        "Reduce num_hidden_layers.",
+        "Reduce n_embd.",
+        "Halve d_model.",
+        "Reduce block_size.",
+        "Reduce max_seq_length.",
+        "Reduce model depth.",
+        "Do not reduce layers; halve hidden size.",
+        "Avoid shrinking layers and reduce hidden_size instead.",
+        "Never reduce activation memory by checkpointing; reduce vocab_size.",
+        "Do not avoid reducing layers.",
+        "Cannot avoid shrinking hidden size.",
+        "Not only reduce layers but also enable checkpointing.",
+    ],
+)
+def test_model_shrink_direct_objects_and_nonlocal_negation_are_rejected(payload, description):
+    payload["plan"][0]["description"] = description
+    assert "MODEL_CHANGE_FORBIDDEN" in {issue.code for issue in validate(payload).issues}
+
+
+def test_model_shrink_title_is_not_negated_by_description(payload):
+    payload["plan"][0].update(title="Halve hidden_size", description="Do not reduce layers.")
+    assert "MODEL_CHANGE_FORBIDDEN" in {issue.code for issue in validate(payload).issues}
+
+
+def test_explicit_model_change_permission_remains_required_and_supported(payload):
+    payload["plan"][0]["description"] = "Reduce vocab_size."
+    result = validate_diagnosis(
+        payload,
+        evidence={"stack_catalog": {"stk_actual": []}},
+        policy={"allow_numerics_change": False, "allow_model_change": True},
+    )
+    assert result.valid
+
+
+def test_channels_last_workspace_plan_is_not_model_shrink(payload):
+    payload["plan"][0].update(
+        title="Enable channels-last memory format for 4D tensors where supported",
+        description=(
+            "Reduce temporary workspace allocations in convolutions/linear layers by using "
+            "NHWC layout; requires model compatibility check."
+        ),
+    )
+    assert validate(payload, required_saving_gb=2.0).ready_for_patch

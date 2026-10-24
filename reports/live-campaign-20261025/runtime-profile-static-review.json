@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "reviewed_at_utc": "2026-10-24T21:20:36.427318+00:00",
+  "scope": "Disabled candidate profile static consistency only; not installed configuration or runtime-code acceptance",
+  "static_configuration_consistent": true,
+  "live_enabled": false,
+  "profile_activated": false,
+  "profile_modified": false,
+  "models": {
+    "ultra": {
+      "model_id": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "identity_prices_cache_context_output_semantics_match": true,
+      "reasoning_method_supported_by_observed_pair": true,
+      "json_schema_evidence_scope": "one small exact-object fixture; complex real schema remains to be attempted and validated",
+      "tools": true,
+      "token_budget_method": null
+    },
+    "super": {
+      "model_id": "nvidia/nemotron-3-super-120b-a12b",
+      "identity_prices_cache_context_output_semantics_match": true,
+      "reasoning_method_supported_by_observed_pair": true,
+      "json_schema_evidence_scope": "one small exact-object fixture; complex real schema remains to be attempted and validated",
+      "tools": true,
+      "token_budget_method": null
+    },
+    "nano": {
+      "model_id": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "identity_prices_cache_context_output_semantics_match": true,
+      "reasoning_method_supported_by_observed_pair": true,
+      "json_schema_evidence_scope": "one small exact-object fixture; complex real schema remains to be attempted and validated",
+      "tools": false,
+      "token_budget_method": null
+    }
+  },
+  "funding": {
+    "authorized_runtime_all_time_usd": "9.99964904",
+    "separate_probe_pool_usd": "6",
+    "historical_probe_known_usd": "0.00035096",
+    "combined_ceiling_usd": "16",
+    "unknown_429_retained_usd": "1.049344",
+    "unknown_429_already_inside_probe_pool": true,
+    "unknown_charge_not_released_or_counted_again_in_runtime_pool": true,
+    "profile_available_credit_usd": "25",
+    "available_credit_meaning": "Initial promotion net face value, not a freshly reconciled net spendable balance after probe charges. Refresh/account for actual and permanently retained probe costs before enabling; do not treat this field as permission to enlarge the runtime pool.",
+    "initial_runtime_daily_limit_usd": "5.99964904",
+    "profile_contains_daily_limit": false,
+    "daily_limit_must_be_supplied_by_reviewed_ledger_creation": true
+  },
+  "evidence_budget": {
+    "configured_tokens": 150000,
+    "successful_provider_prompt_tokens": 500029,
+    "sixty_percent_of_successful_sample": "300017.4",
+    "within_sixty_percent": true,
+    "within_original_150k_cap": true,
+    "largest_success_is_tested_lower_bound_not_absolute_context_limit": true
+  },
+  "output_cap_note": "8192 is the candidate billing admission maximum; these capability probes used at most 1024 completion tokens. No claim of an 8192-output capability test is made.",
+  "activation_conditions": [
+    "Wait for root installed-configuration review and final budget-code validation, including unknown-charge and UTC-midnight behavior.",
+    "Refresh catalogue identity/prices/fee components before every stage; runtime POSTs do not perform that refresh automatically.",
+    "Explicitly supply the approved combined-accounting runtime daily cap, not the default 12 USD.",
+    "Validate actual Diagnosis/Patch schemas and responses after dispatch; small-fixture support does not guarantee complex-schema success."
+  ],
+  "source_sha256": {
+    ".cache/setup/candidate-runtime-20261025.json": "e6eafb9f5304795ef6dea2d4014e2bda012034711054e54e73d9c53839a1339c",
+    "reports/live-campaign-20261025/capability-review.json": "0d3ea7dc484cb8efe86181e2a6dc8ed5363b618d465bd54971e9da5d932a2f3e",
+    "reports/live-campaign-20261025/pricing-reviewed.json": "635c6b90216acfe0505e4f53f0685c8183bc3bc632fff376c3bfcefd7e7eb829",
+    "reports/live-campaign-20261025/allocation.json": "d3acd0f6e31f9b410740ce83ab0fb66ca806f43396d556d1010cacf56742c6d9",
+    "reports/live-campaign-20261025/ultra-long-500000/report.json": "f9f786140b4ca183a80589e7eea6c4023103e7db07e569f4538b222399aa1d3c",
+    "reports/live-campaign-20261025/retained-429-review.json": "c02138911262f6458799a9b026689382af057f1b8e692727c5152c57e9fa9892",
+    "reports/live-campaign-20261025/claims/ultra-long-900000-continuation-review.json": "b1937a1ddbfa6b9bf05b2a559122f20ef27d9b1082e9250c47137a91f16e1cd7"
+  },
+  "reviewer_provider_calls": 0,
+  "reviewer_real_env_reads": false,
+  "reviewer_gpu_jobs": 0
+}

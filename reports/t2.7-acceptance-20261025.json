@@ -1,0 +1,1214 @@
+{
+  "schema": "headroom.t2.7-independent-review.v1",
+  "reviewed_at": "2026-10-24T22:24:59.086869+00:00",
+  "reviewer": "payment_readiness",
+  "plan_requirement": {
+    "path": "docs/PLAN.md",
+    "line": 316,
+    "text": "三个场景在 Docker 路径下结果与子进程路径一致（峰值差 ≤ 1%）。",
+    "peak_delta_pct_limit": "1"
+  },
+  "original_report": {
+    "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/report.json",
+    "bytes": 5910,
+    "sha256": "e17a2b122929039e74dc774f555f6cd9fcbdc5f465ab51c20accdcb476d0981b"
+  },
+  "original_report_accepted": true,
+  "review_method": "Read-only independent raw artifact, source byte/hash, configuration, process/exit/cleanup and Decimal peak comparison; no execution of target code or production comparator.",
+  "rows": [
+    {
+      "case_id": "s1",
+      "source_pin": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+      "peak_delta_pct": "0",
+      "checks": {
+        "same_source_files": true,
+        "same_capture_configuration": true,
+        "same_image": true,
+        "same_status": true,
+        "same_steps": true,
+        "same_loss_series": true,
+        "same_parameter_count": true,
+        "same_allocated_and_reserved_peaks": true,
+        "original_peak_gate": true,
+        "report_peak_matches_raw": true,
+        "all_arm_checks": true
+      },
+      "arms": {
+        "production": {
+          "run_dir": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c",
+          "checks": {
+            "all_source_bytes_match_manifest_and_current": true,
+            "script_matches_original_case_pin": true,
+            "host_matches_raw_capture": true,
+            "env_file_matches_raw": true,
+            "complete_capture": true,
+            "no_capture_errors": true,
+            "all_artifact_writes_complete": true,
+            "expected_status": true,
+            "configured_cuda_20_seed1337_180s": true,
+            "no_deadline_reached": true,
+            "snapshot_available": true,
+            "parameter_count_complete": true,
+            "host_cleanup_verified": true,
+            "no_execution_timeout_error": true,
+            "container_exited_cleanly": true,
+            "image_consistent": true,
+            "gpu_before_after_clear": true,
+            "gpu_initialization_clear": true,
+            "gpu_end_only_capture_pid": true,
+            "gpu_observation_complete_unshared": true,
+            "deadline_control_matches": true,
+            "genuine_oom_before_first_update": true,
+            "production_exit_matches": true,
+            "production_cleanup_absence_recorded": true
+          },
+          "raw_files": [
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/artifacts/.capture-owner.json",
+              "bytes": 45,
+              "sha256": "1e20de0a498c5156d8e9664211382878204af918e02b4e516061f3f4eafc92f1"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/artifacts/capture-ready.json",
+              "bytes": 1223,
+              "sha256": "957d666e0b67c6563be61a79d2a52e0c4bdf9feb022b04e2bcf1b8234b91ac6a"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/artifacts/env.json",
+              "bytes": 683,
+              "sha256": "b64bf6ad9cf0108489954320fcc71935ea205f3c6ab0ad66d596fff2142decc9"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/artifacts/memory_stats.json",
+              "bytes": 5034,
+              "sha256": "dd2e3c409d319b0bfee8e5fb348c196b84049b72997fdd8f77f785833964fe15"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/artifacts/memory_summary.txt",
+              "bytes": 3666,
+              "sha256": "cc0dd9327055115b443f3ff20d63f167a671636a4e4bc8ad2760f5cb63248ab1"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/artifacts/result.json",
+              "bytes": 12687,
+              "sha256": "43854905691d6e50e0bfa998e7cf08e02de1ec461d024ea38c54df3ef659aa3f"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/artifacts/traceback.txt",
+              "bytes": 3867,
+              "sha256": "973140999513205a93afe5e1f074db9ea1b3ebc3a45c19b1ec3dd936710d1bbd"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/control/deadline.json",
+              "bytes": 449,
+              "sha256": "03ffb2a0a6f03e44801837ee70c23241d8cb0fbddc3441a468a1e0d56bd7da10"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/docker-create.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/gpu-after.json",
+              "bytes": 122,
+              "sha256": "f61ae0a41849e88bf8a685f22cd727ec79b191e1759a2ebb099d5bc688bf37c0"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/gpu-before.json",
+              "bytes": 122,
+              "sha256": "f61ae0a41849e88bf8a685f22cd727ec79b191e1759a2ebb099d5bc688bf37c0"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/manifest.json",
+              "bytes": 2651,
+              "sha256": "585bb6f8c2c93791fb6189a2d4de5bd87a1a1bcc1e742b7802aa738e8f5cae53"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/result.json",
+              "bytes": 16726,
+              "sha256": "9fc123280a88732bfd323e2b46afb4cee04efec22c70d1c17aefdd4da0200416"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/source/README.md",
+              "bytes": 4168,
+              "sha256": "e9ebc3ab2698a8093537949ec855d08ae81e037fd5a827168317ced690f466fb"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/source/train.py",
+              "bytes": 4270,
+              "sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/stdout.log",
+              "bytes": 660,
+              "sha256": "b31633c456cbb400fed04b7f6e12e6faf6c8b938340a3fd00bf09eb759b1679b"
+            }
+          ],
+          "source_pins": [
+            {
+              "relative": "README.md",
+              "capture": {
+                "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/source/README.md",
+                "bytes": 4168,
+                "sha256": "e9ebc3ab2698a8093537949ec855d08ae81e037fd5a827168317ced690f466fb"
+              },
+              "current_source": {
+                "path": "scenarios/s1_batch_too_big/README.md",
+                "bytes": 4168,
+                "sha256": "e9ebc3ab2698a8093537949ec855d08ae81e037fd5a827168317ced690f466fb"
+              },
+              "same_current_bytes": true
+            },
+            {
+              "relative": "train.py",
+              "capture": {
+                "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/e6c1e4fe26964263ad7a3c8029b1051c/source/train.py",
+                "bytes": 4270,
+                "sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28"
+              },
+              "current_source": {
+                "path": "scenarios/s1_batch_too_big/train.py",
+                "bytes": 4270,
+                "sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28"
+              },
+              "same_current_bytes": true
+            }
+          ],
+          "status": "oom",
+          "termination_reason": "oom",
+          "configured_steps": 20,
+          "actual_steps": 0,
+          "loss_count": 0,
+          "peak_allocated_bytes": 24750424064,
+          "peak_reserved_bytes": 24752685056,
+          "parameter_count": 101007360,
+          "container_exit_code": 42,
+          "image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7",
+          "controller": null,
+          "snapshots": {
+            "snapshot.json": {
+              "bytes": 62449228,
+              "hash_in_this_review": false
+            },
+            "snapshot.pickle": {
+              "bytes": 592586,
+              "hash_in_this_review": false
+            }
+          }
+        },
+        "reference": {
+          "run_dir": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f",
+          "checks": {
+            "all_source_bytes_match_manifest_and_current": true,
+            "script_matches_original_case_pin": true,
+            "host_matches_raw_capture": true,
+            "env_file_matches_raw": true,
+            "complete_capture": true,
+            "no_capture_errors": true,
+            "all_artifact_writes_complete": true,
+            "expected_status": true,
+            "configured_cuda_20_seed1337_180s": true,
+            "no_deadline_reached": true,
+            "snapshot_available": true,
+            "parameter_count_complete": true,
+            "host_cleanup_verified": true,
+            "no_execution_timeout_error": true,
+            "container_exited_cleanly": true,
+            "image_consistent": true,
+            "gpu_before_after_clear": true,
+            "gpu_initialization_clear": true,
+            "gpu_end_only_capture_pid": true,
+            "gpu_observation_complete_unshared": true,
+            "deadline_control_matches": true,
+            "genuine_oom_before_first_update": true,
+            "separate_child_bound": true,
+            "child_exit_one_preserved": true,
+            "controller_not_timedout_cleaned": true,
+            "reference_container_exit_zero": true,
+            "reference_execution_file_matches": true,
+            "reference_host_controller_file_matches": true,
+            "reference_clock_verified": true,
+            "reference_finished_before_deadline": true,
+            "reference_script_command_matches": true
+          },
+          "raw_files": [
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/artifacts/.capture-owner.json",
+              "bytes": 46,
+              "sha256": "68b3282f7e8d126e2b8d33fd088346893d9ab459e9a027fe4836736864dcb7ec"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/artifacts/capture-ready.json",
+              "bytes": 1224,
+              "sha256": "37339a1439b2a7d260e3920b554c97cc7d93e2e46f85f50109a08fc6901e484b"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/artifacts/child-stderr.log",
+              "bytes": 3603,
+              "sha256": "0645b4ed5b607b78f8212332cbfe2651d82c8316d56a40038375733e5df6c822"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/artifacts/child-stdout.log",
+              "bytes": 550,
+              "sha256": "eab3836f736e01ba24275a9461bf0acd389f73e756cc2a3a31bb56ea0b0a84da"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/artifacts/controller-result.json",
+              "bytes": 2448,
+              "sha256": "92ba55ecc3ff0e5211832d4052a0e03f8b50b5849be8b646579966766c4cef68"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/artifacts/env.json",
+              "bytes": 684,
+              "sha256": "2a65e36ddb1cdaebe6fbcff802ae681950f88fdd6215857bbec8e6697d0a1611"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/artifacts/memory_stats.json",
+              "bytes": 5034,
+              "sha256": "dd2e3c409d319b0bfee8e5fb348c196b84049b72997fdd8f77f785833964fe15"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/artifacts/memory_summary.txt",
+              "bytes": 3666,
+              "sha256": "cc0dd9327055115b443f3ff20d63f167a671636a4e4bc8ad2760f5cb63248ab1"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/artifacts/result.json",
+              "bytes": 12547,
+              "sha256": "0115d155b343638c9f0c8bfae69934391935311e1c56e3d45cf4c602dd3fcf10"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/artifacts/traceback.txt",
+              "bytes": 3603,
+              "sha256": "0645b4ed5b607b78f8212332cbfe2651d82c8316d56a40038375733e5df6c822"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/container-create.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/control/deadline.json",
+              "bytes": 449,
+              "sha256": "5eccb3b91c4bb7605e36f28fb98de1d8451e4bdd9b8d410affe629670cd0bb3e"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/control/request.json",
+              "bytes": 201,
+              "sha256": "9b790a55603e5089a17c3185cee809d8682d0e7ce1736b4c292dc87c7a0f400d"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/execution.json",
+              "bytes": 1163,
+              "sha256": "5653f63c74ef4aff55c2ef08e3c45b331b237d9bb766855a6bd264931d252886"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/manifest.json",
+              "bytes": 4225,
+              "sha256": "01fb9cd32b193c5727d416607c600b135860ee5173d8d9e7380acebc2cd89f50"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/result.json",
+              "bytes": 17416,
+              "sha256": "38a9b9edd6e0ab6d833081f637ef84689ec1ce2cca261edfc79911d959e448d4"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/source/README.md",
+              "bytes": 4168,
+              "sha256": "e9ebc3ab2698a8093537949ec855d08ae81e037fd5a827168317ced690f466fb"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/source/train.py",
+              "bytes": 4270,
+              "sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28"
+            }
+          ],
+          "source_pins": [
+            {
+              "relative": "README.md",
+              "capture": {
+                "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/source/README.md",
+                "bytes": 4168,
+                "sha256": "e9ebc3ab2698a8093537949ec855d08ae81e037fd5a827168317ced690f466fb"
+              },
+              "current_source": {
+                "path": "scenarios/s1_batch_too_big/README.md",
+                "bytes": 4168,
+                "sha256": "e9ebc3ab2698a8093537949ec855d08ae81e037fd5a827168317ced690f466fb"
+              },
+              "same_current_bytes": true
+            },
+            {
+              "relative": "train.py",
+              "capture": {
+                "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/8ec8b9eda315456f87037fde783e174f/source/train.py",
+                "bytes": 4270,
+                "sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28"
+              },
+              "current_source": {
+                "path": "scenarios/s1_batch_too_big/train.py",
+                "bytes": 4270,
+                "sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28"
+              },
+              "same_current_bytes": true
+            }
+          ],
+          "status": "oom",
+          "termination_reason": "oom",
+          "configured_steps": 20,
+          "actual_steps": 0,
+          "loss_count": 0,
+          "peak_allocated_bytes": 24750424064,
+          "peak_reserved_bytes": 24752685056,
+          "parameter_count": 101007360,
+          "container_exit_code": 0,
+          "image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7",
+          "controller": {
+            "pid": 1,
+            "child_pid": 57,
+            "returncode": 1,
+            "timed_out": false,
+            "group_cleanup_verified": true,
+            "controller_does_not_capture": true,
+            "command": [
+              "/opt/venv/bin/python",
+              "/source/train.py"
+            ]
+          },
+          "snapshots": {
+            "snapshot.json": {
+              "bytes": 57389849,
+              "hash_in_this_review": false
+            },
+            "snapshot.pickle": {
+              "bytes": 558448,
+              "hash_in_this_review": false
+            }
+          }
+        }
+      },
+      "accepted": true
+    },
+    {
+      "case_id": "s3",
+      "source_pin": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+      "peak_delta_pct": "0",
+      "checks": {
+        "same_source_files": true,
+        "same_capture_configuration": true,
+        "same_image": true,
+        "same_status": true,
+        "same_steps": true,
+        "same_loss_series": true,
+        "same_parameter_count": true,
+        "same_allocated_and_reserved_peaks": true,
+        "original_peak_gate": true,
+        "report_peak_matches_raw": true,
+        "all_arm_checks": true
+      },
+      "arms": {
+        "production": {
+          "run_dir": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee",
+          "checks": {
+            "all_source_bytes_match_manifest_and_current": true,
+            "script_matches_original_case_pin": true,
+            "host_matches_raw_capture": true,
+            "env_file_matches_raw": true,
+            "complete_capture": true,
+            "no_capture_errors": true,
+            "all_artifact_writes_complete": true,
+            "expected_status": true,
+            "configured_cuda_20_seed1337_180s": true,
+            "no_deadline_reached": true,
+            "snapshot_available": true,
+            "parameter_count_complete": true,
+            "host_cleanup_verified": true,
+            "no_execution_timeout_error": true,
+            "container_exited_cleanly": true,
+            "image_consistent": true,
+            "gpu_before_after_clear": true,
+            "gpu_initialization_clear": true,
+            "gpu_end_only_capture_pid": true,
+            "gpu_observation_complete_unshared": true,
+            "deadline_control_matches": true,
+            "expected_actual_steps": true,
+            "production_exit_matches": true,
+            "production_cleanup_absence_recorded": true
+          },
+          "raw_files": [
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/artifacts/.capture-owner.json",
+              "bytes": 45,
+              "sha256": "74927e9cac1e4209f413db5979f14f70c4f892934b271b2b19970d8c683f05d9"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/artifacts/capture-ready.json",
+              "bytes": 1223,
+              "sha256": "c0cb21aa2f4f4ad7ef4198941e72a7c48bcd731ae9ddf6c7b8dd2fae2a35c5b2"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/artifacts/env.json",
+              "bytes": 683,
+              "sha256": "b64bf6ad9cf0108489954320fcc71935ea205f3c6ab0ad66d596fff2142decc9"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/artifacts/memory_stats.json",
+              "bytes": 5025,
+              "sha256": "69f99d862c7f6364084f31a070d0f19270a708a86509fcfd1242b3d623525886"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/artifacts/memory_summary.txt",
+              "bytes": 3666,
+              "sha256": "394e87ff49aed2d7fcfa56bf1cc76dac7d466c439c6aa457f7ee139bad2240c0"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/artifacts/result.json",
+              "bytes": 29608,
+              "sha256": "a993ba216499bd778e8080545308752b4a65a9c2475f222ed090d7f4ddea689d"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/artifacts/traceback.txt",
+              "bytes": 764,
+              "sha256": "3868d41a1ccddd651e5a61d4b4aa1af4769b9d34ae44a0e3fa46f85dda416d1d"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/control/deadline.json",
+              "bytes": 449,
+              "sha256": "65c6f3b7b139b05059beb439a1562d1d7ab4a79ac723878e66fce83d5410e663"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/docker-create.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/gpu-after.json",
+              "bytes": 122,
+              "sha256": "f61ae0a41849e88bf8a685f22cd727ec79b191e1759a2ebb099d5bc688bf37c0"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/gpu-before.json",
+              "bytes": 122,
+              "sha256": "f61ae0a41849e88bf8a685f22cd727ec79b191e1759a2ebb099d5bc688bf37c0"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/manifest.json",
+              "bytes": 2671,
+              "sha256": "a3a49209cecd326d1aea8152dac301bfaaadb941bc92cfdcc77f32eb8c9e04dc"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/result.json",
+              "bytes": 33658,
+              "sha256": "1c617c4b0e23fa5620dd4efae221e37962f92abe808155bcea676aa1d80cd21f"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/source/README.md",
+              "bytes": 3994,
+              "sha256": "bc045fce13a50740804319d09c9f3cd59eb123fbc32210c1c3e47b6a3a06c212"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/source/train.py",
+              "bytes": 4945,
+              "sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/stderr.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/stdout.log",
+              "bytes": 5963,
+              "sha256": "8b8559a34c77cff0596a8abed4eece516877cc5db0fe9fa10ea1bfe790cf1181"
+            }
+          ],
+          "source_pins": [
+            {
+              "relative": "README.md",
+              "capture": {
+                "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/source/README.md",
+                "bytes": 3994,
+                "sha256": "bc045fce13a50740804319d09c9f3cd59eb123fbc32210c1c3e47b6a3a06c212"
+              },
+              "current_source": {
+                "path": "scenarios/s3_eval_no_grad_missing/README.md",
+                "bytes": 3994,
+                "sha256": "bc045fce13a50740804319d09c9f3cd59eb123fbc32210c1c3e47b6a3a06c212"
+              },
+              "same_current_bytes": true
+            },
+            {
+              "relative": "train.py",
+              "capture": {
+                "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/1a6800b240354627af6b51b2bbafc8ee/source/train.py",
+                "bytes": 4945,
+                "sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67"
+              },
+              "current_source": {
+                "path": "scenarios/s3_eval_no_grad_missing/train.py",
+                "bytes": 4945,
+                "sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67"
+              },
+              "same_current_bytes": true
+            }
+          ],
+          "status": "completed",
+          "termination_reason": "step_limit",
+          "configured_steps": 20,
+          "actual_steps": 20,
+          "loss_count": 20,
+          "peak_allocated_bytes": 2435717632,
+          "peak_reserved_bytes": 2510290944,
+          "parameter_count": 37791744,
+          "container_exit_code": 0,
+          "image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7",
+          "controller": null,
+          "snapshots": {
+            "snapshot.json": {
+              "bytes": 133366079,
+              "hash_in_this_review": false
+            },
+            "snapshot.pickle": {
+              "bytes": 2434833,
+              "hash_in_this_review": false
+            }
+          }
+        },
+        "reference": {
+          "run_dir": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f",
+          "checks": {
+            "all_source_bytes_match_manifest_and_current": true,
+            "script_matches_original_case_pin": true,
+            "host_matches_raw_capture": true,
+            "env_file_matches_raw": true,
+            "complete_capture": true,
+            "no_capture_errors": true,
+            "all_artifact_writes_complete": true,
+            "expected_status": true,
+            "configured_cuda_20_seed1337_180s": true,
+            "no_deadline_reached": true,
+            "snapshot_available": true,
+            "parameter_count_complete": true,
+            "host_cleanup_verified": true,
+            "no_execution_timeout_error": true,
+            "container_exited_cleanly": true,
+            "image_consistent": true,
+            "gpu_before_after_clear": true,
+            "gpu_initialization_clear": true,
+            "gpu_end_only_capture_pid": true,
+            "gpu_observation_complete_unshared": true,
+            "deadline_control_matches": true,
+            "expected_actual_steps": true,
+            "separate_child_bound": true,
+            "child_exit_one_preserved": true,
+            "controller_not_timedout_cleaned": true,
+            "reference_container_exit_zero": true,
+            "reference_execution_file_matches": true,
+            "reference_host_controller_file_matches": true,
+            "reference_clock_verified": true,
+            "reference_finished_before_deadline": true,
+            "reference_script_command_matches": true
+          },
+          "raw_files": [
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/artifacts/.capture-owner.json",
+              "bytes": 46,
+              "sha256": "c4bc5884346aafa10f7352e173234f6e4690d6652614a75f9210389088cd0d50"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/artifacts/capture-ready.json",
+              "bytes": 1224,
+              "sha256": "d0e9d240d9ed65d00e31cc314abc6d051331541a31d61bb12003314fb04dfaca"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/artifacts/child-stderr.log",
+              "bytes": 500,
+              "sha256": "bb97e99059570e342a224280e45c737c0517e8092d20983a98a8360801cc5063"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/artifacts/child-stdout.log",
+              "bytes": 5833,
+              "sha256": "cc76bca38e224aec5f2b17318506a8c0e82b066b298618ab8082f9b8e9169362"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/artifacts/controller-result.json",
+              "bytes": 2447,
+              "sha256": "b8de58ec4eb69d5af7ed481e73ad420e13767c31e1dccab555be302291accd93"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/artifacts/env.json",
+              "bytes": 684,
+              "sha256": "2a65e36ddb1cdaebe6fbcff802ae681950f88fdd6215857bbec8e6697d0a1611"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/artifacts/memory_stats.json",
+              "bytes": 5025,
+              "sha256": "b397b11d087772bb3c103f0eb48416463e818ace3b67206ed3a80fc59ca269cd"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/artifacts/memory_summary.txt",
+              "bytes": 3666,
+              "sha256": "76c54c0affc89ac8ddc094ecee8232a73e0c6d4ad26839ad24a6953235942c31"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/artifacts/result.json",
+              "bytes": 15363,
+              "sha256": "6a6a01f2548401eb74cd8b94c3022ae4185d86f5cd439ac38a4eaa85e79e5ea1"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/artifacts/traceback.txt",
+              "bytes": 500,
+              "sha256": "bb97e99059570e342a224280e45c737c0517e8092d20983a98a8360801cc5063"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/container-create.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/control/deadline.json",
+              "bytes": 449,
+              "sha256": "d40186524c81d1514e30c0f717c81c2702d85b9a911651f9cc17d3122fd3343c"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/control/request.json",
+              "bytes": 201,
+              "sha256": "9b790a55603e5089a17c3185cee809d8682d0e7ce1736b4c292dc87c7a0f400d"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/execution.json",
+              "bytes": 1163,
+              "sha256": "9c591a1c6a4aa62a74a84c53e193775e97340092d7ecfeaa2511463ef53d243f"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/manifest.json",
+              "bytes": 4232,
+              "sha256": "5117d578fe54abde939b20a7e7b4c7522f060cca7d13d1c062af42c0aaaf6118"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/result.json",
+              "bytes": 20231,
+              "sha256": "12c78591e1a40a15f63686e9b8d7fb830dde71db77527eab47d0cd631a363854"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/source/README.md",
+              "bytes": 3994,
+              "sha256": "bc045fce13a50740804319d09c9f3cd59eb123fbc32210c1c3e47b6a3a06c212"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/source/train.py",
+              "bytes": 4945,
+              "sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67"
+            }
+          ],
+          "source_pins": [
+            {
+              "relative": "README.md",
+              "capture": {
+                "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/source/README.md",
+                "bytes": 3994,
+                "sha256": "bc045fce13a50740804319d09c9f3cd59eb123fbc32210c1c3e47b6a3a06c212"
+              },
+              "current_source": {
+                "path": "scenarios/s3_eval_no_grad_missing/README.md",
+                "bytes": 3994,
+                "sha256": "bc045fce13a50740804319d09c9f3cd59eb123fbc32210c1c3e47b6a3a06c212"
+              },
+              "same_current_bytes": true
+            },
+            {
+              "relative": "train.py",
+              "capture": {
+                "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/74b34397873b43b580e19806ce502a7f/source/train.py",
+                "bytes": 4945,
+                "sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67"
+              },
+              "current_source": {
+                "path": "scenarios/s3_eval_no_grad_missing/train.py",
+                "bytes": 4945,
+                "sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67"
+              },
+              "same_current_bytes": true
+            }
+          ],
+          "status": "completed",
+          "termination_reason": "step_limit",
+          "configured_steps": 20,
+          "actual_steps": 20,
+          "loss_count": 20,
+          "peak_allocated_bytes": 2435717632,
+          "peak_reserved_bytes": 2510290944,
+          "parameter_count": 37791744,
+          "container_exit_code": 0,
+          "image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7",
+          "controller": {
+            "pid": 1,
+            "child_pid": 57,
+            "returncode": 1,
+            "timed_out": false,
+            "group_cleanup_verified": true,
+            "controller_does_not_capture": true,
+            "command": [
+              "/opt/venv/bin/python",
+              "/source/train.py"
+            ]
+          },
+          "snapshots": {
+            "snapshot.json": {
+              "bytes": 120822804,
+              "hash_in_this_review": false
+            },
+            "snapshot.pickle": {
+              "bytes": 2251493,
+              "hash_in_this_review": false
+            }
+          }
+        }
+      },
+      "accepted": true
+    },
+    {
+      "case_id": "hf_trainer",
+      "source_pin": "7d3a714264fc76371c1183da125ec0ffa550bc78c68bbe2acd7868870684923a",
+      "peak_delta_pct": "0",
+      "checks": {
+        "same_source_files": true,
+        "same_capture_configuration": true,
+        "same_image": true,
+        "same_status": true,
+        "same_steps": true,
+        "same_loss_series": true,
+        "same_parameter_count": true,
+        "same_allocated_and_reserved_peaks": true,
+        "original_peak_gate": true,
+        "report_peak_matches_raw": true,
+        "all_arm_checks": true
+      },
+      "arms": {
+        "production": {
+          "run_dir": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97",
+          "checks": {
+            "all_source_bytes_match_manifest_and_current": true,
+            "script_matches_original_case_pin": true,
+            "host_matches_raw_capture": true,
+            "env_file_matches_raw": true,
+            "complete_capture": true,
+            "no_capture_errors": true,
+            "all_artifact_writes_complete": true,
+            "expected_status": true,
+            "configured_cuda_20_seed1337_180s": true,
+            "no_deadline_reached": true,
+            "snapshot_available": true,
+            "parameter_count_complete": true,
+            "host_cleanup_verified": true,
+            "no_execution_timeout_error": true,
+            "container_exited_cleanly": true,
+            "image_consistent": true,
+            "gpu_before_after_clear": true,
+            "gpu_initialization_clear": true,
+            "gpu_end_only_capture_pid": true,
+            "gpu_observation_complete_unshared": true,
+            "deadline_control_matches": true,
+            "genuine_oom_before_first_update": true,
+            "production_exit_matches": true,
+            "production_cleanup_absence_recorded": true
+          },
+          "raw_files": [
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/artifacts/.capture-owner.json",
+              "bytes": 45,
+              "sha256": "164873f473e35db3a022910865e2d91bf9c87f218936dcad1f780a45a70cb6d4"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/artifacts/capture-ready.json",
+              "bytes": 1223,
+              "sha256": "a875c8d938787be20ef6ad6da3f12c7340e89912e2e087dadb442902949ba6fb"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/artifacts/env.json",
+              "bytes": 683,
+              "sha256": "b64bf6ad9cf0108489954320fcc71935ea205f3c6ab0ad66d596fff2142decc9"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/artifacts/memory_stats.json",
+              "bytes": 5056,
+              "sha256": "04547c035d117724bd4fc7a364468275d660f7519a44ce95d61967d767748a82"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/artifacts/memory_summary.txt",
+              "bytes": 3666,
+              "sha256": "d9574ec286db176d5cd25176ff7e7fc7fc8dd8e96b57f5d0127f4fa00179a3b3"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/artifacts/result.json",
+              "bytes": 14550,
+              "sha256": "1a144a6045fa24fb08ece1338dba49bdb92a0c6ee9ef78e16c505d71b3b593bb"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/artifacts/traceback.txt",
+              "bytes": 5692,
+              "sha256": "3c051a3e65a3b04012c2810a92df462933afb76affe5e0576d3bded9d394e286"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/control/deadline.json",
+              "bytes": 449,
+              "sha256": "6428cf69f6cec7b7c9b63b3246d3e83ff248ed22d96029ce909ea6642fa658fb"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/docker-create.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/gpu-after.json",
+              "bytes": 122,
+              "sha256": "f61ae0a41849e88bf8a685f22cd727ec79b191e1759a2ebb099d5bc688bf37c0"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/gpu-before.json",
+              "bytes": 122,
+              "sha256": "f61ae0a41849e88bf8a685f22cd727ec79b191e1759a2ebb099d5bc688bf37c0"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/manifest.json",
+              "bytes": 2643,
+              "sha256": "0fde281bb1b40da28bb7edccc8e6e2d3fa4df59acd7778ff1298cabb2f14f286"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/result.json",
+              "bytes": 18589,
+              "sha256": "08d90e84ec248056d29797ca0c98fde78cd1971ffe1679ccfd40708cf4493a61"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/source/headroom.yaml",
+              "bytes": 39,
+              "sha256": "7b482e2b7849ab2ec25ec546c931caec06b922fccab37acb319916f23bc4a5e3"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/source/train.py",
+              "bytes": 3586,
+              "sha256": "7d3a714264fc76371c1183da125ec0ffa550bc78c68bbe2acd7868870684923a"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/stderr.log",
+              "bytes": 73,
+              "sha256": "6c8483cafb6a5dcbbf52d36fa810ed552938597e837b0f62c521dbcdcb0d6f31"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/stdout.log",
+              "bytes": 336,
+              "sha256": "0a41eb2ce656c0db830feac5e7f2369d26b7c9b5c70f8baa9b54aac09bee725d"
+            }
+          ],
+          "source_pins": [
+            {
+              "relative": "headroom.yaml",
+              "capture": {
+                "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/source/headroom.yaml",
+                "bytes": 39,
+                "sha256": "7b482e2b7849ab2ec25ec546c931caec06b922fccab37acb319916f23bc4a5e3"
+              },
+              "current_source": {
+                "path": "repos/hf_trainer/headroom.yaml",
+                "bytes": 39,
+                "sha256": "7b482e2b7849ab2ec25ec546c931caec06b922fccab37acb319916f23bc4a5e3"
+              },
+              "same_current_bytes": true
+            },
+            {
+              "relative": "train.py",
+              "capture": {
+                "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/production/110224497b3344e7b4829a9c0460ce97/source/train.py",
+                "bytes": 3586,
+                "sha256": "7d3a714264fc76371c1183da125ec0ffa550bc78c68bbe2acd7868870684923a"
+              },
+              "current_source": {
+                "path": "repos/hf_trainer/train.py",
+                "bytes": 3586,
+                "sha256": "7d3a714264fc76371c1183da125ec0ffa550bc78c68bbe2acd7868870684923a"
+              },
+              "same_current_bytes": true
+            }
+          ],
+          "status": "oom",
+          "termination_reason": "oom",
+          "configured_steps": 20,
+          "actual_steps": 0,
+          "loss_count": 0,
+          "peak_allocated_bytes": 24805119488,
+          "peak_reserved_bytes": 24826085376,
+          "parameter_count": 354823168,
+          "container_exit_code": 42,
+          "image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7",
+          "controller": null,
+          "snapshots": {
+            "snapshot.json": {
+              "bytes": 32519098,
+              "hash_in_this_review": false
+            },
+            "snapshot.pickle": {
+              "bytes": 399640,
+              "hash_in_this_review": false
+            }
+          }
+        },
+        "reference": {
+          "run_dir": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896",
+          "checks": {
+            "all_source_bytes_match_manifest_and_current": true,
+            "script_matches_original_case_pin": true,
+            "host_matches_raw_capture": true,
+            "env_file_matches_raw": true,
+            "complete_capture": true,
+            "no_capture_errors": true,
+            "all_artifact_writes_complete": true,
+            "expected_status": true,
+            "configured_cuda_20_seed1337_180s": true,
+            "no_deadline_reached": true,
+            "snapshot_available": true,
+            "parameter_count_complete": true,
+            "host_cleanup_verified": true,
+            "no_execution_timeout_error": true,
+            "container_exited_cleanly": true,
+            "image_consistent": true,
+            "gpu_before_after_clear": true,
+            "gpu_initialization_clear": true,
+            "gpu_end_only_capture_pid": true,
+            "gpu_observation_complete_unshared": true,
+            "deadline_control_matches": true,
+            "genuine_oom_before_first_update": true,
+            "separate_child_bound": true,
+            "child_exit_one_preserved": true,
+            "controller_not_timedout_cleaned": true,
+            "reference_container_exit_zero": true,
+            "reference_execution_file_matches": true,
+            "reference_host_controller_file_matches": true,
+            "reference_clock_verified": true,
+            "reference_finished_before_deadline": true,
+            "reference_script_command_matches": true
+          },
+          "raw_files": [
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/artifacts/.capture-owner.json",
+              "bytes": 46,
+              "sha256": "3b109c9567fdd35442ef934cda28e64a8379ed7b3c125641f14f677366867929"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/artifacts/capture-ready.json",
+              "bytes": 1224,
+              "sha256": "58b18c3a2261313d3f929336db44e44048d47d62be78ed29ec54b7078be56b42"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/artifacts/child-stderr.log",
+              "bytes": 5501,
+              "sha256": "71860789a1157d3214f2c89336948956e2896099a42ed05316a19b7fdcf2d8fe"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/artifacts/child-stdout.log",
+              "bytes": 226,
+              "sha256": "72f83fce8a775044de230f7467fc0e81d803f5438576ffc52d3a8f30cfa3d116"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/artifacts/controller-result.json",
+              "bytes": 2448,
+              "sha256": "a481c2b735fe161557254a25c0aebc7a28ad985cd2773ef47cf7bbf4362b29b0"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/artifacts/env.json",
+              "bytes": 684,
+              "sha256": "2a65e36ddb1cdaebe6fbcff802ae681950f88fdd6215857bbec8e6697d0a1611"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/artifacts/memory_stats.json",
+              "bytes": 5056,
+              "sha256": "04547c035d117724bd4fc7a364468275d660f7519a44ce95d61967d767748a82"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/artifacts/memory_summary.txt",
+              "bytes": 3666,
+              "sha256": "d9574ec286db176d5cd25176ff7e7fc7fc8dd8e96b57f5d0127f4fa00179a3b3"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/artifacts/result.json",
+              "bytes": 14410,
+              "sha256": "bb421583ffc900829793e7e17fba3dad05fe131cb669ecc92a3e69d997781be8"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/artifacts/traceback.txt",
+              "bytes": 5428,
+              "sha256": "d742c98200be48341906875e42f834a5042818338cede5dcaf7d0addab890a40"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/container-create.log",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/control/deadline.json",
+              "bytes": 449,
+              "sha256": "b073e1fcd635a3a035c9c8cb8688379046c0226b762377e197e85a354a39a0b2"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/control/request.json",
+              "bytes": 201,
+              "sha256": "9b790a55603e5089a17c3185cee809d8682d0e7ce1736b4c292dc87c7a0f400d"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/execution.json",
+              "bytes": 1162,
+              "sha256": "cc3091d214e5ff1ae860b4dfe9afe632bdcbb19c57981757977862eb4392617f"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/manifest.json",
+              "bytes": 4217,
+              "sha256": "1bf00479ed69ac7b4a5c9d4b5aaf21725c464d20886ece72a5309d8fe01557a1"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/result.json",
+              "bytes": 19278,
+              "sha256": "dcdea469fd270abcb7162f7b1f105cf0b7605af24567aa0c0c80d68cb17e5bc9"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/source/headroom.yaml",
+              "bytes": 39,
+              "sha256": "7b482e2b7849ab2ec25ec546c931caec06b922fccab37acb319916f23bc4a5e3"
+            },
+            {
+              "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/source/train.py",
+              "bytes": 3586,
+              "sha256": "7d3a714264fc76371c1183da125ec0ffa550bc78c68bbe2acd7868870684923a"
+            }
+          ],
+          "source_pins": [
+            {
+              "relative": "headroom.yaml",
+              "capture": {
+                "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/source/headroom.yaml",
+                "bytes": 39,
+                "sha256": "7b482e2b7849ab2ec25ec546c931caec06b922fccab37acb319916f23bc4a5e3"
+              },
+              "current_source": {
+                "path": "repos/hf_trainer/headroom.yaml",
+                "bytes": 39,
+                "sha256": "7b482e2b7849ab2ec25ec546c931caec06b922fccab37acb319916f23bc4a5e3"
+              },
+              "same_current_bytes": true
+            },
+            {
+              "relative": "train.py",
+              "capture": {
+                "path": "runs/acceptance/t2.7-independent-subprocess-20261025-v1/reference/2884379120134326921a8477f4723896/source/train.py",
+                "bytes": 3586,
+                "sha256": "7d3a714264fc76371c1183da125ec0ffa550bc78c68bbe2acd7868870684923a"
+              },
+              "current_source": {
+                "path": "repos/hf_trainer/train.py",
+                "bytes": 3586,
+                "sha256": "7d3a714264fc76371c1183da125ec0ffa550bc78c68bbe2acd7868870684923a"
+              },
+              "same_current_bytes": true
+            }
+          ],
+          "status": "oom",
+          "termination_reason": "oom",
+          "configured_steps": 20,
+          "actual_steps": 0,
+          "loss_count": 0,
+          "peak_allocated_bytes": 24805119488,
+          "peak_reserved_bytes": 24826085376,
+          "parameter_count": 354823168,
+          "container_exit_code": 0,
+          "image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7",
+          "controller": {
+            "pid": 1,
+            "child_pid": 57,
+            "returncode": 1,
+            "timed_out": false,
+            "group_cleanup_verified": true,
+            "controller_does_not_capture": true,
+            "command": [
+              "/opt/venv/bin/python",
+              "/source/train.py"
+            ]
+          },
+          "snapshots": {
+            "snapshot.json": {
+              "bytes": 30197878,
+              "hash_in_this_review": false
+            },
+            "snapshot.pickle": {
+              "bytes": 370294,
+              "hash_in_this_review": false
+            }
+          }
+        }
+      },
+      "accepted": true
+    }
+  ],
+  "limitations": [
+    "Reference is an independently supervised Python subprocess inside the same Docker isolation envelope, not a bare-host subprocess backend.",
+    "Capture/instrumentation, image, source/cache validation and clock protocol are shared; this is execution-path parity, not independent allocator instrumentation.",
+    "GPU before/initialization/end/after samples observed no sharing, but do not establish continuous exclusivity; no throughput claim.",
+    "s1 and HF Trainer genuinely OOM before their first optimizer update; both were configured for 20 updates and are not represented as 20-step successes.",
+    "HF Trainer uses synthetic tokens and a randomly initialized offline GPT-2 configuration; this run does not alone verify downloading or reusing external pretrained model weights.",
+    "Review hashes current implementation files for audit context; no independent before/after whole-runtime hash claim is made."
+  ],
+  "model_api_calls_by_review": 0,
+  "gpu_runs_by_review": 0,
+  "ledger_writes_by_review": 0,
+  "implementation_context": [
+    {
+      "path": "headroom/acceptance/isolation.py",
+      "bytes": 21827,
+      "sha256": "6c868e4871539d2e4c2ee27eed3a847efda6e7b70b64f53e0e5382900cb5961c"
+    },
+    {
+      "path": "headroom/lab/subprocess_reference.py",
+      "bytes": 9547,
+      "sha256": "5b64c4ec9e4a2addadbf8bc28bd3092011cdb08ca7178c10311ab5952ee3effb"
+    },
+    {
+      "path": "headroom/lab/runner.py",
+      "bytes": 37236,
+      "sha256": "d16869bb52730917c398fa85e8d6baa1e3df8e48c92fe880af286e4ebae013aa"
+    },
+    {
+      "path": "headroom/lab/hooks.py",
+      "bytes": 37901,
+      "sha256": "9be7e0adb7ef30a3cb6ad888098f50954944af8db3d09c7a198208ce5556bcc7"
+    },
+    {
+      "path": "headroom/lab/docker.py",
+      "bytes": 8806,
+      "sha256": "8276b44a6332ab466978216d7171036a522cbb192aa6bf23bdde3921308be899"
+    },
+    {
+      "path": "headroom/lab/deadline.py",
+      "bytes": 6412,
+      "sha256": "b01e85b63eeac8ef27f1f300cee15dda5656345332d0d67592366e4ec4726de9"
+    },
+    {
+      "path": "headroom/lab/sitecustomize.py",
+      "bytes": 2166,
+      "sha256": "1549611160fcee36ae8e68053eda752fb38a0dc21f0dbe08246832ce2d71e150"
+    },
+    {
+      "path": "headroom/lab/run_target.py",
+      "bytes": 3022,
+      "sha256": "3aea073c8115a0d4fba56725efd84cd90cf9dc093bf9178d6458624350992847"
+    }
+  ],
+  "plan_file": {
+    "path": "docs/PLAN.md",
+    "bytes": 55643,
+    "sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56"
+  },
+  "original_report_unchanged_during_review": true,
+  "accepted": true
+}

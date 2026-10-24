@@ -1,7 +1,153 @@
-# Token Factory model probes — first capability checkpoint passed; full T0.4 pending
+# Token Factory model probes — T0.4 reviewed and accepted
 
-Status on 2026-10-25 (Asia/Shanghai): the explicitly authorized three-call checkpoint passed: Ultra chat, Super native JSON schema and Super tool-call generation, once each. Earlier Super/Nano chats remain valid historical evidence. **Full T0.4 accepted=false**: reasoning controls, long-input limits, concurrency and the rest of the model matrix remain unmeasured. The server key is private and the full runtime profile remains absent. Evidence: reports/model-checkpoint-20261025/verification.json.
+Status on 2026-10-25 (Asia/Shanghai): all 60 original inference probes have now been executed: 52 capability samples, four Ultra long-input samples and four concurrent Super calls. This includes failures and unverified controls, not 60 successful capabilities. **Full T0.4 accepted=false pending root's installed-configuration/evidence-budget review and final acceptance receipt.** Nano tool generation failed, /no_think did not disable reasoning, Lightning exceeded both requested 128-token reasoning parameters, and the 900k Ultra sample returned HTTP 429 with unknown usage retained at its full upper charge. The disabled candidate profile has only a static review; no configuration is enabled by this document.
 
+
+## Current method adoption matrix
+
+Each cell uses the original T0.4 ok/fail format. Here, ok means the recorded
+small integration fixture or one paired observation supports attempting that
+method; it is not a guarantee for complex real application schemas or all
+prompts. An unverified token-budget effect is rejected for adoption, while its
+raw probe status remains unknown.
+
+| Role | Chat | JSON | Tools | Reasoning toggle | Token budget |
+| --- | --- | --- | --- | --- | --- |
+| Ultra | ok(method=chat) | ok(method=json_schema) | ok(method=tools) | ok(method=chat_template_kwargs) | fail(error=effect_unverified) |
+| Super | ok(method=chat) | ok(method=json_schema) | ok(method=tools) | ok(method=chat_template_kwargs) | fail(error=effect_unverified) |
+| Nano | ok(method=chat) | ok(method=json_schema) | fail(error=missing_or_wrong_tool) | ok(method=chat_template_kwargs) | fail(error=effect_unverified) |
+| Lightning | ok(method=chat) | ok(method=json_schema) | ok(method=tools) | ok(method=chat_template_kwargs) | fail(error=requested_budget_not_enforced) |
+
+The token-budget verdict covers reasoning_budget=128 and max_thinking_tokens=128.
+For Ultra/Super/Nano, effect_unverified is an evidence limitation, not proof that
+every possible budget control is unsupported. Lightning's verdict comes from
+380/450 reported reasoning tokens exceeding those two requested limits.
+The ineffective /no_think prefix is not adopted. Nano's absent reasoning-token
+count is not converted to zero. Detailed observations and source hashes remain
+in the unchanged capability-review.json and sections below.
+
+## Four-model capability review — 2026-10-25 local / 2026-10-24 UTC
+
+The user authorized remaining original-plan model work within existing gifted
+credit, with no recharge or overspend. The four remaining-capability groups
+issued 47 single requests with no retries, all with exact response identities,
+HTTP 200 and known usage-priced charges. They cost $0.00691720; together with the
+five retained checkpoint samples, the 52 capability samples cost $0.00726816.
+These amounts are not reconciled invoice totals. Capability failure or unknown
+parameter semantics do not mean unknown billing.
+
+| Role | json_object | json_schema | Fenced JSON | Expected tool-call generation |
+| --- | --- | --- | --- | --- |
+| Ultra | Pass, one fixture | Pass, one fixture | Pass, one fixture | Pass |
+| Super | Pass, one fixture | Pass, prior checkpoint | Pass, one fixture | Pass, prior checkpoint |
+| Nano | Pass, one fixture | Pass, one fixture | Pass, one fixture | Fail: missing_or_wrong_tool; finish=stop |
+| Lightning | Pass, one fixture | Pass, one fixture | Pass, one fixture | Pass |
+
+JSON success means exactly the two-key object with probe=headroom and integer
+value=7, not arbitrary Diagnosis/Patch schema reliability. Tool success means
+generation of add(a=2,b=3), not execution of an external tool or a Tavily loop.
+All four also have one successful nonempty chat sample.
+
+The paired arithmetic prompt was the same within each on/off method. The
+template parameter was chat_template_kwargs.enable_thinking=true/false; effort
+was reasoning_effort=high/none. Each pair showed a reasoning stream on the first
+request and no reasoning stream on the second. The table records reported
+reasoning-token counts; Nano did not return that usage breakdown.
+
+| Role | Template on / off | Effort high / none | /no_think observation |
+| --- | --- | --- | --- |
+| Ultra | 121 / 0 | 91 / 0 | Reasoning remained, 88 tokens |
+| Super | 48 / 0 | 48 / 0 | Reasoning remained, 48 tokens |
+| Nano | Counts unknown; stream present / absent | Counts unknown; stream present / absent | Reasoning remained; count unknown |
+| Lightning | 439 / 0 | 702 / 0 | Reasoning remained, 691 tokens |
+
+These are observable stream differences in one pair per model, not a guarantee
+about hidden reasoning, arbitrary future prompts or mathematical answer
+correctness. The /think versus /no_think system-prefix pair did **not** disable
+reasoning in any of the four tested cases.
+
+| Role | reasoning_budget=128 | max_thinking_tokens=128 |
+| --- | --- | --- |
+| Ultra | Unverified: 92 reported reasoning tokens | Unverified: 100 reported reasoning tokens |
+| Super | Unverified: 48 reported reasoning tokens | Unverified: 48 reported reasoning tokens |
+| Nano | Unverified: reasoning count absent; 103 total completion tokens | Unverified: reasoning count absent; 118 total completion tokens |
+| Lightning | Failed to enforce requested parameter: 380 reasoning tokens | Failed to enforce requested parameter: 450 reasoning tokens |
+
+A result below 128 on this short task does not exercise or establish a hard
+limit. Lightning's counts exceed the requested parameters, but remain inside the
+separate max_completion_tokens=1024 output ceiling. No provider completion-bound
+violation was reported. Do not use either 128-token parameter as a budget bound.
+
+Disabling the observed reasoning stream did not consistently reduce total
+output or cost. Super template on/off returned 92/200 completion tokens and
+cost $0.0000936/$0.0001908; effort high/none returned 97/454 and cost
+$0.0000981/$0.0004194. These single observations are not a cost or latency
+benchmark.
+
+Evidence: reports/live-campaign-20261025/capability-review.json contains every
+observation's source path, JSON pointer and source SHA-256, including the four
+root-reviewed group receipts and earlier checkpoints. The raw control rows keep
+their original unknown classification; the review adds the narrower paired
+interpretations without rewriting them. That capability-only review recorded
+long-input/concurrency as pending at its observation time; the subsequent results
+are recorded below. No production configuration is changed here.
+
+## Completed long-input staircase and Super concurrency — 2026-10-24 UTC
+
+| Requested local approximation | Server prompt tokens | Server completion tokens | Outcome | Known usage-priced / retained USD |
+| --- | ---: | ---: | --- | --- |
+| 64,000 | 64,031 | 154 | HTTP 200, exact needle, identity matched | $0.064493 known |
+| 200,000 | 200,031 | 161 | HTTP 200, exact needle, identity matched | $0.200514 known |
+| 500,000 | 500,029 | 161 | HTTP 200, exact needle, identity matched | $0.500512 known |
+| 900,000 | Unknown (null) | Unknown (null) | HTTP 429; no response identity or usage | Actual unknown; $1.049344 permanently retained |
+
+The local requested counts are generator approximations, not the server's
+tokenizer. The largest successful observed prompt, 500,029 server tokens, is a
+tested lower bound. The 900k HTTP 429 is a rate-limit failure and does **not**
+establish a context-length ceiling. It was not retried. Reported cached-input
+tokens were 56,576 at 200k and 191,488 at 500k; the listed probe costs use ordinary
+prompt prices conservatively and are not discounted invoice totals.
+
+After the 900k failure, all subsequent model dispatch stopped. The original
+safe_to_continue=false review remains unchanged. An independent review retained
+the complete $1.049344 request bound, kept actual_cost_usd=null and prohibited
+new POSTs before 2026-10-24T21:17:23.615810Z. Root then refreshed the account and
+reviewed continuation for other original-plan calls only. This did not authorize
+a 900k retry or release any unknown charge. An unchanged aggregate UI balance
+was not treated as evidence of zero cost.
+
+Long-input evidence: reports/live-campaign-20261025/ultra-long-64000/report.json,
+ultra-long-200000/report.json, ultra-long-500000/report.json and
+ultra-long-900000/report.json under the same campaign directory. The corresponding
+claims/*-review.json files contain source hashes. Continuation evidence:
+reports/live-campaign-20261025/retained-429-review.json and
+reports/live-campaign-20261025/claims/ultra-long-900000-continuation-review.json.
+
+The subsequent four-way Super group completed all four single requests with
+HTTP 200, nonempty content, exact model identities and finish=stop:
+
+| Probe | Prompt / completion / reasoning tokens | Content TTFT ms | Request elapsed ms | Known token cost USD |
+| --- | --- | ---: | ---: | ---: |
+| super-concurrent-0 | 23 / 19 / 14 | 795.762 | 796.834 | 0.000024 |
+| super-concurrent-1 | 23 / 36 / 31 | 958.755 | 959.101 | 0.0000393 |
+| super-concurrent-2 | 23 / 19 / 14 | 856.383 | 884.664 | 0.000024 |
+| super-concurrent-3 | 23 / 19 / 14 | 884.041 | 884.643 | 0.000024 |
+
+The group used 92 prompt / 93 completion tokens and cost $0.0001113, with no
+unknown usage or retained reservation. This is one four-request experiment;
+per-request elapsed values are not a sustained-throughput or group-wall-time
+benchmark. Evidence: reports/live-campaign-20261025/super-concurrency-4/report.json
+and reports/live-campaign-20261025/claims/super-concurrency-4-review.json.
+
+Across all 60 original inference probes, known usage-priced amounts total
+$0.77289846 and the separate permanently retained unknown charge is $1.049344:
+$1.82224246 combined known-or-retained accounting, including the five earlier
+calls. Actual invoice cost remains unresolved for the 900k request.
+The proposed 150,000 evidence-token budget is below 0.6 × 500,029 = 300,017.4
+and the original 150,000 ceiling. The candidate profile remains disabled; its
+static review is reports/live-campaign-20261025/runtime-profile-static-review.json.
+Root still needs to review the installed configuration and issue the final
+T0.4 receipt. Completion of the probe list does not make every capability pass.
 
 ## First bounded capability checkpoint — 2026-10-25 local / 2026-10-24 UTC
 
@@ -242,12 +388,12 @@ The report's accepted flag always remains false, including after every request s
 
 ## Remaining live acceptance steps
 
-- Account/key, promotional credit and the first three capabilities are established; obtain separate authorization for the remaining full suite and keep verified pricing/caps current.
+- The original-plan continuation is authorized within existing gifted credit only; retain the fixed funding allocation, strict provider bounds, unknown-charge stops and current price/cap review.
 - Inspect both live verbose catalogues; reconcile exact model IDs, deployment context limits and pricing.
-- Execute the capability matrix with bounded requests and inspect real JSON/tools behavior; reason about unknown reasoning/budget observations rather than turning HTTP200 into capability proof.
-- Run the full long staircase and four-way Super experiment; retain failures, 429s, latency and every charge.
+- The four-model capability matrix is recorded and reviewed above. Retain the Nano tool failure, ineffective prefix-off observations and unverified/failed token-budget semantics; do not replace them with HTTP 200 success.
+- The full long staircase and one four-way Super experiment are recorded above. Preserve the 900k rate-limit failure, permanent unknown-charge reservation and all per-request measurements.
 - Populate at least three actual NVIDIA model prices and honest live capability tables here from the report.
-- Add at least five actual Token Factory/model feedback observations.
+- Genuine observations TF-001 through TF-014 are recorded in docs/FEEDBACK.md; root still reviews their use in final T0.4 acceptance.
 - Root independently reviews results and updates model IDs, JSON/reasoning method and EVIDENCE_TOKEN_BUDGET=min(150k, 0.6×verified limit), accounting for the lower-bound distinction and plan changes if required.
 
 Official references, checked during plan review:
@@ -321,3 +467,7 @@ All checks passed!
 ~~~
 
 New regressions cover missing/mismatched/conflicting/partially missing SSE identity, consistent matching identity, no cost attribution or reservation release on identity failure, refusal of later paid probes, and exclusion of a correct needle produced by the wrong model from context-limit evidence. The existing independent DNS/socket guard covers every test. The earlier dummy-token incident record above is intentionally retained and is not replaced by this later guarded result. T0.4 accepted remains false.
+
+## Final installed-configuration review
+
+T0.4 accepted on2026-10-25 local; see reports/t0.4-acceptance-20261025.json. This supersedes the pending final-review status recorded above. All prescribed samples were executed, including explicit failures. Installed ULTRA_MAX_INPUT_TOKENS=500029 is a tested lower bound, EVIDENCE_TOKEN_BUDGET=150000, JSON_METHOD=json_schema and REASONING_METHOD=chat_template_kwargs. Real client/diagnosis/repair acceptance is separate.

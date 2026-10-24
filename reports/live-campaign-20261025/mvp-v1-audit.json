@@ -1,0 +1,295 @@
+{
+  "audit_version": 1,
+  "created_at": "2026-10-24T22:11:36.237652+00:00",
+  "limits": {
+    "denominator": 9,
+    "target_minimum": 6,
+    "first_cause_minimum": 6,
+    "per_run_cost_usd": "0.6",
+    "per_run_wall_seconds": 480,
+    "reports": 9,
+    "mvp_reclaim_reduction_pct": 20
+  },
+  "execution": {
+    "provider_calls": 0,
+    "gpu_workloads": 0,
+    "subprocesses": 0,
+    "environment_files_read": 0,
+    "database_mode": "mode=ro/query_only/consistent read transaction"
+  },
+  "scope": "T1.12 observed campaign gates; independent T1.5--T1.9 gates remain separate",
+  "original_plan_lines": {
+    "T1.5": [
+      257,
+      259
+    ],
+    "T1.6": [
+      261,
+      263
+    ],
+    "T1.7": [
+      265,
+      267
+    ],
+    "T1.8": [
+      269,
+      271
+    ],
+    "T1.9": [
+      273,
+      275
+    ],
+    "T1.12": [
+      284,
+      291
+    ]
+  },
+  "manifest_valid": true,
+  "plan_unchanged": true,
+  "status": "fail",
+  "accepted_observed_campaign_gates": false,
+  "full_plan_acceptance": null,
+  "full_plan_acceptance_note": "Independent negative controls, patch reapply and authored summary still need their own evidence.",
+  "campaign": "runs/evaluation/live/20261024T221011565478Z-4deef5b7/campaign.json",
+  "gates": {
+    "real_live_provenance": null,
+    "run_identity_consistent": null,
+    "source_hash_matches_manifest": null,
+    "report_json_and_markdown": null,
+    "harness_child_exit_zero": null,
+    "owned_cleanup_verified": null,
+    "cost_complete_and_consistent": false,
+    "wall_within_480_seconds": null,
+    "exact_original_9_default_full_ultra": true,
+    "original_plan_hash": true,
+    "manifest_matches_campaign": true,
+    "campaign_live": true,
+    "campaign_finished": false,
+    "per_run_requested_budget_0_6": true,
+    "at_least_6_of_9_targets": null,
+    "at_least_6_of_9_first_causes": null
+  },
+  "counts": {
+    "denominator": 9,
+    "target_true": 0,
+    "target_unknown": 8,
+    "first_cause_true": 0,
+    "first_cause_unknown": 9,
+    "reports": 1
+  },
+  "stages": {
+    "T1.5": {
+      "synthetic_denominator": 8,
+      "applied_compile_within_3_repairs_count": 0,
+      "at_least_6_of_8": null,
+      "all_super_completion_tokens_le_4000": true,
+      "forbidden_precision_negative_test": null
+    },
+    "T1.6": {
+      "s1_completed_peak_lt_24_and_equivalent": false,
+      "s3_reduction_ge_30": null,
+      "model_shrink_negative_control": null,
+      "note": "MVP reclaim >=20% does not satisfy this independent >=30% gate."
+    },
+    "T1.7": {
+      "s1_harness_child_exit_zero": true,
+      "s1_ordered_events": false,
+      "s1_events_ge_15": false,
+      "s1_llm_calls_ge_2": false,
+      "usage_equals_exact_calls_and_ledger": false,
+      "cli_frontend_invocation": "not_observed"
+    },
+    "T1.8": {
+      "all_reports_7_sections": null,
+      "all_report_numbers_have_json_provenance": null,
+      "final_patch_git_apply_check": null
+    },
+    "T1.9": {
+      "nano_completed_fit22": null,
+      "nano_loss_not_changed": null,
+      "nano_cost_le_0_8": null,
+      "nano_changed_lines_le_60": null,
+      "nano_patch_paths_train_or_config_only": null,
+      "note": "MVP still requires <=0.6; this independent <=0.8 is not substituted."
+    },
+    "T1.12_external_artifacts": {
+      "phase_1_summary_reviewed": null,
+      "docs_results_reviewed": null,
+      "pytest_ruff_gitleaks_receipt_reviewed": null,
+      "note": "Need separately reviewed report/quality receipts; never infer from their filenames."
+    }
+  },
+  "rows": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "run_id": "1ae2055418724d708a7b2fb1a9e76fc6",
+      "status": "budget_exceeded",
+      "target": false,
+      "cause": null,
+      "first_cause": null,
+      "truth_status": "authored",
+      "gates": {
+        "real_live_provenance": true,
+        "run_identity_consistent": true,
+        "source_hash_matches_manifest": true,
+        "report_json_and_markdown": true,
+        "harness_child_exit_zero": true,
+        "owned_cleanup_verified": true,
+        "cost_complete_and_consistent": false,
+        "wall_within_480_seconds": true,
+        "markdown_7_sections": true,
+        "report_numbers_provenance": true
+      },
+      "patch_applied_any": null,
+      "selected_round": null,
+      "selected_patch_applied": null,
+      "selected_completed": null,
+      "candidate_rounds": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null,
+          "apply_compile_within_3_repairs": null
+        }
+      ],
+      "verification": {
+        "completed": null,
+        "target_met": null,
+        "peak_before": null,
+        "peak_after": null,
+        "reduction_pct": null,
+        "loss_equivalence": null,
+        "max_loss_delta": null,
+        "loss_tolerance": null,
+        "numerical_basis": null,
+        "checks": null,
+        "parameter_count_before": null,
+        "parameter_count_after": null,
+        "reference_run": null,
+        "acceptance_scope": null
+      },
+      "events_count": 13,
+      "calls_count": 1,
+      "call_checks": [
+        {
+          "cost_complete": false,
+          "identity": true,
+          "cost_recomputed": null,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+          "role": "annotate",
+          "prompt_tokens": 3643,
+          "completion_tokens": 480,
+          "cost_usd": null
+        }
+      ],
+      "ordered_t1_7_events": false,
+      "cost_usd": null,
+      "wall_seconds": 13.184485503938049,
+      "ledger_usage_match_basis": "exact run sum/count/cost multiset; no recorded attempt UUID join exists",
+      "cli_frontend_invocation": "not_observed",
+      "patch_changed_lines": null,
+      "patch_changed_files": null,
+      "patch_apply_check_on_original": null,
+      "patch_apply_check_note": "No subprocess is run by this audit; independent git apply --check receipt is still required."
+    },
+    {
+      "scenario_id": "s2_fp32_adamw_1b",
+      "status": "pending",
+      "target": null,
+      "cause": null,
+      "gates": {},
+      "reason": "No valid recorded run ID"
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "status": "pending",
+      "target": null,
+      "cause": null,
+      "gates": {},
+      "reason": "No valid recorded run ID"
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "status": "pending",
+      "target": null,
+      "cause": null,
+      "gates": {},
+      "reason": "No valid recorded run ID"
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "status": "pending",
+      "target": null,
+      "cause": null,
+      "gates": {},
+      "reason": "No valid recorded run ID"
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "status": "pending",
+      "target": null,
+      "cause": null,
+      "gates": {},
+      "reason": "No valid recorded run ID"
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "status": "pending",
+      "target": null,
+      "cause": null,
+      "gates": {},
+      "reason": "No valid recorded run ID"
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "status": "pending",
+      "target": null,
+      "cause": null,
+      "gates": {},
+      "reason": "No valid recorded run ID"
+    },
+    {
+      "scenario_id": "nanogpt",
+      "status": "pending",
+      "target": null,
+      "cause": null,
+      "gates": {},
+      "reason": "No valid recorded run ID"
+    }
+  ],
+  "sources": {
+    "eval/mvp_phase1.yaml": {
+      "bytes": 6484,
+      "sha256": "3bb919336829754a52ec8c90ccc4a5181f33986f9e300e99211bec6678849e88"
+    },
+    "docs/PLAN.md": {
+      "bytes": 55643,
+      "sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56"
+    },
+    "runs/evaluation/live/20261024T221011565478Z-4deef5b7/campaign.json": {
+      "bytes": 16405,
+      "sha256": "327e635f1b8a4c10a5841478d34385bf6adb9ce9043495602fe1812b8cb02140"
+    },
+    "reports/live-campaign-20261025/pricing-reviewed.json": {
+      "bytes": 2840,
+      "sha256": "635c6b90216acfe0505e4f53f0685c8183bc3bc632fff376c3bfcefd7e7eb829"
+    },
+    "runs/evaluation/live/20261024T221011565478Z-4deef5b7/jobs/1ae2055418724d708a7b2fb1a9e76fc6/report.json": {
+      "bytes": 437489,
+      "sha256": "492cd99a5fac65271a55567d13d0990732783689aa791b1261c9cc60e0452aa4"
+    },
+    "runs/evaluation/live/20261024T221011565478Z-4deef5b7/jobs/1ae2055418724d708a7b2fb1a9e76fc6/report.md": {
+      "bytes": 4852,
+      "sha256": "8966ec7fdf47c395b4587c01a91fe062cb344b526b9ac174c6d0d190b96d27ca"
+    }
+  },
+  "errors": [],
+  "api_publication": {
+    "data_root": "runs/api",
+    "selection_manifest": "runs/api/public-evaluations.json",
+    "action": "read-only audit does not publish or rewrite API data"
+  }
+}

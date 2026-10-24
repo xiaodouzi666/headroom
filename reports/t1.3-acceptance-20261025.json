@@ -1,0 +1,59 @@
+{
+  "task": "T1.3",
+  "accepted": true,
+  "accepted_at_utc": "2026-10-24T21:25:19.069172+00:00",
+  "rows": [
+    {
+      "case": "super_schema",
+      "source": "runs/acceptance/client/20261024-offline-s2-v1/execution-super_schema/result.json",
+      "sha256": "99b3e4459ca175c40b1b0b8b5bfb745d94bf00b9614058c12691b34583a76ab0",
+      "run_id": "dfe34aec582a4aa59771fc8df0b170d8",
+      "response": {
+        "requested_model": "nvidia/nemotron-3-super-120b-a12b",
+        "response_model": "nvidia/nemotron-3-super-120b-a12b",
+        "usage": {
+          "prompt_tokens": 181,
+          "completion_tokens": 89,
+          "total_tokens": 270,
+          "cached_tokens": 0,
+          "reasoning_tokens": 34
+        },
+        "cost_usd": "0.0001344",
+        "elapsed_seconds": 1.167825672077015,
+        "attempts": 1,
+        "finish_reason": "stop",
+        "json_method": "json_schema"
+      }
+    },
+    {
+      "case": "ultra_200k",
+      "source": "runs/acceptance/client/20261024-offline-s2-v1/execution-ultra_200k/result.json",
+      "sha256": "c094cb0089532b7ff04da01825d3028dbe3317fb2e60364afadc99c8aba29389",
+      "run_id": "11a527aa82884589805b45f9bc6aab24",
+      "response": {
+        "requested_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "response_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "usage": {
+          "prompt_tokens": 268920,
+          "completion_tokens": 149,
+          "total_tokens": 269069,
+          "cached_tokens": 0,
+          "reasoning_tokens": 149
+        },
+        "cost_usd": "0.269367",
+        "elapsed_seconds": 10.913585593923926,
+        "attempts": 1,
+        "finish_reason": "stop",
+        "json_method": "json_schema"
+      }
+    }
+  ],
+  "runtime_known_cost_usd": "0.2695014",
+  "real_evidence_provider_input_tokens": 268920,
+  "local_evidence_unique_records": 53,
+  "evidence_is_filler": false,
+  "diagnosis_accuracy_accepted": false,
+  "limitation": "Ultra free-text client fixture overclaimed fragmentation from a cache gap; this client transport/usage/schema gate is not diagnosis correctness.",
+  "profile_activation": "reports/live-campaign-20261025/runtime-activation.json",
+  "prepared_source_revalidation": "reports/live-campaign-20261025/prepared-inputs-revalidated.json"
+}

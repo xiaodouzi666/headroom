@@ -179,6 +179,7 @@ def acceptance_run(
         if file_record(profile_path, 256 * 1024)["sha256"] != profile_hash:
             raise ValueError("Runtime profile changed during verification")
         record["profile_sha256"] = profile_hash
+        record["run_budget_mode"] = profile.run_budget_mode
         budget = BudgetLedger(
             project_root / ".cache/budget.db",
             daily_limit=daily,
@@ -196,7 +197,7 @@ def acceptance_run(
                 "accepted": False,
             },
         )
-        budget.open_run(run_id, limit)
+        budget.open_run(run_id, limit, budget_mode=profile.run_budget_mode)
         opened = True
         bundle = build_live_runtime(
             run_id,
