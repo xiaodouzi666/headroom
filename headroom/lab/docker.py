@@ -8,6 +8,7 @@ import subprocess
 import time
 from pathlib import Path
 
+from headroom.lab.cache import validated_hf_cache
 from headroom.lab.envs import HOST_ENV
 
 IMAGE = "headroom-lab:py312-cu124"
@@ -76,6 +77,11 @@ def create_arguments(
         if "," in str(host) or "\n" in str(host):
             raise ValueError("mount paths cannot contain commas or newlines")
         args.extend(["--mount", mount])
+    cache = validated_hf_cache(project_root)
+    if cache is not None:
+        if "," in str(cache) or "\n" in str(cache):
+            raise ValueError("HF cache path cannot contain commas or newlines")
+        args.extend(["--mount", f"type=bind,source={cache},destination=/hf-cache,readonly"])
     for key, value in sorted(environment.items()):
         args.extend(["--env", f"{key}={value}"])
     return [*args, IMAGE, *command[1:]]

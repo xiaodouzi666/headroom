@@ -1,0 +1,21 @@
+[Unit]
+Description=Headroom local API and single GPU queue
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/xiaodouzi/workspace/headroom
+ExecStart=/home/xiaodouzi/workspace/headroom/.venv/bin/python -m headroom.api.app
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=HEADROOM_RUN_BUDGET_USD=0.6
+Environment=HEADROOM_DAILY_BUDGET_USD=12
+# Add HEADROOM_PUBLIC_HOST and HEADROOM_TRUST_CLOUDFLARED only after tunnel review.
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=20
+KillMode=control-group
+UMask=0077
+
+[Install]
+WantedBy=default.target

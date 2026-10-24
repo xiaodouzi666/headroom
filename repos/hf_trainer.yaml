@@ -1,0 +1,44 @@
+id: hf_trainer
+source_root: repos/hf_trainer
+script: train.py
+command: python train.py
+framework: transformers.Trainer
+framework_version: 4.46.3
+accelerate_version: 1.1.1
+model: randomly initialized GPT2LMHeadModel (gpt2-medium dimensions)
+pretrained_weights: false
+remote_code: false
+dataset: fixed synthetic token sequences, seed 1337
+profile: full
+seed: 1337
+target: fix-oom
+expected_baseline: oom
+baseline_verified: true
+baseline_report: reports/hf-trainer-baseline-20261024.json
+expected_root_causes:
+- optimizer_state
+- activations
+acceptance:
+  target_met: true
+  max_changed_lines: 15
+  configuration_only: true
+  diagnosis: optimizer states + activations
+  verified: false
+cpu_smoke_command: python train.py --profile cpu-smoke --device cpu
+notes:
+- Full default is 24 layers, 16 heads, hidden 1024, vocabulary 50257, sequence 1024,
+  batch 16.
+- CPU smoke uses a different tiny model and cannot satisfy the CUDA or repair acceptance.
+- TrainingArguments are the intended repair surface; bf16 needs explicit numerics
+  policy permission.
+- No from_pretrained call, tokenizer download, Hub login, telemetry, or external dataset.
+- Full CUDA baseline produced real OOM before the first optimizer step; optimizer-state
+  allocation was not observed. Model-generated repair remains unverified.
+observed_baseline:
+  status: oom
+  steps: 0
+  parameter_count: 354823168
+  peak_alloc_gb: 24.805119488
+  peak_reserved_gb: 24.826085376
+  cleanup_verified: true
+  shared_gpu: false

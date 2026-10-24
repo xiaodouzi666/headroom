@@ -1,0 +1,210 @@
+{
+  "version": 1,
+  "scenarios": [
+    {
+      "id": "s1_batch_too_big",
+      "group": "synthetic",
+      "script": "scenarios/s1_batch_too_big/train.py",
+      "source_root": "scenarios/s1_batch_too_big",
+      "target": "fix-oom",
+      "expected_baseline": "oom",
+      "ground_truth": "activations",
+      "truth_status": "authored",
+      "dependencies": [
+        "torch"
+      ],
+      "notes": "Ground truth is authored fixture intent; baseline behavior must be measured.",
+      "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28"
+    },
+    {
+      "id": "s2_fp32_adamw_1b",
+      "group": "synthetic",
+      "script": "scenarios/s2_fp32_adamw_1b/train.py",
+      "source_root": "scenarios/s2_fp32_adamw_1b",
+      "target": "reclaim",
+      "expected_baseline": "completed",
+      "ground_truth": "optimizer_state",
+      "truth_status": "authored",
+      "dependencies": [
+        "torch"
+      ],
+      "notes": "s2 fit:22GB two-round acceptance remains unresolved; reclaim here does not replace T2.1.",
+      "source_sha256": "bb1d12c69ce5525e6eab67e709740cb2d578c070afa8b094b5f4b6906648bc5b"
+    },
+    {
+      "id": "s3_eval_no_grad_missing",
+      "group": "synthetic",
+      "script": "scenarios/s3_eval_no_grad_missing/train.py",
+      "source_root": "scenarios/s3_eval_no_grad_missing",
+      "target": "reclaim",
+      "expected_baseline": "completed",
+      "ground_truth": "activations",
+      "truth_status": "authored",
+      "dependencies": [
+        "torch"
+      ],
+      "notes": "Ground truth is authored fixture intent; baseline behavior must be measured.",
+      "source_sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67"
+    },
+    {
+      "id": "s4_loss_accumulation_graph",
+      "group": "synthetic",
+      "script": "scenarios/s4_loss_accumulation_graph/train.py",
+      "source_root": "scenarios/s4_loss_accumulation_graph",
+      "target": "fix-oom",
+      "expected_baseline": "oom",
+      "ground_truth": "retained_graph",
+      "truth_status": "authored",
+      "dependencies": [
+        "torch"
+      ],
+      "notes": "Ground truth is authored fixture intent; baseline behavior must be measured.",
+      "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b"
+    },
+    {
+      "id": "s5_fragmentation_varlen",
+      "group": "synthetic",
+      "script": "scenarios/s5_fragmentation_varlen/train.py",
+      "source_root": "scenarios/s5_fragmentation_varlen",
+      "target": "reclaim",
+      "expected_baseline": "completed",
+      "ground_truth": "fragmentation_candidate",
+      "truth_status": "unverified",
+      "dependencies": [
+        "torch"
+      ],
+      "notes": "Reserved gap is not proof of fragmentation; excluded from cause accuracy until adjudicated.",
+      "source_sha256": "627d24ee9e62601455e37f29166df8abe73a43b9e82382a293feec3a6b558169"
+    },
+    {
+      "id": "s6_full_vocab_logits_fp32",
+      "group": "synthetic",
+      "script": "scenarios/s6_full_vocab_logits_fp32/train.py",
+      "source_root": "scenarios/s6_full_vocab_logits_fp32",
+      "target": "fix-oom",
+      "expected_baseline": "oom",
+      "ground_truth": "temporaries",
+      "truth_status": "authored",
+      "dependencies": [
+        "torch"
+      ],
+      "notes": "Ground truth is authored fixture intent; baseline behavior must be measured.",
+      "source_sha256": "4f5d7e0f4331a4efcda2039c8ac8a421b2a1923778379896e2658553619b1bba"
+    },
+    {
+      "id": "s7_frozen_params_optimizer_state",
+      "group": "synthetic",
+      "script": "scenarios/s7_frozen_params_optimizer_state/train.py",
+      "source_root": "scenarios/s7_frozen_params_optimizer_state",
+      "target": "reclaim",
+      "expected_baseline": "completed",
+      "ground_truth": "optimizer_state",
+      "truth_status": "authored",
+      "dependencies": [
+        "torch"
+      ],
+      "notes": "Ground truth is authored fixture intent; baseline behavior must be measured.",
+      "source_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191"
+    },
+    {
+      "id": "s8_two_models_resident",
+      "group": "synthetic",
+      "script": "scenarios/s8_two_models_resident/train.py",
+      "source_root": "scenarios/s8_two_models_resident",
+      "target": "reclaim",
+      "expected_baseline": "completed",
+      "ground_truth": "params",
+      "truth_status": "authored",
+      "dependencies": [
+        "torch"
+      ],
+      "notes": "Ground truth is authored fixture intent; baseline behavior must be measured.",
+      "source_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59"
+    },
+    {
+      "id": "nanogpt",
+      "group": "repository",
+      "script": ".cache/upstream/nanoGPT/train.py",
+      "source_root": ".cache/upstream/nanoGPT",
+      "script_args": [
+        "--dataset=/input",
+        "--batch_size=32",
+        "--block_size=1024",
+        "--n_layer=24",
+        "--n_head=16",
+        "--n_embd=1024",
+        "--gradient_accumulation_steps=1",
+        "--max_iters=20",
+        "--eval_iters=1",
+        "--eval_interval=1000",
+        "--compile=False",
+        "--dtype=float32",
+        "--decay_lr=False",
+        "--always_save_checkpoint=False",
+        "--out_dir=/tmp/nanogpt-out"
+      ],
+      "target": "fit:22GB",
+      "expected_baseline": "oom",
+      "ground_truth": null,
+      "truth_status": "unverified",
+      "dependencies": [
+        "torch",
+        "numpy"
+      ],
+      "source_profile": "pinned_nanogpt",
+      "repository_manifest": "repos/nanogpt.yaml",
+      "notes": "Pinned original code; local synthetic tokens only. Exact source profile checked before execution.",
+      "source_sha256": "413bd97b40bb400a2a0d01230e2946f056c263ebac1b7281c2367d964a123085"
+    },
+    {
+      "id": "hf_trainer",
+      "group": "repository",
+      "script": "repos/hf_trainer/train.py",
+      "source_root": "repos/hf_trainer",
+      "target": "fix-oom",
+      "expected_baseline": "oom",
+      "ground_truth": null,
+      "truth_status": "unverified",
+      "dependencies": [
+        "torch",
+        "transformers",
+        "accelerate"
+      ],
+      "repository_manifest": "repos/hf_trainer.yaml",
+      "notes": "Random GPT2 Trainer; separate full GPU baseline observed CUDA OOM before step 1. This manifest validation does not rerun or accept that baseline; root-cause truth remains unverified.",
+      "source_sha256": "7d3a714264fc76371c1183da125ec0ffa550bc78c68bbe2acd7868870684923a"
+    },
+    {
+      "id": "vit_random",
+      "group": "library",
+      "script": "eval/candidates/vit_random/train.py",
+      "source_root": "eval/candidates/vit_random",
+      "target": "reclaim",
+      "expected_baseline": "completed",
+      "ground_truth": null,
+      "truth_status": "unverified",
+      "dependencies": [
+        "torch",
+        "transformers"
+      ],
+      "notes": "Random initialization and synthetic data; no weights download. Candidate only: GPU behavior and root cause await validation.",
+      "source_sha256": "4304e775dcf2394e39349fef05fcfb95419f2c6489422f1d6daff9654d9c99ca"
+    },
+    {
+      "id": "t5_random",
+      "group": "library",
+      "script": "eval/candidates/t5_random/train.py",
+      "source_root": "eval/candidates/t5_random",
+      "target": "reclaim",
+      "expected_baseline": "completed",
+      "ground_truth": null,
+      "truth_status": "unverified",
+      "dependencies": [
+        "torch",
+        "transformers"
+      ],
+      "notes": "Random initialization and synthetic data; no weights download. Candidate only: GPU behavior and root cause await validation.",
+      "source_sha256": "704f44a78a93d24efb564aa54aa2124e2f5c07fbb60dc9581f5abd44aede71d5"
+    }
+  ]
+}

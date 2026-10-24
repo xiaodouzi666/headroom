@@ -1,10 +1,13 @@
 # Results
 
-T0.6 full-size GPU baseline checks and T1.1 Lab capture acceptance are complete.
-No automated repair, model diagnosis, or optimization benchmark result has been
-measured. Phase 0 remains
-incomplete while account-dependent T0.1/T0.4/T0.5 checks await credentials and
-credit/spending confirmation.
+Measured GPU baselines now cover twelve workloads. The complete 2026-10-24
+manifest run reproduced five CUDA OOMs and completed twenty steps in seven workloads.
+All captures and cleanup checks passed. This is baseline acceptance, not automated
+repair or model-quality evidence.
+
+No authenticated Nemotron repair, main repair benchmark or ablation score has
+been measured. Nebius account/key, verified capabilities/billing and authorized
+credit remain required. Tavily real API and cache checks have passed.
 
 ## Preparation checks (not benchmark results)
 
@@ -13,7 +16,8 @@ credit/spending confirmation.
 | CUDA toolchain | torch 2.5.1+cu124 recognizes 3090 Ti; snapshot API returns traces | Small allocation only |
 | Synthetic scenarios | 8/8 CPU tiny checks completed 20 steps; full GPU baselines below | CPU smoke itself is not GPU acceptance |
 | nanoGPT | Pinned source; tiny CPU run exit 0; full GPU CUDA OOM reproduced below | Exact allocator peak unavailable from upstream output |
-| Live model/Tavily calls | None | Account, keys, credits and spending boundary pending |
+| Live model calls | Pending | Nebius account, model and spending gates remain |
+| Tavily | Real search/extract and versioned cache checks passed | Provider-reported credits are separate from account counters |
 
 ## T0.6 full default GPU baselines
 
@@ -147,11 +151,12 @@ differences are not memory improvements.
   No threshold or category has been changed to force a pass.
 - The s2 baseline is already below 22 GB. It does not demonstrate T2.1's
   required two-round fit:22GB improvement.
-- No model-generated repair has been applied, and no numerical-equivalence,
-  memory-savings, Pareto, or end-to-end acceptance has been run.
-- Account-dependent probes still await credentials, available promotional
-  credits and a confirmed spending boundary. Offline probe tests and dry runs
-  are not live service feedback.
+- No authenticated model-generated GPU repair has been demonstrated.
+  CPU numerical-pairing checks and offline Pareto/search/report tests exist,
+  but do not establish real repaired-GPU memory savings or end-to-end acceptance.
+- Nebius model probes still await a reviewed live runtime, available credits
+  and a confirmed spending boundary. Tavily's separate live probe and research
+  component are recorded below; offline model tests and dry runs remain distinct.
 
 ## Historical CPU source smoke evidence
 
@@ -170,3 +175,77 @@ This smoke table predates the s1 default-fixture calibration; its tiny dimension
 are unchanged, but it is not a new current-source run. These wall times include container startup and are not training throughput measurements. Sources and commands are in reports/scenario-cpu-smoke-summary.json and its referenced logs. CPU tiny changes model dimensions for plumbing checks only; those runs are not submitted as memory optimization results.
 
 The pinned nanoGPT smoke retains vocabulary 50304 but uses tiny depth/width/sequence/batch to check loading and training in isolation. GPU acceptance uses the separate unmodified baseline configuration in repos/nanogpt.yaml.
+
+
+## 2026-10-24 complete evaluation baseline pass
+
+Source: [evaluation-baselines-20261024.json](../reports/evaluation-baselines-20261024.json).
+Every row links a preserved raw Lab result and source SHA. The manifest's SHA is
+`c494865118285ab75a96bf2eeacbc67b1048d962ba5d9ebecadd0ff0d47a637d`. The new ViT and T5 workloads use actual Transformers
+implementations with random initialization and synthetic inputs, not pretrained
+task-quality tests. HF Trainer's first-step OOM occurs before optimizer state is
+initialized; optimizer-state causation is therefore not established by that run.
+
+| Scenario | Actual baseline | Steps | Peak allocated GB | Wall seconds |
+|---|---|---:|---:|---:|
+| s1_batch_too_big | oom | 0 | 24.750424 | 3.181 |
+| s2_fp32_adamw_1b | completed | 20 | 21.553251 | 21.190 |
+| s3_eval_no_grad_missing | completed | 20 | 2.435718 | 5.987 |
+| s4_loss_accumulation_graph | oom | 12 | 24.768718 | 4.498 |
+| s5_fragmentation_varlen | completed | 20 | 5.021758 | 6.885 |
+| s6_full_vocab_logits_fp32 | oom | 0 | 21.588380 | 1.437 |
+| s7_frozen_params_optimizer_state | completed | 20 | 17.819809 | 6.164 |
+| s8_two_models_resident | completed | 20 | 3.100142 | 5.827 |
+| nanogpt | oom | 0 | 24.705184 | 8.358 |
+| hf_trainer | oom | 0 | 24.805119 | 7.266 |
+| vit_random | completed | 20 | 2.082593 | 20.158 |
+| t5_random | completed | 20 | 8.042537 | 53.254 |
+
+GB here is decimal bytes / 1e9. Peaks are successful allocations observed by the
+Lab; an OOM peak does not estimate total memory required to finish. Wall time is
+not steady-state throughput. All twelve runs have capture_complete=true,
+cleanup_verified=true and shared_gpu=false in the recorded samples. A lost SSH
+attach connection did not restart the campaign; its supervised server process
+completed the remaining rows.
+
+### Component evidence, separate from benchmark results
+
+- Parameter capture regression: `reports/lab-gpu-acceptance-20261024T021625Z.json`.
+  Real s1 OOM trace and repeated s3 twenty-step loss agreement passed.
+- New pinned nanoGPT preparation/Lab path: `reports/nanogpt-lab-baseline-20261024.json`.
+- HF Trainer CPU pairing and full GPU OOM: `docs/WATCH_HF.md` and
+  `reports/hf-trainer-baseline-20261024.json`.
+- Tavily versioned checkpoint/allocator retrieval: `reports/research-component-20261024T022414Z.json`.
+  Four live methods reported three credits total; repeated queries had zero API
+  calls and zero credits from the local cache. Store contains eight operation rows.
+  This does not yet establish Sources on a complete s1/s5 model-driven repair.
+- Five imported real baseline replays: `reports/baseline-replays.json`.
+  They contain no model diagnosis, patch, repaired after-run or invented agent trace.
+- Offline SDK responses, patching, keep/revert and reporting remain separately
+  labeled fixtures. They do not enter the main or ablation score table.
+
+### Main and ablation results
+
+| Evaluation | State | Success / diagnosis / cost claims |
+|---|---|---|
+| Ten original workloads, original two-policy requirement | Explicit matrix support; actual campaign awaits reviewed Nebius runtime | Not measured; current default/strict are equivalent and original wording remains unresolved |
+| Full evidence + Ultra | Awaiting reviewed Nebius runtime | Not measured |
+| Traceback + memory_summary + Ultra diagnosis | Awaiting reviewed Nebius runtime | Not measured |
+| Full evidence + Super diagnosis | Awaiting reviewed Nebius runtime | Not measured |
+
+The evaluator records first-round diagnosis, all failure/unknown charges, source
+pins and per-condition evidence provenance. Unverified root-cause labels remain
+unscored. No expected ablation advantage is reported as an observed finding.
+Original s2 40% and two-round fit acceptance remain unresolved; no gate was lowered.
+
+### Policy-campaign implementation update
+
+The evaluator now records full effective policies per row and supports explicit
+`default`, `strict`, and `allow_precision` selections; the default remains a single
+policy. `--plan-only` exposes the matrix multiplier and unchanged spend cap without
+running workloads or using a provider. The current default and strict policies
+both prohibit numerical changes. The optional precision-permitting selection
+does not resolve or replace the original T2.8 wording. Aggregate and per-policy
+metrics preserve unknown values and scored/comparable denominators. Real
+two-policy results, the at-most-three-round optimization study, and the original
+target_met >=75%, first-cause agreement >=75%, and USD 12 gates remain unmeasured. See [EVALUATION.md](EVALUATION.md).

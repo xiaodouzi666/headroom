@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from decimal import Decimal
+from decimal import Decimal, localcontext
 from typing import Any
 
 
@@ -24,6 +24,8 @@ class Pricing:
             value = Decimal(value)
             if not value.is_finite() or value < 0:
                 raise ValueError("Prices must be finite and nonnegative")
+            if len(value.as_tuple().digits) > 80 or abs(value.as_tuple().exponent) > 80:
+                raise ValueError("Price precision exceeds supported bounds")
             object.__setattr__(self, name, value)
         if self.verified and not self.source:
             raise ValueError("Verified prices require a source")
@@ -99,12 +101,14 @@ def calculate_cost(usage: Usage | None, pricing: Pricing | None) -> Cost:
     if cached and pricing.cached_input_per_million is None:
         return Cost(None, "unknown", "missing_cached_input_price")
     cached = cached or 0
-    input_charge = (usage.prompt_tokens - cached) * pricing.input_per_million
-    if cached:
-        input_charge += cached * pricing.cached_input_per_million
-    # Reasoning tokens are already a subset of completion_tokens; never add them twice.
-    output_charge = usage.completion_tokens * pricing.output_per_million
-    return Cost((input_charge + output_charge) / Decimal(1_000_000), "known")
+    with localcontext() as context:
+        context.prec = 256 + max(len(str(usage.prompt_tokens)), len(str(usage.completion_tokens)))
+        input_charge = (usage.prompt_tokens - cached) * pricing.input_per_million
+        if cached:
+            input_charge += cached * pricing.cached_input_per_million
+        # Reasoning tokens are already a subset of completion_tokens; never add them twice.
+        output_charge = usage.completion_tokens * pricing.output_per_million
+        return Cost((input_charge + output_charge) / Decimal(1_000_000), "known")
 
 
 @dataclass(frozen=True)
@@ -131,7 +135,9 @@ class CostLedger:
 
     @property
     def known_subtotal_usd(self) -> Decimal:
-        return sum((entry.cost.usd or Decimal(0) for entry in self.entries), Decimal(0))
+        with localcontext() as context:
+            context.prec = 256 + len(str(len(self.entries)))
+            return sum((entry.cost.usd or Decimal(0) for entry in self.entries), Decimal(0))
 
     @property
     def unknown_attempts(self) -> int:

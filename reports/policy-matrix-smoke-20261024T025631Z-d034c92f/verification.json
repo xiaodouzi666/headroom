@@ -1,0 +1,166 @@
+{
+  "scope": "offline policy/CLI adapter verification, not live repair acceptance",
+  "created_at": "2026-10-24T02:56:35.128772+00:00",
+  "commands": [
+    {
+      "name": "default",
+      "command": [
+        ".venv/bin/headroom",
+        "eval",
+        "--plan-only"
+      ],
+      "exit_code": 0,
+      "output": "reports/policy-matrix-smoke-20261024T025631Z-d034c92f/default.stdout.json",
+      "mode": "campaign_plan",
+      "executed": false,
+      "planned_pipeline_runs": 12,
+      "multipliers": {
+        "scenarios": 12,
+        "conditions": 1,
+        "policies": 1
+      },
+      "campaign_cap_usd": "0.6",
+      "sum_of_configured_run_caps_usd": "7.2",
+      "actual_policy_fields": [
+        {
+          "allow_numerics_change": false,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "max_throughput_regression_pct": 25
+        }
+      ],
+      "authorization_expanded": false
+    },
+    {
+      "name": "default-strict",
+      "command": [
+        ".venv/bin/headroom",
+        "eval",
+        "--plan-only",
+        "--policies",
+        "default,strict"
+      ],
+      "exit_code": 0,
+      "output": "reports/policy-matrix-smoke-20261024T025631Z-d034c92f/default-strict.stdout.json",
+      "mode": "campaign_plan",
+      "executed": false,
+      "planned_pipeline_runs": 20,
+      "multipliers": {
+        "scenarios": 10,
+        "conditions": 1,
+        "policies": 2
+      },
+      "campaign_cap_usd": "0.6",
+      "sum_of_configured_run_caps_usd": "12.0",
+      "actual_policy_fields": [
+        {
+          "allow_numerics_change": false,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "max_throughput_regression_pct": 25
+        },
+        {
+          "allow_numerics_change": false,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "max_throughput_regression_pct": 25
+        }
+      ],
+      "authorization_expanded": false
+    },
+    {
+      "name": "explicit-precision",
+      "command": [
+        ".venv/bin/headroom",
+        "eval",
+        "--plan-only",
+        "--policies",
+        "default,allow_precision"
+      ],
+      "exit_code": 0,
+      "output": "reports/policy-matrix-smoke-20261024T025631Z-d034c92f/explicit-precision.stdout.json",
+      "mode": "campaign_plan",
+      "executed": false,
+      "planned_pipeline_runs": 20,
+      "multipliers": {
+        "scenarios": 10,
+        "conditions": 1,
+        "policies": 2
+      },
+      "campaign_cap_usd": "0.6",
+      "sum_of_configured_run_caps_usd": "12.0",
+      "actual_policy_fields": [
+        {
+          "allow_numerics_change": false,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "max_throughput_regression_pct": 25
+        },
+        {
+          "allow_numerics_change": true,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "max_throughput_regression_pct": 25
+        }
+      ],
+      "authorization_expanded": false
+    },
+    {
+      "name": "ablation-matrix",
+      "command": [
+        ".venv/bin/headroom",
+        "eval",
+        "--plan-only",
+        "--policies",
+        "default,strict",
+        "--conditions",
+        "full_ultra,traceback_ultra,full_super"
+      ],
+      "exit_code": 0,
+      "output": "reports/policy-matrix-smoke-20261024T025631Z-d034c92f/ablation-matrix.stdout.json",
+      "mode": "campaign_plan",
+      "executed": false,
+      "planned_pipeline_runs": 48,
+      "multipliers": {
+        "scenarios": 8,
+        "conditions": 3,
+        "policies": 2
+      },
+      "campaign_cap_usd": "0.6",
+      "sum_of_configured_run_caps_usd": "28.8",
+      "actual_policy_fields": [
+        {
+          "allow_numerics_change": false,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "max_throughput_regression_pct": 25
+        },
+        {
+          "allow_numerics_change": false,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "max_throughput_regression_pct": 25
+        }
+      ],
+      "authorization_expanded": false
+    }
+  ],
+  "focused_tests": {
+    "command": ".venv/bin/pytest -q tests/test_evaluation.py tests/test_cli.py",
+    "passed": 75,
+    "seconds": 1.35
+  },
+  "checks": {
+    "ruff": true,
+    "git_diff_whitespace": true
+  },
+  "original_gates_unchanged": true,
+  "live_model_calls": 0,
+  "gpu_workloads": 0,
+  "source_sha256": {
+    "headroom/evaluation.py": "db73b2541b4a8a65c57a4eccb5ca71d83004a97eee93ada06110e76f5a86337d",
+    "headroom/cli.py": "f035754273a9dcfb7de722fd1d5a77f145bf60fe9554a0e6f842a2d5608e0202",
+    "tests/test_evaluation.py": "841d6512b841b9dff073430d7add3bf7bcea00c883929b72385027e6d2c2bfeb",
+    "tests/test_cli.py": "beaa12bb49edc2f0d1f1d3ecb018c8fa18edf87467008ba046e267fddb37addf"
+  }
+}

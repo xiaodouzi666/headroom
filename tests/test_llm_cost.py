@@ -65,3 +65,16 @@ def test_unverified_prices_are_not_reported_as_actual_cost():
 def test_price_rejects_invalid_or_imprecise_input(invalid):
     with pytest.raises((ValueError, TypeError)):
         Pricing(invalid, "1")
+
+
+def test_price_and_sum_preserve_more_than_default_decimal_precision():
+    from headroom.llm.cost import CallRecord, CostLedger
+
+    rate = "0.123456789012345678901234567890123456789"
+    pricing = Pricing(rate, "0", verified=True, source="offline")
+    result = calculate_cost(Usage(1000000, 0, 1000000), pricing)
+    assert result.usd == Decimal(rate)
+    ledger = CostLedger()
+    for _ in range(2):
+        ledger.add(CallRecord("nano", "nvidia/test", 1, "success", 0, None, result))
+    assert ledger.total_usd == Decimal("0.246913578024691357802469135780246913578")

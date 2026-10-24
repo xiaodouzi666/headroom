@@ -1,0 +1,60 @@
+{
+  "mode": "campaign_plan",
+  "executed": false,
+  "scenarios": [
+    "s1_batch_too_big",
+    "s2_fp32_adamw_1b",
+    "s3_eval_no_grad_missing",
+    "s4_loss_accumulation_graph",
+    "s5_fragmentation_varlen",
+    "s6_full_vocab_logits_fp32",
+    "s7_frozen_params_optimizer_state",
+    "s8_two_models_resident"
+  ],
+  "conditions": [
+    "full_ultra",
+    "traceback_ultra",
+    "full_super"
+  ],
+  "policies": [
+    {
+      "name": "default",
+      "policy": {
+        "allow_numerics_change": false,
+        "allow_model_change": false,
+        "allow_batch_grad_accum": true,
+        "max_throughput_regression_pct": 25
+      },
+      "same_effective_policy_as": [
+        "strict"
+      ]
+    },
+    {
+      "name": "strict",
+      "policy": {
+        "allow_numerics_change": false,
+        "allow_model_change": false,
+        "allow_batch_grad_accum": true,
+        "max_throughput_regression_pct": 25
+      },
+      "same_effective_policy_as": [
+        "default"
+      ]
+    }
+  ],
+  "multipliers": {
+    "scenarios": 8,
+    "conditions": 3,
+    "policies": 2
+  },
+  "planned_pipeline_runs": 48,
+  "provider_api_attempts": null,
+  "provider_api_attempts_note": "Pipeline count is not API-call count: annotation, diagnosis supplements, patch attempts, retries and research vary; every actual model attempt remains budgeted.",
+  "sum_of_configured_run_caps_usd": "28.8",
+  "campaign_cap_usd": "0.6",
+  "daily_cap_usd": "12",
+  "can_reserve_all_run_caps": false,
+  "per_run_cap_usd": "0.6",
+  "authorization_expanded": false,
+  "policy_note": "Original T2.8 says default versus allow_numerics_change=false. Current default and strict are equivalent; naming them separately does not resolve that ambiguity. allow_precision is an explicit optional permission."
+}

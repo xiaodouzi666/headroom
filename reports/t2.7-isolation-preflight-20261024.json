@@ -1,0 +1,87 @@
+{
+  "recorded_at": "2026-10-24T02:53:58.036380+00:00",
+  "task": "T2.7",
+  "status": "blocked_environment",
+  "acceptance_met": false,
+  "environment": {
+    "host": "azuki",
+    "user": "xiaodouzi",
+    "uid": 1000,
+    "gid": 1000,
+    "kernel": "7.0.0-38-generic",
+    "platform": "Linux",
+    "bwrap_setuid": false,
+    "tools": {
+      "bwrap": "/usr/bin/bwrap",
+      "unshare": "/usr/bin/unshare",
+      "prlimit": "/usr/bin/prlimit",
+      "timeout": "/usr/bin/timeout"
+    }
+  },
+  "checks": [
+    {
+      "command": [
+        "/usr/bin/unshare",
+        "--user",
+        "--map-root-user",
+        "--",
+        "/usr/bin/true"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "unshare: write failed /proc/self/uid_map: Operation not permitted"
+    },
+    {
+      "command": [
+        "/usr/bin/unshare",
+        "--user",
+        "--map-root-user",
+        "--net",
+        "--",
+        "/usr/bin/true"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "unshare: write failed /proc/self/uid_map: Operation not permitted"
+    },
+    {
+      "command": [
+        "/usr/bin/bwrap",
+        "--unshare-all",
+        "--die-with-parent",
+        "--new-session",
+        "--ro-bind",
+        "/usr",
+        "/usr",
+        "--ro-bind",
+        "/lib",
+        "/lib",
+        "--ro-bind",
+        "/lib64",
+        "/lib64",
+        "--proc",
+        "/proc",
+        "--dev",
+        "/dev",
+        "--tmpfs",
+        "/tmp",
+        "--chdir",
+        "/tmp",
+        "--",
+        "/usr/bin/true"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted"
+    }
+  ],
+  "scope": {
+    "workload": "/usr/bin/true only",
+    "gpu_used": false,
+    "model_api_used": false,
+    "sudo_used": false,
+    "system_configuration_changed": false,
+    "host_training_execution_enabled": false
+  },
+  "conclusion": "Required independent user/network namespace isolation cannot be established with the current permissions. No unsafe host subprocess fallback was enabled. Existing Docker wrapper/injected CPU comparisons are component evidence only, not original T2.7 acceptance."
+}

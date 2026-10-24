@@ -17,43 +17,47 @@ All work, caches, runs, and media remain on azuki.
 | T1.1 | Lab 包装器：运行并抓证据（P0，~3h） | 已验收 | reports/t1.1-acceptance.json; GPU report022523 all checks true; s1 2050 events; s3 completed20 deterministic; final full regression 95 tests passed |
 | T1.2 | 证据包生成（P0，~3h） | 实现完成，验收未通过 | reports/t1.2-acceptance.json; s1/s2/s4/s5 artifacts and real peak replay verified; s2 optimizer-state fraction 39.8715% < original 40% |
 | T1.3 | LLM 客户端与路由（P0，~1.5h） | 离线实现完成，实测待验收 | 82 mock tests; docs/LLM.md; real Super JSON and Ultra200k pending |
-| T1.4 | Diagnose（Ultra）（P0，~2.5h） | 离线准备 | Pydantic schema, prompt, runtime reference and bounded policy checks; 27 CPU/schema/SDK-contract tests; no live diagnosis |
-| T1.5 | Patch（Super）与应用（P0，~2.5h） | 未开始 | — |
-| T1.6 | Verify 与比较（P0，~2h） | 未开始 | — |
-| T1.7 | 单轮编排 + 存储 + 事件（P0，~2h） | 未开始 | — |
-| T1.8 | 报告（P0，~1.5h） | 未开始 | — |
-| T1.9 | 真实仓库：nanoGPT（P0，~2h） | 未开始 | — |
-| T1.10 | Honesty 与安全（P0，~1h） | 未开始 | — |
-| T1.11 | Docker Lab（P1，仅 `DOCKER_GPU=ok`，~1.5h） | 未开始 | — |
-| T1.12 | MVP 整体验收 + 报告（P0，~1.5h，10/24 晚） | 未开始 | — |
-| T2.1 | 显存求解循环：keep-or-revert 搜索 + Pareto 前沿（P0，~3h） | 未开始 | — |
-| T2.2 | Tavily Research（P0，~2h） | 未开始 | — |
-| T2.3 | Nano 栈标注（P1，~1h） | 未开始 | — |
-| T2.4 | 预算守卫与成本面板（P0，~45min） | 未开始 | — |
-| T2.5 | HF Transformers 场景（P1，~2h） | 未开始 | — |
-| T2.6 | Watch 模式（P2，~1.5h） | 未开始 | — |
-| T2.7 | Docker/HF 缓存稳健性（P1）：验收：三个场景在 Docker 路径下结果与子进程路径一致（峰值差 ≤ 1%）。 | 未开始 | — |
-| T2.8 | 小评测 + 自优化（P0，可夜间自治，~4h） | 未开始 | — |
-| T3.1 | FastAPI + SSE（P0，~3h） | 未开始 | — |
-| T3.2 | 前端素版（P0，~4h） | 未开始 | — |
-| T3.3 | Replay（P0，~1.5h） | 未开始 | — |
-| T3.4 | Claude Design 对齐（P1，~3h；设计稿 10/25–10/26 由 Frank+Claude 产出到 `design/`） | 未开始 | — |
-| T3.5 | 公网部署、限流、监控（P0，~2.5h；Frank 提供域名/Cloudflare） | 未开始 | — |
-| T3.6 | 预录素材（P0，~1h） | 未开始 | — |
-| T4.1 | 评测集定稿 | 未开始 | — |
-| T4.2 | 主评测 | 未开始 | — |
-| T4.3 | 消融 | 未开始 | — |
-| T4.4 | 冻结 | 未开始 | — |
-| T5.1 | README | 未开始 | — |
-| T5.2 | docs 定稿 | 未开始 | — |
-| T5.3 | Devpost 描述 | 未开始 | — |
-| T5.4 | 视频 | 未开始 | — |
+| T1.4 | Diagnose（Ultra）（P0，~2.5h） | 实现完成，模型验收待办 | docs/DIAGNOSE.md; schema/SDK offline tests; real Ultra diagnosis pending |
+| T1.5 | Patch（Super）与应用（P0，~2.5h） | 实现及离线验收完成；真实补丁待办 | docs/PATCH.md; git apply, compile, bounded repair and policy tests; real Super/GPU cases pending |
+| T1.6 | Verify 与比较（P0，~2h） | 比较器与CPU配对已测；修复验收待办 | docs/VERIFY.md; parameter shrink rejected; original numerical/throughput gates retained |
+| T1.7 | 单轮编排 + 存储 + 事件（P0，~2h） | 主流程与存储已实现并离线联调 | docs/SEARCH.md; SQLite ordered events, partial reports, SDK fixture pipeline; live two-call gate pending |
+| T1.8 | 报告（P0，~1.5h） | 报告实现与数字追溯通过 | docs/STORAGE_REPORTS.md; JSON/Markdown, source links, Pareto files; real repaired report pending |
+| T1.9 | 真实仓库：nanoGPT（P0，~2h） | 固定仓库输入与真实GPU基线通过 | reports/nanogpt-lab-baseline-20261024.json; actual repair/22GB/diff/cost gates pending |
+| T1.10 | Honesty 与安全（P0，~1h） | 静态与CPU真实性检查通过；完整修复待办 | docs/PATCH.md; model shrink/truncation/escape checks and observed parameter counts |
+| T1.11 | Docker Lab（P1，仅 `DOCKER_GPU=ok`，~1.5h） | Docker隔离与缓存组件通过 | docs/LAB.md; docs/WATCH_HF.md; no-network, read-only source/cache and cleanup tests |
+| T1.12 | MVP 整体验收 + 报告（P0，~1.5h，10/24 晚） | 待Nebius真实MVP验收 | Nine real repair runs and success/time/cost thresholds not yet measured |
+| T2.1 | 显存求解循环：keep-or-revert 搜索 + Pareto 前沿（P0，~3h） | 六轮搜索与Pareto实现完成；真实验收待办 | docs/SEARCH.md; original baseline fixed, retained cumulative patches; s2 two-round/bf16 policy issue unchanged |
+| T2.2 | Tavily Research（P0，~2h） | 真实Research组件通过；修复报告待办 | reports/research-component-20261024T022414Z.json; four live methods, 3 reported credits, repeat cache 0 calls/credits |
+| T2.3 | Nano 栈标注（P1，~1h） | Nano标注与子预算已实现；实测待办 | headroom/annotate.py; top40 strict labels, 0.02 USD sub-budget; live eight-case agreement pending |
+| T2.4 | 预算守卫与成本面板（P0，~45min） | 持久预算与面板已实现并离线测 | docs/RUNTIME.md; per-attempt reservations, unknown charges, daily/total caps, partial stop reports |
+| T2.5 | HF Transformers 场景（P1，~2h） | HF场景CPU/GPU基线通过；修复待办 | reports/hf-trainer-baseline-20261024.json; real Trainer OOM; configuration-only repair gate pending |
+| T2.6 | Watch 模式（P2，~1.5h） | 通用argv隔离观察/退出码通过；完整修复验收待办 | docs/WATCH_HF.md; 89 scoped tests passed; modules/inline/flags/shell observed in Docker; unsupported replay OOM needs_human; missing capture unknown; no host fallback |
+| T2.7 | Docker/HF 缓存稳健性（P1）：验收：三个场景在 Docker 路径下结果与子进程路径一致（峰值差 ≤ 1%）。 | 安全独立子进程环境阻塞；原门槛未通过 | reports/t2.7-isolation-preflight-20261024.json; unshare uid_map EPERM; bwrap network setup EPERM; no sudo/system change/unsafe host fallback; existing Docker dual-entry CPU checks are component evidence only |
+| T2.8 | 小评测 + 自优化（P0，可夜间自治，~4h） | 显式策略矩阵与离线统计完成；原真实验收待办 | docs/EVALUATION.md; default/strict 实际等价，allow_precision 必须显式选择；全矩阵共享预算，逐行完整 Policy；原两档歧义、≤3轮优化、target_met/首因各≥75% 和 $12 实测均未关闭 |
+| T3.1 | FastAPI + SSE（P0，~3h） | API队列/SSE/下载已实现并测 | docs/API.md; worker deadlines, cleanup freeze, session isolation, resume, repo form and rate limits |
+| T3.2 | 前端素版（P0，~4h） | 四页前端/浏览器/性能通过；真实修复流程待办 | reports/web-verification-20261024.json; 27 tests; reports/lighthouse-20261024.json: Home90/90/90, baseline Run89/98/89; mobile no overflow |
+| T3.3 | Replay（P0，~1.5h） | 5条真实基线回放可用；规定修复回放待办 | reports/baseline-replays.json; explicitly baseline-only; s2 two-round/nanoGPT/reclaim repair replay not fabricated |
+| T3.4 | Claude Design 对齐（P1，~3h；设计稿 10/25–10/26 由 Frank+Claude 产出到 `design/`） | 待Frank设计稿与认可 | No design package has been supplied; theme implementation exists |
+| T3.5 | 公网部署、限流、监控（P0，~2.5h；Frank 提供域名/Cloudflare） | 部署与监控模板完成；公网待办 | docs/DEPLOYMENT.md; local rate/queue/deadline tests; domain/tunnel/notification setup and live acceptance pending |
+| T3.6 | 预录素材（P0，~1h） | 8张真实基线UI素材完成；完整修复素材待办 | docs/media/ui-20261024T025659Z-baseline-only; baseline-only labels, desktop/mobile Home/Results/About/Run; no repaired before-after/diagnosis/diff fabricated |
+| T4.1 | 评测集定稿 | 基线范围已验收 | reports/evaluation-baselines-20261024.json; all12 matches, 5 OOM/7 completed20, full capture/cleanup; source pins |
+| T4.2 | 主评测 | 工具与表格已准备；真实主评测待办 | docs/EVALUATION.md; docs/RESULTS.md; Nebius live model run required |
+| T4.3 | 消融 | 三条件消融工具完成；实测待办 | full Ultra / traceback+summary Ultra / full Super; no predicted gain presented as measured |
+| T4.4 | 冻结 | 待真实评测后冻结 | No v0.9-eval tag created before acceptance |
+| T5.1 | README | README初稿完成；干净环境真实repair待办 | README.md; honest role/status table, local quickstart, evidence and limits |
+| T5.2 | docs 定稿 | 文档初稿完成；评审与真实模型反馈待办 | docs/ARCHITECTURE.md; RESULTS.md; FEEDBACK.md; no fabricated model experience |
+| T5.3 | Devpost 描述 | Devpost本地草稿完成；未保存表单 | docs/DEVPOST.md; owner final review/submission pending |
+| T5.4 | 视频 | 视频脚本完成；待真实修复与录制 | docs/VIDEO_SCRIPT.md; <=2:50 storyboard, actual evidence required |
 | T5.5 | 首次完整提交 | 未开始 | — |
-| T5.6 | 评委视角自检 | 未开始 | — |
+| T5.6 | 评委视角自检 | 当前就绪审阅完成；发布前复检待办 | reports/submission-readiness-20261024.md; actual repair, public demo/video and submission gate remain pending |
 | T5.7 | 最终提交 | 未开始 | — |
 | Phase 6 | Weekly health/alerts; balance by Nov 25; manual Dec 1 and Dec 8 access | 未开始 | Future dated acceptance |
 
 ## Acceptance log
+
+- 2026-10-24 full-development checkpoint: final backend718tests passed107.57s; frontend27tests/typecheck/build passed; Home Lighthouse90/90/90 and real baseline Run89/98/89. Twelve actual GPU baselines matched5OOM/7completed20 with capture and cleanup verified. Full source-hash receipt: reports/final-validation-20261024.json; handoff: reports/handoff-development-20261024.md. Real Research added3credits; refreshed Tavily total6/1000,994remain, pay-as-you-go off. Nebius key/profile absent; no authenticated Nebius inference or recharge performed. All original failed gates retained.
+
+- 2026-10-24: Frank explicitly requests full original-plan development, continuing every implementable part while only genuinely Nebius-dependent work waits. Implement later components with honest offline/real-evidence verification; retain original acceptance gates and existing failures. Self-funded Token Factory availability is being researched; no payment or paid inference has been authorized by that question.
 
 - 2026-10-24 00:57 UTC: Frank completed hidden-input Tavily import; private .env preflight passed. The authorized four-operation live probe exited0; basic/advanced searches and both exact-URL extracts succeeded. Report: reports/probe-tavily-20261024T005720856027Z-332161bd.json. Two factual feedback entries (TAVILY-001/002) and observed TOOLS schemas are now recorded; independent read-only review confirmed API checks. Full T0.5 acceptance: reports/t0.5-acceptance.json.
 - Account usage was independently refreshed before and after this run: free-plan used credits moved0 to3/1000, matching API total3;997 remain, pay-as-you-go and auto-upgrade are off, and the UI says requests stop at plan limit. Evidence: reports/tavily-account-after-20261024T005808Z.json. The two extract responses reporting0 do not prove future extraction is free. Nebius remains deferred/unverified; no model calls or other task acceptance is implied.
@@ -61,7 +65,7 @@ All work, caches, runs, and media remain on azuki.
 - 2026-10-24 offline continuation completed: reports/api-prep-20261023T222659Z.json records 259 passed in53.97s, Ruff and formatting passed, and the default model-probe dry-run planned62 operations with network_requests=0 and accepted=false. New coverage includes55 guarded probe tests,82 LLM client/router/cost tests,25 diagnosis checks and2 SDK/schema/evidence integration tests. Full prior tests remain green; historical runs are preserved. Original PLAN SHA remains e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56.
 - Independent review fixed native-versus-fenced JSON classification, retry dispatch after a shared budget violation, absolute streaming deadlines, nonfinite JSON, malformed SDK responses missing accounting, and response model identity. Missing or mismatched identity cannot become accepted capability/diagnosis; uncertain billing stays unknown and model probes halt further paid dispatch. T0.4/T1.3/T1.4 remain unaccepted pending real model calls.
 - Test-isolation incident retained: an earlier AsyncClient refactor round attempted three official-endpoint transports using only a fixed dummy credential; exact network outcomes are unknown. No real key or .env was used by those tests. Corrected mocks and independent DNS/socket-denial guards passed, including separate reviewer checks. See docs/MODELS.md; do not describe the whole development turn as zero network.
-- Latest credential presence check: server .env is0600; Tavily and Nebius values remain empty. Hidden-input Tavily importer syntax validated. No authenticated model/search probe was run; the Tavily four-operation live check remains pending import, and Nebius registration/credit troubleshooting remains deferred at Frank's request.
+- Historical pre-import credential check (superseded by the verified Tavily import above): server .env was0600; Tavily and Nebius values were empty. Hidden-input Tavily importer syntax validated. No authenticated model/search probe was run; the Tavily four-operation live check remains pending import, and Nebius registration/credit troubleshooting remains deferred at Frank's request.
 
 - 2026-10-24: Frank asked to defer the Nebius registration/credit issue and start previously account-dependent work. Proceed with T0.4/T1.3 offline preparation and T1.4 schema/prompt checks while keeping their live acceptance pending. This sequencing instruction does not waive T1.2, numerical, loop, or cost gates.
 - Tavily live UI preflight: Researcher Free, 0/1000 credits used, pay-as-you-go and auto-upgrade off; requests stop at plan limit. Evidence: reports/account-status-20261023T221833Z.json. Existing default key remains in the browser; server import is pending because computer-use access to Terminal was denied. User was given a hidden-input SSH importer; no key was printed, no new key was created, and no paid setting was changed.

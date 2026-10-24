@@ -18,10 +18,16 @@ import sys
 import threading
 import time
 import traceback
+import weakref
 from pathlib import Path
 from typing import Any
 
 import torch
+from torch.nn.modules.module import (
+    register_module_forward_hook,
+    register_module_forward_pre_hook,
+    register_module_parameter_registration_hook,
+)
 from torch.optim.optimizer import register_optimizer_step_post_hook
 
 
@@ -178,6 +184,11 @@ class CaptureSession:
         self._snapshot: Any = None
         self._snapshot_attempted = False
         self._step_handle: Any = None
+        self._parameter_handles: list[Any] = []
+        self._parameter_refs: dict[int, Any] = {}
+        self._parameter_samples: list[int] = []
+        self._root_parameter_counts: list[int] = []
+        self._forward_depth = 0
         self._original_backward: Any = None
         self._backward_wrapper: Any = None
         self._previous_alarm_handler: Any = None
@@ -310,6 +321,11 @@ class CaptureSession:
         self._backward_wrapper = recorded_backward
         torch.Tensor.backward = recorded_backward
         self._step_handle = register_optimizer_step_post_hook(self._optimizer_step)
+        self._parameter_handles = [
+            register_module_parameter_registration_hook(self._registered_parameter),
+            register_module_forward_pre_hook(self._forward_start),
+            register_module_forward_hook(self._forward_end, always_call=True),
+        ]
         self.installed = True
         _ACTIVE_SESSION = self
         if threading.current_thread() is threading.main_thread():
@@ -349,12 +365,81 @@ class CaptureSession:
             self._error("peak_stats", exc)
             return None, None
 
+    def _track_parameter(self, parameter: Any) -> None:
+        if not isinstance(parameter, torch.nn.Parameter):
+            return
+        identity = id(parameter)
+        if identity in self._parameter_refs:
+            return
+
+        def released(reference: Any) -> None:
+            if self._parameter_refs.get(identity) is reference:
+                self._parameter_refs.pop(identity, None)
+
+        self._parameter_refs[identity] = weakref.ref(parameter, released)
+
+    def _registered_parameter(self, module: Any, name: str, parameter: Any) -> None:
+        if os.getpid() == self.pid and not self.finished:
+            self._track_parameter(parameter)
+        # Never replace or retain a parameter through the registration hook.
+
+    def _sample_parameters(self) -> None:
+        if not self._root_parameter_counts:
+            return
+        count = 0
+        for reference in list(self._parameter_refs.values()):
+            parameter = reference()
+            if parameter is not None:
+                count += parameter.numel()
+        if len(self._parameter_samples) < 10000:
+            self._parameter_samples.append(count)
+        else:
+            self._error("parameter_count", RuntimeError("Parameter observation limit exceeded"))
+
+    def _forward_start(self, module: torch.nn.Module, args: Any) -> None:
+        if os.getpid() != self.pid or self.finished:
+            return
+        if self._forward_depth == 0:
+            # Root .parameters() deduplicates tied parameters. Weak references also
+            # cover registered but unused modules without keeping their storage alive.
+            parameters = list(module.parameters())
+            for parameter in parameters:
+                self._track_parameter(parameter)
+            if len(self._root_parameter_counts) < 10000:
+                self._root_parameter_counts.append(sum(p.numel() for p in parameters))
+            self._sample_parameters()
+        self._forward_depth += 1
+
+    def _forward_end(self, module: Any, args: Any, output: Any) -> None:
+        if os.getpid() == self.pid and not self.finished:
+            self._forward_depth = max(0, self._forward_depth - 1)
+
+    def _parameter_evidence(self) -> dict[str, Any]:
+        stable = bool(self._parameter_samples) and len(set(self._parameter_samples)) == 1
+        complete = stable and not any(e["stage"] == "parameter_count" for e in self.errors)
+        return {
+            "parameter_count": self._parameter_samples[-1] if self._parameter_samples else None,
+            "parameter_count_complete": complete,
+            "parameter_count_source": "lab_module_parameter_hooks",
+            "parameter_count_observations": self._parameter_samples,
+            "root_forward_parameter_counts": self._root_parameter_counts,
+            "parameter_count_coverage": (
+                "Unique live Parameters registered on nn.Module during capture, plus Parameters "
+                "seen via root forward module.parameters(); sampled at root forwards and optimizer "
+                "updates. Tied parameters count once; no tensor is retained. Standalone tensors, "
+                "pre-capture unused modules, and no-root-forward construction failures are not covered. "
+                "Changing observed counts are incomplete. This is runtime evidence, not authentication "
+                "against a target that deliberately tampers with hooks."
+            ),
+        }
+
     def _optimizer_step(self, optimizer: torch.optim.Optimizer, args: Any, kwargs: Any) -> None:
         if os.getpid() != self.pid or self.finished:
             return
         if self.device == "cuda":
             torch.cuda.synchronize(self.device_index)
         ended = time.perf_counter()
+        self._sample_parameters()
         allocated, reserved = self._peaks()
         self.step_records.append(
             {
@@ -399,6 +484,9 @@ class CaptureSession:
         if self._step_handle is not None:
             self._step_handle.remove()
             self._step_handle = None
+        for handle in self._parameter_handles:
+            handle.remove()
+        self._parameter_handles.clear()
         if torch.Tensor.backward is self._backward_wrapper:
             torch.Tensor.backward = self._original_backward
         if _ACTIVE_SESSION is self:
@@ -485,6 +573,7 @@ class CaptureSession:
             status, reason = "error", "capture_error"
         self._result = {
             "protocol": "headroom.lab.v1",
+            **self._parameter_evidence(),
             "schema_version": 1,
             "capture_complete": capture_complete,
             "execution_status": execution_status,

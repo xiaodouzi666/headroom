@@ -53,3 +53,19 @@ reports/api-prep-20261023T222659Z.json (259 tests, Ruff/format, 62-item no-reque
 dry-run). A corrected test-isolation incident is documented in docs/MODELS.md;
 no authenticated model or Tavily call is claimed. Original acceptance gates and
 the canonical PLAN.md bytes remain unchanged.
+
+## 2026-10-24: continue the complete implementation while Nebius access is pending
+
+Frank explicitly requested continuing the original plan through complete development,
+leaving only work that cannot actually be done without Nebius pending its approval.
+This authorizes implementing and independently testing later components before the
+model-dependent acceptance gates can pass. It does not mark those gates accepted,
+waive the existing T1.2 shortfall, change numerical/loop thresholds, authorize paid
+usage, public deployment, deletion of historical runs, or submission on Frank's behalf.
+
+Proceed with patch/application and honesty checks, verification, orchestration and
+storage/reporting, research/cache and budgets, API/frontend/replay, evaluation
+harnesses and submission drafts. Keep genuine live model accuracy, cost, repaired
+GPU outcomes and evaluations visibly pending until Token Factory is available.
+Frank also asked whether self-funded Token Factory can avoid waiting for promotional
+approval; official documentation will be checked before advising on that option.

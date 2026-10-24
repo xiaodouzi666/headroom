@@ -57,6 +57,8 @@ class TokenFactoryClient:
         ledger: CostLedger | None = None,
         sleep: Callable[[float], None] = time.sleep,
         clock: Callable[[], float] = time.monotonic,
+        before_attempt: Callable | None = None,
+        after_record: Callable | None = None,
     ):
         self.config = config or RuntimeConfig()
         if transport is not None and not isinstance(transport, httpx.MockTransport):
@@ -70,7 +72,14 @@ class TokenFactoryClient:
         self._sleep = sleep
         self._clock = clock
         self.ledger = ledger if ledger is not None else CostLedger()
+        self._before_attempt = before_attempt
+        self._after_record = after_record
         self._sdk = None
+
+    def _record(self, record):
+        self.ledger.add(record)
+        if self._after_record is not None:
+            self._after_record(record)
 
     def _get_sdk(self):
         if self._sdk is not None:
@@ -200,12 +209,14 @@ class TokenFactoryClient:
         sdk = self._get_sdk()
         started = self._clock()
         for attempt in range(1, len(RETRY_DELAYS) + 2):
+            if self._before_attempt is not None:
+                self._before_attempt(role, spec, attempt, copy.deepcopy(body))
             attempt_started = self._clock()
             try:
                 completion = sdk.chat.completions.create(**body)
             except openai.APIStatusError as error:
                 status = error.status_code
-                self.ledger.add(
+                self._record(
                     CallRecord(
                         role,
                         spec.model_id,
@@ -225,7 +236,7 @@ class TokenFactoryClient:
                 outcome = (
                     "timeout" if isinstance(error, openai.APITimeoutError) else "transport_error"
                 )
-                self.ledger.add(
+                self._record(
                     CallRecord(
                         role,
                         spec.model_id,
@@ -240,7 +251,7 @@ class TokenFactoryClient:
             except Exception:  # noqa: BLE001 - every SDK attempt must retain unknown billing on failure.
                 # Any exception after invoking the SDK leaves billing uncertain. Do
                 # not let an unrecognized decoder failure make an attempt look free.
-                self.ledger.add(
+                self._record(
                     CallRecord(
                         role,
                         spec.model_id,
@@ -252,6 +263,21 @@ class TokenFactoryClient:
                     )
                 )
                 raise LLMError(f"Token Factory response error; attempts={attempt}") from None
+            except BaseException:
+                # Interrupts can arrive after transmission. Preserve the attempt
+                # before allowing the caller to write a partial report and stop.
+                self._record(
+                    CallRecord(
+                        role,
+                        spec.model_id,
+                        attempt,
+                        "interrupted",
+                        self._clock() - attempt_started,
+                        None,
+                        calculate_cost(None, spec.pricing),
+                    )
+                )
+                raise
             usage_payload = getattr(completion, "usage", None)
             raw_usage = (
                 usage_payload.model_dump(warnings=False)
@@ -265,7 +291,7 @@ class TokenFactoryClient:
             cost = calculate_cost(usage, spec.pricing)
             if response_model != spec.model_id:
                 cost = Cost(None, "unknown", "response_model_mismatch")
-            self.ledger.add(
+            self._record(
                 CallRecord(
                     role,
                     spec.model_id,

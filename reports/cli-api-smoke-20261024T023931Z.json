@@ -1,0 +1,197 @@
+{
+  "created_at": "2026-10-24T02:42:50.093004+00:00",
+  "scope": "Non-paid CLI/API smoke; not model-repair or contest acceptance",
+  "passed": true,
+  "checks": {
+    "validate_only_exit0_no_execution": true,
+    "validate_only_12_ready": true,
+    "cpu_watch_exit0_no_repair": true,
+    "cpu_watch_nonzero_passthrough": true,
+    "watch_cpu_cleanup": true,
+    "missing_profile_exit78_partial": true,
+    "missing_profile_before_baseline_and_model": true,
+    "local_get_endpoints_200": true,
+    "saved_replay_stream_end": true,
+    "scoped_contract_tests": true
+  },
+  "commands": [
+    {
+      "name": "eval_validate",
+      "argv": [
+        "headroom",
+        "eval",
+        "--validate-only"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.17353469086810946,
+      "stdout": "runs/cli-smoke/20261024T023931Z-9a32e921/eval_validate.stdout",
+      "stderr": "runs/cli-smoke/20261024T023931Z-9a32e921/eval_validate.stderr"
+    },
+    {
+      "name": "watch_cpu_ok",
+      "argv": [
+        "headroom",
+        "watch",
+        "--source-root",
+        "scenarios/s1_batch_too_big",
+        "--device",
+        "cpu",
+        "--max-steps",
+        "20",
+        "--max-seconds",
+        "30",
+        "--",
+        "python",
+        "train.py",
+        "--tiny",
+        "--device",
+        "cpu",
+        "--steps",
+        "2"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 2.9929086351767182,
+      "stdout": "runs/cli-smoke/20261024T023931Z-9a32e921/watch_cpu_ok.stdout",
+      "stderr": "runs/cli-smoke/20261024T023931Z-9a32e921/watch_cpu_ok.stderr"
+    },
+    {
+      "name": "watch_cpu_exit7",
+      "argv": [
+        "headroom",
+        "watch",
+        "--source-root",
+        "runs/cli-smoke/20261024T023931Z-9a32e921/exit-source",
+        "--device",
+        "cpu",
+        "--max-seconds",
+        "30",
+        "--",
+        "python",
+        "exit7.py"
+      ],
+      "exit_code": 1,
+      "wall_seconds": 2.2950322199612856,
+      "stdout": "runs/cli-smoke/20261024T023931Z-9a32e921/watch_cpu_exit7.stdout",
+      "stderr": "runs/cli-smoke/20261024T023931Z-9a32e921/watch_cpu_exit7.stderr",
+      "observation": "Fixture creation lost string quotes in the SSH shell; SyntaxError exit1 was faithfully preserved. Original fixture/log retained; separate corrected fixture tested below."
+    },
+    {
+      "name": "fix_missing_profile",
+      "argv": [
+        "headroom",
+        "fix",
+        "scenarios/s1_batch_too_big/train.py",
+        "--runtime-profile",
+        "runs/cli-smoke/20261024T023931Z-9a32e921/absent-profile.json",
+        "--device",
+        "cpu",
+        "--max-seconds",
+        "30",
+        "--no-research"
+      ],
+      "exit_code": 78,
+      "wall_seconds": 0.9421028990764171,
+      "stdout": "runs/cli-smoke/20261024T023931Z-9a32e921/fix_missing_profile.stdout",
+      "stderr": "runs/cli-smoke/20261024T023931Z-9a32e921/fix_missing_profile.stderr"
+    },
+    {
+      "name": "watch_cpu_exit7_corrected",
+      "argv": [
+        "headroom",
+        "watch",
+        "--source-root",
+        "runs/cli-smoke/20261024T023931Z-9a32e921/exit-source",
+        "--device",
+        "cpu",
+        "--max-seconds",
+        "30",
+        "--",
+        "python",
+        "exit7-fixed.py"
+      ],
+      "exit_code": 7,
+      "wall_seconds": 2.3122546770609915,
+      "stdout": "runs/cli-smoke/20261024T023931Z-9a32e921/watch_cpu_exit7_corrected.stdout",
+      "stderr": "runs/cli-smoke/20261024T023931Z-9a32e921/watch_cpu_exit7_corrected.stderr"
+    }
+  ],
+  "watches": {
+    "watch_cpu_ok": {
+      "cli_exit": 0,
+      "original_exit": 0,
+      "triggered": false,
+      "device": "cpu",
+      "cleanup_verified": true,
+      "watch_report": "/home/xiaodouzi/workspace/headroom/runs/watch/7a78a70c10ab4a0ea18f5a236836a569/watch.md"
+    },
+    "watch_cpu_exit7_corrected": {
+      "cli_exit": 7,
+      "original_exit": 7,
+      "triggered": false,
+      "device": "cpu",
+      "cleanup_verified": true,
+      "watch_report": "/home/xiaodouzi/workspace/headroom/runs/watch/752334de230f43dbb9a0d2f6a139401f/watch.md"
+    }
+  },
+  "fix": {
+    "run_id": "670f15664c0e4c35b79f9abbe4e3e591",
+    "report_json": "/home/xiaodouzi/workspace/headroom/runs/jobs/670f15664c0e4c35b79f9abbe4e3e591/report.json",
+    "status": "needs_human",
+    "calls": 0
+  },
+  "local_api_report": "runs/cli-smoke/20261024T023931Z-9a32e921/local-api.json",
+  "contract_tests": {
+    "command": [
+      ".venv/bin/pytest",
+      "-q",
+      "tests/test_cli.py",
+      "tests/test_evaluation.py"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 1.6631877289619297,
+    "log": "runs/cli-smoke/20261024T023931Z-9a32e921/contract-tests.log",
+    "passed": 58
+  },
+  "model_or_tavily_requests_performed_by_this_smoke": 0,
+  "gpu_workloads_performed_by_this_smoke": 0,
+  "known_fixture_failure": "Initial exit7 fixture had a quoting-induced SyntaxError/exit1; preserved separately; corrected fixture returned7",
+  "source_sha256": [
+    {
+      "path": "headroom/cli.py",
+      "sha256": "f800ea552429be74e289aba9016749c1bcb7ff69057c02bef4c3e9033a0f1d9f"
+    },
+    {
+      "path": "tests/test_cli.py",
+      "sha256": "0d06bedf6da23c4cc0edec9095a90c0fbfbb9b507f3500d71a9fc60e99f328ee"
+    },
+    {
+      "path": "headroom/evaluation.py",
+      "sha256": "76219a6816281907717f3f9b9aebf93892997b253c5932eacf0d9fa4e6e95050"
+    },
+    {
+      "path": "eval/scenario_set.yaml",
+      "sha256": "c494865118285ab75a96bf2eeacbc67b1048d962ba5d9ebecadd0ff0d47a637d"
+    },
+    {
+      "path": "runs/cli-smoke/20261024T023931Z-9a32e921/commands.json",
+      "sha256": "c2fc67969c9f3086b5f463945ba7f8a8d2a80b8dc6c94cb3085433a24ece9126"
+    },
+    {
+      "path": "runs/cli-smoke/20261024T023931Z-9a32e921/local-api.json",
+      "sha256": "96a750dcaf891be5af98343d8a21b1c5dfd96c209c8d8f031c93139cf59b226b"
+    },
+    {
+      "path": "runs/cli-smoke/20261024T023931Z-9a32e921/contract-tests.log",
+      "sha256": "2b8c7f97b29918ed31d369a79e0241ce92478e098bf816ac3e087d1cdba0fece"
+    },
+    {
+      "path": "reports/submission-readiness-20261024.md",
+      "sha256": "58aba5d702aec5f0433a3c2c3b6b9b00c70051519cfb4a1c0498675dc5ef132f"
+    }
+  ],
+  "publication_note": {
+    "change": "Source-hash mappings are path/sha256 rows; cache_key fields are named cache_query_sha256. Digest values and measured results are unchanged. This prevents generic API-key heuristics from confusing SHA256 identifiers with credentials.",
+    "original_server_copy": "reports/runs/publication-originals-20261024/cli-api-smoke-20261024T023931Z.json",
+    "original_sha256": "226cdd7542b3e9822b9e0449d7f847a14eaae82bc1d8e186a0c4b85696618838"
+  }
+}

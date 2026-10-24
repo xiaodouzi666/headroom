@@ -3,7 +3,8 @@
 Nebius requirements below were documented on 2026-10-23; its key and promotional
 credits remain unverified, and troubleshooting is deferred at Frank's request.
 Tavily was verified live on 2026-10-24: its existing key is configured in the
-server .env (0600), T0.5 passed, and the free-plan counter is 3/1,000 credits used.
+server .env (0600), T0.5 passed, and the free-plan counter is 6/1,000 credits used after the real Research component check (994 remain).
+See reports/tavily-account-after-research-20261024.json.
 Pay-as-you-go and auto-upgrade remain off. No secret value is stored here.
 
 Headroom requires real NVIDIA-model runtime calls through Nebius Token Factory. Its remaining code can run on azuki; an AI Cloud GPU rental is not required. Source: https://nebiusglobalaihackathon.devpost.com/details/faqs
@@ -21,3 +22,21 @@ T0.1 remains incomplete until the Nebius credential is verified and Frank confir
 at least $25 available credit and its spending boundary. Nebius live probes remain
 paused. Tavily has a separate completed live acceptance record; its usage does not
 prove that Nebius is configured. If billing/country/credits block signup, the official FAQ directs participants to Nebius support: https://discord.com/invite/eXYTGhgnhK .
+
+## Self-funding versus promotional approval
+
+Checked against official Token Factory billing/quickstart on 2026-10-24. If only Builders or hackathon promotional-credit approval is pending, normal paid Token Factory onboarding can be used independently: activate the billing account, obtain an API key and fund usage. The documentation says manual top-ups become available immediately; it does not establish that payment bypasses account-level review or eligibility restrictions.
+
+No recharge was authorized or performed by the question about feasibility. Current billing allows negative balances and automatically charges the card at the configured threshold or at the next monthly settlement. A $25 top-up is not a $25 account spending cap. The project also requires explicit per-run/daily/total spending boundaries and reviewed real model/pricing evidence before paid inference.
+
+Sources: https://docs.tokenfactory.nebius.com/other-capabilities/billing-new and https://docs.tokenfactory.nebius.com/quickstart . No minimum top-up amount was verified; use the actual console amount.
+
+## Prepared hidden-input importer on azuki
+
+Once an existing Token Factory API key is available, the owner can run:
+
+```sh
+ssh -t -p 40022 xiaodouzi@azuki.ubj.ink 'python3 /home/xiaodouzi/workspace/headroom/.cache/setup/import_nebius_key.py'
+```
+
+Input is hidden and the key is never printed. This server-only ignored helper refuses to overwrite an existing key or write to a nonregular/nonprivate `.env`, preserves the Tavily entry and writes atomically with mode0600. Its syntax was checked; it has not been run with a Nebius key. Credential presence alone does not verify service access, model availability, balance, or spending authorization. The helper does not create a key, top up an account or call the API.

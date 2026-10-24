@@ -212,3 +212,42 @@ def validate_diagnosis(
         requires_supplement=insufficient,
         supplement_request=supplement,
     )
+
+
+def diagnose_with_router(
+    router,
+    evidence_markdown: str,
+    *,
+    evidence: Mapping[str, Any],
+    goal: str,
+    policy: Mapping[str, Any],
+    required_saving_gb: float | None = None,
+    max_supplements: int = 1,
+) -> DiagnosisValidation:
+    """Call Ultra through the supplied budgeted router; keep invalid evidence invalid.
+
+    Only an insufficient-savings response can request one bounded supplement by
+    default. Credentials, pricing and budget authorization belong to the caller.
+    """
+    if type(max_supplements) is not int or not 0 <= max_supplements <= 3:
+        raise ValueError("max_supplements must be between 0 and 3")
+    messages = build_diagnosis_messages(
+        evidence_markdown, goal=goal, policy=policy, required_saving_gb=required_saving_gb
+    )
+    for attempt in range(max_supplements + 1):
+        response = router.chat("diagnose", messages, Diagnosis, max_tokens=4000)
+        result = validate_diagnosis(
+            response.parsed,
+            evidence=evidence,
+            policy=policy,
+            required_saving_gb=required_saving_gb,
+        )
+        if not result.requires_supplement or attempt == max_supplements:
+            return result
+        messages.extend(
+            [
+                {"role": "assistant", "content": json.dumps(response.parsed, allow_nan=False)},
+                {"role": "user", "content": result.supplement_request},
+            ]
+        )
+    raise AssertionError("Diagnosis loop must return")

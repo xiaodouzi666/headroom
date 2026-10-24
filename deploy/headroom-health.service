@@ -1,0 +1,8 @@
+[Unit]
+Description=Check Headroom health locally
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/xiaodouzi/workspace/headroom
+ExecStart=/home/xiaodouzi/workspace/headroom/.venv/bin/python scripts/check_health.py
+UMask=0077

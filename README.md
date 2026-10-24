@@ -1,11 +1,81 @@
 # Headroom
 
-Autoresearch for GPU memory. Implementation is in progress; no repair success is claimed yet.
+Autoresearch for GPU memory: capture a PyTorch workload, explain its memory use, propose a patch, and measure whether the change works.
 
-The project will diagnose PyTorch memory evidence, propose patches using NVIDIA Nemotron on
-Nebius Token Factory, and verify each candidate on real GPU hardware.
+**Built with NVIDIA Nemotron 3 (Ultra/Super/Nano) on Nebius Token Factory.** The integration is implemented; authenticated model runs and repair benchmarks are still pending account setup.
+**Web research powered by Tavily.** Version-specific search/extraction and cache reuse have been exercised with the real service.
 
-See `docs/PLAN.md` for the unchanged v4.2 plan and `PROGRESS.md` for acceptance evidence.
-All development and runtime assets live on azuki.
+Public demo: pending approved hostname and deployment. Local app: `headroom serve`.
+Video: pending a verified repair and the owner's recording.
+[Current results](docs/RESULTS.md) · [Task status](PROGRESS.md) · [Original plan](docs/PLAN.md)
 
-License: Apache-2.0.
+## How it works
+
+```mermaid
+flowchart LR
+  Input[Script or pinned repository] --> Lab[Isolated GPU baseline]
+  Lab --> Evidence[Allocator history and source evidence]
+  Evidence --> Ultra[Nemotron Ultra diagnosis]
+  Tavily[Versioned documentation via Tavily] --> Super
+  Ultra --> Super[Nemotron Super patch]
+  Evidence --> Nano[Nemotron Nano stack labels]
+  Super --> Verify[Same-seed validation]
+  Verify --> Search[Keep or revert]
+  Search --> Ultra
+  Search --> Report[Patch, report and Pareto configurations]
+```
+
+Each candidate keeps its original baseline, source snapshot, logs and patch. The search makes at most six rounds. A candidate cannot pass by shrinking the model or shortening training. Missing numerical, timing or cost evidence stays unknown. Failed candidates remain inspectable.
+
+| Service | Role | Current evidence |
+|---|---|---|
+| Token Factory / Nemotron Ultra | Evidence-grounded diagnosis and repair planning | Offline SDK/schema integration; live capability, long-input and cost probes pending |
+| Token Factory / Nemotron Super | Bounded patch generation and repair | Real local diff/apply/compile checks with offline model responses |
+| Token Factory / Nemotron Nano | Top-stack labels with a 0.02 USD sub-budget | Offline labels and budget checks; eight-scenario live agreement pending |
+| Tavily | Search plus exact versioned documentation extraction | Real PyTorch 2.5 checkpoint/allocator queries and zero-credit cache hits |
+
+## Quickstart
+
+Run on a Linux NVIDIA/Docker host with Python 3.12, uv, Docker GPU support and sufficient disk. All project assets for this development instance live on azuki.
+
+```bash
+git clone https://github.com/xiaodouzi666/headroom.git && cd headroom
+uv sync
+bash scripts/build_lab_image.sh
+cp .env.example .env && chmod 600 .env
+uv run headroom fix scenarios/s1_batch_too_big/train.py
+```
+
+Without a reviewed live profile, the final command exits 78 and writes a partial report before GPU/model work. Configure the private key, confirmed credit/spending authorization and actual model/pricing/capability evidence using [Runtime setup](docs/RUNTIME.md). No payment is initiated by these commands.
+
+For capture-only work, use `uv run headroom snapshot scenarios/s1_batch_too_big/train.py`. To validate the evaluation manifest without executing anything, use `uv run headroom eval --validate-only`; `--dry-run` actually runs all baselines on the GPU and makes no model request.
+
+## App and replay
+
+Build `web/` with Node 24 and `npm ci && npm run build`, then `uv run headroom serve` opens a localhost service on port 8000. It provides example/script submission, a durable event timeline, before/after evidence, diff, verification, Sources and downloads. Public deployment is separate.
+
+Five curated GPU **baseline** replays are available on the development server. They are labeled baseline-only: no diagnosis, patch or repair success is fabricated. Rebuild them from existing captures with `uv run python scripts/curate_baseline_replays.py`. A clean clone has no private run data and therefore no replays until evidence is generated/imported.
+
+Actual local interface, with account setup still visible:
+
+![Headroom workspace](docs/media/ui-20261024T025659Z-baseline-only/home-desktop.png)
+
+[Baseline-only Run screenshot](docs/media/ui-20261024T025659Z-baseline-only/baseline-run-s1-desktop.png) · [Measured UI validation](reports/lighthouse-20261024.json)
+
+## Results and limitations
+
+[RESULTS](docs/RESULTS.md) separates measured baselines, component tests and pending model-driven repairs. No repair success rate or ablation win is claimed yet. The original s2 optimizer-state gate remains failed: 39.8715% versus 40%. Its baseline also already fits 22 GB; the required two-round repair gate is unresolved.
+
+The Lab executes watched commands only in Docker with no network, read-only source/dependencies, bounded resources and verified cleanup. Static policy is defense in depth, not proof that arbitrary hostile programs are safe. Watch observes Python scripts/modules, `-c`, interpreter options and generic argv, including an explicitly requested container shell, while preserving command arguments and exit codes. Automatic repair needs a replayable Python script; other CUDA OOM entrypoints return `needs_human`, and missing instrumentation is reported as unknown. Distributed captures are not aggregate memory evidence. The independent subprocess comparison is blocked by current user/network namespace permissions; see [Watch and HF](docs/WATCH_HF.md). Captures of shared GPUs cannot establish a speed improvement. Random-initialized repository/library fixtures are not evidence of downstream task quality.
+
+## Related work
+
+PyTorch allocator snapshots supply the low-level evidence. nanoGPT supplies a fixed real training entrypoint; Transformers supplies Trainer, ViT and T5 fixtures. Headroom adds the diagnosis–patch–verification loop and recorded tradeoffs. See [Architecture](docs/ARCHITECTURE.md) for boundaries and [Feedback](docs/FEEDBACK.md) for actual provider observations.
+
+## Development
+
+`uv run pytest -q`, `uv run ruff check .`, `uv run ruff format --check .`, and `gitleaks detect --redact` are the backend checks. Frontend checks are `npm test`, `npm run typecheck`, and `npm run build`. Live model or GPU acceptance is never inferred from mocked tests.
+
+[API](docs/API.md) · [Verification](docs/VERIFY.md) · [Search](docs/SEARCH.md) · [Repositories](docs/REPOSITORIES.md) · [Evaluation](docs/EVALUATION.md) · [Deployment](docs/DEPLOYMENT.md)
+
+License: [Apache-2.0](LICENSE). Thanks to PyTorch, nanoGPT, Transformers, Nebius, NVIDIA and Tavily. Third-party libraries retain their respective licenses.

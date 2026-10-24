@@ -1,0 +1,10 @@
+# Template only: no tunnel is created by this repository.
+# Set a real tunnel UUID and the operator's existing private credential path.
+tunnel: REPLACE_WITH_TUNNEL_UUID
+credentials-file: /PRIVATE/EXISTING/TUNNEL-CREDENTIALS.json
+ingress:
+  - hostname: REPLACE_WITH_APPROVED_HOSTNAME
+    service: http://127.0.0.1:8000
+    originRequest:
+      connectTimeout: 10s
+  - service: http_status:404

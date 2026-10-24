@@ -1,0 +1,76 @@
+{
+  "created_at": "2026-10-24T03:01:17.953896+00:00",
+  "scope": "offline exact-budget arithmetic regression only",
+  "regression_before_fix": {
+    "command": ".venv/bin/pytest -q tests/test_evaluation.py -k high_precision",
+    "failed": 4,
+    "passed": 0,
+    "deselected": 44,
+    "seconds": 0.87
+  },
+  "verification_after_fix": {
+    "command": ".venv/bin/pytest -q tests/test_evaluation.py tests/test_cli.py",
+    "passed": 79,
+    "seconds": 1.32,
+    "ruff": true,
+    "diff_whitespace": true
+  },
+  "precision_digits": 256,
+  "boundary_plan": {
+    "mode": "campaign_plan",
+    "executed": false,
+    "scenarios": [
+      "s1_batch_too_big"
+    ],
+    "conditions": [
+      "full_ultra"
+    ],
+    "policies": [
+      {
+        "name": "default",
+        "policy": {
+          "allow_numerics_change": false,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "max_throughput_regression_pct": 25
+        },
+        "same_effective_policy_as": [
+          "strict"
+        ]
+      },
+      {
+        "name": "strict",
+        "policy": {
+          "allow_numerics_change": false,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "max_throughput_regression_pct": 25
+        },
+        "same_effective_policy_as": [
+          "default"
+        ]
+      }
+    ],
+    "multipliers": {
+      "scenarios": 1,
+      "conditions": 1,
+      "policies": 2
+    },
+    "planned_pipeline_runs": 2,
+    "provider_api_attempts": null,
+    "provider_api_attempts_note": "Pipeline count is not API-call count: annotation, diagnosis supplements, patch attempts, retries and research vary; every actual model attempt remains budgeted.",
+    "sum_of_configured_run_caps_usd": "0.20000000000000000000000000002",
+    "campaign_cap_usd": "0.2",
+    "daily_cap_usd": "12",
+    "can_reserve_all_run_caps": false,
+    "per_run_cap_usd": "0.10000000000000000000000000001",
+    "authorization_expanded": false,
+    "policy_note": "Original T2.8 says default versus allow_numerics_change=false. Current default and strict are equivalent; naming them separately does not resolve that ambiguity. allow_precision is an explicit optional permission."
+  },
+  "source_sha256": {
+    "headroom/evaluation.py": "1779457f6c9c3d5a006b78e66dd664f0518ebc3744641f4e87bfbb5c87718093",
+    "tests/test_evaluation.py": "4b10bdbad9656f147b82c6cc0e7f92a75ca3288ccaa3b7166ca248fbb13f3602"
+  },
+  "live_api_calls": 0,
+  "gpu_workloads": 0
+}

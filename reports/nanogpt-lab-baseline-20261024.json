@@ -1,0 +1,228 @@
+{
+  "scope": "pinned nanoGPT repository preparation and Lab baseline only",
+  "repair_acceptance": false,
+  "repository": {
+    "repository": "https://github.com/karpathy/nanoGPT.git",
+    "ref": "3adf61e154c3fe3fca428ad6bc3818b27a3b8291",
+    "entrypoint": "train.py",
+    "script_args": [
+      "--dataset=headroom_synthetic",
+      "--batch_size=32",
+      "--block_size=1024",
+      "--n_layer=24",
+      "--n_head=16",
+      "--n_embd=1024",
+      "--gradient_accumulation_steps=1",
+      "--max_iters=20",
+      "--eval_iters=1",
+      "--eval_interval=1000",
+      "--compile=False",
+      "--dtype=float32",
+      "--decay_lr=False",
+      "--always_save_checkpoint=False",
+      "--out_dir=/tmp/nanogpt-out"
+    ],
+    "source_manifest": {
+      "files": {
+        "configurator.py": {
+          "sha256": "5cc23aca26b4ab3c0d9e5f82740f4781f9444f42718c15abcee70d93c5aabe8f",
+          "bytes": 1758
+        },
+        "model.py": {
+          "sha256": "7c01703240dbec5d554527dc666e35b3df8391d0b117fddc07afcf325a21d11c",
+          "bytes": 16345
+        },
+        "train.py": {
+          "sha256": "413bd97b40bb400a2a0d01230e2946f056c263ebac1b7281c2367d964a123085",
+          "bytes": 14857
+        }
+      },
+      "skipped": [],
+      "total_bytes": 32960
+    },
+    "dataset": {
+      "kind": "synthetic_uint16",
+      "seed": 1337,
+      "sha256": {
+        "train": "33b9c92bced223a2efe20aaa4fae4311f2dcb5be5189c3755f3215c099b8403c",
+        "val": "7add555e1e0a9b9da1084c953804b5e1c91a0b18f67dcd202b18838f6e710b32"
+      }
+    },
+    "argument_rewrites": [
+      "Historical /input mapped to copied data/headroom_synthetic"
+    ],
+    "code_executed": false
+  },
+  "run": {
+    "protocol": "headroom.lab.v1",
+    "parameter_count": 354599936,
+    "parameter_count_complete": true,
+    "parameter_count_source": "lab_module_parameter_hooks",
+    "parameter_count_observations": [
+      354599936,
+      354599936,
+      354599936
+    ],
+    "root_forward_parameter_counts": [
+      354599936,
+      354599936,
+      354599936
+    ],
+    "parameter_count_coverage": "Unique live Parameters registered on nn.Module during capture, plus Parameters seen via root forward module.parameters(); sampled at root forwards and optimizer updates. Tied parameters count once; no tensor is retained. Standalone tensors, pre-capture unused modules, and no-root-forward construction failures are not covered. Changing observed counts are incomplete. This is runtime evidence, not authentication against a target that deliberately tampers with hooks.",
+    "schema_version": 1,
+    "capture_complete": true,
+    "execution_status": "oom",
+    "status": "oom",
+    "termination_reason": "oom",
+    "pid": 1,
+    "is_primary": true,
+    "steps": 0,
+    "loss_series": [],
+    "step_records": [],
+    "peak_allocated_bytes": 24705183744,
+    "peak_reserved_bytes": 24752685056,
+    "peak_alloc_gb": 24.705183744,
+    "peak_reserved_gb": 24.752685056,
+    "step_ms_median": null,
+    "timing_note": "Intervals between completed optimizer updates; first includes target setup",
+    "wall_seconds": 8.424004018073902,
+    "snapshot": {
+      "available": true,
+      "trace_count": 2575
+    },
+    "snapshot_trace_count": 2575,
+    "oom": {
+      "requested_bytes": 536870912,
+      "free_bytes": 105775104,
+      "requested_source": "allocator_oom_event",
+      "free_source": "allocator_oom_event",
+      "requested_gb": 0.536870912,
+      "free_gb": 0.105775104,
+      "traceback": "Traceback (most recent call last):\n  File \"/runtime/headroom/lab/run_target.py\", line 45, in main\n    runpy.run_path(str(script), run_name=\"__main__\")\n  File \"<frozen runpy>\", line 286, in run_path\n  File \"<frozen runpy>\", line 98, in _run_module_code\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/source/train.py\", line 300, in <module>\n    logits, loss = model(X, Y)\n                   ^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1736, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1844, in _call_impl\n    return inner()\n           ^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1790, in inner\n    result = forward_call(*args, **kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/source/model.py\", line 181, in forward\n    x = block(x)\n        ^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1736, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1844, in _call_impl\n    return inner()\n           ^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1790, in inner\n    result = forward_call(*args, **kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/source/model.py\", line 105, in forward\n    x = x + self.mlp(self.ln_2(x))\n            ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1736, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1844, in _call_impl\n    return inner()\n           ^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1790, in inner\n    result = forward_call(*args, **kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/source/model.py\", line 89, in forward\n    x = self.gelu(x)\n        ^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1736, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1844, in _call_impl\n    return inner()\n           ^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1790, in inner\n    result = forward_call(*args, **kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/activation.py\", line 734, in forward\n    return F.gelu(input, approximate=self.approximate)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntorch.OutOfMemoryError: CUDA out of memory. Tried to allocate 512.00 MiB. GPU 0 has a total capacity of 23.55 GiB of which 100.88 MiB is free. Including non-PyTorch memory, this process has 23.38 GiB memory in use. Of the allocated memory 23.01 GiB is allocated by PyTorch, and 45.30 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)\n"
+    },
+    "shared_gpu": false,
+    "gpu": {
+      "before_cuda_initialization": {
+        "returncode": 0,
+        "stdout": "",
+        "stderr": "",
+        "processes": []
+      },
+      "device_query": {
+        "returncode": 0,
+        "stdout": "0, NVIDIA GeForce RTX 3090 Ti, 595.99.02, 24564, 24055\n",
+        "stderr": ""
+      },
+      "at_capture_end": {
+        "returncode": 0,
+        "stdout": "1, /opt/venv/bin/python, 23946\n",
+        "stderr": "",
+        "processes": [
+          {
+            "pid": "1",
+            "process_name": "/opt/venv/bin/python",
+            "used_memory_mib": "23946"
+          }
+        ]
+      },
+      "shared_gpu_basis": "compute processes before capture CUDA initialization"
+    },
+    "env": {
+      "pid": 1,
+      "is_primary": true,
+      "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+      "torch": "2.5.1+cu124",
+      "cuda": "12.4",
+      "device": "cuda",
+      "seed": 1337,
+      "max_steps": 20,
+      "max_seconds": 90.0,
+      "PYTORCH_CUDA_ALLOC_CONF": null,
+      "CUDA_VISIBLE_DEVICES": "0",
+      "seeded": {
+        "python": true,
+        "torch": true,
+        "numpy": true
+      },
+      "driver_query": {
+        "returncode": 0,
+        "stdout": "0, NVIDIA GeForce RTX 3090 Ti, 595.99.02, 24564, 24055\n",
+        "stderr": ""
+      },
+      "deterministic_algorithms": true,
+      "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+      "gpu_name": "NVIDIA GeForce RTX 3090 Ti",
+      "gpu_total_memory_bytes": 25283526656,
+      "cudnn": 90100
+    },
+    "errors": [],
+    "exception": {
+      "type": "OutOfMemoryError",
+      "message": "CUDA out of memory. Tried to allocate 512.00 MiB. GPU 0 has a total capacity of 23.55 GiB of which 100.88 MiB is free. Including non-PyTorch memory, this process has 23.38 GiB memory in use. Of the allocated memory 23.01 GiB is allocated by PyTorch, and 45.30 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)"
+    },
+    "run_id": "5e5566267e7b45a3a7e6f75fe738ed08",
+    "run_dir": "/home/xiaodouzi/workspace/headroom/runs/nanogpt-lab-validation/5e5566267e7b45a3a7e6f75fe738ed08",
+    "artifact_dir": "/home/xiaodouzi/workspace/headroom/runs/nanogpt-lab-validation/5e5566267e7b45a3a7e6f75fe738ed08/artifacts",
+    "container_name": "headroom-lab-5e5566267e7b45a3a7e6f75fe738ed08",
+    "cleanup_verified": true,
+    "gpu_observation_complete": true,
+    "started_at": "2026-10-24T02:31:00.883076+00:00",
+    "execution": {
+      "timed_out": false,
+      "returncode": 42,
+      "log_limit_bytes_per_stream": 8388608,
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Paused": false,
+        "Restarting": false,
+        "OOMKilled": false,
+        "Dead": false,
+        "Pid": 0,
+        "ExitCode": 42,
+        "Error": "",
+        "StartedAt": "2026-10-24T02:31:00.975276784Z",
+        "FinishedAt": "2026-10-24T02:31:11.247267385Z"
+      },
+      "image_id": "sha256:54accb9f005c435d13c018026781487600914cd99434a2d424136522dfed3661",
+      "cleanup_verified": true,
+      "cleanup_attempts": [
+        {
+          "operation": "stop",
+          "returncode": 0,
+          "stderr": ""
+        },
+        {
+          "operation": "kill",
+          "returncode": 1,
+          "stderr": "Error response from daemon: cannot kill container: headroom-lab-5e5566267e7b45a3a7e6f75fe738ed08: container e6918977c62e58da187740c799b18bbc1e48cace213835fde97acb6784bf84a9 is not running\n"
+        },
+        {
+          "operation": "rm",
+          "returncode": 0,
+          "stderr": ""
+        }
+      ],
+      "cleanup_inspect": {
+        "returncode": 1,
+        "stdout": "[]\n",
+        "stderr": "Error response from daemon: No such container: headroom-lab-5e5566267e7b45a3a7e6f75fe738ed08\n"
+      }
+    },
+    "gpu_before": {
+      "available": true,
+      "processes": [],
+      "devices_csv": "0, NVIDIA GeForce RTX 3090 Ti, 24564, 24055",
+      "error": ""
+    },
+    "image_id": "sha256:54accb9f005c435d13c018026781487600914cd99434a2d424136522dfed3661",
+    "gpu_after": {
+      "available": true,
+      "processes": [],
+      "devices_csv": "0, NVIDIA GeForce RTX 3090 Ti, 24564, 24055",
+      "error": ""
+    },
+    "gpu_observation_note": "Host before/after samples and the capture's sharing observation are combined; these samples do not establish continuous GPU exclusivity.",
+    "finished_at": "2026-10-24T02:31:11.362900+00:00"
+  }
+}

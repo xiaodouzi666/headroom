@@ -467,3 +467,58 @@ def run_command(
         device=device,
         allocator_conf=allocator_conf,
     )
+
+
+PYTHON_COMMANDS = frozenset(
+    {
+        "python",
+        "python3",
+        "python3.12",
+        "/opt/venv/bin/python",
+        "/opt/venv/bin/python3",
+    }
+)
+
+
+def run_argv(
+    source_root: str | Path,
+    command: Sequence[str],
+    *,
+    run_root: str | Path | None = None,
+    max_steps: int = 20,
+    max_seconds: float = 120,
+    seed: int = 1337,
+    device: str = "cuda",
+    allocator_conf: str | None = None,
+) -> dict:
+    """Observe arbitrary argv inside Docker; never interpret a host shell command.
+
+    Python descendants can opt into the existing sitecustomize capture through
+    the fixed environment. Other runtimes or -E/-I/-S may emit no capture; _run
+    retains their actual container state and does not fabricate allocator data.
+    Only commands installed in the image/venv or copied source can execute.
+    """
+    if isinstance(command, (str, bytes)) or not isinstance(command, Sequence):
+        raise TypeError("command must be an argv sequence, not a shell string")
+    if (
+        not command
+        or len(command) > 256
+        or not command[0]
+        or any(not isinstance(arg, str) or "\x00" in arg for arg in command)
+        or sum(len(arg.encode("utf-8")) for arg in command) > 65536
+    ):
+        raise ValueError("command requires nonempty argv within 256 entries and 64 KiB")
+    argv = list(command)
+    if argv[0] in PYTHON_COMMANDS:
+        argv[0] = "/opt/venv/bin/python"
+    return _run(
+        source_root=Path(source_root).resolve(strict=True),
+        command=argv,
+        script_relative=None,
+        run_root=run_root,
+        max_steps=max_steps,
+        max_seconds=max_seconds,
+        seed=seed,
+        device=device,
+        allocator_conf=allocator_conf,
+    )
