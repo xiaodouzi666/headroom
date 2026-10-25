@@ -18,18 +18,18 @@ All work, caches, runs, and media remain on azuki.
 | T1.2 | 证据包生成（P0，~3h） | 实现完成，验收未通过 | reports/t1.2-acceptance.json; s1/s2/s4/s5 artifacts and real peak replay verified; s2 optimizer-state fraction 39.8715% < original 40% |
 | T1.3 | LLM 客户端与路由（P0，~1.5h） | 已验收 | reports/t1.3-acceptance-20261025.json; actual client/router Super schema passed; authentic53-record Ultra evidence returned268920 server input tokens; both1attempt/exact ID/known cost total0.2695014USD; free-text fragmentation overclaim recorded, not diagnosis acceptance |
 | T1.4 | Diagnose（Ultra）（P0，~2.5h） | 首因7/8及全部引用有效；完整验收未通过 | reports/live-campaign-20261025/diagnosis-attempt4-review.json; v5八次真实响应stop/0 reasoning，cost0.328770USD；s1/s6禁止改动及s7需补充信息保留；原6/8与政策门未改 |
-| T1.5 | Patch（Super）与应用（P0，~2.5h） | 真实合成场景3/8应用编译；原≥6/8未通过 | v6 source spans:9 attempts=5applied+compiled/2syntax rejected/2response rejected;synthetic s1/s3/s4 only; nano2 extra; all original limits retained |
-| T1.6 | Verify 与比较（P0，~2h） | s3真实修复通过；s1仍未通过 | v6 s3 20updates/73.378694%reduction/lossdelta0/unchangedparams/cleanreapply; s1 candidateOOM0steps; original gates unchanged |
-| T1.7 | 单轮编排 + 存储 + 事件（P0，~2h） | 真实核心事件与九条CLI执行链已核；全零退出门未通过 | v6 literal CLI9/9verified,1exit0(s3)/8exit78; PID/request/source/rawresult bindings verified |
-| T1.8 | 报告（P0，~1.5h） | 九报告数字检查通过；s3选中补丁独立重应用通过 | mvp-v6-audit-v2.json and mvp-v6-s3-clean-reapply.json; selected s3candidate bytes exactly reproduced |
-| T1.9 | 真实仓库：nanoGPT（P0，~2h） | 真实nanoGPT已执行；修复门未通过 | v6 two applied candidates incomplete,needs_human,targetfalse,actualCLI78,conservative0.12194076USD;22GB/diff/loss gates not accepted |
+| T1.5 | Patch（Super）与应用（P0，~2.5h） | v7真实3/8应用编译；原≥6/8未通过 | v7 three attempts all applied/compiled(s4/s7/s8); source-span conversion/application/selected chains independently verified; original<=3fixers/4000tokens retained |
+| T1.6 | Verify 与比较（P0，~2h） | 历史v6 s3通过；v7 s8标量门通过；s1仍未通过 | v7 s8 20updates/96.0714217%reduction/scalaridentical/paramsunchanged; pairingunknown; v6s3 fullpairing success preserved; v7s1 no candidate |
+| T1.7 | 单轮编排 + 存储 + 事件（P0，~2h） | 九条真实CLI链已核；原s1事件及全零退出门未通过 | v7 9CLI chainsverified; s8exit0/others78; s1 stopsbeforepatch and full ordered eventgate notpassed |
+| T1.8 | 报告（P0，~1.5h） | 九报告数字及s8选中补丁干净重应用通过 | mvp-v7-audit-v2.json and mvp-v7-s8-clean-reapply.json; publicpatch reapplies to exact GPUcandidate bytes |
+| T1.9 | 真实仓库：nanoGPT（P0，~2h） | 真实nanoGPT已执行；修复门未通过 | v7 realCLI32/1 but modelplan defaults12/40;needs_human/no candidate/CLI78;cost0.063958528USD |
 | T1.10 | Honesty 与安全（P0，~1h） | 静态与CPU真实性检查通过；完整修复待办 | docs/PATCH.md; model shrink/truncation/escape checks and observed parameter counts |
 | T1.11 | Docker Lab（P1，仅 `DOCKER_GPU=ok`，~1.5h） | 自有Python镜像、干净目录CPU及隔离组件通过 | docs/LAB_RUNTIME.md; hash-locked image-owned Python3.12, verified immutable image ID, no host venv mount; clean candidate tree script/module each3updates with capture/cleanup verified |
-| T1.12 | MVP 整体验收 + 报告（P0，~1.5h，10/24 晚） | v6目标1/9未通过；最后授权v7回归进行中 | v6 all9live/32calls,1target,6validfirstcauses,9literalCLI chains; last additional iteration3/3 not yet run |
+| T1.12 | MVP 整体验收 + 报告（P0，~1.5h，10/24 晚） | 追加三轮已用完；v7目标1/9未通过，待Frank决定 | v7 all9live/25calls; target1/9; cause raw6/valid4true3false2unknown;9CLIchains 1zero8exit78; originalPLAN0.6 stop |
 | T2.1 | 显存求解循环：keep-or-revert 搜索 + Pareto 前沿（P0，~3h） | 有界搜索与逐轮验证反馈完成；真实验收待办 | docs/SEARCH.md; selected state survives revert; per-round verification-feedback.json exposes actual loss/check/error facts to later rounds; original s2/bf16 policy gates unchanged |
 | T2.2 | Tavily Research（P0，~2h） | 真实模型研究与缓存已测；指定Sources门未通过 | v4 research9rows/8API/7credits;s4PyTorch2.5checkpoint extract;s3->s5cache0API0credits;s1checkpoint/s5CUDA memorySources absent |
 | T2.3 | Nano 栈标注（P1，~1h） | 真实8场景已测；覆盖和一致率未通过 | v4 4/8complete;completed outputs3/40heuristic matches;failed4not excluded;all<=0.02certified upper |
-| T2.4 | 预算守卫与成本面板（P0，~45min） | 真实费用链复核通过；原额外预算门待办 | v6 after432attempts settled/67runs closed/0pending unresolved halt; runtimeknown4.482150040/conservative4.512781420/remaining5.486867620;original.05/.1 cases unexecuted |
+| T2.4 | 预算守卫与成本面板（P0，~45min） | 真实费用链复核通过；原额外预算门待办 | 457settledattempts/76closedruns/0pending unresolved halt; runtimeconservative4.968399436/remaining5.031249604;original.05/.1 cases unexecuted |
 | T2.5 | HF Transformers 场景（P1，~2h） | HF场景CPU/GPU基线通过；修复待办 | reports/hf-trainer-baseline-20261024.json; real Trainer OOM; configuration-only repair gate pending |
 | T2.6 | Watch 模式（P2，~1.5h） | shell/Python启动器可定位唯一CUDA OOM子进程并重跑；真实模型修复验收待办 | docs/WATCH_HF.md; preserved multi-process inventory and selected capture binding; exact target replay; manual real GPU helper+s1 OOM selected correctly; candidate/reference each20updates passed; duplicate/OOM ambiguity and root failures rejected; no host fallback |
 | T2.7 | Docker/HF 缓存稳健性（P1）：验收：三个场景在 Docker 路径下结果与子进程路径一致（峰值差 ≤ 1%）。 | 已验收 | reports/t2.7-acceptance-20261025.json; six actual GPU arms independently audited; s1/s3/HF allocated/reserved peak differences 0% <=1%; s3 both20updates/identical losses, s1/HF genuineOOM; Docker-contained independent subprocess controller, source/image/seed/capture/cleanup verified; original hostEPERM retained |
@@ -45,7 +45,7 @@ All work, caches, runs, and media remain on azuki.
 | T4.3 | 消融 | 三条件消融工具完成；实测待办 | full Ultra / traceback+summary Ultra / full Super; no predicted gain presented as measured |
 | T4.4 | 冻结 | 待真实评测后冻结 | No v0.9-eval tag created before acceptance |
 | T5.1 | README | 五命令Quickstart与干净目录CPU通过；真实repair待办 | README.md; locked Python3.12 and self-contained Lab image; reports/portable-lab-20261024 proves script/module capture without local .venv/.env; clean-clone live fix remains pending |
-| T5.2 | docs 定稿 | 真实失败/服务体验及阶段报告已更新；最终审阅待办 | Versionedv5/v6RESULTS/phase1summaries/finance/CLI/source audits; full project acceptance remains open |
+| T5.2 | docs 定稿 | v7最终结果与交接已整理；完整项目验收未完成 | Versionedv5/v6/v7 summaries and finance/CLI/candidate audits; final-decision-20261025-v7.md; no release or submission claimed |
 | T5.3 | Devpost 描述 | Devpost本地草稿完成；未保存表单 | docs/DEVPOST.md; owner final review/submission pending |
 | T5.4 | 视频 | 视频脚本完成；待真实修复与录制 | docs/VIDEO_SCRIPT.md; <=2:50 storyboard, actual evidence required |
 | T5.5 | 首次完整提交 | 未开始 | — |
@@ -62,7 +62,7 @@ All work, caches, runs, and media remain on azuki.
 - The dedicated T1.3/T1.4 drivers and native model tool loop are implemented and have now been exercised live. Accepted client capability, partial diagnosis/research evidence and failed repair outcomes remain separately recorded below.
 - The owner authorizes remaining original-plan model work using existing gifted credit only, with no recharge/overrun. reports/live-campaign-20261025 records authorization, allocation and the enabled actual_usage profile with verified provider global/day reservations. All60 original T0.4 samples are finalized with failures retained; Ultra900k429 permanently occupies1.049344USD under the completed conservative continuation review. Runtime all-time/current UTC2026-10-24 daily ceiling is9.99964904USD, including spent usage; combined external probe plus maximum runtime day total11.82189150USD remains below12. No unknown charge is treated as zero. T1.3 is accepted; latest T1.4 v5 is7/8 exact first causes with8/8 valid references but incomplete policy/readiness. Its0.328770USD calls are known; subsequent MVP Nano missing-cache usage retained0.01644864USD and halted the runtime. Earlier v2/v3/v4 failures remain preserved.
 - Keep original failed gates and procedure conflicts visible: s2's 39.8715% optimizer fraction versus40%, default precision policy/bf16 tier. T2.7 isolation comparison is now accepted with its Docker-contained reference boundary.
-- Latest completed T1.12 v6 executed all nine cases: target1/9, raw cause7/9 (valid6), one actualCLI0/eight78, all original cost/time bounds pass. V7 remains pending; no failed run is replaced by an offline success.
+- Final authorized T1.12 v7 completed all nine: target1/9, raw cause6/9, valid4true/3false/2unknown; one actualCLI0/eight78, all original cost/time bounds pass. Additional three iterations exhausted; no failed run replaced by offline success.
 - T3.5 / Phase6 webhook delivery is implemented but disabled. The owner must select/authorize a real destination and supply public domain/Cloudflare access before deployment and delivery acceptance; no recipient message or unit installation has occurred.
 - Current requirement-by-requirement source audit found no additional independently implementable feature gap at1452d27; see reports/readiness-after-outcomes-20261024.md. This does not establish full acceptance or release readiness. Owner design, genuine repair replay/media, final review/video/submission and future dated uptime checks remain separately open.
 - No original threshold is lowered, no old run is replaced, and no evaluation/release tag is created before acceptance.
@@ -140,7 +140,7 @@ All work, caches, runs, and media remain on azuki.
 
 ## 待 Frank 决策
 
-- 历史 v4 停止点已由 Frank 明确批准额外最多 3 轮（v5/v6/v7），原阈值、策略和 gift-only/no-recharge/no-overrun 不变。v5 目标 0/9、v6 目标 1/9；最后授权 v7 已整合，完整回归进行中，尚未执行九场景。若 v7 仍未达标，按原 §0.6 停止新增修复并交付具体结果后等待 Frank 决策。
+- 追加 v5/v6/v7 已全部完成，目标分别0/9、1/9、1/9；最后v7未过原6/9门。按照原PLAN§0.6停止新增修复和后续Phase2实测，完成报告/提交/handoff后等待Frank决定。具体两种范围见reports/final-decision-20261025-v7.md；赠送额度仍可用，但未自行扩展轮数。
 
 - Ultra admission: the reviewed profile is now enabled in explicit actual_usage mode; an8192-output diagnosis still reserves the full1.073152USD verified provider bound in global/day pools, while the original0.35/0.60USD actual-cost acceptance thresholds remain unchanged. A settled call can cross its actual run threshold and must then fail/stop; the provider bound is not a minimum charge or a promise of per-call0.35USD worst-case cost. Current runtime all-time/day allocations and prior charges are recorded in reports/live-campaign-20261025. The optional local_estimate mode remains distinct and is not used for the active strict shared pool. No further authorization is pending for already authorized original-plan work within gifted credit; recharge/overrun and threshold changes remain unauthorized.
 
@@ -230,3 +230,15 @@ Audit: reports/live-campaign-20261025/mvp-v5-audit-notes.json. Preparing extensi
 - v6 source-span 侧审计 v2 修正“被静态拒绝的 candidate_dir 等于已 GPU 验证”误判；34 项审计器测试通过。新版 v6 覆盖无缺失，但两条响应解析仍未知，整体 sidecar 未通过。旧报告完整保留。
 
 - V7 final full guarded regression: 2218 passed in 560.90s, no skipped tests; 247 source entries unchanged before/after/current, original PLAN and guard unchanged. Root and independent launcher/source review passed; final live campaign pending.
+
+## MVP v7 completed — final extension 3/3
+
+
+**整体 MVP 未通过。** 固定九场景真实目标 1/9，低于原 6/9；首因类别原始匹配 6/9，加入 diagnosis.valid 后为 4 真、3 假、2 未知。真实 CLI 九条执行链全部核实，但只有 s8 退出 0，其余八项退出 78。未把部分显存改善或传输协议通过算作整体通过。
+
+本次追加授权 v5/v6/v7 共三轮已全部完成。原 PLAN §0.6 的停止边界现已触发：完成审计、报告、提交和交接后等待 Frank 决定，不自动开始 v8 或后续 Phase 2 实测。所有阈值、原场景、策略、旧 runs 和原预算池保持不变。
+
+执行源码 cb9da81405d5c4f77a5d6d9c1f7a1ee07ad27f32；campaign 为 runs/evaluation/live/20261025T033333928331Z-1b228422/campaign.json，SHA256 cb78766a21e16ba2244b371ca460ec394cd8ad85e6015548fe036f0a82b97cdb。北京时间 2026-10-25 11:33:33–11:39:10，336.93 秒；九场景完整、无质量提前终止、无预算 halt。
+
+
+V7 25calls保守0.455618016USD；runtime457attempts/76runs全settled/closed，余额5.031249604，无halt。完整回归2218passed。后续决策与交接见reports/final-decision-20261025-v7.md及reports/handoff-phase-1.md。

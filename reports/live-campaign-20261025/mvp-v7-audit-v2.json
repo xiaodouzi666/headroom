@@ -1,0 +1,1296 @@
+{
+  "audit_version": 2,
+  "cost_gate_basis": "Exact known charges or independently recomputed verified upper bounds; actual-null never changed to exact.",
+  "created_at": "2026-10-25T03:39:48.964036+00:00",
+  "limits": {
+    "denominator": 9,
+    "target_minimum": 6,
+    "first_cause_minimum": 6,
+    "per_run_cost_usd": "0.6",
+    "per_run_wall_seconds": 480,
+    "reports": 9,
+    "mvp_reclaim_reduction_pct": 20
+  },
+  "execution": {
+    "provider_calls": 0,
+    "gpu_workloads": 0,
+    "subprocesses": 0,
+    "environment_files_read": 0,
+    "database_mode": "mode=ro/query_only/consistent read transaction"
+  },
+  "scope": "T1.12 observed campaign gates; independent T1.5--T1.9 gates remain separate",
+  "original_plan_lines": {
+    "T1.5": [
+      257,
+      259
+    ],
+    "T1.6": [
+      261,
+      263
+    ],
+    "T1.7": [
+      265,
+      267
+    ],
+    "T1.8": [
+      269,
+      271
+    ],
+    "T1.9": [
+      273,
+      275
+    ],
+    "T1.12": [
+      284,
+      291
+    ]
+  },
+  "manifest_valid": true,
+  "plan_unchanged": true,
+  "status": "fail",
+  "accepted_observed_campaign_gates": false,
+  "full_plan_acceptance": null,
+  "full_plan_acceptance_note": "Independent negative controls, patch reapply and authored summary still need their own evidence.",
+  "campaign": "runs/evaluation/live/20261025T033333928331Z-1b228422/campaign.json",
+  "gates": {
+    "real_live_provenance": true,
+    "run_identity_consistent": true,
+    "source_hash_matches_manifest": true,
+    "report_json_and_markdown": true,
+    "harness_child_exit_zero": false,
+    "owned_cleanup_verified": true,
+    "cost_complete_and_consistent": true,
+    "wall_within_480_seconds": true,
+    "exact_original_9_default_full_ultra": true,
+    "original_plan_hash": true,
+    "manifest_matches_campaign": true,
+    "campaign_live": true,
+    "campaign_finished": true,
+    "per_run_requested_budget_0_6": true,
+    "at_least_6_of_9_targets": false,
+    "at_least_6_of_9_first_causes": null
+  },
+  "counts": {
+    "denominator": 9,
+    "target_true": 1,
+    "target_unknown": 0,
+    "first_cause_true": 4,
+    "first_cause_unknown": 2,
+    "reports": 9
+  },
+  "stages": {
+    "T1.5": {
+      "synthetic_denominator": 8,
+      "applied_compile_within_3_repairs_count": 3,
+      "at_least_6_of_8": null,
+      "all_super_completion_tokens_le_4000": true,
+      "forbidden_precision_negative_test": null
+    },
+    "T1.6": {
+      "s1_completed_peak_lt_24_and_equivalent": false,
+      "s3_reduction_ge_30": null,
+      "model_shrink_negative_control": null,
+      "note": "MVP reclaim >=20% does not satisfy this independent >=30% gate."
+    },
+    "T1.7": {
+      "s1_harness_child_exit_zero": false,
+      "s1_ordered_events": false,
+      "s1_events_ge_15": false,
+      "s1_llm_calls_ge_2": true,
+      "usage_equals_exact_calls_and_ledger": true,
+      "cli_frontend_invocation": "not_observed"
+    },
+    "T1.8": {
+      "all_reports_7_sections": true,
+      "all_report_numbers_have_json_provenance": true,
+      "final_patch_git_apply_check": null
+    },
+    "T1.9": {
+      "nano_completed_fit22": null,
+      "nano_loss_not_changed": false,
+      "nano_cost_le_0_8": true,
+      "nano_cost_gate_amount_usd": "0.063958528",
+      "nano_cost_gate_basis": "actual",
+      "nano_actual_cost_usd": "0.063958528",
+      "nano_changed_lines_le_60": null,
+      "nano_patch_paths_train_or_config_only": null,
+      "note": "MVP still requires <=0.6; this independent <=0.8 is not substituted."
+    },
+    "T1.12_external_artifacts": {
+      "phase_1_summary_reviewed": null,
+      "docs_results_reviewed": null,
+      "pytest_ruff_gitleaks_receipt_reviewed": null,
+      "note": "Need separately reviewed report/quality receipts; never infer from their filenames."
+    }
+  },
+  "rows": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "run_id": "77b62a3d90374a6d96ed06c11a6d573a",
+      "status": "needs_human",
+      "target": false,
+      "cause": false,
+      "first_cause": "activations",
+      "truth_status": "authored",
+      "gates": {
+        "real_live_provenance": true,
+        "run_identity_consistent": true,
+        "source_hash_matches_manifest": true,
+        "report_json_and_markdown": true,
+        "harness_child_exit_zero": false,
+        "owned_cleanup_verified": true,
+        "cost_complete_and_consistent": true,
+        "billing_evidence_complete_and_consistent": true,
+        "wall_within_480_seconds": true,
+        "markdown_7_sections": true,
+        "report_numbers_provenance": true
+      },
+      "patch_applied_any": null,
+      "selected_round": null,
+      "selected_patch_applied": null,
+      "selected_completed": null,
+      "candidate_rounds": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null,
+          "apply_compile_within_3_repairs": null
+        }
+      ],
+      "verification": {
+        "completed": null,
+        "target_met": null,
+        "peak_before": null,
+        "peak_after": null,
+        "reduction_pct": null,
+        "loss_equivalence": null,
+        "max_loss_delta": null,
+        "loss_tolerance": null,
+        "numerical_basis": null,
+        "checks": null,
+        "parameter_count_before": null,
+        "parameter_count_after": null,
+        "reference_run": null,
+        "acceptance_scope": null
+      },
+      "events_count": 14,
+      "calls_count": 2,
+      "call_checks": [
+        {
+          "cost_complete": true,
+          "actual_cost_complete": false,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+          "role": "annotate",
+          "prompt_tokens": 3643,
+          "completion_tokens": 308,
+          "cost_usd": null,
+          "cost_upper_usd": "0.0002925",
+          "cost_basis": "verified_upper_bound"
+        },
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "role": "diagnose",
+          "prompt_tokens": 32048,
+          "completion_tokens": 1583,
+          "cost_usd": "0.036797",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        }
+      ],
+      "ordered_t1_7_events": false,
+      "cost_usd": null,
+      "cost_upper_usd": "0.0370895",
+      "cost_basis": "verified_upper_bound",
+      "wall_seconds": 20.54842149000615,
+      "ledger_usage_match_basis": "New calls use exact budget_attempt_id joins; historical exact-only calls use run sum/count/cost multiset. Historical unknowns never upgraded.",
+      "cli_frontend_invocation": "not_observed",
+      "patch_changed_lines": null,
+      "patch_changed_files": null,
+      "patch_apply_check_on_original": null,
+      "patch_apply_check_note": "No subprocess is run by this audit; independent git apply --check receipt is still required."
+    },
+    {
+      "scenario_id": "s2_fp32_adamw_1b",
+      "run_id": "9561b7d956cf415bbf4b98f6950a45e0",
+      "status": "needs_human",
+      "target": false,
+      "cause": true,
+      "first_cause": "optimizer_state",
+      "truth_status": "authored",
+      "gates": {
+        "real_live_provenance": true,
+        "run_identity_consistent": true,
+        "source_hash_matches_manifest": true,
+        "report_json_and_markdown": true,
+        "harness_child_exit_zero": false,
+        "owned_cleanup_verified": true,
+        "cost_complete_and_consistent": true,
+        "billing_evidence_complete_and_consistent": true,
+        "wall_within_480_seconds": true,
+        "markdown_7_sections": true,
+        "report_numbers_provenance": true
+      },
+      "patch_applied_any": null,
+      "selected_round": null,
+      "selected_patch_applied": null,
+      "selected_completed": null,
+      "candidate_rounds": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null,
+          "apply_compile_within_3_repairs": null
+        }
+      ],
+      "verification": {
+        "completed": null,
+        "target_met": null,
+        "peak_before": null,
+        "peak_after": null,
+        "reduction_pct": null,
+        "loss_equivalence": null,
+        "max_loss_delta": null,
+        "loss_tolerance": null,
+        "numerical_basis": null,
+        "checks": null,
+        "parameter_count_before": null,
+        "parameter_count_after": null,
+        "reference_run": null,
+        "acceptance_scope": null
+      },
+      "events_count": 14,
+      "calls_count": 2,
+      "call_checks": [
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+          "role": "annotate",
+          "prompt_tokens": 6651,
+          "completion_tokens": 788,
+          "cost_usd": "0.000385428",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        },
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "role": "diagnose",
+          "prompt_tokens": 44094,
+          "completion_tokens": 1365,
+          "cost_usd": "0.048189",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        }
+      ],
+      "ordered_t1_7_events": false,
+      "cost_usd": "0.048574428",
+      "cost_upper_usd": null,
+      "cost_basis": "actual",
+      "wall_seconds": 57.071774752112105,
+      "ledger_usage_match_basis": "New calls use exact budget_attempt_id joins; historical exact-only calls use run sum/count/cost multiset. Historical unknowns never upgraded.",
+      "cli_frontend_invocation": "not_observed",
+      "patch_changed_lines": null,
+      "patch_changed_files": null,
+      "patch_apply_check_on_original": null,
+      "patch_apply_check_note": "No subprocess is run by this audit; independent git apply --check receipt is still required."
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "run_id": "52bb8129723241889337486bcb187f63",
+      "status": "needs_human",
+      "target": false,
+      "cause": false,
+      "first_cause": "retained_graph",
+      "truth_status": "authored",
+      "gates": {
+        "real_live_provenance": true,
+        "run_identity_consistent": true,
+        "source_hash_matches_manifest": true,
+        "report_json_and_markdown": true,
+        "harness_child_exit_zero": false,
+        "owned_cleanup_verified": true,
+        "cost_complete_and_consistent": true,
+        "billing_evidence_complete_and_consistent": true,
+        "wall_within_480_seconds": true,
+        "markdown_7_sections": true,
+        "report_numbers_provenance": true
+      },
+      "patch_applied_any": null,
+      "selected_round": null,
+      "selected_patch_applied": null,
+      "selected_completed": null,
+      "candidate_rounds": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null,
+          "apply_compile_within_3_repairs": null
+        }
+      ],
+      "verification": {
+        "completed": null,
+        "target_met": null,
+        "peak_before": null,
+        "peak_after": null,
+        "reduction_pct": null,
+        "loss_equivalence": null,
+        "max_loss_delta": null,
+        "loss_tolerance": null,
+        "numerical_basis": null,
+        "checks": null,
+        "parameter_count_before": null,
+        "parameter_count_after": null,
+        "reference_run": null,
+        "acceptance_scope": null
+      },
+      "events_count": 14,
+      "calls_count": 2,
+      "call_checks": [
+        {
+          "cost_complete": true,
+          "actual_cost_complete": false,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+          "role": "annotate",
+          "prompt_tokens": 7910,
+          "completion_tokens": 1058,
+          "cost_usd": null,
+          "cost_upper_usd": "0.00072852",
+          "cost_basis": "verified_upper_bound"
+        },
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "role": "diagnose",
+          "prompt_tokens": 47537,
+          "completion_tokens": 1496,
+          "cost_usd": "0.052025",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        }
+      ],
+      "ordered_t1_7_events": false,
+      "cost_usd": null,
+      "cost_upper_usd": "0.05275352",
+      "cost_basis": "verified_upper_bound",
+      "wall_seconds": 30.781129308976233,
+      "ledger_usage_match_basis": "New calls use exact budget_attempt_id joins; historical exact-only calls use run sum/count/cost multiset. Historical unknowns never upgraded.",
+      "cli_frontend_invocation": "not_observed",
+      "patch_changed_lines": null,
+      "patch_changed_files": null,
+      "patch_apply_check_on_original": null,
+      "patch_apply_check_note": "No subprocess is run by this audit; independent git apply --check receipt is still required."
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "run_id": "845f46be0f124c9c9dba4944feb9353f",
+      "status": "needs_human",
+      "target": false,
+      "cause": true,
+      "first_cause": "retained_graph",
+      "truth_status": "authored",
+      "gates": {
+        "real_live_provenance": true,
+        "run_identity_consistent": true,
+        "source_hash_matches_manifest": true,
+        "report_json_and_markdown": true,
+        "harness_child_exit_zero": false,
+        "owned_cleanup_verified": true,
+        "cost_complete_and_consistent": true,
+        "billing_evidence_complete_and_consistent": true,
+        "wall_within_480_seconds": true,
+        "markdown_7_sections": true,
+        "report_numbers_provenance": true
+      },
+      "patch_applied_any": true,
+      "selected_round": null,
+      "selected_patch_applied": null,
+      "selected_completed": null,
+      "candidate_rounds": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": true,
+          "apply_compile_within_3_repairs": true
+        },
+        {
+          "round": 2,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null,
+          "apply_compile_within_3_repairs": null
+        }
+      ],
+      "verification": {
+        "completed": null,
+        "target_met": null,
+        "peak_before": null,
+        "peak_after": null,
+        "reduction_pct": null,
+        "loss_equivalence": null,
+        "max_loss_delta": null,
+        "loss_tolerance": null,
+        "numerical_basis": null,
+        "checks": null,
+        "parameter_count_before": null,
+        "parameter_count_after": null,
+        "reference_run": null,
+        "acceptance_scope": null
+      },
+      "events_count": 22,
+      "calls_count": 4,
+      "call_checks": [
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+          "role": "annotate",
+          "prompt_tokens": 5573,
+          "completion_tokens": 982,
+          "cost_usd": "0.000367308",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        },
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "role": "diagnose",
+          "prompt_tokens": 42064,
+          "completion_tokens": 1824,
+          "cost_usd": "0.047536",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        },
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/nemotron-3-super-120b-a12b",
+          "role": "patcher",
+          "prompt_tokens": 7443,
+          "completion_tokens": 175,
+          "cost_usd": "0.0023904",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        },
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "role": "diagnose",
+          "prompt_tokens": 44327,
+          "completion_tokens": 1430,
+          "cost_usd": "0.01797892",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        }
+      ],
+      "ordered_t1_7_events": false,
+      "cost_usd": "0.068272628",
+      "cost_upper_usd": null,
+      "cost_basis": "actual",
+      "wall_seconds": 62.10752017097548,
+      "ledger_usage_match_basis": "New calls use exact budget_attempt_id joins; historical exact-only calls use run sum/count/cost multiset. Historical unknowns never upgraded.",
+      "cli_frontend_invocation": "not_observed",
+      "patch_changed_lines": null,
+      "patch_changed_files": null,
+      "patch_apply_check_on_original": null,
+      "patch_apply_check_note": "No subprocess is run by this audit; independent git apply --check receipt is still required."
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "run_id": "34c41d1d52b5427fb29bc02eae76fa07",
+      "status": "needs_human",
+      "target": false,
+      "cause": null,
+      "first_cause": "temporaries",
+      "truth_status": "unverified",
+      "gates": {
+        "real_live_provenance": true,
+        "run_identity_consistent": true,
+        "source_hash_matches_manifest": true,
+        "report_json_and_markdown": true,
+        "harness_child_exit_zero": false,
+        "owned_cleanup_verified": true,
+        "cost_complete_and_consistent": true,
+        "billing_evidence_complete_and_consistent": true,
+        "wall_within_480_seconds": true,
+        "markdown_7_sections": true,
+        "report_numbers_provenance": true
+      },
+      "patch_applied_any": null,
+      "selected_round": null,
+      "selected_patch_applied": null,
+      "selected_completed": null,
+      "candidate_rounds": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null,
+          "apply_compile_within_3_repairs": null
+        }
+      ],
+      "verification": {
+        "completed": null,
+        "target_met": null,
+        "peak_before": null,
+        "peak_after": null,
+        "reduction_pct": null,
+        "loss_equivalence": null,
+        "max_loss_delta": null,
+        "loss_tolerance": null,
+        "numerical_basis": null,
+        "checks": null,
+        "parameter_count_before": null,
+        "parameter_count_after": null,
+        "reference_run": null,
+        "acceptance_scope": null
+      },
+      "events_count": 14,
+      "calls_count": 2,
+      "call_checks": [
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+          "role": "annotate",
+          "prompt_tokens": 7692,
+          "completion_tokens": 1331,
+          "cost_usd": "0.000578208",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        },
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "role": "diagnose",
+          "prompt_tokens": 36267,
+          "completion_tokens": 1156,
+          "cost_usd": "0.039735",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        }
+      ],
+      "ordered_t1_7_events": false,
+      "cost_usd": "0.040313208",
+      "cost_upper_usd": null,
+      "cost_basis": "actual",
+      "wall_seconds": 32.195570598123595,
+      "ledger_usage_match_basis": "New calls use exact budget_attempt_id joins; historical exact-only calls use run sum/count/cost multiset. Historical unknowns never upgraded.",
+      "cli_frontend_invocation": "not_observed",
+      "patch_changed_lines": null,
+      "patch_changed_files": null,
+      "patch_apply_check_on_original": null,
+      "patch_apply_check_note": "No subprocess is run by this audit; independent git apply --check receipt is still required."
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "run_id": "6a7478dc928c4ad19929a870872c5b1d",
+      "status": "needs_human",
+      "target": false,
+      "cause": false,
+      "first_cause": "temporaries",
+      "truth_status": "authored",
+      "gates": {
+        "real_live_provenance": true,
+        "run_identity_consistent": true,
+        "source_hash_matches_manifest": true,
+        "report_json_and_markdown": true,
+        "harness_child_exit_zero": false,
+        "owned_cleanup_verified": true,
+        "cost_complete_and_consistent": true,
+        "billing_evidence_complete_and_consistent": true,
+        "wall_within_480_seconds": true,
+        "markdown_7_sections": true,
+        "report_numbers_provenance": true
+      },
+      "patch_applied_any": null,
+      "selected_round": null,
+      "selected_patch_applied": null,
+      "selected_completed": null,
+      "candidate_rounds": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null,
+          "apply_compile_within_3_repairs": null
+        }
+      ],
+      "verification": {
+        "completed": null,
+        "target_met": null,
+        "peak_before": null,
+        "peak_after": null,
+        "reduction_pct": null,
+        "loss_equivalence": null,
+        "max_loss_delta": null,
+        "loss_tolerance": null,
+        "numerical_basis": null,
+        "checks": null,
+        "parameter_count_before": null,
+        "parameter_count_after": null,
+        "reference_run": null,
+        "acceptance_scope": null
+      },
+      "events_count": 14,
+      "calls_count": 2,
+      "call_checks": [
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+          "role": "annotate",
+          "prompt_tokens": 4935,
+          "completion_tokens": 362,
+          "cost_usd": "0.000180228",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        },
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "role": "diagnose",
+          "prompt_tokens": 28931,
+          "completion_tokens": 1319,
+          "cost_usd": "0.032888",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        }
+      ],
+      "ordered_t1_7_events": false,
+      "cost_usd": "0.033068228",
+      "cost_upper_usd": null,
+      "cost_basis": "actual",
+      "wall_seconds": 18.010459661018103,
+      "ledger_usage_match_basis": "New calls use exact budget_attempt_id joins; historical exact-only calls use run sum/count/cost multiset. Historical unknowns never upgraded.",
+      "cli_frontend_invocation": "not_observed",
+      "patch_changed_lines": null,
+      "patch_changed_files": null,
+      "patch_apply_check_on_original": null,
+      "patch_apply_check_note": "No subprocess is run by this audit; independent git apply --check receipt is still required."
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "run_id": "bb32d35379b84bc091d0f6af1f71ae73",
+      "status": "needs_human",
+      "target": false,
+      "cause": true,
+      "first_cause": "optimizer_state",
+      "truth_status": "authored",
+      "gates": {
+        "real_live_provenance": true,
+        "run_identity_consistent": true,
+        "source_hash_matches_manifest": true,
+        "report_json_and_markdown": true,
+        "harness_child_exit_zero": false,
+        "owned_cleanup_verified": true,
+        "cost_complete_and_consistent": true,
+        "billing_evidence_complete_and_consistent": true,
+        "wall_within_480_seconds": true,
+        "markdown_7_sections": true,
+        "report_numbers_provenance": true
+      },
+      "patch_applied_any": true,
+      "selected_round": null,
+      "selected_patch_applied": null,
+      "selected_completed": null,
+      "candidate_rounds": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": true,
+          "apply_compile_within_3_repairs": true
+        },
+        {
+          "round": 2,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null,
+          "apply_compile_within_3_repairs": null
+        }
+      ],
+      "verification": {
+        "completed": null,
+        "target_met": null,
+        "peak_before": null,
+        "peak_after": null,
+        "reduction_pct": null,
+        "loss_equivalence": null,
+        "max_loss_delta": null,
+        "loss_tolerance": null,
+        "numerical_basis": null,
+        "checks": null,
+        "parameter_count_before": null,
+        "parameter_count_after": null,
+        "reference_run": null,
+        "acceptance_scope": null
+      },
+      "events_count": 27,
+      "calls_count": 6,
+      "call_checks": [
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+          "role": "annotate",
+          "prompt_tokens": 6382,
+          "completion_tokens": 679,
+          "cost_usd": "0.000343128",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        },
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "role": "diagnose",
+          "prompt_tokens": 37155,
+          "completion_tokens": 1189,
+          "cost_usd": "0.040722",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        },
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/nemotron-3-super-120b-a12b",
+          "role": "super",
+          "prompt_tokens": 1049,
+          "completion_tokens": 108,
+          "cost_usd": "0.0004119",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        },
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/nemotron-3-super-120b-a12b",
+          "role": "super",
+          "prompt_tokens": 2434,
+          "completion_tokens": 104,
+          "cost_usd": "0.0008238",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        },
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/nemotron-3-super-120b-a12b",
+          "role": "patcher",
+          "prompt_tokens": 9057,
+          "completion_tokens": 196,
+          "cost_usd": "0.0028935",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        },
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "role": "diagnose",
+          "prompt_tokens": 39161,
+          "completion_tokens": 1694,
+          "cost_usd": "0.01743468",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        }
+      ],
+      "ordered_t1_7_events": false,
+      "cost_usd": "0.062629008",
+      "cost_upper_usd": null,
+      "cost_basis": "actual",
+      "wall_seconds": 54.954296723008156,
+      "ledger_usage_match_basis": "New calls use exact budget_attempt_id joins; historical exact-only calls use run sum/count/cost multiset. Historical unknowns never upgraded.",
+      "cli_frontend_invocation": "not_observed",
+      "patch_changed_lines": null,
+      "patch_changed_files": null,
+      "patch_apply_check_on_original": null,
+      "patch_apply_check_note": "No subprocess is run by this audit; independent git apply --check receipt is still required."
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "run_id": "e3260634f5f04de19386344db570df02",
+      "status": "completed",
+      "target": true,
+      "cause": true,
+      "first_cause": "params",
+      "truth_status": "authored",
+      "gates": {
+        "real_live_provenance": true,
+        "run_identity_consistent": true,
+        "source_hash_matches_manifest": true,
+        "report_json_and_markdown": true,
+        "harness_child_exit_zero": true,
+        "owned_cleanup_verified": true,
+        "cost_complete_and_consistent": true,
+        "billing_evidence_complete_and_consistent": true,
+        "wall_within_480_seconds": true,
+        "markdown_7_sections": true,
+        "report_numbers_provenance": true
+      },
+      "patch_applied_any": true,
+      "selected_round": 1,
+      "selected_patch_applied": true,
+      "selected_completed": true,
+      "candidate_rounds": [
+        {
+          "round": 1,
+          "decision": "keep",
+          "patch_applied": true,
+          "candidate_completed": true,
+          "apply_compile_within_3_repairs": true
+        }
+      ],
+      "verification": {
+        "completed": true,
+        "target_met": true,
+        "peak_before": 3.100141568,
+        "peak_after": 0.121791488,
+        "reduction_pct": 96.07142172934472,
+        "loss_equivalence": "identical",
+        "max_loss_delta": 0.0,
+        "loss_tolerance": 0.001,
+        "numerical_basis": "original_plan_full_backward_scalar_series",
+        "checks": {
+          "baseline_capture": true,
+          "target_mode_valid": true,
+          "candidate_completed_required_steps": true,
+          "finite_candidate_losses": true,
+          "parameter_count_unchanged": true,
+          "numerics_policy": true,
+          "same_seed": true,
+          "same_inputs": null,
+          "same_effective_batch": null,
+          "same_objective": null,
+          "loss_series_aligned_to_updates": true,
+          "loss_series_comparison_available": true,
+          "loss_comparable": false,
+          "repository_no_reference_exception": false,
+          "loss_tolerance": true,
+          "numerical_acceptance": true,
+          "parameter_policy": true,
+          "measured_cuda_peaks": true,
+          "same_gpu_hardware": true,
+          "gpu_observation_clear": true,
+          "throughput_limit": true,
+          "memory_target": true
+        },
+        "parameter_count_before": 747474432,
+        "parameter_count_after": 747474432,
+        "reference_run": null,
+        "acceptance_scope": "standard"
+      },
+      "events_count": 20,
+      "calls_count": 3,
+      "call_checks": [
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+          "role": "annotate",
+          "prompt_tokens": 5828,
+          "completion_tokens": 606,
+          "cost_usd": "0.000292368",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        },
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "role": "diagnose",
+          "prompt_tokens": 43644,
+          "completion_tokens": 914,
+          "cost_usd": "0.046386",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        },
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/nemotron-3-super-120b-a12b",
+          "role": "patcher",
+          "prompt_tokens": 6963,
+          "completion_tokens": 213,
+          "cost_usd": "0.0022806",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        }
+      ],
+      "ordered_t1_7_events": false,
+      "cost_usd": "0.048958968",
+      "cost_upper_usd": null,
+      "cost_basis": "actual",
+      "wall_seconds": 34.815100801875815,
+      "ledger_usage_match_basis": "New calls use exact budget_attempt_id joins; historical exact-only calls use run sum/count/cost multiset. Historical unknowns never upgraded.",
+      "cli_frontend_invocation": "not_observed",
+      "patch_changed_lines": 2,
+      "patch_changed_files": [
+        "train.py"
+      ],
+      "patch_apply_check_on_original": null,
+      "patch_apply_check_note": "No subprocess is run by this audit; independent git apply --check receipt is still required."
+    },
+    {
+      "scenario_id": "nanogpt",
+      "run_id": "ff1aaf6695b74045bfee4e0789133427",
+      "status": "needs_human",
+      "target": false,
+      "cause": null,
+      "first_cause": "activations",
+      "truth_status": "unverified",
+      "gates": {
+        "real_live_provenance": true,
+        "run_identity_consistent": true,
+        "source_hash_matches_manifest": true,
+        "report_json_and_markdown": true,
+        "harness_child_exit_zero": false,
+        "owned_cleanup_verified": true,
+        "cost_complete_and_consistent": true,
+        "billing_evidence_complete_and_consistent": true,
+        "wall_within_480_seconds": true,
+        "markdown_7_sections": true,
+        "report_numbers_provenance": true
+      },
+      "patch_applied_any": null,
+      "selected_round": null,
+      "selected_patch_applied": null,
+      "selected_completed": null,
+      "candidate_rounds": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null,
+          "apply_compile_within_3_repairs": null
+        }
+      ],
+      "verification": {
+        "completed": null,
+        "target_met": null,
+        "peak_before": null,
+        "peak_after": null,
+        "reduction_pct": null,
+        "loss_equivalence": null,
+        "max_loss_delta": null,
+        "loss_tolerance": null,
+        "numerical_basis": null,
+        "checks": null,
+        "parameter_count_before": null,
+        "parameter_count_after": null,
+        "reference_run": null,
+        "acceptance_scope": null
+      },
+      "events_count": 14,
+      "calls_count": 2,
+      "call_checks": [
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+          "role": "annotate",
+          "prompt_tokens": 6858,
+          "completion_tokens": 70,
+          "cost_usd": "0.000225528",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        },
+        {
+          "cost_complete": true,
+          "actual_cost_complete": true,
+          "identity": true,
+          "cost_recomputed": true,
+          "super_cap": true,
+          "not_dispatched": false,
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "role": "diagnose",
+          "prompt_tokens": 60019,
+          "completion_tokens": 1238,
+          "cost_usd": "0.063733",
+          "cost_upper_usd": null,
+          "cost_basis": "actual"
+        }
+      ],
+      "ordered_t1_7_events": false,
+      "cost_usd": "0.063958528",
+      "cost_upper_usd": null,
+      "cost_basis": "actual",
+      "wall_seconds": 25.460637015057728,
+      "ledger_usage_match_basis": "New calls use exact budget_attempt_id joins; historical exact-only calls use run sum/count/cost multiset. Historical unknowns never upgraded.",
+      "cli_frontend_invocation": "not_observed",
+      "patch_changed_lines": null,
+      "patch_changed_files": null,
+      "patch_apply_check_on_original": null,
+      "patch_apply_check_note": "No subprocess is run by this audit; independent git apply --check receipt is still required."
+    }
+  ],
+  "sources": {
+    "eval/mvp_phase1.yaml": {
+      "bytes": 6484,
+      "sha256": "3bb919336829754a52ec8c90ccc4a5181f33986f9e300e99211bec6678849e88"
+    },
+    "docs/PLAN.md": {
+      "bytes": 55643,
+      "sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/campaign.json": {
+      "bytes": 101363,
+      "sha256": "cb78766a21e16ba2244b371ca460ec394cd8ad85e6015548fe036f0a82b97cdb"
+    },
+    "reports/live-campaign-20261025/pricing-reviewed.json": {
+      "bytes": 2840,
+      "sha256": "635c6b90216acfe0505e4f53f0685c8183bc3bc632fff376c3bfcefd7e7eb829"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/77b62a3d90374a6d96ed06c11a6d573a/report.json": {
+      "bytes": 458592,
+      "sha256": "e2e5ff32ad2fb8b11c03b99ceb1e9cca81721983f386665d13c756a886f0cdb4"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/77b62a3d90374a6d96ed06c11a6d573a/report.md": {
+      "bytes": 9951,
+      "sha256": "de3e6e2ca8123a4d0435f4450a413f7fd7294c3643b34b4061713f28ea6e8e90"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/77b62a3d90374a6d96ed06c11a6d573a/rounds/01/diagnosis.json": {
+      "bytes": 6055,
+      "sha256": "c51036ef011d9628aa13fdd7f0f05a64c3fb7a72ac80f22523080b299c3205be"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/9561b7d956cf415bbf4b98f6950a45e0/report.json": {
+      "bytes": 670464,
+      "sha256": "e305cb12e69f5607ef9eb0d27b575796faa5aa1db9ba24ce55168eb55f6e2f00"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/9561b7d956cf415bbf4b98f6950a45e0/report.md": {
+      "bytes": 10085,
+      "sha256": "8600b79c91bca22ecbdd77b43a065bc63f0d73ad1b2670b22f00c118a732b14b"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/9561b7d956cf415bbf4b98f6950a45e0/rounds/01/diagnosis.json": {
+      "bytes": 4941,
+      "sha256": "c9e3246457e1326ebf578216cee275ff6bbdcba420b620ea14dfb42b3152980c"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/52bb8129723241889337486bcb187f63/report.json": {
+      "bytes": 842287,
+      "sha256": "bee406f2dc65e0f0efe90b2f97c8414c50aa712e1148b18f2f762de41b061880"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/52bb8129723241889337486bcb187f63/report.md": {
+      "bytes": 10496,
+      "sha256": "2a4702f5913cdf0c89d35e044917ba635bab3484b7cc8a83c629c97df6017f4b"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/52bb8129723241889337486bcb187f63/rounds/01/diagnosis.json": {
+      "bytes": 5194,
+      "sha256": "1122a518f657f299056d7bc8f04d48abdfe6b5ca3da6b3c5ca538a478c702d21"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/report.json": {
+      "bytes": 700140,
+      "sha256": "6a96af23240513548b7e4ee1b42f022af0179e296ff78ad16ac87e07ce5e09e7"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/report.md": {
+      "bytes": 12769,
+      "sha256": "1ccd918493f30d7057cc34218bb866838146ed2d039833a3a3570ad2b669e318"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/patch-result.json": {
+      "bytes": 3776,
+      "sha256": "27b0bfc6b55ab9dc259f9a4bffcf902992c3b3f30df75928976efae442878b2b"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/verification.json": {
+      "bytes": 36091,
+      "sha256": "0021c6be477618e31ec255fc69f9d05d8e21fe0692275231667f763344342ed4"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/diagnosis.json": {
+      "bytes": 6593,
+      "sha256": "728b11dafea6c49cac556c76262d4270709285ce6a36c6dd00a6aa515336feb2"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/34c41d1d52b5427fb29bc02eae76fa07/report.json": {
+      "bytes": 526221,
+      "sha256": "d0acd5cfcc7b3b739e1d90de1cb2a4b3a4f8e358f73e49528e944a56721dc03a"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/34c41d1d52b5427fb29bc02eae76fa07/report.md": {
+      "bytes": 7742,
+      "sha256": "cd0fca81913c212f8e1b06a84520b0b02bdbb56f8723d90d86be556f48bd20c5"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/34c41d1d52b5427fb29bc02eae76fa07/rounds/01/diagnosis.json": {
+      "bytes": 4181,
+      "sha256": "6fae653288df22124efa61bde948bcde85789c22fc06f355e0057bd22a2fead6"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/6a7478dc928c4ad19929a870872c5b1d/report.json": {
+      "bytes": 502388,
+      "sha256": "3933abeb464671c7a1772a9601861d4277b9e22237641098babe7699f3cf9180"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/6a7478dc928c4ad19929a870872c5b1d/report.md": {
+      "bytes": 8097,
+      "sha256": "d308553eb048d833259edf0c4bc3f5aac55ccda3457e046ce42ec4b542f70e6c"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/6a7478dc928c4ad19929a870872c5b1d/rounds/01/diagnosis.json": {
+      "bytes": 4898,
+      "sha256": "3feda658345b276683922d3ececcb6c320c3df7d53023d3b8c55422463ac7b22"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/report.json": {
+      "bytes": 604587,
+      "sha256": "4abdfdfb1df0b9e7acd90ea5dfd0343dce4400e06d0f1e751069ab02154e69b6"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/report.md": {
+      "bytes": 13816,
+      "sha256": "0d748b468a73165e60142946c79a42f5820e07cc4c036e29a1c96e1de3262ac9"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/patch-result.json": {
+      "bytes": 3867,
+      "sha256": "6acf826e92a9722b8af1f5f081fee7bdd9506de80daa501059b46dd4f8b1e805"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/verification.json": {
+      "bytes": 23403,
+      "sha256": "23c788e22c908db98f2c2ea08e58d4445abe04d1439fd9036c8e643113652588"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/diagnosis.json": {
+      "bytes": 4662,
+      "sha256": "e3c80e6c5a91740cffdd50de9431e1c90846d79dd0d1f2c7f9e29af66ed2189d"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/report.json": {
+      "bytes": 1129416,
+      "sha256": "92ccc4ebe4feddfa2ba057b4709643b5d29a09d42ff8d504f3f4c3340045c8bf"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/report.md": {
+      "bytes": 12714,
+      "sha256": "9db1ab9be647f934c998eda33b4d6436e2051945bcd9caa340c558f3f237dda2"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/patch-result.json": {
+      "bytes": 3840,
+      "sha256": "8492c83a23e646361b3a37604314c4947fbbe377266fdd09275e34a76c48faba"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/verification.json": {
+      "bytes": 23223,
+      "sha256": "8847fdda2d59f2f8821ab507268b481619138ee3ba450b1c6dfb64629588126d"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/diagnosis.json": {
+      "bytes": 3159,
+      "sha256": "eb066ab512307f8ae884e6dff2b6fd6afd0ecbcd734d5ad947d65b42b36a623d"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/patch.diff": {
+      "bytes": 587,
+      "sha256": "f6baa4f7fe3715067663f977b0b4fbc6c6e2aef330bf311def2a861435d37b64"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/ff1aaf6695b74045bfee4e0789133427/report.json": {
+      "bytes": 1147306,
+      "sha256": "bf2ba134a30aa9f96944ac6e43d0e8c6112d10d6e8e080849636e33d9a2acc6c"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/ff1aaf6695b74045bfee4e0789133427/report.md": {
+      "bytes": 7780,
+      "sha256": "b1488cae9364ccf69523ce30451062cc294f718f9dc320b9f1dec8d7610c7307"
+    },
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/ff1aaf6695b74045bfee4e0789133427/rounds/01/diagnosis.json": {
+      "bytes": 4199,
+      "sha256": "6c275346f43062f2bc195d391f05cbb7e17bf2984664d124c5d4234673bcf6f5"
+    }
+  },
+  "errors": [],
+  "api_publication": {
+    "data_root": "runs/api",
+    "selection_manifest": "runs/api/public-evaluations.json",
+    "action": "read-only audit does not publish or rewrite API data"
+  }
+}

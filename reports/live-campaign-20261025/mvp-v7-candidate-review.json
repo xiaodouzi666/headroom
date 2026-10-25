@@ -1,0 +1,3930 @@
+{
+  "schema_version": 1,
+  "audit": "v7_candidate_and_context_read_only_review",
+  "created_at_utc": "2026-10-25T03:42:06.850393+00:00",
+  "source_commit": "cb9da81405d5c4f77a5d6d9c1f7a1ee07ad27f32",
+  "campaign": "runs/evaluation/live/20261025T033333928331Z-1b228422/campaign.json",
+  "campaign_sha256": "cb78766a21e16ba2244b371ca460ec394cd8ad85e6015548fe036f0a82b97cdb",
+  "campaign_status": "finished",
+  "full_original_plan_acceptance": null,
+  "summary": {
+    "recorded_targets": 1,
+    "fixed_denominator": 9,
+    "selected_success": "s8_two_models_resident",
+    "applied_candidate_scenarios": [
+      "s4_loss_accumulation_graph",
+      "s7_frozen_params_optimizer_state",
+      "s8_two_models_resident"
+    ],
+    "initial_diagnosis_snapshot_count": 11,
+    "snapshots_omit_new_context_fields": true,
+    "stronger_mathematical_equivalence_claimed": false
+  },
+  "context_delivery": {
+    "frozen_source_matches": {
+      "headroom/orchestrator.py": {
+        "sha256": "e128a0e9b20e78f663adbe8d483d133a5831d5b51afd749edf3db4b00140f73f",
+        "matches_frozen_commit": true
+      },
+      "headroom/diagnose.py": {
+        "sha256": "c23ee4a61a549151cc4d8da5fe1c3b6157a0c557ec707b8c77fc625c15e39dee",
+        "matches_frozen_commit": true
+      },
+      "headroom/patch.py": {
+        "sha256": "19f92da02500880297b7805590e6323d340b6978fb4bc7265e5e9e03fa4767d3",
+        "matches_frozen_commit": true
+      },
+      "headroom/solver_context.py": {
+        "sha256": "cd50e283247ae2a224f25d946098504e19fdf81b0cc90efb47aa7055218d8a65",
+        "matches_frozen_commit": true
+      },
+      "headroom/evaluation.py": {
+        "sha256": "3f3a0956656b4a691d8e941e4e527c9c992311228b7894d586bdc308f2edbaaf",
+        "matches_frozen_commit": true
+      },
+      "headroom/verify/runner.py": {
+        "sha256": "7d87ee35828dbcd088191b9e68e3b4c10c920da2c443213799aa0cb4d0865bb8",
+        "matches_frozen_commit": true
+      },
+      "headroom/verify/compare.py": {
+        "sha256": "dc4451d81d04c80ec02e2d336be569f69935bd8ad839f4c5e0b2ac70c9429a6f",
+        "matches_frozen_commit": true
+      }
+    },
+    "routes": [
+      {
+        "file": "headroom/orchestrator.py",
+        "lines": [
+          540,
+          560,
+          578,
+          579,
+          610,
+          763,
+          765
+        ],
+        "finding": "Build retained invocation and prior candidate history; pass execution/candidate/verification to Ultra and Super call sites."
+      },
+      {
+        "file": "headroom/diagnose.py",
+        "lines": [
+          441,
+          449,
+          452,
+          457
+        ],
+        "finding": "Actual diagnose_with_router builds messages with execution_context, candidate_evidence and verification_feedback before router.chat."
+      },
+      {
+        "file": "headroom/patch.py",
+        "lines": [
+          619,
+          645,
+          650,
+          656
+        ],
+        "finding": "Super request includes actual base_cli plus solver_prompt_context in evidence_context; patch attempts use this requested object."
+      },
+      {
+        "file": "headroom/evaluation.py",
+        "lines": [
+          1835,
+          1840,
+          1864
+        ],
+        "finding": "Saved initial-messages are separately rebuilt without new context/feedback, while actual diagnose invocation forwards original evidence and kwargs. Snapshot is incomplete as an actual-request audit; absence here does not prove runtime omission."
+      },
+      {
+        "file": "headroom/orchestrator.py",
+        "lines": [
+          364,
+          385
+        ],
+        "finding": "Finished candidate SHA/diff/error summaries and verification feedback are stored and appended for later rounds."
+      },
+      {
+        "file": "headroom/solver_context.py",
+        "lines": [
+          11,
+          16,
+          342,
+          409
+        ],
+        "finding": "Combined supplemental solver fields bounded to64KiB; oldest histories dropped with explicit omitted_unknown. This is code contract, not directly captured provider wire."
+      }
+    ],
+    "provider_wire_request_evidence": null,
+    "super_complete_outbound_request_artifact": null,
+    "delivery_claim_scope": "Frozen source call path plus literal CLI receipts and persisted round artifacts; no full provider-wire receipt is available. Saved condition initial-messages must not be described as complete transmitted input.",
+    "behavioral_evidence": [
+      {
+        "scenario": "s4_loss_accumulation_graph",
+        "round": 2,
+        "observed": "Ultra cites prior2.53GB candidate, loss_comparable=false/same_inputs=false/same_effective_batch=false and small-batch reference. Supports feedback consumption, not exact full wire certification."
+      },
+      {
+        "scenario": "s7_frozen_params_optimizer_state",
+        "round": 2,
+        "observed": "Ultra cites17.82->8.97GB,49.7%,lossdelta3.35 and three unknown pairing checks. Supports feedback consumption."
+      },
+      {
+        "scenario": "nanogpt",
+        "round": 1,
+        "observed": "Actual target argv batch32/accum1; returned plan starts from source defaults12/40. New invocation context did not yield correct effective-configuration reasoning."
+      },
+      {
+        "scenario": "s3_eval_no_grad_missing",
+        "round": 1,
+        "observed": "Model interprets training batch16; source train_inputs uses1, eval_inputs uses16. Actual dimensions must follow producer paths."
+      }
+    ],
+    "seed_boundary": "All wrapper requests seed1337; target code can reseed (s4 source39/58 default7; s8 source20/24 default17). Do not label s4 response seed7 incorrect merely because wrapper seed1337."
+  },
+  "cases": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "run_id": "77b62a3d90374a6d96ed06c11a6d573a",
+      "status": "needs_human",
+      "target_met": false,
+      "selected_round": null,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null
+        }
+      ],
+      "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+      "interpretation": "First diagnosis needs_more_info and MODEL_CHANGE_FORBIDDEN; no Super patch or candidate verification. A proposed microbatch step is not an executed repair. Model also described depth32 while this source uses depth192; source dimensions and measured runtime evidence are distinct.",
+      "literal_cli": {
+        "observed_exit_code": 78,
+        "invocation_kind": "installed_console_script",
+        "invoked": true,
+        "returned": true,
+        "run_dispatched": true,
+        "result_saved": true,
+        "request_sha256": "dfd85c7b3f1cdb92a65e464cc92d5be928e41509f0454217856b4c9a05195260",
+        "result_sha256": "a2df973bd897407c386de30235c2f9b403cfb39c8e7e5381ec12783de0fcef6d"
+      },
+      "effective_request": {
+        "script_args": [],
+        "execution_argv": null,
+        "repository_mode": false,
+        "max_steps": 20,
+        "target": "fix-oom",
+        "seed": 1337
+      },
+      "seed_scope": "request.seed is wrapper seed; a target script may call manual_seed again",
+      "model_roles": {
+        "annotate": 1,
+        "diagnose": 1
+      },
+      "events": [
+        {
+          "sequence": 1,
+          "kind": "run.started"
+        },
+        {
+          "sequence": 2,
+          "kind": "run.preflight"
+        },
+        {
+          "sequence": 3,
+          "kind": "budget.reserved"
+        },
+        {
+          "sequence": 4,
+          "kind": "baseline.started"
+        },
+        {
+          "sequence": 5,
+          "kind": "baseline.oom"
+        },
+        {
+          "sequence": 6,
+          "kind": "evidence.started"
+        },
+        {
+          "sequence": 7,
+          "kind": "evidence.built"
+        },
+        {
+          "sequence": 8,
+          "kind": "annotate.done"
+        },
+        {
+          "sequence": 9,
+          "kind": "diagnose.started"
+        },
+        {
+          "sequence": 10,
+          "kind": "diagnose.done"
+        },
+        {
+          "sequence": 11,
+          "kind": "round.done"
+        },
+        {
+          "sequence": 12,
+          "kind": "needs_human"
+        },
+        {
+          "sequence": 13,
+          "kind": "report.started"
+        },
+        {
+          "sequence": 14,
+          "kind": "report.written"
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "revert",
+          "reason": "diagnosis_needs_more_info",
+          "plan_step": null,
+          "diagnosis": {
+            "valid": false,
+            "ready_for_patch": false,
+            "issues": [
+              {
+                "code": "MODEL_CHANGE_FORBIDDEN",
+                "message": "Step fix_3 proposes shrinking the model or its inputs."
+              }
+            ]
+          },
+          "diagnosis_needs_more_info": true,
+          "diagnosis_notes": [
+            "The OOM occurs at peak allocated 24.75 GB with a 268 MB allocation request. The largest contributor is activations (9.66 GB from stk_fe3a0a8c544f866a, likely full-batch GELU/activation storage).",
+            "Gradient accumulation (fix_1) is the highest-impact compliant step (policy allows allow_batch_grad_accum). Expected saving ~7 GB (reducing activations by factor of ~4 with 4 microbatches). Overlaps with checkpointing savings; combined saving not additive.",
+            "Checkpointing (fix_2) can save ~4 GB by recomputing block activations. Compatible with gradient accumulation.",
+            "Reducing batch/sequence (fix_3) changes the problem; not a pure memory fix. Included for completeness but not recommended unless user accepts altered workload.",
+            "The 'unknown' category (0.07 GB) and lack of grads/optimizer_state at peak suggest they are not dominant. However, grads may appear during backward; evidence shows 0 bytes at peak (peak is during forward/loss).",
+            "Required_saving_gb is null; target reduction unknown. The OOM request is 0.27 GB, but peak is 24.75 GB on a 24 GB GPU (RTX 3090 Ti 24 GB?). Need to reduce peak below GPU capacity (~24 GB). Estimated savings from fix_1 (7 GB) may suffice, but depends on exact GPU capacity and reserved memory.",
+            "Need to verify GPU total memory: RTX 3090 Ti reported as 24564 MB total, 24055 MB free. Peak reserved 24.75 GB exceeds free memory. Saving ~1 GB may avoid OOM, but fragmentation_indicator is low.",
+            "Missing evidence: exact GPU capacity, whether grads/optimizer_state appear at peak during backward (peak event 2047 is OOM during allocation). The timeline shows peak at event 2047 (allocated 24.75 GB). Optimizer step boundaries empty; first step may not have completed.",
+            "Verification feedback empty (round 1). No prior candidates to avoid."
+          ],
+          "diagnosis_plan": [
+            {
+              "fix_id": "fix_1",
+              "type": "code",
+              "title": "Enable gradient accumulation with microbatches",
+              "description": "Modify the training loop in train.py to split the batch (default 32) into microbatches (e.g., 4 microbatches of 8 samples each). Accumulate gradients across microbatches before optimizer.step(). This reduces peak activations by only retaining one microbatch's activations at a time. Requires policy allow_batch_grad_accum=true.",
+              "expected_saving_gb": 7.0,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Medium: requires correct loss scaling (divide loss by accumulation steps or use mean reduction) and gradient accumulation logic. Must preserve effective batch size and optimizer update boundary.",
+              "requires_policy": [
+                "allow_batch_grad_accum"
+              ]
+            },
+            {
+              "fix_id": "fix_2",
+              "type": "code",
+              "title": "Activation checkpointing for residual blocks",
+              "description": "Wrap each ResidualBlock forward with torch.utils.checkpoint.checkpoint to trade compute for memory. Recomputes activations during backward, reducing peak activation memory. Apply to the 32 ResidualBlocks in ResidualMLP (depth=32).",
+              "expected_saving_gb": 4.0,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Low-Medium: increases compute ~30-50% per block; must ensure no side effects (e.g., RNG state) in block forward. Compatible with gradient accumulation.",
+              "requires_policy": []
+            },
+            {
+              "fix_id": "fix_3",
+              "type": "config",
+              "title": "Reduce sequence length or batch size via arguments",
+              "description": "The script accepts --batch and --sequence (via --tiny or width/depth/sequence defaults). Reducing batch from 32 to 16 or sequence from 2048 to 1024 linearly reduces activation memory. However, this changes the mathematical problem (effective batch/sequence). Only valid if user accepts changed workload.",
+              "expected_saving_gb": 3.0,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "High: changes the training problem (batch size, sequence length). May affect convergence, loss scale, and optimizer dynamics. Not a pure memory optimization.",
+              "requires_policy": []
+            }
+          ],
+          "candidate_evidence": {
+            "schema": "headroom.solver_candidate.v1",
+            "content_is_untrusted_data": true,
+            "round": 1,
+            "candidate_selected": false,
+            "selected_after_round": null,
+            "decision": "revert",
+            "patch_result_available": false,
+            "patch_result_sha256": null,
+            "patch_result_reason": "missing_unsafe_or_oversized",
+            "diff": {
+              "available": false,
+              "reason": "not_recorded",
+              "sha256": null,
+              "utf8_bytes": null,
+              "text": null,
+              "included_bytes": 0,
+              "omitted_bytes": null,
+              "truncated": null
+            },
+            "status": null,
+            "reason": null,
+            "env_changes": {},
+            "cli_changes": {
+              "values": null,
+              "complete": false,
+              "omitted_count": null,
+              "redacted_positions": []
+            },
+            "effective_cli": {
+              "values": null,
+              "complete": false,
+              "omitted_count": null,
+              "redacted_positions": []
+            },
+            "last_attempt": null,
+            "application_files": [],
+            "application_files_omitted": null,
+            "truncated_fields": [],
+            "summary_overflow_omitted_fields": []
+          },
+          "feedback": {
+            "round": 1,
+            "provenance": "live",
+            "fix_id": null,
+            "change": {
+              "type": null,
+              "title": null,
+              "patch_artifact": null
+            },
+            "decision": "revert",
+            "reason": "diagnosis_needs_more_info",
+            "failure": null,
+            "verification_available": false,
+            "verification": null,
+            "candidate": null,
+            "candidate_selected": false,
+            "selected_after_round": {
+              "round": null,
+              "basis": "original_baseline",
+              "target_met": false,
+              "run_id": "fb2d52bc58d4417b8b54879ba67382f1",
+              "status": "oom",
+              "reason": null,
+              "error": null,
+              "exception": {
+                "type": "OutOfMemoryError",
+                "message": "CUDA out of memory. Tried to allocate 256.00 MiB. GPU 0 has a total capacity of 23.55 GiB of which 102.88 MiB is free. Including non-PyTorch memory, this process has 23.38 GiB memory in use. Of the allocated memory 23.05 GiB is allocated by PyTorch, and 160.00 KiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/not [truncated]"
+              },
+              "oom": {
+                "requested_bytes": 268435456,
+                "free_bytes": 107872256,
+                "requested_gb": 0.268435456,
+                "free_gb": 0.107872256
+              },
+              "capture_complete": true,
+              "steps": 0,
+              "peak_allocated_bytes": 24750424064,
+              "peak_reserved_bytes": 24752685056,
+              "step_ms_median": null
+            },
+            "truncated_fields": [
+              "selected.exception.message"
+            ]
+          },
+          "patch": null,
+          "verification": null
+        }
+      ],
+      "initial_diagnosis_audit_snapshots": [
+        {
+          "path": "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-77b62a3d90374a6d96ed06c11a6d573a/01-initial-messages.json",
+          "recorded_message_scope": "Initial diagnosis messages before router schema prepend; not a wire request hash and excludes supplementary turns",
+          "keys": [
+            "goal",
+            "policy",
+            "required_saving_gb",
+            "evidence_markdown"
+          ],
+          "new_context_fields_present": {
+            "execution_context": false,
+            "candidate_evidence": false,
+            "verification_feedback": false,
+            "solver_context_availability": false
+          },
+          "provenance_serialization_hash_matches": true
+        }
+      ],
+      "selected_configuration": {}
+    },
+    {
+      "scenario_id": "s2_fp32_adamw_1b",
+      "run_id": "9561b7d956cf415bbf4b98f6950a45e0",
+      "status": "needs_human",
+      "target_met": false,
+      "selected_round": null,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null
+        }
+      ],
+      "source_sha256": "bb1d12c69ce5525e6eab67e709740cb2d578c070afa8b094b5f4b6906648bc5b",
+      "interpretation": "First diagnosis needs_more_info; no Super patch or candidate verification. Original optimizer-state/fit22 acceptance conflict is not resolved by this run.",
+      "literal_cli": {
+        "observed_exit_code": 78,
+        "invocation_kind": "installed_console_script",
+        "invoked": true,
+        "returned": true,
+        "run_dispatched": true,
+        "result_saved": true,
+        "request_sha256": "4b76d3f95b1023d02c623b3c99dbb3dfe206c536b2c4672d0d58223e738c7d0f",
+        "result_sha256": "303c2d3da6dc8fc054d506ee3c01abe67e242f8910dbd32323d024dbbec8dd48"
+      },
+      "effective_request": {
+        "script_args": [],
+        "execution_argv": null,
+        "repository_mode": false,
+        "max_steps": 20,
+        "target": "reclaim",
+        "seed": 1337
+      },
+      "seed_scope": "request.seed is wrapper seed; a target script may call manual_seed again",
+      "model_roles": {
+        "annotate": 1,
+        "diagnose": 1
+      },
+      "events": [
+        {
+          "sequence": 1,
+          "kind": "run.started"
+        },
+        {
+          "sequence": 2,
+          "kind": "run.preflight"
+        },
+        {
+          "sequence": 3,
+          "kind": "budget.reserved"
+        },
+        {
+          "sequence": 4,
+          "kind": "baseline.started"
+        },
+        {
+          "sequence": 5,
+          "kind": "baseline.completed"
+        },
+        {
+          "sequence": 6,
+          "kind": "evidence.started"
+        },
+        {
+          "sequence": 7,
+          "kind": "evidence.built"
+        },
+        {
+          "sequence": 8,
+          "kind": "annotate.done"
+        },
+        {
+          "sequence": 9,
+          "kind": "diagnose.started"
+        },
+        {
+          "sequence": 10,
+          "kind": "diagnose.done"
+        },
+        {
+          "sequence": 11,
+          "kind": "round.done"
+        },
+        {
+          "sequence": 12,
+          "kind": "needs_human"
+        },
+        {
+          "sequence": 13,
+          "kind": "report.started"
+        },
+        {
+          "sequence": 14,
+          "kind": "report.written"
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "revert",
+          "reason": "diagnosis_needs_more_info",
+          "plan_step": null,
+          "diagnosis": {
+            "valid": true,
+            "ready_for_patch": false,
+            "issues": []
+          },
+          "diagnosis_needs_more_info": true,
+          "diagnosis_notes": [
+            "Required saving is 4.31 GB; summed plan estimates (~4.65 GB) exceed this but savings overlap (e.g., micro-batch reduces temporaries that fused AdamW also targets).",
+            "No source code for the model definition beyond train.py is available; exact parameter/gradient sizes are inferred from allocator categories.",
+            "Fragmentation_candidate (rc5) is a cache-gap proxy; not proven harmful. If cache cannot be released, savings rely on reducing live tensors.",
+            "Verification feedback is empty (first round); plan steps are untested.",
+            "If micro-batch change is not permitted or fails verification, required saving may not be met without model/precision changes (both disallowed)."
+          ],
+          "diagnosis_plan": [
+            {
+              "fix_id": "fix1",
+              "type": "config",
+              "title": "Reduce micro-batch size with gradient accumulation",
+              "description": "In train.py, change batch=2 to batch=1 and add accumulation_steps=2 so that the effective batch and optimizer update boundary are preserved. This halves the peak activation/temporary footprint (forward/backward tensors for batch dimension 2→1) while keeping the same number of samples per optimizer step.",
+              "expected_saving_gb": 2.15,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Requires verifying loss equivalence with the host's default tolerance (0.001) over 20 steps. Small roundoff differences may appear.",
+              "requires_policy": [
+                "allow_batch_grad_accum"
+              ]
+            },
+            {
+              "fix_id": "fix2",
+              "type": "code",
+              "title": "Switch AdamW to fused implementation and disable foreach",
+              "description": "In train.py, replace `optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, foreach=True)` with `optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, fused=True)`. The fused kernel avoids the per-parameter temporary buffers created by the foreach path (stk_8f779f24931b0038) and reduces optimizer-step workspace allocations.",
+              "expected_saving_gb": 1.0,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Fused AdamW may have slightly different numerics; host will verify loss equivalence. Ensure CUDA 11.7+ and compatible GPU.",
+              "requires_policy": []
+            },
+            {
+              "fix_id": "fix3",
+              "type": "code",
+              "title": "Enable gradient checkpointing on ResidualMLP blocks",
+              "description": "Wrap each ResidualBlock forward with `torch.utils.checkpoint.checkpoint` in train.py (or set `use_reentrant=False` and checkpoint the block sequence). This trades recompute for memory by freeing intermediate activations during the backward pass. Targets the large activation/temporary footprint seen at stk_79161657edb34a93 and stk_47a33c87f8ad78dd.",
+              "expected_saving_gb": 1.5,
+              "numerics_impact": "none",
+              "throughput_impact": "major",
+              "risk": "Recompute increases step time; host policy allows up to 25% throughput regression. Must verify loss matches within tolerance.",
+              "requires_policy": []
+            }
+          ],
+          "candidate_evidence": {
+            "schema": "headroom.solver_candidate.v1",
+            "content_is_untrusted_data": true,
+            "round": 1,
+            "candidate_selected": false,
+            "selected_after_round": null,
+            "decision": "revert",
+            "patch_result_available": false,
+            "patch_result_sha256": null,
+            "patch_result_reason": "missing_unsafe_or_oversized",
+            "diff": {
+              "available": false,
+              "reason": "not_recorded",
+              "sha256": null,
+              "utf8_bytes": null,
+              "text": null,
+              "included_bytes": 0,
+              "omitted_bytes": null,
+              "truncated": null
+            },
+            "status": null,
+            "reason": null,
+            "env_changes": {},
+            "cli_changes": {
+              "values": null,
+              "complete": false,
+              "omitted_count": null,
+              "redacted_positions": []
+            },
+            "effective_cli": {
+              "values": null,
+              "complete": false,
+              "omitted_count": null,
+              "redacted_positions": []
+            },
+            "last_attempt": null,
+            "application_files": [],
+            "application_files_omitted": null,
+            "truncated_fields": [],
+            "summary_overflow_omitted_fields": []
+          },
+          "feedback": {
+            "round": 1,
+            "provenance": "live",
+            "fix_id": null,
+            "change": {
+              "type": null,
+              "title": null,
+              "patch_artifact": null
+            },
+            "decision": "revert",
+            "reason": "diagnosis_needs_more_info",
+            "failure": null,
+            "verification_available": false,
+            "verification": null,
+            "candidate": null,
+            "candidate_selected": false,
+            "selected_after_round": {
+              "round": null,
+              "basis": "original_baseline",
+              "target_met": false,
+              "run_id": "d0f5c0357a884542adfbc64f697a6709",
+              "status": "completed",
+              "reason": null,
+              "error": null,
+              "exception": {
+                "type": "StepLimitReached",
+                "message": "Reached 20 optimizer updates"
+              },
+              "oom": {
+                "requested_bytes": null,
+                "free_bytes": null,
+                "requested_gb": null,
+                "free_gb": null
+              },
+              "capture_complete": true,
+              "steps": 20,
+              "peak_allocated_bytes": 21553250816,
+              "peak_reserved_bytes": 22244491264,
+              "step_ms_median": 184.55905199516565
+            },
+            "truncated_fields": []
+          },
+          "patch": null,
+          "verification": null
+        }
+      ],
+      "initial_diagnosis_audit_snapshots": [
+        {
+          "path": "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-9561b7d956cf415bbf4b98f6950a45e0/01-initial-messages.json",
+          "recorded_message_scope": "Initial diagnosis messages before router schema prepend; not a wire request hash and excludes supplementary turns",
+          "keys": [
+            "goal",
+            "policy",
+            "required_saving_gb",
+            "evidence_markdown"
+          ],
+          "new_context_fields_present": {
+            "execution_context": false,
+            "candidate_evidence": false,
+            "verification_feedback": false,
+            "solver_context_availability": false
+          },
+          "provenance_serialization_hash_matches": true
+        }
+      ],
+      "selected_configuration": {}
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "run_id": "52bb8129723241889337486bcb187f63",
+      "status": "needs_human",
+      "target_met": false,
+      "selected_round": null,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null
+        }
+      ],
+      "source_sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+      "interpretation": "Diagnosis valid but needs_more_info, so no Super/GPU candidate this campaign. The model proposed no_grad yet conflated train batch16 with the source train_inputs batch1 and eval_inputs batch16. An earlier campaign success cannot be counted again as v7 success.",
+      "literal_cli": {
+        "observed_exit_code": 78,
+        "invocation_kind": "installed_console_script",
+        "invoked": true,
+        "returned": true,
+        "run_dispatched": true,
+        "result_saved": true,
+        "request_sha256": "93ea89b8ce793dc689e9f22a1b06915f3b0cf1f31b8e09b3977636175c3f26d4",
+        "result_sha256": "aa3af4f02001aeffc4122447bdb70850a9d4e4e0981d5e090f7ea5f6cd58e3a4"
+      },
+      "effective_request": {
+        "script_args": [],
+        "execution_argv": null,
+        "repository_mode": false,
+        "max_steps": 20,
+        "target": "reclaim",
+        "seed": 1337
+      },
+      "seed_scope": "request.seed is wrapper seed; a target script may call manual_seed again",
+      "model_roles": {
+        "annotate": 1,
+        "diagnose": 1
+      },
+      "events": [
+        {
+          "sequence": 1,
+          "kind": "run.started"
+        },
+        {
+          "sequence": 2,
+          "kind": "run.preflight"
+        },
+        {
+          "sequence": 3,
+          "kind": "budget.reserved"
+        },
+        {
+          "sequence": 4,
+          "kind": "baseline.started"
+        },
+        {
+          "sequence": 5,
+          "kind": "baseline.completed"
+        },
+        {
+          "sequence": 6,
+          "kind": "evidence.started"
+        },
+        {
+          "sequence": 7,
+          "kind": "evidence.built"
+        },
+        {
+          "sequence": 8,
+          "kind": "annotate.done"
+        },
+        {
+          "sequence": 9,
+          "kind": "diagnose.started"
+        },
+        {
+          "sequence": 10,
+          "kind": "diagnose.done"
+        },
+        {
+          "sequence": 11,
+          "kind": "round.done"
+        },
+        {
+          "sequence": 12,
+          "kind": "needs_human"
+        },
+        {
+          "sequence": 13,
+          "kind": "report.started"
+        },
+        {
+          "sequence": 14,
+          "kind": "report.written"
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "revert",
+          "reason": "diagnosis_needs_more_info",
+          "plan_step": null,
+          "diagnosis": {
+            "valid": true,
+            "ready_for_patch": false,
+            "issues": []
+          },
+          "diagnosis_needs_more_info": true,
+          "diagnosis_notes": [
+            "Combined expected savings (0.69 GB) exceed required 0.487 GB, but savings overlap: eval fix reduces validation peak (~0.2 GB at event 855), accumulation reduces training peak (~0.48 GB at events 1212/1320). They address different timeline phases.",
+            "Peak composition shows 0.83 GB activations (stk_6828f35a261aa571 GELU) and 0.18 GB temporaries (stk_47a33c87f8ad78dd matmul grads) at reconstructed peak. Exact dimensional breakdown of GELU input (batch*sequence*width) not in evidence; saving estimates based on batch-proportional scaling.",
+            "No OOM events recorded; peak_is_exact=true with complete history. Fragmentation_indicator=high but not confirmed; reserved-allocated gap (74 MB) is cache-gap proxy, not proven harmful fragmentation.",
+            "train.py uses SGD (no optimizer_state memory). Parameter count ~151 MB (stk_b273e6f3e13b8530) matches peak params composition.",
+            "Source shows evaluation runs every training step (line 115); eval_inputs shape (batch, sequence, width) with batch=16 per line 86. Fixing eval autograd also reduces per-step memory spikes seen at events 855, 925, 996.",
+            "Verification requires 20 optimizer updates with loss comparison; tolerance 0.001 is host default for FP32. Do not reduce steps or change tolerance.",
+            "If gradient accumulation is not permitted or validation shows regression, need_more_info=true for alternative: activation checkpointing on residual blocks (code change) or sequence chunking."
+          ],
+          "diagnosis_plan": [
+            {
+              "fix_id": "fix_eval_no_grad",
+              "type": "code",
+              "title": "Add torch.no_grad() to evaluation forward pass",
+              "description": "In train.py evaluate() function (line 69-74), wrap the model(inputs) call with torch.no_grad() to disable autograd during validation. The source shows model.eval() is called but autograd remains enabled, causing activation retention for the entire validation forward pass. This affects stk_d7b2c5a4024a5913 (linear/gelu), stk_b273e6f3e13b8530 (layer_norm), and stk_d915067dbdd35a8b (add/residual) stacks observed at peak.",
+              "expected_saving_gb": 0.21,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Low - standard PyTorch practice; only affects validation path, not training loss or optimizer updates.",
+              "requires_policy": []
+            },
+            {
+              "fix_id": "fix_gradient_accumulation",
+              "type": "config",
+              "title": "Enable gradient accumulation to reduce microbatch size",
+              "description": "Reduce train_batch from 16 to 4 with gradient accumulation (accumulation_steps=4) to lower peak activation memory during training forward/backward. The peak at event 1212 (1.78GB) and 1320 (2.44GB) corresponds to training steps with batch=16, sequence=512, width=768. Accumulation preserves effective batch and optimizer update boundary (20 steps). Requires allow_batch_grad_accum=true.",
+              "expected_saving_gb": 0.48,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Medium - changes memory profile but preserves mathematics; validate loss equivalence over 20 optimizer steps.",
+              "requires_policy": [
+                "allow_batch_grad_accum"
+              ]
+            }
+          ],
+          "candidate_evidence": {
+            "schema": "headroom.solver_candidate.v1",
+            "content_is_untrusted_data": true,
+            "round": 1,
+            "candidate_selected": false,
+            "selected_after_round": null,
+            "decision": "revert",
+            "patch_result_available": false,
+            "patch_result_sha256": null,
+            "patch_result_reason": "missing_unsafe_or_oversized",
+            "diff": {
+              "available": false,
+              "reason": "not_recorded",
+              "sha256": null,
+              "utf8_bytes": null,
+              "text": null,
+              "included_bytes": 0,
+              "omitted_bytes": null,
+              "truncated": null
+            },
+            "status": null,
+            "reason": null,
+            "env_changes": {},
+            "cli_changes": {
+              "values": null,
+              "complete": false,
+              "omitted_count": null,
+              "redacted_positions": []
+            },
+            "effective_cli": {
+              "values": null,
+              "complete": false,
+              "omitted_count": null,
+              "redacted_positions": []
+            },
+            "last_attempt": null,
+            "application_files": [],
+            "application_files_omitted": null,
+            "truncated_fields": [],
+            "summary_overflow_omitted_fields": []
+          },
+          "feedback": {
+            "round": 1,
+            "provenance": "live",
+            "fix_id": null,
+            "change": {
+              "type": null,
+              "title": null,
+              "patch_artifact": null
+            },
+            "decision": "revert",
+            "reason": "diagnosis_needs_more_info",
+            "failure": null,
+            "verification_available": false,
+            "verification": null,
+            "candidate": null,
+            "candidate_selected": false,
+            "selected_after_round": {
+              "round": null,
+              "basis": "original_baseline",
+              "target_met": false,
+              "run_id": "3809bd3afadd445884873eafdc2041ec",
+              "status": "completed",
+              "reason": null,
+              "error": null,
+              "exception": {
+                "type": "StepLimitReached",
+                "message": "Reached 20 optimizer updates"
+              },
+              "oom": {
+                "requested_bytes": null,
+                "free_bytes": null,
+                "requested_gb": null,
+                "free_gb": null
+              },
+              "capture_complete": true,
+              "steps": 20,
+              "peak_allocated_bytes": 2435717632,
+              "peak_reserved_bytes": 2510290944,
+              "step_ms_median": 43.57422445900738
+            },
+            "truncated_fields": []
+          },
+          "patch": null,
+          "verification": null
+        }
+      ],
+      "initial_diagnosis_audit_snapshots": [
+        {
+          "path": "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-52bb8129723241889337486bcb187f63/01-initial-messages.json",
+          "recorded_message_scope": "Initial diagnosis messages before router schema prepend; not a wire request hash and excludes supplementary turns",
+          "keys": [
+            "goal",
+            "policy",
+            "required_saving_gb",
+            "evidence_markdown"
+          ],
+          "new_context_fields_present": {
+            "execution_context": false,
+            "candidate_evidence": false,
+            "verification_feedback": false,
+            "solver_context_availability": false
+          },
+          "provenance_serialization_hash_matches": true
+        }
+      ],
+      "selected_configuration": {}
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "run_id": "845f46be0f124c9c9dba4944feb9353f",
+      "status": "needs_human",
+      "target_met": false,
+      "selected_round": null,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": true
+        },
+        {
+          "round": 2,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null
+        }
+      ],
+      "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+      "interpretation": "One applied retain_graph removal completed20 updates and satisfied memory_target, but original scalar-loss gate failed against the small-batch reference; next diagnosis requested more information. Different input/effective batch is established, so scalar difference is not mathematical non-equivalence proof. Candidate remains REVERT under unchanged gate.",
+      "literal_cli": {
+        "observed_exit_code": 78,
+        "invocation_kind": "installed_console_script",
+        "invoked": true,
+        "returned": true,
+        "run_dispatched": true,
+        "result_saved": true,
+        "request_sha256": "4dc5fa61cfcfc94c6121f12f7a1920596b3a06eae1e06df3cd3661f277736c78",
+        "result_sha256": "ddb36219018da558e3d71c691a87e426bbfbb5663c50eb37cbb75018ea7539cd"
+      },
+      "effective_request": {
+        "script_args": [],
+        "execution_argv": null,
+        "repository_mode": false,
+        "max_steps": 20,
+        "target": "fix-oom",
+        "seed": 1337
+      },
+      "seed_scope": "request.seed is wrapper seed; a target script may call manual_seed again",
+      "model_roles": {
+        "annotate": 1,
+        "diagnose": 2,
+        "patcher": 1
+      },
+      "events": [
+        {
+          "sequence": 1,
+          "kind": "run.started"
+        },
+        {
+          "sequence": 2,
+          "kind": "run.preflight"
+        },
+        {
+          "sequence": 3,
+          "kind": "budget.reserved"
+        },
+        {
+          "sequence": 4,
+          "kind": "baseline.started"
+        },
+        {
+          "sequence": 5,
+          "kind": "baseline.oom"
+        },
+        {
+          "sequence": 6,
+          "kind": "evidence.started"
+        },
+        {
+          "sequence": 7,
+          "kind": "evidence.built"
+        },
+        {
+          "sequence": 8,
+          "kind": "annotate.done"
+        },
+        {
+          "sequence": 9,
+          "kind": "diagnose.started"
+        },
+        {
+          "sequence": 10,
+          "kind": "diagnose.done"
+        },
+        {
+          "sequence": 11,
+          "kind": "patch.started"
+        },
+        {
+          "sequence": 12,
+          "kind": "patch.written"
+        },
+        {
+          "sequence": 13,
+          "kind": "patch.applied"
+        },
+        {
+          "sequence": 14,
+          "kind": "verify.started"
+        },
+        {
+          "sequence": 15,
+          "kind": "verify.done"
+        },
+        {
+          "sequence": 16,
+          "kind": "round.done"
+        },
+        {
+          "sequence": 17,
+          "kind": "diagnose.started"
+        },
+        {
+          "sequence": 18,
+          "kind": "diagnose.done"
+        },
+        {
+          "sequence": 19,
+          "kind": "round.done"
+        },
+        {
+          "sequence": 20,
+          "kind": "needs_human"
+        },
+        {
+          "sequence": 21,
+          "kind": "report.started"
+        },
+        {
+          "sequence": 22,
+          "kind": "report.written"
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "revert",
+          "reason": "verification_hard_constraints_unmet",
+          "plan_step": {
+            "fix_id": "fix1",
+            "type": "code",
+            "title": "Remove retain_graph=True from loss.backward()",
+            "description": "In train.py line 104, loss.backward(retain_graph=True) retains the entire autograd graph after each step. The graph is only traversed once per step, so retain_graph is unnecessary and causes the graph and its saved tensors to accumulate across 20 steps. Removing it allows PyTorch to free the graph and saved activations after each backward pass.",
+            "expected_saving_gb": 9.93,
+            "numerics_impact": "none",
+            "throughput_impact": "minor",
+            "risk": "Low - standard PyTorch behavior; retain_graph=True was a bug.",
+            "requires_policy": []
+          },
+          "diagnosis": {
+            "valid": true,
+            "ready_for_patch": true,
+            "issues": []
+          },
+          "diagnosis_needs_more_info": false,
+          "diagnosis_notes": [
+            "Peak composition shows 9.93 GB activations (stk_57f32c9835cf005b) from retained graph; removing retain_graph=True is highest-impact fix.",
+            "LayerNorm forward (stk_0431a2edadcfa792, 2.52 GB) and residual adds (stk_a88502b20644c801, 2.08 GB) are next largest activation categories; checkpointing targets these.",
+            "GELU backward temporaries total ~9.66 GB across multiple stacks; approximate GELU may reduce but savings uncertain.",
+            "Gradient accumulation savings overlap with checkpointing; combined plan steps are not additive.",
+            "Required saving unknown (null); proposed steps target largest measured causes.",
+            "Policy allows gradient accumulation; numerics changes disallowed so all steps have numerics_impact='none'.",
+            "Verification uses host default FP32 tolerance 0.001 over 20 steps with loss comparison."
+          ],
+          "diagnosis_plan": [
+            {
+              "fix_id": "fix1",
+              "type": "code",
+              "title": "Remove retain_graph=True from loss.backward()",
+              "description": "In train.py line 104, loss.backward(retain_graph=True) retains the entire autograd graph after each step. The graph is only traversed once per step, so retain_graph is unnecessary and causes the graph and its saved tensors to accumulate across 20 steps. Removing it allows PyTorch to free the graph and saved activations after each backward pass.",
+              "expected_saving_gb": 9.93,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Low - standard PyTorch behavior; retain_graph=True was a bug.",
+              "requires_policy": []
+            },
+            {
+              "fix_id": "fix2",
+              "type": "code",
+              "title": "Enable gradient checkpointing for residual blocks",
+              "description": "The ResidualMLP uses 6 ResidualBlocks each with LayerNorm and GELU. The forward activations (LayerNorm outputs, GELU inputs/outputs, residual adds) dominate the peak. Wrap each block with torch.utils.checkpoint.checkpoint to trade recomputation for activation memory. Applies to training forward path (train.py lines 18, 28-29).",
+              "expected_saving_gb": 4.5,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Medium - recomputation overhead; verify loss equivalence.",
+              "requires_policy": []
+            },
+            {
+              "fix_id": "fix3",
+              "type": "code",
+              "title": "Replace GELU with in-place approximation or fused kernel",
+              "description": "GELU backward (stk_57f32c9835cf005b, stk_9bb5a0af368c58f6, stk_fa0937f88c4eb0d3, stk_8740c7ed9227569b) allocates large temporary buffers for gelu_backward. If a fused or in-place GELU is available (e.g., torch.nn.GELU(approximate='tanh')), it may reduce temporaries. Requires source check for GELU options.",
+              "expected_saving_gb": 1.5,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Low - approximate GELU is numerically close; verify equivalence.",
+              "requires_policy": []
+            },
+            {
+              "fix_id": "fix4",
+              "type": "code",
+              "title": "Enable gradient accumulation with microbatches",
+              "description": "Batch size is 8 (train.py line 73). Split into microbatches (e.g., 2) with gradient accumulation over 4 steps per effective batch, reducing peak activations per forward/permicro by ~4x. Requires allow_batch_grad_accum policy (enabled). Must preserve effective batch=8, loss scaling (mean), and optimizer step boundary every 4 microbatches.",
+              "expected_saving_gb": 6.0,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Medium - changes execution structure; verify loss/optimizer equivalence.",
+              "requires_policy": [
+                "allow_batch_grad_accum"
+              ]
+            }
+          ],
+          "candidate_evidence": {
+            "schema": "headroom.solver_candidate.v1",
+            "content_is_untrusted_data": true,
+            "round": 1,
+            "candidate_selected": false,
+            "selected_after_round": null,
+            "decision": "revert",
+            "patch_result_available": true,
+            "patch_result_sha256": "27b0bfc6b55ab9dc259f9a4bffcf902992c3b3f30df75928976efae442878b2b",
+            "patch_result_reason": null,
+            "diff": {
+              "available": true,
+              "reason": null,
+              "sha256": "b45f06998e1ae9bbdbe2d63abd0006b0635137def9d355d4b2da1a3457ce9998",
+              "utf8_bytes": 462,
+              "text": "--- a/train.py\n+++ b/train.py\n@@ -101,7 +101,7 @@\n         loss = (predictions - targets).square().mean()\n         # BUG: this training loop needlessly retains saved forward tensors.\n         # Each graph is only traversed once, so retain_graph is unnecessary.\n-        loss.backward(retain_graph=True)\n+        loss.backward()\n         optimizer.step()\n         # BUG: the epoch metric holds every retained graph instead of a float.\n         total_loss += loss\n",
+              "included_bytes": 462,
+              "omitted_bytes": 0,
+              "truncated": false
+            },
+            "status": "applied",
+            "reason": "STATIC_CHECKS_PASSED",
+            "env_changes": {},
+            "cli_changes": {
+              "values": [],
+              "complete": true,
+              "omitted_count": 0,
+              "redacted_positions": []
+            },
+            "effective_cli": {
+              "values": [],
+              "complete": true,
+              "omitted_count": 0,
+              "redacted_positions": []
+            },
+            "last_attempt": {
+              "status": "applied",
+              "reason": "STATIC_CHECKS_PASSED",
+              "detail": null,
+              "detail_truncated": false,
+              "policy_issues": [],
+              "policy_issues_omitted": 0
+            },
+            "application_files": [
+              {
+                "path": "train.py",
+                "path_truncated": false,
+                "before_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+                "candidate_sha256": "73b68c99da5d5408c8702a1c7316f7ca004153b9946a5751d63e403984190e5a"
+              }
+            ],
+            "application_files_omitted": 0,
+            "truncated_fields": [],
+            "summary_overflow_omitted_fields": []
+          },
+          "feedback": {
+            "round": 1,
+            "provenance": "live",
+            "fix_id": "fix1",
+            "change": {
+              "type": "code",
+              "title": "Remove retain_graph=True from loss.backward()",
+              "patch_artifact": "rounds/01/patches/patch-engine-08aef4b3945342be9725f76a9df2d310/attempt-1/patch-3cd8b4298839405e844641e526306b67/patch.diff"
+            },
+            "decision": "revert",
+            "reason": "verification_hard_constraints_unmet",
+            "failure": null,
+            "verification_available": true,
+            "verification": {
+              "peak_before": 24.768717824,
+              "peak_after": 2.533996544,
+              "reduction_pct": 89.76936730433155,
+              "step_ms_before": 108.73158846516162,
+              "step_ms_after": 108.60395897179842,
+              "max_loss_delta": 0.052162110805511475,
+              "throughput_regression_pct": -0.11738032632908624,
+              "parameter_count_before": 50374656,
+              "parameter_count_after": 50374656,
+              "loss_tolerance": 0.001,
+              "completed": true,
+              "target_met": false,
+              "numerics_changed": false,
+              "observed_precision_change": false,
+              "loss_equivalence": "changed",
+              "numerical_basis": "original_plan_first_five_backward_scalars",
+              "comparison_precision": "fp32",
+              "acceptance_scope": "standard",
+              "checks": {
+                "baseline_capture": true,
+                "target_mode_valid": true,
+                "candidate_completed_required_steps": true,
+                "finite_candidate_losses": true,
+                "parameter_count_unchanged": true,
+                "numerics_policy": true,
+                "same_seed": true,
+                "same_inputs": false,
+                "same_effective_batch": false,
+                "same_objective": true,
+                "small_batch_reference_completed": true,
+                "small_batch_reference_same_seed": true,
+                "loss_decreases": true,
+                "loss_series_aligned_to_updates": true,
+                "loss_series_comparison_available": true,
+                "loss_comparable": false,
+                "repository_no_reference_exception": false,
+                "loss_tolerance": false,
+                "numerical_acceptance": false,
+                "parameter_policy": true,
+                "measured_cuda_peaks": true,
+                "same_gpu_hardware": true,
+                "gpu_observation_clear": true,
+                "throughput_limit": null,
+                "memory_target": true
+              },
+              "checks_omitted": 0,
+              "checks_available": true,
+              "failed_checks": [
+                "same_inputs",
+                "same_effective_batch",
+                "loss_comparable",
+                "repository_no_reference_exception",
+                "loss_tolerance",
+                "numerical_acceptance"
+              ],
+              "unknown_checks": [
+                "throughput_limit"
+              ],
+              "notes": [
+                "OOM comparison uses the original small-batch reference's first five backward scalars.",
+                "Loss states describe the original-plan observed scalar comparison; matching inputs, effective batch and objective are not established. This is not proof of workload equivalence.",
+                "OOM baseline has no comparable completed-run throughput; slowdown is not certified.",
+                "OOM peak reduction compares observed peaks, not the unobserved memory needed to finish the baseline.",
+                "Pairing: Lab runtime fingerprints and pinned source contracts; same_inputs differs; same_effective_batch differs",
+                "Reference discovery: headroom.yaml/argparse static inspection"
+              ],
+              "notes_omitted": 0
+            },
+            "candidate": {
+              "run_id": "d8957cb70b7443f2bb9b6b7e2640cc91",
+              "status": "completed",
+              "reason": null,
+              "error": null,
+              "exception": {
+                "type": "StepLimitReached",
+                "message": "Reached 20 optimizer updates"
+              },
+              "oom": {
+                "requested_bytes": null,
+                "free_bytes": null,
+                "requested_gb": null,
+                "free_gb": null
+              },
+              "capture_complete": true,
+              "steps": 20,
+              "peak_allocated_bytes": 2533996544,
+              "peak_reserved_bytes": 2585788416,
+              "step_ms_median": 108.60395897179842
+            },
+            "candidate_selected": false,
+            "selected_after_round": {
+              "round": null,
+              "basis": "original_baseline",
+              "target_met": false,
+              "run_id": "e86797c9f39743a6b186c1dcdf01c90a",
+              "status": "oom",
+              "reason": null,
+              "error": null,
+              "exception": {
+                "type": "OutOfMemoryError",
+                "message": "CUDA out of memory. Tried to allocate 128.00 MiB. GPU 0 has a total capacity of 23.55 GiB of which 52.88 MiB is free. Including non-PyTorch memory, this process has 23.43 GiB memory in use. Of the allocated memory 23.07 GiB is allocated by PyTorch, and 727.00 KiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/note [truncated]"
+              },
+              "oom": {
+                "requested_bytes": 134217728,
+                "free_bytes": 55443456,
+                "requested_gb": 0.134217728,
+                "free_gb": 0.055443456
+              },
+              "capture_complete": true,
+              "steps": 12,
+              "peak_allocated_bytes": 24768717824,
+              "peak_reserved_bytes": 24771559424,
+              "step_ms_median": 108.73158846516162
+            },
+            "truncated_fields": [
+              "selected.exception.message"
+            ]
+          },
+          "patch": {
+            "status": "applied",
+            "reason": "STATIC_CHECKS_PASSED",
+            "candidate_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/patches/patch-engine-08aef4b3945342be9725f76a9df2d310/attempt-1/patch-3cd8b4298839405e844641e526306b67/candidate",
+            "original_source_root": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/lab/e86797c9f39743a6b186c1dcdf01c90a/source",
+            "cli_changes": [],
+            "effective_cli": [],
+            "env_changes": {},
+            "runtime_verified": false,
+            "runtime_verified_scope": "Patch engine static-stage field; runtime verification is the separate round verification artifact",
+            "attempts": [
+              {
+                "index": 1,
+                "status": "applied",
+                "reason": "STATIC_CHECKS_PASSED",
+                "detail": null,
+                "compile_exit_code": 0,
+                "changed_files": [
+                  "train.py"
+                ],
+                "application_check": {
+                  "protocol": "headroom.exact_application.v1",
+                  "verified": true,
+                  "files": [
+                    {
+                      "path": "train.py",
+                      "before_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+                      "expected_sha256": "73b68c99da5d5408c8702a1c7316f7ca004153b9946a5751d63e403984190e5a",
+                      "candidate_sha256": "73b68c99da5d5408c8702a1c7316f7ca004153b9946a5751d63e403984190e5a",
+                      "hunks": 1,
+                      "bytes": 4559
+                    }
+                  ]
+                },
+                "response_artifact": "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/patches/patch-engine-08aef4b3945342be9725f76a9df2d310/attempt-1-response.json",
+                "response": {
+                  "wire_schema": "source_span_edits_v1",
+                  "finish_reason": "stop",
+                  "validation": "schema_passed",
+                  "validation_reason": null,
+                  "parsed_omitted": false,
+                  "parsed_sha256": "e22508407960135d01482fa4213175b73b80369b1e3e480e5c2d43f264d93b7a"
+                },
+                "parsed_present": true
+              }
+            ]
+          },
+          "verification": {
+            "completed": true,
+            "target_met": false,
+            "peak_before": 24.768717824,
+            "peak_after": 2.533996544,
+            "reduction_pct": 89.76936730433155,
+            "step_ms_before": 108.73158846516162,
+            "step_ms_after": 108.60395897179842,
+            "throughput_regression_pct": -0.11738032632908624,
+            "loss_equivalence": "changed",
+            "max_loss_delta": 0.052162110805511475,
+            "loss_tolerance": 0.001,
+            "parameter_count_before": 50374656,
+            "parameter_count_after": 50374656,
+            "numerical_basis": "original_plan_first_five_backward_scalars",
+            "comparison_precision": "fp32",
+            "observed_precision_change": false,
+            "checks": {
+              "baseline_capture": true,
+              "target_mode_valid": true,
+              "candidate_completed_required_steps": true,
+              "finite_candidate_losses": true,
+              "parameter_count_unchanged": true,
+              "numerics_policy": true,
+              "same_seed": true,
+              "same_inputs": false,
+              "same_effective_batch": false,
+              "same_objective": true,
+              "small_batch_reference_completed": true,
+              "small_batch_reference_same_seed": true,
+              "loss_decreases": true,
+              "loss_series_aligned_to_updates": true,
+              "loss_series_comparison_available": true,
+              "loss_comparable": false,
+              "repository_no_reference_exception": false,
+              "loss_tolerance": false,
+              "numerical_acceptance": false,
+              "parameter_policy": true,
+              "measured_cuda_peaks": true,
+              "same_gpu_hardware": true,
+              "gpu_observation_clear": true,
+              "throughput_limit": null,
+              "memory_target": true
+            },
+            "notes": [
+              "OOM comparison uses the original small-batch reference's first five backward scalars.",
+              "Loss states describe the original-plan observed scalar comparison; matching inputs, effective batch and objective are not established. This is not proof of workload equivalence.",
+              "OOM baseline has no comparable completed-run throughput; slowdown is not certified.",
+              "OOM peak reduction compares observed peaks, not the unobserved memory needed to finish the baseline.",
+              "Pairing: Lab runtime fingerprints and pinned source contracts; same_inputs differs; same_effective_batch differs",
+              "Reference discovery: headroom.yaml/argparse static inspection"
+            ],
+            "run_ids": {
+              "baseline": "e86797c9f39743a6b186c1dcdf01c90a",
+              "candidate": "d8957cb70b7443f2bb9b6b7e2640cc91"
+            },
+            "reference_run": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/lab/40ec04637ded4337880968b523da44ea",
+            "reference_discovery": {
+              "found": true,
+              "flag": "--batch",
+              "original_batch": null,
+              "source": "headroom.yaml/argparse static inspection",
+              "reference_batch": 1,
+              "attempts": [
+                {
+                  "batch": 1,
+                  "run_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/lab/40ec04637ded4337880968b523da44ea",
+                  "status": "completed"
+                }
+              ]
+            },
+            "pairing_evidence": {
+              "protocol": "headroom.pairing.v1",
+              "checks": {
+                "same_inputs": false,
+                "same_effective_batch": false,
+                "same_objective": true
+              },
+              "reasons": [
+                "same_inputs differs",
+                "same_effective_batch differs"
+              ],
+              "source": "Lab runtime fingerprints and pinned source contracts",
+              "reference_run": "40ec04637ded4337880968b523da44ea",
+              "candidate_run": "d8957cb70b7443f2bb9b6b7e2640cc91"
+            },
+            "candidate": {
+              "run_id": "d8957cb70b7443f2bb9b6b7e2640cc91",
+              "status": "completed",
+              "steps": 20,
+              "capture_complete": true,
+              "parameter_count": 50374656,
+              "parameter_count_complete": true,
+              "loss_series": [
+                1.0407228469848633,
+                1.0404858589172363,
+                1.040249228477478,
+                1.040013074874878,
+                1.0397772789001465,
+                1.0395419597625732,
+                1.0393069982528687,
+                1.0390725135803223,
+                1.038838267326355,
+                1.038604497909546,
+                1.038371205329895,
+                1.0381382703781128,
+                1.0379058122634888,
+                1.0376737117767334,
+                1.0374417304992676,
+                1.037210464477539,
+                1.0369794368743896,
+                1.0367488861083984,
+                1.0365188121795654,
+                1.036289095878601
+              ],
+              "peak_allocated_bytes": 2533996544,
+              "cleanup_verified": true,
+              "shared_gpu": false
+            }
+          },
+          "candidate_artifact_hashes_match": true
+        },
+        {
+          "number": 2,
+          "decision": "revert",
+          "reason": "diagnosis_needs_more_info",
+          "plan_step": null,
+          "diagnosis": {
+            "valid": true,
+            "ready_for_patch": false,
+            "issues": []
+          },
+          "diagnosis_needs_more_info": true,
+          "diagnosis_notes": [
+            "The OOM run used batch=8, width=1024, depth=6, sequence=1024 (from source defaults for non-tiny). Peak allocated 24.77 GB; GPU has 24.56 GB total, 24.06 GB free per nvidia-smi. The dominant cause is retained_graph (activations 9.93 GB). Fix1 targets this.",
+            "Prior verification of fix1 (round 1) reduced peak to 2.53 GB but failed numerical acceptance: loss_comparable=false, same_inputs=false, same_effective_batch=false. The verification compared against a small-batch reference, not the original OOM configuration. The fix itself is numerically correct (removes unnecessary retention). The gate failure is a verification-setup mismatch, not a correctness issue.",
+            "If fix1 is re-verified against the correct baseline (same batch=8, steps=20, seed=7), it should pass. However, the host's acceptance gate requires a completed reference run with matching inputs/effective-batch. That reference is not yet available in evidence.",
+            "Fix2 (gradient accumulation) is a fallback if fix1's verified peak still exceeds capacity, or if the user wants additional headroom. It requires confirm of batch size, sequence length, and that loss reduction uses mean (not sum) over micro-batches to preserve mathematics.",
+            "Required_saving_gb is null; the target is to avoid OOM on the 24.56 GB GPU. Fix1 alone may suffice (estimated peak ~2.5 GB based on prior run). But without a valid verification against the correct baseline, needs_more_info=true.",
+            "Other categories (params 0.2 GB, optimizer_state 0, grads 0, cache 0, unknown 0.034 GB) are minor. No fragmentation confirmed (largest_free_block 0.72 MB < OOM request 128 MB but inactive_split 0.74 MB)."
+          ],
+          "diagnosis_plan": [
+            {
+              "fix_id": "fix1",
+              "type": "code",
+              "title": "Remove retain_graph=True from loss.backward()",
+              "description": "In train.py line 104, change `loss.backward(retain_graph=True)` to `loss.backward()`. The training loop performs one backward pass per optimizer step; the retained graph is released only at the end of the step, causing all forward activations (LayerNorm, GELU, Linear, residual adds) to stay live simultaneously. This matches the peak composition where activations account for 9.9 GB across stk_57f32c9835cf005b, stk_0431a2edadcfa792, stk_a88502b20644c801, stk_c82e48625841ab76.",
+              "expected_saving_gb": 9.93,
+              "numerics_impact": "none",
+              "throughput_impact": "none",
+              "risk": "Low: the comment in source acknowledges the bug. No change to loss computation or optimizer update boundary.",
+              "requires_policy": []
+            },
+            {
+              "fix_id": "fix2",
+              "type": "code",
+              "title": "Enable gradient accumulation with micro-batches",
+              "description": "If fix1 alone does not bring peak under GPU capacity, introduce micro-batching with gradient accumulation. The model forward is ResidualMLP(width=1024, depth=6) with batch=8, sequence=1024. Split batch into micro-batches (e.g., 2), accumulate gradients over 4 micro-batches per optimizer step. Requires allow_batch_grad_accum=true. This reduces peak activation memory proportionally to micro-batch size while preserving effective batch and loss weighting.",
+              "expected_saving_gb": 5.0,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Medium: must verify non-empty micro-batch range, correct loss scaling (mean over micro-batch), and that optimizer.step() occurs only after accumulation completes. Unknown current batch/sequence values from evidence; needs confirmation.",
+              "requires_policy": [
+                "allow_batch_grad_accum"
+              ]
+            }
+          ],
+          "candidate_evidence": {
+            "schema": "headroom.solver_candidate.v1",
+            "content_is_untrusted_data": true,
+            "round": 2,
+            "candidate_selected": false,
+            "selected_after_round": null,
+            "decision": "revert",
+            "patch_result_available": false,
+            "patch_result_sha256": null,
+            "patch_result_reason": "missing_unsafe_or_oversized",
+            "diff": {
+              "available": false,
+              "reason": "not_recorded",
+              "sha256": null,
+              "utf8_bytes": null,
+              "text": null,
+              "included_bytes": 0,
+              "omitted_bytes": null,
+              "truncated": null
+            },
+            "status": null,
+            "reason": null,
+            "env_changes": {},
+            "cli_changes": {
+              "values": null,
+              "complete": false,
+              "omitted_count": null,
+              "redacted_positions": []
+            },
+            "effective_cli": {
+              "values": null,
+              "complete": false,
+              "omitted_count": null,
+              "redacted_positions": []
+            },
+            "last_attempt": null,
+            "application_files": [],
+            "application_files_omitted": null,
+            "truncated_fields": [],
+            "summary_overflow_omitted_fields": []
+          },
+          "feedback": {
+            "round": 2,
+            "provenance": "live",
+            "fix_id": null,
+            "change": {
+              "type": null,
+              "title": null,
+              "patch_artifact": null
+            },
+            "decision": "revert",
+            "reason": "diagnosis_needs_more_info",
+            "failure": null,
+            "verification_available": false,
+            "verification": null,
+            "candidate": null,
+            "candidate_selected": false,
+            "selected_after_round": {
+              "round": null,
+              "basis": "original_baseline",
+              "target_met": false,
+              "run_id": "e86797c9f39743a6b186c1dcdf01c90a",
+              "status": "oom",
+              "reason": null,
+              "error": null,
+              "exception": {
+                "type": "OutOfMemoryError",
+                "message": "CUDA out of memory. Tried to allocate 128.00 MiB. GPU 0 has a total capacity of 23.55 GiB of which 52.88 MiB is free. Including non-PyTorch memory, this process has 23.43 GiB memory in use. Of the allocated memory 23.07 GiB is allocated by PyTorch, and 727.00 KiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/note [truncated]"
+              },
+              "oom": {
+                "requested_bytes": 134217728,
+                "free_bytes": 55443456,
+                "requested_gb": 0.134217728,
+                "free_gb": 0.055443456
+              },
+              "capture_complete": true,
+              "steps": 12,
+              "peak_allocated_bytes": 24768717824,
+              "peak_reserved_bytes": 24771559424,
+              "step_ms_median": 108.73158846516162
+            },
+            "truncated_fields": [
+              "selected.exception.message"
+            ]
+          },
+          "patch": null,
+          "verification": null
+        }
+      ],
+      "initial_diagnosis_audit_snapshots": [
+        {
+          "path": "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-845f46be0f124c9c9dba4944feb9353f/01-initial-messages.json",
+          "recorded_message_scope": "Initial diagnosis messages before router schema prepend; not a wire request hash and excludes supplementary turns",
+          "keys": [
+            "goal",
+            "policy",
+            "required_saving_gb",
+            "evidence_markdown"
+          ],
+          "new_context_fields_present": {
+            "execution_context": false,
+            "candidate_evidence": false,
+            "verification_feedback": false,
+            "solver_context_availability": false
+          },
+          "provenance_serialization_hash_matches": true
+        },
+        {
+          "path": "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-845f46be0f124c9c9dba4944feb9353f/02-initial-messages.json",
+          "recorded_message_scope": "Initial diagnosis messages before router schema prepend; not a wire request hash and excludes supplementary turns",
+          "keys": [
+            "goal",
+            "policy",
+            "required_saving_gb",
+            "evidence_markdown"
+          ],
+          "new_context_fields_present": {
+            "execution_context": false,
+            "candidate_evidence": false,
+            "verification_feedback": false,
+            "solver_context_availability": false
+          },
+          "provenance_serialization_hash_matches": true
+        }
+      ],
+      "selected_configuration": {}
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "run_id": "34c41d1d52b5427fb29bc02eae76fa07",
+      "status": "needs_human",
+      "target_met": false,
+      "selected_round": null,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null
+        }
+      ],
+      "source_sha256": "627d24ee9e62601455e37f29166df8abe73a43b9e82382a293feec3a6b558169",
+      "interpretation": "First diagnosis valid but needs_more_info; no patch or candidate. Model explicitly did not treat the reserved/allocated gap as proven harmful fragmentation.",
+      "literal_cli": {
+        "observed_exit_code": 78,
+        "invocation_kind": "installed_console_script",
+        "invoked": true,
+        "returned": true,
+        "run_dispatched": true,
+        "result_saved": true,
+        "request_sha256": "a4b2cd750ae9504d9c4c7d9e83c5f3d68ce1ca1ebe053bd3f6643f55e54fc9f1",
+        "result_sha256": "4233c706d7a458b160542d3b271860d8dbe21d9a0c2dc1a0942b8719cfbfc7b8"
+      },
+      "effective_request": {
+        "script_args": [],
+        "execution_argv": null,
+        "repository_mode": false,
+        "max_steps": 20,
+        "target": "reclaim",
+        "seed": 1337
+      },
+      "seed_scope": "request.seed is wrapper seed; a target script may call manual_seed again",
+      "model_roles": {
+        "annotate": 1,
+        "diagnose": 1
+      },
+      "events": [
+        {
+          "sequence": 1,
+          "kind": "run.started"
+        },
+        {
+          "sequence": 2,
+          "kind": "run.preflight"
+        },
+        {
+          "sequence": 3,
+          "kind": "budget.reserved"
+        },
+        {
+          "sequence": 4,
+          "kind": "baseline.started"
+        },
+        {
+          "sequence": 5,
+          "kind": "baseline.completed"
+        },
+        {
+          "sequence": 6,
+          "kind": "evidence.started"
+        },
+        {
+          "sequence": 7,
+          "kind": "evidence.built"
+        },
+        {
+          "sequence": 8,
+          "kind": "annotate.done"
+        },
+        {
+          "sequence": 9,
+          "kind": "diagnose.started"
+        },
+        {
+          "sequence": 10,
+          "kind": "diagnose.done"
+        },
+        {
+          "sequence": 11,
+          "kind": "round.done"
+        },
+        {
+          "sequence": 12,
+          "kind": "needs_human"
+        },
+        {
+          "sequence": 13,
+          "kind": "report.started"
+        },
+        {
+          "sequence": 14,
+          "kind": "report.written"
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "revert",
+          "reason": "diagnosis_needs_more_info",
+          "plan_step": null,
+          "diagnosis": {
+            "valid": true,
+            "ready_for_patch": false,
+            "issues": []
+          },
+          "diagnosis_needs_more_info": true,
+          "diagnosis_notes": [
+            "Overlap between fix1 and fix2 savings: both reduce activation memory; combined saving is not additive. Estimated combined peak reduction ~2.0 GB, but exact overlap unknown without profiling.",
+            "required_saving_gb=1.004 GB; plan covers this if either step works, but both need verification.",
+            "Fragmentation candidate (rc4) accounts for most reserved memory (17.8 GB gap) but does not directly reduce peak allocated bytes; allocator tuning (e.g., PYTORCH_CUDA_ALLOC_CONF) not proposed due to insufficient evidence of harmful fragmentation.",
+            "Unknown category (rc3, 0.35 GB) lacks causal evidence; no repair proposed.",
+            "Policy allows batch/grad accumulation; numerics changes disallowed."
+          ],
+          "diagnosis_plan": [
+            {
+              "fix_id": "fix1",
+              "type": "code",
+              "title": "Enable gradient checkpointing for linear layers to drop forward activations",
+              "description": "Wrap each TokenMLP layer's linear call with torch.utils.checkpoint.checkpoint so forward activations (stk_7e0a38b93b58c6ac, 1.8 GB live) are not retained; they are recomputed during backward. Source: /opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py forward at train.py:92; consuming operation: backward through autograd. Observed live blocks=6, bytes=1837105152.",
+              "expected_saving_gb": 1.5,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Recomputation adds ~20-30% backward time; test with 20 steps to verify loss equivalence.",
+              "requires_policy": []
+            },
+            {
+              "fix_id": "fix2",
+              "type": "code",
+              "title": "Reduce microbatch size with gradient accumulation to cut peak activations and temporaries",
+              "description": "Split the batch dimension (currently 8) into microbatches of 2 with accumulation steps=4, preserving effective batch and optimizer update boundary. This reduces live activation and temporary tensors proportionally at peak. Source: train.py:97 batch=8, train.py:115 optimizer.zero_grad(set_to_none=True), train.py:121 optimizer.step(); consuming path: forward/backward per microbatch. Observed peak composition shows activations 1.8 GB and temporaries 0.5 GB scale with batch.",
+              "expected_saving_gb": 1.2,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Must keep loss reduction (mean) and sample weighting identical; verify no empty slices and same number of optimizer updates per effective batch.",
+              "requires_policy": [
+                "allow_batch_grad_accum"
+              ]
+            }
+          ],
+          "candidate_evidence": {
+            "schema": "headroom.solver_candidate.v1",
+            "content_is_untrusted_data": true,
+            "round": 1,
+            "candidate_selected": false,
+            "selected_after_round": null,
+            "decision": "revert",
+            "patch_result_available": false,
+            "patch_result_sha256": null,
+            "patch_result_reason": "missing_unsafe_or_oversized",
+            "diff": {
+              "available": false,
+              "reason": "not_recorded",
+              "sha256": null,
+              "utf8_bytes": null,
+              "text": null,
+              "included_bytes": 0,
+              "omitted_bytes": null,
+              "truncated": null
+            },
+            "status": null,
+            "reason": null,
+            "env_changes": {},
+            "cli_changes": {
+              "values": null,
+              "complete": false,
+              "omitted_count": null,
+              "redacted_positions": []
+            },
+            "effective_cli": {
+              "values": null,
+              "complete": false,
+              "omitted_count": null,
+              "redacted_positions": []
+            },
+            "last_attempt": null,
+            "application_files": [],
+            "application_files_omitted": null,
+            "truncated_fields": [],
+            "summary_overflow_omitted_fields": []
+          },
+          "feedback": {
+            "round": 1,
+            "provenance": "live",
+            "fix_id": null,
+            "change": {
+              "type": null,
+              "title": null,
+              "patch_artifact": null
+            },
+            "decision": "revert",
+            "reason": "diagnosis_needs_more_info",
+            "failure": null,
+            "verification_available": false,
+            "verification": null,
+            "candidate": null,
+            "candidate_selected": false,
+            "selected_after_round": {
+              "round": null,
+              "basis": "original_baseline",
+              "target_met": false,
+              "run_id": "c04511955d2f43ebb364bf8e4a22e13f",
+              "status": "completed",
+              "reason": null,
+              "error": null,
+              "exception": {
+                "type": "StepLimitReached",
+                "message": "Reached 20 optimizer updates"
+              },
+              "oom": {
+                "requested_bytes": null,
+                "free_bytes": null,
+                "requested_gb": null,
+                "free_gb": null
+              },
+              "capture_complete": true,
+              "steps": 20,
+              "peak_allocated_bytes": 5021758464,
+              "peak_reserved_bytes": 19824377856,
+              "step_ms_median": 219.04151048511267
+            },
+            "truncated_fields": []
+          },
+          "patch": null,
+          "verification": null
+        }
+      ],
+      "initial_diagnosis_audit_snapshots": [
+        {
+          "path": "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-34c41d1d52b5427fb29bc02eae76fa07/01-initial-messages.json",
+          "recorded_message_scope": "Initial diagnosis messages before router schema prepend; not a wire request hash and excludes supplementary turns",
+          "keys": [
+            "goal",
+            "policy",
+            "required_saving_gb",
+            "evidence_markdown"
+          ],
+          "new_context_fields_present": {
+            "execution_context": false,
+            "candidate_evidence": false,
+            "verification_feedback": false,
+            "solver_context_availability": false
+          },
+          "provenance_serialization_hash_matches": true
+        }
+      ],
+      "selected_configuration": {}
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "run_id": "6a7478dc928c4ad19929a870872c5b1d",
+      "status": "needs_human",
+      "target_met": false,
+      "selected_round": null,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null
+        }
+      ],
+      "source_sha256": "4f5d7e0f4331a4efcda2039c8ac8a421b2a1923778379896e2658553619b1bba",
+      "interpretation": "First diagnosis needs_more_info and NUMERICS_CHANGE_FORBIDDEN; no patch/candidate. Its own statement of no numerical change does not override the policy validator.",
+      "literal_cli": {
+        "observed_exit_code": 78,
+        "invocation_kind": "installed_console_script",
+        "invoked": true,
+        "returned": true,
+        "run_dispatched": true,
+        "result_saved": true,
+        "request_sha256": "d8621d4b71ae82c80365c350829f7fa1d79ee92408b1a167d1e17383e0ec825e",
+        "result_sha256": "e1111fca455221a21b4b9eeaa456cf5c3cf26dce54c1a55d015f3c300c56ddc0"
+      },
+      "effective_request": {
+        "script_args": [],
+        "execution_argv": null,
+        "repository_mode": false,
+        "max_steps": 20,
+        "target": "fix-oom",
+        "seed": 1337
+      },
+      "seed_scope": "request.seed is wrapper seed; a target script may call manual_seed again",
+      "model_roles": {
+        "annotate": 1,
+        "diagnose": 1
+      },
+      "events": [
+        {
+          "sequence": 1,
+          "kind": "run.started"
+        },
+        {
+          "sequence": 2,
+          "kind": "run.preflight"
+        },
+        {
+          "sequence": 3,
+          "kind": "budget.reserved"
+        },
+        {
+          "sequence": 4,
+          "kind": "baseline.started"
+        },
+        {
+          "sequence": 5,
+          "kind": "baseline.oom"
+        },
+        {
+          "sequence": 6,
+          "kind": "evidence.started"
+        },
+        {
+          "sequence": 7,
+          "kind": "evidence.built"
+        },
+        {
+          "sequence": 8,
+          "kind": "annotate.done"
+        },
+        {
+          "sequence": 9,
+          "kind": "diagnose.started"
+        },
+        {
+          "sequence": 10,
+          "kind": "diagnose.done"
+        },
+        {
+          "sequence": 11,
+          "kind": "round.done"
+        },
+        {
+          "sequence": 12,
+          "kind": "needs_human"
+        },
+        {
+          "sequence": 13,
+          "kind": "report.started"
+        },
+        {
+          "sequence": 14,
+          "kind": "report.written"
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "revert",
+          "reason": "diagnosis_needs_more_info",
+          "plan_step": null,
+          "diagnosis": {
+            "valid": false,
+            "ready_for_patch": false,
+            "issues": [
+              {
+                "code": "NUMERICS_CHANGE_FORBIDDEN",
+                "message": "Step f1 changes numerics or names a disallowed precision method."
+              }
+            ]
+          },
+          "diagnosis_needs_more_info": true,
+          "diagnosis_notes": [
+            "The unknown category (17.25 GB) dominates the peak but lacks causal attribution. A fix for the two identified temporaries (8.59 GB each, likely the same allocation counted in two stacks) and the activations (4.3 GB) may not cover the full OOM gap (requested 8.59 GB, GPU free 3.25 GB, deficit ~5.3 GB).",
+            "The two large temporaries (stk_e98c45844175a357 and stk_5e15e04e85ebea00) both show 8.589934592 bytes and appear at the OOM event. They are likely the same allocation (logits copy + cross-entropy workspace) but attributed to different stack frames. The plan estimates savings from eliminating this allocation once (8.59 GB), not twice.",
+            "Gradient accumulation (f2) savings are approximate: peak activations scale with micro-batch size, but the cross-entropy temporary may not scale linearly if the vocabulary dimension is unchanged. A more precise estimate requires a replay with a smaller micro-batch.",
+            "Policy allows_batch_grad_accum=true, so f2 is permitted. No numerics change is proposed (allow_numerics_change=false).",
+            "If the unknown 17.25 GB cannot be reduced, the OOM may persist even after applying f1 and f2. Further evidence (e.g., a successful run with smaller micro-batch, or a full peak composition with fewer unknowns) is needed to confirm the plan covers the required saving."
+          ],
+          "diagnosis_plan": [
+            {
+              "fix_id": "f1",
+              "type": "code",
+              "title": "Compute cross_entropy_loss without materializing full [B*T, V] logits",
+              "description": "In train.py:107, replace logits.float() + cross_entropy with a fused or chunked cross-entropy that accepts half-precision logits and computes log_softmax/nll_loss in tiles over the vocabulary dimension (V=131072). This avoids the 8.59 GB temporary allocation (stk_e98c45844175a357 and stk_5e15e04e85ebea00). The model, loss reduction (mean), effective batch (B*T tokens), and optimizer update boundary (once per step) are unchanged.",
+              "expected_saving_gb": 8.589934,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Requires a custom kernel or PyTorch's fused cross_entropy that supports half-precision inputs without a full FP32 copy. If unavailable, a manual tiled implementation is needed.",
+              "requires_policy": [
+                "allow_batch_grad_accum"
+              ]
+            },
+            {
+              "fix_id": "f2",
+              "type": "config",
+              "title": "Reduce micro-batch size and accumulate gradients to preserve effective batch",
+              "description": "In train.py, split the batch dimension (B=8, T=2048) into smaller micro-batches (e.g., micro_batch=2) with gradient accumulation steps=4 before optimizer.step(). This reduces peak activations (stk_8083f9b834bd7240, ~4.3 GB) and the cross-entropy temporary proportionally. Effective batch (8*2048 tokens), loss reduction (mean), and update boundary (once per 4 micro-batches) are preserved. Policy allows allow_batch_grad_accum=true.",
+              "expected_saving_gb": 3.2,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Must ensure micro-batches are non-empty and accumulation steps divide the original batch exactly. No change to model, vocabulary, or sequence length.",
+              "requires_policy": [
+                "allow_batch_grad_accum"
+              ]
+            }
+          ],
+          "candidate_evidence": {
+            "schema": "headroom.solver_candidate.v1",
+            "content_is_untrusted_data": true,
+            "round": 1,
+            "candidate_selected": false,
+            "selected_after_round": null,
+            "decision": "revert",
+            "patch_result_available": false,
+            "patch_result_sha256": null,
+            "patch_result_reason": "missing_unsafe_or_oversized",
+            "diff": {
+              "available": false,
+              "reason": "not_recorded",
+              "sha256": null,
+              "utf8_bytes": null,
+              "text": null,
+              "included_bytes": 0,
+              "omitted_bytes": null,
+              "truncated": null
+            },
+            "status": null,
+            "reason": null,
+            "env_changes": {},
+            "cli_changes": {
+              "values": null,
+              "complete": false,
+              "omitted_count": null,
+              "redacted_positions": []
+            },
+            "effective_cli": {
+              "values": null,
+              "complete": false,
+              "omitted_count": null,
+              "redacted_positions": []
+            },
+            "last_attempt": null,
+            "application_files": [],
+            "application_files_omitted": null,
+            "truncated_fields": [],
+            "summary_overflow_omitted_fields": []
+          },
+          "feedback": {
+            "round": 1,
+            "provenance": "live",
+            "fix_id": null,
+            "change": {
+              "type": null,
+              "title": null,
+              "patch_artifact": null
+            },
+            "decision": "revert",
+            "reason": "diagnosis_needs_more_info",
+            "failure": null,
+            "verification_available": false,
+            "verification": null,
+            "candidate": null,
+            "candidate_selected": false,
+            "selected_after_round": {
+              "round": null,
+              "basis": "original_baseline",
+              "target_met": false,
+              "run_id": "2504b8a05d5648e9ab6d0b447e6e9fb8",
+              "status": "oom",
+              "reason": null,
+              "error": null,
+              "exception": {
+                "type": "OutOfMemoryError",
+                "message": "CUDA out of memory. Tried to allocate 8.00 GiB. GPU 0 has a total capacity of 23.55 GiB of which 3.03 GiB is free. Including non-PyTorch memory, this process has 20.45 GiB memory in use. Of the allocated memory 20.11 GiB is allocated by PyTorch, and 9.72 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cud [truncated]"
+              },
+              "oom": {
+                "requested_bytes": 8589934592,
+                "free_bytes": 3253600256,
+                "requested_gb": 8.589934592,
+                "free_gb": 3.253600256
+              },
+              "capture_complete": true,
+              "steps": 0,
+              "peak_allocated_bytes": 21588379648,
+              "peak_reserved_bytes": 21598568448,
+              "step_ms_median": null
+            },
+            "truncated_fields": [
+              "selected.exception.message"
+            ]
+          },
+          "patch": null,
+          "verification": null
+        }
+      ],
+      "initial_diagnosis_audit_snapshots": [
+        {
+          "path": "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-6a7478dc928c4ad19929a870872c5b1d/01-initial-messages.json",
+          "recorded_message_scope": "Initial diagnosis messages before router schema prepend; not a wire request hash and excludes supplementary turns",
+          "keys": [
+            "goal",
+            "policy",
+            "required_saving_gb",
+            "evidence_markdown"
+          ],
+          "new_context_fields_present": {
+            "execution_context": false,
+            "candidate_evidence": false,
+            "verification_feedback": false,
+            "solver_context_availability": false
+          },
+          "provenance_serialization_hash_matches": true
+        }
+      ],
+      "selected_configuration": {}
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "run_id": "bb32d35379b84bc091d0f6af1f71ae73",
+      "status": "needs_human",
+      "target_met": false,
+      "selected_round": null,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": true
+        },
+        {
+          "round": 2,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null
+        }
+      ],
+      "source_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+      "interpretation": "Applied optimizer restriction completed20 updates and reduced peak49.6696%, but original scalar-loss delta3.3520 exceeded tolerance. Pairing inputs/effective batch/objective are unknown. Next diagnosis repeated failure facts and requested objective confirmation; no mathematical-equivalence verdict is inferred.",
+      "literal_cli": {
+        "observed_exit_code": 78,
+        "invocation_kind": "installed_console_script",
+        "invoked": true,
+        "returned": true,
+        "run_dispatched": true,
+        "result_saved": true,
+        "request_sha256": "64ede61497a316a01e4bdc4cf17d47dd8edf5203eabd2698d1a9dd7b99c20d4d",
+        "result_sha256": "bcc838c7f2f819388a68c0bbe4046c0b3ed4bf3197ec92d5f9fd4dae2d5af882"
+      },
+      "effective_request": {
+        "script_args": [],
+        "execution_argv": null,
+        "repository_mode": false,
+        "max_steps": 20,
+        "target": "reclaim",
+        "seed": 1337
+      },
+      "seed_scope": "request.seed is wrapper seed; a target script may call manual_seed again",
+      "model_roles": {
+        "annotate": 1,
+        "diagnose": 2,
+        "super": 2,
+        "patcher": 1
+      },
+      "events": [
+        {
+          "sequence": 1,
+          "kind": "run.started"
+        },
+        {
+          "sequence": 2,
+          "kind": "run.preflight"
+        },
+        {
+          "sequence": 3,
+          "kind": "budget.reserved"
+        },
+        {
+          "sequence": 4,
+          "kind": "baseline.started"
+        },
+        {
+          "sequence": 5,
+          "kind": "baseline.completed"
+        },
+        {
+          "sequence": 6,
+          "kind": "evidence.started"
+        },
+        {
+          "sequence": 7,
+          "kind": "evidence.built"
+        },
+        {
+          "sequence": 8,
+          "kind": "annotate.done"
+        },
+        {
+          "sequence": 9,
+          "kind": "diagnose.started"
+        },
+        {
+          "sequence": 10,
+          "kind": "diagnose.done"
+        },
+        {
+          "sequence": 11,
+          "kind": "research.called"
+        },
+        {
+          "sequence": 12,
+          "kind": "research.done"
+        },
+        {
+          "sequence": 13,
+          "kind": "research.called"
+        },
+        {
+          "sequence": 14,
+          "kind": "research.done"
+        },
+        {
+          "sequence": 15,
+          "kind": "research.done"
+        },
+        {
+          "sequence": 16,
+          "kind": "patch.started"
+        },
+        {
+          "sequence": 17,
+          "kind": "patch.written"
+        },
+        {
+          "sequence": 18,
+          "kind": "patch.applied"
+        },
+        {
+          "sequence": 19,
+          "kind": "verify.started"
+        },
+        {
+          "sequence": 20,
+          "kind": "verify.done"
+        },
+        {
+          "sequence": 21,
+          "kind": "round.done"
+        },
+        {
+          "sequence": 22,
+          "kind": "diagnose.started"
+        },
+        {
+          "sequence": 23,
+          "kind": "diagnose.done"
+        },
+        {
+          "sequence": 24,
+          "kind": "round.done"
+        },
+        {
+          "sequence": 25,
+          "kind": "needs_human"
+        },
+        {
+          "sequence": 26,
+          "kind": "report.started"
+        },
+        {
+          "sequence": 27,
+          "kind": "report.written"
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "revert",
+          "reason": "verification_hard_constraints_unmet",
+          "plan_step": {
+            "fix_id": "fix1",
+            "type": "code",
+            "title": "Exclude frozen backbone parameters from the optimizer",
+            "description": "In train.py, change optimizer construction from `torch.optim.AdamW(model.parameters(), lr=1e-4)` to `torch.optim.AdamW(model.head.parameters(), lr=1e-4)` so that only the head parameters (intended trainable set) receive AdamW state. The backbone is already in eval() and has requires_grad=True unintentionally; restricting the optimizer to the head eliminates the 8.6 GB of optimizer_state (two fp32 moment buffers per backbone parameter) and the associated temporary allocations during the AdamW step.",
+            "expected_saving_gb": 8.607762,
+            "numerics_impact": "none",
+            "throughput_impact": "minor",
+            "risk": "Low. The code comment states the intended contract is to train only the head. The change aligns the optimizer with that contract and does not alter forward/backward math for the head. The backbone remains in eval() and its parameters stay frozen.",
+            "requires_policy": [
+              "allow_batch_grad_accum"
+            ]
+          },
+          "diagnosis": {
+            "valid": true,
+            "ready_for_patch": true,
+            "issues": []
+          },
+          "diagnosis_needs_more_info": false,
+          "diagnosis_notes": [
+            "The optimizer_state cause (8.6 GB) alone exceeds the required 3.56 GB saving. Fix1 is expected to achieve the target in a single step.",
+            "Fix2 savings are approximate; actual reduction depends on micro-batch size and the activation/temporary profile per micro-batch. Overlaps with Fix1 (which removes backbone optimizer temporaries) are not additive.",
+            "The unknown category (4.3 GB) is attributed to stk_eda7e6b0bca0708e (THPVariable_empty allocations). Without a more specific semantic label, its avoidability is uncertain; it is not counted toward the plan savings.",
+            "Policy check: allow_numerics_change=false → all steps have numerics_impact='none'. allow_batch_grad_accum=true → Fix2 is permitted."
+          ],
+          "diagnosis_plan": [
+            {
+              "fix_id": "fix1",
+              "type": "code",
+              "title": "Exclude frozen backbone parameters from the optimizer",
+              "description": "In train.py, change optimizer construction from `torch.optim.AdamW(model.parameters(), lr=1e-4)` to `torch.optim.AdamW(model.head.parameters(), lr=1e-4)` so that only the head parameters (intended trainable set) receive AdamW state. The backbone is already in eval() and has requires_grad=True unintentionally; restricting the optimizer to the head eliminates the 8.6 GB of optimizer_state (two fp32 moment buffers per backbone parameter) and the associated temporary allocations during the AdamW step.",
+              "expected_saving_gb": 8.607762,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Low. The code comment states the intended contract is to train only the head. The change aligns the optimizer with that contract and does not alter forward/backward math for the head. The backbone remains in eval() and its parameters stay frozen.",
+              "requires_policy": [
+                "allow_batch_grad_accum"
+              ]
+            },
+            {
+              "fix_id": "fix2",
+              "type": "code",
+              "title": "Enable gradient accumulation to reduce peak activations and temporaries",
+              "description": "Introduce gradient accumulation in train.py: process micro-batches (e.g., split batch=8 into 4 micro-batches of 2), call loss.backward() for each without optimizer.step(), then call optimizer.step() once per effective batch. This reduces the live activation working set and temporary buffers at any one time because each micro-batch's forward/backward frees its tensors before the next. The policy allow_batch_grad_accum=true permits this change.",
+              "expected_saving_gb": 0.5,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Medium. Requires verifying that the effective batch size, loss reduction (mean vs sum), and optimizer update boundary remain mathematically equivalent. The current script uses a single batch of 8; micro-batch size and accumulation steps must be chosen so that the number of samples per optimizer update and the loss scaling are preserved.",
+              "requires_policy": [
+                "allow_batch_grad_accum"
+              ]
+            }
+          ],
+          "candidate_evidence": {
+            "schema": "headroom.solver_candidate.v1",
+            "content_is_untrusted_data": true,
+            "round": 1,
+            "candidate_selected": false,
+            "selected_after_round": null,
+            "decision": "revert",
+            "patch_result_available": true,
+            "patch_result_sha256": "6acf826e92a9722b8af1f5f081fee7bdd9506de80daa501059b46dd4f8b1e805",
+            "patch_result_reason": null,
+            "diff": {
+              "available": true,
+              "reason": null,
+              "sha256": "87c03367421d4e72caf430c3c46579cdcc3e4fbfc1aded98b05c23c2047db9fb",
+              "utf8_bytes": 492,
+              "text": "--- a/train.py\n+++ b/train.py\n@@ -105,7 +105,7 @@\n     width, depth, classes = (32, 2, 8) if args.tiny else (8192, 16, 256)\n     model = HeadOnlyFineTuner(width, depth, classes, device)\n     # Defect: backbone requires_grad was never disabled and all parameters enter AdamW.\n-    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, foreach=False)\n+    optimizer = torch.optim.AdamW(model.head.parameters(), lr=1e-4, foreach=False)\n     emit(\n         \"workload\",\n         batch=batch,\n",
+              "included_bytes": 492,
+              "omitted_bytes": 0,
+              "truncated": false
+            },
+            "status": "applied",
+            "reason": "STATIC_CHECKS_PASSED",
+            "env_changes": {},
+            "cli_changes": {
+              "values": [],
+              "complete": true,
+              "omitted_count": 0,
+              "redacted_positions": []
+            },
+            "effective_cli": {
+              "values": [],
+              "complete": true,
+              "omitted_count": 0,
+              "redacted_positions": []
+            },
+            "last_attempt": {
+              "status": "applied",
+              "reason": "STATIC_CHECKS_PASSED",
+              "detail": null,
+              "detail_truncated": false,
+              "policy_issues": [],
+              "policy_issues_omitted": 0
+            },
+            "application_files": [
+              {
+                "path": "train.py",
+                "path_truncated": false,
+                "before_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+                "candidate_sha256": "1db2308322ad2f1144eb96cf791c63e58d3a6f5679f265b31d9bd954631eb01a"
+              }
+            ],
+            "application_files_omitted": 0,
+            "truncated_fields": [],
+            "summary_overflow_omitted_fields": []
+          },
+          "feedback": {
+            "round": 1,
+            "provenance": "live",
+            "fix_id": "fix1",
+            "change": {
+              "type": "code",
+              "title": "Exclude frozen backbone parameters from the optimizer",
+              "patch_artifact": "rounds/01/patches/patch-engine-8bc8d99a5dff46b394bcf025a470a5dd/attempt-1/patch-6bd150524e0d4b56b743635d7b3bb431/patch.diff"
+            },
+            "decision": "revert",
+            "reason": "verification_hard_constraints_unmet",
+            "failure": null,
+            "verification_available": true,
+            "verification": {
+              "peak_before": 17.819808768,
+              "peak_after": 8.968779264,
+              "reduction_pct": 49.66960992249409,
+              "step_ms_before": 111.03144858498126,
+              "step_ms_after": 30.97665950190276,
+              "max_loss_delta": 3.3520333766937256,
+              "throughput_regression_pct": -72.10100390774075,
+              "parameter_count_before": 1075970304,
+              "parameter_count_after": 1075970304,
+              "loss_tolerance": 0.001,
+              "completed": true,
+              "target_met": false,
+              "numerics_changed": false,
+              "observed_precision_change": false,
+              "loss_equivalence": "changed",
+              "numerical_basis": "original_plan_full_backward_scalar_series",
+              "comparison_precision": "fp32",
+              "acceptance_scope": "standard",
+              "checks": {
+                "baseline_capture": true,
+                "target_mode_valid": true,
+                "candidate_completed_required_steps": true,
+                "finite_candidate_losses": true,
+                "parameter_count_unchanged": true,
+                "numerics_policy": true,
+                "same_seed": true,
+                "same_inputs": null,
+                "same_effective_batch": null,
+                "same_objective": null,
+                "loss_series_aligned_to_updates": true,
+                "loss_series_comparison_available": true,
+                "loss_comparable": false,
+                "repository_no_reference_exception": false,
+                "loss_tolerance": false,
+                "numerical_acceptance": false,
+                "parameter_policy": true,
+                "measured_cuda_peaks": true,
+                "same_gpu_hardware": true,
+                "gpu_observation_clear": true,
+                "throughput_limit": true,
+                "memory_target": true
+              },
+              "checks_omitted": 0,
+              "checks_available": true,
+              "failed_checks": [
+                "loss_comparable",
+                "repository_no_reference_exception",
+                "loss_tolerance",
+                "numerical_acceptance"
+              ],
+              "unknown_checks": [
+                "same_inputs",
+                "same_effective_batch",
+                "same_objective"
+              ],
+              "notes": [
+                "Loss states describe the original-plan observed scalar comparison; matching inputs, effective batch and objective are not established. This is not proof of workload equivalence.",
+                "Pairing: Lab runtime fingerprints and pinned source contracts; reference: source outside pinned s3/s4 AST contracts; candidate: source outside pinned s3/s4 AST contracts",
+                "Reference discovery: Baseline did not OOM or reference already supplied"
+              ],
+              "notes_omitted": 0
+            },
+            "candidate": {
+              "run_id": "5b24aa0174de4faaa11778f304960fc5",
+              "status": "completed",
+              "reason": null,
+              "error": null,
+              "exception": {
+                "type": "StepLimitReached",
+                "message": "Reached 20 optimizer updates"
+              },
+              "oom": {
+                "requested_bytes": null,
+                "free_bytes": null,
+                "requested_gb": null,
+                "free_gb": null
+              },
+              "capture_complete": true,
+              "steps": 20,
+              "peak_allocated_bytes": 8968779264,
+              "peak_reserved_bytes": 9000976384,
+              "step_ms_median": 30.97665950190276
+            },
+            "candidate_selected": false,
+            "selected_after_round": {
+              "round": null,
+              "basis": "original_baseline",
+              "target_met": false,
+              "run_id": "c4392cfabc8d4355a7c857fc76799dbb",
+              "status": "completed",
+              "reason": null,
+              "error": null,
+              "exception": {
+                "type": "StepLimitReached",
+                "message": "Reached 20 optimizer updates"
+              },
+              "oom": {
+                "requested_bytes": null,
+                "free_bytes": null,
+                "requested_gb": null,
+                "free_gb": null
+              },
+              "capture_complete": true,
+              "steps": 20,
+              "peak_allocated_bytes": 17819808768,
+              "peak_reserved_bytes": 17838374912,
+              "step_ms_median": 111.03144858498126
+            },
+            "truncated_fields": []
+          },
+          "patch": {
+            "status": "applied",
+            "reason": "STATIC_CHECKS_PASSED",
+            "candidate_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/patches/patch-engine-8bc8d99a5dff46b394bcf025a470a5dd/attempt-1/patch-6bd150524e0d4b56b743635d7b3bb431/candidate",
+            "original_source_root": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/lab/c4392cfabc8d4355a7c857fc76799dbb/source",
+            "cli_changes": [],
+            "effective_cli": [],
+            "env_changes": {},
+            "runtime_verified": false,
+            "runtime_verified_scope": "Patch engine static-stage field; runtime verification is the separate round verification artifact",
+            "attempts": [
+              {
+                "index": 1,
+                "status": "applied",
+                "reason": "STATIC_CHECKS_PASSED",
+                "detail": null,
+                "compile_exit_code": 0,
+                "changed_files": [
+                  "train.py"
+                ],
+                "application_check": {
+                  "protocol": "headroom.exact_application.v1",
+                  "verified": true,
+                  "files": [
+                    {
+                      "path": "train.py",
+                      "before_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+                      "expected_sha256": "1db2308322ad2f1144eb96cf791c63e58d3a6f5679f265b31d9bd954631eb01a",
+                      "candidate_sha256": "1db2308322ad2f1144eb96cf791c63e58d3a6f5679f265b31d9bd954631eb01a",
+                      "hunks": 1,
+                      "bytes": 4910
+                    }
+                  ]
+                },
+                "response_artifact": "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/patches/patch-engine-8bc8d99a5dff46b394bcf025a470a5dd/attempt-1-response.json",
+                "response": {
+                  "wire_schema": "source_span_edits_v1",
+                  "finish_reason": "stop",
+                  "validation": "schema_passed",
+                  "validation_reason": null,
+                  "parsed_omitted": false,
+                  "parsed_sha256": "4924a58e341058e347720a67528b5e680d5fbb4d9cc6a6ae52b768026232476f"
+                },
+                "parsed_present": true
+              }
+            ]
+          },
+          "verification": {
+            "completed": true,
+            "target_met": false,
+            "peak_before": 17.819808768,
+            "peak_after": 8.968779264,
+            "reduction_pct": 49.66960992249409,
+            "step_ms_before": 111.03144858498126,
+            "step_ms_after": 30.97665950190276,
+            "throughput_regression_pct": -72.10100390774075,
+            "loss_equivalence": "changed",
+            "max_loss_delta": 3.3520333766937256,
+            "loss_tolerance": 0.001,
+            "parameter_count_before": 1075970304,
+            "parameter_count_after": 1075970304,
+            "numerical_basis": "original_plan_full_backward_scalar_series",
+            "comparison_precision": "fp32",
+            "observed_precision_change": false,
+            "checks": {
+              "baseline_capture": true,
+              "target_mode_valid": true,
+              "candidate_completed_required_steps": true,
+              "finite_candidate_losses": true,
+              "parameter_count_unchanged": true,
+              "numerics_policy": true,
+              "same_seed": true,
+              "same_inputs": null,
+              "same_effective_batch": null,
+              "same_objective": null,
+              "loss_series_aligned_to_updates": true,
+              "loss_series_comparison_available": true,
+              "loss_comparable": false,
+              "repository_no_reference_exception": false,
+              "loss_tolerance": false,
+              "numerical_acceptance": false,
+              "parameter_policy": true,
+              "measured_cuda_peaks": true,
+              "same_gpu_hardware": true,
+              "gpu_observation_clear": true,
+              "throughput_limit": true,
+              "memory_target": true
+            },
+            "notes": [
+              "Loss states describe the original-plan observed scalar comparison; matching inputs, effective batch and objective are not established. This is not proof of workload equivalence.",
+              "Pairing: Lab runtime fingerprints and pinned source contracts; reference: source outside pinned s3/s4 AST contracts; candidate: source outside pinned s3/s4 AST contracts",
+              "Reference discovery: Baseline did not OOM or reference already supplied"
+            ],
+            "run_ids": {
+              "baseline": "c4392cfabc8d4355a7c857fc76799dbb",
+              "candidate": "5b24aa0174de4faaa11778f304960fc5"
+            },
+            "reference_run": null,
+            "reference_discovery": {
+              "found": false,
+              "reason": "Baseline did not OOM or reference already supplied",
+              "attempts": []
+            },
+            "pairing_evidence": {
+              "protocol": "headroom.pairing.v1",
+              "checks": {
+                "same_inputs": null,
+                "same_effective_batch": null,
+                "same_objective": null
+              },
+              "reasons": [
+                "reference: source outside pinned s3/s4 AST contracts",
+                "candidate: source outside pinned s3/s4 AST contracts"
+              ],
+              "source": "Lab runtime fingerprints and pinned source contracts",
+              "reference_run": "c4392cfabc8d4355a7c857fc76799dbb",
+              "candidate_run": "5b24aa0174de4faaa11778f304960fc5"
+            },
+            "candidate": {
+              "run_id": "5b24aa0174de4faaa11778f304960fc5",
+              "status": "completed",
+              "steps": 20,
+              "capture_complete": true,
+              "parameter_count": 1075970304,
+              "parameter_count_complete": true,
+              "loss_series": [
+                5.542102336883545,
+                5.537402629852295,
+                5.532703399658203,
+                5.528005123138428,
+                5.5233073234558105,
+                5.518610954284668,
+                5.513915061950684,
+                5.509219646453857,
+                5.504525661468506,
+                5.499831676483154,
+                5.4951395988464355,
+                5.490447521209717,
+                5.485757350921631,
+                5.481067180633545,
+                5.476378440856934,
+                5.471690654754639,
+                5.467002868652344,
+                5.46231746673584,
+                5.457632541656494,
+                5.452948093414307
+              ],
+              "peak_allocated_bytes": 8968779264,
+              "cleanup_verified": true,
+              "shared_gpu": false
+            }
+          },
+          "candidate_artifact_hashes_match": true
+        },
+        {
+          "number": 2,
+          "decision": "revert",
+          "reason": "diagnosis_needs_more_info",
+          "plan_step": null,
+          "diagnosis": {
+            "valid": true,
+            "ready_for_patch": false,
+            "issues": []
+          },
+          "diagnosis_needs_more_info": true,
+          "diagnosis_notes": [
+            "Required saving 3.56 GB; fix1 alone estimates 4.30 GB saving (exceeds target) but previous verification failed numerical acceptance due to unverified loss comparability (unknown_checks: same_inputs, same_effective_batch, same_objective). Must establish that head-only training with same data/loss is the intended objective.",
+            "Fix1 overlaps with fix3; fix3 enables fix1 to work via model.parameters() filtering. Expected savings not additive.",
+            "Unknown category (4.3 GB) includes stk_eda7e6b0bca0708e (4.29 GB) from 'THPVariable_empty' at train.py:83 __init__. Need source inspection to identify if this is optimizer state initialization or other.",
+            "Temporaries in optimizer step (stk_f26c3b30c018188e, stk_b66ef85338d2fe83) are inherent to AdamW; reduction requires fused optimizer or lower precision (policy disallows).",
+            "Peak composition shows optimizer_state 4.3 GB, temporaries 4.87 GB, unknown 4.3 GB. Fix1 targets optimizer_state. Other categories need more evidence.",
+            "Verification feedback round 1: candidate reduced peak 49.7% (17.82 -> 8.97 GB) but failed loss_comparable, loss_tolerance, numerical_acceptance. Loss changed (max_loss_delta 3.35). This suggests the mathematical objective changed (full model vs head-only). Need user confirmation of intended objective.",
+            "Policy allows allow_batch_grad_accum but no accumulation currently used (batch=8, steps=20). Could reduce batch and accumulate to lower activation peak, but activation peak is only 0.03 GB."
+          ],
+          "diagnosis_plan": [
+            {
+              "fix_id": "fix1",
+              "type": "code",
+              "title": "Exclude frozen backbone parameters from optimizer",
+              "description": "Change optimizer construction to only include model.head.parameters() instead of model.parameters(). The backbone is frozen (eval() and no_grad) but its parameters were being passed to AdamW, causing optimizer state (moments) to be allocated for them. This is supported by stk_b488709a683c5eb8 showing 4.3 GB optimizer_state and source line 108. The previous verification round 1 attempted this but failed numerical acceptance because loss comparison used different effective batch/objective (unknown_checks). This fix preserves mathematics if head-only training is the intended objective.",
+              "expected_saving_gb": 4.303881,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Changes which parameters receive optimizer updates; must confirm head-only training is the intended objective. Previous attempt failed numerical acceptance due to unverified loss comparability (different inputs/effective batch/objective not established).",
+              "requires_policy": [
+                "allow_batch_grad_accum"
+              ]
+            },
+            {
+              "fix_id": "fix2",
+              "type": "code",
+              "title": "Add torch.no_grad() context for backbone forward",
+              "description": "Wrap the backbone forward call in torch.no_grad() to prevent autograd from saving activations for the frozen backbone. In train.py line 91, the forward is 'return self.head(self.backbone(x))'. Since backbone is in eval() and intended frozen, its activations should not be retained for backward. This targets the activations category (stk_523ffc8c089e3758, stk_5ae507471d8ce8a7) and may reduce temporaries in backward. Source shows backbone.eval() but no no_grad guard.",
+              "expected_saving_gb": 0.033563,
+              "numerics_impact": "none",
+              "throughput_impact": "none",
+              "risk": "Low; ensures no gradients computed for backbone. Must verify head still receives gradients.",
+              "requires_policy": []
+            },
+            {
+              "fix_id": "fix3",
+              "type": "code",
+              "title": "Set requires_grad=False on backbone parameters",
+              "description": "Explicitly set requires_grad=False for all backbone parameters after model construction. This prevents them from being included in model.parameters() (which filters by requires_grad) and ensures no gradient buffers are allocated. Combined with fix1, provides defense in depth. Source line 107 comment confirms 'backbone requires_grad was never disabled'.",
+              "expected_saving_gb": 0.0,
+              "numerics_impact": "none",
+              "throughput_impact": "none",
+              "risk": "None; makes freezing explicit. May allow optimizer to automatically exclude them even if model.parameters() used.",
+              "requires_policy": []
+            }
+          ],
+          "candidate_evidence": {
+            "schema": "headroom.solver_candidate.v1",
+            "content_is_untrusted_data": true,
+            "round": 2,
+            "candidate_selected": false,
+            "selected_after_round": null,
+            "decision": "revert",
+            "patch_result_available": false,
+            "patch_result_sha256": null,
+            "patch_result_reason": "missing_unsafe_or_oversized",
+            "diff": {
+              "available": false,
+              "reason": "not_recorded",
+              "sha256": null,
+              "utf8_bytes": null,
+              "text": null,
+              "included_bytes": 0,
+              "omitted_bytes": null,
+              "truncated": null
+            },
+            "status": null,
+            "reason": null,
+            "env_changes": {},
+            "cli_changes": {
+              "values": null,
+              "complete": false,
+              "omitted_count": null,
+              "redacted_positions": []
+            },
+            "effective_cli": {
+              "values": null,
+              "complete": false,
+              "omitted_count": null,
+              "redacted_positions": []
+            },
+            "last_attempt": null,
+            "application_files": [],
+            "application_files_omitted": null,
+            "truncated_fields": [],
+            "summary_overflow_omitted_fields": []
+          },
+          "feedback": {
+            "round": 2,
+            "provenance": "live",
+            "fix_id": null,
+            "change": {
+              "type": null,
+              "title": null,
+              "patch_artifact": null
+            },
+            "decision": "revert",
+            "reason": "diagnosis_needs_more_info",
+            "failure": null,
+            "verification_available": false,
+            "verification": null,
+            "candidate": null,
+            "candidate_selected": false,
+            "selected_after_round": {
+              "round": null,
+              "basis": "original_baseline",
+              "target_met": false,
+              "run_id": "c4392cfabc8d4355a7c857fc76799dbb",
+              "status": "completed",
+              "reason": null,
+              "error": null,
+              "exception": {
+                "type": "StepLimitReached",
+                "message": "Reached 20 optimizer updates"
+              },
+              "oom": {
+                "requested_bytes": null,
+                "free_bytes": null,
+                "requested_gb": null,
+                "free_gb": null
+              },
+              "capture_complete": true,
+              "steps": 20,
+              "peak_allocated_bytes": 17819808768,
+              "peak_reserved_bytes": 17838374912,
+              "step_ms_median": 111.03144858498126
+            },
+            "truncated_fields": []
+          },
+          "patch": null,
+          "verification": null
+        }
+      ],
+      "initial_diagnosis_audit_snapshots": [
+        {
+          "path": "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-bb32d35379b84bc091d0f6af1f71ae73/01-initial-messages.json",
+          "recorded_message_scope": "Initial diagnosis messages before router schema prepend; not a wire request hash and excludes supplementary turns",
+          "keys": [
+            "goal",
+            "policy",
+            "required_saving_gb",
+            "evidence_markdown"
+          ],
+          "new_context_fields_present": {
+            "execution_context": false,
+            "candidate_evidence": false,
+            "verification_feedback": false,
+            "solver_context_availability": false
+          },
+          "provenance_serialization_hash_matches": true
+        },
+        {
+          "path": "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-bb32d35379b84bc091d0f6af1f71ae73/02-initial-messages.json",
+          "recorded_message_scope": "Initial diagnosis messages before router schema prepend; not a wire request hash and excludes supplementary turns",
+          "keys": [
+            "goal",
+            "policy",
+            "required_saving_gb",
+            "evidence_markdown"
+          ],
+          "new_context_fields_present": {
+            "execution_context": false,
+            "candidate_evidence": false,
+            "verification_feedback": false,
+            "solver_context_availability": false
+          },
+          "provenance_serialization_hash_matches": true
+        }
+      ],
+      "selected_configuration": {}
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "run_id": "e3260634f5f04de19386344db570df02",
+      "status": "completed",
+      "target_met": true,
+      "selected_round": 1,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "keep",
+          "patch_applied": true,
+          "candidate_completed": true
+        }
+      ],
+      "source_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+      "interpretation": "Single first-attempt patch constructs the unused teacher on CPU while retaining all teacher/student parameters. Round1 selected KEEP,20 updates, observed identical scalar series and original memory/numerical/throughput gates pass. Pairing inputs/effective batch/objective remain unknown, so this is original-gate success, not a stronger paired mathematical-equivalence proof.",
+      "literal_cli": {
+        "observed_exit_code": 0,
+        "invocation_kind": "installed_console_script",
+        "invoked": true,
+        "returned": true,
+        "run_dispatched": true,
+        "result_saved": true,
+        "request_sha256": "0a9236e0b828098d6ec4c77f447211f81f23958289072778de6e2fb34d18e21d",
+        "result_sha256": "cd16f17b227ab9d9678b2ec56ad27e1aba1d6a27eab4aae6813ddd49c58f19e8"
+      },
+      "effective_request": {
+        "script_args": [],
+        "execution_argv": null,
+        "repository_mode": false,
+        "max_steps": 20,
+        "target": "reclaim",
+        "seed": 1337
+      },
+      "seed_scope": "request.seed is wrapper seed; a target script may call manual_seed again",
+      "model_roles": {
+        "annotate": 1,
+        "diagnose": 1,
+        "patcher": 1
+      },
+      "events": [
+        {
+          "sequence": 1,
+          "kind": "run.started"
+        },
+        {
+          "sequence": 2,
+          "kind": "run.preflight"
+        },
+        {
+          "sequence": 3,
+          "kind": "budget.reserved"
+        },
+        {
+          "sequence": 4,
+          "kind": "baseline.started"
+        },
+        {
+          "sequence": 5,
+          "kind": "baseline.completed"
+        },
+        {
+          "sequence": 6,
+          "kind": "evidence.started"
+        },
+        {
+          "sequence": 7,
+          "kind": "evidence.built"
+        },
+        {
+          "sequence": 8,
+          "kind": "annotate.done"
+        },
+        {
+          "sequence": 9,
+          "kind": "diagnose.started"
+        },
+        {
+          "sequence": 10,
+          "kind": "diagnose.done"
+        },
+        {
+          "sequence": 11,
+          "kind": "patch.started"
+        },
+        {
+          "sequence": 12,
+          "kind": "patch.written"
+        },
+        {
+          "sequence": 13,
+          "kind": "patch.applied"
+        },
+        {
+          "sequence": 14,
+          "kind": "verify.started"
+        },
+        {
+          "sequence": 15,
+          "kind": "verify.done"
+        },
+        {
+          "sequence": 16,
+          "kind": "round.done"
+        },
+        {
+          "sequence": 17,
+          "kind": "target.met"
+        },
+        {
+          "sequence": 18,
+          "kind": "report.started"
+        },
+        {
+          "sequence": 19,
+          "kind": "report.written"
+        },
+        {
+          "sequence": 20,
+          "kind": "run.done"
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "keep",
+          "reason": "memory_improved_within_constraints",
+          "plan_step": {
+            "fix_id": "fix_teacher_cpu_offload",
+            "type": "code",
+            "title": "Move teacher model to CPU (inference only)",
+            "description": "The teacher model (8192 width, 12 layers) is created on GPU, put in eval() mode with requires_grad_(False), but never used because distillation_weight=0.0. Moving it to CPU eliminates ~2.99 GB of resident params. Source: train.py lines 96-99 create teacher on device; forward at line 121 only uses student. The teacher params are allocated at stk_1a7a9d02829ff350 via wrapper_CompositeExplicitAutograd___to_copy during model initialization.",
+            "expected_saving_gb": 2.989897,
+            "numerics_impact": "none",
+            "throughput_impact": "none",
+            "risk": "Low. Teacher is unused (distillation_weight=0.0). No change to training math, effective batch, or optimizer updates.",
+            "requires_policy": []
+          },
+          "diagnosis": {
+            "valid": true,
+            "ready_for_patch": true,
+            "issues": []
+          },
+          "diagnosis_needs_more_info": false,
+          "diagnosis_notes": [
+            "The teacher model is entirely unused because distillation_weight=0.0 (train.py line 100). Offloading it to CPU saves ~2.99 GB with no numerical or throughput impact.",
+            "Required saving 0.62 GB is covered by fix_teacher_cpu_offload alone (2.99 GB estimated).",
+            "Activation working set (0.033 GB) and temporaries (0.033 GB) are inherent to student forward/backward; reducing them would require model/sequence changes (not allowed) or gradient accumulation (policy allowed but not needed given the large params saving).",
+            "Optimizer state (0.023 GB) is expected for AdamW on student params; no action proposed.",
+            "No OOM events; peak is stable at ~3.10 GB allocated. Fragmentation indicator is low."
+          ],
+          "diagnosis_plan": [
+            {
+              "fix_id": "fix_teacher_cpu_offload",
+              "type": "code",
+              "title": "Move teacher model to CPU (inference only)",
+              "description": "The teacher model (8192 width, 12 layers) is created on GPU, put in eval() mode with requires_grad_(False), but never used because distillation_weight=0.0. Moving it to CPU eliminates ~2.99 GB of resident params. Source: train.py lines 96-99 create teacher on device; forward at line 121 only uses student. The teacher params are allocated at stk_1a7a9d02829ff350 via wrapper_CompositeExplicitAutograd___to_copy during model initialization.",
+              "expected_saving_gb": 2.989897,
+              "numerics_impact": "none",
+              "throughput_impact": "none",
+              "risk": "Low. Teacher is unused (distillation_weight=0.0). No change to training math, effective batch, or optimizer updates.",
+              "requires_policy": []
+            }
+          ],
+          "candidate_evidence": {
+            "schema": "headroom.solver_candidate.v1",
+            "content_is_untrusted_data": true,
+            "round": 1,
+            "candidate_selected": true,
+            "selected_after_round": 1,
+            "decision": "keep",
+            "patch_result_available": true,
+            "patch_result_sha256": "8492c83a23e646361b3a37604314c4947fbbe377266fdd09275e34a76c48faba",
+            "patch_result_reason": null,
+            "diff": {
+              "available": true,
+              "reason": null,
+              "sha256": "de1251e6d28062424960cc7061f93f9d8c4e66df910f74df6b026f8e69427f44",
+              "utf8_bytes": 554,
+              "text": "--- a/train.py\n+++ b/train.py\n@@ -95,7 +95,7 @@\n     )\n     student = Classifier(features, student_width, 3, classes, device)\n     # Defect: the disabled teacher is eagerly created on the GPU and remains resident.\n-    teacher = Classifier(features, teacher_width, teacher_depth, classes, device).eval()\n+    teacher = Classifier(features, teacher_width, teacher_depth, classes, torch.device('cpu')).eval()\n     teacher.requires_grad_(False)\n     distillation_weight = 0.0\n     optimizer = torch.optim.AdamW(student.parameters(), lr=1e-4, foreach=False)\n",
+              "included_bytes": 554,
+              "omitted_bytes": 0,
+              "truncated": false
+            },
+            "status": "applied",
+            "reason": "STATIC_CHECKS_PASSED",
+            "env_changes": {},
+            "cli_changes": {
+              "values": [],
+              "complete": true,
+              "omitted_count": 0,
+              "redacted_positions": []
+            },
+            "effective_cli": {
+              "values": [],
+              "complete": true,
+              "omitted_count": 0,
+              "redacted_positions": []
+            },
+            "last_attempt": {
+              "status": "applied",
+              "reason": "STATIC_CHECKS_PASSED",
+              "detail": null,
+              "detail_truncated": false,
+              "policy_issues": [],
+              "policy_issues_omitted": 0
+            },
+            "application_files": [
+              {
+                "path": "train.py",
+                "path_truncated": false,
+                "before_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+                "candidate_sha256": "79d9637e02038b7daa770474706158ae9e3cad5b7f8512c164e1241720198063"
+              }
+            ],
+            "application_files_omitted": 0,
+            "truncated_fields": [],
+            "summary_overflow_omitted_fields": []
+          },
+          "feedback": {
+            "round": 1,
+            "provenance": "live",
+            "fix_id": "fix_teacher_cpu_offload",
+            "change": {
+              "type": "code",
+              "title": "Move teacher model to CPU (inference only)",
+              "patch_artifact": "rounds/01/patches/patch-engine-0b0bf155e521419e9114984626449bba/attempt-1/patch-76fe3bdeebba4156b2604998a631c568/patch.diff"
+            },
+            "decision": "keep",
+            "reason": "memory_improved_within_constraints",
+            "failure": null,
+            "verification_available": true,
+            "verification": {
+              "peak_before": 3.100141568,
+              "peak_after": 0.121791488,
+              "reduction_pct": 96.07142172934472,
+              "step_ms_before": 4.120887024328113,
+              "step_ms_after": 3.9960250724107027,
+              "max_loss_delta": 0.0,
+              "throughput_regression_pct": -3.0299775553242148,
+              "parameter_count_before": 747474432,
+              "parameter_count_after": 747474432,
+              "loss_tolerance": 0.001,
+              "completed": true,
+              "target_met": true,
+              "numerics_changed": false,
+              "observed_precision_change": false,
+              "loss_equivalence": "identical",
+              "numerical_basis": "original_plan_full_backward_scalar_series",
+              "comparison_precision": "fp32",
+              "acceptance_scope": "standard",
+              "checks": {
+                "baseline_capture": true,
+                "target_mode_valid": true,
+                "candidate_completed_required_steps": true,
+                "finite_candidate_losses": true,
+                "parameter_count_unchanged": true,
+                "numerics_policy": true,
+                "same_seed": true,
+                "same_inputs": null,
+                "same_effective_batch": null,
+                "same_objective": null,
+                "loss_series_aligned_to_updates": true,
+                "loss_series_comparison_available": true,
+                "loss_comparable": false,
+                "repository_no_reference_exception": false,
+                "loss_tolerance": true,
+                "numerical_acceptance": true,
+                "parameter_policy": true,
+                "measured_cuda_peaks": true,
+                "same_gpu_hardware": true,
+                "gpu_observation_clear": true,
+                "throughput_limit": true,
+                "memory_target": true
+              },
+              "checks_omitted": 0,
+              "checks_available": true,
+              "failed_checks": [
+                "loss_comparable",
+                "repository_no_reference_exception"
+              ],
+              "unknown_checks": [
+                "same_inputs",
+                "same_effective_batch",
+                "same_objective"
+              ],
+              "notes": [
+                "Loss states describe the original-plan observed scalar comparison; matching inputs, effective batch and objective are not established. This is not proof of workload equivalence.",
+                "Pairing: Lab runtime fingerprints and pinned source contracts; reference: source outside pinned s3/s4 AST contracts; candidate: source outside pinned s3/s4 AST contracts",
+                "Reference discovery: Baseline did not OOM or reference already supplied"
+              ],
+              "notes_omitted": 0
+            },
+            "candidate": {
+              "run_id": "1b1c9af0a65a4a35bdf74826ad41219a",
+              "status": "completed",
+              "reason": null,
+              "error": null,
+              "exception": {
+                "type": "StepLimitReached",
+                "message": "Reached 20 optimizer updates"
+              },
+              "oom": {
+                "requested_bytes": null,
+                "free_bytes": null,
+                "requested_gb": null,
+                "free_gb": null
+              },
+              "capture_complete": true,
+              "steps": 20,
+              "peak_allocated_bytes": 121791488,
+              "peak_reserved_bytes": 138412032,
+              "step_ms_median": 3.9960250724107027
+            },
+            "candidate_selected": true,
+            "selected_after_round": {
+              "round": 1,
+              "basis": "retained_candidate",
+              "target_met": true,
+              "run_id": "1b1c9af0a65a4a35bdf74826ad41219a",
+              "status": "completed",
+              "reason": null,
+              "error": null,
+              "exception": {
+                "type": "StepLimitReached",
+                "message": "Reached 20 optimizer updates"
+              },
+              "oom": {
+                "requested_bytes": null,
+                "free_bytes": null,
+                "requested_gb": null,
+                "free_gb": null
+              },
+              "capture_complete": true,
+              "steps": 20,
+              "peak_allocated_bytes": 121791488,
+              "peak_reserved_bytes": 138412032,
+              "step_ms_median": 3.9960250724107027
+            },
+            "truncated_fields": []
+          },
+          "patch": {
+            "status": "applied",
+            "reason": "STATIC_CHECKS_PASSED",
+            "candidate_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/patches/patch-engine-0b0bf155e521419e9114984626449bba/attempt-1/patch-76fe3bdeebba4156b2604998a631c568/candidate",
+            "original_source_root": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/lab/5e0ca1b2530b41269e69248039dcae94/source",
+            "cli_changes": [],
+            "effective_cli": [],
+            "env_changes": {},
+            "runtime_verified": false,
+            "runtime_verified_scope": "Patch engine static-stage field; runtime verification is the separate round verification artifact",
+            "attempts": [
+              {
+                "index": 1,
+                "status": "applied",
+                "reason": "STATIC_CHECKS_PASSED",
+                "detail": null,
+                "compile_exit_code": 0,
+                "changed_files": [
+                  "train.py"
+                ],
+                "application_check": {
+                  "protocol": "headroom.exact_application.v1",
+                  "verified": true,
+                  "files": [
+                    {
+                      "path": "train.py",
+                      "before_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+                      "expected_sha256": "79d9637e02038b7daa770474706158ae9e3cad5b7f8512c164e1241720198063",
+                      "candidate_sha256": "79d9637e02038b7daa770474706158ae9e3cad5b7f8512c164e1241720198063",
+                      "hunks": 1,
+                      "bytes": 4917
+                    }
+                  ]
+                },
+                "response_artifact": "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/patches/patch-engine-0b0bf155e521419e9114984626449bba/attempt-1-response.json",
+                "response": {
+                  "wire_schema": "source_span_edits_v1",
+                  "finish_reason": "stop",
+                  "validation": "schema_passed",
+                  "validation_reason": null,
+                  "parsed_omitted": false,
+                  "parsed_sha256": "433254ec61d2af6957f273e781efffdb1104dfa466b95b5af5c4a2947b8b929b"
+                },
+                "parsed_present": true
+              }
+            ]
+          },
+          "verification": {
+            "completed": true,
+            "target_met": true,
+            "peak_before": 3.100141568,
+            "peak_after": 0.121791488,
+            "reduction_pct": 96.07142172934472,
+            "step_ms_before": 4.120887024328113,
+            "step_ms_after": 3.9960250724107027,
+            "throughput_regression_pct": -3.0299775553242148,
+            "loss_equivalence": "identical",
+            "max_loss_delta": 0.0,
+            "loss_tolerance": 0.001,
+            "parameter_count_before": 747474432,
+            "parameter_count_after": 747474432,
+            "numerical_basis": "original_plan_full_backward_scalar_series",
+            "comparison_precision": "fp32",
+            "observed_precision_change": false,
+            "checks": {
+              "baseline_capture": true,
+              "target_mode_valid": true,
+              "candidate_completed_required_steps": true,
+              "finite_candidate_losses": true,
+              "parameter_count_unchanged": true,
+              "numerics_policy": true,
+              "same_seed": true,
+              "same_inputs": null,
+              "same_effective_batch": null,
+              "same_objective": null,
+              "loss_series_aligned_to_updates": true,
+              "loss_series_comparison_available": true,
+              "loss_comparable": false,
+              "repository_no_reference_exception": false,
+              "loss_tolerance": true,
+              "numerical_acceptance": true,
+              "parameter_policy": true,
+              "measured_cuda_peaks": true,
+              "same_gpu_hardware": true,
+              "gpu_observation_clear": true,
+              "throughput_limit": true,
+              "memory_target": true
+            },
+            "notes": [
+              "Loss states describe the original-plan observed scalar comparison; matching inputs, effective batch and objective are not established. This is not proof of workload equivalence.",
+              "Pairing: Lab runtime fingerprints and pinned source contracts; reference: source outside pinned s3/s4 AST contracts; candidate: source outside pinned s3/s4 AST contracts",
+              "Reference discovery: Baseline did not OOM or reference already supplied"
+            ],
+            "run_ids": {
+              "baseline": "5e0ca1b2530b41269e69248039dcae94",
+              "candidate": "1b1c9af0a65a4a35bdf74826ad41219a"
+            },
+            "reference_run": null,
+            "reference_discovery": {
+              "found": false,
+              "reason": "Baseline did not OOM or reference already supplied",
+              "attempts": []
+            },
+            "pairing_evidence": {
+              "protocol": "headroom.pairing.v1",
+              "checks": {
+                "same_inputs": null,
+                "same_effective_batch": null,
+                "same_objective": null
+              },
+              "reasons": [
+                "reference: source outside pinned s3/s4 AST contracts",
+                "candidate: source outside pinned s3/s4 AST contracts"
+              ],
+              "source": "Lab runtime fingerprints and pinned source contracts",
+              "reference_run": "5e0ca1b2530b41269e69248039dcae94",
+              "candidate_run": "1b1c9af0a65a4a35bdf74826ad41219a"
+            },
+            "candidate": {
+              "run_id": "1b1c9af0a65a4a35bdf74826ad41219a",
+              "status": "completed",
+              "steps": 20,
+              "capture_complete": true,
+              "parameter_count": 747474432,
+              "parameter_count_complete": true,
+              "loss_series": [
+                5.546091556549072,
+                5.508113384246826,
+                5.469991683959961,
+                5.431397914886475,
+                5.391988754272461,
+                5.351401329040527,
+                5.309258937835693,
+                5.265161037445068,
+                5.218688011169434,
+                5.169388771057129,
+                5.116775989532471,
+                5.060318946838379,
+                4.999436855316162,
+                4.9334821701049805,
+                4.861739158630371,
+                4.783402442932129,
+                4.697568416595459,
+                4.603214740753174,
+                4.499186992645264,
+                4.384181499481201
+              ],
+              "peak_allocated_bytes": 121791488,
+              "cleanup_verified": true,
+              "shared_gpu": false
+            }
+          },
+          "candidate_artifact_hashes_match": true
+        }
+      ],
+      "initial_diagnosis_audit_snapshots": [
+        {
+          "path": "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-e3260634f5f04de19386344db570df02/01-initial-messages.json",
+          "recorded_message_scope": "Initial diagnosis messages before router schema prepend; not a wire request hash and excludes supplementary turns",
+          "keys": [
+            "goal",
+            "policy",
+            "required_saving_gb",
+            "evidence_markdown"
+          ],
+          "new_context_fields_present": {
+            "execution_context": false,
+            "candidate_evidence": false,
+            "verification_feedback": false,
+            "solver_context_availability": false
+          },
+          "provenance_serialization_hash_matches": true
+        }
+      ],
+      "selected_configuration": {
+        "round": 1,
+        "script": "/home/xiaodouzi/workspace/headroom/scenarios/s8_two_models_resident/train.py",
+        "original": {
+          "execution_argv": null,
+          "script_args": [],
+          "allocator_conf": null
+        },
+        "effective": {
+          "execution_argv": null,
+          "script_args": [],
+          "allocator_conf": null
+        },
+        "wrapper_replay": null,
+        "artifacts": {
+          "patch": "configurations/round-01/patch.diff",
+          "env": "configurations/round-01/env.sh",
+          "cli": "configurations/round-01/cli.json",
+          "manifest": "configurations/round-01/manifest.json"
+        }
+      },
+      "selected_manifest": {
+        "round": 1,
+        "policy": {
+          "allow_numerics_change": false,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "max_throughput_regression_pct": 25.0
+        },
+        "provenance": "live",
+        "numerics_impact": "none",
+        "original_source": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/lab/5e0ca1b2530b41269e69248039dcae94/source",
+        "original_execution_argv": null,
+        "execution_entrypoint": null,
+        "execution_argv": null,
+        "changed_files": [
+          "train.py"
+        ],
+        "patch_sha256": "f6baa4f7fe3715067663f977b0b4fbc6c6e2aef330bf311def2a861435d37b64",
+        "apply_check": {
+          "status": "passed",
+          "returncode": 0,
+          "changed_files": [
+            "train.py"
+          ]
+        }
+      },
+      "selected_patch_sha256_matches_manifest": true,
+      "selected_source_semantics": {
+        "only_source_change": "teacher constructor destination device -> cpu; teacher remains constructed with same dimensions",
+        "exact_original_to_candidate_single_statement_replacement": true,
+        "candidate_bytes_equal_executed_lab_source": true,
+        "original_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+        "candidate_sha256": "79d9637e02038b7daa770474706158ae9e3cad5b7f8512c164e1241720198063",
+        "teacher_forward_guard": "distillation_weight=0.0, teacher only called when >0",
+        "student_forward_loss_optimizer_and_update_loop_unchanged": true,
+        "clean_patch_reapply": "Separate root audit; this review does not apply or execute patches",
+        "pairing_contract_acceptance": null,
+        "mathematical_equivalence_proven": null,
+        "original_scalar_acceptance": true
+      }
+    },
+    {
+      "scenario_id": "nanogpt",
+      "run_id": "ff1aaf6695b74045bfee4e0789133427",
+      "status": "needs_human",
+      "target_met": false,
+      "selected_round": null,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null
+        }
+      ],
+      "source_sha256": "413bd97b40bb400a2a0d01230e2946f056c263ebac1b7281c2367d964a123085",
+      "interpretation": "CLI script_args explicitly batch_size32 and gradient_accumulation_steps1; Ultra still proposed changes from source defaults12/40 to8/60. This shows incorrect use of effective invocation in the returned plan, without proving the wire omitted that invocation. needs_more_info stopped before patch; actual effective batch preservation was not demonstrated.",
+      "literal_cli": {
+        "observed_exit_code": 78,
+        "invocation_kind": "installed_console_script",
+        "invoked": true,
+        "returned": true,
+        "run_dispatched": true,
+        "result_saved": true,
+        "request_sha256": "0b5c51a29d7ac203604bdd8928d623041ed1765591e4abdcfd2ca6d786301842",
+        "result_sha256": "ac2c24f5c57030ee8deb293e1897bbd76667afcad4e6abae234ccaa56e929af9"
+      },
+      "effective_request": {
+        "script_args": [
+          "--dataset=/input",
+          "--batch_size=32",
+          "--block_size=1024",
+          "--n_layer=24",
+          "--n_head=16",
+          "--n_embd=1024",
+          "--gradient_accumulation_steps=1",
+          "--max_iters=20",
+          "--eval_iters=1",
+          "--eval_interval=1000",
+          "--compile=False",
+          "--dtype=float32",
+          "--decay_lr=False",
+          "--always_save_checkpoint=False",
+          "--out_dir=/tmp/nanogpt-out"
+        ],
+        "execution_argv": null,
+        "repository_mode": false,
+        "max_steps": 20,
+        "target": "fit:22GB",
+        "seed": 1337
+      },
+      "seed_scope": "request.seed is wrapper seed; a target script may call manual_seed again",
+      "model_roles": {
+        "annotate": 1,
+        "diagnose": 1
+      },
+      "events": [
+        {
+          "sequence": 1,
+          "kind": "run.started"
+        },
+        {
+          "sequence": 2,
+          "kind": "run.preflight"
+        },
+        {
+          "sequence": 3,
+          "kind": "budget.reserved"
+        },
+        {
+          "sequence": 4,
+          "kind": "baseline.started"
+        },
+        {
+          "sequence": 5,
+          "kind": "baseline.oom"
+        },
+        {
+          "sequence": 6,
+          "kind": "evidence.started"
+        },
+        {
+          "sequence": 7,
+          "kind": "evidence.built"
+        },
+        {
+          "sequence": 8,
+          "kind": "annotate.done"
+        },
+        {
+          "sequence": 9,
+          "kind": "diagnose.started"
+        },
+        {
+          "sequence": 10,
+          "kind": "diagnose.done"
+        },
+        {
+          "sequence": 11,
+          "kind": "round.done"
+        },
+        {
+          "sequence": 12,
+          "kind": "needs_human"
+        },
+        {
+          "sequence": 13,
+          "kind": "report.started"
+        },
+        {
+          "sequence": 14,
+          "kind": "report.written"
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "revert",
+          "reason": "diagnosis_needs_more_info",
+          "plan_step": null,
+          "diagnosis": {
+            "valid": true,
+            "ready_for_patch": false,
+            "issues": []
+          },
+          "diagnosis_needs_more_info": true,
+          "diagnosis_notes": [
+            "Peak allocated 24.7 GB > 22 GB target; required_saving unknown_event_index 2573 shows allocated 24.7 GB, reserved 24.7 GB, OOM on 536 MB request.",
+            "Largest temporaries at stk_08713fde259d4fcb (13.2 GB) and stk_371b6eb0d924b686 (13.2 GB) are attention output/softmax intermediates (short-lived 13.2 GB).",
+            "Activations at peak sum to 23.3 GB across multiple stacks (attention, linear, gelu, layer_norm).",
+            "Proposed fx1 saves ~7 GB (estimated by batch reduction 12->8 reduces activation footprint proportionally). fx2 saves additional ~5 GB by checkpointing but with major throughput impact.",
+            "Combined estimated savings ~12 GB overlapping; not strictly additive. Need verification run to measure actual peak after changes.",
+            "Policy: allow_numerics_change=false, allow_model_change=false, allow_batch_grad_accum=true, max_throughput_regression_pct=25. fx2 throughput_impact=major may exceed budget; needs measurement.",
+            "Missing: exact activation tensor shapes at peak to quantify per-sample memory; optimizer step boundaries (analyzer reports []); confirmation that gradient_accumulation_steps divisible by ddp_world_size (single GPU).",
+            "If fx1 alone insufficient, may need both steps or further batch reduction (requires policy permission already granted)."
+          ],
+          "diagnosis_plan": [
+            {
+              "fix_id": "fx1",
+              "type": "config",
+              "title": "Reduce micro-batch size and increase gradient accumulation steps",
+              "description": "Reduce batch_size from 12 to 8 (micro-batch) and increase gradient_accumulation_steps from 40 to 60 to preserve tokens per iteration (8*60=480 vs 12*40=480). This reduces per-forward activation memory. Policy allows batch/grad accumulation changes.",
+              "expected_saving_gb": 7.0,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Increases steps per optimizer update; may affect convergence if LR schedule not adjusted. Must keep effective batch and tokens per iter identical.",
+              "requires_policy": [
+                "allow_batch_grad_accum"
+              ]
+            },
+            {
+              "fix_id": "fx2",
+              "type": "code",
+              "title": "Enable gradient checkpointing on transformer blocks",
+              "description": "Wrap each Block in torch.utils.checkpoint.checkpoint to trade compute for activation memory. This recomputes activations during backward instead of storing them. Source: model.py Block.forward (lines 103-106).",
+              "expected_saving_gb": 5.0,
+              "numerics_impact": "none",
+              "throughput_impact": "major",
+              "risk": "Significant throughput regression (~20-30%) due to recomputation. Must verify loss equivalence.",
+              "requires_policy": []
+            }
+          ],
+          "candidate_evidence": {
+            "schema": "headroom.solver_candidate.v1",
+            "content_is_untrusted_data": true,
+            "round": 1,
+            "candidate_selected": false,
+            "selected_after_round": null,
+            "decision": "revert",
+            "patch_result_available": false,
+            "patch_result_sha256": null,
+            "patch_result_reason": "missing_unsafe_or_oversized",
+            "diff": {
+              "available": false,
+              "reason": "not_recorded",
+              "sha256": null,
+              "utf8_bytes": null,
+              "text": null,
+              "included_bytes": 0,
+              "omitted_bytes": null,
+              "truncated": null
+            },
+            "status": null,
+            "reason": null,
+            "env_changes": {},
+            "cli_changes": {
+              "values": null,
+              "complete": false,
+              "omitted_count": null,
+              "redacted_positions": []
+            },
+            "effective_cli": {
+              "values": null,
+              "complete": false,
+              "omitted_count": null,
+              "redacted_positions": []
+            },
+            "last_attempt": null,
+            "application_files": [],
+            "application_files_omitted": null,
+            "truncated_fields": [],
+            "summary_overflow_omitted_fields": []
+          },
+          "feedback": {
+            "round": 1,
+            "provenance": "live",
+            "fix_id": null,
+            "change": {
+              "type": null,
+              "title": null,
+              "patch_artifact": null
+            },
+            "decision": "revert",
+            "reason": "diagnosis_needs_more_info",
+            "failure": null,
+            "verification_available": false,
+            "verification": null,
+            "candidate": null,
+            "candidate_selected": false,
+            "selected_after_round": {
+              "round": null,
+              "basis": "original_baseline",
+              "target_met": false,
+              "run_id": "06193174f02c426ba5369381c9bdc7a0",
+              "status": "oom",
+              "reason": null,
+              "error": null,
+              "exception": {
+                "type": "OutOfMemoryError",
+                "message": "CUDA out of memory. Tried to allocate 512.00 MiB. GPU 0 has a total capacity of 23.55 GiB of which 101.19 MiB is free. Including non-PyTorch memory, this process has 23.38 GiB memory in use. Of the allocated memory 23.01 GiB is allocated by PyTorch, and 45.30 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/note [truncated]"
+              },
+              "oom": {
+                "requested_bytes": 536870912,
+                "free_bytes": 106102784,
+                "requested_gb": 0.536870912,
+                "free_gb": 0.106102784
+              },
+              "capture_complete": true,
+              "steps": 0,
+              "peak_allocated_bytes": 24705183744,
+              "peak_reserved_bytes": 24752685056,
+              "step_ms_median": null
+            },
+            "truncated_fields": [
+              "selected.exception.message"
+            ]
+          },
+          "patch": null,
+          "verification": null
+        }
+      ],
+      "initial_diagnosis_audit_snapshots": [
+        {
+          "path": "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-ff1aaf6695b74045bfee4e0789133427/01-initial-messages.json",
+          "recorded_message_scope": "Initial diagnosis messages before router schema prepend; not a wire request hash and excludes supplementary turns",
+          "keys": [
+            "goal",
+            "policy",
+            "required_saving_gb",
+            "evidence_markdown"
+          ],
+          "new_context_fields_present": {
+            "execution_context": false,
+            "candidate_evidence": false,
+            "verification_feedback": false,
+            "solver_context_availability": false
+          },
+          "provenance_serialization_hash_matches": true
+        }
+      ],
+      "selected_configuration": {}
+    }
+  ],
+  "database_projection_sha256": "316d8496a69a262cb7ee7079a74d4c67040b62ab2f12a20a29edc21af2e074bb",
+  "database_read_mode": "SQLite mode=ro, query_only=ON, one read transaction; no writes",
+  "source_artifacts_stable": true,
+  "artifact_sha256": {
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/campaign.json": "cb78766a21e16ba2244b371ca460ec394cd8ad85e6015548fe036f0a82b97cdb",
+    "headroom/orchestrator.py": "e128a0e9b20e78f663adbe8d483d133a5831d5b51afd749edf3db4b00140f73f",
+    "headroom/diagnose.py": "c23ee4a61a549151cc4d8da5fe1c3b6157a0c557ec707b8c77fc625c15e39dee",
+    "headroom/patch.py": "19f92da02500880297b7805590e6323d340b6978fb4bc7265e5e9e03fa4767d3",
+    "headroom/solver_context.py": "cd50e283247ae2a224f25d946098504e19fdf81b0cc90efb47aa7055218d8a65",
+    "headroom/evaluation.py": "3f3a0956656b4a691d8e941e4e527c9c992311228b7894d586bdc308f2edbaaf",
+    "headroom/verify/runner.py": "7d87ee35828dbcd088191b9e68e3b4c10c920da2c443213799aa0cb4d0865bb8",
+    "headroom/verify/compare.py": "dc4451d81d04c80ec02e2d336be569f69935bd8ad839f4c5e0b2ac70c9429a6f",
+    "reports/live-campaign-20261025/mvp-v7-preflight.json": "1676badac053e6897e122f2b93772b885a07ba31d096ad8bb4ea2543b5455be4",
+    "reports/live-campaign-20261025/mvp-v7-execution.json": "83de7c934c690f5df3df44ec46e812a3b66d7cf01a4f279fefbdf5d2abf72b6e",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/77b62a3d90374a6d96ed06c11a6d573a/report.json": "e2e5ff32ad2fb8b11c03b99ceb1e9cca81721983f386665d13c756a886f0cdb4",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-context-77b62a3d90374a6d96ed06c11a6d573a.json": "488c3ed42d75b99c73d55d5fe273e9fa8ab49fcc5ae63db6f5d10d9564a08551",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-invocation-77b62a3d90374a6d96ed06c11a6d573a.json": "f22ba489b0acf45e557b48ab47cfb3a917c10c0d8cddf87e698378c7ff1df8af",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-77b62a3d90374a6d96ed06c11a6d573a.stderr.log": "274661ac0f160cd1b809c88cc9173513e36220eb14a44864ca2f4297f8de2cb0",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-77b62a3d90374a6d96ed06c11a6d573a.stdout.log": "fcb8594898f03c24f1a2feef29350bf0d80044f98e7591e685931eb232f61364",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-77b62a3d90374a6d96ed06c11a6d573a/01-initial-messages.json": "1a4681dee0be62d215c75ccc75284809e3d3b78d108d35202726734e9d81bd57",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-77b62a3d90374a6d96ed06c11a6d573a/01-provenance.json": "fcbf06cce175328713c5b9627a09c3ff2152aca004115840d18a714b4bd5850c",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-77b62a3d90374a6d96ed06c11a6d573a/01-diagnosis-input.txt": "e483be3a93d453fd8061f76d415d71611a01de99da60620313904b36a3307835",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/77b62a3d90374a6d96ed06c11a6d573a/rounds/01/diagnosis.json": "c51036ef011d9628aa13fdd7f0f05a64c3fb7a72ac80f22523080b299c3205be",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/77b62a3d90374a6d96ed06c11a6d573a/rounds/01/verification-feedback.json": "253e92a97ddc53faa42ffd04494c41871831bfe920201a6ed0dac5d9fe5a6b8b",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/77b62a3d90374a6d96ed06c11a6d573a/lab/fb2d52bc58d4417b8b54879ba67382f1/result.json": "99edb4848cc9b65f8f9abc71fb5b1a7dfe3fac178cdd6027a86daa2bc69adfd0",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/9561b7d956cf415bbf4b98f6950a45e0/report.json": "e305cb12e69f5607ef9eb0d27b575796faa5aa1db9ba24ce55168eb55f6e2f00",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-context-9561b7d956cf415bbf4b98f6950a45e0.json": "ba2c4d225f20c785288f3f65a98478b4fd6c77e003fcb4bb18c7a40acabb692a",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-invocation-9561b7d956cf415bbf4b98f6950a45e0.json": "a3c3c60b812f486ceb98b9da30fed142579fdbcd35d90eb418461a580e83f6b0",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-9561b7d956cf415bbf4b98f6950a45e0.stderr.log": "b0e7cbadcfa609136712108824240e90b1675d22e58b9d0d0865c1d6aca0cf0f",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-9561b7d956cf415bbf4b98f6950a45e0.stdout.log": "85bc0913dee79cc944f9f8e07eca048a52e96239df8c1ce1a5228836abd608c0",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-9561b7d956cf415bbf4b98f6950a45e0/01-initial-messages.json": "23b9bb8443006dac18824019e44486b7cba7d7840dd5718a01bd5679685c2e40",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-9561b7d956cf415bbf4b98f6950a45e0/01-provenance.json": "1f0678f6d3622576eadc91327f5aaa979dacae4ffbcc22fe62365e500c37c39a",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-9561b7d956cf415bbf4b98f6950a45e0/01-diagnosis-input.txt": "8771c54c55759e51a0a1c6e31cd2bc4a91e1c0bac7c3f3cdce705b0342d584f4",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/9561b7d956cf415bbf4b98f6950a45e0/rounds/01/diagnosis.json": "c9e3246457e1326ebf578216cee275ff6bbdcba420b620ea14dfb42b3152980c",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/9561b7d956cf415bbf4b98f6950a45e0/rounds/01/verification-feedback.json": "6ba9d494672a6b3e1fa900d98ea516b093d5c12a516031404f55498ed6f6f324",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/9561b7d956cf415bbf4b98f6950a45e0/lab/d0f5c0357a884542adfbc64f697a6709/result.json": "9a816f0849edce57129ac583299fe84826bed0411511fb7ce54c10e5b9d0735e",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/52bb8129723241889337486bcb187f63/report.json": "bee406f2dc65e0f0efe90b2f97c8414c50aa712e1148b18f2f762de41b061880",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-context-52bb8129723241889337486bcb187f63.json": "a9c3301b71ba03015bef8c2417ff752f2efc33e3ea0deae947c9d7d6bc0824dd",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-invocation-52bb8129723241889337486bcb187f63.json": "8738b72ab34b921c9c0f88044c5f39e530477d472cbfbf6a910f8913e2fb5c84",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-52bb8129723241889337486bcb187f63.stderr.log": "b0e7cbadcfa609136712108824240e90b1675d22e58b9d0d0865c1d6aca0cf0f",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-52bb8129723241889337486bcb187f63.stdout.log": "2da3b2b733980826cb66844b0559b9d1a404f20bd062fa44290eb0e791609f87",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-52bb8129723241889337486bcb187f63/01-initial-messages.json": "94a831b226f575397dfa694224e26129dfb62bf0a9d3c493a87e238a22fb9dc3",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-52bb8129723241889337486bcb187f63/01-provenance.json": "cfbfe47e5d32751d1ac0219ac659d902b8e8c4c4b1002c946519d101dcb59f56",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-52bb8129723241889337486bcb187f63/01-diagnosis-input.txt": "cc237ac27186e8657150bf3542139ae623a804b951abb859f5be04fee8530b1d",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/52bb8129723241889337486bcb187f63/rounds/01/diagnosis.json": "1122a518f657f299056d7bc8f04d48abdfe6b5ca3da6b3c5ca538a478c702d21",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/52bb8129723241889337486bcb187f63/rounds/01/verification-feedback.json": "c1192b0f88cbfbef34e3fd03d86431ffecc3d96e89b5b9911b13a57445776c3a",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/52bb8129723241889337486bcb187f63/lab/3809bd3afadd445884873eafdc2041ec/result.json": "80d0d907bb601336449280c4d9355cfecfaf1aae6e3c4379f68e07582c1ca2a9",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/report.json": "6a96af23240513548b7e4ee1b42f022af0179e296ff78ad16ac87e07ce5e09e7",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-context-845f46be0f124c9c9dba4944feb9353f.json": "401ce55d82edcf23a2e80de2d3fb5606d1ec207da53619329d41aa15914a4fbd",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-invocation-845f46be0f124c9c9dba4944feb9353f.json": "336f38cb5f47535f18973fc537bcbef42737043d3a00e099325dac2f1d467557",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-845f46be0f124c9c9dba4944feb9353f.stderr.log": "45f7ee1e9227b1102fa3a6496f4ff5cc91767f0d6b818deef143538ee2574734",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-845f46be0f124c9c9dba4944feb9353f.stdout.log": "b443702c3bf284d3bf59ca18599cd502710bc6ab2bf353b62e6fcc8123247cb0",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-845f46be0f124c9c9dba4944feb9353f/01-initial-messages.json": "9bdb187826c4ef2a851c09da75f57780403a6cd42aaad90bc4bf2d350c045e47",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-845f46be0f124c9c9dba4944feb9353f/01-provenance.json": "1a3445616298c1dc7cfef333ddce3c8cf726167973c9b68470744733167a4efb",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-845f46be0f124c9c9dba4944feb9353f/01-diagnosis-input.txt": "a7a737a000f2caa83492e568f0871cf52140c4dacf06883bfa5da0f29bb852dc",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-845f46be0f124c9c9dba4944feb9353f/02-initial-messages.json": "28978bb60bce083baf74efa67c3bc5e08f3ceb9c4148c9266c64ccb80e76e3e1",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-845f46be0f124c9c9dba4944feb9353f/02-provenance.json": "4b73dddeea6c314197b11a217a7c5e8a1da06b305cff25fedf7a6920464fe402",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-845f46be0f124c9c9dba4944feb9353f/02-diagnosis-input.txt": "fbec3cd726c5231beeaa0a6652b97418f839be88836c5b2e13ab3876b8496075",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/diagnosis.json": "728b11dafea6c49cac556c76262d4270709285ce6a36c6dd00a6aa515336feb2",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/verification-feedback.json": "6c89ebaadd020d2688ade243cc25e087fa298ddb455b91dd336d823080e4812f",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/patch-result.json": "27b0bfc6b55ab9dc259f9a4bffcf902992c3b3f30df75928976efae442878b2b",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/patches/patch-engine-08aef4b3945342be9725f76a9df2d310/attempt-1-response.json": "6cdb759221ab6629e66782959467aa7109c19368f5ec4663be45adb626a174cb",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/patches/patch-engine-08aef4b3945342be9725f76a9df2d310/attempt-1/patch-3cd8b4298839405e844641e526306b67/patch.diff": "b45f06998e1ae9bbdbe2d63abd0006b0635137def9d355d4b2da1a3457ce9998",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/verification.json": "0021c6be477618e31ec255fc69f9d05d8e21fe0692275231667f763344342ed4",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/lab/d8957cb70b7443f2bb9b6b7e2640cc91/result.json": "04a194c8fd005279a8a11630568c081e6317c3a450cdbb66b18a54e5d4f321d8",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/lab/40ec04637ded4337880968b523da44ea/result.json": "18510419bd1fae8bdce0b0a9c850148034c6cd071bce46e91c79adaa1cda8427",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/02/diagnosis.json": "fae7a4460e0c28308a45c6ff1dad1e44ead179fb912e442dc62db58f5bf0e4ba",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/02/verification-feedback.json": "3fda737a967bf44f2c094aefc129fcdb5609ec20692e3050c6b25f7c0e88c999",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/lab/e86797c9f39743a6b186c1dcdf01c90a/result.json": "5f6dbd7402e8c07fe644bbfe28839a1e5788d7b543dda3e7a7bb8514a284d047",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/34c41d1d52b5427fb29bc02eae76fa07/report.json": "d0acd5cfcc7b3b739e1d90de1cb2a4b3a4f8e358f73e49528e944a56721dc03a",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-context-34c41d1d52b5427fb29bc02eae76fa07.json": "ae08228829762d1be4f1de8193d519010fd2bb063da6d05926989bf2d24ce847",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-invocation-34c41d1d52b5427fb29bc02eae76fa07.json": "5fbc0feb66dc65ed3c2c1f248f5be14284dbeebad6190dfa983de3ccf0503e53",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-34c41d1d52b5427fb29bc02eae76fa07.stderr.log": "b0e7cbadcfa609136712108824240e90b1675d22e58b9d0d0865c1d6aca0cf0f",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-34c41d1d52b5427fb29bc02eae76fa07.stdout.log": "daf90e7236333c6f772c8b0e58281f1304185a3cd510776ae4934c9b45b35830",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-34c41d1d52b5427fb29bc02eae76fa07/01-initial-messages.json": "48d3408001a3704a288b2054d02a2de4ab0e2630f3ae81623c5f44334cd996c9",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-34c41d1d52b5427fb29bc02eae76fa07/01-provenance.json": "3bd9a187ec088256c0f4df1b33a92255835ca06f5a8ce8cbcadd2a8a1660653c",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-34c41d1d52b5427fb29bc02eae76fa07/01-diagnosis-input.txt": "b58c4748d5e1326efadfa008b52e4fd31a72e843eef5775e8a9b9026f40eb39c",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/34c41d1d52b5427fb29bc02eae76fa07/rounds/01/diagnosis.json": "6fae653288df22124efa61bde948bcde85789c22fc06f355e0057bd22a2fead6",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/34c41d1d52b5427fb29bc02eae76fa07/rounds/01/verification-feedback.json": "6fa5b433ea3a408eef8f53516a425edcf285a85262bdbf964fcc6bb0d99e5e4c",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/34c41d1d52b5427fb29bc02eae76fa07/lab/c04511955d2f43ebb364bf8e4a22e13f/result.json": "825a6d22673c33c724b0463a34092e8c093dbeb4ee2ff92bf887c7e519ec14aa",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/6a7478dc928c4ad19929a870872c5b1d/report.json": "3933abeb464671c7a1772a9601861d4277b9e22237641098babe7699f3cf9180",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-context-6a7478dc928c4ad19929a870872c5b1d.json": "5aff74e47b76eb5df04bf02f3c546d270933b8615bccd4664fd8d5a8d780dbb3",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-invocation-6a7478dc928c4ad19929a870872c5b1d.json": "a67e5e48c3ce9a7887ec3b1f06399036de4ad9b43819d9a1e27c1617b32b99b6",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-6a7478dc928c4ad19929a870872c5b1d.stderr.log": "274661ac0f160cd1b809c88cc9173513e36220eb14a44864ca2f4297f8de2cb0",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-6a7478dc928c4ad19929a870872c5b1d.stdout.log": "2085aa0fa5e898198950a194420feb6c80910b67f77503542e37b75475d05c90",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-6a7478dc928c4ad19929a870872c5b1d/01-initial-messages.json": "5118553fc5ebead1f3f8f80374c144fc4b730d240a4dc2c45e6422d6dde7588f",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-6a7478dc928c4ad19929a870872c5b1d/01-provenance.json": "60362847154c766038a2078fd87f2bd9f9f93079af6bd1af03241ebf40a6f397",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-6a7478dc928c4ad19929a870872c5b1d/01-diagnosis-input.txt": "0d5a9f8fbd938e7d02a76d5db858f618c61b937e58485051fac371fc34ab30ec",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/6a7478dc928c4ad19929a870872c5b1d/rounds/01/diagnosis.json": "3feda658345b276683922d3ececcb6c320c3df7d53023d3b8c55422463ac7b22",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/6a7478dc928c4ad19929a870872c5b1d/rounds/01/verification-feedback.json": "ebbe0bc61f3f095801ac630f9fc5c61cba0c091dc9e2937a32e6d20cd11a6314",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/6a7478dc928c4ad19929a870872c5b1d/lab/2504b8a05d5648e9ab6d0b447e6e9fb8/result.json": "b8e12e8ae679c745a4779fe63429b5562d70538cc32433e0b5a77e9effd9f403",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/report.json": "4abdfdfb1df0b9e7acd90ea5dfd0343dce4400e06d0f1e751069ab02154e69b6",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-context-bb32d35379b84bc091d0f6af1f71ae73.json": "d11c0edeeac22850ae76d4fd8eaa470ee609893c3d8a8f8fde823802b35e9b4c",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-invocation-bb32d35379b84bc091d0f6af1f71ae73.json": "bb5268d5aaf5dab6b9e1315e4ed5cb9f24c64f47fb19f6e94b2c0fd8505e3084",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-bb32d35379b84bc091d0f6af1f71ae73.stderr.log": "f92b91ad07ead1c3af495b244a360efc35c57b2372315865e1376b0f94257bf5",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-bb32d35379b84bc091d0f6af1f71ae73.stdout.log": "5ff568c53a54d7e8a270bf5fcb81be7714c2eed1eb9be4bcca85627daed7f1e8",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-bb32d35379b84bc091d0f6af1f71ae73/01-initial-messages.json": "d1bd2ead3e8b6c9bb2b1f0ce33e4d85dd52e08de9c490a24d66b05c64bd08dfd",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-bb32d35379b84bc091d0f6af1f71ae73/01-provenance.json": "95c775d3315573e924f187a233f6a9437d5a2bca587abc224f00262509f2a24d",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-bb32d35379b84bc091d0f6af1f71ae73/01-diagnosis-input.txt": "301bb6e98e12c4926f5ba0f096c743c81260b9ed8dac324b7a083b0c23f5e9fd",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-bb32d35379b84bc091d0f6af1f71ae73/02-initial-messages.json": "07159c1bb03020135f0d10b2bc0fd3cfde31f12a7711ad5fd6b07331d6bc4815",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-bb32d35379b84bc091d0f6af1f71ae73/02-provenance.json": "8ab3d294a59cc230b8db2711b20b11344077a46150a70fd46c4b135934811377",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-bb32d35379b84bc091d0f6af1f71ae73/02-diagnosis-input.txt": "addd53cc3a0247e63991a6ff02f45ba950fdd11f1571f4e4741feb9057efbe5a",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/diagnosis.json": "e3c80e6c5a91740cffdd50de9431e1c90846d79dd0d1f2c7f9e29af66ed2189d",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/verification-feedback.json": "34a7ab02253a13c337fad1ff52e7bb0c2beb3a1017775425049f1c247a19e9f1",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/patch-result.json": "6acf826e92a9722b8af1f5f081fee7bdd9506de80daa501059b46dd4f8b1e805",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/patches/patch-engine-8bc8d99a5dff46b394bcf025a470a5dd/attempt-1-response.json": "ce824a7b72c01be7f9dd79ff638ba646d9f0942f75ae96a0d42fb58074f6331c",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/patches/patch-engine-8bc8d99a5dff46b394bcf025a470a5dd/attempt-1/patch-6bd150524e0d4b56b743635d7b3bb431/patch.diff": "87c03367421d4e72caf430c3c46579cdcc3e4fbfc1aded98b05c23c2047db9fb",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/verification.json": "23c788e22c908db98f2c2ea08e58d4445abe04d1439fd9036c8e643113652588",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/lab/5b24aa0174de4faaa11778f304960fc5/result.json": "68a104fa81e9b15fbc10c713e577b6ba02e775dbbfff67990c5975709de84acd",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/02/diagnosis.json": "b128cf55934bafeaa24960b92089c351d0f7395a9d143286e093d9a1767645d7",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/02/verification-feedback.json": "20402242c7e097d285f79c1dc3c5aa6e1750d74da1a24de2a983cd378057e6d9",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/lab/c4392cfabc8d4355a7c857fc76799dbb/result.json": "a4549ea87f8033ac0bcd8197af206f076443921fce71ca783d17d750835eaa5f",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/report.json": "92ccc4ebe4feddfa2ba057b4709643b5d29a09d42ff8d504f3f4c3340045c8bf",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-context-e3260634f5f04de19386344db570df02.json": "0941096277db18b29e195b88499d0d190dc3108cd783320c246dc87fdfdd21c6",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-invocation-e3260634f5f04de19386344db570df02.json": "8357e6b64beb360be22326e52c12a3d44edd3050be7a61f96e8cfdb8a3a09624",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-e3260634f5f04de19386344db570df02.stderr.log": "1b2d04f4b889239e31f10aa5ebca356771e13626e8b26d2c51990de38c9f1db1",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-e3260634f5f04de19386344db570df02.stdout.log": "818dc3fd5a9332d3dbd4af52824deb45dcb6d5ed5dc2212bc387ec3bcb570ec8",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-e3260634f5f04de19386344db570df02/01-initial-messages.json": "fbe2f4fbff42d22cf7171bc9d87dd9d2ff78ec40b2e0f1bcb27936cf6d0fdcb4",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-e3260634f5f04de19386344db570df02/01-provenance.json": "409e12b7a795cf7dcfacf6e565708fe5e9bfff7c2190191c9dc36f724447cd1c",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-e3260634f5f04de19386344db570df02/01-diagnosis-input.txt": "29ffab1d830503549ee33f4bcbcc84c4ca97946be80230e3628dd2b6bc15f1ba",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/diagnosis.json": "eb066ab512307f8ae884e6dff2b6fd6afd0ecbcd734d5ad947d65b42b36a623d",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/verification-feedback.json": "3e480352dd05a0d3f07a2f94678bc4ba32a6a9ea4324d6ef2230c034c5bee3be",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/patch-result.json": "8492c83a23e646361b3a37604314c4947fbbe377266fdd09275e34a76c48faba",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/patches/patch-engine-0b0bf155e521419e9114984626449bba/attempt-1-response.json": "96fbe87a5206a107d8f62d4c1e2b57a144e1281c2a5aa8d8aa9f203d1567c074",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/patches/patch-engine-0b0bf155e521419e9114984626449bba/attempt-1/patch-76fe3bdeebba4156b2604998a631c568/patch.diff": "de1251e6d28062424960cc7061f93f9d8c4e66df910f74df6b026f8e69427f44",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/verification.json": "8847fdda2d59f2f8821ab507268b481619138ee3ba450b1c6dfb64629588126d",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/lab/1b1c9af0a65a4a35bdf74826ad41219a/result.json": "3a017506eda4595c7955737f45cc8ab01a6edab1da9c85ef7920ea54f0221436",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/lab/5e0ca1b2530b41269e69248039dcae94/result.json": "dd4bf1e2e3e28629ab2b8bb79ef2741a146a775c6d01c6fabbfcd338758652a0",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/configurations/round-01/patch.diff": "f6baa4f7fe3715067663f977b0b4fbc6c6e2aef330bf311def2a861435d37b64",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/configurations/round-01/env.sh": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/configurations/round-01/cli.json": "7e1565dbe5faa887109289bc9ae45706e3d5745f3032f682149ddac0d95e4bb5",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/configurations/round-01/manifest.json": "e8d75a5602554fa328fa29d28fd0320e83221c936a8f550031c5d188b610a047",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/lab/5e0ca1b2530b41269e69248039dcae94/source/train.py": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/patches/patch-engine-0b0bf155e521419e9114984626449bba/attempt-1/patch-76fe3bdeebba4156b2604998a631c568/candidate/train.py": "79d9637e02038b7daa770474706158ae9e3cad5b7f8512c164e1241720198063",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/lab/1b1c9af0a65a4a35bdf74826ad41219a/source/train.py": "79d9637e02038b7daa770474706158ae9e3cad5b7f8512c164e1241720198063",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/ff1aaf6695b74045bfee4e0789133427/report.json": "bf2ba134a30aa9f96944ac6e43d0e8c6112d10d6e8e080849636e33d9a2acc6c",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-context-ff1aaf6695b74045bfee4e0789133427.json": "fb1075d835f9ac19c21e2d006d6638b36c40881180587a3bf7d55c38a00aa89b",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-invocation-ff1aaf6695b74045bfee4e0789133427.json": "af5d6ba26e5209f8a0b132870cc9e9d007359ab5171747acad718e027f3701ac",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-ff1aaf6695b74045bfee4e0789133427.stderr.log": "274661ac0f160cd1b809c88cc9173513e36220eb14a44864ca2f4297f8de2cb0",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/cli-ff1aaf6695b74045bfee4e0789133427.stdout.log": "d82cf198cd91253307b7331b283f97ad93e0e37135ccefc2113e3a710fa17c91",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-ff1aaf6695b74045bfee4e0789133427/01-initial-messages.json": "4292608ef25e6db20f66e1e7d863dc3668fc196d14a968d8afab146cc6924b8b",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-ff1aaf6695b74045bfee4e0789133427/01-provenance.json": "e674bee29612263dce336037224265f6f4c63a5766c2919e39529ddcb2304ca7",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/condition-ff1aaf6695b74045bfee4e0789133427/01-diagnosis-input.txt": "49d9f571aa37cbc58678bd2f6352d4eb26db05b511dee8609fb1dfa97375477a",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/ff1aaf6695b74045bfee4e0789133427/rounds/01/diagnosis.json": "6c275346f43062f2bc195d391f05cbb7e17bf2984664d124c5d4234673bcf6f5",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/ff1aaf6695b74045bfee4e0789133427/rounds/01/verification-feedback.json": "080cc21faf8af3fe462655a638980234c6c1243a332add8dc34037a60bef4373",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/ff1aaf6695b74045bfee4e0789133427/lab/06193174f02c426ba5369381c9bdc7a0/result.json": "62dd33a32641f37ed4bd4b4a7396dea2a43770b0607c55fa6dddc60873a4018e",
+    "scenarios/s1_batch_too_big/train.py": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+    "scenarios/s3_eval_no_grad_missing/train.py": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+    "scenarios/s4_loss_accumulation_graph/train.py": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+    "scenarios/s8_two_models_resident/train.py": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59"
+  },
+  "limitations": [
+    "Original-gate success remains separate from phase-wide acceptance and stronger paired equivalence.",
+    "Loss differences across unequal batch/input references do not prove mathematical non-equivalence; original rejection remains recorded.",
+    "s8 and s7 pairing checks remain unknown outside pinned s3/s4 contracts.",
+    "Model claims that a patch is mathematically correct are unverified interpretations.",
+    "Same-campaign s3 no candidate does not erase prior v6 success and does not inherit it as a v7 success.",
+    "Selected cumulative patch and per-round patch can have different formatting/hash; selected manifest binding is independently checked.",
+    "Root performs a separate clean reapplication; no patch was applied or executed in this review.",
+    "No causal performance-improvement attribution is made from a single step-time measurement."
+  ],
+  "operations": {
+    "production_edits": 0,
+    "model_calls": 0,
+    "GPU_jobs": 0,
+    "patch_applications": 0,
+    "DB_writes": 0,
+    "secret_reads": 0,
+    "new_report_files": 1
+  }
+}

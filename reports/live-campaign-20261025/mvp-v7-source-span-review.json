@@ -1,0 +1,661 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-10-25T03:39:46.064833+00:00",
+  "audit": "source_span_campaign_independent_sidecar",
+  "full_plan_acceptance": null,
+  "execution": {
+    "model_calls": 0,
+    "gpu_jobs": 0,
+    "production_imports": 0,
+    "patch_application": 0,
+    "ledger_writes": 0,
+    "secret_reads": 0
+  },
+  "rows": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "run_id": "77b62a3d90374a6d96ed06c11a6d573a",
+      "status": "needs_human",
+      "target_met": false,
+      "rounds": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_status": null,
+          "candidate_completed": null,
+          "candidate_target_met": null,
+          "attempts": [],
+          "errors": [],
+          "patch_artifact_required": false,
+          "verification_artifact_required": false,
+          "patch_evidence_complete": true,
+          "verification_evidence_complete": true,
+          "missing_required_artifacts": [],
+          "round_evidence_complete": true
+        }
+      ],
+      "errors": [],
+      "selection": {
+        "selected_round": null,
+        "selected_preserved_verified": true,
+        "selected_code_chain_verified": null,
+        "errors": [],
+        "selection": "explicit_none"
+      },
+      "row_evidence_complete": true
+    },
+    {
+      "scenario_id": "s2_fp32_adamw_1b",
+      "run_id": "9561b7d956cf415bbf4b98f6950a45e0",
+      "status": "needs_human",
+      "target_met": false,
+      "rounds": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_status": null,
+          "candidate_completed": null,
+          "candidate_target_met": null,
+          "attempts": [],
+          "errors": [],
+          "patch_artifact_required": false,
+          "verification_artifact_required": false,
+          "patch_evidence_complete": true,
+          "verification_evidence_complete": true,
+          "missing_required_artifacts": [],
+          "round_evidence_complete": true
+        }
+      ],
+      "errors": [],
+      "selection": {
+        "selected_round": null,
+        "selected_preserved_verified": true,
+        "selected_code_chain_verified": null,
+        "errors": [],
+        "selection": "explicit_none"
+      },
+      "row_evidence_complete": true
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "run_id": "52bb8129723241889337486bcb187f63",
+      "status": "needs_human",
+      "target_met": false,
+      "rounds": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_status": null,
+          "candidate_completed": null,
+          "candidate_target_met": null,
+          "attempts": [],
+          "errors": [],
+          "patch_artifact_required": false,
+          "verification_artifact_required": false,
+          "patch_evidence_complete": true,
+          "verification_evidence_complete": true,
+          "missing_required_artifacts": [],
+          "round_evidence_complete": true
+        }
+      ],
+      "errors": [],
+      "selection": {
+        "selected_round": null,
+        "selected_preserved_verified": true,
+        "selected_code_chain_verified": null,
+        "errors": [],
+        "selection": "explicit_none"
+      },
+      "row_evidence_complete": true
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "run_id": "845f46be0f124c9c9dba4944feb9353f",
+      "status": "needs_human",
+      "target_met": false,
+      "rounds": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_status": "applied",
+          "candidate_completed": true,
+          "candidate_target_met": false,
+          "attempts": [
+            {
+              "index": 1,
+              "recorded_status": "applied",
+              "recorded_reason": "STATIC_CHECKS_PASSED",
+              "conversion_verified": true,
+              "public_diff_verified": true,
+              "application_verified": true,
+              "compile_exit_code": 0,
+              "code_edit_count": 1,
+              "errors": [],
+              "response_artifact": "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/patches/patch-engine-08aef4b3945342be9725f76a9df2d310/attempt-1-response.json",
+              "recorded_normalization_status": "applied",
+              "reconstructed_files": [
+                {
+                  "path": "train.py",
+                  "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+                  "source_bytes": 4576,
+                  "expected_sha256": "73b68c99da5d5408c8702a1c7316f7ca004153b9946a5751d63e403984190e5a",
+                  "expected_bytes": 4559,
+                  "edits": [
+                    {
+                      "edit_index": 0,
+                      "start_id": "L000104",
+                      "end_id": "L000104",
+                      "start_line": 104,
+                      "end_line": 104,
+                      "start_byte": 3683,
+                      "end_byte": 3724,
+                      "old_sha256": "7466be412476fc3cc453702c46824e2d41799b36130d5a8f19ca55f53f5d0925",
+                      "old_bytes": 41
+                    }
+                  ]
+                }
+              ],
+              "reconstructed_diff_sha256": "b45f06998e1ae9bbdbe2d63abd0006b0635137def9d355d4b2da1a3457ce9998",
+              "config_only": false,
+              "application_scope": "independent_full_candidate_bytes",
+              "exact_application_artifact": "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/patches/patch-engine-08aef4b3945342be9725f76a9df2d310/attempt-1/patch-3cd8b4298839405e844641e526306b67/exact-application.json"
+            }
+          ],
+          "errors": [],
+          "patch_artifact_required": true,
+          "verification_artifact_required": true,
+          "patch_evidence_complete": true,
+          "verification_evidence_complete": true,
+          "missing_required_artifacts": [],
+          "round_evidence_complete": true
+        },
+        {
+          "round": 2,
+          "decision": "revert",
+          "patch_status": null,
+          "candidate_completed": null,
+          "candidate_target_met": null,
+          "attempts": [],
+          "errors": [],
+          "patch_artifact_required": false,
+          "verification_artifact_required": false,
+          "patch_evidence_complete": true,
+          "verification_evidence_complete": true,
+          "missing_required_artifacts": [],
+          "round_evidence_complete": true
+        }
+      ],
+      "errors": [],
+      "selection": {
+        "selected_round": null,
+        "selected_preserved_verified": true,
+        "selected_code_chain_verified": null,
+        "errors": [],
+        "selection": "explicit_none"
+      },
+      "row_evidence_complete": true
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "run_id": "34c41d1d52b5427fb29bc02eae76fa07",
+      "status": "needs_human",
+      "target_met": false,
+      "rounds": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_status": null,
+          "candidate_completed": null,
+          "candidate_target_met": null,
+          "attempts": [],
+          "errors": [],
+          "patch_artifact_required": false,
+          "verification_artifact_required": false,
+          "patch_evidence_complete": true,
+          "verification_evidence_complete": true,
+          "missing_required_artifacts": [],
+          "round_evidence_complete": true
+        }
+      ],
+      "errors": [],
+      "selection": {
+        "selected_round": null,
+        "selected_preserved_verified": true,
+        "selected_code_chain_verified": null,
+        "errors": [],
+        "selection": "explicit_none"
+      },
+      "row_evidence_complete": true
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "run_id": "6a7478dc928c4ad19929a870872c5b1d",
+      "status": "needs_human",
+      "target_met": false,
+      "rounds": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_status": null,
+          "candidate_completed": null,
+          "candidate_target_met": null,
+          "attempts": [],
+          "errors": [],
+          "patch_artifact_required": false,
+          "verification_artifact_required": false,
+          "patch_evidence_complete": true,
+          "verification_evidence_complete": true,
+          "missing_required_artifacts": [],
+          "round_evidence_complete": true
+        }
+      ],
+      "errors": [],
+      "selection": {
+        "selected_round": null,
+        "selected_preserved_verified": true,
+        "selected_code_chain_verified": null,
+        "errors": [],
+        "selection": "explicit_none"
+      },
+      "row_evidence_complete": true
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "run_id": "bb32d35379b84bc091d0f6af1f71ae73",
+      "status": "needs_human",
+      "target_met": false,
+      "rounds": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_status": "applied",
+          "candidate_completed": true,
+          "candidate_target_met": false,
+          "attempts": [
+            {
+              "index": 1,
+              "recorded_status": "applied",
+              "recorded_reason": "STATIC_CHECKS_PASSED",
+              "conversion_verified": true,
+              "public_diff_verified": true,
+              "application_verified": true,
+              "compile_exit_code": 0,
+              "code_edit_count": 1,
+              "errors": [],
+              "response_artifact": "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/patches/patch-engine-8bc8d99a5dff46b394bcf025a470a5dd/attempt-1-response.json",
+              "recorded_normalization_status": "applied",
+              "reconstructed_files": [
+                {
+                  "path": "train.py",
+                  "source_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+                  "source_bytes": 4905,
+                  "expected_sha256": "1db2308322ad2f1144eb96cf791c63e58d3a6f5679f265b31d9bd954631eb01a",
+                  "expected_bytes": 4910,
+                  "edits": [
+                    {
+                      "edit_index": 0,
+                      "start_id": "L000108",
+                      "end_id": "L000108",
+                      "start_line": 108,
+                      "end_line": 108,
+                      "start_byte": 3384,
+                      "end_byte": 3462,
+                      "old_sha256": "be18c94faf7422e41b2d1461ce59708a344d0c20e3b5aa99449ab5473acf74a1",
+                      "old_bytes": 78
+                    }
+                  ]
+                }
+              ],
+              "reconstructed_diff_sha256": "87c03367421d4e72caf430c3c46579cdcc3e4fbfc1aded98b05c23c2047db9fb",
+              "config_only": false,
+              "application_scope": "independent_full_candidate_bytes",
+              "exact_application_artifact": "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/patches/patch-engine-8bc8d99a5dff46b394bcf025a470a5dd/attempt-1/patch-6bd150524e0d4b56b743635d7b3bb431/exact-application.json"
+            }
+          ],
+          "errors": [],
+          "patch_artifact_required": true,
+          "verification_artifact_required": true,
+          "patch_evidence_complete": true,
+          "verification_evidence_complete": true,
+          "missing_required_artifacts": [],
+          "round_evidence_complete": true
+        },
+        {
+          "round": 2,
+          "decision": "revert",
+          "patch_status": null,
+          "candidate_completed": null,
+          "candidate_target_met": null,
+          "attempts": [],
+          "errors": [],
+          "patch_artifact_required": false,
+          "verification_artifact_required": false,
+          "patch_evidence_complete": true,
+          "verification_evidence_complete": true,
+          "missing_required_artifacts": [],
+          "round_evidence_complete": true
+        }
+      ],
+      "errors": [],
+      "selection": {
+        "selected_round": null,
+        "selected_preserved_verified": true,
+        "selected_code_chain_verified": null,
+        "errors": [],
+        "selection": "explicit_none"
+      },
+      "row_evidence_complete": true
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "run_id": "e3260634f5f04de19386344db570df02",
+      "status": "completed",
+      "target_met": true,
+      "rounds": [
+        {
+          "round": 1,
+          "decision": "keep",
+          "patch_status": "applied",
+          "candidate_completed": true,
+          "candidate_target_met": true,
+          "attempts": [
+            {
+              "index": 1,
+              "recorded_status": "applied",
+              "recorded_reason": "STATIC_CHECKS_PASSED",
+              "conversion_verified": true,
+              "public_diff_verified": true,
+              "application_verified": true,
+              "compile_exit_code": 0,
+              "code_edit_count": 1,
+              "errors": [],
+              "response_artifact": "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/patches/patch-engine-0b0bf155e521419e9114984626449bba/attempt-1-response.json",
+              "recorded_normalization_status": "applied",
+              "reconstructed_files": [
+                {
+                  "path": "train.py",
+                  "source_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+                  "source_bytes": 4904,
+                  "expected_sha256": "79d9637e02038b7daa770474706158ae9e3cad5b7f8512c164e1241720198063",
+                  "expected_bytes": 4917,
+                  "edits": [
+                    {
+                      "edit_index": 0,
+                      "start_id": "L000098",
+                      "end_id": "L000099",
+                      "start_line": 98,
+                      "end_line": 99,
+                      "start_byte": 3090,
+                      "end_byte": 3213,
+                      "old_sha256": "dd4c376af0b58b2a493cb5977bdb4847d6ab8a7e4e70a81a59369fc7a889f68a",
+                      "old_bytes": 123
+                    }
+                  ]
+                }
+              ],
+              "reconstructed_diff_sha256": "de1251e6d28062424960cc7061f93f9d8c4e66df910f74df6b026f8e69427f44",
+              "config_only": false,
+              "application_scope": "independent_full_candidate_bytes",
+              "exact_application_artifact": "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/patches/patch-engine-0b0bf155e521419e9114984626449bba/attempt-1/patch-76fe3bdeebba4156b2604998a631c568/exact-application.json"
+            }
+          ],
+          "errors": [],
+          "patch_artifact_required": true,
+          "verification_artifact_required": true,
+          "patch_evidence_complete": true,
+          "verification_evidence_complete": true,
+          "missing_required_artifacts": [],
+          "round_evidence_complete": true
+        }
+      ],
+      "errors": [],
+      "selection": {
+        "selected_round": 1,
+        "selected_preserved_verified": true,
+        "selected_code_chain_verified": true,
+        "errors": [],
+        "cumulative_public_patch_files": [
+          {
+            "path": "train.py",
+            "source_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+            "expected_sha256": "79d9637e02038b7daa770474706158ae9e3cad5b7f8512c164e1241720198063",
+            "candidate_sha256": "79d9637e02038b7daa770474706158ae9e3cad5b7f8512c164e1241720198063",
+            "bytes": 4917,
+            "hunks": 1
+          }
+        ],
+        "selection": "recorded_keep",
+        "selected_completed": true,
+        "selected_candidate_target_met": true,
+        "run_target_met": true,
+        "after_run_id": "1b1c9af0a65a4a35bdf74826ad41219a",
+        "later_revert_rounds": []
+      },
+      "row_evidence_complete": true
+    },
+    {
+      "scenario_id": "nanogpt",
+      "run_id": "ff1aaf6695b74045bfee4e0789133427",
+      "status": "needs_human",
+      "target_met": false,
+      "rounds": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_status": null,
+          "candidate_completed": null,
+          "candidate_target_met": null,
+          "attempts": [],
+          "errors": [],
+          "patch_artifact_required": false,
+          "verification_artifact_required": false,
+          "patch_evidence_complete": true,
+          "verification_evidence_complete": true,
+          "missing_required_artifacts": [],
+          "round_evidence_complete": true
+        }
+      ],
+      "errors": [],
+      "selection": {
+        "selected_round": null,
+        "selected_preserved_verified": true,
+        "selected_code_chain_verified": null,
+        "errors": [],
+        "selection": "explicit_none"
+      },
+      "row_evidence_complete": true
+    }
+  ],
+  "errors": [],
+  "campaign": "runs/evaluation/live/20261025T033333928331Z-1b228422/campaign.json",
+  "all_nine_have_recorded_provider_responses": true,
+  "finance": {
+    "errors": [],
+    "rows": [
+      {
+        "scenario_id": "s1_batch_too_big",
+        "run_id": "77b62a3d90374a6d96ed06c11a6d573a",
+        "calls": 2,
+        "known_actual_subtotal_usd": "0.036797",
+        "actual_total_usd": null,
+        "conservative_total_usd": "0.0370895",
+        "ledger_uuid_binding_complete": true
+      },
+      {
+        "scenario_id": "s2_fp32_adamw_1b",
+        "run_id": "9561b7d956cf415bbf4b98f6950a45e0",
+        "calls": 2,
+        "known_actual_subtotal_usd": "0.048574428",
+        "actual_total_usd": "0.048574428",
+        "conservative_total_usd": "0.048574428",
+        "ledger_uuid_binding_complete": true
+      },
+      {
+        "scenario_id": "s3_eval_no_grad_missing",
+        "run_id": "52bb8129723241889337486bcb187f63",
+        "calls": 2,
+        "known_actual_subtotal_usd": "0.052025",
+        "actual_total_usd": null,
+        "conservative_total_usd": "0.05275352",
+        "ledger_uuid_binding_complete": true
+      },
+      {
+        "scenario_id": "s4_loss_accumulation_graph",
+        "run_id": "845f46be0f124c9c9dba4944feb9353f",
+        "calls": 4,
+        "known_actual_subtotal_usd": "0.068272628",
+        "actual_total_usd": "0.068272628",
+        "conservative_total_usd": "0.068272628",
+        "ledger_uuid_binding_complete": true
+      },
+      {
+        "scenario_id": "s5_fragmentation_varlen",
+        "run_id": "34c41d1d52b5427fb29bc02eae76fa07",
+        "calls": 2,
+        "known_actual_subtotal_usd": "0.040313208",
+        "actual_total_usd": "0.040313208",
+        "conservative_total_usd": "0.040313208",
+        "ledger_uuid_binding_complete": true
+      },
+      {
+        "scenario_id": "s6_full_vocab_logits_fp32",
+        "run_id": "6a7478dc928c4ad19929a870872c5b1d",
+        "calls": 2,
+        "known_actual_subtotal_usd": "0.033068228",
+        "actual_total_usd": "0.033068228",
+        "conservative_total_usd": "0.033068228",
+        "ledger_uuid_binding_complete": true
+      },
+      {
+        "scenario_id": "s7_frozen_params_optimizer_state",
+        "run_id": "bb32d35379b84bc091d0f6af1f71ae73",
+        "calls": 6,
+        "known_actual_subtotal_usd": "0.062629008",
+        "actual_total_usd": "0.062629008",
+        "conservative_total_usd": "0.062629008",
+        "ledger_uuid_binding_complete": true
+      },
+      {
+        "scenario_id": "s8_two_models_resident",
+        "run_id": "e3260634f5f04de19386344db570df02",
+        "calls": 3,
+        "known_actual_subtotal_usd": "0.048958968",
+        "actual_total_usd": "0.048958968",
+        "conservative_total_usd": "0.048958968",
+        "ledger_uuid_binding_complete": true
+      },
+      {
+        "scenario_id": "nanogpt",
+        "run_id": "ff1aaf6695b74045bfee4e0789133427",
+        "calls": 2,
+        "known_actual_subtotal_usd": "0.063958528",
+        "actual_total_usd": "0.063958528",
+        "conservative_total_usd": "0.063958528",
+        "ledger_uuid_binding_complete": true
+      }
+    ],
+    "campaign_all_call_known_actual_subtotal_usd": "0.454596996",
+    "campaign_known_actual_calls_in_bounded_runs_usd": "0.088822000",
+    "campaign_fully_known_run_sum_usd": "0.365774996",
+    "campaign_summary_known_cost_usd": "0.365774996",
+    "summary_known_is_fully_known_run_sum": true,
+    "campaign_conservative_total_usd": "0.455618016",
+    "campaign_financial_binding_complete": true,
+    "shared_ledger_clear": true,
+    "campaign_summary_conservative_consistent": true,
+    "actual_unknown_never_reclassified": true,
+    "all_time_ledger": {
+      "attempts": 457,
+      "runs": 76,
+      "known_actual_subtotal_usd": "4.936747036",
+      "actual_total_usd": null,
+      "conservative_charge_usd": "4.968399436",
+      "remaining_usd": "5.031249604",
+      "remaining_basis": "conservative_bound",
+      "pending": 0,
+      "unresolved": 0,
+      "nonclosed_runs": 0,
+      "halted_runs": 0,
+      "charge_status_counts": {
+        "exact": 426,
+        "upper_bound": 30,
+        "reviewed_retained": 1
+      },
+      "projection_sha256": "c69bc49ee63bd90633287f4052bde5725a64bd21dd7f3d87c43e1743489a6a35"
+    },
+    "external_known_or_retained_usd": "1.82224246",
+    "combined_runtime_external_conservative_net_usd": "6.790641896",
+    "price_recomputation_authority": "Run unchanged audit_mvp_acceptance_v2.py as well; this sidecar binds call amounts to ledger, not an independent tariff oracle."
+  },
+  "summary": {
+    "recorded_attempts": 3,
+    "round_artifact_coverage_complete": true,
+    "missing_required_round_artifacts": [],
+    "conversion_status_counts": {
+      "true": 3,
+      "false": 0,
+      "unknown": 0
+    },
+    "unknown_response_evidence_count": 0,
+    "contradicted_normalization_claims": 0,
+    "original_status_counts": {
+      "applied": 3
+    },
+    "applied_attempts": 3,
+    "code_applied_attempts": 3,
+    "applied_code_chains_verified": true,
+    "applied_conversions_verified": true,
+    "selected_configuration_consistency": true
+  },
+  "source_artifacts_stable": true,
+  "source_sha256": {
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/campaign.json": "cb78766a21e16ba2244b371ca460ec394cd8ad85e6015548fe036f0a82b97cdb",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/77b62a3d90374a6d96ed06c11a6d573a/report.json": "e2e5ff32ad2fb8b11c03b99ceb1e9cca81721983f386665d13c756a886f0cdb4",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/9561b7d956cf415bbf4b98f6950a45e0/report.json": "e305cb12e69f5607ef9eb0d27b575796faa5aa1db9ba24ce55168eb55f6e2f00",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/52bb8129723241889337486bcb187f63/report.json": "bee406f2dc65e0f0efe90b2f97c8414c50aa712e1148b18f2f762de41b061880",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/report.json": "6a96af23240513548b7e4ee1b42f022af0179e296ff78ad16ac87e07ce5e09e7",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/patch-result.json": "27b0bfc6b55ab9dc259f9a4bffcf902992c3b3f30df75928976efae442878b2b",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/patches/patch-engine-08aef4b3945342be9725f76a9df2d310/attempt-1-response.json": "6cdb759221ab6629e66782959467aa7109c19368f5ec4663be45adb626a174cb",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/lab/e86797c9f39743a6b186c1dcdf01c90a/source/train.py": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/patches/patch-engine-08aef4b3945342be9725f76a9df2d310/attempt-1/patch-3cd8b4298839405e844641e526306b67/patch.diff": "b45f06998e1ae9bbdbe2d63abd0006b0635137def9d355d4b2da1a3457ce9998",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/patches/patch-engine-08aef4b3945342be9725f76a9df2d310/attempt-1/patch-3cd8b4298839405e844641e526306b67/exact-application.json": "335d7551311c58990438f059949398377523495d11ea91189f114645ebe7f6aa",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/patches/patch-engine-08aef4b3945342be9725f76a9df2d310/attempt-1/patch-3cd8b4298839405e844641e526306b67/candidate/train.py": "73b68c99da5d5408c8702a1c7316f7ca004153b9946a5751d63e403984190e5a",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/845f46be0f124c9c9dba4944feb9353f/rounds/01/verification.json": "0021c6be477618e31ec255fc69f9d05d8e21fe0692275231667f763344342ed4",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/34c41d1d52b5427fb29bc02eae76fa07/report.json": "d0acd5cfcc7b3b739e1d90de1cb2a4b3a4f8e358f73e49528e944a56721dc03a",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/6a7478dc928c4ad19929a870872c5b1d/report.json": "3933abeb464671c7a1772a9601861d4277b9e22237641098babe7699f3cf9180",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/report.json": "4abdfdfb1df0b9e7acd90ea5dfd0343dce4400e06d0f1e751069ab02154e69b6",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/patch-result.json": "6acf826e92a9722b8af1f5f081fee7bdd9506de80daa501059b46dd4f8b1e805",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/patches/patch-engine-8bc8d99a5dff46b394bcf025a470a5dd/attempt-1-response.json": "ce824a7b72c01be7f9dd79ff638ba646d9f0942f75ae96a0d42fb58074f6331c",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/lab/c4392cfabc8d4355a7c857fc76799dbb/source/train.py": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/patches/patch-engine-8bc8d99a5dff46b394bcf025a470a5dd/attempt-1/patch-6bd150524e0d4b56b743635d7b3bb431/patch.diff": "87c03367421d4e72caf430c3c46579cdcc3e4fbfc1aded98b05c23c2047db9fb",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/patches/patch-engine-8bc8d99a5dff46b394bcf025a470a5dd/attempt-1/patch-6bd150524e0d4b56b743635d7b3bb431/exact-application.json": "c493bd3665abd4bf1cb8810ca92101c8fff179cd01d31e7d53275a78cb258205",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/patches/patch-engine-8bc8d99a5dff46b394bcf025a470a5dd/attempt-1/patch-6bd150524e0d4b56b743635d7b3bb431/candidate/train.py": "1db2308322ad2f1144eb96cf791c63e58d3a6f5679f265b31d9bd954631eb01a",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/bb32d35379b84bc091d0f6af1f71ae73/rounds/01/verification.json": "23c788e22c908db98f2c2ea08e58d4445abe04d1439fd9036c8e643113652588",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/report.json": "92ccc4ebe4feddfa2ba057b4709643b5d29a09d42ff8d504f3f4c3340045c8bf",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/patch-result.json": "8492c83a23e646361b3a37604314c4947fbbe377266fdd09275e34a76c48faba",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/patches/patch-engine-0b0bf155e521419e9114984626449bba/attempt-1-response.json": "96fbe87a5206a107d8f62d4c1e2b57a144e1281c2a5aa8d8aa9f203d1567c074",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/lab/5e0ca1b2530b41269e69248039dcae94/source/train.py": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/patches/patch-engine-0b0bf155e521419e9114984626449bba/attempt-1/patch-76fe3bdeebba4156b2604998a631c568/patch.diff": "de1251e6d28062424960cc7061f93f9d8c4e66df910f74df6b026f8e69427f44",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/patches/patch-engine-0b0bf155e521419e9114984626449bba/attempt-1/patch-76fe3bdeebba4156b2604998a631c568/exact-application.json": "2408eb874a693e3944774e48b7d7a1f4b7f36cff708a982cac8dcff478fa0de7",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/patches/patch-engine-0b0bf155e521419e9114984626449bba/attempt-1/patch-76fe3bdeebba4156b2604998a631c568/candidate/train.py": "79d9637e02038b7daa770474706158ae9e3cad5b7f8512c164e1241720198063",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/rounds/01/verification.json": "8847fdda2d59f2f8821ab507268b481619138ee3ba450b1c6dfb64629588126d",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/configurations/round-01/patch.diff": "f6baa4f7fe3715067663f977b0b4fbc6c6e2aef330bf311def2a861435d37b64",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/patch.diff": "f6baa4f7fe3715067663f977b0b4fbc6c6e2aef330bf311def2a861435d37b64",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/configurations/round-01/env.sh": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/env.sh": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/configurations/round-01/cli.json": "7e1565dbe5faa887109289bc9ae45706e3d5745f3032f682149ddac0d95e4bb5",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/cli.json": "7e1565dbe5faa887109289bc9ae45706e3d5745f3032f682149ddac0d95e4bb5",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/e3260634f5f04de19386344db570df02/configurations/round-01/manifest.json": "e8d75a5602554fa328fa29d28fd0320e83221c936a8f550031c5d188b610a047",
+    "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/ff1aaf6695b74045bfee4e0789133427/report.json": "bf2ba134a30aa9f96944ac6e43d0e8c6112d10d6e8e080849636e33d9a2acc6c",
+    "reports/live-campaign-20261025/allocation.json": "3db9675ddc542bb2ba42f9929748deea64d3810e913f13c303615e78f88203c0"
+  },
+  "limitations": [
+    "This supplement never changes original MVP gates, histories or verdicts; run the unchanged fixed-nine and CLI audits separately.",
+    "Original rejected/failed attempts remain rejected/failed even if their transport or conversion can be verified.",
+    "Missing/truncated/legacy response and application evidence stays unknown; absence is never acceptance.",
+    "No production normalizer is used as oracle; original source line IDs independently reconstruct complete candidate bytes and standard public diffs.",
+    "Partial improvements can remain KEEP while final target is false; later REVERT is not a replacement for the selected configuration.",
+    "Known-call subtotal and fully-known-run subtotal are distinct; bounded actual cost remains null."
+  ],
+  "sidecar_evidence_complete": true
+}

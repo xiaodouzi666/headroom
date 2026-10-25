@@ -20,7 +20,7 @@ Python, PyTorch allocator traces, Docker, SQLite, FastAPI/SSE, React/TypeScript,
 
 RESULTS records real GPU baselines, sandbox checks, Tavily search/extract/cache reuse, all 60 prescribed T0.4 probe outcomes and the T1.3 client gate. Ultra handled 500,029 measured input tokens and a separate 268,920-token authentic evidence request. The former is a tested lower bound, not the exact maximum or proof of the advertised 1M context; the 900k/429 outcome retains its unknown charge conservatively. The three-scenario Docker-contained independent subprocess comparison passed with 0% peak differences. The development app's existing replays remain clearly labeled baselines.
 
-MVP v6 verified one automated repair: s3 completed 20 updates with 73.378694% lower peak memory, identical recorded losses and unchanged parameter count. All nine cases ran; the overall score remains 1/9, below the original 6/9 gate. Raw first-cause agreement is 7/9 (six valid, one invalid, two unknown). Do not present the project as having passed MVP, main benchmarks or ablations. The final authorized v7 extension is undergoing regression; its live result is still pending.
+Final MVP v7 measured 1/9 target success (s8) and 6/9 raw first causes (4 valid, 3 failed, 2 unknown). Its patch kept an unused teacher on CPU: 20 updates, 96.071422% lower GPU peak, identical observed scalar losses and unchanged parameter count. Full workload pairing remains unknown, so this is the original scalar gate, not proof of full mathematical equivalence. Earlier v6 s3 evidence is separately preserved. Overall MVP and main/ablation acceptance remain failed or pending; the three additional iterations are exhausted.
 
 ## Challenges and learning
 
@@ -28,7 +28,7 @@ Allocator categories are heuristics with recorded coverage. A large reserved-min
 
 ## What's next
 
-Finish the final authorized v7 campaign and audit; if it still fails, return the concrete results for the owner's decision under the original PLAN section0.6 stop rule. Main/ablation campaigns, qualifying repair replays, public deployment and the demo video remain subject to their original acceptance gates; no outcome is promised.
+Review the completed v7 audit and choose the next bounded scope under the original PLAN section0.6 stop rule; see reports/final-decision-20261025-v7.md. Main/ablation campaigns, qualifying repair replays, public deployment and the demo video remain subject to their original acceptance gates; no outcome is promised.
 
 ## Submission checklist
 
@@ -42,4 +42,4 @@ Finish the final authorized v7 campaign and audit; if it still fails, return the
 
 ## Latest measured readiness — 2026-10-25
 
-Latest completed MVP v6: 1/9 targets, 7/9 raw first causes (six valid), 3/8 synthetic scenes applied and compiled. The s3 repair passes its original target and independent >=30% reduction gate. Full Nano coverage/accuracy, required Tavily Sources, main evaluation, qualifying replay set and public delivery remain incomplete. Final v7 is pending. Draft only: no public submission or deployment has occurred.
+Final MVP v7: 1/9 targets, 6/9 raw first causes (4 valid), 3/8 synthetic scenes applied and compiled. Source-span and literal CLI evidence are complete, but overall target and all-zero CLI gates fail. Backend 2,218 tests passed. Required Nano/Sources, full UI repair flow, main evaluation, qualifying replays, public demo and video remain incomplete. Draft only: no public submission or deployment has occurred.

@@ -437,3 +437,12 @@ Source-span component follow-up: clarifying docstring-only/no duplicated stateme
 ## TF-024 — Source-span placement and solver feedback
 
 V6 source-span reconstruction verified seven parseable edits and five applied/compiled candidates; two rejected responses remain unknown. The s3 repair met its target, while overall MVP remained 1/9. This shows that correct source placement is necessary but does not guarantee valid plans or numerical acceptance. Inspection also found that effective runtime CLI arguments and failed-candidate details were not fully delivered to both solvers. V7 adds bounded shared execution, candidate and verification context, with prompt-only credential flag redaction; full regression and live acceptance must precede any claim of improvement. No fixture-specific correct repair is supplied.
+
+
+## TF-025 — Final v7 context and repair behavior
+
+V7 added effective invocation and shared failed-candidate/verification context. All three produced patches applied and compiled, and s8 met its original scalar/memory gate (20 updates, 96.071422% peak reduction, observed losses identical, parameter count unchanged; full pairing unknown). Yet only 1/9 targets passed. Eight runs ended needs_more_info. NanoGPT still received a plan reasoning from source defaults12/40 despite actual CLI32/1; s3 withheld a patch despite a proposed no-grad fix. This shows that context availability does not imply correct use.
+
+The s4/s7 second diagnoses referred to the earlier candidate peaks, loss checks and pairing failures, providing behavior evidence of feedback use. Evaluation's separately reconstructed initial-message audit copies omit the new context, so they are not complete wire records; actual full Ultra/Super input bytes remain unverified. Source routing and captured fake-SDK tests are distinct evidence, not replacements for provider-wire logging.
+
+V7's25 calls have known subtotal0.454596996USD and conservative total0.455618016USD; two bounded actual charges remain unknown. No model-quality improvement is inferred merely from lower call count. Additional v5/v6/v7 rounds are exhausted; all original gates remain intact.
