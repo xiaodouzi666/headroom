@@ -300,6 +300,7 @@ def search_run(
     verify_error_at=None,
     policy=None,
     script_args=None,
+    numerical_reference=None,
 ):
     import difflib
 
@@ -605,7 +606,7 @@ def search_run(
         return {
             "report": result,
             "candidate": candidate,
-            "reference": None,
+            "reference": plan.get("reference"),
             "pairing_evidence": {"provenance": "offline_fixture", "reason": "test transport only"},
         }
 
@@ -618,6 +619,11 @@ def search_run(
             search_mode=search_mode,
             research_enabled=research_enabled,
             script_args=script_args or [],
+            **(
+                {"numerical_reference": numerical_reference}
+                if numerical_reference is not None
+                else {}
+            ),
             **({"policy": policy} if policy is not None else {}),
         ),
         store=store,

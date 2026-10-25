@@ -10,6 +10,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from headroom.schemas import Diagnosis
+from headroom.solver_context import invocation_reference_catalog
 
 
 class DiagnosisSchemaError(ValueError):
@@ -55,6 +56,12 @@ def build_diagnosis_schema(*, evidence: Mapping[str, Any], policy: Mapping[str, 
 
     schema = copy.deepcopy(Diagnosis.model_json_schema())
     try:
+        invocation_refs = schema["properties"]["invocation_refs"]
+        identities = sorted(invocation_reference_catalog(evidence.get("execution_context")))
+        if identities:
+            invocation_refs["items"]["enum"] = identities
+        else:
+            invocation_refs["maxItems"] = 0
         definitions = schema["$defs"]
         refs = definitions["RootCause"]["properties"]["evidence_refs"]
         steps = definitions["PlanStep"]["properties"]

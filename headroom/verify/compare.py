@@ -8,6 +8,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from headroom.verify.checkpoint import STRATEGY as CHECKPOINT_STRATEGY
+from headroom.verify.checkpoint import reference_proof as checkpoint_reference_proof
 from headroom.verify.offload import LEGACY_STRATEGY, STRATEGY, reference_proof
 from headroom.verify.precision import derive_precision
 
@@ -151,7 +153,7 @@ def compare_runs(
     Loss states describe the prescribed observed scalar comparison, not a proof
     of workload equivalence. Stronger pairing observations remain diagnostic.
     """
-    if reference_strategy not in {LEGACY_STRATEGY, STRATEGY}:
+    if reference_strategy not in {LEGACY_STRATEGY, STRATEGY, CHECKPOINT_STRATEGY}:
         raise ValueError("Unknown numerical reference strategy")
     mode, fit_bytes = parse_target(target)
     if acceptance_scope not in {"standard", "repository"}:
@@ -318,6 +320,30 @@ def compare_runs(
                 "Original-workload reference unavailable: "
                 + ", ".join(name for name, passed in proof["checks"].items() if passed is not True)
             )
+    if baseline_oom and reference_strategy == CHECKPOINT_STRATEGY:
+        proof = checkpoint_reference_proof(reference, candidate, required_steps, baseline=baseline)
+        checks["original_workload_checkpoint_reference"] = proof["valid"]
+        for name in ("same_inputs", "same_effective_batch", "same_objective"):
+            checks[name] = proof["checks"][name]
+        comparable = comparable and proof["valid"]
+        numerical_basis = "baseline_derived_checkpoint_first_five_backward_scalars"
+        notes = [
+            note
+            for note in notes
+            if note
+            != "OOM comparison uses the original small-batch reference's first five backward scalars."
+        ]
+        notes.append(
+            "Opt-in baseline-derived transformed reference applies a fixed reviewed "
+            "non-reentrant checkpoint transformation to the bound original source. "
+            "It preserves original argv and workload; it is not byte-for-byte original "
+            "source execution. Its memory and timing do not score the candidate."
+        )
+        if not proof["valid"]:
+            notes.append(
+                "Checkpoint reference unavailable: "
+                + ", ".join(name for name, passed in proof["checks"].items() if passed is not True)
+            )
     # Retain stronger evidence without inventing it for generic user programs.
     checks["loss_comparable"] = bool(
         comparable
@@ -349,6 +375,7 @@ def compare_runs(
         )
     no_reference_exception = (
         acceptance_scope == "repository"
+        and reference_strategy == LEGACY_STRATEGY
         and baseline_oom
         and reference is None
         and candidate_losses is not None

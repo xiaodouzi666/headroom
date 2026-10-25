@@ -9,6 +9,8 @@ from pathlib import Path
 import yaml
 
 from headroom.lab.runner import read_artifact_json, run_script
+from headroom.verify.checkpoint import STRATEGY as CHECKPOINT_STRATEGY
+from headroom.verify.checkpoint import attest_reference, prepare_reference
 from headroom.verify.compare import compare_runs
 from headroom.verify.offload import (
     LEGACY_STRATEGY,
@@ -170,7 +172,7 @@ def verify_script(
     max_reference_attempts bounds execution, not acceptance: exhaustion leaves
     reference unavailable. Every attempted reference is retained in the report.
     """
-    if reference_strategy not in {LEGACY_STRATEGY, STRATEGY}:
+    if reference_strategy not in {LEGACY_STRATEGY, STRATEGY, CHECKPOINT_STRATEGY}:
         raise ValueError("Unknown numerical reference strategy")
     if reference_strategy == STRATEGY:
         validate_limit(reference_offload_bytes)
@@ -183,6 +185,16 @@ def verify_script(
             raise ValueError("Reference wall-clock budget must be positive and at most 480 seconds")
         if reference is not None:
             raise ValueError("Original-workload offload must execute its own bound reference")
+    if reference_strategy == CHECKPOINT_STRATEGY:
+        if reference is not None:
+            raise ValueError("Checkpoint reference must execute its own baseline-derived source")
+        if required_steps != 20 or type(required_steps) is not int:
+            raise ValueError("Checkpoint reference requires 20 complete logical updates")
+        if reference_offload_bytes != MAX_SAVED_BYTES or reference_offload_disk_bytes != 0:
+            raise ValueError("Checkpoint reference does not use saved-tensor offload settings")
+        reference_budget = max_seconds if reference_max_seconds is None else reference_max_seconds
+        if type(reference_budget) not in (int, float) or not 0 < reference_budget <= 480:
+            raise ValueError("Reference wall-clock budget must be positive and at most 480 seconds")
     if type(max_reference_attempts) is not int or max_reference_attempts < 1:
         raise ValueError("max_reference_attempts must be a positive integer")
     seed = baseline.get("env", {}).get("seed") if seed is None else seed
@@ -300,6 +312,69 @@ def verify_script(
                             }
                         ],
                     )
+            elif reference_strategy == CHECKPOINT_STRATEGY:
+                discovery = {
+                    "found": False,
+                    "strategy": CHECKPOINT_STRATEGY,
+                    "attempts": [],
+                    "reason": "Checkpoint reference requires bound original standalone s1 source and argv",
+                }
+                original_contract = source_contract(Path(baseline_script))
+                candidate_contract = source_contract(Path(candidate_script))
+                supported = (
+                    baseline_args is not None
+                    and not baseline_command_options
+                    and original_contract.get("supported") is True
+                    and original_contract.get("profile") == "s1"
+                    and original_contract.get("checkpointed") is False
+                    and candidate_contract.get("supported") is True
+                    and candidate_contract.get("profile") == "s1"
+                )
+                if supported:
+                    try:
+                        transformed_script, receipt = prepare_reference(
+                            baseline,
+                            baseline_script,
+                            reference_args,
+                            Path(candidate["run_dir"]) / "checkpoint-reference-source",
+                            reference_budget,
+                        )
+                    except (OSError, ValueError, TypeError, KeyError) as error:
+                        discovery["reason"] = "Checkpoint reference preparation failed: " + str(
+                            error
+                        )
+                    else:
+                        reference = run_script(
+                            transformed_script,
+                            script_args=reference_args,
+                            source_root=transformed_script.parent,
+                            run_root=run_root,
+                            max_steps=required_steps,
+                            max_seconds=reference_budget,
+                            seed=seed,
+                            device=device,
+                            allocator_conf=baseline_allocator_conf,
+                        )
+                        reference = attest_reference(
+                            reference,
+                            receipt,
+                            baseline_script,
+                            transformed_script,
+                        )
+                        discovery.update(
+                            found=True,
+                            reason="Baseline-derived transformed checkpoint reference; original argv and workload",
+                            source_kind="baseline_derived_transformed_reference",
+                            transformation=reference["reference_checkpoint"],
+                            original_args=reference_args,
+                            attempts=[
+                                {
+                                    "run_dir": reference.get("run_dir"),
+                                    "status": reference.get("status"),
+                                    "strategy": CHECKPOINT_STRATEGY,
+                                }
+                            ],
+                        )
             elif discovery["found"]:
                 upper = discovery["original_batch"] or max_reference_attempts
                 upper = min(upper, max_reference_attempts)
@@ -372,7 +447,9 @@ def verify_script(
     )
     if baseline.get("status") == "oom" and reference is None:
         report.notes.append(
-            "Small-batch reference unavailable; loss equivalence is n/a under the original no-reference rule."
+            "Explicit original-workload reference unavailable; no legacy fallback is performed."
+            if reference_strategy != LEGACY_STRATEGY
+            else "Small-batch reference unavailable; loss equivalence is n/a under the original no-reference rule."
         )
     payload = {
         "report": report.model_dump(),

@@ -30,7 +30,10 @@ def test_only_equals_assignments_are_split_with_original_indices_and_order():
             ]
         )
     )
-    assert view["assignments"] == [
+    assert [
+        {k: v for k, v in item.items() if k not in {"source", "evidence_ref"}}
+        for item in view["assignments"]
+    ] == [
         {"index": 0, "option": "--width", "value": "7", "token": "--width=7"},
         {"index": 1, "option": "--width", "value": "9", "token": "--width=9"},
         {"index": 6, "option": "--empty", "value": "", "token": "--empty="},

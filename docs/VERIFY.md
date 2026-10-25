@@ -352,3 +352,36 @@ The preserved v7 s4 candidate has separate supplemental evidence: original
 batch 8 disk reference, 20 updates, all 20 loss differences 0; the old nine-scenario
 score remains 1/9. See reports/acceptance-research-20261025/numerical-reference-research.md
 and reports/research-solutions-20261025/summary.md.
+
+
+## Versioned reference and checkpoint update — 2026-10-25
+
+`numerical_reference.strategy` defaults to `legacy_small_batch`. Two explicit
+alternatives are available through the shared configuration and verification API:
+
+| Strategy | Executed reference | Limits and proof |
+|---|---|---|
+| `original_saved_tensor_offload` | Original source and original argv, with saved tensors moved to CPU or explicitly enabled disk storage | CPU saved-tensor cap at most 16 GiB, disk serialized-byte cap at most 64 GiB, reference at most 480 seconds; reviewed source, actual initialized data/parameters, execution and pairing proof required |
+| `original_workload_checkpoint` | A fixed, versioned non-reentrant block-checkpoint transformation derived from the original s1 baseline source and original argv | 20 complete logical updates, at most 480 seconds; original/transformed hashes, actual runtime pairing, known original/reference precision, recomputation and cleanup required |
+
+The checkpoint strategy is a **baseline-derived transformed reference**, not
+byte-for-byte execution of the original source. It never derives its source from
+the candidate. Automatic pairing now supports the pinned s1 program and its
+reviewed checkpoint form in addition to s3/s4; arbitrary accumulation or changed
+batch/objective programs remain unsupported. A shared seed does not establish
+identical data or initialization.
+
+Each explicit strategy attempts one reference. Unsupported source, resource
+exhaustion, timeout, missing provenance/pairing, unknown precision or incomplete
+cleanup leaves its proof false. It does not fall back to the legacy small-batch
+path or use the repository no-reference exception. Reference time and memory do
+not score candidate performance. Existing scalar tolerances, allowed candidate
+precision policy, and scenario thresholds remain unchanged.
+
+The v3 s1 resource qualification completed 20 FP32 updates in 115.27 seconds and
+read its 27,640,271-byte lossless snapshot through the original 512 MiB limit.
+It proves reference resource/observation feasibility only: the old original OOM
+lacks runtime input/initialization fingerprints, and no candidate was run in that
+control. Old failed receipts and the historical MVP score remain unchanged; a
+fresh formal baseline and candidate must establish their own acceptance.
+See [the reference report](../reports/s1-checkpoint-reference-20261025.md).

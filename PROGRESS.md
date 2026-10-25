@@ -4,6 +4,28 @@ Initialized: 2026-10-23T00:44:58.397951+00:00
 Canonical plan: docs/PLAN.md (v4.2, preserved verbatim).
 All work, caches, runs, and media remain on azuki.
 
+## Current continuation — acceptance v2 and remaining delivery
+
+Frank approved separate s2 classification/capacity fixtures and explicit
+strict/allow_precision comparisons, preserving historical results and the 6/9 gate.
+Continued nanoGPT/s7 repair and remaining acceptance are authorized within existing
+gifted credit, without recharge/overrun. New fixtures are calibrated and pinned
+before model evaluation; CPU controls are never counted as model repair successes.
+Implementation and validation are in progress; no new scored campaign is claimed yet.
+The separate s2 classification/capacity calibration passed. The s7 human control
+preserved full FP32 updates and reduced peak by 22.60%; it is not a model score.
+The s1 transformed reference completed 20 FP32 updates in 115.27 seconds and its
+27,640,271-byte snapshot was readable at the unchanged 512 MiB limit. Historical
+s1 fingerprints remain unavailable, so this does not rescore earlier runs.
+
+The final guarded full suite passed 2,689 tests in 710.98 seconds with all
+288 source hashes, canonical PLAN and offline guard unchanged. The explicit
+offload/reference exception gap is fixed: only legacy repository references
+retain the old unavailable-reference exception. Focused regression, staged Ruff,
+format and secret checks passed. The earlier 2,662-test pass, the initial four
+failures, and the format-related interrupted full run are retained. Qualification
+is being frozen before the new nine-case model dispatch.
+
 ## 2026-10-25 independent research and fixes
 
 Frank authorized independently researching the pending items and implementing
@@ -32,7 +54,7 @@ Receipt: reports/preview-research-20261025.json.
 | T0.5 | Tavily 探测（P1，~15min） | 已验收 | reports/t0.5-acceptance.json; live exit0, 4/4 operations, 2 factual FEEDBACK entries, observed schema; API total3 credits matches UI3/1000 |
 | T0.6 | 场景集 v0（P0，~2h） | 已验收 | reports/t0.6-acceptance.json; 3 synthetic CUDA OOM <7s, 5 reclaim completed20 steps with measured README peaks; pinned nanoGPT CUDA OOM11.489s; all cleanup verified |
 | T1.1 | Lab 包装器：运行并抓证据（P0，~3h） | 原验收保留；绝对截止及部分证据GPU增强通过 | reports/t1.1-acceptance.json retains original checks; reports/deadline-manual-gpu-20261024T131612Z.json verifies shared hard deadline, natural/small-timeout full captures, stress timeout explicit partial, canonical s3 twice20updates; no invented inference training steps |
-| T1.2 | 证据包生成（P0，~3h） | 实现完成，验收未通过 | reports/t1.2-acceptance.json; s1/s2/s4/s5 artifacts and real peak replay verified; s2 optimizer-state fraction 39.8715% < original 40% |
+| T1.2 | 证据包生成（P0，~3h） | 历史失败保留；获批v2独立分类校准通过49.415%，新codec通过等价验证 | reports/t1.2-acceptance.json; s1/s2/s4/s5 artifacts and real peak replay verified; s2 optimizer-state fraction 39.8715% < original 40% |
 | T1.3 | LLM 客户端与路由（P0，~1.5h） | 已验收 | reports/t1.3-acceptance-20261025.json; actual client/router Super schema passed; authentic53-record Ultra evidence returned268920 server input tokens; both1attempt/exact ID/known cost total0.2695014USD; free-text fragmentation overclaim recorded, not diagnosis acceptance |
 | T1.4 | Diagnose（Ultra）（P0，~2.5h） | 首因7/8及全部引用有效；完整验收未通过 | reports/live-campaign-20261025/diagnosis-attempt4-review.json; v5八次真实响应stop/0 reasoning，cost0.328770USD；s1/s6禁止改动及s7需补充信息保留；原6/8与政策门未改 |
 | T1.5 | Patch（Super）与应用（P0，~2.5h） | v7真实3/8应用编译；原≥6/8未通过 | v7 three attempts all applied/compiled(s4/s7/s8); source-span conversion/application/selected chains independently verified; original<=3fixers/4000tokens retained |
@@ -42,15 +64,15 @@ Receipt: reports/preview-research-20261025.json.
 | T1.9 | 真实仓库：nanoGPT（P0，~2h） | 真实nanoGPT已执行；修复门未通过 | v7 realCLI32/1 versus model12/40 failure preserved; latest diagnostic probe reads32x1 but fails claim/policy gates, no candidate; reports/final-nano-diagnostic-probe-20261025T050212Z-b19ed759/report.md |
 | T1.10 | Honesty 与安全（P0，~1h） | 静态与CPU真实性检查通过；完整修复待办 | docs/PATCH.md; model shrink/truncation/escape checks and observed parameter counts |
 | T1.11 | Docker Lab（P1，仅 `DOCKER_GPU=ok`，~1.5h） | 自有Python镜像、干净目录CPU及隔离组件通过 | docs/LAB_RUNTIME.md; hash-locked image-owned Python3.12, verified immutable image ID, no host venv mount; clean candidate tree script/module each3updates with capture/cleanup verified |
-| T1.12 | MVP 整体验收 + 报告（P0，~1.5h，10/24 晚） | 追加三轮已用完；v7目标1/9未通过；新版目标或额外全campaign待决，本轮研究修复已授权 | v7 all9live/25calls; target1/9; cause raw6/valid4true3false2unknown;9CLIchains 1zero8exit78; originalPLAN0.6 stop |
+| T1.12 | MVP 整体验收 + 报告（P0，~1.5h，10/24 晚） | 历史v7目标1/9保留；新v2九场景已获授权，待最终回归后执行；6/9门不变 | v7 all9live/25calls; target1/9; cause raw6/valid4true3false2unknown;9CLIchains 1zero8exit78; originalPLAN0.6 stop |
 | T2.1 | 显存求解循环：keep-or-revert 搜索 + Pareto 前沿（P0，~3h） | 有界搜索与逐轮验证反馈完成；真实验收待办 | docs/SEARCH.md; selected state survives revert; per-round verification-feedback.json exposes actual loss/check/error facts to later rounds; original s2/bf16 policy gates unchanged |
 | T2.2 | Tavily Research（P0，~2h） | 真实模型研究与缓存已测；指定Sources门未通过 | v4 research9rows/8API/7credits;s4PyTorch2.5checkpoint extract;s3->s5cache0API0credits;s1checkpoint/s5CUDA memorySources absent |
 | T2.3 | Nano 栈标注（P1，~1h） | 真实8场景已测；覆盖和一致率未通过 | v4 4/8complete;completed outputs3/40heuristic matches;failed4not excluded;all<=0.02certified upper |
-| T2.4 | 预算守卫与成本面板（P0，~45min） | 真实费用链复核通过；原额外预算门待办 | 461settledattempts/79closedruns/0pending unresolved halt; runtimeconservative5.176484316/remaining4.823164724;original.05/.1 cases unexecuted |
+| T2.4 | 预算守卫与成本面板（P0，~45min） | 真实费用链复核通过；原额外预算门待办 | 461settledattempts/79closedruns/0pending unresolved halt; runtimeconservative5.176484316/remaining4.823164724; original .05/.1 partial-report/day-rejection paths covered by full-suite offline MockTransport tests; live multi-round billing gate remains separate |
 | T2.5 | HF Transformers 场景（P1，~2h） | HF场景CPU/GPU基线通过；修复待办 | reports/hf-trainer-baseline-20261024.json; real Trainer OOM; configuration-only repair gate pending |
 | T2.6 | Watch 模式（P2，~1.5h） | shell/Python启动器可定位唯一CUDA OOM子进程并重跑；真实模型修复验收待办 | docs/WATCH_HF.md; preserved multi-process inventory and selected capture binding; exact target replay; manual real GPU helper+s1 OOM selected correctly; candidate/reference each20updates passed; duplicate/OOM ambiguity and root failures rejected; no host fallback |
 | T2.7 | Docker/HF 缓存稳健性（P1）：验收：三个场景在 Docker 路径下结果与子进程路径一致（峰值差 ≤ 1%）。 | 已验收 | reports/t2.7-acceptance-20261025.json; six actual GPU arms independently audited; s1/s3/HF allocated/reserved peak differences 0% <=1%; s3 both20updates/identical losses, s1/HF genuineOOM; Docker-contained independent subprocess controller, source/image/seed/capture/cleanup verified; original hostEPERM retained |
-| T2.8 | 小评测 + 自优化（P0，可夜间自治，~4h） | 显式策略矩阵与离线统计完成；原真实验收待办 | docs/EVALUATION.md; default/strict 实际等价，allow_precision 必须显式选择；全矩阵共享预算，逐行完整 Policy；原两档歧义、≤3轮优化、target_met/首因各≥75% 和 $12 实测均未关闭 |
+| T2.8 | 小评测 + 自优化（P0，可夜间自治，~4h） | strict/allow_precision方案已获批；20次真实政策矩阵及75%目标验收待办 | docs/EVALUATION.md; default/strict 实际等价，allow_precision 必须显式选择；全矩阵共享预算，逐行完整 Policy；两档歧义已按批准方案解决；≤3轮优化、target_met/首因各≥75% 和 $12 实测仍未关闭 |
 | T3.1 | FastAPI + SSE（P0，~3h） | API队列/SSE/选中轮次下载已实现并测 | docs/API.md; selected round after PNG/JSON and configuration manifest; missing selected evidence never falls back to stale files; existing ownership/nofollow/deadline rules retained |
 | T3.2 | 前端素版（P0，~4h） | 当前Home性能99及390px无溢出；真实修复UI待办 | reports/home-performance-20261025/receipt.json;one completed Lighthouse13.5/Chrome151 sample,FCP1.36s/LCP1.51s/TBT0/CLS0.0396;currentdist unchanged,390px widths390/no overflowing elements;68frontend tests/typecheck/build retained. Baseline Home only,no live run submitted;browser processes cleaned beforeGPU |
 | T3.3 | Replay（P0，~1.5h） | 5条真实基线回放可用；规定修复回放待办 | reports/baseline-replays.json; explicitly baseline-only; s2 two-round/nanoGPT/reclaim repair replay not fabricated |

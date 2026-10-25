@@ -20,7 +20,7 @@ from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
@@ -28,6 +28,7 @@ from headroom.api.availability import AvailabilityMonitor
 from headroom.api.evaluations import register_evaluations
 from headroom.api.queue import TERMINAL, AdmissionError, RunQueue
 from headroom.api.security import ARTIFACTS, RUN_ID, artifact_relative, job_directory, open_regular
+from headroom.lab.envs import validate_allocator
 from headroom.lab.runner import PROJECT_ROOT
 from headroom.orchestrator import FixRequest, Policy
 from headroom.repository import (
@@ -41,6 +42,7 @@ from headroom.runtime import read_live_profile
 from headroom.store.db import Store
 from headroom.verify.compare import parse_target
 from headroom.verify.policy import scan_source_forbidden
+from headroom.verify.reference_config import NumericalReference
 
 COOKIE = "headroom_session"
 MAX_SCRIPT_BYTES = 1024 * 1024
@@ -102,7 +104,14 @@ class Submission(BaseModel):
     target: str = "fix-oom"
     search_mode: Literal["until_target", "bounded_pareto"] = "until_target"
     policy: Policy = Field(default_factory=Policy)
+    numerical_reference: NumericalReference = Field(default_factory=NumericalReference)
+    allocator_conf: str | None = None
     budget: str = "0.6"
+
+    @field_validator("allocator_conf")
+    @classmethod
+    def supported_allocator(cls, value):
+        return validate_allocator(value)
 
 
 def _catalog(settings):
@@ -147,6 +156,8 @@ def _public_run(row):
         "target",
         "search_mode",
         "policy",
+        "numerical_reference",
+        "allocator_conf",
         "target_met",
         "reason",
         "provenance",
@@ -205,6 +216,8 @@ def _prepare_submission(settings, submission, source, run_id, *, deadline):
         target=submission.target,
         search_mode=submission.search_mode,
         policy=submission.policy,
+        numerical_reference=submission.numerical_reference,
+        allocator_conf=submission.allocator_conf,
         budget_usd=submission.budget,
         max_steps=20,
         max_seconds=180,
@@ -381,6 +394,8 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
                     "target": submission.target,
                     "search_mode": submission.search_mode,
                     "policy": submission.policy.model_dump(),
+                    "numerical_reference": submission.numerical_reference.model_dump(),
+                    "allocator_conf": submission.allocator_conf,
                 },
                 request.state.owner,
                 client_ip,

@@ -7,6 +7,7 @@ from pathlib import Path, PurePosixPath
 from headroom.acceptance.common import file_record, read_bytes, read_json, write_json
 from headroom.evidence import MAX_SNAPSHOT_BYTES, _tokens, build_evidence
 from headroom.lab.runner import selected_capture_directory
+from headroom.lab.snapshot_codec import read_snapshot_artifact
 
 MIN_EVIDENCE_TOKENS = 200_000
 LOCAL_TARGET_TOKENS = 220_000
@@ -123,7 +124,7 @@ def prepare_long_evidence(capture, output_dir):
     summary = build_evidence(root, budget=150000, output_dir=output / "c4")
     summary_bytes = read_bytes(Path(summary["evidence_md"]), MAX_PACKAGE_BYTES)
     summary_text = summary_bytes.decode("utf-8")
-    snapshot = read_json(snapshot_path, MAX_SNAPSHOT_BYTES)
+    snapshot = read_snapshot_artifact(snapshot_path, MAX_SNAPSHOT_BYTES)
     if not isinstance(snapshot, dict):
         raise TypeError("CUDA snapshot must be an object")
     content_parts, displayed, index_rows, seen = [summary_text], [summary_text], [], set()
@@ -139,7 +140,7 @@ def prepare_long_evidence(capture, output_dir):
             continue
         seen.add(digest)
         part = "\n\n" + raw
-        header = f"\n\nAllocator source snapshot.json#{pointer}; canonical_sha256={digest}\n"
+        header = f"\n\nAllocator decoded-native source snapshot.json#{pointer}; canonical_sha256={digest}\n"
         if content_bytes + len((header + raw).encode()) > MAX_PACKAGE_BYTES - 65536:
             break
         content_parts.append(part)
@@ -178,6 +179,7 @@ def prepare_long_evidence(capture, output_dir):
         else "INSUFFICIENT_UNIQUE_CAPTURE_EVIDENCE",
         "capture_root": str(root),
         "selected_snapshot": str(snapshot_path.relative_to(root)),
+        "record_pointer_basis": "decoded-native snapshot; original encoded file remains SHA-pinned",
         "capture_pins": pins,
         "files": files,
         "record_count": len(index_rows),

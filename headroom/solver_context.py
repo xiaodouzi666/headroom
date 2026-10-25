@@ -151,7 +151,7 @@ def invocation_reading_aid(context):
         and "script" not in truncated_fields
     )
     aid = {
-        "schema": "headroom.literal_invocation_view.v1",
+        "schema": "headroom.literal_invocation_view.v2",
         "basis": "visible_script_args_tokens_only",
         "target_effective_configuration": "unverified",
         "recorded_script_entrypoint": script if script_complete else None,
@@ -180,14 +180,21 @@ def invocation_reading_aid(context):
         if not redaction_known or index in redacted or "[redacted]" in token:
             field, item = "unknown_token_indices", index
         else:
+            reference = {"source": "script_args", "evidence_ref": f"script_args[{index}]"}
             match = pattern.fullmatch(token)
             if match:
                 field, item = (
                     "assignments",
-                    {"index": index, "option": "--" + match[1], "value": match[2], "token": token},
+                    {
+                        **reference,
+                        "index": index,
+                        "option": "--" + match[1],
+                        "value": match[2],
+                        "token": token,
+                    },
                 )
             else:
-                field, item = "unsupported_tokens", {"index": index, "token": token}
+                field, item = "unsupported_tokens", {**reference, "index": index, "token": token}
         aid[field].append(item)
         if len(json.dumps(aid, ensure_ascii=True, allow_nan=False).encode()) > 4000:
             aid[field].pop()
@@ -197,6 +204,24 @@ def invocation_reading_aid(context):
     # Reserve above leaves room for bounded omission counts. No raw secret value
     # or redacted token is copied into the reading aid.
     return bounded_json(aid, 4096, "invocation_reading_aid")
+
+
+def invocation_reference_catalog(context):
+    """Resolve only identities actually advertised in the bounded, redacted view.
+
+    Unknown/redacted and view-truncated tokens have no reference. A lexical token
+    identity does not establish parser semantics, precedence or a plan's validity.
+    """
+    view = invocation_reading_aid(context)
+    return {
+        item["evidence_ref"]: {
+            "source": item["source"],
+            "index": item["index"],
+            "token": item["token"],
+        }
+        for field in ("assignments", "unsupported_tokens")
+        for item in view[field]
+    }
 
 
 def runtime_input_observations(result, source_files, *, selected_round=None, required_steps=20):

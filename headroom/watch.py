@@ -23,6 +23,7 @@ FIX_OPTIONS = {
     "source_profile",
     "research_enabled",
     "allocator_conf",
+    "numerical_reference",
 }
 
 
@@ -122,6 +123,8 @@ def watch_command(
     outcome = {
         "watch_id": directory.name,
         "search_mode": request.search_mode,
+        "allocator_conf": request.allocator_conf,
+        "numerical_reference": request.numerical_reference.model_dump(),
         "run_dir": str(directory),
         "command": list(command),
         "command_details": asdict(parsed),

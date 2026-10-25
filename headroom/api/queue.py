@@ -435,6 +435,8 @@ class RunQueue:
                 target=request.get("target"),
                 search_mode=request.get("search_mode"),
                 policy=request.get("policy", {}),
+                numerical_reference=request.get("numerical_reference"),
+                allocator_conf=request.get("allocator_conf"),
                 target_met=False,
                 run_dir=str(self.run_root / run_id),
                 api_admitted_at=admitted_at,
@@ -474,6 +476,8 @@ class RunQueue:
                     run_id,
                     target=prepared.target,
                     policy=prepared.policy.model_dump(),
+                    numerical_reference=prepared.numerical_reference.model_dump(),
+                    allocator_conf=prepared.allocator_conf,
                     search_mode=prepared.search_mode,
                 )
                 self.store.add_event(run_id, "run.queued", {"position": len(self.pending) + 1})

@@ -77,3 +77,30 @@ cached under the project .cache/tiktoken directory.
 
 Current scenario results are recorded in PROGRESS.md, docs/RESULTS.md and the
 unique reports/evidence-acceptance-*.json reports.
+
+## Versioned snapshot JSON
+
+New captures store allocator frames and call stacks once in a versioned JSON
+envelope. Each recorded event keeps its original fields and stack order; this
+reduces repeated serialization without dropping events or enlarging the 512 MiB
+file limit. The native PyTorch pickle is retained unchanged for compatible tools.
+Historical native JSON remains readable and is never rewritten automatically.
+
+Consumers should use the shared bounded reader instead of parsing snapshot.json
+and assuming its top-level keys are native PyTorch keys:
+
+```python
+from headroom.lab.snapshot_codec import read_snapshot_artifact
+
+snapshot = read_snapshot_artifact("/path/to/run/artifacts/snapshot.json")
+# snapshot exposes the native segments/device_traces structure.
+```
+
+Decoded frame and stack values are shared and read-only through their normal
+interfaces. Reference indexes, format/version, table sizes, nesting and theoretical
+expanded traversal costs are validated before analysis. Invalid or oversized
+captures remain errors. This encoding preserves the captured history; it cannot
+restore events that the allocator history buffer had already discarded.
+
+The protocol, limits, compatibility checks and independent analysis-equivalence
+evidence are recorded in [the codec report](../reports/snapshot-codec-contract-20261025.md).

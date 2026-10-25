@@ -1,0 +1,342 @@
+{
+  "executed": false,
+  "model_calls": 0,
+  "primary": {
+    "mode": "campaign_plan",
+    "search_mode": "until_target",
+    "executed": false,
+    "scenarios": [
+      "s1_batch_too_big",
+      "s2_capacity_v2",
+      "s3_eval_no_grad_missing",
+      "s4_loss_accumulation_graph",
+      "s5_fragmentation_varlen",
+      "s6_full_vocab_logits_fp32",
+      "s7_frozen_params_optimizer_state",
+      "s8_two_models_resident",
+      "nanogpt"
+    ],
+    "targets": [
+      {
+        "scenario_id": "s1_batch_too_big",
+        "target": "fix-oom",
+        "reclaim_reduction_pct": 30,
+        "numerical_reference": {
+          "strategy": "original_workload_checkpoint",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 0,
+          "max_seconds": 480
+        },
+        "allocator_conf": null
+      },
+      {
+        "scenario_id": "s2_capacity_v2",
+        "target": "fit:22GB",
+        "reclaim_reduction_pct": 20.0,
+        "numerical_reference": {
+          "strategy": "legacy_small_batch",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 0,
+          "max_seconds": null
+        },
+        "allocator_conf": "expandable_segments:True"
+      },
+      {
+        "scenario_id": "s3_eval_no_grad_missing",
+        "target": "reclaim",
+        "reclaim_reduction_pct": 20.0,
+        "numerical_reference": {
+          "strategy": "legacy_small_batch",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 0,
+          "max_seconds": null
+        },
+        "allocator_conf": null
+      },
+      {
+        "scenario_id": "s4_loss_accumulation_graph",
+        "target": "fix-oom",
+        "reclaim_reduction_pct": 30,
+        "numerical_reference": {
+          "strategy": "original_saved_tensor_offload",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 68719476736,
+          "max_seconds": 480
+        },
+        "allocator_conf": null
+      },
+      {
+        "scenario_id": "s5_fragmentation_varlen",
+        "target": "reclaim",
+        "reclaim_reduction_pct": 20.0,
+        "numerical_reference": {
+          "strategy": "legacy_small_batch",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 0,
+          "max_seconds": null
+        },
+        "allocator_conf": null
+      },
+      {
+        "scenario_id": "s6_full_vocab_logits_fp32",
+        "target": "fix-oom",
+        "reclaim_reduction_pct": 30,
+        "numerical_reference": {
+          "strategy": "legacy_small_batch",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 0,
+          "max_seconds": null
+        },
+        "allocator_conf": null
+      },
+      {
+        "scenario_id": "s7_frozen_params_optimizer_state",
+        "target": "reclaim",
+        "reclaim_reduction_pct": 20.0,
+        "numerical_reference": {
+          "strategy": "legacy_small_batch",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 0,
+          "max_seconds": null
+        },
+        "allocator_conf": null
+      },
+      {
+        "scenario_id": "s8_two_models_resident",
+        "target": "reclaim",
+        "reclaim_reduction_pct": 20.0,
+        "numerical_reference": {
+          "strategy": "legacy_small_batch",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 0,
+          "max_seconds": null
+        },
+        "allocator_conf": null
+      },
+      {
+        "scenario_id": "nanogpt",
+        "target": "fit:22GB",
+        "reclaim_reduction_pct": 30,
+        "numerical_reference": {
+          "strategy": "legacy_small_batch",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 0,
+          "max_seconds": null
+        },
+        "allocator_conf": null
+      }
+    ],
+    "conditions": [
+      "full_ultra"
+    ],
+    "policies": [
+      {
+        "name": "strict",
+        "policy": {
+          "allow_numerics_change": false,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "max_throughput_regression_pct": 25
+        },
+        "same_effective_policy_as": []
+      }
+    ],
+    "multipliers": {
+      "scenarios": 9,
+      "conditions": 1,
+      "policies": 1
+    },
+    "planned_pipeline_runs": 9,
+    "run_wall_limit_seconds": 480,
+    "provider_api_attempts": null,
+    "provider_api_attempts_note": "Pipeline count is not API-call count: annotation, diagnosis supplements, patch attempts, retries and research vary; every actual model attempt remains budgeted.",
+    "sum_of_configured_run_caps_usd": "5.4",
+    "campaign_cap_usd": "4.823164724",
+    "daily_cap_usd": "9.99964904",
+    "can_reserve_all_run_caps": false,
+    "per_run_cap_usd": "0.6",
+    "authorization_expanded": false,
+    "policy_note": "default aliases strict. Use explicit strict and allow_precision arms for the versioned policy comparison; keep their outcomes separate. allow_precision grants permission only: changed numerics and actual BF16 behavior still require verification."
+  },
+  "phase2": {
+    "mode": "campaign_plan",
+    "search_mode": "bounded_pareto",
+    "executed": false,
+    "scenarios": [
+      "s1_batch_too_big",
+      "s2_capacity_v2",
+      "s3_eval_no_grad_missing",
+      "s4_loss_accumulation_graph",
+      "s5_fragmentation_varlen",
+      "s6_full_vocab_logits_fp32",
+      "s7_frozen_params_optimizer_state",
+      "s8_two_models_resident",
+      "nanogpt",
+      "hf_trainer"
+    ],
+    "targets": [
+      {
+        "scenario_id": "s1_batch_too_big",
+        "target": "fix-oom",
+        "reclaim_reduction_pct": 30,
+        "numerical_reference": {
+          "strategy": "original_workload_checkpoint",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 0,
+          "max_seconds": 480
+        },
+        "allocator_conf": null
+      },
+      {
+        "scenario_id": "s2_capacity_v2",
+        "target": "fit:22GB",
+        "reclaim_reduction_pct": 20.0,
+        "numerical_reference": {
+          "strategy": "legacy_small_batch",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 0,
+          "max_seconds": null
+        },
+        "allocator_conf": "expandable_segments:True"
+      },
+      {
+        "scenario_id": "s3_eval_no_grad_missing",
+        "target": "reclaim",
+        "reclaim_reduction_pct": 30,
+        "numerical_reference": {
+          "strategy": "legacy_small_batch",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 0,
+          "max_seconds": null
+        },
+        "allocator_conf": null
+      },
+      {
+        "scenario_id": "s4_loss_accumulation_graph",
+        "target": "fix-oom",
+        "reclaim_reduction_pct": 30,
+        "numerical_reference": {
+          "strategy": "original_saved_tensor_offload",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 68719476736,
+          "max_seconds": 480
+        },
+        "allocator_conf": null
+      },
+      {
+        "scenario_id": "s5_fragmentation_varlen",
+        "target": "reclaim",
+        "reclaim_reduction_pct": 30,
+        "numerical_reference": {
+          "strategy": "legacy_small_batch",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 0,
+          "max_seconds": null
+        },
+        "allocator_conf": null
+      },
+      {
+        "scenario_id": "s6_full_vocab_logits_fp32",
+        "target": "fix-oom",
+        "reclaim_reduction_pct": 30,
+        "numerical_reference": {
+          "strategy": "legacy_small_batch",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 0,
+          "max_seconds": null
+        },
+        "allocator_conf": null
+      },
+      {
+        "scenario_id": "s7_frozen_params_optimizer_state",
+        "target": "reclaim",
+        "reclaim_reduction_pct": 30,
+        "numerical_reference": {
+          "strategy": "legacy_small_batch",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 0,
+          "max_seconds": null
+        },
+        "allocator_conf": null
+      },
+      {
+        "scenario_id": "s8_two_models_resident",
+        "target": "reclaim",
+        "reclaim_reduction_pct": 30,
+        "numerical_reference": {
+          "strategy": "legacy_small_batch",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 0,
+          "max_seconds": null
+        },
+        "allocator_conf": null
+      },
+      {
+        "scenario_id": "nanogpt",
+        "target": "fit:22GB",
+        "reclaim_reduction_pct": 30,
+        "numerical_reference": {
+          "strategy": "legacy_small_batch",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 0,
+          "max_seconds": null
+        },
+        "allocator_conf": null
+      },
+      {
+        "scenario_id": "hf_trainer",
+        "target": "fix-oom",
+        "reclaim_reduction_pct": 30,
+        "numerical_reference": {
+          "strategy": "legacy_small_batch",
+          "cpu_saved_tensor_limit_bytes": 17179869184,
+          "disk_saved_tensor_limit_bytes": 0,
+          "max_seconds": null
+        },
+        "allocator_conf": null
+      }
+    ],
+    "conditions": [
+      "full_ultra"
+    ],
+    "policies": [
+      {
+        "name": "strict",
+        "policy": {
+          "allow_numerics_change": false,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "max_throughput_regression_pct": 25
+        },
+        "same_effective_policy_as": []
+      },
+      {
+        "name": "allow_precision",
+        "policy": {
+          "allow_numerics_change": true,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "max_throughput_regression_pct": 25
+        },
+        "same_effective_policy_as": []
+      }
+    ],
+    "multipliers": {
+      "scenarios": 10,
+      "conditions": 1,
+      "policies": 2
+    },
+    "planned_pipeline_runs": 20,
+    "run_wall_limit_seconds": 480,
+    "provider_api_attempts": null,
+    "provider_api_attempts_note": "Pipeline count is not API-call count: annotation, diagnosis supplements, patch attempts, retries and research vary; every actual model attempt remains budgeted.",
+    "sum_of_configured_run_caps_usd": "12.0",
+    "campaign_cap_usd": "4.823164724",
+    "daily_cap_usd": "9.99964904",
+    "can_reserve_all_run_caps": false,
+    "per_run_cap_usd": "0.6",
+    "authorization_expanded": false,
+    "policy_note": "default aliases strict. Use explicit strict and allow_precision arms for the versioned policy comparison; keep their outcomes separate. allow_precision grants permission only: changed numerics and actual BF16 behavior still require verification."
+  },
+  "note": "Plans share one authoritative remaining pool; these caps are not separate allocations."
+}

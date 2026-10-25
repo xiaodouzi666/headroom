@@ -36,6 +36,7 @@ from headroom.diagnose import (
 from headroom.diagnosis_schema import build_diagnosis_schema
 from headroom.evidence import MAX_SNAPSHOT_BYTES, _main_source, _tokens, build_evidence
 from headroom.lab.runner import read_capture, selected_capture_directory
+from headroom.lab.snapshot_codec import read_snapshot_artifact
 from headroom.llm.router import ResponseValidationError
 from headroom.orchestrator import Policy, _required_reduction
 from headroom.runtime import PROJECT_ROOT
@@ -154,7 +155,7 @@ def _capture_inputs(path, case):
         == case["source_sha256"],
         "CAPTURE_SOURCE_HASH_MISMATCH",
     )
-    snapshot = read_json(artifacts / "snapshot.json", max_bytes=MAX_SNAPSHOT_BYTES)
+    snapshot = read_snapshot_artifact(artifacts / "snapshot.json", MAX_SNAPSHOT_BYTES)
     _require(
         isinstance(snapshot, dict)
         and isinstance(snapshot.get("device_traces"), list)

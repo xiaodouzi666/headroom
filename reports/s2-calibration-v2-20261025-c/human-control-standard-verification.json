@@ -1,0 +1,97 @@
+{
+  "purpose": "human_control_only",
+  "model_generated": false,
+  "repair_score_eligible": false,
+  "api_calls": 0,
+  "gpu_runs": 0,
+  "recorded_at": "2026-10-25T06:33:53.069141+00:00",
+  "target": "fit:22GB",
+  "policy": {
+    "allow_numerics_change": false,
+    "allow_model_change": false,
+    "allow_batch_grad_accum": true,
+    "max_throughput_regression_pct": 25
+  },
+  "required_steps": 20,
+  "source_hashes": {
+    "headroom/verify/compare.py": "8106c3b6d6310388a20cdd5872e80af3efdbe3ded22ff685e7cc07769f6c1ea2",
+    "headroom/orchestrator.py": "586abf889ddb4d3d5e479a4cc8a52a05f4c6bba6a73b234ec3a7765583d3d0a3"
+  },
+  "results": {
+    "capacity_baseline": {
+      "path": "/home/xiaodouzi/workspace/headroom/reports/s2-calibration-v2-20261025-c/lab/dd517f74286e4d17a0ae27549bd78273/result.json",
+      "sha256": "35172d7896d234a90ddba56ff5cda9c09a4d18e100f42d169d2a22946efc0d54"
+    },
+    "combined": {
+      "path": "/home/xiaodouzi/workspace/headroom/reports/s2-calibration-v2-20261025-c/continuations/combined/lab/3ad9877013de46e0a97eadef3acf8c1f/result.json",
+      "sha256": "6a5c3653b73d81acb5829d102e1d2b8376a5bc6c6bf2d8b922b639a5bf9e99cb"
+    }
+  },
+  "standard_verification": {
+    "completed": true,
+    "peak_before": 22.919430656,
+    "peak_after": 18.639258624,
+    "reduction_pct": 18.674861938071345,
+    "step_ms_before": 951.6944976057857,
+    "step_ms_after": 1128.079813439399,
+    "loss_equivalence": "within_tol",
+    "target_met": true,
+    "notes": [
+      "Incomplete, mixed or unsupported precision observations do not relax the original FP32 loss bound.",
+      "Loss states describe the original-plan observed scalar comparison; matching inputs, effective batch and objective are not established. This is not proof of workload equivalence."
+    ],
+    "checks": {
+      "baseline_capture": true,
+      "target_mode_valid": true,
+      "candidate_completed_required_steps": true,
+      "finite_candidate_losses": true,
+      "parameter_count_unchanged": true,
+      "numerics_policy": true,
+      "same_seed": true,
+      "same_inputs": null,
+      "same_effective_batch": null,
+      "same_objective": null,
+      "loss_series_aligned_to_updates": true,
+      "loss_series_comparison_available": true,
+      "loss_comparable": false,
+      "repository_no_reference_exception": false,
+      "loss_tolerance": true,
+      "numerical_acceptance": true,
+      "parameter_policy": true,
+      "measured_cuda_peaks": true,
+      "same_gpu_hardware": true,
+      "gpu_observation_clear": true,
+      "throughput_limit": true,
+      "memory_target": true
+    },
+    "max_loss_delta": 4.76837158203125e-07,
+    "throughput_regression_pct": 18.53381692101326,
+    "numerics_changed": false,
+    "parameter_count_before": 1141338112,
+    "parameter_count_after": 1141338112,
+    "target": "fit:22GB",
+    "units": "GB = 1e9 bytes; percentages are relative to baseline",
+    "run_ids": {
+      "baseline": "dd517f74286e4d17a0ae27549bd78273",
+      "candidate": "3ad9877013de46e0a97eadef3acf8c1f"
+    },
+    "reference_run": null,
+    "acceptance_scope": "standard",
+    "numerical_basis": "original_plan_full_backward_scalar_series",
+    "comparison_precision": "fp32",
+    "loss_tolerance": 0.001,
+    "observed_precision_change": null,
+    "precision_evidence": {
+      "source": "lab_runtime_precision_observer_v1",
+      "before": "fp32",
+      "after": "unknown",
+      "comparison_before": "fp32",
+      "observed_change": null,
+      "comparison_precision": "fp32",
+      "notes": [
+        "Incomplete, mixed or unsupported precision observations do not relax the original FP32 loss bound."
+      ],
+      "limitations": "Observed Python-dispatched forward precision, not proof of every internal operator dtype or full workload equivalence."
+    }
+  }
+}

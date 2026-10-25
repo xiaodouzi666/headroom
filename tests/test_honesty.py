@@ -250,7 +250,18 @@ def test_all_real_scenarios_are_accepted_by_strict_source_preflight():
 
     root = Path(__file__).resolve().parents[1]
     paths = sorted((root / "scenarios").glob("*/train.py"))
-    assert len(paths) == 8
+    assert {path.parent.name for path in paths} == {
+        "s1_batch_too_big",
+        "s2_capacity_v2",
+        "s2_fp32_adamw_1b",
+        "s2_optimizer_classification_v2",
+        "s3_eval_no_grad_missing",
+        "s4_loss_accumulation_graph",
+        "s5_fragmentation_varlen",
+        "s6_full_vocab_logits_fp32",
+        "s7_frozen_params_optimizer_state",
+        "s8_two_models_resident",
+    }
     for path in paths:
         report = scan_source_forbidden({path.name: path.read_text()})
         assert report.allowed, (str(path), report.issues)

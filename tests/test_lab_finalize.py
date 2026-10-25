@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
+import torch
 
 from headroom.lab import hooks
 from headroom.lab.runner import read_capture, run_script
@@ -26,11 +27,16 @@ def restore_capture():
 def test_core_checkpoint_precedes_snapshot_and_is_never_accepted(
     tmp_path, monkeypatch, execution_status
 ):
+    parameter = torch.nn.Parameter(torch.tensor(1.0))
+    optimizer = torch.optim.SGD([parameter], lr=0.01)
     session = hooks.CaptureSession(tmp_path, device="cpu").start()
-    session.step_records.append(
-        {"step": 1, "step_ms": 2.0, "peak_allocated_bytes": 100, "peak_reserved_bytes": 200}
-    )
-    session.loss_series.append(1.0)
+    monkeypatch.setattr(session, "_peaks", lambda: (100, 200))
+    # Generate the record through real pre/post hooks; finalization interruption
+    # remains the unit under test rather than a hand-built historical schema.
+    parameter.square().backward()
+    optimizer.step()
+    assert len(session.step_records) == 1
+    assert session.step_records[0]["parameter_update_coverage_complete"]
     if execution_status == "timeout":
         session.deadline_reached = True
 
@@ -69,7 +75,7 @@ def test_snapshot_json_interruption_keeps_core_and_small_artifacts(tmp_path, mon
         assert value is snapshot
         raise InterruptedFinalization()
 
-    monkeypatch.setattr(hooks, "native_snapshot", interrupt_conversion)
+    monkeypatch.setattr(hooks, "encode_snapshot", interrupt_conversion)
     with pytest.raises(InterruptedFinalization):
         session.finish()
     checkpoint = read_capture(tmp_path / "result.json")
@@ -147,7 +153,7 @@ def test_real_cpu_hard_stop_during_serialization_keeps_partial_timeout(tmp_path)
         "from headroom.lab import hooks\n"
         "def blocked_conversion(value):\n"
         "    time.sleep(60)\n"
-        "hooks.native_snapshot = blocked_conversion\n"
+        "hooks.encode_snapshot = blocked_conversion\n"
         "while True:\n"
         "    time.sleep(0.02)\n"
     )

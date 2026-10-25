@@ -2,7 +2,47 @@
 
 Canonical plan: `docs/PLAN.md` is immutable and matches the supplied attachment.
 
-## Current authorization — 2026-10-25 independent research and fixes
+## Current authorization — 2026-10-25 acceptance v2 and continued delivery
+
+Frank explicitly approved the proposed first two changes: split the s2 classification
+and capacity-repair fixtures, and compare strict versus allow_precision. Historical
+results and the 6/9 MVP target remain preserved. He also instructed continued
+research/repair of nanoGPT and s7 and completion of the remaining development and
+acceptance, using existing gifted credit only, with no recharge or overrun.
+
+This resumes repair and evaluation after the prior v7 stop; the v5/v6/v7 limit remains
+an accurate historical record, not a new request for the same authorization. Each
+pipeline remains bounded to at most six search rounds and its existing time/cost
+limits. New experiments receive versioned manifests and immutable pre-run source
+pins. Existing failed runs are retained, and successful cases from separate campaigns
+are never stitched together to meet 6/9.
+
+Approved acceptance-v2 interpretation:
+- The >=40% optimizer-state classification measurement has a separately calibrated
+  s2 fixture and remains an independent prerequisite, outside the nine-case denominator.
+- Capacity-repair s2 occupies exactly one slot in the new nine-case MVP. Its original
+  baseline must exceed 22GB; a baseline that already fits cannot count as a rescue.
+  The two-step optimizer/activation exercise is calibrated before model runs.
+- The MVP remains strict by default and requires >=6/9 target successes and >=6/9
+  correct first causes. Other original numeric, throughput, runtime, and per-run
+  spending requirements remain visible; unrelated failures are not waived.
+- Phase2 compares explicit strict and allow_precision arms. Default remains strict;
+  BF16 belongs only to the allowing arm, with independent verification and patches.
+  The original ten-case/two-policy scope and 75% goals remain distinct from MVP.
+- Original-workload numerical references are an explicit bounded protocol for
+  supported cases, retain original tolerances, and never count reference time/memory
+  as candidate performance. Historical scalar comparisons are retained.
+
+Initial live recheck: main69144d1, clean checkout, idle GPU/preview, 79 closed budget
+runs and 461 settled attempts. Existing pool cap9.99964904USD is unchanged; its
+conservative remaining allowance is4.823164724USD. No additional calls may exceed
+the durable provider reservations or actual remaining gifted credit. No card charge,
+public port, domain, alert recipient, or final submission is implied by this change.
+
+Detailed fixtures and calibration evidence will be recorded under the new versioned
+acceptance protocol, with final results linked from PROGRESS and RESULTS.
+
+## Earlier authorization — 2026-10-25 independent research and fixes
 
 Frank subsequently instructed: independently research all pending discussion items,
 verify public/large-company approaches, implement solutions where supported, and

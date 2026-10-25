@@ -11,8 +11,10 @@ from typing import Annotated, Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
+from headroom.lab.envs import validate_allocator
 from headroom.orchestrator import Policy
 from headroom.verify.compare import parse_target
+from headroom.verify.reference_config import NumericalReference
 
 MAX_CONFIG_BYTES = 16384
 BatchFlag = Literal["--batch", "--batch_size", "--batch-size"]
@@ -38,6 +40,8 @@ class ProjectConfig(BaseModel):
     target: str = "fix-oom"
     reclaim_reduction_pct: float = Field(default=30, gt=0, le=100)
     policy: Policy = Field(default_factory=Policy)
+    numerical_reference: NumericalReference = Field(default_factory=NumericalReference)
+    allocator_conf: str | None = None
     max_steps: int = Field(default=20, ge=1, le=10000)
     max_seconds: int = Field(default=120, ge=1, le=3600)
     seed: int = Field(default=1337, ge=0, lt=2**32)
@@ -46,6 +50,11 @@ class ProjectConfig(BaseModel):
     search_mode: Literal["until_target", "bounded_pareto"] = "until_target"
     batch: Annotated[int, Field(ge=1)] | BatchConfig | None = None
     batch_arg: BatchFlag | None = None
+
+    @field_validator("allocator_conf")
+    @classmethod
+    def supported_allocator(cls, value):
+        return validate_allocator(value)
 
     @field_validator("version", mode="before")
     @classmethod

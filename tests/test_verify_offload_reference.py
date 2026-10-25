@@ -7,8 +7,10 @@ from pathlib import Path
 
 import pytest
 
+from headroom.verify.checkpoint import STRATEGY as CHECKPOINT_STRATEGY
 from headroom.verify.compare import compare_runs
 from headroom.verify.offload import (
+    LEGACY_STRATEGY,
     MAX_SAVED_BYTES,
     PROTOCOL,
     STRATEGY,
@@ -161,13 +163,40 @@ def test_bad_proof_cannot_be_upgraded_by_matching_loss_or_explicit_pairing(mutat
     assert "original_workload_offload_reference" not in legacy.checks
 
 
-def test_repository_no_reference_exception_is_preserved():
+def test_legacy_repository_no_reference_exception_is_preserved():
     report = compare_runs(
-        measured("oom"), measured(), reference_strategy=STRATEGY, acceptance_scope="repository"
+        measured("oom"),
+        measured(),
+        reference_strategy=LEGACY_STRATEGY,
+        acceptance_scope="repository",
     )
     assert report.checks["repository_no_reference_exception"]
     assert report.loss_equivalence == "n/a"
     assert report.numerical_basis == "repository_no_reference_exception"
+
+
+@pytest.mark.parametrize("strategy", [LEGACY_STRATEGY, STRATEGY, CHECKPOINT_STRATEGY])
+@pytest.mark.parametrize("scope", ["standard", "repository"])
+@pytest.mark.parametrize("reference_status", [None, "error", "timeout", "oom"])
+def test_reference_exception_strategy_scope_failure_matrix(strategy, scope, reference_status):
+    ref = None if reference_status is None else measured(reference_status)
+    report = compare_runs(
+        measured("oom"),
+        measured(),
+        reference=ref,
+        reference_strategy=strategy,
+        acceptance_scope=scope,
+    )
+    legacy_exception = (
+        strategy == LEGACY_STRATEGY and scope == "repository" and reference_status is None
+    )
+    assert report.checks["repository_no_reference_exception"] is legacy_exception
+    assert report.checks["numerical_acceptance"] is legacy_exception
+    assert report.target_met is legacy_exception
+    assert report.loss_equivalence == "n/a"
+    assert report.numerical_basis == (
+        "repository_no_reference_exception" if legacy_exception else "unavailable"
+    )
 
 
 @pytest.mark.parametrize("bad", [0, -1, True, 1.5, MAX_SAVED_BYTES + 1])
@@ -259,7 +288,11 @@ def test_runner_preserves_original_argv_and_attempts_only_one_reference(monkeypa
     assert result["reference_discovery"]["strategy"] == STRATEGY
 
 
-def test_unsupported_source_does_not_execute_offload_or_small_batch_fallback(monkeypatch, tmp_path):
+@pytest.mark.parametrize("strategy", [STRATEGY, CHECKPOINT_STRATEGY])
+@pytest.mark.parametrize("scope", ["standard", "repository"])
+def test_unsupported_source_does_not_execute_reference_or_fallback(
+    monkeypatch, tmp_path, strategy, scope
+):
     from headroom.verify import runner
 
     script = tmp_path / "unknown.py"
@@ -271,10 +304,13 @@ def test_unsupported_source_does_not_execute_offload_or_small_batch_fallback(mon
         script,
         baseline_script=script,
         baseline_args=[],
-        reference_strategy=STRATEGY,
+        reference_strategy=strategy,
+        acceptance_scope=scope,
     )
     assert len(calls) == 1 and result["reference"] is None
     assert not result["report"].target_met
+    assert not result["report"].checks["repository_no_reference_exception"]
+    assert result["reference_discovery"]["attempts"] == []
 
 
 def test_no_explicit_reference_can_bypass_original_execution_binding():

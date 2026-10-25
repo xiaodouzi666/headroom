@@ -62,4 +62,8 @@ class Diagnosis(DiagnosisModel):
     notes: list[str]
     # Optional for compatibility with saved responses; absence is unverified.
     invocation_claims: list[InvocationClaim] = Field(default_factory=list, max_length=16)
+    # Copy a host-provided identity; resolving it does not validate free-text reasoning.
+    invocation_refs: list[Annotated[str, StringConstraints(min_length=1, max_length=64)]] = Field(
+        default_factory=list, max_length=16
+    )
     evidence_requests: list[EvidenceRequest] = Field(default_factory=list, max_length=16)

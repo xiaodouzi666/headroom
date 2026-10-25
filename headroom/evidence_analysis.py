@@ -8,6 +8,8 @@ import json
 from collections import Counter
 from typing import Any
 
+from headroom.lab.snapshot_codec import FrozenStack
+
 CATEGORIES = (
     "params",
     "grads",
@@ -442,6 +444,7 @@ def analyze_snapshot(snapshot: dict, result: dict, buckets: int = 200) -> dict:
     occupied_addresses: list[int] = []
     catalog: dict[str, list[dict[str, Any]]] = {}
     signatures: dict[str, str] = {}
+    shared_stack_ids: dict[int, str] = {}
     categories: dict[str, str] = {}
     hot: dict[str, dict[str, Any]] = {}
     allocations: dict[int, dict[str, Any]] = {}
@@ -455,6 +458,11 @@ def analyze_snapshot(snapshot: dict, result: dict, buckets: int = 200) -> dict:
     def stack_id_for(event: dict[str, Any]) -> str:
         nonlocal missing_frames
         frames = event.get("frames", [])
+        shared_identity = id(frames) if isinstance(frames, FrozenStack) else None
+        if shared_identity is not None and shared_identity in shared_stack_ids:
+            if not frames:
+                missing_frames += 1
+            return shared_stack_ids[shared_identity]
         if not isinstance(frames, list) or any(not isinstance(frame, dict) for frame in frames):
             frames = []
         if not frames:
@@ -475,6 +483,8 @@ def analyze_snapshot(snapshot: dict, result: dict, buckets: int = 200) -> dict:
                 "frames": frames,
                 "short_lived_bytes": 0,
             }
+        if shared_identity is not None:
+            shared_stack_ids[shared_identity] = signatures[signature]
         return signatures[signature]
 
     for index, event in enumerate(trace):

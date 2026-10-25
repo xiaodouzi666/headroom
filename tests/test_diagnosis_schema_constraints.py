@@ -288,6 +288,9 @@ def test_deepcopy_preserves_historical_schema_and_every_unrelated_field(monkeypa
         restored["$defs"][name]["properties"][field] = copy.deepcopy(
             baseline["$defs"][name]["properties"][field]
         )
+    restored["properties"]["invocation_refs"] = copy.deepcopy(
+        baseline["properties"]["invocation_refs"]
+    )
     assert restored == baseline
     constrained["$defs"]["RootCause"]["properties"]["title"]["minLength"] = 999
     assert original == baseline

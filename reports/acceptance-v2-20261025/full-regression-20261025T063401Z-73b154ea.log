@@ -1,0 +1,202 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}}
+........................................................................ [  2%]
+........................................................................ [  5%]
+........................................................................ [  8%]
+........................................................................ [ 11%]
+........................................................................ [ 13%]
+........................................................................ [ 16%]
+........................................................................ [ 19%]
+........................................................................ [ 22%]
+........................................................................ [ 25%]
+........................................................................ [ 27%]
+........................................................................ [ 30%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+............F........................................................... [ 38%]
+........................................................................ [ 41%]
+.FFF.................................................................... [ 44%]
+........................................................................ [ 47%]
+........................................................................ [ 50%]
+........................................................................ [ 52%]
+........................................................................ [ 55%]
+........................................................................ [ 58%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 66%]
+........................................................................ [ 69%]
+........................................................................ [ 72%]
+........................................................................ [ 75%]
+........................................................................ [ 77%]
+........................................................................ [ 80%]
+........................................................................ [ 83%]
+........................................................................ [ 86%]
+........................................................................ [ 89%]
+........................................................................ [ 91%]
+........................................................................ [ 94%]
+........................................................................ [ 97%]
+.................................................................        [100%]
+=================================== FAILURES ===================================
+_______ test_all_real_scenarios_are_accepted_by_strict_source_preflight ________
+
+    def test_all_real_scenarios_are_accepted_by_strict_source_preflight():
+        from pathlib import Path
+    
+        from headroom.verify.policy import scan_source_forbidden
+    
+        root = Path(__file__).resolve().parents[1]
+        paths = sorted((root / "scenarios").glob("*/train.py"))
+>       assert len(paths) == 8
+E       AssertionError: assert 10 == 8
+E        +  where 10 = len([PosixPath('/home/xiaodouzi/workspace/headroom/scenarios/s1_batch_too_big/train.py'), PosixPath('/home/xiaodouzi/works...missing/train.py'), PosixPath('/home/xiaodouzi/workspace/headroom/scenarios/s4_loss_accumulation_graph/train.py'), ...])
+
+tests/test_honesty.py:253: AssertionError
+___ test_core_checkpoint_precedes_snapshot_and_is_never_accepted[completed] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-137/test_core_checkpoint_precedes_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7545a95db770>
+execution_status = 'completed'
+
+    @pytest.mark.parametrize("execution_status", ["completed", "oom", "timeout"])
+    def test_core_checkpoint_precedes_snapshot_and_is_never_accepted(
+        tmp_path, monkeypatch, execution_status
+    ):
+        session = hooks.CaptureSession(tmp_path, device="cpu").start()
+        session.step_records.append(
+            {"step": 1, "step_ms": 2.0, "peak_allocated_bytes": 100, "peak_reserved_bytes": 200}
+        )
+        session.loss_series.append(1.0)
+        if execution_status == "timeout":
+            session.deadline_reached = True
+    
+        def interrupted_snapshot():
+            checkpoint = read_capture(tmp_path / "result.json")
+            assert checkpoint["finalization_stage"] == "snapshot_capture"
+            assert checkpoint["capture_complete"] is False
+            assert checkpoint["finalization_incomplete"] is True
+            assert checkpoint["execution_status"] == execution_status
+            raise InterruptedFinalization()
+    
+        monkeypatch.setattr(session, "take_snapshot", interrupted_snapshot)
+        with pytest.raises(InterruptedFinalization):
+>           session.finish(execution_status)
+
+tests/test_lab_finalize.py:47: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/lab/hooks.py:967: in finish
+    "optimizer_update_observation": self._optimizer_update_evidence(),
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/lab/hooks.py:837: in _optimizer_update_evidence
+    coverage_complete = bool(self.step_records) and all(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <list_iterator object at 0x7545dd3c17e0>
+
+    coverage_complete = bool(self.step_records) and all(
+>       record["parameter_update_coverage_complete"] for record in self.step_records
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+E   KeyError: 'parameter_update_coverage_complete'
+
+headroom/lab/hooks.py:838: KeyError
+______ test_core_checkpoint_precedes_snapshot_and_is_never_accepted[oom] _______
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-137/test_core_checkpoint_precedes_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7545ddd69eb0>
+execution_status = 'oom'
+
+    @pytest.mark.parametrize("execution_status", ["completed", "oom", "timeout"])
+    def test_core_checkpoint_precedes_snapshot_and_is_never_accepted(
+        tmp_path, monkeypatch, execution_status
+    ):
+        session = hooks.CaptureSession(tmp_path, device="cpu").start()
+        session.step_records.append(
+            {"step": 1, "step_ms": 2.0, "peak_allocated_bytes": 100, "peak_reserved_bytes": 200}
+        )
+        session.loss_series.append(1.0)
+        if execution_status == "timeout":
+            session.deadline_reached = True
+    
+        def interrupted_snapshot():
+            checkpoint = read_capture(tmp_path / "result.json")
+            assert checkpoint["finalization_stage"] == "snapshot_capture"
+            assert checkpoint["capture_complete"] is False
+            assert checkpoint["finalization_incomplete"] is True
+            assert checkpoint["execution_status"] == execution_status
+            raise InterruptedFinalization()
+    
+        monkeypatch.setattr(session, "take_snapshot", interrupted_snapshot)
+        with pytest.raises(InterruptedFinalization):
+>           session.finish(execution_status)
+
+tests/test_lab_finalize.py:47: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/lab/hooks.py:967: in finish
+    "optimizer_update_observation": self._optimizer_update_evidence(),
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/lab/hooks.py:837: in _optimizer_update_evidence
+    coverage_complete = bool(self.step_records) and all(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <list_iterator object at 0x7545dd3b2560>
+
+    coverage_complete = bool(self.step_records) and all(
+>       record["parameter_update_coverage_complete"] for record in self.step_records
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+E   KeyError: 'parameter_update_coverage_complete'
+
+headroom/lab/hooks.py:838: KeyError
+____ test_core_checkpoint_precedes_snapshot_and_is_never_accepted[timeout] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-137/test_core_checkpoint_precedes_2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7545dd0f7a10>
+execution_status = 'timeout'
+
+    @pytest.mark.parametrize("execution_status", ["completed", "oom", "timeout"])
+    def test_core_checkpoint_precedes_snapshot_and_is_never_accepted(
+        tmp_path, monkeypatch, execution_status
+    ):
+        session = hooks.CaptureSession(tmp_path, device="cpu").start()
+        session.step_records.append(
+            {"step": 1, "step_ms": 2.0, "peak_allocated_bytes": 100, "peak_reserved_bytes": 200}
+        )
+        session.loss_series.append(1.0)
+        if execution_status == "timeout":
+            session.deadline_reached = True
+    
+        def interrupted_snapshot():
+            checkpoint = read_capture(tmp_path / "result.json")
+            assert checkpoint["finalization_stage"] == "snapshot_capture"
+            assert checkpoint["capture_complete"] is False
+            assert checkpoint["finalization_incomplete"] is True
+            assert checkpoint["execution_status"] == execution_status
+            raise InterruptedFinalization()
+    
+        monkeypatch.setattr(session, "take_snapshot", interrupted_snapshot)
+        with pytest.raises(InterruptedFinalization):
+>           session.finish(execution_status)
+
+tests/test_lab_finalize.py:47: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/lab/hooks.py:967: in finish
+    "optimizer_update_observation": self._optimizer_update_evidence(),
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/lab/hooks.py:837: in _optimizer_update_evidence
+    coverage_complete = bool(self.step_records) and all(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <list_iterator object at 0x7545dd3b3b20>
+
+    coverage_complete = bool(self.step_records) and all(
+>       record["parameter_update_coverage_complete"] for record in self.step_records
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+E   KeyError: 'parameter_update_coverage_complete'
+
+headroom/lab/hooks.py:838: KeyError
+=========================== short test summary info ============================
+FAILED tests/test_honesty.py::test_all_real_scenarios_are_accepted_by_strict_source_preflight
+FAILED tests/test_lab_finalize.py::test_core_checkpoint_precedes_snapshot_and_is_never_accepted[completed]
+FAILED tests/test_lab_finalize.py::test_core_checkpoint_precedes_snapshot_and_is_never_accepted[oom]
+FAILED tests/test_lab_finalize.py::test_core_checkpoint_precedes_snapshot_and_is_never_accepted[timeout]
+4 failed, 2581 passed in 623.38s (0:10:23)

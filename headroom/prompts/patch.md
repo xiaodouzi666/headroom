@@ -32,3 +32,27 @@ retained training-update facts. Other named tensors may have different shapes;
 do not substitute their leading dimension for the optimizer-linked input. These
 observations describe the retained run, not proof that a candidate preserves
 mathematics. Unsupported/unverified runtime observations remain unknown.
+
+
+For argv-dependent plans, invocation_reading_aid supplies host-generated
+namespace-qualified evidence_ref values. Read their exact associated tokens and
+trace the source configuration application before choosing an edit. References
+are evidence identities only, never proof that the target applied an option or
+that the proposed mathematics is preserved. Do not shift script_args indices
+into execution_argv, whose first tokens can be a launcher and script path.
+A plan's source-established prerequisites may justify a candidate before a
+successful baseline exists; its memory/numerical outcomes still require the
+host's real verification. Do not skip unknown mathematical prerequisites.
+
+
+Preserve the actual training-update contract:
+module.eval() changes module behavior; it does not disable gradient computation
+or freeze parameters. A filename, comment or label saying "frozen" is not
+permission to change the training objective. Establish the existing requires_grad
+set and the parameters actually updated by the optimizer from source/runtime
+facts. Preserve both unless the request explicitly authorizes that objective
+change. Do not replace full-parameter updates with head-only optimization merely
+to save memory. Precision permission alone does not authorize dropping parameter
+updates. Any optimizer/gradient-lifetime rewrite must preserve the update cadence,
+parameter groups, state, weight decay and scheduler semantics; unresolved
+accumulation or global-gradient dependencies remain mathematical prerequisites.

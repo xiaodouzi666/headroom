@@ -28,10 +28,14 @@ from torch.nn.modules.module import (
     register_module_forward_pre_hook,
     register_module_parameter_registration_hook,
 )
-from torch.optim.optimizer import register_optimizer_step_post_hook
+from torch.optim.optimizer import (
+    register_optimizer_step_post_hook,
+    register_optimizer_step_pre_hook,
+)
 
 from headroom.lab.deadline import capture_window, configured_control
-from headroom.lab.precision import PrecisionObserver
+from headroom.lab.precision import CheckpointPrecisionAdapter, PrecisionObserver
+from headroom.lab.snapshot_codec import encode_snapshot
 
 
 class StepLimitReached(BaseException):
@@ -65,7 +69,10 @@ _AMOUNT = r"([0-9]+(?:\.[0-9]+)?)\s*(bytes?|[KMGT]?i?B)"
 
 def _atomic_json(path: Path, value: Any) -> None:
     temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    temporary.write_text(json.dumps(value, allow_nan=False, indent=2) + "\n")
+    # Allocator histories can contain hundreds of thousands of native events.
+    # Whitespace is not evidence; keep every value without the pretty-print expansion.
+    indent = None if path.name == "snapshot.json" else 2
+    temporary.write_text(json.dumps(value, allow_nan=False, indent=indent) + "\n")
     temporary.replace(path)
 
 
@@ -194,6 +201,15 @@ class CaptureSession:
         self._snapshot: Any = None
         self._snapshot_attempted = False
         self._step_handle: Any = None
+        self._step_pre_handle: Any = None
+        self._optimizer_pending: dict[tuple[int, int], dict[str, Any]] = {}
+        self._backward_groups: dict[int, dict[str, Any]] = {}
+        self._optimizer_step_calls = 0
+        self._optimizer_successful_step_calls = 0
+        self._update_identities: dict[int, tuple[Any, str]] = {}
+        self._update_catalog: list[dict[str, Any]] = []
+        self._recorded_update_members = 0
+        self._backward_update_failures: list[dict[str, Any]] = []
         self._parameter_handles: list[Any] = []
         self._parameter_refs: dict[int, Any] = {}
         self._parameter_samples: list[int] = []
@@ -210,6 +226,9 @@ class CaptureSession:
         self._pairing_hash_excluded = False
         self.precision_observer = PrecisionObserver(device)
         self._precision_mode = None
+        self._checkpoint_precision = CheckpointPrecisionAdapter(
+            self.precision_observer, self._observe_checkpoint_recompute
+        )
         self.entrypoint_capture = None
         self.deadline_reached = False
         self.deadline_observation = {
@@ -343,7 +362,34 @@ class CaptureSession:
             # distinct nested losses and later calls remain observable.
             if identity in active:
                 return session._original_backward(tensor, *args, **kwargs)
+            outermost = not active
             active.add(identity)
+            thread = threading.get_ident()
+            group = session._backward_groups.get(thread)
+            if outermost:
+                group = {
+                    "root": weakref.ref(tensor),
+                    "expected": None,
+                    "calls": 0,
+                    "successful_calls": 0,
+                    "updated": {},
+                    "pending": set(),
+                    "classes": set(),
+                    "reasons": [],
+                    "graph_task": None,
+                    "restricted": kwargs.get("inputs") is not None
+                    or (len(args) > 3 and args[3] is not None),
+                    "higher_order": bool(
+                        kwargs.get("create_graph", args[2] if len(args) > 2 else False)
+                    ),
+                }
+                session._backward_groups[thread] = group
+                if len(session._backward_groups) > 1:
+                    for concurrent in session._backward_groups.values():
+                        session._group_problem(concurrent, "concurrent_tensor_backward")
+            elif group is not None:
+                session._group_problem(group, "nested_distinct_tensor_backward")
+            succeeded = False
             try:
                 if session.pairing_capture is not None:
                     session.pairing_capture.backward(tensor, sys._getframe(1))
@@ -354,12 +400,25 @@ class CaptureSession:
                         session.loss_series.append(None)
                     else:
                         session.loss_series.append(scalar)
-                return session._original_backward(tensor, *args, **kwargs)
+                returned = session._original_backward(tensor, *args, **kwargs)
+                succeeded = True
             finally:
                 active.remove(identity)
+                if outermost:
+                    session._backward_groups.pop(thread, None)
+                    if not succeeded and group["calls"]:
+                        session._group_problem(group, "backward_did_not_return_successfully")
+                        session._reject_backward_group(group)
+            if outermost and group["calls"]:
+                # The autograd engine and all post-accumulate callbacks returned.
+                # Raising a limit here cannot interrupt a partially updated model.
+                session._complete_backward_group(group)
+            return returned
 
+        self._checkpoint_precision.install()
         self._backward_wrapper = recorded_backward
         torch.Tensor.backward = recorded_backward
+        self._step_pre_handle = register_optimizer_step_pre_hook(self._optimizer_step_start)
         self._step_handle = register_optimizer_step_post_hook(self._optimizer_step)
         self._parameter_handles = [
             register_module_parameter_registration_hook(self._registered_parameter),
@@ -390,7 +449,8 @@ class CaptureSession:
                 "is_primary": self.is_primary,
                 "device": self.device,
                 "history_enabled": self.history_enabled,
-                "optimizer_hook": "global_post_hook",
+                "optimizer_hook": "global_pre_post_hooks",
+                "logical_update_boundary": "outer_optimizer_step_or_complete_tensor_backward",
                 "deadline_observation": self.deadline_observation,
             },
         )
@@ -473,18 +533,38 @@ class CaptureSession:
                 except Exception as exc:  # noqa: BLE001 - optional metadata must not break training
                     self._precision_mode = None
                     self._error("precision_observation", exc)
-        self.precision_observer.observe_pre(module, args)
+        self.precision_observer.active_observer().observe_pre(module, args)
         self._forward_depth.value = depth + 1
 
     def _forward_end(self, module: Any, args: Any, output: Any) -> None:
         if os.getpid() == self.pid and not self.finished:
             try:
-                self.precision_observer.observe_post(module, args, output)
+                self.precision_observer.active_observer().observe_post(module, args, output)
             finally:
                 depth = max(0, getattr(self._forward_depth, "value", 0) - 1)
                 self._forward_depth.value = depth
                 if depth == 0 and threading.get_ident() == self._precision_thread:
                     self._close_precision_mode()
+
+    def _observe_checkpoint_recompute(self, function, args, kwargs):
+        # This flag authorizes a scope, never substitutes for operation coverage.
+        # The callback enters a real TorchFunctionMode before invoking function.
+        group = self._backward_groups.get(self._precision_thread)
+        task = self._graph_task()
+        if (
+            os.getpid() != self.pid
+            or self.finished
+            or group is None
+            or len(self._backward_groups) != 1
+            or task is None
+            or task < 0
+        ):
+            self.precision_observer._error("checkpoint_scope_unverified")
+            return function(*args, **kwargs)
+        observer = self.precision_observer.explicit_worker_observer()
+        if observer is None:
+            return function(*args, **kwargs)
+        return observer.observe_recompute(function, args, kwargs)
 
     def _close_precision_mode(self):
         if self._precision_mode is not None:
@@ -519,13 +599,238 @@ class CaptureSession:
             ),
         }
 
+    @staticmethod
+    def _group_problem(group, reason):
+        if reason not in group["reasons"] and len(group["reasons"]) < 16:
+            group["reasons"].append(reason)
+
+    def _update_identity(self, parameter):
+        if not isinstance(parameter, torch.nn.Parameter):
+            raise TypeError("standalone optimizer tensors lack Parameter coverage")
+        identity = id(parameter)
+        previous = self._update_identities.get(identity)
+        if previous is not None and previous[0]() is parameter:
+            return previous[1]
+        if len(self._update_catalog) >= 8192:
+            raise ValueError("parameter identity observation limit exceeded")
+        token = f"p{len(self._update_catalog) + 1:05d}"
+        self._update_identities[identity] = (weakref.ref(parameter), token)
+        self._update_catalog.append(
+            {
+                "id": token,
+                "numel": parameter.numel(),
+                "requires_grad_at_observation": bool(parameter.requires_grad),
+            }
+        )
+        return token
+
+    def _backward_parameters(self, group):
+        """Bounded graph-edge inspection; never read/copy tensor contents or saved tensors."""
+        if group["restricted"] or group["higher_order"]:
+            raise ValueError("restricted-input or higher-order backward is unsupported")
+        root = group["root"]()
+        if root is None:
+            raise ValueError("backward root unavailable")
+        expected = set()
+        if isinstance(root, torch.nn.Parameter) and root.requires_grad and root.is_leaf:
+            expected.add(self._update_identity(root))
+        pending = [root.grad_fn]
+        visited = set()
+        while pending:
+            node = pending.pop()
+            if node is None or node in visited:
+                continue
+            visited.add(node)
+            if len(visited) > 65536:
+                raise ValueError("backward graph observation limit exceeded")
+            variable = getattr(node, "variable", None)
+            if isinstance(variable, torch.nn.Parameter) and variable.requires_grad:
+                expected.add(self._update_identity(variable))
+                if len(expected) > 4096:
+                    raise ValueError("backward parameter coverage limit exceeded")
+            pending.extend(next_node for next_node, _ in node.next_functions)
+        if not expected:
+            raise ValueError("no observable leaf Parameter update contract")
+        return expected
+
+    @staticmethod
+    def _graph_task():
+        try:
+            value = torch._C._current_graph_task_id()
+            return value if type(value) is int else None
+        except (AttributeError, RuntimeError):
+            return None
+
+    def _optimizer_step_start(self, optimizer, args, kwargs):
+        if os.getpid() != self.pid or self.finished:
+            return
+        self._optimizer_step_calls += 1
+        task = self._graph_task()
+        groups = list(self._backward_groups.values())
+        group = groups[0] if len(groups) == 1 and task is not None and task >= 0 else None
+        unsupported = bool(groups) or task != -1
+        if group is not None:
+            unsupported = False
+            group["calls"] += 1
+            group["pending"].add(self._optimizer_step_calls)
+            if group["graph_task"] is None:
+                group["graph_task"] = task
+            elif group["graph_task"] != task:
+                self._group_problem(group, "multiple_autograd_graph_tasks")
+            if group["expected"] is None:
+                try:
+                    group["expected"] = self._backward_parameters(group)
+                except Exception:  # noqa: BLE001 - unsupported graph remains incomplete
+                    group["expected"] = set()
+                    self._group_problem(group, "backward_parameter_coverage_unavailable")
+            if group["calls"] > 8192:
+                self._group_problem(group, "optimizer_call_observation_limit")
+                raise CaptureSetupError("Optimizer-in-backward observation limit exceeded")
+        elif unsupported:
+            for active in groups:
+                self._group_problem(active, "optimizer_callback_scope_unverified")
+            self._error(
+                "optimizer_update",
+                RuntimeError("Optimizer callback has no unique Tensor.backward boundary"),
+            )
+        key = (threading.get_ident(), id(optimizer))
+        previous = self._optimizer_pending.get(key)
+        if previous is not None and previous["group"] is not None:
+            self._group_problem(previous["group"], "optimizer_call_did_not_complete")
+        observed = []
+        seen = set()
+        # A closure can populate or replace gradients after this pre-hook.
+        # Preserve ordinary step counting without claiming its update set is known.
+        complete = not (
+            kwargs.get("closure") is not None or any(callable(value) for value in args[1:])
+        )
+        try:
+            for parameter_group in optimizer.param_groups:
+                for parameter in parameter_group["params"]:
+                    if parameter.grad is None:
+                        continue
+                    token = self._update_identity(parameter)
+                    if token in seen:
+                        raise ValueError("duplicate parameter in optimizer groups")
+                    seen.add(token)
+                    if len(seen) > 4096:
+                        raise ValueError("optimizer parameter observation limit")
+                    observed.append((weakref.ref(parameter), token, parameter._version))
+        except Exception:  # noqa: BLE001 - ordinary steps retain prior counting, with unknown coverage
+            complete = False
+            if group is not None:
+                self._group_problem(group, "optimizer_parameter_observation_unavailable")
+        self._optimizer_pending[key] = {
+            "group": group,
+            "call": self._optimizer_step_calls,
+            "observed": observed,
+            "complete": complete,
+            "unsupported": unsupported,
+        }
+
     def _optimizer_step(self, optimizer: torch.optim.Optimizer, args: Any, kwargs: Any) -> None:
         if os.getpid() != self.pid or self.finished:
             return
+        self._optimizer_successful_step_calls += 1
+        frame = self._optimizer_pending.pop((threading.get_ident(), id(optimizer)), None)
+        if frame is None:
+            self._error(
+                "optimizer_update", RuntimeError("Optimizer post hook has no matching pre hook")
+            )
+            return
+        group = frame["group"]
+        updated = []
+        complete = frame["complete"] and bool(frame["observed"])
+        for reference, token, version in frame["observed"]:
+            parameter = reference()
+            if parameter is not None and parameter._version > version:
+                updated.append(token)
+            else:
+                complete = False
+        optimizer_name = f"{type(optimizer).__module__}.{type(optimizer).__name__}"
+        if group is not None:
+            group["pending"].discard(frame["call"])
+            group["successful_calls"] += 1
+            group["classes"].add(optimizer_name)
+            if not complete or not updated:
+                self._group_problem(group, "parameter_update_not_observed")
+            for token in updated:
+                group["updated"][token] = group["updated"].get(token, 0) + 1
+            return
+        if frame["unsupported"]:
+            return
+        self._record_optimizer_update(
+            optimizer,
+            optimizer_name,
+            "optimizer_post_hook",
+            1,
+            updated,
+            parameter_coverage_complete=complete,
+        )
+
+    def _reject_backward_group(self, group):
+        self._error("optimizer_update", RuntimeError("Incomplete optimizer-in-backward update"))
+        if len(self._backward_update_failures) < 64:
+            self._backward_update_failures.append(
+                {
+                    "optimizer_step_calls": group["calls"],
+                    "successful_step_calls": group["successful_calls"],
+                    "observed_updated_parameters": sorted(group["updated"]),
+                    "expected_parameters": sorted(group["expected"] or []),
+                    "reasons": list(group["reasons"]),
+                }
+            )
+        # An exception may leave pre-hooks without a matching post-hook. Keep
+        # their actual call counters, but do not retain the failed graph context.
+        self._optimizer_pending = {
+            key: frame
+            for key, frame in self._optimizer_pending.items()
+            if frame["group"] is not group
+        }
+
+    def _complete_backward_group(self, group):
+        if group["pending"] or group["calls"] != group["successful_calls"]:
+            self._group_problem(group, "optimizer_call_did_not_complete")
+        if not group["expected"] or set(group["updated"]) != group["expected"]:
+            self._group_problem(group, "backward_parameter_updates_not_fully_covered")
+        if any(count != 1 for count in group["updated"].values()):
+            self._group_problem(group, "parameter_updated_more_than_once")
+        if group["reasons"]:
+            self._reject_backward_group(group)
+            return
+        self._record_optimizer_update(
+            None,
+            "complete_tensor_backward",
+            "complete_tensor_backward",
+            group["calls"],
+            sorted(group["updated"]),
+            parameter_coverage_complete=True,
+            optimizer_classes=sorted(group["classes"]),
+        )
+
+    def _record_optimizer_update(
+        self,
+        optimizer,
+        name,
+        basis,
+        calls,
+        updated,
+        *,
+        parameter_coverage_complete,
+        optimizer_classes=None,
+    ):
+        if self._recorded_update_members + len(updated) > 65536:
+            self._error(
+                "optimizer_update", RuntimeError("Update-set evidence exceeds its bounded limit")
+            )
+            return
+        self._recorded_update_members += len(updated)
         if self.device == "cuda":
             torch.cuda.synchronize(self.device_index)
         ended = time.perf_counter()
         if self.pairing_capture is not None:
+            # None deliberately cannot match the fixed single-optimizer adapter.
+            # Grouping callbacks must not manufacture a stronger pairing proof.
             self.pairing_capture.step(optimizer)
             if not self._pairing_hash_excluded:
                 self.last_step_at += self.pairing_capture.hash_seconds
@@ -535,7 +840,12 @@ class CaptureSession:
         self.step_records.append(
             {
                 "step": len(self.step_records) + 1,
-                "optimizer": f"{type(optimizer).__module__}.{type(optimizer).__name__}",
+                "optimizer": name,
+                "update_basis": basis,
+                "optimizer_step_calls": calls,
+                "optimizer_classes": optimizer_classes or [name],
+                "updated_parameter_ids": sorted(updated),
+                "parameter_update_coverage_complete": parameter_coverage_complete,
                 "step_ms": (ended - self.last_step_at) * 1000,
                 "elapsed_ms": (ended - self.started_at) * 1000,
                 "wall_time_us": time.time_ns() // 1000,
@@ -546,6 +856,29 @@ class CaptureSession:
         self.last_step_at = ended
         if len(self.step_records) >= self.max_steps:
             raise StepLimitReached(f"Reached {self.max_steps} optimizer updates")
+
+    def _optimizer_update_evidence(self):
+        boundary_complete = not any(e["stage"] == "optimizer_update" for e in self.errors)
+        coverage_complete = bool(self.step_records) and all(
+            record["parameter_update_coverage_complete"] for record in self.step_records
+        )
+        return {
+            "protocol": "headroom.optimizer_updates.v1",
+            "complete": boundary_complete and coverage_complete,
+            "logical_boundary_complete": boundary_complete,
+            "parameter_update_sets_complete": coverage_complete,
+            "optimizer_step_calls": self._optimizer_step_calls,
+            "successful_optimizer_step_calls": self._optimizer_successful_step_calls,
+            "logical_updates": len(self.step_records),
+            "parameter_catalog": self._update_catalog,
+            "failed_backward_groups": self._backward_update_failures,
+            "coverage": "Process-local Parameter identities and optimizer pre/post hooks; "
+            "version-counter changes are observations, not numerical equivalence. A grouped update "
+            "requires one successful complete Tensor.backward and exactly-once coverage of its "
+            "observable leaf Parameters. Restricted/nested/concurrent graphs are unsupported. "
+            "Ordinary outer optimizer calls retain the legacy counting contract. "
+            "This is cooperative instrumentation, not authentication against target tampering.",
+        }
 
     def take_snapshot(self) -> Any:
         if self._snapshot_attempted:
@@ -574,6 +907,9 @@ class CaptureSession:
         self._cancel_timer()
         if self.pairing_capture is not None:
             self.pairing_capture.close()
+        if self._step_pre_handle is not None:
+            self._step_pre_handle.remove()
+            self._step_pre_handle = None
         if self._step_handle is not None:
             self._step_handle.remove()
             self._step_handle = None
@@ -581,6 +917,7 @@ class CaptureSession:
             handle.remove()
         self._parameter_handles.clear()
         self._close_precision_mode()
+        self._checkpoint_precision.close()
         if torch.Tensor.backward is self._backward_wrapper:
             torch.Tensor.backward = self._original_backward
         if _ACTIVE_SESSION is self:
@@ -653,6 +990,7 @@ class CaptureSession:
             "termination_reason": "timeout" if status == "timeout" else "capture_incomplete",
             "pid": self.pid,
             "is_primary": self.is_primary,
+            "optimizer_update_observation": self._optimizer_update_evidence(),
             "steps": len(self.step_records),
             "loss_series": self.loss_series,
             "step_records": self.step_records,
@@ -735,7 +1073,7 @@ class CaptureSession:
             "traceback.txt": lambda path: path.write_text(exception_text),
             "env.json": lambda path: _atomic_json(path, self.env),
             "snapshot.pickle": lambda path: _atomic_pickle(path, snapshot),
-            "snapshot.json": lambda path: _atomic_json(path, native_snapshot(snapshot)),
+            "snapshot.json": lambda path: _atomic_json(path, encode_snapshot(snapshot)),
         }
         for filename, writer in artifact_writers.items():
             checkpoint(f"write:{filename}")
@@ -755,7 +1093,13 @@ class CaptureSession:
             except Exception as history_error:  # noqa: BLE001 - report capture failures
                 self._error("history_disable", history_error)
         execution_status = status
-        critical_stages = {"snapshot", "peak_stats", "memory_stats", "memory_summary"}
+        critical_stages = {
+            "snapshot",
+            "peak_stats",
+            "memory_stats",
+            "memory_summary",
+            "optimizer_update",
+        }
         capture_complete = self.ready and not any(
             error["stage"] in critical_stages or error["stage"].startswith("write:")
             for error in self.errors
@@ -784,6 +1128,7 @@ class CaptureSession:
             "termination_reason": reason,
             "pid": self.pid,
             "is_primary": self.is_primary,
+            "optimizer_update_observation": self._optimizer_update_evidence(),
             "steps": len(self.step_records),
             "loss_series": self.loss_series,
             "step_records": self.step_records,

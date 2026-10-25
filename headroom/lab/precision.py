@@ -33,6 +33,12 @@ _ERRORS = (
     "operation_mode_missing",
     "operation_mode_error",
     "compiled_module",
+    "checkpoint_scope_unverified",
+    "checkpoint_context_unverified",
+    "checkpoint_recompute_failed",
+    "checkpoint_reentrant_unsupported",
+    "checkpoint_adapter_changed",
+    "thread_observer_limit",
 )
 
 
@@ -71,6 +77,11 @@ class PrecisionObserver:
         self.max_nodes, self.max_depth = max_nodes, max_depth
         self.max_parameters, self.max_forward_depth = max_parameters, max_forward_depth
         self._owner_thread = threading.get_ident()
+        self._worker_observers = {}
+        self._function_scope_depth = 0
+        self._mode_entries = self._mode_exits = 0
+        self._checkpoint_counts = dict.fromkeys(("entered", "exited", "early_stops", "failed"), 0)
+        self._graph_metadata_outputs = 0
         self._depth = 0
         self._mode_depth = 0
         self._observing = False
@@ -90,6 +101,101 @@ class PrecisionObserver:
         self._autocast = dict.fromkeys(("disabled", "bfloat16", "unsupported", "unknown"), 0)
         self._dtypes = {role: dict.fromkeys(_DTYPES, 0) for role in _ROLES}
         self._roots = dict.fromkeys(("fp32", "bf16", "unknown"), 0)
+
+    def active_observer(self):
+        """An unregistered or inactive thread still routes to the rejecting owner."""
+        if threading.get_ident() == self._owner_thread:
+            return self
+        child = self._worker_observers.get(threading.get_ident())
+        return child if child is not None and child._function_scope_depth else self
+
+    def explicit_worker_observer(self):
+        """Only the Lab's verified checkpoint callback may provision this observer."""
+        if threading.get_ident() == self._owner_thread:
+            return self
+        thread = threading.get_ident()
+        if thread not in self._worker_observers:
+            if len(self._worker_observers) >= 8:
+                self._error("thread_observer_limit")
+                return None
+            self._worker_observers[thread] = PrecisionObserver(
+                self.device,
+                max_nodes=self.max_nodes,
+                max_depth=self.max_depth,
+                max_parameters=self.max_parameters,
+                max_forward_depth=self.max_forward_depth,
+            )
+        return self._worker_observers[thread]
+
+    def observe_recompute(self, function, args, kwargs):
+        """Observe the actual function body, including module-free operations."""
+        from torch.utils.checkpoint import _StopRecomputationError
+
+        self._function_scope_depth += 1
+        self._checkpoint_counts["entered"] += 1
+        try:
+            with self.operation_mode():
+                synthetic = self._depth == 0
+                if synthetic:
+                    self._root = {
+                        "bf16": False,
+                        "unsupported": False,
+                        "unknown": False,
+                        "floating": False,
+                        "mode_covered": self._mode_depth > 0,
+                    }
+                    self._depth = 1
+                self._observing = True
+                try:
+                    self._autocast_state()
+                    self._values(args, "input")
+                    self._values(kwargs, "input")
+                except Exception:  # noqa: BLE001 - metadata errors cannot change target execution
+                    self._error("metadata_failed")
+                finally:
+                    self._observing = False
+                try:
+                    result = function(*args, **kwargs)
+                    self._observing = True
+                    try:
+                        self._autocast_state()
+                        self._values(result, "output")
+                    except Exception:  # noqa: BLE001 - metadata errors cannot change target execution
+                        self._error("metadata_failed")
+                    finally:
+                        self._observing = False
+                    return result
+                except _StopRecomputationError:
+                    # Official non-reentrant early-stop is successful coverage
+                    # of the function prefix that actually executed.
+                    self._checkpoint_counts["early_stops"] += 1
+                    raise
+                except BaseException:
+                    self._checkpoint_counts["failed"] += 1
+                    self._error("checkpoint_recompute_failed")
+                    raise
+                finally:
+                    if synthetic:
+                        if self._depth != 1:
+                            self._error("unbalanced_hooks")
+                        self._depth = 0
+                        self._finish_root()
+        finally:
+            self._checkpoint_counts["exited"] += 1
+            self._function_scope_depth -= 1
+
+    def _finish_root(self):
+        self._increment(self._counts, "root_forwards")
+        root = self._root
+        mode = (
+            "unknown"
+            if root["unknown"] or root["unsupported"] or not root["floating"]
+            else "bf16"
+            if root["bf16"]
+            else "fp32"
+        )
+        self._increment(self._roots, mode)
+        self._root = None
 
     @staticmethod
     def operation_supported(module: torch.nn.Module) -> bool:
@@ -275,17 +381,7 @@ class PrecisionObserver:
             self._observing = False
             self._depth -= 1
         if self._depth == 0:
-            self._increment(self._counts, "root_forwards")
-            root = self._root
-            mode = (
-                "unknown"
-                if root["unknown"] or root["unsupported"] or not root["floating"]
-                else "bf16"
-                if root["bf16"]
-                else "fp32"
-            )
-            self._increment(self._roots, mode)
-            self._root = None
+            self._finish_root()
 
     @contextmanager
     def operation_mode(self) -> Iterator[None]:
@@ -304,15 +400,19 @@ class PrecisionObserver:
         self._mode_depth = 1
         try:
             with _PrecisionMode(self):
-                yield
+                self._mode_entries += 1
+                try:
+                    yield
+                finally:
+                    self._mode_exits += 1
         finally:
             self._mode_depth = 0
             if self._depth:
                 self._error("operation_mode_error")
 
-    def snapshot(self) -> dict:
+    def _own_snapshot(self) -> dict:
         errors = {name: count for name, count in self._errors.items() if count}
-        if self._depth:
+        if self._depth or self._mode_depth or self._function_scope_depth:
             errors["unbalanced_hooks"] = max(errors.get("unbalanced_hooks", 0), 1)
         observed = [name for name, count in self._roots.items() if count]
         complete = (
@@ -333,6 +433,9 @@ class PrecisionObserver:
             "autocast": dict(self._autocast),
             "dtypes": {role: dict(counts) for role, counts in self._dtypes.items()},
             "errors": errors,
+            "checkpoint_recompute": dict(self._checkpoint_counts),
+            "operation_mode_lifecycle": {"entered": self._mode_entries, "exited": self._mode_exits},
+            "recognized_graph_metadata_outputs": self._graph_metadata_outputs,
             "coverage": {
                 "module_hooks": "Every observed module pre/post forward; direct registered parameters",
                 "internal_autocast": "TorchFunctionMode samples autocast and tensor argument/output metadata during forwards",
@@ -347,12 +450,64 @@ class PrecisionObserver:
                         "operators may not expose internal autocast or every intermediate dtype."
                     ),
                     "Metadata records observed precision, not tensor values or full numerical equivalence.",
-                    "Known compiled module wrappers and cross-thread module forwards remain unknown.",
+                    "Known compiled wrappers and unregistered or unobserved worker forwards remain unknown.",
                     "Metadata observation adds Python overhead; no tensor data or GPU synchronization is added.",
                     "Runtime hooks are not authentication against deliberate target tampering.",
                 ],
             },
         }
+
+    def snapshot(self):
+        result = self._own_snapshot()
+        children = [child._own_snapshot() for child in self._worker_observers.values()]
+        for child in children:
+            for field in (
+                "root_modes",
+                "counts",
+                "autocast",
+                "errors",
+                "checkpoint_recompute",
+                "operation_mode_lifecycle",
+            ):
+                for key, value in child[field].items():
+                    result[field][key] = result[field].get(key, 0) + value
+            for role in _ROLES:
+                for key, value in child["dtypes"][role].items():
+                    result["dtypes"][role][key] += value
+            result["recognized_graph_metadata_outputs"] += child[
+                "recognized_graph_metadata_outputs"
+            ]
+        observed = [name for name, count in result["root_modes"].items() if count]
+        result["complete"] = bool(
+            not result["errors"]
+            and result["counts"]["root_forwards"] > 0
+            and result["root_modes"]["unknown"] == 0
+            and len(observed) == 1
+            and result["operation_mode_lifecycle"]["entered"]
+            == result["operation_mode_lifecycle"]["exited"]
+            and result["checkpoint_recompute"]["entered"]
+            == result["checkpoint_recompute"]["exited"]
+        )
+        result["precision"] = observed[0] if result["complete"] else "unknown"
+        result["worker_observers"] = {
+            "registered": len(children),
+            "basis": "explicit checkpoint function boundary with actual thread-local operation mode",
+            "snapshots": [
+                {
+                    key: child[key]
+                    for key in (
+                        "complete",
+                        "precision",
+                        "root_modes",
+                        "operation_mode_lifecycle",
+                        "checkpoint_recompute",
+                        "errors",
+                    )
+                }
+                for child in children
+            ],
+        }
+        return result
 
 
 class _PrecisionMode(TorchFunctionMode):
@@ -377,9 +532,129 @@ class _PrecisionMode(TorchFunctionMode):
         result = func(*args, **(kwargs or {}))
         observer._observing = True
         try:
-            observer._values(result, "operation_output")
+            if (
+                getattr(func, "__name__", None) == "__get__"
+                and getattr(func, "__self__", None) is torch.Tensor.grad_fn
+                and isinstance(result, torch.autograd.graph.Node)
+            ):
+                # Tensor.grad_fn returns graph metadata, not an unobserved dtype.
+                observer._graph_metadata_outputs += 1
+            else:
+                observer._values(result, "operation_output")
         except Exception:  # noqa: BLE001
             observer._error("metadata_failed")
         finally:
             observer._observing = False
         return result
+
+
+class CheckpointPrecisionAdapter:
+    """Pinned torch 2.5.1 non-reentrant recompute boundary, preserving user contexts.
+
+    The official generator closes over fn for recomputation, while the public
+    API calls the original fn for the initial forward. Wrapping that argument
+    covers the actual recomputation function, including functional-only code.
+    Non-default user contexts execute unchanged but remain unverified: custom
+    dispatch modes may hide internal operations from an outer observer.
+    Existing imported aliases of checkpoint still resolve this module helper.
+    """
+
+    def __init__(self, observer, recompute):
+        self.observer, self.recompute = observer, recompute
+        self.module = None
+        self.original = self.original_reentrant = None
+        self.wrapper = self.reentrant_wrapper = None
+
+    def install(self):
+        import inspect
+
+        import torch.utils.checkpoint as module
+
+        try:
+            original = module._checkpoint_without_reentrant_generator
+            reentrant = module.CheckpointFunction.forward
+            parameters = list(inspect.signature(original).parameters.values())
+            compatible = (
+                str(torch.__version__).split("+")[0] == "2.5.1"
+                and callable(original)
+                and callable(reentrant)
+                and original.__module__ == "torch.utils.checkpoint"
+                and original.__name__ == "_checkpoint_without_reentrant_generator"
+                and reentrant.__module__ == "torch.utils.checkpoint"
+                and reentrant.__qualname__ == "CheckpointFunction.forward"
+                and [item.name for item in parameters]
+                == [
+                    "fn",
+                    "preserve_rng_state",
+                    "context_fn",
+                    "determinism_check",
+                    "debug",
+                    "args",
+                    "kwargs",
+                ]
+                and [item.kind for item in parameters]
+                == [
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    inspect.Parameter.VAR_POSITIONAL,
+                    inspect.Parameter.VAR_KEYWORD,
+                ]
+                and parameters[2].default is module.noop_context_fn
+            )
+        except Exception:  # noqa: BLE001 - an optional observer cannot break training
+            compatible = False
+        if not compatible:
+            self.observer._error("checkpoint_scope_unverified")
+            return
+        self.module, self.original, self.original_reentrant = module, original, reentrant
+
+        def generator(function, *args, **kwargs):
+            if torch.compiler.is_compiling():
+                return self.original(function, *args, **kwargs)
+            if (
+                isinstance(function, (torch.jit.ScriptModule, torch.jit.ScriptFunction))
+                or hasattr(function, "_torchdynamo_orig_callable")
+                or (
+                    isinstance(function, torch.nn.Module)
+                    and not self.observer.operation_supported(function)
+                )
+            ):
+                self.observer._error("compiled_module")
+                return self.original(function, *args, **kwargs)
+            forward_observer = self.observer.active_observer()
+            if forward_observer._root is None or not forward_observer._mode_depth:
+                self.observer._error("operation_mode_missing")
+            context = args[1] if len(args) > 1 else kwargs.get("context_fn", module.noop_context_fn)
+            if context is not module.noop_context_fn:
+                self.observer._error("checkpoint_context_unverified")
+                # Do not change dispatch-mode ordering inside unreviewed contexts.
+                return self.original(function, *args, **kwargs)
+
+            def observed_function(*inputs, **keywords):
+                return self.recompute(function, inputs, keywords)
+
+            return self.original(observed_function, *args, **kwargs)
+
+        def reentrant(*args, **kwargs):
+            self.observer._error("checkpoint_reentrant_unsupported")
+            return self.original_reentrant(*args, **kwargs)
+
+        self.wrapper, self.reentrant_wrapper = generator, reentrant
+        module._checkpoint_without_reentrant_generator = generator
+        module.CheckpointFunction.forward = staticmethod(reentrant)
+
+    def close(self):
+        if self.module is None:
+            return
+        if self.module._checkpoint_without_reentrant_generator is self.wrapper:
+            self.module._checkpoint_without_reentrant_generator = self.original
+        else:
+            self.observer._error("checkpoint_adapter_changed")
+        if self.module.CheckpointFunction.forward is self.reentrant_wrapper:
+            self.module.CheckpointFunction.forward = staticmethod(self.original_reentrant)
+        else:
+            self.observer._error("checkpoint_adapter_changed")
+        self.module = None

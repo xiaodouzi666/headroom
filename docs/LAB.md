@@ -253,3 +253,35 @@ The self-contained runtime is described in [LAB_RUNTIME.md](LAB_RUNTIME.md).
 Lab create uses the immutable image ID returned by its contract/lock preflight,
 without mounting the host virtual environment. The execution result and run
 manifest both preserve the actual container image ID.
+
+
+## Logical updates and checkpoint precision — 2026-10-25
+
+The capture limit counts complete logical optimizer updates. Ordinary outer
+optimizer steps retain their behavior. For the reviewed optimizer-in-backward
+shape, multiple per-parameter callbacks count as one update only after the outer
+`Tensor.backward` returns successfully and all observed gradient parameters have
+been updated. Callback counts and coverage evidence are retained separately.
+Exceptions, incomplete coverage or unrecognized shapes cannot manufacture 20
+complete updates. Closure/empty-gradient cases do not gain a false complete
+parameter-coverage claim.
+
+The precision observer explicitly supports the pinned PyTorch 2.5.1
+non-reentrant checkpoint implementation with its default context. It requires
+initial-forward observation and enters an actual thread-local operation mode
+before the CUDA worker recomputation function body, including functional-only
+operations. Entry/exit, early-stop and error counters are recorded. Unknown API
+shapes, reentrant/custom contexts, unseen initial forwards and unregistered
+threads remain unknown. The mode is restored on success and exceptions; it is
+not a blanket assertion that every native operator dtype has been proved.
+Two real CUDA observer regressions distinguish FP32 from internal BF16 even when
+the returned tensor is FP32. See [the observer report](../reports/checkpoint-precision-observer-20261025.md).
+
+Snapshot JSON now uses a versioned lossless shared frame/stack encoding. The
+formal `headroom.lab.snapshot_codec.read_snapshot_artifact` reader accepts both
+old native snapshots and the new encoding within the unchanged 512 MiB file
+limit, with bounded decoded structures. The original pickle remains untouched;
+host readers do not unpickle it. Existing captured events and stacks are retained;
+the original 200,000-event history capacity and deadlines have not increased.
+These capture and manual-reference validations do not count as model-generated
+repairs, and all older failed evidence remains preserved.

@@ -123,6 +123,11 @@ def cli_arguments(request, repository=None):
         ("seed", request.seed),
         ("max-rounds", request.max_rounds),
         ("search-mode", request.search_mode),
+        ("allocator-conf", request.allocator_conf or ""),
+        ("reference-strategy", request.numerical_reference.strategy),
+        ("reference-cpu-bytes", request.numerical_reference.cpu_saved_tensor_limit_bytes),
+        ("reference-disk-bytes", request.numerical_reference.disk_saved_tensor_limit_bytes),
+        ("reference-max-seconds", request.numerical_reference.max_seconds or 0),
     ):
         args += ["--" + name, str(value)]
     for name, value in (

@@ -1,0 +1,104 @@
+{
+  "kind": "read_only_checkpoint_qualification_validation",
+  "driver_sha256": "4ddb959611048ad44b89ce9a54ee91a0f7680c7f002a0415c5a1d312bad68a97",
+  "driver_unchanged": true,
+  "saved_v3_artifacts_qualified": {
+    "plan": "runs/research/s1-checkpoint-reference-20261025-v3/plan.json",
+    "plan_sha256": "08bf8cb135165b8616fe680536825024254a391f148b4f4035ca75e17c8d4998",
+    "receipt": "runs/research/s1-checkpoint-reference-20261025-v3/calibration.json",
+    "receipt_sha256": "264297c684a1daa9f14ce7ac2134f605c0fad9d1a985173cf6a9d9c98cc5c646",
+    "artifacts": {
+      "original_source": {
+        "path": "scenarios/s1_batch_too_big/train.py",
+        "bytes": 4270,
+        "sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28"
+      },
+      "reference_source": {
+        "path": "runs/research/s1-checkpoint-reference-20261025-v3/reference-source/train.py",
+        "bytes": 3904,
+        "sha256": "9e0a0e5718e83ef0d18df3f03403e86e519c4f55d5609aa6dc22df149bbfb59f"
+      },
+      "historical_baseline_result": {
+        "path": "runs/evaluation/live/20261025T033333928331Z-1b228422/jobs/77b62a3d90374a6d96ed06c11a6d573a/lab/fb2d52bc58d4417b8b54879ba67382f1/result.json",
+        "bytes": 16804,
+        "sha256": "99edb4848cc9b65f8f9abc71fb5b1a7dfe3fac178cdd6027a86daa2bc69adfd0"
+      },
+      "reference_result": {
+        "path": "runs/research/s1-checkpoint-reference-20261025-v3/runs/b6ea4ee5fd3144a3adae57ffb05f9d8f/result.json",
+        "bytes": 934277,
+        "sha256": "3d5c7d63225e6f4f4b9f12683645f31f832470294b53b8ea84253b196dfc2e26"
+      },
+      "reference_manifest": {
+        "path": "runs/research/s1-checkpoint-reference-20261025-v3/runs/b6ea4ee5fd3144a3adae57ffb05f9d8f/manifest.json",
+        "bytes": 2562,
+        "sha256": "dfc1e356067a21e8df90f1815c5c24288a82dd7a079d8b2d79d5f7cd8c275026"
+      },
+      "reference_attestation": {
+        "path": "runs/research/s1-checkpoint-reference-20261025-v3/runs/b6ea4ee5fd3144a3adae57ffb05f9d8f/reference-checkpoint.json",
+        "bytes": 911,
+        "sha256": "be97067414315bb984f9e28a4d19c63d5abe039f13400a60da36e3cad21449dc"
+      },
+      "target_result": {
+        "path": "runs/research/s1-checkpoint-reference-20261025-v3/runs/b6ea4ee5fd3144a3adae57ffb05f9d8f/artifacts/result.json",
+        "bytes": 928979,
+        "sha256": "f3298d507eb5d8d084387bca33d9788abfba9613fe9c54822e1922f042a6190f"
+      },
+      "snapshot": {
+        "path": "runs/research/s1-checkpoint-reference-20261025-v3/runs/b6ea4ee5fd3144a3adae57ffb05f9d8f/artifacts/snapshot.json",
+        "bytes": 27640271,
+        "sha256": "390eb9b468dd91388049211cb9951a1ac521a37cd2a1a90a1d1254e1a81a7529"
+      }
+    },
+    "measurement_source_hashes": {
+      "headroom/lab/precision.py": "5ad05a55a880134d88afd2c58e40fc8eb550a23434ae298973aca1a1fd612e1d",
+      "headroom/lab/snapshot_codec.py": "67f74ae4f5c7b2ddab23ff6222c409c7133d1f9e9721f3de80150b34c5229d73",
+      "headroom/evidence_analysis.py": "902fa48ec9c5337fffc58c2fcb9bb1fe8215020f032f922cc96ace849af61c80",
+      "headroom/verify/checkpoint.py": "29991e96dc706fb176ef4c1a067c3cb9d53d0dac0740d0d3351cbc9ca9e14583",
+      "headroom/verify/pairing.py": "0c1418371a14142ff1f8c1ea120cf5f2d62a64fdd5cffa33b19540b336e38ded",
+      "headroom/verify/precision.py": "f87b95e8f3609e49cc445ed5530c3407a4952b64cdd3e9d6630b007430e0cdd9",
+      "headroom/lab/runner.py": "9281b259798126e9538ca9661d23b8be568f271a76ee5c6f31164d9066ff1e78",
+      "headroom/lab/run_target.py": "3800114e136cd9214c64ad4c8c1f1dfceffa38c7aac31bb5c89bfb3166eb2978",
+      "headroom/lab/hooks.py": "9f8952fc9fab02e3816ae9cae24d861ed6cb9706b89a52d3d690d734f2282825",
+      "scripts/research_checkpoint_reference.py": "b52114d30177fd27c4e8ce5a4b77a0cbaecb7cad0b78bc0a7d82702a4c73a855"
+    },
+    "resource_feasible": true,
+    "counts_toward_model_acceptance": false,
+    "historical_baseline_pairing_proven": false,
+    "fresh_formal_baseline_pairing_still_required": true
+  },
+  "negative_cases": [
+    {
+      "name": "empty_source_scope",
+      "rejected": true,
+      "reason": "checkpoint qualification source scope or hashes changed"
+    },
+    {
+      "name": "missing_required_precision_check",
+      "rejected": true,
+      "reason": "checkpoint resource/precision/snapshot qualification failed"
+    },
+    {
+      "name": "raw_result_receipt_mismatch",
+      "rejected": true,
+      "reason": "checkpoint receipt no longer matches saved result"
+    },
+    {
+      "name": "actual_snapshot_size_mismatch",
+      "rejected": true,
+      "reason": "checkpoint snapshot actual size changed"
+    },
+    {
+      "name": "wrong_snapshot_path",
+      "rejected": true,
+      "reason": "checkpoint snapshot reader path mismatch"
+    },
+    {
+      "name": "raw_manifest_hash_drift",
+      "frozen_equality_rejects": true
+    }
+  ],
+  "gpu_calls": 0,
+  "model_api_calls": 0,
+  "production_or_raw_artifact_writes": 0,
+  "elapsed_seconds": 4.530287355883047
+}

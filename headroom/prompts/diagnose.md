@@ -148,11 +148,19 @@ solver_context_availability reports whether older paired candidate/verification 
 
 
 Literal invocation grounding:
-- When a conclusion or proposed change depends on CLI arguments, include optional
-  invocation_claims: [{source: "script_args"|"execution_argv", index: zero-based
-  token index, token: exact visible string}]. Quote the retained argv token at
-  that index; never substitute a source default or a proposed replacement value.
-- The host checks only declared visible tokens. Empty/absent claims are unverified;
+- When a conclusion or proposed change depends on CLI arguments, prefer optional
+  invocation_refs: [exact evidence_ref copied from invocation_reading_aid]. Each
+  reference already includes its namespace and original index; copy the complete
+  identifier rather than translating it to execution_argv. The schema lists only
+  references advertised by the bounded visible view. Repeated options retain
+  separate references and order; a reference does not select a winning value.
+- Legacy invocation_claims: [{source: "script_args"|"execution_argv", index:
+  zero-based token index, token: exact visible string}] are also checked strictly.
+  Do not emit a reconstructed claim alongside a reference unless you have checked
+  all three fields against that original argv array. script_args excludes the
+  launcher/entrypoint; its indices cannot be reused for execution_argv.
+- The host resolves references and checks declared visible tokens only. Empty or
+  absent references/claims are unverified;
   matching tokens do not prove parsing, effective configuration, mathematical
   equivalence, or that a plan actually uses those values correctly. Source code
   may override CLI values, wrapper seeds, or other settings. Explain unresolved
@@ -194,3 +202,39 @@ launch token and may be an interpreter, launcher or directly executable script;
 do not assume it equals the recorded script entrypoint. script_args indices start at the target's arguments,
 not at the interpreter or script. Preserve a genuine evidence gap and existing
 needs_more_info semantics; a readable view does not authorize changing gates.
+
+
+Separate repair prerequisites from verification outcomes:
+- Establish the current operation, input path, loss/sample semantics and update
+  cadence from the supplied source plus available invocation/runtime evidence.
+  Cite the source producer/consumer and explain any configuration precedence;
+  merely quoting a token or default does not establish what the target applied.
+- A source-established mathematical invariant does not require a completed
+  baseline solely to propose a candidate. Predicted memory savings, timing and
+  floating-point agreement remain hypotheses for the host's later real checks.
+  Lack of those future measurements alone is not a missing repair prerequisite.
+- Unknown data ranges, parser precedence, mathematical semantics or policy
+  permission remain real blockers. Name the exact unresolved precondition;
+  never convert it into an unchecked assumption to reach ready_for_patch.
+- Return only executable, policy-permitted steps. Describe what source/config
+  operation to change, how its consumers and update cadence are preserved, and
+  what the candidate verification must check. Do not mix in forbidden backup
+  steps. A smaller compliant plan must still satisfy the host's savings check,
+  or explicitly preserve needs_more_info without inflated estimates.
+- Machine validation feedback identifies rejected output fields with JSON paths.
+  Repair the complete diagnosis, including all dependent plan steps, against the
+  unchanged evidence, policy and schema. It is not permission to perform the
+  rejected action. The existing finite supplement limit still applies.
+
+
+Preserve the actual training-update contract:
+module.eval() changes module behavior; it does not disable gradient computation
+or freeze parameters. A filename, comment or label saying "frozen" is not
+permission to change the training objective. Establish the existing requires_grad
+set and the parameters actually updated by the optimizer from source/runtime
+facts. Preserve both unless the request explicitly authorizes that objective
+change. Do not replace full-parameter updates with head-only optimization merely
+to save memory. Precision permission alone does not authorize dropping parameter
+updates. Any optimizer/gradient-lifetime rewrite must preserve the update cadence,
+parameter groups, state, weight decay and scheduler semantics; unresolved
+accumulation or global-gradient dependencies remain mathematical prerequisites.

@@ -8,7 +8,15 @@ from typing import Annotated
 import typer
 
 from headroom import __version__
+from headroom.lab.envs import validate_allocator
 from headroom.lab.runner import run_script
+from headroom.verify.reference_config import NumericalReference
+
+
+class ReferenceStrategyOption(str, Enum):
+    legacy_small_batch = "legacy_small_batch"
+    original_saved_tensor_offload = "original_saved_tensor_offload"
+    original_workload_checkpoint = "original_workload_checkpoint"
 
 
 class SearchModeOption(str, Enum):
@@ -155,6 +163,19 @@ def fix(
     max_rounds: int = typer.Option(6, min=1, max=6),
     search_mode: SearchModeOption = SearchModeOption.until_target,
     research: bool = True,
+    allocator_conf: str | None = typer.Option(
+        None,
+        help="Allowlisted allocator options; an explicit empty string clears project configuration.",
+    ),
+    reference_strategy: ReferenceStrategyOption = ReferenceStrategyOption.legacy_small_batch,
+    reference_cpu_bytes: int = typer.Option(16 * 1024**3, min=1, max=16 * 1024**3),
+    reference_disk_bytes: int = typer.Option(0, min=0, max=64 * 1024**3),
+    reference_max_seconds: int = typer.Option(
+        0,
+        min=0,
+        max=480,
+        help="Reference timeout; 0 uses the normal Lab timeout. The outer run deadline still applies.",
+    ),
 ) -> None:
     """Run the complete repair pipeline; missing live prerequisites produce a partial report."""
     from rich.console import Console
@@ -185,6 +206,20 @@ def fix(
             if explicit(name):
                 return value
             return getattr(project, name) if name in project.model_fields_set else value
+
+        reference = project.numerical_reference.model_dump()
+        for name, field, value in (
+            ("reference_strategy", "strategy", reference_strategy.value),
+            ("reference_cpu_bytes", "cpu_saved_tensor_limit_bytes", reference_cpu_bytes),
+            ("reference_disk_bytes", "disk_saved_tensor_limit_bytes", reference_disk_bytes),
+            ("reference_max_seconds", "max_seconds", reference_max_seconds or None),
+        ):
+            if explicit(name):
+                reference[field] = value
+        numerical_reference = NumericalReference.model_validate(reference)
+        allocator = validate_allocator(
+            (allocator_conf or None) if explicit("allocator_conf") else project.allocator_conf
+        )
 
         policy = project.policy.model_dump()
         for name, value in (
@@ -241,6 +276,8 @@ def fix(
             target=selected("target", target),
             reclaim_reduction_pct=selected("reclaim_reduction_pct", reclaim_reduction_pct),
             policy=Policy(**policy),
+            numerical_reference=numerical_reference,
+            allocator_conf=allocator,
             max_steps=selected("max_steps", max_steps),
             max_seconds=selected("max_seconds", max_seconds),
             seed=selected("seed", seed),
@@ -347,9 +384,15 @@ def watch(
     budget: str = "0.6",
     daily_budget: str = "12",
     runtime_profile: Path | None = None,
+    allocator_conf: str | None = typer.Option(
+        None,
+        help="Allowlisted options applied to Watch baseline and repair; empty clears project configuration.",
+    ),
     allow_numerics_change: bool = False,
     search_mode: SearchModeOption = SearchModeOption.until_target,
-    config: Annotated[Path | None, typer.Option(help="Project YAML search mode for Watch.")] = None,
+    config: Annotated[
+        Path | None, typer.Option(help="Project YAML; CLI settings take precedence.")
+    ] = None,
 ) -> None:
     """Observe argv in Docker; confirmed CUDA OOM repairs mapped Python scripts.
 
@@ -363,6 +406,13 @@ def watch(
     try:
         config_path = find_project_config(config, script=None, source_root=source_root)
         project = load_project_config(config_path) if config_path else None
+        allocator = validate_allocator(
+            (allocator_conf or None)
+            if getattr(ctx.get_parameter_source("allocator_conf"), "name", None) == "COMMANDLINE"
+            else project.allocator_conf
+            if project
+            else None
+        )
         mode = search_mode.value
         if (
             project is not None
@@ -383,6 +433,10 @@ def watch(
                 "daily_budget_usd": daily_budget,
                 "runtime_profile": str(runtime_profile) if runtime_profile else None,
                 "policy": Policy(allow_numerics_change=allow_numerics_change),
+                "allocator_conf": allocator,
+                "numerical_reference": project.numerical_reference
+                if project
+                else NumericalReference(),
             },
         )
     except (OSError, ValueError, TypeError):

@@ -1,0 +1,58 @@
+....F.....................F.                                             [100%]
+=================================== FAILURES ===================================
+_ test_reference_exception_strategy_scope_failure_matrix[None-repository-original_saved_tensor_offload] _
+
+strategy = 'original_saved_tensor_offload', scope = 'repository'
+reference_status = None
+
+    @pytest.mark.parametrize("strategy", [LEGACY_STRATEGY, STRATEGY, CHECKPOINT_STRATEGY])
+    @pytest.mark.parametrize("scope", ["standard", "repository"])
+    @pytest.mark.parametrize("reference_status", [None, "error", "timeout", "oom"])
+    def test_reference_exception_strategy_scope_failure_matrix(strategy, scope, reference_status):
+        ref = None if reference_status is None else measured(reference_status)
+        report = compare_runs(
+            measured("oom"), measured(), reference=ref,
+            reference_strategy=strategy, acceptance_scope=scope,
+        )
+        legacy_exception = (
+            strategy == LEGACY_STRATEGY and scope == "repository" and reference_status is None
+        )
+>       assert report.checks["repository_no_reference_exception"] is legacy_exception
+E       assert True is False
+
+tests/test_verify_offload_reference.py:190: AssertionError
+_ test_unsupported_source_does_not_execute_reference_or_fallback[repository-original_saved_tensor_offload] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7af938376090>
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-153/test_unsupported_source_does_n2')
+strategy = 'original_saved_tensor_offload', scope = 'repository'
+
+    @pytest.mark.parametrize("strategy", [STRATEGY, CHECKPOINT_STRATEGY])
+    @pytest.mark.parametrize("scope", ["standard", "repository"])
+    def test_unsupported_source_does_not_execute_reference_or_fallback(
+        monkeypatch, tmp_path, strategy, scope
+    ):
+        from headroom.verify import runner
+    
+        script = tmp_path / "unknown.py"
+        script.write_text("raise RuntimeError('must not execute')")
+        calls = []
+        monkeypatch.setattr(runner, "run_script", lambda *a, **k: calls.append(k) or measured())
+        result = verify_script(
+            measured("oom"),
+            script,
+            baseline_script=script,
+            baseline_args=[],
+            reference_strategy=strategy,
+            acceptance_scope=scope,
+        )
+        assert len(calls) == 1 and result["reference"] is None
+>       assert not result["report"].target_met
+E       AssertionError: assert not True
+E        +  where True = VerifyReport(completed=True, peak_before=2.0, peak_after=2.0, reduction_pct=0.0, step_ms_before=100.0, step_ms_after=1...served Python-dispatched forward precision, not proof of every internal operator dtype or full workload equivalence.'}).target_met
+
+tests/test_verify_offload_reference.py:308: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_verify_offload_reference.py::test_reference_exception_strategy_scope_failure_matrix[None-repository-original_saved_tensor_offload]
+FAILED tests/test_verify_offload_reference.py::test_unsupported_source_does_not_execute_reference_or_fallback[repository-original_saved_tensor_offload]
+2 failed, 26 passed, 45 deselected in 0.19s

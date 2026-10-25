@@ -11,8 +11,8 @@ from uuid import uuid4
 
 from headroom.execution import captured_wrapper_descriptor, parse_command, source_entrypoint
 from headroom.lab.runner import read_artifact_json, selected_capture_directory
+from headroom.lab.snapshot_codec import MAX_SNAPSHOT_BYTES, read_snapshot_artifact
 
-MAX_SNAPSHOT_BYTES = 512 * 1024 * 1024
 MAX_SOURCE_FILE_BYTES = 1024 * 1024
 MAX_SOURCE_TOTAL_BYTES = 4 * 1024 * 1024
 MAX_SOURCE_FILES = 64
@@ -697,7 +697,7 @@ def build_evidence(run_dir: Path, budget: int = 150000, output_dir: Path | None 
     result = read_artifact_json(run_dir / "result.json")
     manifest = read_artifact_json(run_dir / "manifest.json")
     artifacts = selected_capture_directory(run_dir, result, manifest)
-    snapshot = read_artifact_json(artifacts / "snapshot.json", MAX_SNAPSHOT_BYTES)
+    snapshot = read_snapshot_artifact(artifacts / "snapshot.json", MAX_SNAPSHOT_BYTES)
     if snapshot is None:
         raise ValueError(
             "CUDA snapshot JSON is unavailable; CPU captures cannot provide CUDA evidence"

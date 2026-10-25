@@ -1,0 +1,80 @@
+{
+  "schema": "headroom.evaluation-protocol.v2",
+  "historical_results": "Preserve v7 1/9 and all old manifests/receipts; never rescore historical runs.",
+  "primary": {
+    "manifest": "eval/mvp_phase1_v2.yaml",
+    "scenario_count": 9,
+    "policy_names": [
+      "strict"
+    ],
+    "condition": "full_ultra",
+    "minimum_target_met": 6
+  },
+  "policy_comparison": {
+    "policy_names": [
+      "strict",
+      "allow_precision"
+    ],
+    "default_alias": "strict",
+    "combine_policy_successes": false,
+    "bf16_claim_requires": "Observed verified lower-peak candidate under allow_precision with separate patch and changed-numerics label; permission alone is not BF16 evidence."
+  },
+  "scopes": {
+    "mvp_policy_matrix": {
+      "manifest": "eval/mvp_phase1_v2.yaml",
+      "scenario_count": 9,
+      "policy_names": [
+        "strict",
+        "allow_precision"
+      ],
+      "pipeline_runs": 18
+    },
+    "phase2_policy_matrix": {
+      "manifest": "eval/scenario_set_v2.yaml",
+      "exclude_groups": [
+        "library"
+      ],
+      "scenario_count": 10,
+      "policy_names": [
+        "strict",
+        "allow_precision"
+      ],
+      "pipeline_runs": 20,
+      "target_met_goal": "0.75",
+      "first_cause_goal": "0.75"
+    },
+    "library_acceptance": {
+      "manifest": "eval/scenario_set_v2.yaml",
+      "include_groups": [
+        "library"
+      ],
+      "scenario_count": 2,
+      "separate": true
+    },
+    "hf_acceptance": {
+      "scenario": "hf_trainer",
+      "separate_checks": [
+        "target_met",
+        "configuration_only_diff_at_most_15_lines",
+        "optimizer_state_and_activations_diagnosis"
+      ]
+    }
+  },
+  "s2": {
+    "classification_fixture": "scenarios/s2_optimizer_classification_v2/train.py",
+    "classification_minimum_fraction": "0.40",
+    "classification_in_primary_denominator": false,
+    "capacity_scenario": "s2_capacity_v2",
+    "fit_limit_bytes": 22000000000,
+    "required_updates": 20,
+    "minimum_successful_repair_rounds": 2,
+    "maximum_search_rounds": 6,
+    "calibration_required_before_model_evaluation": true,
+    "calibration_controls_count_as_model_repairs": false
+  },
+  "spending": {
+    "uses_existing_authoritative_shared_pool": true,
+    "new_credit_or_recharge": false,
+    "planning_is_not_spending_authorization": true
+  }
+}

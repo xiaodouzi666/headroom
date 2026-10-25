@@ -14,13 +14,14 @@ from decimal import Decimal, localcontext
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from headroom.annotate import annotate_stacks
 from headroom.budget import BudgetExceeded, BudgetLedger, RunBudgetReached, money
 from headroom.diagnose import diagnose_with_router, round_verification_feedback
 from headroom.evidence import annotate_evidence_bundle, build_evidence
 from headroom.execution import prepare_local_command, replay_argv
+from headroom.lab.envs import validate_allocator
 from headroom.lab.runner import PROJECT_ROOT, run_script
 from headroom.llm.client import LLMError
 from headroom.patch import PatchEngine
@@ -41,6 +42,7 @@ from headroom.solver_context import candidate_context, candidate_evidence, execu
 from headroom.store.db import Store, _bounded_cost
 from headroom.verify.compare import parse_target
 from headroom.verify.policy import nanogpt_cli, scan_source_forbidden
+from headroom.verify.reference_config import NumericalReference
 from headroom.verify.runner import verify_script
 
 
@@ -67,6 +69,7 @@ class FixRequest(BaseModel):
     target: str = "fix-oom"
     reclaim_reduction_pct: float = Field(default=30.0, gt=0, le=100)
     policy: Policy = Field(default_factory=Policy)
+    numerical_reference: NumericalReference = Field(default_factory=NumericalReference)
     max_steps: int = Field(default=20, ge=1, le=10000)
     max_seconds: int = Field(default=120, ge=1, le=3600)
     seed: int = Field(default=1337, ge=0, lt=2**32)
@@ -79,6 +82,11 @@ class FixRequest(BaseModel):
     search_mode: Literal["until_target", "bounded_pareto"] = "until_target"
     source_profile: str | None = None
     research_enabled: bool = True
+
+    @field_validator("allocator_conf")
+    @classmethod
+    def supported_allocator(cls, value):
+        return validate_allocator(value)
 
 
 @dataclass
@@ -827,12 +835,21 @@ def run_fix(
                 allocator_conf=allocator,
                 baseline_allocator_conf=request.allocator_conf,
                 numerics_impact=candidate_numerics,
-                reference=original_reference,
+                # Offload references must execute their own source-bound proof; do
+                # not inject the legacy cached reference into a later round.
+                reference=original_reference
+                if request.numerical_reference.strategy == "legacy_small_batch"
+                else None,
+                **request.numerical_reference.verify_kwargs(),
                 **execution_options,
                 reclaim_reduction_pct=request.reclaim_reduction_pct,
                 **({"acceptance_scope": "repository"} if request.repository_mode else {}),
             )
-            if original_reference is None and verified.get("reference") is not None:
+            if (
+                request.numerical_reference.strategy == "legacy_small_batch"
+                and original_reference is None
+                and verified.get("reference") is not None
+            ):
                 original_reference = verified["reference"]
             report = verified["report"]
             candidate_verification = (

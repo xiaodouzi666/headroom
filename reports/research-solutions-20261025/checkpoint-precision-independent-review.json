@@ -1,0 +1,26 @@
+{
+  "review_scope": "read_only_private_checkpoint_precision_design",
+  "private_sources": {
+    "precision.py": "5ad05a55a880134d88afd2c58e40fc8eb550a23434ae298973aca1a1fd612e1d",
+    "hooks.py": "1195c22c8fdf6d06ec350702dbe71009eb014776b14d6b2ff9a316bec5e34701",
+    "test_checkpoint_precision.py": "7fb1e4febb722953407892bb4373658acdcc40aba370ea90d97abdb516892b93",
+    "run_cpu.py": "a453ba9957506596f443fc3571d6a3ab07c76d0ef4e03ac86cbb4e1bc79c930a"
+  },
+  "torch": "2.5.1+cu124",
+  "official_helper_signature": "(fn, preserve_rng_state=True, context_fn: Callable[[], Tuple[ContextManager, ContextManager]] = <function noop_context_fn at 0x76c17ccaaa20>, determinism_check: str = 'default', debug: bool = False, *args, **kwargs)",
+  "official_helper_source_sha256": "4a1fbca5632085786d0367759c7528abe49e6e648a0370797859b0f5aae483ce",
+  "production_equal_to_private_original_at_review": {
+    "precision.py": true,
+    "hooks.py": true
+  },
+  "independent_cpu": {
+    "command": ".venv/bin/python .cache/checkpoint-precision-review/run_cpu.py",
+    "passed": 62,
+    "failed": 0,
+    "elapsed_seconds": 1.48
+  },
+  "gpu_executed_by_reviewer": false,
+  "model_api_executed_by_reviewer": false,
+  "blocking_findings": [],
+  "verdict": "no_blocker_for_bounded_gpu_validation"
+}

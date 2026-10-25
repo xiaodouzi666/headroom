@@ -17,10 +17,12 @@ from typing import Literal
 from uuid import uuid4
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from headroom.api.security import open_regular
 from headroom.budget import money
+from headroom.lab.envs import validate_allocator
+from headroom.verify.reference_config import NumericalReference
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CONDITIONS = ("full_ultra", "traceback_ultra", "full_super")
@@ -35,6 +37,8 @@ class Scenario(BaseModel):
     source_root: str
     script_args: list[str] = Field(default_factory=list)
     target: str
+    numerical_reference: NumericalReference = Field(default_factory=NumericalReference)
+    allocator_conf: str | None = None
     reclaim_reduction_pct: float = Field(default=30, gt=0, le=100, allow_inf_nan=False)
     expected_baseline: Literal["oom", "completed", "oom_or_completed"]
     ground_truth: str | None = None
@@ -44,6 +48,11 @@ class Scenario(BaseModel):
     repository_manifest: str | None = None
     source_sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
     notes: str = ""
+
+    @field_validator("allocator_conf")
+    @classmethod
+    def supported_allocator(cls, value):
+        return validate_allocator(value)
 
 
 class Manifest(BaseModel):
@@ -262,6 +271,8 @@ def campaign_plan(
                 "scenario_id": case.id,
                 "target": case.target,
                 "reclaim_reduction_pct": case.reclaim_reduction_pct,
+                "numerical_reference": case.numerical_reference.model_dump(),
+                "allocator_conf": case.allocator_conf,
             }
             for case in cases
         ],
@@ -286,9 +297,9 @@ def campaign_plan(
         "per_run_cap_usd": str(per_run),
         "authorization_expanded": False,
         "policy_note": (
-            "Original T2.8 says default versus allow_numerics_change=false. "
-            "Current default and strict are equivalent; naming them separately does not resolve "
-            "that ambiguity. allow_precision is an explicit optional permission."
+            "default aliases strict. Use explicit strict and allow_precision arms for the "
+            "versioned policy comparison; keep their outcomes separate. allow_precision grants "
+            "permission only: changed numerics and actual BF16 behavior still require verification."
         ),
     }
 
@@ -1555,6 +1566,8 @@ def _campaign(
                     search_mode=plan["search_mode"],
                     reclaim_reduction_pct=case.reclaim_reduction_pct,
                     policy=policy,
+                    numerical_reference=case.numerical_reference,
+                    allocator_conf=case.allocator_conf,
                     budget_usd=str(per_run),
                     daily_budget_usd=str(daily),
                     runtime_profile=str(runtime_profile) if runtime_profile else None,
@@ -1613,6 +1626,7 @@ def _campaign(
             row["search_mode"] = plan["search_mode"]
             row["target"] = case.target
             row["reclaim_reduction_pct"] = case.reclaim_reduction_pct
+            row["allocator_conf"] = case.allocator_conf
             row["policy_name"] = policy_name
             row["policy"] = policy.model_dump()
             row["group"] = case.group

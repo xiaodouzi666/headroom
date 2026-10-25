@@ -1,0 +1,47 @@
+{
+  "schema": "headroom.s2-calibration.v2",
+  "created_at": "2026-10-25T05:37:50.177209+00:00",
+  "status": "preregistered",
+  "model_calls": 0,
+  "repair_score_eligible": false,
+  "max_runs": 5,
+  "required_steps": 20,
+  "max_seconds_per_run": 180,
+  "seed": 1337,
+  "fit_limit_bytes": 22000000000,
+  "classification_minimum_ratio": "0.40",
+  "source_pins": {
+    "classification": {
+      "path": "/home/xiaodouzi/workspace/headroom/scenarios/s2_optimizer_classification_v2/train.py",
+      "sha256": "4ae145759a6b11d355a9733e2307bef51439c0d52d729efdc37d2b54a55ca65c"
+    },
+    "capacity_baseline": {
+      "path": "/home/xiaodouzi/workspace/headroom/scenarios/s2_capacity_v2/train.py",
+      "sha256": "8d6bc5f457550c4dcbdf1be4ddc6e10830eeface3cafad96e7a5bd391733a286"
+    },
+    "optimizer_only": {
+      "path": "/home/xiaodouzi/workspace/headroom/reports/s2-calibration-v2-20261025-a/unscored_controls/optimizer_only/train.py",
+      "sha256": "1db06e58c192be6cf2bda7647a6c27b10ec0df1345007e56ebd2d850ce655022"
+    },
+    "checkpoint_only": {
+      "path": "/home/xiaodouzi/workspace/headroom/reports/s2-calibration-v2-20261025-a/unscored_controls/checkpoint_only/train.py",
+      "sha256": "eb2782ff0d476e002a6092b46026d8437e611d9944e6143d2a794fdc85c64c3c"
+    },
+    "combined": {
+      "path": "/home/xiaodouzi/workspace/headroom/reports/s2-calibration-v2-20261025-a/unscored_controls/combined/train.py",
+      "sha256": "e31bfe3eafd419305d7c3a3e2f1a714b99a41b40a42089e323c16f290a4e3ad1"
+    }
+  },
+  "runner_sha256": "7b995d642df3bd3411fce3f1d3658e7723b4615a3742c7fcb2918c6eefe31c76",
+  "historical_manifest_sha256": "3bb919336829754a52ec8c90ccc4a5181f33986f9e300e99211bec6678849e88",
+  "historical_s2_sha256": "bb1d12c69ce5525e6eab67e709740cb2d578c070afa8b094b5f4b6906648bc5b",
+  "gates": {
+    "all": "completed, exactly 20 optimizer updates, complete capture, isolated GPU, exact replayed/native peak; valid initialized fp32 moment tensors",
+    "classification": "peak optimizer-state category equals measured CUDA moment bytes and >=40% of native peak",
+    "capacity_baseline": "native peak >22,000,000,000 bytes",
+    "optimizer_only": "native peak >22,000,000,000 bytes",
+    "checkpoint_only": "native peak >22,000,000,000 bytes",
+    "combined": "native peak <=22,000,000,000 bytes"
+  },
+  "failure_policy": "Stop at first failed gate. Preserve failures. No threshold changes or replacement after model attempts."
+}

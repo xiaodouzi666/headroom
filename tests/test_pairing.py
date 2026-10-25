@@ -11,7 +11,11 @@ from headroom.verify.pairing import CONTRACTS, derive_pairing, source_contract
 from headroom.verify.runner import verify_script
 
 ROOT = Path(__file__).resolve().parents[1]
-SCENARIOS = {"s3": "s3_eval_no_grad_missing", "s4": "s4_loss_accumulation_graph"}
+SCENARIOS = {
+    "s1": "s1_batch_too_big",
+    "s3": "s3_eval_no_grad_missing",
+    "s4": "s4_loss_accumulation_graph",
+}
 ARGS = ["--tiny", "--device", "cpu", "--steps", "20"]
 
 
@@ -20,6 +24,13 @@ def source(profile):
 
 
 def repaired(profile, text):
+    if profile == "s1":
+        return text.replace(
+            "from torch import nn",
+            "from torch import nn\nfrom torch.utils.checkpoint import checkpoint",
+        ).replace(
+            "hidden = block(hidden)", "hidden = checkpoint(block, hidden, use_reentrant=False)"
+        )
     if profile == "s3":
         return text.replace("def evaluate(", "@torch.no_grad()\ndef evaluate(")
     return (
@@ -37,7 +48,7 @@ def script_at(tmp_path, text, name):
     return script
 
 
-@pytest.mark.parametrize("profile", ["s3", "s4"])
+@pytest.mark.parametrize("profile", ["s1", "s3", "s4"])
 def test_pinned_source_and_reviewed_memory_edits_only(tmp_path, profile):
     for index, text in enumerate((source(profile), repaired(profile, source(profile)))):
         contract = source_contract(script_at(tmp_path, text, str(index)))
@@ -75,7 +86,7 @@ def test_arbitrary_script_and_identical_seed_are_not_proof(tmp_path):
     assert len(proof["reasons"]) == 2
 
 
-@pytest.mark.parametrize("profile", ["s3", "s4"])
+@pytest.mark.parametrize("profile", ["s1", "s3", "s4"])
 def test_real_cpu_default_verifier_produces_auditable_pairing(tmp_path, profile):
     baseline_script = script_at(tmp_path, source(profile), "baseline")
     candidate_script = script_at(tmp_path, repaired(profile, source(profile)), "candidate")
@@ -219,11 +230,25 @@ def test_hash_cost_is_excluded_once_from_step_intervals_only(tmp_path, monkeypat
     session.last_step_at = 2.0
     session.pairing_capture = SimpleNamespace(hash_seconds=1.25, step=lambda optimizer: None)
     monkeypatch.setattr(hooks.time, "perf_counter", lambda: 5.0)
-    session._optimizer_step(None, (), {})
+    session._record_optimizer_update(
+        None,
+        "timing-fixture",
+        "optimizer_post_hook",
+        1,
+        [],
+        parameter_coverage_complete=False,
+    )
     assert session.step_records[0]["step_ms"] == 1750
     assert session.step_records[0]["elapsed_ms"] == 4000
     monkeypatch.setattr(hooks.time, "perf_counter", lambda: 6.0)
-    session._optimizer_step(None, (), {})
+    session._record_optimizer_update(
+        None,
+        "timing-fixture",
+        "optimizer_post_hook",
+        1,
+        [],
+        parameter_coverage_complete=False,
+    )
     assert session.step_records[1]["step_ms"] == 1000
     assert session.started_at == 1.0
 
@@ -262,3 +287,60 @@ def test_pending_cuda_setup_is_synchronized_before_hash_clock(tmp_path, monkeypa
     capture._trace(frame, "line", None)
     assert capture.captured
     assert events == ["synchronize", "clock", "hash", "hash", "clock"]
+
+
+@pytest.mark.parametrize(
+    "alteration",
+    [
+        lambda text: text.replace("use_reentrant=False", "use_reentrant=True"),
+        lambda text: text.replace(
+            "use_reentrant=False", "use_reentrant=False, preserve_rng_state=False"
+        ),
+        lambda text: text.replace("checkpoint(block, hidden", "checkpoint(block, hidden.detach()"),
+        lambda text: text.replace("lr=1e-3", "lr=2e-3"),
+        lambda text: text.replace("inputs = torch.randn", "inputs = torch.ones"),
+        lambda text: text.replace("square().mean()", "abs().mean()"),
+        lambda text: text.replace("else 32)", "else 16)"),
+        lambda text: text.replace("loss.backward()", "loss.backward(); loss.backward()"),
+        lambda text: text.replace("from torch.utils.checkpoint import checkpoint", ""),
+        lambda text: text.replace(
+            "from torch.utils.checkpoint import checkpoint", "from evil import checkpoint"
+        ),
+    ],
+)
+def test_s1_checkpoint_contract_rejects_semantic_and_unproven_changes(tmp_path, alteration):
+    text = repaired("s1", source("s1"))
+    changed = alteration(text)
+    assert changed != text
+    assert not source_contract(script_at(tmp_path, changed, "changed"))["supported"]
+
+
+def test_s1_qualified_checkpoint_and_explicit_rng_preservation(tmp_path):
+    text = repaired("s1", source("s1"))
+    text = text.replace(
+        "from torch.utils.checkpoint import checkpoint", "import torch.utils.checkpoint"
+    )
+    text = text.replace("hidden = checkpoint(", "hidden = torch.utils.checkpoint.checkpoint(")
+    text = text.replace("use_reentrant=False)", "use_reentrant=False, preserve_rng_state=True)")
+    contract = source_contract(script_at(tmp_path, text, "qualified"))
+    assert contract["supported"] and contract["checkpointed"]
+
+
+def test_real_cpu_s1_same_seed_different_batch_is_not_paired(tmp_path):
+    baseline_script = script_at(tmp_path, source("s1"), "baseline")
+    candidate_script = script_at(tmp_path, repaired("s1", source("s1")), "candidate")
+    baseline = run_script(
+        baseline_script, script_args=ARGS, run_root=tmp_path / "runs", device="cpu"
+    )
+    candidate = run_script(
+        candidate_script,
+        script_args=[*ARGS, "--batch", "1"],
+        run_root=tmp_path / "runs",
+        device="cpu",
+    )
+    assert baseline["steps"] == candidate["steps"] == 20
+    assert candidate["pairing_capture"]["complete"], candidate["pairing_capture"]
+    checks = derive_pairing(baseline, candidate)["checks"]
+    assert checks["same_inputs"] is False
+    assert checks["same_effective_batch"] is False
+    assert checks["same_objective"] is True

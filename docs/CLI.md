@@ -118,6 +118,8 @@ Supported fields:
 | `target` | existing `fix-oom`, `fit:<size>GB`, `reclaim` targets |
 | `reclaim_reduction_pct` | numeric > 0 and <= 100; default 30; used with `reclaim` |
 | `policy` | the four existing policy fields shown above; booleans must be YAML booleans |
+| `allocator_conf` | allowlisted allocator configuration string, or null |
+| `numerical_reference` | explicit bounded reference settings described below |
 | `max_steps` | integer 1–10000 |
 | `max_seconds` | integer 1–3600 |
 | `seed` | integer 0–4294967295 |
@@ -170,9 +172,9 @@ keeps `until_target`. Invalid values fail before source preparation or dispatch.
 
 `watch` also accepts `--config PATH`, otherwise checking the selected source
 root's `headroom.yaml` (the working directory when no root was supplied). It
-reads **only `search_mode`** from that project configuration; all other Watch
-options retain their existing CLI/default behavior. An explicit Watch
-`--search-mode` overrides YAML. The config is still validated as the same strict
+reads `search_mode`, `allocator_conf` and `numerical_reference` from that project
+configuration; other Watch options retain their existing CLI/default behavior.
+Explicit Watch `--search-mode` and `--allocator-conf` override their YAML values. The config is still validated as the same strict
 ProjectConfig schema. `watch.json` records the requested mode even if no OOM
 triggers repair. Historical reports without this field remain unknown.
 
@@ -180,3 +182,42 @@ triggers repair. Historical reports without this field remain unknown.
 without executing it. Evaluation uses its own manifest's `search_mode`, not
 `headroom.yaml`; see [EVALUATION.md](EVALUATION.md). No mode selection enables a
 live profile or expands spending authorization.
+
+## Explicit allocator and numerical reference settings
+
+`headroom fix --allocator-conf 'expandable_segments:True'` applies an allowlisted
+allocator setting to the baseline and subsequent verification. An explicit empty
+string clears the project setting. Arbitrary environment variables cannot be
+injected through this option.
+
+The default reference strategy remains `legacy_small_batch`. Supported
+original-workload references require an explicit choice; they retain their own
+source, runtime and numerical qualification checks:
+
+| CLI option | Meaning |
+| --- | --- |
+| `--reference-strategy` | `legacy_small_batch`, `original_saved_tensor_offload`, or `original_workload_checkpoint` |
+| `--reference-cpu-bytes` | Saved-tensor CPU cap, 1 byte through 16 GiB; default 16 GiB |
+| `--reference-disk-bytes` | Saved-tensor disk cap, 0 through 64 GiB; default 0 disables disk storage |
+| `--reference-max-seconds` | 1 through 480 seconds, or CLI 0 for the normal Lab timeout; the outer run deadline still applies |
+
+The equivalent YAML/API/evaluation object is:
+
+```yaml
+numerical_reference:
+  strategy: original_saved_tensor_offload
+  cpu_saved_tensor_limit_bytes: 17179869184
+  disk_saved_tensor_limit_bytes: 68719476736
+  max_seconds: 480
+```
+
+The object rejects unknown fields. YAML `max_seconds` uses null, not 0, for the
+normal timeout. Legacy small-batch references reject nondefault resource limits;
+checkpoint references accept a timeout but reject offload resource overrides.
+Explicit CLI values, including defaults and 0, override YAML values. Watch takes
+the reference object from its project configuration and records it in watch.json.
+
+These settings select verification methods; they do not grant precision changes,
+change acceptance scope, provide credentials or increase any spending limit.
+See [verification contracts](VERIFY.md) for supported source patterns and failure
+semantics.
