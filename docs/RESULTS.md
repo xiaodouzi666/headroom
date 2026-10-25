@@ -552,3 +552,9 @@ T0.4全部60项探测已执行并保留失败；Ultra实测500029输入token成�
 - 当前完整回归：reports/patch-wire-integration-20261025/full-regression-20261024T230712Z-cc548dc9-receipt.json。
 - 本任务既有localhost preview已重启加载78a83df，health/Home200，无UI提交；mvp-v4-final-source-check.json与final-preview-restart.json保留收尾证据。
 - 最终handoff合并本页、RESULTS和PROGRESS，纯文本小于1MiB。提交前扫描/交付状态单独记录；原失败和旧summary保留。
+
+## MVP v5 — 2026-10-25
+
+Original target gate:0/9. First-category match:7/9 (2 unknown); unchanged auditor also requires valid diagnosis, giving6 true/1 false/2 unknown.17/52 patch attempts applied/compiled with independently verified source-byte chains;5/8 synthetic scenes had an applied candidate. s4 completed20 steps and reduced measured peak89.769367%, but the original scalar-loss check compared batch1 reference with batch8 candidate and rejected it. No final configuration selected. All nine scenes executed; PLAN and manifest unchanged. Details: reports/phase-1-summary-20261025-mvp-v5.md.
+
+98 calls: all-call known$0.89236424, verified bounded remainder$0.00460392, conservative$0.89696816, actual-total null. Campaign known0 is its fully-known-run-only subtotal, not all-call known cost. Real CLI invocation still not observed in v5.

@@ -188,3 +188,23 @@ All work, caches, runs, and media remain on azuki.
 - Ruff check/format and diff checks passed. Preliminary staged gitleaks: zero findings.
 - Real generic anchored-edit component: accepted on one Super call, 130 output tokens, exact cost $0.00054. Raw response, source hash, generated diff, Git application, compile, exact candidate bytes and unchanged executable AST all verified. This is not a benchmark success.
 - Full nine-scenario v5 campaign is the next step; no new MVP result is asserted here.
+
+## MVP v5 completed — extension 1/3
+
+原 MVP 未通过。九场景已完整执行，目标 0/9；首因类别匹配 7/9（2 未知），保留旧审计器 diagnosis.valid 条件后为 6 真、1 假、2 未知。未将部分显存改善、组件验证或 worker 退出 0 算作整体通过。
+
+执行源码 d6f29945eaffe2c56a2969d85f23fdfe06f03aa7；campaign 为 runs/evaluation/live/20261025T022454741538Z-8e6e085d/campaign.json。2026-10-25 02:24:53–02:36:26 UTC，共692.93秒。原 PLAN 与九场景 manifest 未修改；额外三轮已使用一轮。
+
+| 场景 | 首因（含有效性门） | 有静态应用候选 | 最终保留轮 | 目标 | 保守费用 USD | 秒 |
+|---|---|---|---|---|---|---|
+| s1_batch_too_big | 正确 | 是 | 无 | 未达标 | 0.12525164 | 114.69 |
+| s2_fp32_adamw_1b | 正确 | 否 | 无 | 未达标 | 0.04753906 | 44.24 |
+| s3_eval_no_grad_missing | 正确 | 是 | 无 | 未达标 | 0.09023786 | 56.42 |
+| s4_loss_accumulation_graph | 正确 | 是 | 无 | 未达标 | 0.15481084 | 145.27 |
+| s5_fragmentation_varlen | 未知 | 否 | 无 | 未达标 | 0.09600868 | 64.39 |
+| s6_full_vocab_logits_fp32 | 未通过有效性门 | 否 | 无 | 未达标 | 0.0336181 | 19.17 |
+| s7_frozen_params_optimizer_state | 正确 | 是 | 无 | 未达标 | 0.11522816 | 93.94 |
+| s8_two_models_resident | 正确 | 是 | 无 | 未达标 | 0.10851474 | 80.74 |
+| nanogpt | 未知 | 是 | 无 | 未达标 | 0.12575908 | 72.97 |
+
+Audit: reports/live-campaign-20261025/mvp-v5-audit-notes.json. Preparing extension 2/3 in isolated server worktrees; original acceptance gates unchanged.

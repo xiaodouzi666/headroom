@@ -1,0 +1,328 @@
+{
+  "reviewed_at": "2026-10-25T02:38:34.825803+00:00",
+  "reviewer": "payment_readiness independent read-only audit",
+  "campaign": "runs/evaluation/live/20261025T022454741538Z-8e6e085d/campaign.json",
+  "production_source_unchanged_by_review": true,
+  "api_gpu_calls": 0,
+  "report_refs": {
+    "runs/evaluation/live/20261025T022454741538Z-8e6e085d/campaign.json": "90c49ba7f937ce3c9057a767f82243ba94299d412ba6d21037f3a0a0389c7ff7",
+    "reports/live-campaign-20261025/mvp-v5-audit-v2.json": "afcb50f6ccf33297cd8d75a2d43788fbcde7362e02e56d1661c7f03d2b184773",
+    "reports/live-campaign-20261025/mvp-v5-anchored-review.json": "d0ea24b3928334db5d192f1dffabdf169c8564ddef9757f9e7748fca82432310",
+    "reports/live-campaign-20261025/mvp-v5-cli-exit-semantics.json": "417ac7032efa70b8b3ff3d8d36c6a1ef46de038234ddfd7f2f381686c685dcda",
+    "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/dab41b8349cc4ee48780d6e911f9883b/rounds/01/verification.json": "df3625d8584ce12aa46346df64c100eb79aa52005b4d2d088f83787849877833",
+    "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/dab41b8349cc4ee48780d6e911f9883b/lab/2e01638d1ea641e9a0b97378c07730eb/manifest.json": "f5eb898d11f9ff085818f7626b18f4b30b503eb34594e33caa6a515f05d60e15",
+    "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/dab41b8349cc4ee48780d6e911f9883b/lab/89d3986e7b304ab3a94066f025fa49f2/manifest.json": "67dd010d342d714782f81a6177c406d55895083346c7910d6c72a52b115f8cde"
+  },
+  "original_fixed_nine": {
+    "accepted": false,
+    "counts": {
+      "denominator": 9,
+      "target_true": 0,
+      "target_unknown": 0,
+      "first_cause_true": 6,
+      "first_cause_unknown": 2,
+      "reports": 9
+    },
+    "target_false": 9,
+    "gates": {
+      "real_live_provenance": true,
+      "run_identity_consistent": true,
+      "source_hash_matches_manifest": true,
+      "report_json_and_markdown": true,
+      "harness_child_exit_zero": true,
+      "owned_cleanup_verified": true,
+      "cost_complete_and_consistent": true,
+      "wall_within_480_seconds": true,
+      "exact_original_9_default_full_ultra": true,
+      "original_plan_hash": true,
+      "manifest_matches_campaign": true,
+      "campaign_live": true,
+      "campaign_finished": true,
+      "per_run_requested_budget_0_6": true,
+      "at_least_6_of_9_targets": false,
+      "at_least_6_of_9_first_causes": true
+    }
+  },
+  "first_cause_distinction": {
+    "raw_category_matches": 7,
+    "raw_category_mismatches": 0,
+    "truth_unknown": 2,
+    "unchanged_auditor_valid_and_matching": 6,
+    "unchanged_auditor_false": 1,
+    "reason": "The unchanged auditor additionally requires diagnosis.valid=true. s6 temporaries matches its authored truth but NUMERICS_CHANGE_FORBIDDEN makes valid=false. Original output is preserved, not rescored.",
+    "s6_validation_issue": "NUMERICS_CHANGE_FORBIDDEN"
+  },
+  "anchored_evidence": {
+    "summary": {
+      "recorded_attempts": 52,
+      "conversion_status_counts": {
+        "true": 17,
+        "false": 31,
+        "unknown": 4
+      },
+      "unknown_response_evidence_count": 4,
+      "contradicted_normalization_claims": 0,
+      "original_status_counts": {
+        "rejected": 31,
+        "applied": 17,
+        "failed": 4
+      },
+      "applied_attempts": 17,
+      "code_applied_attempts": 17,
+      "applied_code_chains_verified": true,
+      "applied_conversions_verified": true,
+      "selected_configuration_consistency": true
+    },
+    "sidecar_evidence_complete": false,
+    "reason_incomplete": "Four LLM_RESPONSE_REJECTED attempts have unavailable valid normalized response chains and remain unknown. 31 original rejections remain rejected; all 17 actually applied source/normalization/diff/candidate chains independently verify, with zero contradicted normalization claims. No final selected configuration in any of nine runs."
+  },
+  "s4_comparison_limitation": {
+    "verification": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/dab41b8349cc4ee48780d6e911f9883b/rounds/01/verification.json",
+    "reference_manifest": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/dab41b8349cc4ee48780d6e911f9883b/lab/2e01638d1ea641e9a0b97378c07730eb/manifest.json",
+    "candidate_manifest": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/dab41b8349cc4ee48780d6e911f9883b/lab/89d3986e7b304ab3a94066f025fa49f2/manifest.json",
+    "reference_batch": 1,
+    "candidate_batch": 8,
+    "same_inputs": false,
+    "same_effective_batch": false,
+    "same_objective": true,
+    "candidate_completed": true,
+    "candidate_updates": 20,
+    "peak_before_gb": 24.768717824,
+    "peak_after_gb": 2.533996544,
+    "reduction_pct": 89.76936730433155,
+    "original_loss_equivalence": "changed",
+    "original_target_met": false,
+    "interpretation": "The original scalar-loss rule rejects these runs. Different observed inputs/effective batches mean this comparison does not prove that removing retain_graph changed the mathematical objective or a same-workload numerical result. Real OOM avoidance/20 updates and memory reduction are separately observed; no threshold, score, truth or original receipt is altered."
+  },
+  "finance": {
+    "errors": [],
+    "rows": [
+      {
+        "scenario_id": "s1_batch_too_big",
+        "run_id": "84fb5dc741fa4931a4eddf961819da7b",
+        "calls": 25,
+        "known_actual_subtotal_usd": "0.12492914",
+        "actual_total_usd": null,
+        "conservative_total_usd": "0.12525164",
+        "ledger_uuid_binding_complete": true
+      },
+      {
+        "scenario_id": "s2_fp32_adamw_1b",
+        "run_id": "01b3edf54a1e4e6eb2fee1a4c0e49ad5",
+        "calls": 2,
+        "known_actual_subtotal_usd": "0.046978",
+        "actual_total_usd": null,
+        "conservative_total_usd": "0.04753906",
+        "ledger_uuid_binding_complete": true
+      },
+      {
+        "scenario_id": "s3_eval_no_grad_missing",
+        "run_id": "46383653e0034d39a815f4d30c590247",
+        "calls": 9,
+        "known_actual_subtotal_usd": "0.08975438",
+        "actual_total_usd": null,
+        "conservative_total_usd": "0.09023786",
+        "ledger_uuid_binding_complete": true
+      },
+      {
+        "scenario_id": "s4_loss_accumulation_graph",
+        "run_id": "dab41b8349cc4ee48780d6e911f9883b",
+        "calls": 14,
+        "known_actual_subtotal_usd": "0.15446710",
+        "actual_total_usd": null,
+        "conservative_total_usd": "0.15481084",
+        "ledger_uuid_binding_complete": true
+      },
+      {
+        "scenario_id": "s5_fragmentation_varlen",
+        "run_id": "ecaa8c0e7d204f4dbaf2c0201ed51f4e",
+        "calls": 13,
+        "known_actual_subtotal_usd": "0.09534892",
+        "actual_total_usd": null,
+        "conservative_total_usd": "0.09600868",
+        "ledger_uuid_binding_complete": true
+      },
+      {
+        "scenario_id": "s6_full_vocab_logits_fp32",
+        "run_id": "b097b60d8817475992bf54294314ea78",
+        "calls": 2,
+        "known_actual_subtotal_usd": "0.033022",
+        "actual_total_usd": null,
+        "conservative_total_usd": "0.0336181",
+        "ledger_uuid_binding_complete": true
+      },
+      {
+        "scenario_id": "s7_frozen_params_optimizer_state",
+        "run_id": "80fc991e01b9464880778c5d058d2dbc",
+        "calls": 11,
+        "known_actual_subtotal_usd": "0.11470052",
+        "actual_total_usd": null,
+        "conservative_total_usd": "0.11522816",
+        "ledger_uuid_binding_complete": true
+      },
+      {
+        "scenario_id": "s8_two_models_resident",
+        "run_id": "890bd925382746d78ab16cffd36fc815",
+        "calls": 10,
+        "known_actual_subtotal_usd": "0.10801506",
+        "actual_total_usd": null,
+        "conservative_total_usd": "0.10851474",
+        "ledger_uuid_binding_complete": true
+      },
+      {
+        "scenario_id": "nanogpt",
+        "run_id": "dfd0e468099042c8916253616d8a07e3",
+        "calls": 12,
+        "known_actual_subtotal_usd": "0.12514912",
+        "actual_total_usd": null,
+        "conservative_total_usd": "0.12575908",
+        "ledger_uuid_binding_complete": true
+      }
+    ],
+    "campaign_all_call_known_actual_subtotal_usd": "0.89236424",
+    "campaign_known_actual_calls_in_bounded_runs_usd": "0.89236424",
+    "campaign_fully_known_run_sum_usd": "0",
+    "campaign_summary_known_cost_usd": "0",
+    "summary_known_is_fully_known_run_sum": true,
+    "campaign_conservative_total_usd": "0.89696816",
+    "campaign_financial_binding_complete": true,
+    "shared_ledger_clear": true,
+    "campaign_summary_conservative_consistent": true,
+    "actual_unknown_never_reclassified": true,
+    "all_time_ledger": {
+      "attempts": 397,
+      "runs": 56,
+      "known_actual_subtotal_usd": "3.948962832",
+      "actual_total_usd": null,
+      "conservative_charge_usd": "3.975401832",
+      "remaining_usd": "6.024247208",
+      "remaining_basis": "conservative_bound",
+      "pending": 0,
+      "unresolved": 0,
+      "nonclosed_runs": 0,
+      "halted_runs": 0,
+      "charge_status_counts": {
+        "exact": 376,
+        "upper_bound": 20,
+        "reviewed_retained": 1
+      },
+      "projection_sha256": "becac878ad0b941de6dbea8279b7c749e73f8dcf65f4ced0fb4a48a1fb894ae3"
+    },
+    "external_known_or_retained_usd": "1.82224246",
+    "combined_runtime_external_conservative_net_usd": "5.797644292",
+    "price_recomputation_authority": "Run unchanged audit_mvp_acceptance_v2.py as well; this sidecar binds call amounts to ledger, not an independent tariff oracle."
+  },
+  "rows": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "run_id": "84fb5dc741fa4931a4eddf961819da7b",
+      "status": "completed",
+      "target": false,
+      "cause_valid_and_matching": true,
+      "wall_seconds": 114.68538666795939,
+      "actual_cost_usd": null,
+      "cost_upper_usd": "0.12525164",
+      "selected_round": null
+    },
+    {
+      "scenario_id": "s2_fp32_adamw_1b",
+      "run_id": "01b3edf54a1e4e6eb2fee1a4c0e49ad5",
+      "status": "needs_human",
+      "target": false,
+      "cause_valid_and_matching": true,
+      "wall_seconds": 44.2433069748804,
+      "actual_cost_usd": null,
+      "cost_upper_usd": "0.04753906",
+      "selected_round": null
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "run_id": "46383653e0034d39a815f4d30c590247",
+      "status": "needs_human",
+      "target": false,
+      "cause_valid_and_matching": true,
+      "wall_seconds": 56.41763647994958,
+      "actual_cost_usd": null,
+      "cost_upper_usd": "0.09023786",
+      "selected_round": null
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "run_id": "dab41b8349cc4ee48780d6e911f9883b",
+      "status": "completed",
+      "target": false,
+      "cause_valid_and_matching": true,
+      "wall_seconds": 145.26897650188766,
+      "actual_cost_usd": null,
+      "cost_upper_usd": "0.15481084",
+      "selected_round": null
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "run_id": "ecaa8c0e7d204f4dbaf2c0201ed51f4e",
+      "status": "needs_human",
+      "target": false,
+      "cause_valid_and_matching": null,
+      "wall_seconds": 64.39444721490145,
+      "actual_cost_usd": null,
+      "cost_upper_usd": "0.09600868",
+      "selected_round": null
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "run_id": "b097b60d8817475992bf54294314ea78",
+      "status": "needs_human",
+      "target": false,
+      "cause_valid_and_matching": false,
+      "wall_seconds": 19.17239188007079,
+      "actual_cost_usd": null,
+      "cost_upper_usd": "0.0336181",
+      "selected_round": null
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "run_id": "80fc991e01b9464880778c5d058d2dbc",
+      "status": "needs_human",
+      "target": false,
+      "cause_valid_and_matching": true,
+      "wall_seconds": 93.93528157891706,
+      "actual_cost_usd": null,
+      "cost_upper_usd": "0.11522816",
+      "selected_round": null
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "run_id": "890bd925382746d78ab16cffd36fc815",
+      "status": "needs_human",
+      "target": false,
+      "cause_valid_and_matching": true,
+      "wall_seconds": 80.74385539907962,
+      "actual_cost_usd": null,
+      "cost_upper_usd": "0.10851474",
+      "selected_round": null
+    },
+    {
+      "scenario_id": "nanogpt",
+      "run_id": "dfd0e468099042c8916253616d8a07e3",
+      "status": "needs_human",
+      "target": false,
+      "cause_valid_and_matching": null,
+      "wall_seconds": 72.97498284117319,
+      "actual_cost_usd": null,
+      "cost_upper_usd": "0.12575908",
+      "selected_round": null
+    }
+  ],
+  "cli_boundary": "All nine harness worker exits are zero; this is not literal headroom fix invocation. Supplemental expected mapping is evidence-derived, actual literal exits remain null/not observed.",
+  "new_mutations": [
+    "new audit report files only; no original run, source, profile or ledger mutations"
+  ],
+  "tax_reserve_arithmetic": {
+    "combined_conservative_net_usd": "5.797644292",
+    "vat_rate_reference": "0.21",
+    "vat_reserve_usd": "1.21750530132",
+    "gross_equivalent_reserve_usd": "7.01514959332",
+    "observed_billing_statement": false,
+    "note": "Reserve arithmetic only, not an observed provider invoice or current UI balance; delayed UI is not the ledger. Original pool/allocation limits are unchanged."
+  }
+}

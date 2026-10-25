@@ -1,0 +1,2023 @@
+{
+  "mode": "campaign",
+  "search_mode": "until_target",
+  "provenance": "live",
+  "status": "finished",
+  "manifest_sha256": "3bb919336829754a52ec8c90ccc4a5181f33986f9e300e99211bec6678849e88",
+  "limits": {
+    "per_run_usd": "0.6",
+    "campaign_usd": "5.4",
+    "daily_usd": "9.99964904",
+    "run_wall_seconds": 480
+  },
+  "plan": {
+    "mode": "campaign_plan",
+    "search_mode": "until_target",
+    "executed": false,
+    "scenarios": [
+      "s1_batch_too_big",
+      "s2_fp32_adamw_1b",
+      "s3_eval_no_grad_missing",
+      "s4_loss_accumulation_graph",
+      "s5_fragmentation_varlen",
+      "s6_full_vocab_logits_fp32",
+      "s7_frozen_params_optimizer_state",
+      "s8_two_models_resident",
+      "nanogpt"
+    ],
+    "targets": [
+      {
+        "scenario_id": "s1_batch_too_big",
+        "target": "fix-oom",
+        "reclaim_reduction_pct": 30
+      },
+      {
+        "scenario_id": "s2_fp32_adamw_1b",
+        "target": "reclaim",
+        "reclaim_reduction_pct": 20.0
+      },
+      {
+        "scenario_id": "s3_eval_no_grad_missing",
+        "target": "reclaim",
+        "reclaim_reduction_pct": 20.0
+      },
+      {
+        "scenario_id": "s4_loss_accumulation_graph",
+        "target": "fix-oom",
+        "reclaim_reduction_pct": 30
+      },
+      {
+        "scenario_id": "s5_fragmentation_varlen",
+        "target": "reclaim",
+        "reclaim_reduction_pct": 20.0
+      },
+      {
+        "scenario_id": "s6_full_vocab_logits_fp32",
+        "target": "fix-oom",
+        "reclaim_reduction_pct": 30
+      },
+      {
+        "scenario_id": "s7_frozen_params_optimizer_state",
+        "target": "reclaim",
+        "reclaim_reduction_pct": 20.0
+      },
+      {
+        "scenario_id": "s8_two_models_resident",
+        "target": "reclaim",
+        "reclaim_reduction_pct": 20.0
+      },
+      {
+        "scenario_id": "nanogpt",
+        "target": "fit:22GB",
+        "reclaim_reduction_pct": 30
+      }
+    ],
+    "conditions": [
+      "full_ultra"
+    ],
+    "policies": [
+      {
+        "name": "default",
+        "policy": {
+          "allow_numerics_change": false,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "max_throughput_regression_pct": 25
+        },
+        "same_effective_policy_as": []
+      }
+    ],
+    "multipliers": {
+      "scenarios": 9,
+      "conditions": 1,
+      "policies": 1
+    },
+    "planned_pipeline_runs": 9,
+    "run_wall_limit_seconds": 480,
+    "provider_api_attempts": null,
+    "provider_api_attempts_note": "Pipeline count is not API-call count: annotation, diagnosis supplements, patch attempts, retries and research vary; every actual model attempt remains budgeted.",
+    "sum_of_configured_run_caps_usd": "5.4",
+    "campaign_cap_usd": "5.4",
+    "daily_cap_usd": "9.99964904",
+    "can_reserve_all_run_caps": true,
+    "per_run_cap_usd": "0.6",
+    "authorization_expanded": false,
+    "policy_note": "Original T2.8 says default versus allow_numerics_change=false. Current default and strict are equivalent; naming them separately does not resolve that ambiguity. allow_precision is an explicit optional permission."
+  },
+  "rows": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "group": "synthetic",
+      "condition": "full_ultra",
+      "provenance": "live",
+      "outcome_basis": "recorded_round_artifacts_v1",
+      "patch_applied": true,
+      "patch_applied_rounds": [
+        3,
+        4
+      ],
+      "selected_round": null,
+      "selected_patch_applied": false,
+      "selected_completed": null,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": false,
+          "candidate_completed": null
+        },
+        {
+          "round": 2,
+          "decision": "revert",
+          "patch_applied": false,
+          "candidate_completed": null
+        },
+        {
+          "round": 3,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": false
+        },
+        {
+          "round": 4,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": false
+        },
+        {
+          "round": 5,
+          "decision": "revert",
+          "patch_applied": false,
+          "candidate_completed": null
+        },
+        {
+          "round": 6,
+          "decision": "revert",
+          "patch_applied": false,
+          "candidate_completed": null
+        }
+      ],
+      "status": "completed",
+      "search_mode": "until_target",
+      "search_stop_reason": "max_rounds_reached",
+      "search_rounds_executed": 6,
+      "first_target_met_round": null,
+      "baseline_target_met": false,
+      "run_id": "84fb5dc741fa4931a4eddf961819da7b",
+      "report_json": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/84fb5dc741fa4931a4eddf961819da7b/report.json",
+      "run_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/84fb5dc741fa4931a4eddf961819da7b",
+      "reason": "max_rounds_reached",
+      "ground_truth": "activations",
+      "truth_status": "authored",
+      "first_cause": "activations",
+      "first_cause_matches": true,
+      "target_met": false,
+      "target": "fix-oom",
+      "reclaim_reduction_pct": 30,
+      "peak_before_bytes": 24750424064,
+      "peak_after_bytes": null,
+      "peak_reduction_pct": null,
+      "step_time_change_pct": null,
+      "throughput_change_pct": null,
+      "loss_equivalence": "unknown",
+      "numerical_basis": null,
+      "acceptance_scope": null,
+      "rounds": 6,
+      "elapsed_seconds": 113.53834534017369,
+      "usage": {
+        "calls": 25,
+        "known_cost_usd": "0.12492914",
+        "total_cost_usd": null,
+        "unknown_cost_calls": 1,
+        "complete": false,
+        "billing_complete": true,
+        "bounded_cost_calls": 1,
+        "unresolved_cost_calls": 0,
+        "conservative_total_usd": "0.12525164",
+        "admission_counts": {
+          "verified_provider_bound": 25,
+          "local_estimate": 0,
+          "unknown": 0
+        },
+        "input_tokens": 274324,
+        "known_input_tokens": 274324,
+        "output_tokens": 15842,
+        "known_output_tokens": 15842,
+        "by_model": [
+          {
+            "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+            "calls": 1,
+            "known_cost_usd": "0",
+            "total_cost_usd": null,
+            "unknown_cost_calls": 1,
+            "complete": false,
+            "billing_complete": true,
+            "bounded_cost_calls": 1,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.0003225",
+            "admission_counts": {
+              "verified_provider_bound": 1,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 3643,
+            "known_input_tokens": 3643,
+            "output_tokens": 433,
+            "known_output_tokens": 433
+          },
+          {
+            "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+            "calls": 6,
+            "known_cost_usd": "0.10132220",
+            "total_cost_usd": "0.10132220",
+            "unknown_cost_calls": 0,
+            "complete": true,
+            "billing_complete": true,
+            "bounded_cost_calls": 0,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.10132220",
+            "admission_counts": {
+              "verified_provider_bound": 6,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 201524,
+            "known_input_tokens": 201524,
+            "output_tokens": 4897,
+            "known_output_tokens": 4897
+          },
+          {
+            "model": "nvidia/nemotron-3-super-120b-a12b",
+            "calls": 18,
+            "known_cost_usd": "0.02360694",
+            "total_cost_usd": "0.02360694",
+            "unknown_cost_calls": 0,
+            "complete": true,
+            "billing_complete": true,
+            "bounded_cost_calls": 0,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.02360694",
+            "admission_counts": {
+              "verified_provider_bound": 18,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 69157,
+            "known_input_tokens": 69157,
+            "output_tokens": 10512,
+            "known_output_tokens": 10512
+          }
+        ]
+      },
+      "cost_usd": null,
+      "billing_complete": true,
+      "cost_upper_usd": "0.12525164",
+      "cost_basis": "verified_upper_bound",
+      "evidence": {
+        "before": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/84fb5dc741fa4931a4eddf961819da7b/evidence/before/evidence.json",
+        "after": null
+      },
+      "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+      "execution": {
+        "repository_mode": false,
+        "requested_argv": null,
+        "execution_argv": null,
+        "command_source": null
+      },
+      "condition_audit_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/condition-84fb5dc741fa4931a4eddf961819da7b",
+      "evaluation_timing": {
+        "limit_seconds": 480,
+        "wall_seconds": 114.66864592093043,
+        "cleanup_seconds": 0.02651142911054194,
+        "within_wall_limit": true,
+        "deadline_exceeded": false,
+        "worker_exit_code": 0,
+        "cleanup_verified": true
+      },
+      "policy_name": "default",
+      "policy": {
+        "allow_numerics_change": false,
+        "allow_model_change": false,
+        "allow_batch_grad_accum": true,
+        "max_throughput_regression_pct": 25
+      },
+      "wall_seconds": 114.68538666795939,
+      "run_wall_limit_seconds": 480,
+      "within_wall_limit": true,
+      "cost_limit_certified": true
+    },
+    {
+      "scenario_id": "s2_fp32_adamw_1b",
+      "group": "synthetic",
+      "condition": "full_ultra",
+      "provenance": "live",
+      "outcome_basis": "recorded_round_artifacts_v1",
+      "patch_applied": null,
+      "patch_applied_rounds": [],
+      "selected_round": null,
+      "selected_patch_applied": false,
+      "selected_completed": null,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null
+        }
+      ],
+      "status": "needs_human",
+      "search_mode": "until_target",
+      "search_stop_reason": "diagnosis_needs_more_info",
+      "search_rounds_executed": 1,
+      "first_target_met_round": null,
+      "baseline_target_met": false,
+      "run_id": "01b3edf54a1e4e6eb2fee1a4c0e49ad5",
+      "report_json": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/01b3edf54a1e4e6eb2fee1a4c0e49ad5/report.json",
+      "run_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/01b3edf54a1e4e6eb2fee1a4c0e49ad5",
+      "reason": "Diagnosis requests additional information; inspect diagnosis.json notes before restarting with new evidence",
+      "ground_truth": "optimizer_state",
+      "truth_status": "authored",
+      "first_cause": "optimizer_state",
+      "first_cause_matches": true,
+      "target_met": false,
+      "target": "reclaim",
+      "reclaim_reduction_pct": 20.0,
+      "peak_before_bytes": 21553250816,
+      "peak_after_bytes": null,
+      "peak_reduction_pct": null,
+      "step_time_change_pct": null,
+      "throughput_change_pct": null,
+      "loss_equivalence": "unknown",
+      "numerical_basis": null,
+      "acceptance_scope": null,
+      "rounds": 1,
+      "elapsed_seconds": 43.13712971215136,
+      "usage": {
+        "calls": 2,
+        "known_cost_usd": "0.046978",
+        "total_cost_usd": null,
+        "unknown_cost_calls": 1,
+        "complete": false,
+        "billing_complete": true,
+        "bounded_cost_calls": 1,
+        "unresolved_cost_calls": 0,
+        "conservative_total_usd": "0.04753906",
+        "admission_counts": {
+          "verified_provider_bound": 2,
+          "local_estimate": 0,
+          "unknown": 0
+        },
+        "input_tokens": 49762,
+        "known_input_tokens": 49762,
+        "output_tokens": 1964,
+        "known_output_tokens": 1964,
+        "by_model": [
+          {
+            "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+            "calls": 1,
+            "known_cost_usd": "0",
+            "total_cost_usd": null,
+            "unknown_cost_calls": 1,
+            "complete": false,
+            "billing_complete": true,
+            "bounded_cost_calls": 1,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.00056106",
+            "admission_counts": {
+              "verified_provider_bound": 1,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 6651,
+            "known_input_tokens": 6651,
+            "output_tokens": 675,
+            "known_output_tokens": 675
+          },
+          {
+            "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+            "calls": 1,
+            "known_cost_usd": "0.046978",
+            "total_cost_usd": "0.046978",
+            "unknown_cost_calls": 0,
+            "complete": true,
+            "billing_complete": true,
+            "bounded_cost_calls": 0,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.046978",
+            "admission_counts": {
+              "verified_provider_bound": 1,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 43111,
+            "known_input_tokens": 43111,
+            "output_tokens": 1289,
+            "known_output_tokens": 1289
+          }
+        ]
+      },
+      "cost_usd": null,
+      "billing_complete": true,
+      "cost_upper_usd": "0.04753906",
+      "cost_basis": "verified_upper_bound",
+      "evidence": {
+        "before": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/01b3edf54a1e4e6eb2fee1a4c0e49ad5/evidence/before/evidence.json",
+        "after": null
+      },
+      "source_sha256": "bb1d12c69ce5525e6eab67e709740cb2d578c070afa8b094b5f4b6906648bc5b",
+      "execution": {
+        "repository_mode": false,
+        "requested_argv": null,
+        "execution_argv": null,
+        "command_source": null
+      },
+      "condition_audit_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/condition-01b3edf54a1e4e6eb2fee1a4c0e49ad5",
+      "evaluation_timing": {
+        "limit_seconds": 480,
+        "wall_seconds": 44.22909063892439,
+        "cleanup_seconds": 0.009486763970926404,
+        "within_wall_limit": true,
+        "deadline_exceeded": false,
+        "worker_exit_code": 0,
+        "cleanup_verified": true
+      },
+      "policy_name": "default",
+      "policy": {
+        "allow_numerics_change": false,
+        "allow_model_change": false,
+        "allow_batch_grad_accum": true,
+        "max_throughput_regression_pct": 25
+      },
+      "wall_seconds": 44.2433069748804,
+      "run_wall_limit_seconds": 480,
+      "within_wall_limit": true,
+      "cost_limit_certified": true
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "group": "synthetic",
+      "condition": "full_ultra",
+      "provenance": "live",
+      "outcome_basis": "recorded_round_artifacts_v1",
+      "patch_applied": true,
+      "patch_applied_rounds": [
+        2
+      ],
+      "selected_round": null,
+      "selected_patch_applied": false,
+      "selected_completed": null,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": false,
+          "candidate_completed": null
+        },
+        {
+          "round": 2,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": false
+        },
+        {
+          "round": 3,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null
+        }
+      ],
+      "status": "needs_human",
+      "search_mode": "until_target",
+      "search_stop_reason": "diagnosis_needs_more_info",
+      "search_rounds_executed": 3,
+      "first_target_met_round": null,
+      "baseline_target_met": false,
+      "run_id": "46383653e0034d39a815f4d30c590247",
+      "report_json": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/46383653e0034d39a815f4d30c590247/report.json",
+      "run_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/46383653e0034d39a815f4d30c590247",
+      "reason": "Diagnosis requests additional information; inspect diagnosis.json notes before restarting with new evidence",
+      "ground_truth": "activations",
+      "truth_status": "authored",
+      "first_cause": "activations",
+      "first_cause_matches": true,
+      "target_met": false,
+      "target": "reclaim",
+      "reclaim_reduction_pct": 20.0,
+      "peak_before_bytes": 2435717632,
+      "peak_after_bytes": null,
+      "peak_reduction_pct": null,
+      "step_time_change_pct": null,
+      "throughput_change_pct": null,
+      "loss_equivalence": "unknown",
+      "numerical_basis": null,
+      "acceptance_scope": null,
+      "rounds": 3,
+      "elapsed_seconds": 55.23673488618806,
+      "usage": {
+        "calls": 9,
+        "known_cost_usd": "0.08975438",
+        "total_cost_usd": null,
+        "unknown_cost_calls": 1,
+        "complete": false,
+        "billing_complete": true,
+        "bounded_cost_calls": 1,
+        "unresolved_cost_calls": 0,
+        "conservative_total_usd": "0.09023786",
+        "admission_counts": {
+          "verified_provider_bound": 9,
+          "local_estimate": 0,
+          "unknown": 0
+        },
+        "input_tokens": 168142,
+        "known_input_tokens": 168142,
+        "output_tokens": 7249,
+        "known_output_tokens": 7249,
+        "by_model": [
+          {
+            "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+            "calls": 1,
+            "known_cost_usd": "0",
+            "total_cost_usd": null,
+            "unknown_cost_calls": 1,
+            "complete": false,
+            "billing_complete": true,
+            "bounded_cost_calls": 1,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.00048348",
+            "admission_counts": {
+              "verified_provider_bound": 1,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 7910,
+            "known_input_tokens": 7910,
+            "output_tokens": 37,
+            "known_output_tokens": 37
+          },
+          {
+            "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+            "calls": 3,
+            "known_cost_usd": "0.08141732",
+            "total_cost_usd": "0.08141732",
+            "unknown_cost_calls": 0,
+            "complete": true,
+            "billing_complete": true,
+            "bounded_cost_calls": 0,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.08141732",
+            "admission_counts": {
+              "verified_provider_bound": 3,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 137828,
+            "known_input_tokens": 137828,
+            "output_tokens": 4175,
+            "known_output_tokens": 4175
+          },
+          {
+            "model": "nvidia/nemotron-3-super-120b-a12b",
+            "calls": 5,
+            "known_cost_usd": "0.00833706",
+            "total_cost_usd": "0.00833706",
+            "unknown_cost_calls": 0,
+            "complete": true,
+            "billing_complete": true,
+            "bounded_cost_calls": 0,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.00833706",
+            "admission_counts": {
+              "verified_provider_bound": 5,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 22404,
+            "known_input_tokens": 22404,
+            "output_tokens": 3037,
+            "known_output_tokens": 3037
+          }
+        ]
+      },
+      "cost_usd": null,
+      "billing_complete": true,
+      "cost_upper_usd": "0.09023786",
+      "cost_basis": "verified_upper_bound",
+      "evidence": {
+        "before": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/46383653e0034d39a815f4d30c590247/evidence/before/evidence.json",
+        "after": null
+      },
+      "source_sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+      "execution": {
+        "repository_mode": false,
+        "requested_argv": null,
+        "execution_argv": null,
+        "command_source": null
+      },
+      "condition_audit_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/condition-46383653e0034d39a815f4d30c590247",
+      "evaluation_timing": {
+        "limit_seconds": 480,
+        "wall_seconds": 56.39158155187033,
+        "cleanup_seconds": 0.01793006993830204,
+        "within_wall_limit": true,
+        "deadline_exceeded": false,
+        "worker_exit_code": 0,
+        "cleanup_verified": true
+      },
+      "policy_name": "default",
+      "policy": {
+        "allow_numerics_change": false,
+        "allow_model_change": false,
+        "allow_batch_grad_accum": true,
+        "max_throughput_regression_pct": 25
+      },
+      "wall_seconds": 56.41763647994958,
+      "run_wall_limit_seconds": 480,
+      "within_wall_limit": true,
+      "cost_limit_certified": true
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "group": "synthetic",
+      "condition": "full_ultra",
+      "provenance": "live",
+      "outcome_basis": "recorded_round_artifacts_v1",
+      "patch_applied": true,
+      "patch_applied_rounds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "selected_round": null,
+      "selected_patch_applied": false,
+      "selected_completed": null,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": true
+        },
+        {
+          "round": 2,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": true
+        },
+        {
+          "round": 3,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": true
+        },
+        {
+          "round": 4,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": true
+        },
+        {
+          "round": 5,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": true
+        },
+        {
+          "round": 6,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": true
+        }
+      ],
+      "status": "completed",
+      "search_mode": "until_target",
+      "search_stop_reason": "max_rounds_reached",
+      "search_rounds_executed": 6,
+      "first_target_met_round": null,
+      "baseline_target_met": false,
+      "run_id": "dab41b8349cc4ee48780d6e911f9883b",
+      "report_json": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/dab41b8349cc4ee48780d6e911f9883b/report.json",
+      "run_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/dab41b8349cc4ee48780d6e911f9883b",
+      "reason": "max_rounds_reached",
+      "ground_truth": "retained_graph",
+      "truth_status": "authored",
+      "first_cause": "retained_graph",
+      "first_cause_matches": true,
+      "target_met": false,
+      "target": "fix-oom",
+      "reclaim_reduction_pct": 30,
+      "peak_before_bytes": 24768717824,
+      "peak_after_bytes": null,
+      "peak_reduction_pct": null,
+      "step_time_change_pct": null,
+      "throughput_change_pct": null,
+      "loss_equivalence": "unknown",
+      "numerical_basis": null,
+      "acceptance_scope": null,
+      "rounds": 6,
+      "elapsed_seconds": 144.03229915816337,
+      "usage": {
+        "calls": 14,
+        "known_cost_usd": "0.15446710",
+        "total_cost_usd": null,
+        "unknown_cost_calls": 1,
+        "complete": false,
+        "billing_complete": true,
+        "bounded_cost_calls": 1,
+        "unresolved_cost_calls": 0,
+        "conservative_total_usd": "0.15481084",
+        "admission_counts": {
+          "verified_provider_bound": 14,
+          "local_estimate": 0,
+          "unknown": 0
+        },
+        "input_tokens": 305956,
+        "known_input_tokens": 305956,
+        "output_tokens": 10788,
+        "known_output_tokens": 10788,
+        "by_model": [
+          {
+            "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+            "calls": 1,
+            "known_cost_usd": "0",
+            "total_cost_usd": null,
+            "unknown_cost_calls": 1,
+            "complete": false,
+            "billing_complete": true,
+            "bounded_cost_calls": 1,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.00034374",
+            "admission_counts": {
+              "verified_provider_bound": 1,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 5573,
+            "known_input_tokens": 5573,
+            "output_tokens": 39,
+            "known_output_tokens": 39
+          },
+          {
+            "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+            "calls": 6,
+            "known_cost_usd": "0.14376460",
+            "total_cost_usd": "0.14376460",
+            "unknown_cost_calls": 0,
+            "complete": true,
+            "billing_complete": true,
+            "bounded_cost_calls": 0,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.14376460",
+            "admission_counts": {
+              "verified_provider_bound": 6,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 270225,
+            "known_input_tokens": 270225,
+            "output_tokens": 8910,
+            "known_output_tokens": 8910
+          },
+          {
+            "model": "nvidia/nemotron-3-super-120b-a12b",
+            "calls": 7,
+            "known_cost_usd": "0.0107025",
+            "total_cost_usd": "0.0107025",
+            "unknown_cost_calls": 0,
+            "complete": true,
+            "billing_complete": true,
+            "bounded_cost_calls": 0,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.0107025",
+            "admission_counts": {
+              "verified_provider_bound": 7,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 30158,
+            "known_input_tokens": 30158,
+            "output_tokens": 1839,
+            "known_output_tokens": 1839
+          }
+        ]
+      },
+      "cost_usd": null,
+      "billing_complete": true,
+      "cost_upper_usd": "0.15481084",
+      "cost_basis": "verified_upper_bound",
+      "evidence": {
+        "before": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/dab41b8349cc4ee48780d6e911f9883b/evidence/before/evidence.json",
+        "after": null
+      },
+      "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+      "execution": {
+        "repository_mode": false,
+        "requested_argv": null,
+        "execution_argv": null,
+        "command_source": null
+      },
+      "condition_audit_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/condition-dab41b8349cc4ee48780d6e911f9883b",
+      "evaluation_timing": {
+        "limit_seconds": 480,
+        "wall_seconds": 145.24797822604887,
+        "cleanup_seconds": 0.07150485506281257,
+        "within_wall_limit": true,
+        "deadline_exceeded": false,
+        "worker_exit_code": 0,
+        "cleanup_verified": true
+      },
+      "policy_name": "default",
+      "policy": {
+        "allow_numerics_change": false,
+        "allow_model_change": false,
+        "allow_batch_grad_accum": true,
+        "max_throughput_regression_pct": 25
+      },
+      "wall_seconds": 145.26897650188766,
+      "run_wall_limit_seconds": 480,
+      "within_wall_limit": true,
+      "cost_limit_certified": true
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "group": "synthetic",
+      "condition": "full_ultra",
+      "provenance": "live",
+      "outcome_basis": "recorded_round_artifacts_v1",
+      "patch_applied": null,
+      "patch_applied_rounds": [],
+      "selected_round": null,
+      "selected_patch_applied": false,
+      "selected_completed": null,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null
+        },
+        {
+          "round": 2,
+          "decision": "revert",
+          "patch_applied": false,
+          "candidate_completed": null
+        },
+        {
+          "round": 3,
+          "decision": "revert",
+          "patch_applied": false,
+          "candidate_completed": null
+        },
+        {
+          "round": 4,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null
+        }
+      ],
+      "status": "needs_human",
+      "search_mode": "until_target",
+      "search_stop_reason": "diagnosis_needs_more_info",
+      "search_rounds_executed": 4,
+      "first_target_met_round": null,
+      "baseline_target_met": false,
+      "run_id": "ecaa8c0e7d204f4dbaf2c0201ed51f4e",
+      "report_json": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/ecaa8c0e7d204f4dbaf2c0201ed51f4e/report.json",
+      "run_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/ecaa8c0e7d204f4dbaf2c0201ed51f4e",
+      "reason": "Diagnosis requests additional information; inspect diagnosis.json notes before restarting with new evidence",
+      "ground_truth": "fragmentation_candidate",
+      "truth_status": "unverified",
+      "first_cause": "activations",
+      "first_cause_matches": null,
+      "target_met": false,
+      "target": "reclaim",
+      "reclaim_reduction_pct": 20.0,
+      "peak_before_bytes": 5021758464,
+      "peak_after_bytes": null,
+      "peak_reduction_pct": null,
+      "step_time_change_pct": null,
+      "throughput_change_pct": null,
+      "loss_equivalence": "unknown",
+      "numerical_basis": null,
+      "acceptance_scope": null,
+      "rounds": 4,
+      "elapsed_seconds": 63.25928525417112,
+      "usage": {
+        "calls": 13,
+        "known_cost_usd": "0.09534892",
+        "total_cost_usd": null,
+        "unknown_cost_calls": 1,
+        "complete": false,
+        "billing_complete": true,
+        "bounded_cost_calls": 1,
+        "unresolved_cost_calls": 0,
+        "conservative_total_usd": "0.09600868",
+        "admission_counts": {
+          "verified_provider_bound": 13,
+          "local_estimate": 0,
+          "unknown": 0
+        },
+        "input_tokens": 189480,
+        "known_input_tokens": 189480,
+        "output_tokens": 10635,
+        "known_output_tokens": 10635,
+        "by_model": [
+          {
+            "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+            "calls": 1,
+            "known_cost_usd": "0",
+            "total_cost_usd": null,
+            "unknown_cost_calls": 1,
+            "complete": false,
+            "billing_complete": true,
+            "bounded_cost_calls": 1,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.00065976",
+            "admission_counts": {
+              "verified_provider_bound": 1,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 7692,
+            "known_input_tokens": 7692,
+            "output_tokens": 826,
+            "known_output_tokens": 826
+          },
+          {
+            "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+            "calls": 4,
+            "known_cost_usd": "0.08316604",
+            "total_cost_usd": "0.08316604",
+            "unknown_cost_calls": 0,
+            "complete": true,
+            "billing_complete": true,
+            "bounded_cost_calls": 0,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.08316604",
+            "admission_counts": {
+              "verified_provider_bound": 4,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 148486,
+            "known_input_tokens": 148486,
+            "output_tokens": 5035,
+            "known_output_tokens": 5035
+          },
+          {
+            "model": "nvidia/nemotron-3-super-120b-a12b",
+            "calls": 8,
+            "known_cost_usd": "0.01218288",
+            "total_cost_usd": "0.01218288",
+            "unknown_cost_calls": 0,
+            "complete": true,
+            "billing_complete": true,
+            "bounded_cost_calls": 0,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.01218288",
+            "admission_counts": {
+              "verified_provider_bound": 8,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 33302,
+            "known_input_tokens": 33302,
+            "output_tokens": 4774,
+            "known_output_tokens": 4774
+          }
+        ]
+      },
+      "cost_usd": null,
+      "billing_complete": true,
+      "cost_upper_usd": "0.09600868",
+      "cost_basis": "verified_upper_bound",
+      "evidence": {
+        "before": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/ecaa8c0e7d204f4dbaf2c0201ed51f4e/evidence/before/evidence.json",
+        "after": null
+      },
+      "source_sha256": "627d24ee9e62601455e37f29166df8abe73a43b9e82382a293feec3a6b558169",
+      "execution": {
+        "repository_mode": false,
+        "requested_argv": null,
+        "execution_argv": null,
+        "command_source": null
+      },
+      "condition_audit_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/condition-ecaa8c0e7d204f4dbaf2c0201ed51f4e",
+      "evaluation_timing": {
+        "limit_seconds": 480,
+        "wall_seconds": 64.38183435704559,
+        "cleanup_seconds": 0.009102015988901258,
+        "within_wall_limit": true,
+        "deadline_exceeded": false,
+        "worker_exit_code": 0,
+        "cleanup_verified": true
+      },
+      "policy_name": "default",
+      "policy": {
+        "allow_numerics_change": false,
+        "allow_model_change": false,
+        "allow_batch_grad_accum": true,
+        "max_throughput_regression_pct": 25
+      },
+      "wall_seconds": 64.39444721490145,
+      "run_wall_limit_seconds": 480,
+      "within_wall_limit": true,
+      "cost_limit_certified": true
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "group": "synthetic",
+      "condition": "full_ultra",
+      "provenance": "live",
+      "outcome_basis": "recorded_round_artifacts_v1",
+      "patch_applied": null,
+      "patch_applied_rounds": [],
+      "selected_round": null,
+      "selected_patch_applied": false,
+      "selected_completed": null,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null
+        }
+      ],
+      "status": "needs_human",
+      "search_mode": "until_target",
+      "search_stop_reason": "diagnosis_needs_more_info",
+      "search_rounds_executed": 1,
+      "first_target_met_round": null,
+      "baseline_target_met": false,
+      "run_id": "b097b60d8817475992bf54294314ea78",
+      "report_json": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/b097b60d8817475992bf54294314ea78/report.json",
+      "run_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/b097b60d8817475992bf54294314ea78",
+      "reason": "Diagnosis requests additional information; inspect diagnosis.json notes before restarting with new evidence",
+      "ground_truth": "temporaries",
+      "truth_status": "authored",
+      "first_cause": "temporaries",
+      "first_cause_matches": true,
+      "target_met": false,
+      "target": "fix-oom",
+      "reclaim_reduction_pct": 30,
+      "peak_before_bytes": 21588379648,
+      "peak_after_bytes": null,
+      "peak_reduction_pct": null,
+      "step_time_change_pct": null,
+      "throughput_change_pct": null,
+      "loss_equivalence": "unknown",
+      "numerical_basis": null,
+      "acceptance_scope": null,
+      "rounds": 1,
+      "elapsed_seconds": 18.06994797103107,
+      "usage": {
+        "calls": 2,
+        "known_cost_usd": "0.033022",
+        "total_cost_usd": null,
+        "unknown_cost_calls": 1,
+        "complete": false,
+        "billing_complete": true,
+        "bounded_cost_calls": 1,
+        "unresolved_cost_calls": 0,
+        "conservative_total_usd": "0.0336181",
+        "admission_counts": {
+          "verified_provider_bound": 2,
+          "local_estimate": 0,
+          "unknown": 0
+        },
+        "input_tokens": 34537,
+        "known_input_tokens": 34537,
+        "output_tokens": 2390,
+        "known_output_tokens": 2390,
+        "by_model": [
+          {
+            "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+            "calls": 1,
+            "known_cost_usd": "0",
+            "total_cost_usd": null,
+            "unknown_cost_calls": 1,
+            "complete": false,
+            "billing_complete": true,
+            "bounded_cost_calls": 1,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.0005961",
+            "admission_counts": {
+              "verified_provider_bound": 1,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 4935,
+            "known_input_tokens": 4935,
+            "output_tokens": 1250,
+            "known_output_tokens": 1250
+          },
+          {
+            "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+            "calls": 1,
+            "known_cost_usd": "0.033022",
+            "total_cost_usd": "0.033022",
+            "unknown_cost_calls": 0,
+            "complete": true,
+            "billing_complete": true,
+            "bounded_cost_calls": 0,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.033022",
+            "admission_counts": {
+              "verified_provider_bound": 1,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 29602,
+            "known_input_tokens": 29602,
+            "output_tokens": 1140,
+            "known_output_tokens": 1140
+          }
+        ]
+      },
+      "cost_usd": null,
+      "billing_complete": true,
+      "cost_upper_usd": "0.0336181",
+      "cost_basis": "verified_upper_bound",
+      "evidence": {
+        "before": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/b097b60d8817475992bf54294314ea78/evidence/before/evidence.json",
+        "after": null
+      },
+      "source_sha256": "4f5d7e0f4331a4efcda2039c8ac8a421b2a1923778379896e2658553619b1bba",
+      "execution": {
+        "repository_mode": false,
+        "requested_argv": null,
+        "execution_argv": null,
+        "command_source": null
+      },
+      "condition_audit_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/condition-b097b60d8817475992bf54294314ea78",
+      "evaluation_timing": {
+        "limit_seconds": 480,
+        "wall_seconds": 19.16078499518335,
+        "cleanup_seconds": 0.009327142965048552,
+        "within_wall_limit": true,
+        "deadline_exceeded": false,
+        "worker_exit_code": 0,
+        "cleanup_verified": true
+      },
+      "policy_name": "default",
+      "policy": {
+        "allow_numerics_change": false,
+        "allow_model_change": false,
+        "allow_batch_grad_accum": true,
+        "max_throughput_regression_pct": 25
+      },
+      "wall_seconds": 19.17239188007079,
+      "run_wall_limit_seconds": 480,
+      "within_wall_limit": true,
+      "cost_limit_certified": true
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "group": "synthetic",
+      "condition": "full_ultra",
+      "provenance": "live",
+      "outcome_basis": "recorded_round_artifacts_v1",
+      "patch_applied": true,
+      "patch_applied_rounds": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "selected_round": null,
+      "selected_patch_applied": false,
+      "selected_completed": null,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": true
+        },
+        {
+          "round": 2,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": true
+        },
+        {
+          "round": 3,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": true
+        },
+        {
+          "round": 4,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": true
+        },
+        {
+          "round": 5,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null
+        }
+      ],
+      "status": "needs_human",
+      "search_mode": "until_target",
+      "search_stop_reason": "diagnosis_needs_more_info",
+      "search_rounds_executed": 5,
+      "first_target_met_round": null,
+      "baseline_target_met": false,
+      "run_id": "80fc991e01b9464880778c5d058d2dbc",
+      "report_json": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/80fc991e01b9464880778c5d058d2dbc/report.json",
+      "run_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/80fc991e01b9464880778c5d058d2dbc",
+      "reason": "Diagnosis requests additional information; inspect diagnosis.json notes before restarting with new evidence",
+      "ground_truth": "optimizer_state",
+      "truth_status": "authored",
+      "first_cause": "optimizer_state",
+      "first_cause_matches": true,
+      "target_met": false,
+      "target": "reclaim",
+      "reclaim_reduction_pct": 20.0,
+      "peak_before_bytes": 17819808768,
+      "peak_after_bytes": null,
+      "peak_reduction_pct": null,
+      "step_time_change_pct": null,
+      "throughput_change_pct": null,
+      "loss_equivalence": "unknown",
+      "numerical_basis": null,
+      "acceptance_scope": null,
+      "rounds": 5,
+      "elapsed_seconds": 92.72841255599633,
+      "usage": {
+        "calls": 11,
+        "known_cost_usd": "0.11470052",
+        "total_cost_usd": null,
+        "unknown_cost_calls": 1,
+        "complete": false,
+        "billing_complete": true,
+        "bounded_cost_calls": 1,
+        "unresolved_cost_calls": 0,
+        "conservative_total_usd": "0.11522816",
+        "admission_counts": {
+          "verified_provider_bound": 11,
+          "local_estimate": 0,
+          "unknown": 0
+        },
+        "input_tokens": 222319,
+        "known_input_tokens": 222319,
+        "output_tokens": 7081,
+        "known_output_tokens": 7081,
+        "by_model": [
+          {
+            "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+            "calls": 1,
+            "known_cost_usd": "0",
+            "total_cost_usd": null,
+            "unknown_cost_calls": 1,
+            "complete": false,
+            "billing_complete": true,
+            "bounded_cost_calls": 1,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.00052764",
+            "admission_counts": {
+              "verified_provider_bound": 1,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 6382,
+            "known_input_tokens": 6382,
+            "output_tokens": 603,
+            "known_output_tokens": 603
+          },
+          {
+            "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+            "calls": 5,
+            "known_cost_usd": "0.10894172",
+            "total_cost_usd": "0.10894172",
+            "unknown_cost_calls": 0,
+            "complete": true,
+            "billing_complete": true,
+            "bounded_cost_calls": 0,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.10894172",
+            "admission_counts": {
+              "verified_provider_bound": 5,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 198937,
+            "known_input_tokens": 198937,
+            "output_tokens": 5746,
+            "known_output_tokens": 5746
+          },
+          {
+            "model": "nvidia/nemotron-3-super-120b-a12b",
+            "calls": 5,
+            "known_cost_usd": "0.0057588",
+            "total_cost_usd": "0.0057588",
+            "unknown_cost_calls": 0,
+            "complete": true,
+            "billing_complete": true,
+            "bounded_cost_calls": 0,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.0057588",
+            "admission_counts": {
+              "verified_provider_bound": 5,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 17000,
+            "known_input_tokens": 17000,
+            "output_tokens": 732,
+            "known_output_tokens": 732
+          }
+        ]
+      },
+      "cost_usd": null,
+      "billing_complete": true,
+      "cost_upper_usd": "0.11522816",
+      "cost_basis": "verified_upper_bound",
+      "evidence": {
+        "before": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/80fc991e01b9464880778c5d058d2dbc/evidence/before/evidence.json",
+        "after": null
+      },
+      "source_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+      "execution": {
+        "repository_mode": false,
+        "requested_argv": null,
+        "execution_argv": null,
+        "command_source": null
+      },
+      "condition_audit_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/condition-80fc991e01b9464880778c5d058d2dbc",
+      "evaluation_timing": {
+        "limit_seconds": 480,
+        "wall_seconds": 93.91840555891395,
+        "cleanup_seconds": 0.04239747114479542,
+        "within_wall_limit": true,
+        "deadline_exceeded": false,
+        "worker_exit_code": 0,
+        "cleanup_verified": true
+      },
+      "policy_name": "default",
+      "policy": {
+        "allow_numerics_change": false,
+        "allow_model_change": false,
+        "allow_batch_grad_accum": true,
+        "max_throughput_regression_pct": 25
+      },
+      "wall_seconds": 93.93528157891706,
+      "run_wall_limit_seconds": 480,
+      "within_wall_limit": true,
+      "cost_limit_certified": true
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "group": "synthetic",
+      "condition": "full_ultra",
+      "provenance": "live",
+      "outcome_basis": "recorded_round_artifacts_v1",
+      "patch_applied": true,
+      "patch_applied_rounds": [
+        1,
+        2,
+        3
+      ],
+      "selected_round": null,
+      "selected_patch_applied": false,
+      "selected_completed": null,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": true
+        },
+        {
+          "round": 2,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": true
+        },
+        {
+          "round": 3,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": true
+        },
+        {
+          "round": 4,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null
+        }
+      ],
+      "status": "needs_human",
+      "search_mode": "until_target",
+      "search_stop_reason": "diagnosis_needs_more_info",
+      "search_rounds_executed": 4,
+      "first_target_met_round": null,
+      "baseline_target_met": false,
+      "run_id": "890bd925382746d78ab16cffd36fc815",
+      "report_json": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/890bd925382746d78ab16cffd36fc815/report.json",
+      "run_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/890bd925382746d78ab16cffd36fc815",
+      "reason": "Diagnosis requests additional information; inspect diagnosis.json notes before restarting with new evidence",
+      "ground_truth": "params",
+      "truth_status": "authored",
+      "first_cause": "params",
+      "first_cause_matches": true,
+      "target_met": false,
+      "target": "reclaim",
+      "reclaim_reduction_pct": 20.0,
+      "peak_before_bytes": 3100141568,
+      "peak_after_bytes": null,
+      "peak_reduction_pct": null,
+      "step_time_change_pct": null,
+      "throughput_change_pct": null,
+      "loss_equivalence": "unknown",
+      "numerical_basis": null,
+      "acceptance_scope": null,
+      "rounds": 4,
+      "elapsed_seconds": 79.61413854709826,
+      "usage": {
+        "calls": 10,
+        "known_cost_usd": "0.10801506",
+        "total_cost_usd": null,
+        "unknown_cost_calls": 1,
+        "complete": false,
+        "billing_complete": true,
+        "bounded_cost_calls": 1,
+        "unresolved_cost_calls": 0,
+        "conservative_total_usd": "0.10851474",
+        "admission_counts": {
+          "verified_provider_bound": 10,
+          "local_estimate": 0,
+          "unknown": 0
+        },
+        "input_tokens": 204049,
+        "known_input_tokens": 204049,
+        "output_tokens": 7553,
+        "known_output_tokens": 7553,
+        "by_model": [
+          {
+            "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+            "calls": 1,
+            "known_cost_usd": "0",
+            "total_cost_usd": null,
+            "unknown_cost_calls": 1,
+            "complete": false,
+            "billing_complete": true,
+            "bounded_cost_calls": 1,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.00049968",
+            "admission_counts": {
+              "verified_provider_bound": 1,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 5828,
+            "known_input_tokens": 5828,
+            "output_tokens": 625,
+            "known_output_tokens": 625
+          },
+          {
+            "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+            "calls": 4,
+            "known_cost_usd": "0.09983976",
+            "total_cost_usd": "0.09983976",
+            "unknown_cost_calls": 0,
+            "complete": true,
+            "billing_complete": true,
+            "bounded_cost_calls": 0,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.09983976",
+            "admission_counts": {
+              "verified_provider_bound": 4,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 178575,
+            "known_input_tokens": 178575,
+            "output_tokens": 4393,
+            "known_output_tokens": 4393
+          },
+          {
+            "model": "nvidia/nemotron-3-super-120b-a12b",
+            "calls": 5,
+            "known_cost_usd": "0.0081753",
+            "total_cost_usd": "0.0081753",
+            "unknown_cost_calls": 0,
+            "complete": true,
+            "billing_complete": true,
+            "bounded_cost_calls": 0,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.0081753",
+            "admission_counts": {
+              "verified_provider_bound": 5,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 19646,
+            "known_input_tokens": 19646,
+            "output_tokens": 2535,
+            "known_output_tokens": 2535
+          }
+        ]
+      },
+      "cost_usd": null,
+      "billing_complete": true,
+      "cost_upper_usd": "0.10851474",
+      "cost_basis": "verified_upper_bound",
+      "evidence": {
+        "before": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/890bd925382746d78ab16cffd36fc815/evidence/before/evidence.json",
+        "after": null
+      },
+      "source_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+      "execution": {
+        "repository_mode": false,
+        "requested_argv": null,
+        "execution_argv": null,
+        "command_source": null
+      },
+      "condition_audit_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/condition-890bd925382746d78ab16cffd36fc815",
+      "evaluation_timing": {
+        "limit_seconds": 480,
+        "wall_seconds": 80.72719902708195,
+        "cleanup_seconds": 0.03476675390265882,
+        "within_wall_limit": true,
+        "deadline_exceeded": false,
+        "worker_exit_code": 0,
+        "cleanup_verified": true
+      },
+      "policy_name": "default",
+      "policy": {
+        "allow_numerics_change": false,
+        "allow_model_change": false,
+        "allow_batch_grad_accum": true,
+        "max_throughput_regression_pct": 25
+      },
+      "wall_seconds": 80.74385539907962,
+      "run_wall_limit_seconds": 480,
+      "within_wall_limit": true,
+      "cost_limit_certified": true
+    },
+    {
+      "scenario_id": "nanogpt",
+      "group": "repository",
+      "condition": "full_ultra",
+      "provenance": "live",
+      "outcome_basis": "recorded_round_artifacts_v1",
+      "patch_applied": true,
+      "patch_applied_rounds": [
+        2
+      ],
+      "selected_round": null,
+      "selected_patch_applied": false,
+      "selected_completed": null,
+      "round_outcomes": [
+        {
+          "round": 1,
+          "decision": "revert",
+          "patch_applied": false,
+          "candidate_completed": null
+        },
+        {
+          "round": 2,
+          "decision": "revert",
+          "patch_applied": true,
+          "candidate_completed": false
+        },
+        {
+          "round": 3,
+          "decision": "revert",
+          "patch_applied": null,
+          "candidate_completed": null
+        }
+      ],
+      "status": "needs_human",
+      "search_mode": "until_target",
+      "search_stop_reason": "diagnosis_needs_more_info",
+      "search_rounds_executed": 3,
+      "first_target_met_round": null,
+      "baseline_target_met": false,
+      "run_id": "dfd0e468099042c8916253616d8a07e3",
+      "report_json": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/dfd0e468099042c8916253616d8a07e3/report.json",
+      "run_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/dfd0e468099042c8916253616d8a07e3",
+      "reason": "Diagnosis requests additional information; inspect diagnosis.json notes before restarting with new evidence",
+      "ground_truth": null,
+      "truth_status": "unverified",
+      "first_cause": "activations",
+      "first_cause_matches": null,
+      "target_met": false,
+      "target": "fit:22GB",
+      "reclaim_reduction_pct": 30,
+      "peak_before_bytes": 24705183744,
+      "peak_after_bytes": null,
+      "peak_reduction_pct": null,
+      "step_time_change_pct": null,
+      "throughput_change_pct": null,
+      "loss_equivalence": "unknown",
+      "numerical_basis": null,
+      "acceptance_scope": null,
+      "rounds": 3,
+      "elapsed_seconds": 71.67979658883996,
+      "usage": {
+        "calls": 12,
+        "known_cost_usd": "0.12514912",
+        "total_cost_usd": null,
+        "unknown_cost_calls": 1,
+        "complete": false,
+        "billing_complete": true,
+        "bounded_cost_calls": 1,
+        "unresolved_cost_calls": 0,
+        "conservative_total_usd": "0.12575908",
+        "admission_counts": {
+          "verified_provider_bound": 12,
+          "local_estimate": 0,
+          "unknown": 0
+        },
+        "input_tokens": 265864,
+        "known_input_tokens": 265864,
+        "output_tokens": 7282,
+        "known_output_tokens": 7282,
+        "by_model": [
+          {
+            "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+            "calls": 1,
+            "known_cost_usd": "0",
+            "total_cost_usd": null,
+            "unknown_cost_calls": 1,
+            "complete": false,
+            "billing_complete": true,
+            "bounded_cost_calls": 1,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.00060996",
+            "admission_counts": {
+              "verified_provider_bound": 1,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 6858,
+            "known_input_tokens": 6858,
+            "output_tokens": 827,
+            "known_output_tokens": 827
+          },
+          {
+            "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+            "calls": 3,
+            "known_cost_usd": "0.10450276",
+            "total_cost_usd": "0.10450276",
+            "unknown_cost_calls": 0,
+            "complete": true,
+            "billing_complete": true,
+            "bounded_cost_calls": 0,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.10450276",
+            "admission_counts": {
+              "verified_provider_bound": 3,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 182962,
+            "known_input_tokens": 182962,
+            "output_tokens": 4485,
+            "known_output_tokens": 4485
+          },
+          {
+            "model": "nvidia/nemotron-3-super-120b-a12b",
+            "calls": 8,
+            "known_cost_usd": "0.02064636",
+            "total_cost_usd": "0.02064636",
+            "unknown_cost_calls": 0,
+            "complete": true,
+            "billing_complete": true,
+            "bounded_cost_calls": 0,
+            "unresolved_cost_calls": 0,
+            "conservative_total_usd": "0.02064636",
+            "admission_counts": {
+              "verified_provider_bound": 8,
+              "local_estimate": 0,
+              "unknown": 0
+            },
+            "input_tokens": 76044,
+            "known_input_tokens": 76044,
+            "output_tokens": 1970,
+            "known_output_tokens": 1970
+          }
+        ]
+      },
+      "cost_usd": null,
+      "billing_complete": true,
+      "cost_upper_usd": "0.12575908",
+      "cost_basis": "verified_upper_bound",
+      "evidence": {
+        "before": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/jobs/dfd0e468099042c8916253616d8a07e3/evidence/before/evidence.json",
+        "after": null
+      },
+      "source_sha256": "413bd97b40bb400a2a0d01230e2946f056c263ebac1b7281c2367d964a123085",
+      "execution": {
+        "repository_mode": true,
+        "requested_argv": [
+          "python",
+          "train.py",
+          "--dataset=/input",
+          "--batch_size=32",
+          "--block_size=1024",
+          "--n_layer=24",
+          "--n_head=16",
+          "--n_embd=1024",
+          "--gradient_accumulation_steps=1",
+          "--max_iters=20",
+          "--eval_iters=1",
+          "--eval_interval=1000",
+          "--compile=False",
+          "--dtype=float32",
+          "--decay_lr=False",
+          "--always_save_checkpoint=False",
+          "--out_dir=/tmp/nanogpt-out"
+        ],
+        "execution_argv": [
+          "python",
+          "train.py",
+          "--dataset=headroom_synthetic",
+          "--batch_size=32",
+          "--block_size=1024",
+          "--n_layer=24",
+          "--n_head=16",
+          "--n_embd=1024",
+          "--gradient_accumulation_steps=1",
+          "--max_iters=20",
+          "--eval_iters=1",
+          "--eval_interval=1000",
+          "--compile=False",
+          "--dtype=float32",
+          "--decay_lr=False",
+          "--always_save_checkpoint=False",
+          "--out_dir=/tmp/nanogpt-out"
+        ],
+        "command_source": "repos/nanogpt.yaml",
+        "repository_manifest_sha256": "d7d2564b3950658a91da9aaecff3eaf15de9b5e47ebc8e89704a220dfbaf727a"
+      },
+      "condition_audit_dir": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/condition-dfd0e468099042c8916253616d8a07e3",
+      "evaluation_timing": {
+        "limit_seconds": 480,
+        "wall_seconds": 72.94925841316581,
+        "cleanup_seconds": 0.017410014988854527,
+        "within_wall_limit": true,
+        "deadline_exceeded": false,
+        "worker_exit_code": 0,
+        "cleanup_verified": true
+      },
+      "policy_name": "default",
+      "policy": {
+        "allow_numerics_change": false,
+        "allow_model_change": false,
+        "allow_batch_grad_accum": true,
+        "max_throughput_regression_pct": 25
+      },
+      "wall_seconds": 72.97498284117319,
+      "run_wall_limit_seconds": 480,
+      "within_wall_limit": true,
+      "cost_limit_certified": true
+    }
+  ],
+  "summary": {
+    "status": "measured",
+    "attempted_live_runs": 9,
+    "offline_fixture_rows_excluded": 0,
+    "target_met_count": 0,
+    "target_measured_denominator": 9,
+    "target_met_rate": 0.0,
+    "target_unknown_runs": 0,
+    "target_success_lower_bound": 0.0,
+    "first_cause_correct": 7,
+    "first_cause_scored_denominator": 7,
+    "first_cause_accuracy": null,
+    "first_cause_accuracy_among_scored": 1.0,
+    "first_cause_unknown_runs": 2,
+    "first_cause_success_lower_bound": 0.7777777777777778,
+    "known_cost_usd": "0",
+    "total_cost_usd": null,
+    "unknown_cost_runs": 9,
+    "billing_complete": true,
+    "bounded_cost_runs": 9,
+    "unresolved_cost_runs": 0,
+    "conservative_total_usd": "0.89696816",
+    "failed_or_partial_runs": 7,
+    "measured_metrics": {
+      "peak_reduction_pct": {
+        "mean": null,
+        "measured_count": 0,
+        "unknown_count": 9,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "step_time_change_pct": {
+        "mean": null,
+        "measured_count": 0,
+        "unknown_count": 9,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "throughput_change_pct": {
+        "mean": null,
+        "measured_count": 0,
+        "unknown_count": 9,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "rounds": {
+        "mean": "3.666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666667",
+        "measured_count": 9,
+        "unknown_count": 0,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "wall_seconds": {
+        "mean": "76.87069617097990444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444",
+        "measured_count": 9,
+        "unknown_count": 0,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "cost_usd": {
+        "mean": null,
+        "measured_count": 0,
+        "unknown_count": 9,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "numerical_equivalence": {
+        "equivalent": 0,
+        "comparable_count": 0,
+        "rate_among_comparable": null,
+        "not_comparable_or_unknown": 9
+      },
+      "failure_modes": {
+        "max_rounds_reached": 2,
+        "Diagnosis requests additional information; inspect diagnosis.json notes before restarting with new evidence": 7
+      }
+    },
+    "outcomes": {
+      "patch_applied": {
+        "true_count": 6,
+        "false_count": 0,
+        "unknown_count": 3,
+        "known_count": 6
+      },
+      "selected_patch_applied": {
+        "true_count": 0,
+        "false_count": 9,
+        "unknown_count": 0,
+        "known_count": 9
+      },
+      "selected_completed": {
+        "true_count": 0,
+        "false_count": 0,
+        "unknown_count": 9,
+        "known_count": 0
+      }
+    },
+    "by_policy": {
+      "default": {
+        "attempted": 9,
+        "target_met": 0,
+        "target_rate": 0.0,
+        "target_unknown": 0,
+        "first_cause_correct": 7,
+        "first_cause_scored": 7,
+        "first_cause_accuracy": null,
+        "first_cause_accuracy_among_scored": 1.0,
+        "first_cause_unknown": 2,
+        "known_cost_usd": "0",
+        "total_cost_usd": null,
+        "unknown_cost_runs": 9,
+        "metrics": {
+          "peak_reduction_pct": {
+            "mean": null,
+            "measured_count": 0,
+            "unknown_count": 9,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "step_time_change_pct": {
+            "mean": null,
+            "measured_count": 0,
+            "unknown_count": 9,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "throughput_change_pct": {
+            "mean": null,
+            "measured_count": 0,
+            "unknown_count": 9,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "rounds": {
+            "mean": "3.666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666667",
+            "measured_count": 9,
+            "unknown_count": 0,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "wall_seconds": {
+            "mean": "76.87069617097990444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444",
+            "measured_count": 9,
+            "unknown_count": 0,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "cost_usd": {
+            "mean": null,
+            "measured_count": 0,
+            "unknown_count": 9,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "numerical_equivalence": {
+            "equivalent": 0,
+            "comparable_count": 0,
+            "rate_among_comparable": null,
+            "not_comparable_or_unknown": 9
+          },
+          "failure_modes": {
+            "max_rounds_reached": 2,
+            "Diagnosis requests additional information; inspect diagnosis.json notes before restarting with new evidence": 7
+          }
+        },
+        "billing_complete": true,
+        "bounded_cost_runs": 9,
+        "unresolved_cost_runs": 0,
+        "conservative_total_usd": "0.89696816"
+      }
+    },
+    "by_condition": {
+      "full_ultra": {
+        "attempted": 9,
+        "target_met": 0,
+        "first_cause_scored": 7,
+        "first_cause_correct": 7
+      },
+      "traceback_ultra": {
+        "attempted": 0,
+        "target_met": 0,
+        "first_cause_scored": 0,
+        "first_cause_correct": 0
+      },
+      "full_super": {
+        "attempted": 0,
+        "target_met": 0,
+        "first_cause_scored": 0,
+        "first_cause_correct": 0
+      }
+    }
+  },
+  "halt_reason": null,
+  "ablation": {
+    "status": "descriptive_only",
+    "planned_synthetic_count": 8,
+    "paired_scored_count": 0,
+    "aggregation_scope": "scenario-policy pairs; use by_policy for a fixed-policy comparison",
+    "by_policy": {},
+    "pairs": [],
+    "excluded": [
+      {
+        "scenario_id": "s1_batch_too_big",
+        "policy_name": "default",
+        "reason": "missing_or_duplicate_condition"
+      },
+      {
+        "scenario_id": "s2_fp32_adamw_1b",
+        "policy_name": "default",
+        "reason": "missing_or_duplicate_condition"
+      },
+      {
+        "scenario_id": "s3_eval_no_grad_missing",
+        "policy_name": "default",
+        "reason": "missing_or_duplicate_condition"
+      },
+      {
+        "scenario_id": "s4_loss_accumulation_graph",
+        "policy_name": "default",
+        "reason": "missing_or_duplicate_condition"
+      },
+      {
+        "scenario_id": "s5_fragmentation_varlen",
+        "policy_name": "default",
+        "reason": "missing_or_duplicate_condition"
+      },
+      {
+        "scenario_id": "s6_full_vocab_logits_fp32",
+        "policy_name": "default",
+        "reason": "missing_or_duplicate_condition"
+      },
+      {
+        "scenario_id": "s7_frozen_params_optimizer_state",
+        "policy_name": "default",
+        "reason": "missing_or_duplicate_condition"
+      },
+      {
+        "scenario_id": "s8_two_models_resident",
+        "policy_name": "default",
+        "reason": "missing_or_duplicate_condition"
+      }
+    ],
+    "accuracy": {
+      "full_ultra": null,
+      "traceback_ultra": null,
+      "full_super": null
+    },
+    "ultra_full_minus_traceback": null,
+    "full_ultra_minus_full_super": null,
+    "note": "Exact category agreement on paired first-round diagnoses; no significance claim."
+  },
+  "report_path": "/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261025T022454741538Z-8e6e085d/campaign.json"
+}
