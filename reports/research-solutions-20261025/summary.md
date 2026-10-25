@@ -73,3 +73,6 @@
 - 第二次完整回归为 **2,337 passed、1 failed**。唯一失败是旧测试要求整条调用记录不含提示正文；新增专用 request_evidence 字段本来就保存经过限制和脱敏的请求。修复只涉及测试，明确专用 payload 与实际运输正文相等，预算字段、其他 metadata 和预算数据库仍不包含正文。相关64项测试通过。
 - 最终完整回归 **2,338 passed，562.33秒**，257个源码/配置/提示词/测试条目前后及当前一致；原PLAN与guard哈希保持不变。[完整收据](full-regression-20261025T051427Z-c9f092a7-receipt.json)、[完整日志](full-regression-20261025T051427Z-c9f092a7.log)和同名前缀的源文件清单均保留。
 - 使用原有离线 guard，禁止真实模型/API、生产凭据/数据库和GPU任务。所有生产代码、提示词和测试在最终运行开始后冻结；原 PLAN、MVP manifest、扫描配置不变。
+
+- Ruff、格式、pre-commit与提交前history/staged密钥扫描全部通过，零密钥发现。源码版本[0792ab7](https://github.com/xiaodouzi666/headroom/commit/0792ab7c288b98489e8f3e68668d8e00eb5e7192)已推送并核对远端一致。
+- 现有127.0.0.1:8765预览已刷新到该源码版本：健康、队列空闲、runtime已配置；257个源条目与完整回归一致，旧profile和预算账本不变。没有发起UI修复、模型推理或GPU任务，也不据此声称浏览器全流程验收通过。[预览交付收据](../preview-research-20261025.json)。

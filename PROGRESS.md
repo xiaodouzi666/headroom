@@ -17,6 +17,9 @@ nanoGPT now reads32x1 but still fails citation/policy checks. s2's fixed-state
 remaining target choices: reports/research-solutions-20261025/summary.md.
 Final guarded backend regression: 2338 passed in 562.33s; all257 source entries,
 canonical PLAN, and offline guard unchanged. Earlier interrupted/failed runs retained.
+Source0792ab7 is pushed; refreshed loopback preview is healthy/idle/configured,
+with unchanged ledger/profile and matching tested source inventory.
+Receipt: reports/preview-research-20261025.json.
 
 ## Tasks
 
