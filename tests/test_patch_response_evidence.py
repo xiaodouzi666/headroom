@@ -118,7 +118,7 @@ def test_rejected_source_anchor_is_saved_verbatim_before_application(source, tmp
     assert record["validation"] == "failed"
     assert stat.S_IMODE(path.stat().st_mode) == 0o600
     assert stat.S_IMODE(path.parent.stat().st_mode) == 0o700
-    assert calls[0]["chat_template_kwargs"] == {"enable_thinking": False}
+    assert calls[0]["chat_template_kwargs"] == {"enable_thinking": True}
     assert calls[0]["max_completion_tokens"] == 4000 and "max_tokens" not in calls[0]
     for secret in (
         "NEVER_CAPTURE_HIDDEN_REASONING",

@@ -11,7 +11,8 @@ strict/allow_precision comparisons, preserving historical results and the 6/9 ga
 Continued nanoGPT/s7 repair and remaining acceptance are authorized within existing
 gifted credit, without recharge/overrun. New fixtures are calibrated and pinned
 before model evaluation; CPU controls are never counted as model repair successes.
-Implementation and validation are in progress; no new scored campaign is claimed yet.
+The independent acceptance-v2 campaign completed: target 1/9, valid and correct
+first cause 6/9. The six-target gate remains failed; Phase 2 is not dispatched.
 The separate s2 classification/capacity calibration passed. The s7 human control
 preserved full FP32 updates and reduced peak by 22.60%; it is not a model score.
 The s1 transformed reference completed 20 FP32 updates in 115.27 seconds and its
@@ -23,8 +24,24 @@ The final guarded full suite passed 2,689 tests in 710.98 seconds with all
 offload/reference exception gap is fixed: only legacy repository references
 retain the old unavailable-reference exception. Focused regression, staged Ruff,
 format and secret checks passed. The earlier 2,662-test pass, the initial four
-failures, and the format-related interrupted full run are retained. Qualification
-is being frozen before the new nine-case model dispatch.
+failures, and the format-related interrupted full run are retained. Qualification and the real nine-case dispatch are complete. The independent audit
+verifies nine CLI chains (one exit 0, eight exit 78), unchanged 288-source inventory,
+and 27 model attempts costing a conservative $0.62468206. The same pool has
+$4.198482664 remaining at that receipt; unknown charges remain reserved.
+See reports/acceptance-v2-20261025/independent-audit-summary.md.
+
+Repair round 1 after this approved protocol-v2 baseline is in development:
+use the already verified reasoning toggle, expose the selected numerical-reference
+capability to the solver, and check evidence-gap availability/dependencies.
+Super's original 4,000 completion-token limit, all financial guards, old results
+and both 6/9 primary gates remain unchanged. No new live result is claimed.
+The initial r1 full regression retained 2717 passed/30 failed: all 30 were
+prepared-diagnosis adapter request-contract mismatches after reasoning enablement.
+The adapter and frozen-request implementation pins were repaired without weakening
+one-call, payload or billing gates. The fresh full regression passed all 2757 tests
+in 736.48 seconds, with all 293 source entries, PLAN and guard unchanged.
+Receipt: reports/acceptance-v2-r1-20261025/full-regression-20261025T093232Z-370e16ea-receipt.json.
+The source-matched round-1 dispatch is being qualified; no live score is yet claimed.
 
 ## 2026-10-25 independent research and fixes
 
@@ -64,11 +81,11 @@ Receipt: reports/preview-research-20261025.json.
 | T1.9 | 真实仓库：nanoGPT（P0，~2h） | 真实nanoGPT已执行；修复门未通过 | v7 realCLI32/1 versus model12/40 failure preserved; latest diagnostic probe reads32x1 but fails claim/policy gates, no candidate; reports/final-nano-diagnostic-probe-20261025T050212Z-b19ed759/report.md |
 | T1.10 | Honesty 与安全（P0，~1h） | 静态与CPU真实性检查通过；完整修复待办 | docs/PATCH.md; model shrink/truncation/escape checks and observed parameter counts |
 | T1.11 | Docker Lab（P1，仅 `DOCKER_GPU=ok`，~1.5h） | 自有Python镜像、干净目录CPU及隔离组件通过 | docs/LAB_RUNTIME.md; hash-locked image-owned Python3.12, verified immutable image ID, no host venv mount; clean candidate tree script/module each3updates with capture/cleanup verified |
-| T1.12 | MVP 整体验收 + 报告（P0，~1.5h，10/24 晚） | 历史v7目标1/9保留；新v2九场景已获授权，待最终回归后执行；6/9门不变 | v7 all9live/25calls; target1/9; cause raw6/valid4true3false2unknown;9CLIchains 1zero8exit78; originalPLAN0.6 stop |
+| T1.12 | MVP 整体验收 + 报告（P0，~1.5h，10/24 晚） | 历史v7与新版协议v2各1/9分开保留；新版有效首因6/9；目标门未通过 | v7 all9live/25calls; target1/9; cause raw6/valid4true3false2unknown;9CLIchains 1zero8exit78; originalPLAN0.6 stop |
 | T2.1 | 显存求解循环：keep-or-revert 搜索 + Pareto 前沿（P0，~3h） | 有界搜索与逐轮验证反馈完成；真实验收待办 | docs/SEARCH.md; selected state survives revert; per-round verification-feedback.json exposes actual loss/check/error facts to later rounds; original s2/bf16 policy gates unchanged |
 | T2.2 | Tavily Research（P0，~2h） | 真实模型研究与缓存已测；指定Sources门未通过 | v4 research9rows/8API/7credits;s4PyTorch2.5checkpoint extract;s3->s5cache0API0credits;s1checkpoint/s5CUDA memorySources absent |
 | T2.3 | Nano 栈标注（P1，~1h） | 真实8场景已测；覆盖和一致率未通过 | v4 4/8complete;completed outputs3/40heuristic matches;failed4not excluded;all<=0.02certified upper |
-| T2.4 | 预算守卫与成本面板（P0，~45min） | 真实费用链复核通过；原额外预算门待办 | 461settledattempts/79closedruns/0pending unresolved halt; runtimeconservative5.176484316/remaining4.823164724; original .05/.1 partial-report/day-rejection paths covered by full-suite offline MockTransport tests; live multi-round billing gate remains separate |
+| T2.4 | 预算守卫与成本面板（P0，~45min） | 真实费用链复核通过；原额外预算门待办 | acceptance-v2 audit: 0 pending/unresolved; runtime conservative5.801166376/remaining4.198482664; original .05/.1 partial-report/day-rejection paths covered by full-suite offline MockTransport tests; live multi-round billing gate remains separate |
 | T2.5 | HF Transformers 场景（P1，~2h） | HF场景CPU/GPU基线通过；修复待办 | reports/hf-trainer-baseline-20261024.json; real Trainer OOM; configuration-only repair gate pending |
 | T2.6 | Watch 模式（P2，~1.5h） | shell/Python启动器可定位唯一CUDA OOM子进程并重跑；真实模型修复验收待办 | docs/WATCH_HF.md; preserved multi-process inventory and selected capture binding; exact target replay; manual real GPU helper+s1 OOM selected correctly; candidate/reference each20updates passed; duplicate/OOM ambiguity and root failures rejected; no host fallback |
 | T2.7 | Docker/HF 缓存稳健性（P1）：验收：三个场景在 Docker 路径下结果与子进程路径一致（峰值差 ≤ 1%）。 | 已验收 | reports/t2.7-acceptance-20261025.json; six actual GPU arms independently audited; s1/s3/HF allocated/reserved peak differences 0% <=1%; s3 both20updates/identical losses, s1/HF genuineOOM; Docker-contained independent subprocess controller, source/image/seed/capture/cleanup verified; original hostEPERM retained |

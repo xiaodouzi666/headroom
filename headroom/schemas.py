@@ -50,8 +50,24 @@ class InvocationClaim(DiagnosisModel):
 
 class EvidenceRequest(DiagnosisModel):
     field: Annotated[str, StringConstraints(min_length=1, max_length=160)]
-    reason: Literal["missing", "ambiguous", "policy_infeasible", "insufficient_saving", "other"]
+    reason: Literal[
+        "missing",
+        "redacted",
+        "truncated",
+        "ambiguous",
+        "policy_infeasible",
+        "insufficient_saving",
+        "other",
+    ]
     detail: Annotated[str, StringConstraints(min_length=1, max_length=1024)]
+    # Optional for saved responses. Availability is not semantic/runtime proof.
+    evidence_ref: Annotated[str, StringConstraints(min_length=1, max_length=160)] | None = None
+    source_line_start: int | None = Field(default=None, ge=1, le=1_000_000)
+    source_line_end: int | None = Field(default=None, ge=1, le=1_000_000)
+    blocking_scope: Literal["current_plan", "alternative_plan", "overall_feasibility"] | None = None
+    blocked_plan_ids: list[Annotated[str, StringConstraints(min_length=1, max_length=160)]] = Field(
+        default_factory=list, max_length=16
+    )
 
 
 class Diagnosis(DiagnosisModel):

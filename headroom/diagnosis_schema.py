@@ -9,6 +9,7 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
+from headroom.evidence_blockers import evidence_reference_catalog
 from headroom.schemas import Diagnosis
 from headroom.solver_context import invocation_reference_catalog
 
@@ -63,6 +64,13 @@ def build_diagnosis_schema(*, evidence: Mapping[str, Any], policy: Mapping[str, 
         else:
             invocation_refs["maxItems"] = 0
         definitions = schema["$defs"]
+        evidence_ref = definitions["EvidenceRequest"]["properties"]["evidence_ref"]
+        identities = sorted(evidence_reference_catalog(evidence))
+        evidence_ref["anyOf"] = (
+            [{"type": "string", "enum": identities}, {"type": "null"}]
+            if identities
+            else [{"type": "null"}]
+        )
         refs = definitions["RootCause"]["properties"]["evidence_refs"]
         steps = definitions["PlanStep"]["properties"]
         required = steps["requires_policy"]

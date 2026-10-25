@@ -282,6 +282,7 @@ def test_deepcopy_preserves_historical_schema_and_every_unrelated_field(monkeypa
     restored = copy.deepcopy(constrained)
     for name, field in [
         ("RootCause", "evidence_refs"),
+        ("EvidenceRequest", "evidence_ref"),
         ("PlanStep", "requires_policy"),
         ("PlanStep", "numerics_impact"),
     ]:
@@ -326,10 +327,15 @@ def test_production_diagnosis_reuses_current_schema_for_the_supplement():
         )
     assert verdict.requires_supplement and not verdict.valid
     assert len(requests) == 2
-    expected = build_diagnosis_schema(evidence=evidence(), policy={})
+    delivered = json.loads(requests[0]["messages"][-1]["content"])
+    expected = build_diagnosis_schema(
+        evidence=evidence()
+        | {"evidence_availability_catalog": delivered["evidence_availability_catalog"]},
+        policy={},
+    )
     assert all(r["response_format"]["json_schema"]["schema"] == expected for r in requests)
     assert all(r["max_tokens"] == 8192 for r in requests)
-    assert all(r["chat_template_kwargs"] == {"enable_thinking": False} for r in requests)
+    assert all(r["chat_template_kwargs"] == {"enable_thinking": True} for r in requests)
     assert len(requests[1]["messages"]) == len(requests[0]["messages"]) + 2
 
 
@@ -381,7 +387,7 @@ def test_prepared_wrapper_checks_independently_rebuilt_schema_before_dispatch(tm
             LLMRouter(sdk), messages, tmp_path / "response.json", evidence=source, policy=policy
         )
         with pytest.raises(DiagnosisAcceptanceRefused, match="DIAGNOSIS_SCHEMA_CHANGED"):
-            wrapped.chat("diagnose", messages, schema, max_tokens=8192, reasoning=False)
+            wrapped.chat("diagnose", messages, schema, max_tokens=8192, reasoning=True)
     assert requests == [] and not (tmp_path / "response.json").exists()
 
 
@@ -397,10 +403,10 @@ def test_prepared_wrapper_passes_pinned_schema_once_and_retains_messages_gate(tm
             LLMRouter(sdk), messages, tmp_path / "response.json", evidence=source, policy=policy
         )
         with pytest.raises(DiagnosisAcceptanceRefused, match="DIAGNOSIS_REQUEST_CHANGED"):
-            wrapped.chat("diagnose", [], schema, max_tokens=8192, reasoning=False)
-        wrapped.chat("diagnose", messages, schema, max_tokens=8192, reasoning=False)
+            wrapped.chat("diagnose", [], schema, max_tokens=8192, reasoning=True)
+        wrapped.chat("diagnose", messages, schema, max_tokens=8192, reasoning=True)
         with pytest.raises(DiagnosisAcceptanceRefused, match="ONLY_ONE_PREPARED"):
-            wrapped.chat("diagnose", messages, schema, max_tokens=8192, reasoning=False)
+            wrapped.chat("diagnose", messages, schema, max_tokens=8192, reasoning=True)
     assert len(requests) == 1 and (tmp_path / "response.json").is_file()
     assert requests[0]["response_format"]["json_schema"]["schema"] == schema
 
@@ -443,11 +449,16 @@ def test_evaluation_conditions_keep_dynamic_schema_with_only_visible_ids(tmp_pat
         )
     assert checked.valid and len(requests) == 1
     request = requests[0]
-    expected = build_diagnosis_schema(evidence=visible, policy={})
+    delivered = json.loads(request["messages"][-1]["content"])
+    expected = build_diagnosis_schema(
+        evidence=visible
+        | {"evidence_availability_catalog": delivered["evidence_availability_catalog"]},
+        policy={},
+    )
     assert request["response_format"]["json_schema"]["schema"] == expected
     assert request["model"] == candidate_models()[role].model_id
     assert request["max_tokens"] == 8192
-    assert request["chat_template_kwargs"] == {"enable_thinking": False}
+    assert request["chat_template_kwargs"] == {"enable_thinking": True}
     if condition == "traceback_ultra":
         references = expected["$defs"]["RootCause"]["properties"]["evidence_refs"]["items"]["enum"]
         assert references == ["memory_summary", "traceback"]

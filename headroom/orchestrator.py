@@ -43,6 +43,7 @@ from headroom.store.db import Store, _bounded_cost
 from headroom.verify.compare import parse_target
 from headroom.verify.policy import nanogpt_cli, scan_source_forbidden
 from headroom.verify.reference_config import NumericalReference
+from headroom.verify.reference_context import numerical_reference_context
 from headroom.verify.runner import verify_script
 
 
@@ -566,6 +567,17 @@ def run_fix(
                 allocator_conf=current_allocator,
                 runtime_result=current_result,
             )
+            reference_capabilities = numerical_reference_context(
+                request.numerical_reference,
+                baseline=baseline,
+                original_script=original_source / relative,
+                original_args=request.script_args,
+                retained_script=current_source / relative,
+                required_steps=request.max_steps,
+                max_seconds=request.max_seconds,
+                repository_mode=request.repository_mode,
+                command_mode=request.execution_argv is not None,
+            )
             prior_candidates = candidate_context(candidate_history)
             prompt_evidence = Path(current_evidence["evidence_md"]).read_text()
             prompt_evidence += "\n\nSEARCH STATE (trusted orchestration metadata):\n" + json.dumps(
@@ -585,6 +597,7 @@ def run_fix(
             diagnostic_evidence = {
                 **evidence_json,
                 "execution_context": invocation,
+                "numerical_reference_context": reference_capabilities,
                 "candidate_evidence": prior_candidates,
                 "search_state": {
                     "round": number,
@@ -771,6 +784,7 @@ def run_fix(
             context = {
                 "diagnosis": diagnosis,
                 "execution_context": invocation,
+                "numerical_reference_context": reference_capabilities,
                 "candidate_evidence": prior_candidates,
                 "verification_feedback": verification_feedback,
                 "goal": request.target,

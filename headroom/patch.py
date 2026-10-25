@@ -626,6 +626,7 @@ class PatchEngine:
                         "execution_context",
                         "candidate_evidence",
                         "verification_feedback",
+                        "numerical_reference_context",
                     )
                 }
             )
@@ -656,7 +657,7 @@ class PatchEngine:
                     messages,
                     SourceSpanProposal,
                     max_tokens=self.max_completion_tokens,
-                    reasoning=False,
+                    reasoning=True,
                 )
                 if response.usage is None:
                     raise LLMError("PATCH_USAGE_UNVERIFIED")

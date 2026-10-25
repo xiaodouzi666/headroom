@@ -5,7 +5,20 @@ manifest run reproduced five CUDA OOMs and completed twenty steps in seven workl
 All captures and cleanup checks passed. This is baseline acceptance, not automated
 repair or model-quality evidence.
 
-The final authorized extension, MVP v7, completed all nine cases with one target
+The separately authorized **acceptance protocol v2** campaign completed at source
+ce38d3c with **1/9 targets (s3)** and **6/9 valid correct first causes**. Its raw
+category matches were seven; s6 failed diagnosis validity and is not counted.
+The fixed nine-case denominator and six-target threshold are unchanged. All
+nine actual CLI chains were verified, with one exit 0 and eight exit 78.
+The independent audit found unchanged source artifacts and no ledger mismatch.
+27 model attempts occupy a conservative $0.62468206, including $0.00440220
+retained for unknown actual charges. At that receipt, the original cumulative
+pool has $4.198482664 remaining. No recharge or new pool was used.
+See [the independent summary](../reports/acceptance-v2-20261025/independent-audit-summary.md).
+This failed campaign is retained; a newly authorized repair round is being
+developed. Phase 2, main evaluation and full acceptance remain open.
+
+The final extension in the earlier protocol, MVP v7, completed all nine cases with one target
 success (s8), below the original six-target gate. Raw first-cause matches are
 6/9; with diagnosis validity they are four correct, three failed and two unknown.
 Nine literal CLI execution chains were verified: s8 exit 0 and eight exit 78.
@@ -16,8 +29,10 @@ under the original scalar gate, not proof of full mathematical equivalence.
 
 The earlier v6 s3 success (73.378694% reduction, full pinned pairing checks) is
 preserved separately. Different source versions are not merged into a score.
-All three additional iterations v5/v6/v7 are exhausted; further repair work
-awaits the owner's decision under PLAN section 0.6. Main evaluation, ablations,
+All three historical additional iterations v5/v6/v7 were exhausted. The owner
+subsequently authorized independent research, the two protocol-v2 changes and
+continued repairs using existing gifted credit; the new results above do not
+rewrite these historical runs. Main evaluation, ablations,
 public delivery and full project acceptance remain open. See the final v7
 summary and decision report; all historical snapshots below remain dated evidence.
 

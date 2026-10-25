@@ -18,6 +18,8 @@ from types import SimpleNamespace
 
 import httpx
 
+from headroom import diagnose as diagnosis_module
+from headroom import diagnosis_schema, evidence_blockers, schemas, solver_context
 from headroom.acceptance.common import (
     acceptance_run,
     file_record,
@@ -35,6 +37,7 @@ from headroom.diagnose import (
 )
 from headroom.diagnosis_schema import build_diagnosis_schema
 from headroom.evidence import MAX_SNAPSHOT_BYTES, _main_source, _tokens, build_evidence
+from headroom.evidence_blockers import build_evidence_availability_catalog
 from headroom.lab.runner import read_capture, selected_capture_directory
 from headroom.lab.snapshot_codec import read_snapshot_artifact
 from headroom.llm.router import ResponseValidationError
@@ -57,6 +60,16 @@ REQUIRED_MATCHES = 6
 MAX_DOCUMENT_BYTES = 32 * 1024 * 1024
 MAX_METADATA_BYTES = 4 * 1024 * 1024
 MAX_RESPONSE_ARTIFACT_BYTES = 256 * 1024
+# Bind the actual imported request builders, not paths inside a fixture project.
+# Older preparation packages without these pins must be prepared afresh.
+REQUEST_IMPLEMENTATION_PATHS = {
+    "acceptance/diagnosis.py": Path(__file__),
+    "diagnose.py": Path(diagnosis_module.__file__),
+    "diagnosis_schema.py": Path(diagnosis_schema.__file__),
+    "evidence_blockers.py": Path(evidence_blockers.__file__),
+    "schemas.py": Path(schemas.__file__),
+    "solver_context.py": Path(solver_context.__file__),
+}
 
 
 class DiagnosisAcceptanceRefused(ValueError):
@@ -101,6 +114,12 @@ def _project_inputs(root):
         "scenarios/INDEX.yaml": file_record(index_path, max_bytes=MAX_METADATA_BYTES),
         "diagnosis_prompt": file_record(PROMPT_PATH, max_bytes=MAX_METADATA_BYTES),
     }
+    pins.update(
+        {
+            "request_implementation/" + name: file_record(path, max_bytes=MAX_METADATA_BYTES)
+            for name, path in REQUEST_IMPLEMENTATION_PATHS.items()
+        }
+    )
     for case_id in SCENARIO_IDS:
         case, entry = cases[case_id], indexed[case_id]
         _require(case["script"] == f"scenarios/{case_id}/train.py", "SCENARIO_SOURCE_CHANGED")
@@ -205,6 +224,29 @@ def _truth_record(root, case, destination):
     }
 
 
+def _prepared_request(evidence, markdown, *, goal, policy, required_saving_gb):
+    """Derive the same bounded request context from the frozen evidence bytes.
+
+    The source document remains unchanged. Preparation, revalidation and dispatch
+    use this one adapter and the same catalogue/message builders as diagnosis.
+    """
+    document = dict(evidence)
+    document["evidence_availability_catalog"] = build_evidence_availability_catalog(
+        document, markdown
+    )
+    messages = build_diagnosis_messages(
+        markdown,
+        goal=goal,
+        policy=policy,
+        required_saving_gb=required_saving_gb,
+        execution_context=document.get("execution_context"),
+        candidate_evidence=document.get("candidate_evidence"),
+        numerical_reference_context=document.get("numerical_reference_context"),
+        evidence_availability_catalog=document["evidence_availability_catalog"],
+    )
+    return document, messages
+
+
 def prepare_diagnosis_acceptance(
     captures, output_dir, *, project_root=PROJECT_ROOT, evidence_budget=150000
 ):
@@ -279,7 +321,8 @@ def prepare_diagnosis_acceptance(
                     "EVIDENCE_TOKEN_COUNT_MISMATCH",
                 )
                 required = _required_reduction(result, case["target"], reclaim_reduction_pct=30)
-                messages = build_diagnosis_messages(
+                _, messages = _prepared_request(
+                    document,
                     markdown,
                     goal=case["target"],
                     policy=report["policy"],
@@ -399,19 +442,15 @@ def _verify_preparation(path):
                 == row["prepared_files"][name],
                 "PREPARED_EVIDENCE_CHANGED",
             )
-        markdown = read_bytes(
-            directory / "evidence/evidence.md", max_bytes=MAX_DOCUMENT_BYTES
-        ).decode()
-        _require(
-            read_json(directory / "messages.json", max_bytes=MAX_DOCUMENT_BYTES)
-            == build_diagnosis_messages(
-                markdown,
-                goal=cases[case_id]["target"],
-                policy=prepared["policy"],
-                required_saving_gb=row["required_saving_gb"],
-            ),
-            "DIAGNOSIS_REQUEST_CHANGED",
+        markdown, document, messages = _case_payload(package, row)
+        _, expected_messages = _prepared_request(
+            document,
+            markdown,
+            goal=cases[case_id]["target"],
+            policy=prepared["policy"],
+            required_saving_gb=row["required_saving_gb"],
         )
+        _require(messages == expected_messages, "DIAGNOSIS_REQUEST_CHANGED")
     return package, prepared
 
 
@@ -552,7 +591,7 @@ def _prepared_router(router, expected_messages, response_path, *, evidence, poli
             calls == 0
             and role == "diagnose"
             and max_tokens == DIAGNOSIS_MAX_COMPLETION_TOKENS
-            and reasoning is False,
+            and reasoning is True,
             "ONLY_ONE_PREPARED_DIAGNOSIS_ALLOWED",
         )
         _require(messages == expected_messages, "DIAGNOSIS_REQUEST_CHANGED")
@@ -675,7 +714,7 @@ def execute_diagnosis_acceptance(
         "campaign_admission_limit_usd": str(campaign_cap),
         "actual_acceptance_limit_per_call_usd": "0.35",
         "diagnosis_max_completion_tokens": DIAGNOSIS_MAX_COMPLETION_TOKENS,
-        "diagnosis_reasoning": False,
+        "diagnosis_reasoning": True,
         "min_case_interval_seconds": min_case_interval_seconds,
         "rows": [],
         "stop_reason": None,
@@ -728,6 +767,14 @@ def execute_diagnosis_acceptance(
             last_case_started = started
             row["case_start_offset_seconds"] = started - execution_started
             markdown, document, expected_messages = _case_payload(package, prepared_row)
+            document, rebuilt_messages = _prepared_request(
+                document,
+                markdown,
+                goal=prepared_row["target"],
+                policy=prepared["policy"],
+                required_saving_gb=prepared_row["required_saving_gb"],
+            )
+            _require(rebuilt_messages == expected_messages, "DIAGNOSIS_REQUEST_CHANGED")
             with acceptance_run(
                 case_id="diagnosis-" + case_id,
                 artifact_dir=execution / case_id,

@@ -252,7 +252,7 @@ def test_real_router_generates_patch_with_super_and_4000_cap(project, tmp_path):
         and requests[0]["model"] == SUPER_MODEL
         and requests[0]["max_tokens"] == 4000
     )
-    assert requests[0]["chat_template_kwargs"] == {"enable_thinking": False}
+    assert requests[0]["chat_template_kwargs"] == {"enable_thinking": True}
     assert result.attempts[0].llm_usage["completion_tokens"] == 100
     assert result.attempts[0].llm_cost["usd"] is None
     assert (
@@ -278,7 +278,7 @@ def test_policy_repair_against_original_with_failure_history(project, tmp_path):
     finally:
         router.client.close()
     assert result.applied and len(result.attempts) == 2
-    assert all(r["chat_template_kwargs"] == {"enable_thinking": False} for r in requests)
+    assert all(r["chat_template_kwargs"] == {"enable_thinking": True} for r in requests)
     assert result.attempts[0].reason == "MODEL_SHRUNK"
     assert all(Path(item.candidate_dir).exists() for item in result.attempts)
     assert len({item.candidate_dir for item in result.attempts}) == 2

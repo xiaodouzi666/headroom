@@ -366,6 +366,19 @@ def test_prepare_preserves_eight_inputs_and_truth_without_reading_profile(projec
     report, path = prepare(project)
     assert report["ready_count"] == 8 and report["ready_for_execution"]
     assert report["accepted"] is False and report["live_executed"] is False
+    assert {
+        key for key in report["project_inputs"] if key.startswith("request_implementation/")
+    } == {
+        "request_implementation/" + name
+        for name in (
+            "acceptance/diagnosis.py",
+            "diagnose.py",
+            "diagnosis_schema.py",
+            "evidence_blockers.py",
+            "schemas.py",
+            "solver_context.py",
+        )
+    }
     assert report["thresholds"] == {
         "required_matches": 6,
         "denominator": 8,
@@ -395,11 +408,31 @@ def test_real_router_runtime_chain_scores_seven_without_fake_live_acceptance(pro
     assert all(row["references_valid"] and row["response_identity_valid"] for row in result["rows"])
     assert all(row["runtime"]["usage"]["unknown_cost_calls"] == 0 for row in result["rows"])
     assert all(body["max_completion_tokens"] == 8192 for body in calls)
-    assert all(body["chat_template_kwargs"] == {"enable_thinking": False} for body in calls)
-    assert result["diagnosis_reasoning"] is False
+    assert all(body["chat_template_kwargs"] == {"enable_thinking": True} for body in calls)
+    assert result["diagnosis_reasoning"] is True
     assert all(
         "root_causes" in body["messages"][0]["content"] for body in calls
     )  # Actual router-added schema.
+    from headroom.diagnosis_schema import build_diagnosis_schema
+    from headroom.evidence_blockers import build_evidence_availability_catalog
+
+    for row, body in zip(prepared["rows"], calls, strict=True):
+        directory = path.parent / "cases" / row["scenario_id"]
+        frozen_messages = json.loads((directory / "messages.json").read_text())
+        evidence = json.loads((directory / "evidence/evidence.json").read_text())
+        markdown = (directory / "evidence/evidence.md").read_text()
+        catalogue = build_evidence_availability_catalog(evidence, markdown)
+        assert body["messages"][1:] == frozen_messages
+        assert (
+            json.loads(body["messages"][-1]["content"])["evidence_availability_catalog"]
+            == catalogue
+        )
+        assert any(entry["evidence_ref"] == "source[0]" for entry in catalogue["entries"])
+        wire_schema = json.loads(body["messages"][0]["content"].split("\n", 1)[1])
+        assert wire_schema == build_diagnosis_schema(
+            evidence=evidence | {"evidence_availability_catalog": catalogue},
+            policy=prepared["policy"],
+        )
     store = Store(project[0] / "runs/acceptance/headroom.db")
     try:
         assert store.usage()["calls"] == 8
@@ -944,7 +977,7 @@ def test_missing_verified_reasoning_toggle_refuses_before_dispatch(project):
     assert not (path.parent / "execution" / SCENARIO_IDS[0] / "model-response.json").exists()
 
 
-@pytest.mark.parametrize("reasoning", [None, True, 0, "false"])
+@pytest.mark.parametrize("reasoning", [None, False, 0, 1, "true"])
 def test_prepared_wrapper_rejects_changed_reasoning_choice_before_call(tmp_path, reasoning):
     from types import SimpleNamespace
 
@@ -961,3 +994,155 @@ def test_prepared_wrapper_rejects_changed_reasoning_choice_before_call(tmp_path,
     with pytest.raises(DiagnosisAcceptanceRefused, match="ONLY_ONE_PREPARED"):
         router.chat("diagnose", [], {}, max_tokens=8192, reasoning=reasoning)
     assert not calls
+
+
+@pytest.mark.parametrize("changed", ["reasoning", "messages", "schema", "second_call"])
+def test_prepared_wrapper_exact_request_gate_allows_no_extra_dispatch(
+    tmp_path, monkeypatch, changed
+):
+    from copy import deepcopy
+    from types import SimpleNamespace
+
+    from headroom.acceptance import diagnosis
+    from headroom.diagnosis_schema import build_diagnosis_schema
+
+    evidence, messages = diagnosis._prepared_request(
+        {"stack_catalog": {"stk_fixture": []}},
+        "Frozen evidence only.",
+        goal="reclaim",
+        policy={},
+        required_saving_gb=None,
+    )
+    schema = build_diagnosis_schema(evidence=evidence, policy={})
+    calls = []
+    response = object()
+
+    def dispatch(*args, **kwargs):
+        calls.append((args, kwargs))
+        return response
+
+    monkeypatch.setattr(diagnosis, "_save_response", lambda *args, **kwargs: None)
+    router = diagnosis._prepared_router(
+        SimpleNamespace(chat=dispatch),
+        messages,
+        tmp_path / "unused.json",
+        evidence=evidence,
+        policy={},
+    )
+    actual_messages, actual_schema, reasoning = deepcopy(messages), deepcopy(schema), True
+    if changed == "reasoning":
+        reasoning = False
+    elif changed == "messages":
+        actual_messages[-1]["content"] += " changed after preparation"
+    elif changed == "schema":
+        actual_schema["title"] = "changed after preparation"
+    else:
+        assert (
+            router.chat("diagnose", messages, schema, max_tokens=8192, reasoning=True) is response
+        )
+    before = len(calls)
+    with pytest.raises(DiagnosisAcceptanceRefused):
+        router.chat(
+            "diagnose",
+            actual_messages,
+            actual_schema,
+            max_tokens=8192,
+            reasoning=reasoning,
+        )
+    assert len(calls) == before == (1 if changed == "second_call" else 0)
+
+
+def test_preparation_context_is_derived_without_mutating_frozen_evidence(project, monkeypatch):
+    from headroom.acceptance import diagnosis
+
+    original = diagnosis.build_evidence
+    reference = {
+        "selected_strategy": "original_workload_checkpoint",
+        "reference_execution_verified": None,
+        "candidate_equivalence_verified": None,
+    }
+
+    def build_with_context(*args, **kwargs):
+        result = original(*args, **kwargs)
+        path = Path(kwargs["output_dir"]) / "evidence.json"
+        document = json.loads(path.read_text())
+        document["numerical_reference_context"] = reference
+        document["evidence_availability_catalog"] = {"stale": "must not be trusted"}
+        write(path, document)
+        return result
+
+    monkeypatch.setattr(diagnosis, "build_evidence", build_with_context)
+    prepared, path = prepare(project)
+    before = {
+        row["scenario_id"]: (
+            path.parent / "cases" / row["scenario_id"] / "evidence/evidence.json"
+        ).read_bytes()
+        for row in prepared["rows"]
+    }
+    result, calls = execute(project, prepared, path)
+    assert len(calls) == 8 and result["fixture_gates_passed"]
+    for row, body in zip(prepared["rows"], calls, strict=True):
+        request = json.loads(body["messages"][-1]["content"])
+        assert request["numerical_reference_context"] == reference
+        assert (
+            request["evidence_availability_catalog"].get("schema")
+            == "headroom.evidence_availability.v1"
+        )
+        assert "stale" not in request["evidence_availability_catalog"]
+        source = path.parent / "cases" / row["scenario_id"] / "evidence/evidence.json"
+        assert source.read_bytes() == before[row["scenario_id"]]
+
+
+@pytest.mark.parametrize(
+    "module", ["evidence_blockers.py", "solver_context.py", "diagnosis_schema.py"]
+)
+def test_changed_request_implementation_refuses_before_runtime_and_preserves_package(
+    project, monkeypatch, module
+):
+    from headroom.acceptance import diagnosis
+
+    copied = project[0] / ("request-" + module)
+    copied.write_bytes(diagnosis.REQUEST_IMPLEMENTATION_PATHS[module].read_bytes())
+    monkeypatch.setattr(
+        diagnosis,
+        "REQUEST_IMPLEMENTATION_PATHS",
+        diagnosis.REQUEST_IMPLEMENTATION_PATHS | {module: copied},
+    )
+    _, path = prepare(project)
+    frozen = path.read_bytes()
+    copied.write_bytes(copied.read_bytes() + b"\n# changed implementation\n")
+    monkeypatch.setattr(
+        diagnosis, "acceptance_run", lambda **kwargs: pytest.fail("Runtime must not open")
+    )
+    with pytest.raises(DiagnosisAcceptanceRefused, match="PROJECT_INPUTS_CHANGED"):
+        execute_diagnosis_acceptance(
+            path, profile_path=project[0] / ".env", execute=True, live_authorized=True
+        )
+    assert path.read_bytes() == frozen
+    assert not (path.parent / "execution").exists()
+
+
+def test_legacy_preparation_without_request_code_pins_is_refused_unchanged(project, monkeypatch):
+    from headroom.acceptance import diagnosis
+
+    # Construct a fresh offline fixture in the old format; never migrate any
+    # historical preparation package or reinterpret its saved result.
+    prepared, path = prepare(project)
+    prepared["project_inputs"] = {
+        key: value
+        for key, value in prepared["project_inputs"].items()
+        if not key.startswith("request_implementation/")
+    }
+    prepared.pop("preparation_digest")
+    prepared["preparation_digest"] = diagnosis._json_digest(prepared)
+    write(path, prepared)
+    frozen = path.read_bytes()
+    monkeypatch.setattr(
+        diagnosis, "acceptance_run", lambda **kwargs: pytest.fail("Runtime must not open")
+    )
+    with pytest.raises(DiagnosisAcceptanceRefused, match="PROJECT_INPUTS_CHANGED"):
+        execute_diagnosis_acceptance(
+            path, profile_path=project[0] / ".env", execute=True, live_authorized=True
+        )
+    assert path.read_bytes() == frozen
+    assert not (path.parent / "execution").exists()

@@ -13,7 +13,8 @@ For environment/CLI-only changes, use edits:[]; retain the original supported al
 The plan is an unverified suggestion. Before editing, inspect the actual source producer and consumers of the affected tensors, the training versus evaluation call path, actual leading dimension/effective batch, loss reduction, and optimizer update cadence. Never infer batch semantics from a variable name or plan title alone.
 A microbatch change must use actual tensor lengths, never create empty slices, weight losses by the original sample/reduction semantics, and perform exactly one optimizer update per original effective batch. Preserve input data, objective, model, precision and required updates. If these premises cannot be established from the provided source, do not invent them: leave that edit out and state the unresolved premise in notes.
 Preserve interfaces and all policy restrictions. Precision changes need explicit permission. Batch/gradient-accumulation changes require their permission and must preserve effective mathematics. Do not change measurement hooks or accounting. Unknown permissions are disabled.
-Do not claim measured savings or verification. Existing policy, apply, compile, candidate-byte and GPU verification gates decide acceptance. Keep the response within the 4000-token output cap.
+Do not claim measured savings or verification. Existing policy, apply, compile, candidate-byte and GPU verification gates decide acceptance. The 4000-token completion cap includes reasoning and the final JSON together.
+Use concise reasoning and small edits, reserving enough tokens for complete valid JSON.
 
 Safety boundaries remain explicit for every proposal. Never add network access, subprocess/process execution, credential access, or filesystem escape; new runtime writes may only target /out. Do not modify profiling/measurement/accounting hooks.
 env_changes may only set the supported PYTORCH_CUDA_ALLOC_CONF allocator options. cli_changes are actual supported long-option overrides only, with no shell syntax or interpreter command.
@@ -56,3 +57,25 @@ to save memory. Precision permission alone does not authorize dropping parameter
 updates. Any optimizer/gradient-lifetime rewrite must preserve the update cadence,
 parameter groups, state, weight decay and scheduler semantics; unresolved
 accumulation or global-gradient dependencies remain mathematical prerequisites.
+
+For every accumulation edit, derive the loss weights before writing code:
+if the original loss is a mean over N valid reduction elements, each nonempty
+chunk mean must be weighted by its valid-element count divided by N before
+backward. Equal-size K chunks therefore contribute loss / K; uneven chunks
+must not be averaged equally. Sum-reduced or masked losses need their own
+source-defined denominator. Preserve one optimizer step, scheduler step and
+gradient reset at the original effective-update boundary. Changing only an
+accumulation count does not automatically change the physical microbatch.
+Trace both settings in the actual source, and preserve their product (including
+the original accumulation and any distributed factor), data coverage and
+required update count. Cross-sample operations, stochastic ordering and global
+gradient operations may prevent equivalence; keep such limitations explicit.
+
+numerical_reference_context, when supplied, describes the host-selected
+reference strategy, its source-contract support and resource limits. It is
+verification capability metadata, not an instruction to implement that strategy
+as the repair or proof that a candidate passed. Read its specific supported
+candidate boundaries before proposing changes. A pending real reference is not
+a missing repair prerequisite by itself; an unsupported mathematical contract
+remains a real limitation. Never invent an alternative reference, silently
+fall back to a smaller workload, or alter the host's equivalence threshold.

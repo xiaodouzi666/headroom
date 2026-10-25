@@ -1,0 +1,242 @@
+diff --git a/reports/phase2-v2-20261025/run_phase2_v2.py b/reports/phase2-v2-r1-20261025/run_phase2_v2.py
+index d3f65b0..a44e37f 100644
+--- a/reports/phase2-v2-20261025/run_phase2_v2.py
++++ b/reports/phase2-v2-r1-20261025/run_phase2_v2.py
+@@ -22,10 +22,11 @@ from pathlib import Path
+ 
+ sys.dont_write_bytecode = True
+ ROOT = Path("/home/xiaodouzi/workspace/headroom")
+-OUT = ROOT / "reports/phase2-v2-20261025"
++OUT = ROOT / "reports/phase2-v2-r1-20261025"
+ DRIVER = OUT / "run_phase2_v2.py"
+ CAP = OUT / "cap-review.json"
+ REVIEW = OUT / "root-review.json"
++MVP_OUT = ROOT / "reports/acceptance-v2-r1-20261025"
+ PROTOCOL = "eval/protocol_v2.json"
+ MANIFEST = "eval/scenario_set_v2.yaml"
+ POOL = Decimal("9.99964904")
+@@ -46,9 +47,10 @@ IDS = (
+ )
+ HELPERS = {
+     ".cache/setup/run_mvp_v7.py": "7fecfdc73a9f5a9f83a6daf422d5d34f5decca4ef89c45c1de670de9898d49b5",
+-    "reports/acceptance-v2-20261025/run_mvp_v2.py": "4ddb959611048ad44b89ce9a54ee91a0f7680c7f002a0415c5a1d312bad68a97",
++    "reports/acceptance-v2-r1-20261025/run_mvp_v2.py": "ac659cec3fb5847d9d6677b5bc637eaf3bb16d1dc6ff638d0382b0c4acb68ff9",
++    "reports/acceptance-v2-r1-20261025/full_regression_driver.py": "e287296b1f2a445a72413643be10877fe6876c32cf291c1cdbbae2b67a25c938",
+ }
+-MVP_AUDITOR_SHA = "09fa339c212966c8a0dca7a619689f6b51e1adedbd063dba73f05aa9a8323129"
++MVP_AUDITOR_SHA = "32a4f4044292bf9848dc46a7ab3c98e100d169ebfa59e1a03da7065e094e03ba"
+ 
+ 
+ def require(condition, message):
+@@ -65,7 +67,7 @@ def primitives():
+     for name, expected in HELPERS.items():
+         require(digest(ROOT / name) == expected, "Reviewed helper changed")
+     spec = importlib.util.spec_from_file_location(
+-        "phase2_mvp_guards", ROOT / "reports/acceptance-v2-20261025/run_mvp_v2.py"
++        "phase2_mvp_guards", ROOT / "reports/acceptance-v2-r1-20261025/run_mvp_v2.py"
+     )
+     mvp = importlib.util.module_from_spec(spec)
+     spec.loader.exec_module(mvp)
+@@ -128,6 +130,10 @@ def plan():
+         reads_profile_or_ledger=False,
+         mvp_gate_before_freeze="independent fixed-nine audit: targets >= 6 and valid/correct causes >= 6",
+         phase1_all_items_certified=False,
++        phase2_output=str(OUT.relative_to(ROOT)),
++        required_mvp_output=str(MVP_OUT.relative_to(ROOT)),
++        required_quality_output=str(MVP_OUT.relative_to(ROOT)),
++        execution_qualification="not established by planning or self-test",
+     )
+     return value
+ 
+@@ -261,8 +267,8 @@ def mvp_pass_line(audit):
+ 
+ def mvp_qualification(old, audit_path):
+     """Require this version's independently audited MVP gate; never merge old scores."""
+-    audit_path = old.path(audit_path)
+-    mvp_out = ROOT / "reports/acceptance-v2-20261025"
++    audit_path = old.path(audit_path).resolve()
++    mvp_out = MVP_OUT
+     require(audit_path.parent == mvp_out, "MVP audit must belong to the current version")
+     audit = old.read(audit_path)
+     execution_path = mvp_out / "execution.json"
+@@ -313,6 +319,37 @@ def mvp_qualification(old, audit_path):
+     }
+ 
+ 
++def quality_qualification(old, receipt_path):
++    """Bind receipt and its source inventories/log to this MVP revision."""
++    receipt_path = old.path(receipt_path).resolve()
++    require(
++        receipt_path.parent == MVP_OUT and receipt_path.name.endswith("-receipt.json"),
++        "Full quality receipt must belong to MVP r1",
++    )
++    quality = old.read(receipt_path)
++    require(
++        all(
++            isinstance(quality.get(name), str)
++            and old.path(quality[name]).resolve().parent == MVP_OUT
++            for name in ("before", "after", "log")
++        ),
++        "Full quality evidence must belong to MVP r1",
++    )
++    # Existing full-suite/PLAN/guard/current source inventory checks are unchanged.
++    return old.verify_quality(receipt_path)
++
++
++def require_execution_artifacts():
++    """Reject an unqualified revision before helper/ledger/profile/GPU access."""
++    require(
++        all(
++            path.is_file() and not path.is_symlink()
++            for path in (REVIEW, CAP, MVP_OUT / "execution.json")
++        ),
++        "Phase 2 r1 requires its own frozen review/cap and completed MVP r1 execution",
++    )
++
++
+ def cap_snapshot(old, catalogue):
+     """Called only after the MVP gate; all old rows/unknown charges remain included."""
+     runs, attempts = old.ledger_rows()
+@@ -349,12 +386,12 @@ def freeze(quality_path, audit_path):
+     require(not CAP.exists() and not REVIEW.exists(), "This version was already frozen")
+     planned = plan()
+     parent = mvp_qualification(old, audit_path)
+-    quality = old.verify_quality(quality_path)
++    quality = quality_qualification(old, quality_path)
+     cap = cap_snapshot(old, mvp.capability())
+     # Resource qualifications remain independent from the model's MVP score.
+     resources = {"s2": mvp.calibration(), "s1": mvp.checkpoint_qualification()}
+     review = {
+-        "purpose": "phase2_v2_ten_core_two_policy",
++        "purpose": "phase2_v2_r1_ten_core_two_policy",
+         "source_pins": old.inventory(),
+         "driver_sha256": old.sha(DRIVER),
+         "helper_sha256": HELPERS,
+@@ -374,6 +411,7 @@ def freeze(quality_path, audit_path):
+ 
+ 
+ def execute(expected_review_sha):
++    require_execution_artifacts()
+     mvp, old = primitives()
+     with (ROOT / ".cache/setup/phase2-v2.lock").open("a") as lock:
+         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+@@ -389,7 +427,8 @@ def execute(expected_review_sha):
+             and review["protocol_sha256"] == old.sha(PROTOCOL)
+             and review["manifest_sha256"] == old.sha(MANIFEST)
+             and review["plan"] == plan()
+-            and review["quality_receipt"] == old.verify_quality(review["quality_receipt"]["path"])
++            and review["quality_receipt"]
++            == quality_qualification(old, review["quality_receipt"]["path"])
+             and review["mvp"] == mvp_qualification(old, review["mvp"]["audit"])
+             and cap["catalogue"] == mvp.capability(),
+             "Reviewed source/protocol/quality/MVP/financial capability changed",
+@@ -464,6 +503,7 @@ def execute(expected_review_sha):
+ 
+ def self_test():
+     from types import SimpleNamespace
++    from unittest.mock import patch
+ 
+     from headroom.orchestrator import FixRequest
+ 
+@@ -564,8 +604,8 @@ def self_test():
+             raise AssertionError("Invalid MVP gate was accepted")
+     # Exercise the actual future-freeze qualification path, not just its inner
+     # pass-line helper. An outstanding original CLI item must not create a 9/9 gate.
+-    mock_audit_path = ROOT / "reports/acceptance-v2-20261025/memory-only-audit.json"
+-    mock_execution_path = ROOT / "reports/acceptance-v2-20261025/execution.json"
++    mock_audit_path = ROOT / "reports/acceptance-v2-r1-20261025/memory-only-audit.json"
++    mock_execution_path = ROOT / "reports/acceptance-v2-r1-20261025/execution.json"
+     campaign_path = "runs/evaluation/live/memory-only/campaign.json"
+     sources = {"headroom/mock.py": "d" * 64}
+     audit.update(
+@@ -619,6 +659,79 @@ def self_test():
+             checks += 1
+         else:
+             raise AssertionError("Actual qualification accepted an invalid MVP artifact")
++
++    # Old revisions cannot satisfy either qualification, even with otherwise
++    # valid synthetic data. These tests never read the live ledger/profile.
++    for prior in (
++        ROOT / "reports/acceptance-v2-20261025/memory-only-audit.json",
++        MVP_OUT / "../acceptance-v2-20261025/memory-only-audit.json",
++    ):
++        try:
++            mvp_qualification(mock, prior)
++        except ValueError:
++            checks += 1
++        else:
++            raise AssertionError("A different MVP revision was accepted")
++
++    quality_path = MVP_OUT / "memory-only-receipt.json"
++    quality_document = {
++        "before": str((MVP_OUT / "memory-only-before.json").relative_to(ROOT)),
++        "after": str((MVP_OUT / "memory-only-after.json").relative_to(ROOT)),
++        "log": str((MVP_OUT / "memory-only.log").relative_to(ROOT)),
++    }
++    quality_calls = []
++    quality_mock = SimpleNamespace(
++        path=lambda path: ROOT / path,
++        read=lambda path: quality_document,
++        verify_quality=lambda path: quality_calls.append(path) or {"offline": True},
++    )
++    require(
++        quality_qualification(quality_mock, quality_path) == {"offline": True}
++        and quality_calls == [quality_path],
++        "Current revision did not delegate unchanged full quality verification",
++    )
++    checks += 1
++    for prior in (
++        ROOT / "reports/acceptance-v2-20261025/memory-only-receipt.json",
++        MVP_OUT / "../acceptance-v2-20261025/memory-only-receipt.json",
++    ):
++        try:
++            quality_qualification(quality_mock, prior)
++        except ValueError:
++            checks += 1
++        else:
++            raise AssertionError("A different quality revision was accepted")
++    for field in ("before", "after", "log"):
++        saved_value = quality_document[field]
++        quality_document[field] = "reports/acceptance-v2-20261025/old-evidence.json"
++        try:
++            quality_qualification(quality_mock, quality_path)
++        except ValueError:
++            checks += 1
++        else:
++            raise AssertionError("Old quality evidence was accepted")
++        finally:
++            quality_document[field] = saved_value
++    require(quality_calls == [quality_path], "Rejected quality reached verification")
++    with (
++        patch.object(Path, "is_file", return_value=False),
++        patch.dict(
++            globals(),
++            primitives=lambda: (_ for _ in ()).throw(
++                AssertionError("Unqualified execution imported helpers")
++            ),
++        ),
++        patch.object(subprocess, "Popen", side_effect=AssertionError("Unexpected execution")),
++        patch.object(subprocess, "check_output", side_effect=AssertionError("Unexpected GPU/git")),
++    ):
++        try:
++            execute("0" * 64)
++        except ValueError as error:
++            require("requires its own frozen review/cap" in str(error), "Wrong early rejection")
++            checks += 1
++        else:
++            raise AssertionError("Unqualified revision was dispatched")
++
+     return {
+         "self_test": "passed",
+         "checks": checks,
+@@ -626,6 +739,10 @@ def self_test():
+         "gpu_jobs": 0,
+         "live_ledger_reads": 0,
+         "cap_frozen": False,
++        "execution_qualification": False,
++        "old_revision_rejected": True,
++        "quality_revision_bound": True,
++        "missing_qualification_rejected_before_helpers": True,
+     }
+ 
+ 

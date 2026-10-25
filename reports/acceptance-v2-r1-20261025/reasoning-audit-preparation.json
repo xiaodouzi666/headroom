@@ -1,0 +1,45 @@
+{
+  "script": "reports/acceptance-v2-r1-20261025/audit_reasoning_wire.py",
+  "sha256": "37dbb85ca58502b406d2b48bea087646b612adeaeebfb4e1fbf08a89c294e3a2",
+  "validation": [
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "reports/acceptance-v2-r1-20261025/audit_reasoning_wire.py"
+      ],
+      "exit_code": 0,
+      "stdout": "All checks passed!\n"
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "reports/acceptance-v2-r1-20261025/audit_reasoning_wire.py"
+      ],
+      "exit_code": 0,
+      "stdout": "1 file already formatted\n"
+    },
+    {
+      "command": [
+        ".venv/bin/python",
+        "reports/acceptance-v2-r1-20261025/audit_reasoning_wire.py",
+        "--self-test"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"self_test\": \"passed\",\n  \"checks\": 33,\n  \"new_provider_calls\": 0,\n  \"new_gpu_runs\": 0\n}\n"
+    }
+  ],
+  "missing_inputs_rejected": true,
+  "real_campaign_audit_executed": false,
+  "new_provider_calls": 0,
+  "new_gpu_runs": 0,
+  "expected_wire_cap_field": "max_completion_tokens",
+  "legacy_field_recognized_but_not_accepted_as_r1_contract": true,
+  "dual_cap_fields_unknown_and_integrity_error": true,
+  "finish_reason_scope": "Store only; patch response artifacts persist finish_reason separately and are not read here",
+  "unknown_finish_reason_not_inferred_from_cap": true,
+  "source_or_tests_modified": false,
+  "superseded_preparation_sha256": "094f652cbfbb3d65a0a348056af7657287208dc8cb3167df16677bef75cba244"
+}

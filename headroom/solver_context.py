@@ -14,6 +14,8 @@ MAX_EXECUTION_BYTES = 16384
 MAX_CANDIDATE_CONTEXT_BYTES = 96000
 MAX_CANDIDATE_ROUNDS = 6
 MAX_SOLVER_CONTEXT_BYTES = 64 * 1024
+MAX_NUMERICAL_REFERENCE_CONTEXT_BYTES = 12 * 1024
+MAX_EVIDENCE_AVAILABILITY_CONTEXT_BYTES = 8 * 1024
 _SECRET_OPTION = re.compile(
     r"(?:^|[-_])(?:api[-_]?key|secret|password|passwd|(?:access[-_]|auth[-_]|hf[-_])?token|authorization|cookie)(?:$|[-_])",
     re.IGNORECASE,
@@ -594,7 +596,12 @@ def candidate_context(values):
 
 
 def solver_prompt_context(
-    *, execution_context=None, candidate_evidence=None, verification_feedback=None
+    *,
+    execution_context=None,
+    candidate_evidence=None,
+    verification_feedback=None,
+    numerical_reference_context=None,
+    evidence_availability_catalog=None,
 ):
     """Bound the combined model-visible context using Super's ASCII-escaped wire size.
 
@@ -602,6 +609,18 @@ def solver_prompt_context(
     list position. This is only prompt visibility, not the persisted search state.
     """
     fields = {}
+    if evidence_availability_catalog is not None:
+        fields["evidence_availability_catalog"] = bounded_json(
+            evidence_availability_catalog,
+            MAX_EVIDENCE_AVAILABILITY_CONTEXT_BYTES,
+            "evidence_availability_catalog",
+        )
+    if numerical_reference_context is not None:
+        fields["numerical_reference_context"] = bounded_json(
+            numerical_reference_context,
+            MAX_NUMERICAL_REFERENCE_CONTEXT_BYTES,
+            "numerical_reference_context",
+        )
     if execution_context is not None:
         fields["invocation_reading_aid"] = invocation_reading_aid(execution_context)
         fields["execution_context"] = bounded_json(
@@ -658,7 +677,7 @@ def solver_prompt_context(
                 fields[field] = kept
         availability["complete"] = False
         if not removed:
-            # Bounded execution plus the <=4KB lexical aid fits after ASCII escaping.
+            # Fixed capability metadata, bounded execution and lexical aid must fit together.
             # This is an invariant check, never a path for oversized run history.
             raise ValueError("execution_context cannot fit the combined solver bound")
     return fields

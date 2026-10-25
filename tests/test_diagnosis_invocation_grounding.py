@@ -186,7 +186,7 @@ def test_repair_uses_existing_single_supplement_budget_and_retains_true_gap():
     assert len(router.calls) == 2
     assert result.valid and not result.ready_for_patch and result.diagnosis.needs_more_info
     assert len(router.calls[1][1]) == len(router.calls[0][1]) + 2
-    assert all(c[3]["reasoning"] is False for c in router.calls)
+    assert all(c[3]["reasoning"] is True for c in router.calls)
 
 
 @pytest.mark.parametrize("limit", [0, 1, 3])

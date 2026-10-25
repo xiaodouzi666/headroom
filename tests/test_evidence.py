@@ -368,6 +368,7 @@ def test_completed_annotations_cannot_match_new_capture(captured_run, monkeypatc
 
 def test_traceback_ablation_excludes_real_bound_nano_metadata(captured_run, monkeypatch, tmp_path):
     import headroom.diagnose as diagnosis
+    import headroom.orchestrator  # noqa: F401 - capture real Services defaults before patching
     from headroom.evaluation import condition_services
     from headroom.evidence import annotate_evidence_bundle
 

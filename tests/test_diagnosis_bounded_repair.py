@@ -220,7 +220,7 @@ def test_entire_validator_runs_after_schema_repair_and_every_call_uses_same_cap(
     assert "JSON_SCHEMA_MISMATCH" in requests[1]["messages"][-1]["content"]
     assert "MODEL_CHANGE_FORBIDDEN" in requests[2]["messages"][-1]["content"]
     assert all(r["max_tokens"] == 8192 for r in requests)
-    assert all(r["chat_template_kwargs"] == {"enable_thinking": False} for r in requests)
+    assert all(r["chat_template_kwargs"] == {"enable_thinking": True} for r in requests)
     assert all(r["response_format"] == requests[0]["response_format"] for r in requests)
     assert len(requests[2]["messages"]) == len(requests[0]["messages"]) + 4
 

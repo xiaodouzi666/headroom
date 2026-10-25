@@ -12,6 +12,10 @@ from jsonschema import Draft202012Validator
 from pydantic import ValidationError
 
 from headroom.diagnosis_schema import build_diagnosis_schema
+from headroom.evidence_blockers import (
+    build_evidence_availability_catalog,
+    validate_evidence_requests,
+)
 from headroom.llm.router import ResponseValidationError, parse_json
 from headroom.schemas import Diagnosis
 from headroom.solver_context import (
@@ -128,6 +132,11 @@ _REPAIR_RULES = {
     "MODEL_CHANGE_FORBIDDEN": "Remove or revise model/input shrinking; preserve layers, width, vocabulary and sequence length.",
     "TRAINING_TRUNCATION_FORBIDDEN": "Preserve all required training data and optimizer updates.",
     "NUMERICS_CHANGE_FORBIDDEN": "Remove or revise precision/mathematics changes; do not merely relabel their impact.",
+    "UNKNOWN_EVIDENCE_REFERENCE": "Copy an exact identity from evidence_availability_catalog; use genuine ambiguity for unsupported facts.",
+    "INVALID_EVIDENCE_RANGE": "Reference an advertised source and provide both valid ordered line bounds.",
+    "INVALID_EVIDENCE_DEPENDENCY": "Name only existing blocked plan steps; distinguish current plans, alternatives and overall feasibility.",
+    "EVIDENCE_AVAILABILITY_CONTRADICTED": "The cited text is present. Correct the availability claim and recheck the actual semantic prerequisites; visible text does not prove runtime values.",
+    "ALTERNATIVE_EVIDENCE_BLOCKS_CURRENT_PLAN": "Only future alternatives were declared blocked. Recheck current-step dependencies and state any genuine blocker; do not force readiness or bypass required total savings.",
     "INVALID_SAVINGS_TOTAL": "Use finite realistic estimates and account for overlap; do not inflate savings.",
     "INSUFFICIENT_EXPECTED_SAVING": "Provide additional evidenced compliant savings or retain needs_more_info; do not inflate estimates.",
 }
@@ -342,6 +351,8 @@ def build_diagnosis_messages(
     verification_feedback: list[Mapping[str, Any]] | None = None,
     execution_context: Mapping[str, Any] | None = None,
     candidate_evidence: list[Mapping[str, Any]] | None = None,
+    numerical_reference_context: Mapping[str, Any] | None = None,
+    evidence_availability_catalog: Mapping[str, Any] | None = None,
 ) -> list[dict[str, str]]:
     """No network access; generated request is for the Token Factory router only."""
     _check_required_saving(required_saving_gb)
@@ -366,6 +377,8 @@ def build_diagnosis_messages(
             execution_context=execution_context,
             candidate_evidence=candidate_evidence,
             verification_feedback=verification_feedback,
+            numerical_reference_context=numerical_reference_context,
+            evidence_availability_catalog=evidence_availability_catalog,
         )
     )
     # Put actual invocation facts before long source/evidence snippets.
@@ -516,6 +529,12 @@ def validate_diagnosis(
             (DiagnosisIssue("EVIDENCE_CATALOG_MISSING", "No runtime stack catalog is available."),),
         )
     issues, grounding_corrections, provenance = _validate_invocation_grounding(diagnosis, evidence)
+    blocker_issues, blocker_corrections, blocker_provenance = validate_evidence_requests(
+        diagnosis, evidence
+    )
+    issues.extend(DiagnosisIssue(**issue) for issue in blocker_issues)
+    grounding_corrections.extend(blocker_corrections)
+    provenance = dict(provenance, evidence_requests=blocker_provenance)
     root_ids = [cause.id for cause in diagnosis.root_causes]
     fix_ids = [step.fix_id for step in diagnosis.plan]
     if len(set(root_ids)) != len(root_ids) or len(set(fix_ids)) != len(fix_ids):
@@ -644,6 +663,12 @@ def diagnose_with_router(
     """
     if type(max_supplements) is not int or not 0 <= max_supplements <= 3:
         raise ValueError("max_supplements must be between 0 and 3")
+    # Derive availability from the exact outgoing evidence, not model prose or
+    # merely static source metadata. Keep the caller's evidence immutable.
+    evidence = dict(evidence)
+    evidence["evidence_availability_catalog"] = build_evidence_availability_catalog(
+        evidence, evidence_markdown
+    )
     messages = build_diagnosis_messages(
         evidence_markdown,
         goal=goal,
@@ -652,6 +677,8 @@ def diagnose_with_router(
         verification_feedback=verification_feedback,
         execution_context=evidence.get("execution_context"),
         candidate_evidence=evidence.get("candidate_evidence"),
+        numerical_reference_context=evidence.get("numerical_reference_context"),
+        evidence_availability_catalog=evidence["evidence_availability_catalog"],
     )
     schema = build_diagnosis_schema(evidence=evidence, policy=policy)
     for attempt in range(max_supplements + 1):
@@ -662,7 +689,7 @@ def diagnose_with_router(
                 messages,
                 schema,
                 max_tokens=DIAGNOSIS_MAX_COMPLETION_TOKENS,
-                reasoning=False,
+                reasoning=True,
             )
             parsed = response.parsed
         except ResponseValidationError as error:
@@ -705,6 +732,8 @@ def diagnose_with_router(
             observations = ()
             if result.diagnosis is not None:
                 _, observations, _ = _validate_invocation_grounding(result.diagnosis, evidence)
+                _, blocker_observations, _ = validate_evidence_requests(result.diagnosis, evidence)
+                observations.extend(blocker_observations)
             result = _repair_validation(
                 result.diagnosis,
                 issues,

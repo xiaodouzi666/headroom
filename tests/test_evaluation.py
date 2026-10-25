@@ -460,6 +460,7 @@ def test_condition_audit_hash_names_do_not_claim_wire_requests(tmp_path, monkeyp
     import hashlib
 
     import headroom.diagnose
+    import headroom.orchestrator  # Capture real Services defaults before patching.
 
     marker = object()
     monkeypatch.setattr(headroom.diagnose, "diagnose_with_router", lambda *args, **kwargs: marker)

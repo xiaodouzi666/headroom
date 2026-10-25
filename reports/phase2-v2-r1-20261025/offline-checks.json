@@ -1,0 +1,65 @@
+{
+  "kind": "offline_phase2_r1_preparation",
+  "prepared_utc": "2026-10-25T09:22:42.105037+00:00",
+  "driver": "reports/phase2-v2-r1-20261025/run_phase2_v2.py",
+  "driver_sha256": "870427d95befe970259609f444f07f1f1bdd0846573528bcbde8c5943a7dc2c7",
+  "prior_driver": "reports/phase2-v2-20261025/run_phase2_v2.py",
+  "prior_driver_sha256_before": "2f9598a8254dcaa70fb1d9d3bd12f4f5727d729cdae035b069f3f92e86e316a4",
+  "prior_driver_sha256_after": "2f9598a8254dcaa70fb1d9d3bd12f4f5727d729cdae035b069f3f92e86e316a4",
+  "checks": [
+    {
+      "argv": [
+        ".venv/bin/ruff",
+        "check",
+        "reports/phase2-v2-r1-20261025/run_phase2_v2.py"
+      ],
+      "returncode": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "reports/phase2-v2-r1-20261025/run_phase2_v2.py"
+      ],
+      "returncode": 0,
+      "stdout": "1 file already formatted\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        ".venv/bin/python",
+        "reports/phase2-v2-r1-20261025/run_phase2_v2.py",
+        "--self-test"
+      ],
+      "returncode": 0,
+      "stdout": "{\n  \"self_test\": \"passed\",\n  \"checks\": 26,\n  \"provider_calls\": 0,\n  \"gpu_jobs\": 0,\n  \"live_ledger_reads\": 0,\n  \"cap_frozen\": false,\n  \"execution_qualification\": false,\n  \"old_revision_rejected\": true,\n  \"quality_revision_bound\": true,\n  \"missing_qualification_rejected_before_helpers\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        ".venv/bin/python",
+        "reports/phase2-v2-r1-20261025/run_phase2_v2.py"
+      ],
+      "returncode": 0,
+      "stdout": "{\n  \"mode\": \"campaign_plan\",\n  \"search_mode\": \"bounded_pareto\",\n  \"executed\": false,\n  \"scenarios\": [\n    \"s1_batch_too_big\",\n    \"s2_capacity_v2\",\n    \"s3_eval_no_grad_missing\",\n    \"s4_loss_accumulation_graph\",\n    \"s5_fragmentation_varlen\",\n    \"s6_full_vocab_logits_fp32\",\n    \"s7_frozen_params_optimizer_state\",\n    \"s8_two_models_resident\",\n    \"nanogpt\",\n    \"hf_trainer\"\n  ],\n  \"targets\": [\n    {\n      \"scenario_id\": \"s1_batch_too_big\",\n      \"target\": \"fix-oom\",\n      \"reclaim_reduction_pct\": 30,\n      \"numerical_reference\": {\n        \"strategy\": \"original_workload_checkpoint\",\n        \"cpu_saved_tensor_limit_bytes\": 17179869184,\n        \"disk_saved_tensor_limit_bytes\": 0,\n        \"max_seconds\": 480\n      },\n      \"allocator_conf\": null\n    },\n    {\n      \"scenario_id\": \"s2_capacity_v2\",\n      \"target\": \"fit:22GB\",\n      \"reclaim_reduction_pct\": 20.0,\n      \"numerical_reference\": {\n        \"strategy\": \"legacy_small_batch\",\n        \"cpu_saved_tensor_limit_bytes\": 17179869184,\n        \"disk_saved_tensor_limit_bytes\": 0,\n        \"max_seconds\": null\n      },\n      \"allocator_conf\": \"expandable_segments:True\"\n    },\n    {\n      \"scenario_id\": \"s3_eval_no_grad_missing\",\n      \"target\": \"reclaim\",\n      \"reclaim_reduction_pct\": 30,\n      \"numerical_reference\": {\n        \"strategy\": \"legacy_small_batch\",\n        \"cpu_saved_tensor_limit_bytes\": 17179869184,\n        \"disk_saved_tensor_limit_bytes\": 0,\n        \"max_seconds\": null\n      },\n      \"allocator_conf\": null\n    },\n    {\n      \"scenario_id\": \"s4_loss_accumulation_graph\",\n      \"target\": \"fix-oom\",\n      \"reclaim_reduction_pct\": 30,\n      \"numerical_reference\": {\n        \"strategy\": \"original_saved_tensor_offload\",\n        \"cpu_saved_tensor_limit_bytes\": 17179869184,\n        \"disk_saved_tensor_limit_bytes\": 68719476736,\n        \"max_seconds\": 480\n      },\n      \"allocator_conf\": null\n    },\n    {\n      \"scenario_id\": \"s5_fragmentation_varlen\",\n      \"target\": \"reclaim\",\n      \"reclaim_reduction_pct\": 30,\n      \"numerical_reference\": {\n        \"strategy\": \"legacy_small_batch\",\n        \"cpu_saved_tensor_limit_bytes\": 17179869184,\n        \"disk_saved_tensor_limit_bytes\": 0,\n        \"max_seconds\": null\n      },\n      \"allocator_conf\": null\n    },\n    {\n      \"scenario_id\": \"s6_full_vocab_logits_fp32\",\n      \"target\": \"fix-oom\",\n      \"reclaim_reduction_pct\": 30,\n      \"numerical_reference\": {\n        \"strategy\": \"legacy_small_batch\",\n        \"cpu_saved_tensor_limit_bytes\": 17179869184,\n        \"disk_saved_tensor_limit_bytes\": 0,\n        \"max_seconds\": null\n      },\n      \"allocator_conf\": null\n    },\n    {\n      \"scenario_id\": \"s7_frozen_params_optimizer_state\",\n      \"target\": \"reclaim\",\n      \"reclaim_reduction_pct\": 30,\n      \"numerical_reference\": {\n        \"strategy\": \"legacy_small_batch\",\n        \"cpu_saved_tensor_limit_bytes\": 17179869184,\n        \"disk_saved_tensor_limit_bytes\": 0,\n        \"max_seconds\": null\n      },\n      \"allocator_conf\": null\n    },\n    {\n      \"scenario_id\": \"s8_two_models_resident\",\n      \"target\": \"reclaim\",\n      \"reclaim_reduction_pct\": 30,\n      \"numerical_reference\": {\n        \"strategy\": \"legacy_small_batch\",\n        \"cpu_saved_tensor_limit_bytes\": 17179869184,\n        \"disk_saved_tensor_limit_bytes\": 0,\n        \"max_seconds\": null\n      },\n      \"allocator_conf\": null\n    },\n    {\n      \"scenario_id\": \"nanogpt\",\n      \"target\": \"fit:22GB\",\n      \"reclaim_reduction_pct\": 30,\n      \"numerical_reference\": {\n        \"strategy\": \"legacy_small_batch\",\n        \"cpu_saved_tensor_limit_bytes\": 17179869184,\n        \"disk_saved_tensor_limit_bytes\": 0,\n        \"max_seconds\": null\n      },\n      \"allocator_conf\": null\n    },\n    {\n      \"scenario_id\": \"hf_trainer\",\n      \"target\": \"fix-oom\",\n      \"reclaim_reduction_pct\": 30,\n      \"numerical_reference\": {\n        \"strategy\": \"legacy_small_batch\",\n        \"cpu_saved_tensor_limit_bytes\": 17179869184,\n        \"disk_saved_tensor_limit_bytes\": 0,\n        \"max_seconds\": null\n      },\n      \"allocator_conf\": null\n    }\n  ],\n  \"conditions\": [\n    \"full_ultra\"\n  ],\n  \"policies\": [\n    {\n      \"name\": \"strict\",\n      \"policy\": {\n        \"allow_numerics_change\": false,\n        \"allow_model_change\": false,\n        \"allow_batch_grad_accum\": true,\n        \"max_throughput_regression_pct\": 25\n      },\n      \"same_effective_policy_as\": []\n    },\n    {\n      \"name\": \"allow_precision\",\n      \"policy\": {\n        \"allow_numerics_change\": true,\n        \"allow_model_change\": false,\n        \"allow_batch_grad_accum\": true,\n        \"max_throughput_regression_pct\": 25\n      },\n      \"same_effective_policy_as\": []\n    }\n  ],\n  \"multipliers\": {\n    \"scenarios\": 10,\n    \"conditions\": 1,\n    \"policies\": 2\n  },\n  \"planned_pipeline_runs\": 20,\n  \"run_wall_limit_seconds\": 480,\n  \"provider_api_attempts\": null,\n  \"provider_api_attempts_note\": \"Pipeline count is not API-call count: annotation, diagnosis supplements, patch attempts, retries and research vary; every actual model attempt remains budgeted.\",\n  \"sum_of_configured_run_caps_usd\": \"12.0\",\n  \"campaign_cap_usd\": \"12\",\n  \"daily_cap_usd\": \"9.99964904\",\n  \"can_reserve_all_run_caps\": null,\n  \"per_run_cap_usd\": \"0.6\",\n  \"authorization_expanded\": false,\n  \"policy_note\": \"default aliases strict. Use explicit strict and allow_precision arms for the versioned policy comparison; keep their outcomes separate. allow_precision grants permission only: changed numerics and actual BF16 behavior still require verification.\",\n  \"protocol\": \"headroom.evaluation-protocol.v2\",\n  \"scope\": \"phase2_policy_matrix\",\n  \"acceptance_certified\": false,\n  \"calibration_required_before_execution\": true,\n  \"primary_gate\": {\n    \"target_met_minimum\": 6,\n    \"denominator\": 9,\n    \"policy\": \"strict\"\n  },\n  \"historical_scores_modified\": false,\n  \"pending_separate_acceptance\": [\n    \"s2_calibration\",\n    \"s2_two_round_search\",\n    \"bf16_pareto_candidate\",\n    \"hf_configuration_diff\",\n    \"library_cases\"\n  ],\n  \"fixed_pipeline_denominator\": 20,\n  \"fixed_per_policy_denominator\": 10,\n  \"maximum_search_rounds\": 6,\n  \"combine_policy_successes\": false,\n  \"nominal_campaign_ceiling_usd\": \"12\",\n  \"same_cumulative_pool_usd\": \"9.99964904\",\n  \"actual_campaign_cap\": \"min(12, remaining_all_time_pool, remaining_utc_day)\",\n  \"remaining_unexecuted_slots\": \"unknown; never removed from the denominator\",\n  \"cap_frozen\": false,\n  \"full_reservation_feasibility\": \"unknown until the post-MVP cumulative ledger freeze\",\n  \"reads_profile_or_ledger\": false,\n  \"mvp_gate_before_freeze\": \"independent fixed-nine audit: targets >= 6 and valid/correct causes >= 6\",\n  \"phase1_all_items_certified\": false,\n  \"phase2_output\": \"reports/phase2-v2-r1-20261025\",\n  \"required_mvp_output\": \"reports/acceptance-v2-r1-20261025\",\n  \"required_quality_output\": \"reports/acceptance-v2-r1-20261025\",\n  \"execution_qualification\": \"not established by planning or self-test\"\n}\n",
+      "stderr": ""
+    }
+  ],
+  "mvp_r1_execution_exists": false,
+  "not_an_execution_or_quality_receipt": true,
+  "execution_qualification": false,
+  "cap_frozen": false,
+  "phase2_provider_calls": 0,
+  "phase2_gpu_jobs": 0,
+  "live_ledger_reads": 0,
+  "production_sources_modified_by_this_preparation": false,
+  "source_binding_status": "Observed draft helper bytes only; no quality receipt or execution commit has been approved or invented.",
+  "independent_read_only_review": {
+    "reviewer": "research_agent_reliability_solution",
+    "blocking_findings": [],
+    "executed_freeze_or_live_modes": false
+  }
+}

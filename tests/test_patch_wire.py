@@ -33,7 +33,7 @@ def wire(lines=(), **extra):
     return {"diff_lines": list(lines), "env_changes": {}, "cli_changes": [], "notes": [], **extra}
 
 
-def run_wire(tmp_path, payloads, *, max_repairs=0, base_cli=()):
+def run_wire(tmp_path, payloads, *, max_repairs=0, base_cli=(), context=None):
     source = tmp_path / "source"
     source.mkdir()
     (source / "train.py").write_text("x = 1\n")
@@ -64,10 +64,19 @@ def run_wire(tmp_path, payloads, *, max_repairs=0, base_cli=()):
                     {
                         "index": 0,
                         "finish_reason": "stop",
-                        "message": {"role": "assistant", "content": json.dumps(payload)},
+                        "message": {
+                            "role": "assistant",
+                            "content": json.dumps(payload),
+                            "reasoning_content": "PRIVATE_REASONING_MUST_NOT_ENTER_ARTIFACTS",
+                        },
                     }
                 ],
-                "usage": {"prompt_tokens": 100, "completion_tokens": 100, "total_tokens": 200},
+                "usage": {
+                    "prompt_tokens": 100,
+                    "completion_tokens": 100,
+                    "total_tokens": 200,
+                    "completion_tokens_details": {"reasoning_tokens": 60},
+                },
             },
         )
 
@@ -81,6 +90,7 @@ def run_wire(tmp_path, payloads, *, max_repairs=0, base_cli=()):
             {"fix_id": "generic-offline-fixture"},
             work_root=tmp_path / "work",
             base_cli=base_cli,
+            context=context,
         )
     return result, calls, source
 
@@ -156,7 +166,7 @@ def test_actual_sdk_router_engine_apply_and_compile_with_hash_linked_evidence(tm
     sent = calls[0]
     assert sent["model"] == SUPER_MODEL
     assert sent["max_completion_tokens"] == 4000
-    assert sent["chat_template_kwargs"] == {"enable_thinking": False}
+    assert sent["chat_template_kwargs"] == {"enable_thinking": True}
     schema = sent["response_format"]["json_schema"]["schema"]
     assert schema["properties"]["edits"]["type"] == "array"
     assert "diff" not in schema["properties"] and "diff_lines" not in schema["properties"]
@@ -171,6 +181,9 @@ def test_actual_sdk_router_engine_apply_and_compile_with_hash_linked_evidence(tm
     expected = "\n".join(LINES) + "\n"
     normalized = {"diff": expected, "env_changes": {}, "cli_changes": [], "notes": []}
     assert artifact["parsed"] == payload
+    assert result.attempts[0].llm_usage["reasoning_tokens"] == 60
+    assert artifact["usage"]["reasoning_tokens"] == 60
+    assert "PRIVATE_REASONING_MUST_NOT_ENTER_ARTIFACTS" not in path.read_text()
     assert json.loads(artifact["visible"]["text"]) == payload
     assert artifact["diff"] is None
     assert artifact["normalized_proposal"] == normalized
@@ -274,3 +287,19 @@ def test_large_source_edits_fail_closed_and_preserve_bounded_visible_evidence(tm
     assert artifact["normalization"]["status"] == "not_applied"
     assert artifact["visible"]["truncated"]
     assert artifact["visible"]["sha256"] == hashlib.sha256(json.dumps(payload).encode()).hexdigest()
+
+
+def test_numerical_reference_capability_context_reaches_super_unchanged(tmp_path):
+    capability = {
+        "strategy": "original_workload_checkpoint",
+        "status": "available_not_yet_verified",
+        "candidate_success_proven": False,
+    }
+    result, calls, _ = run_wire(
+        tmp_path,
+        [anchored(["x = 1"], ["x = 2"])],
+        context={"numerical_reference_context": capability},
+    )
+    assert result.applied
+    sent = json.loads(calls[0]["messages"][-1]["content"])
+    assert sent["evidence_context"]["numerical_reference_context"] == capability

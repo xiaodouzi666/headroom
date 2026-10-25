@@ -214,6 +214,7 @@ def test_prepared_evidence_cannot_be_replaced_or_attached_to_wrong_attempt(tmp_p
 
 def test_evaluation_initial_copy_retains_context_and_failure_feedback(tmp_path, monkeypatch):
     import headroom.diagnose
+    import headroom.orchestrator  # Capture real Services defaults before patching.
     from headroom.evaluation import condition_services
 
     seen = {}
