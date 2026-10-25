@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "status": "planning_only_not_executed",
+  "created_at": "2026-10-25T12:05:31.251388+00:00",
+  "review_scope": "Read-only source/path review for a future fresh R3 checkout using the existing gifted-credit ledger. No acceptance claim.",
+  "operations_not_performed": [
+    "clone",
+    "symlink or bind mount",
+    "credential copy/read",
+    "profile modification",
+    "ledger connection or modification",
+    "API/provider request",
+    "model inference",
+    "GPU workload",
+    "curation",
+    "production/test source edit"
+  ],
+  "authoritative_root": "/home/xiaodouzi/workspace/headroom",
+  "existing_setup_clone": {
+    "path": ".cache/clean-clone-r2-20261025",
+    "exists": true,
+    "qualification": "Earlier R2 setup only; not a fresh R3 runtime acceptance."
+  },
+  "observed_path_facts": {
+    "hf_reviewed_exists": false,
+    "hf_reviewed_is_symlink": false,
+    "budget_db_regular": true,
+    "budget_db_is_symlink": false,
+    "host_python_sqlite_version": "3.45.1"
+  },
+  "source_pins": [
+    {
+      "path": ".gitignore",
+      "sha256": "973bee508d6a217321f5a96e4c3c4899361ae2e7422cfc5bbcd86621c1c25671"
+    },
+    {
+      "path": "README.md",
+      "sha256": "1eb4daa1474e8f5b9aae87100d04a93b554d842eadabc366420e62e4e0dd8a82"
+    },
+    {
+      "path": "headroom/lab/runner.py",
+      "sha256": "9281b259798126e9538ca9661d23b8be568f271a76ee5c6f31164d9066ff1e78"
+    },
+    {
+      "path": "headroom/lab/docker.py",
+      "sha256": "8276b44a6332ab466978216d7171036a522cbb192aa6bf23bdde3921308be899"
+    },
+    {
+      "path": "headroom/lab/cache.py",
+      "sha256": "b2366f2bf6fc5722167e7cc7cb78aa84e8f0da3fe28dbcfb57cc3319eb0b4932"
+    },
+    {
+      "path": "headroom/orchestrator.py",
+      "sha256": "7ea0dd5afd3a095ecaed81f5525b8abef28d684e0b6d76c4b5911e4bb2c86f7b"
+    },
+    {
+      "path": "headroom/runtime.py",
+      "sha256": "87b0ef04a62a7d6ef8eb3bb91dec09728c4ba5f8b6fe13d776fdca3c4b777c10"
+    },
+    {
+      "path": "headroom/budget.py",
+      "sha256": "55df4929cc5e1798e16b90e4fae0b0bb82cb231224fc2e17092c4c0d39bc306d"
+    },
+    {
+      "path": "headroom/store/db.py",
+      "sha256": "58ec9882d1bd4790d4c821e4834a99ed65f11d88cd46b7f224fd15819d2cdec4"
+    },
+    {
+      "path": "headroom/cli.py",
+      "sha256": "56252af2eb96948d70c0c5367961e15d047058315cd065227d09abf23ba7fc68"
+    },
+    {
+      "path": "headroom/api/app.py",
+      "sha256": "d1a4b1b0021253264762eab44d4dd3972a9f51d5ae3595369e472571144b208c"
+    },
+    {
+      "path": "headroom/api/availability.py",
+      "sha256": "539e3e0b7e58e010d4c74ab90b09bb881b683519e105da592a4f87a1a33e0b24"
+    },
+    {
+      "path": "headroom/api/queue.py",
+      "sha256": "41bbe4f7056eae9b512c7928fc0f915676ac345f1cc27144828e73eb85fce2f6"
+    },
+    {
+      "path": "headroom/api/security.py",
+      "sha256": "3173752b6c8d28d9805780f3f16a16fdb3a9d7005a5143854b6778cc5e037587"
+    },
+    {
+      "path": "headroom/replay_curation.py",
+      "sha256": "1aa0a310ec0d45595bd40ad79f36f5fc6ee844c857d1e2bbf0701ce910e978c8"
+    },
+    {
+      "path": "headroom/acceptance/common.py",
+      "sha256": "a66a6eb47a497cdc1e4bd27b1d2e90ad01e6c03e9baa27a8762bb883520c3c0d"
+    },
+    {
+      "path": "headroom/billing_review.py",
+      "sha256": "a8b03826dcd5fc349e1414875555092e528dca2506d3b05f1c6dcd267b24acb8"
+    }
+  ],
+  "alias_assessment": {
+    "verdict": "Not recommended for complete long-lived clone acceptance; conditionally usable without reviewed HF cache, not an observed current failure.",
+    "cache": "Orchestrator hardcodes project/.cache/budget.db. A parent-directory alias would share DB/WAL/SHM; Store alone does not. lab/cache.py rejects symlink .cache when hf-reviewed exists. Currently hf-reviewed is absent and the helper returns None before that guard. Do not weaken the guard or remove authoritative cache.",
+    "runs": "API settings and Store resolve run roots to canonical paths; source copy excludes runs/.cache and symlinks. The replay curator rejects symlink ancestors, so use its canonical authoritative root.",
+    "git_ignore": "Existing .cache/ and runs/ directory patterns do not match same-name symlinks. A future deliberate runs alias requires local .git/info/exclude pattern /runs without trailing slash, plus git check-ignore and tracked-file checks.",
+    "sqlite": "Avoid copies, hard links, or individual DB-only aliases with divergent WAL/SHM paths. Parent-directory alias safety remains an engineering inference requiring future identity checks."
+  },
+  "preferred_post_r3_design": {
+    "status": "Private implementation scope reviewed by parent; not implemented by this report. Main runtime stays frozen.",
+    "accessor": "One HEADROOM_BUDGET_DB_PATH accessor: absent preserves project default; explicit value requires absolute canonical existing initialized ledger, regular nonsymlink file, nonsymlink ancestors; failure never falls back.",
+    "writer": "Explicit selection uses SQLite mode=rw via Path.as_uri and requires initialized schema, preventing missing-file creation and rejecting empty/unrelated SQLite files. Preserve default behavior. Document operator-controlled path race: Python SQLite does not provide atomic nofollow for every component.",
+    "callers": [
+      "headroom/orchestrator.py",
+      "headroom/api/availability.py",
+      "headroom/acceptance/common.py"
+    ],
+    "unchanged_explicit_caller": "headroom/billing_review.py keeps its reviewed-receipt ledger path; environment cannot override it.",
+    "scope": [
+      "new headroom/ledger_path.py",
+      "minimal headroom/budget.py existing-only option",
+      "three listed callers",
+      "focused offline tests",
+      "standalone prepared-source dependency pin if needed"
+    ],
+    "tests": "Default compatibility; absolute/existing/schema and all-component symlink negatives; no fallback; disappearance creates no database; same history/WAL across instances; CLI/API/acceptance agree; original day/lifetime refusal and unknown retained. No inference/GPU.",
+    "limitations": "Explicit configuration itself does not prove the intended history; future driver must bind main canonical path and ledger snapshot. runtime_factory is harness integration, not ordinary README CLI. Host bind mounting is unvalidated privileged configuration."
+  },
+  "future_execution_gates": [
+    "Finish/audit R3 and freeze a fresh full read-only ledger frontier. Do not reuse earlier 106/573 cap after new requests. BudgetLedger/Store constructors may migrate/write and are not read-only preflight.",
+    "New server checkout of exact reviewed/pushed commit, own uv environment/frontend build. Verify import path/Python prefix/CLI executable/source hashes; clear inherited path overrides. Preserve R2 setup clone.",
+    "Keep clone .cache regular. Use qualified explicit canonical main budget DB and unchanged absolute R2 profile in both headroom fix and serve. CLI does not automatically honor HEADROOM_RUNTIME_PROFILE.",
+    "Both processes set HEADROOM_DAILY_BUDGET_USD=9.99964904; CLI also explicit --daily-budget; retain 0.6 run cap. Shared DB alone does not impose equal limits because daily limit is per instance and defaults to 12.",
+    "Preserve lifetime14.17775754/day9.99964904, all history/unknown charges and retained external obligations. Profile available_credit validates a funded partition, not provider balance. Full per-request reservation still applies; 0.6 actual-usage limit is not a per-POST ceiling.",
+    "Future explicit execution only: regular ignored 0600 remote .env without displaying contents; no symlink/profile overwrite/new allocation. Source copy excludes secrets; Docker mounts clone/headroom, source and output, not repository root.",
+    "Canonical authoritative runs/Store; one owned API server after old workers finish and all API jobs terminal. RunQueue.start can rewrite unfinished api_owner rows; no simultaneous shared-Store servers.",
+    "Prospectively register sequential CLI then API/UI job with exact source/argv, fresh budget admission and supervision. API outer deadline defaults600; any required480 limit needs explicit bounded design. This report executes or authorizes no live jobs.",
+    "Capture actual new run IDs/runtime/model/GPU evidence and before/after ledger. Setup/old report browsing is not live success; manual delivery tests are not benchmark target successes.",
+    "Later cleanup only owned aliases before checkout removal; never recurse through aliases/delete authoritative DB/WAL/SHM/runs. Public hostname/video remain separate."
+  ],
+  "honest_claim_if_later_passed": "Fresh reviewed checkout with own installation/UI build and explicitly shared private state on same server; not fresh machine, isolated DB, new funded account or unconfigured one-command success.",
+  "official_sources": [
+    {
+      "url": "https://git-scm.com/docs/gitignore",
+      "supports": "Trailing slash directory patterns do not match symlinks; local info/exclude."
+    },
+    {
+      "url": "https://www.sqlite.org/wal.html",
+      "supports": "WAL/SHM are associated database state requiring same-host shared memory."
+    },
+    {
+      "url": "https://www.sqlite.org/howtocorrupt.html",
+      "supports": "Multiple filenames/hard links and mismatched journals; modern Unix symlink canonicalization."
+    }
+  ]
+}

@@ -119,6 +119,7 @@ class DiagnosisValidation:
 
 
 _REPAIR_RULES = {
+    "PLAN_ASSESSMENT_IS_NOT_OBSERVED_INPUT": "Distinguish supported prospective plan effects from pending candidate measurements. Keep all verification gates; name genuine missing source, weighting, RNG, reference or policy prerequisites, and retain needs_more_info for those. Do not invent measured success or merely relabel a forbidden change.",
     "INVALID_SCHEMA": "Return a complete object matching the supplied schema and field types.",
     "JSON_SCHEMA_MISMATCH": "Use only choices admitted by the current request schema.",
     "DUPLICATE_ID": "Use unique IDs within causes and within plan steps.",

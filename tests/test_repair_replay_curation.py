@@ -55,6 +55,7 @@ def fixture_run(
     in_jobs=False,
     call_roles=("diagnose", "patcher"),
     patch_call_overrides=None,
+    patch_relative="rounds/01/patches/attempt-01/patch.diff",
 ):
     """Synthetic records shaped like one fully saved live attempt, not live evidence."""
     runs = tmp_path / "runs"
@@ -86,11 +87,10 @@ def fixture_run(
     }
     write(before_dir / "result.json", baseline)
     write(after_dir / "result.json", after)
-    patch_relative = "rounds/01/patches/attempt-01/patch.diff"
     patch = source / patch_relative
     patch.parent.mkdir(parents=True)
     patch.write_text("--- a/train.py\n+++ b/train.py\n@@ -1 +1 @@\n-X = 1\n+X = 2\n")
-    candidate_source = source / "rounds/01/patches/attempt-01/candidate"
+    candidate_source = patch.parent / "candidate"
     candidate_source.mkdir()
     (candidate_source / "train.py").write_text("do not copy source")
     (before_dir / "snapshot.pickle").write_bytes(b"never load or copy")

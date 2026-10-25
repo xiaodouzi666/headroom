@@ -1,0 +1,190 @@
+--- a/reports/acceptance-v2-r2-20261025/run_mvp_v2.py
++++ b/reports/acceptance-v2-r3-20261025/run_mvp_v2.py
+@@ -15,7 +15,7 @@
+ from pathlib import Path
+ 
+ ROOT = Path("/home/xiaodouzi/workspace/headroom")
+-OUT = ROOT / "reports/acceptance-v2-r2-20261025"
++OUT = ROOT / "reports/acceptance-v2-r3-20261025"
+ DRIVER = OUT / "run_mvp_v2.py"
+ CAP = OUT / "cap-review.json"
+ REVIEW = OUT / "root-review.json"
+@@ -26,7 +26,7 @@
+ DAILY_POOL = Decimal("9.99964904")
+ BUDGET_HELPER = OUT / "ledger_state_r2.py"
+ BUDGET_HELPER_SHA = "b27d8c04117502b65c7be0501cdd86208bb17d50b7ee2c668ed161a130baff6f"
+-FUNDING = OUT / "funding-transition.json"
++FUNDING = ROOT / "reports/acceptance-v2-r2-20261025/funding-transition.json"
+ FUNDING_SHA = "cc31a24d0a6cdc91413b4521ef0d8b1f86a04e76ceb32fed3081d0998348784d"
+ spec = importlib.util.spec_from_file_location(
+     "historical_budget_primitives", ROOT / ".cache/setup/run_mvp_v7.py"
+@@ -36,7 +36,7 @@
+ require, sha, read, save = old.require, old.sha, old.read, old.save
+ 
+ require(sha(BUDGET_HELPER) == BUDGET_HELPER_SHA, "budget partition helper drift")
+-budget_spec = importlib.util.spec_from_file_location("reviewed_r2_budget", BUDGET_HELPER)
++budget_spec = importlib.util.spec_from_file_location("reviewed_r3_budget", BUDGET_HELPER)
+ budget_partition = importlib.util.module_from_spec(budget_spec)
+ budget_spec.loader.exec_module(budget_partition)
+ 
+@@ -153,7 +153,7 @@
+                 }
+             )
+     return {
+-        "path": "reports/acceptance-v2-r2-20261025/catalogue/report.json",
++        "path": "reports/acceptance-v2-r3-20261025/catalogue/report.json",
+         "sha256": sha(OUT / "catalogue/report.json"),
+         "verified": verified,
+     }
+@@ -429,7 +429,7 @@
+     checkpoint = checkpoint_qualification()
+     value = {
+         "reviewed_by": "root",
+-        "purpose": "mvp_v2_repair_round_2_strict_nine_case",
++        "purpose": "mvp_v2_repair_round_3_strict_nine_case",
+         "source_pins": old.inventory(),
+         "driver_sha256": sha(DRIVER),
+         "cap_sha256": sha(CAP),
+@@ -450,7 +450,7 @@
+ 
+ 
+ def execute(expected_review_sha):
+-    with (ROOT / ".cache/setup/mvp-v2-repair-r2-strict.lock").open("a") as lock:
++    with (ROOT / ".cache/setup/mvp-v2-repair-r3-strict.lock").open("a") as lock:
+         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+         for name in ("preflight.json", "execution.log", "execution.json"):
+             require(not (OUT / name).exists(), "version already dispatched; no overwrite/retry")
+--- a/reports/acceptance-v2-r2-20261025/audit_mvp_v2.py
++++ b/reports/acceptance-v2-r3-20261025/audit_mvp_v2.py
+@@ -22,7 +22,7 @@
+ 
+ sys.dont_write_bytecode = True
+ ROOT = Path("/home/xiaodouzi/workspace/headroom")
+-OUT = ROOT / "reports/acceptance-v2-r2-20261025"
++OUT = ROOT / "reports/acceptance-v2-r3-20261025"
+ MANIFEST = "eval/mvp_phase1_v2.yaml"
+ IDS = (
+     "s1_batch_too_big",
+@@ -42,7 +42,7 @@
+ FUNDING_PATH = "reports/acceptance-v2-r2-20261025/funding-transition.json"
+ RETIREMENT_PATH = "reports/acceptance-v2-r2-20261025/external-probe-retirement.json"
+ ALLOCATION_PATH = "reports/live-campaign-20261025/allocation.json"
+-BUDGET_HELPER_PATH = "reports/acceptance-v2-r2-20261025/ledger_state_r2.py"
++BUDGET_HELPER_PATH = "reports/acceptance-v2-r3-20261025/ledger_state_r2.py"
+ HISTORICAL_HELPER_PATH = ".cache/setup/run_mvp_v7.py"
+ FUNDING_PINS = [
+     {"path": PROFILE, "sha256": "0a55810841198ed0821653a6690542b2e43eead3f73885e77dcb748fc57bd1e9"},
+@@ -1004,7 +1004,7 @@
+     gates["no_artifact_read_errors"] = not errors
+     return {
+         "schema_version": 1,
+-        "audit_kind": "independent_v2_r2_mvp_nine_zero_sum_partition",
++        "audit_kind": "independent_v2_r3_mvp_nine_zero_sum_partition",
+         "created_at_utc": datetime.now(UTC).isoformat(),
+         "campaign": str(campaign_path.relative_to(ROOT)),
+         "fixed_denominator": 9,
+--- a/reports/acceptance-v2-r2-20261025/audit_reasoning_wire.py
++++ b/reports/acceptance-v2-r3-20261025/audit_reasoning_wire.py
+@@ -1,4 +1,4 @@
+-"""Read-only r2 prepared-request/usage audit; never publishes prompts or reasoning text."""
++"""Read-only r3 prepared-request/usage audit; never publishes prompts or reasoning text."""
+ 
+ import argparse
+ import copy
+@@ -10,13 +10,14 @@
+ from pathlib import Path
+ 
+ ROOT = Path(__file__).resolve().parents[2]
+-OUT = ROOT / "reports/acceptance-v2-r2-20261025"
++OUT = ROOT / "reports/acceptance-v2-r3-20261025"
+ EXECUTION = OUT / "execution.json"
+ MAX_JSON_BYTES = 16 * 1024 * 1024
+ MAX_CALLS = 2048
+ # The reviewed r2 profile uses this exact wire field, not a default/alias inference.
+ EXPECTED_CAP_FIELD = "max_completion_tokens"
+ CAP_FIELDS = {"max_tokens", "max_completion_tokens"}
++EXPECTED_THINKING = {"diagnose": True, "patcher": False}
+ HEX = re.compile(r"[0-9a-f]{64}")
+ FINISH_REASONS = {"stop", "length", "tool_calls", "function_call", "content_filter"}
+ ROLES = {
+@@ -162,6 +163,8 @@
+         "wire_body_sha256": wire_hash,
+         "stored_payload_sha256": stored_hash if payload_valid else None,
+         "enable_thinking": enabled,
++        "expected_enable_thinking": EXPECTED_THINKING[role],
++        "thinking_matches": None if enabled is None else enabled == EXPECTED_THINKING[role],
+         "expected_output_cap_field": EXPECTED_CAP_FIELD,
+         "observed_output_cap_field": cap_field,
+         "expected_output_cap_tokens": expected_cap,
+@@ -200,6 +203,8 @@
+     return {
+         "attempts": len(rows),
+         "enable_thinking_true": counts("enable_thinking", True),
++        "enable_thinking_expected": counts("thinking_matches", True),
++        "enable_thinking_true_scope": "descriptive count only; use enable_thinking_expected for the role contract",
+         "output_cap_expected": counts("cap_matches", True),
+         "output_cap_field_expected": counts("cap_field_matches", True),
+         "reasoning_tokens_known_subtotal": sum(known_reasoning) if known_reasoning else None,
+@@ -291,7 +296,8 @@
+     finally:
+         con.close()
+     return {
+-        "schema": "headroom.reasoning_wire_audit.v1",
++        "schema": "headroom.reasoning_wire_audit.v2",
++        "expected_enable_thinking_by_role": dict(EXPECTED_THINKING),
+         "execution_sha256": execution_sha,
+         "campaign_sha256": campaign_sha,
+         "manifest_sha256": manifest_sha,
+@@ -396,9 +402,28 @@
+         body.update(model=model, max_completion_tokens=cap)
+         evidence["stored_payload_sha256"] = digest(canonical(body))
+         check(analyze_call(changed)["cap_matches"] is True)
+-        body["chat_template_kwargs"]["enable_thinking"] = False
++        for value in (True, False):
++            body["chat_template_kwargs"]["enable_thinking"] = value
++            evidence["stored_payload_sha256"] = digest(canonical(body))
++            actual = analyze_call(changed)
++            check(actual["enable_thinking"] is value)
++            check(actual["expected_enable_thinking"] is EXPECTED_THINKING[role])
++            check(actual["thinking_matches"] is (value == EXPECTED_THINKING[role]))
++            summary = aggregate([actual])
++            check(
++                summary["enable_thinking_expected"]["matching"]
++                == int(value == EXPECTED_THINKING[role])
++            )
++            check(summary["enable_thinking_true"]["matching"] == int(value))
++        for value in (None, 0, "false"):
++            body["chat_template_kwargs"]["enable_thinking"] = value
++            evidence["stored_payload_sha256"] = digest(canonical(body))
++            actual = analyze_call(changed)
++            check(actual["thinking_matches"] is None)
++            check(aggregate([actual])["enable_thinking_expected"]["unknown"] == 1)
++        body.pop("chat_template_kwargs")
+         evidence["stored_payload_sha256"] = digest(canonical(body))
+-        check(analyze_call(changed)["enable_thinking"] is False)
++        check(analyze_call(changed)["thinking_matches"] is None)
+     changed = copy.deepcopy(row)
+     evidence = changed["data"]["request_evidence"]
+     evidence["payload"]["max_completion_tokens"] = 4000
+@@ -415,7 +440,7 @@
+     changed = copy.deepcopy(row)
+     changed["data"]["finish_reason"] = "PRIVATE_REASONING"
+     check(analyze_call(changed)["finish_reason"] is None)
+-    # Recognize the legacy spelling, but never accept it as the reviewed r1 field.
++    # Recognize the legacy spelling, but never accept it as the reviewed profile field.
+     changed = copy.deepcopy(row)
+     evidence = changed["data"]["request_evidence"]
+     body = evidence["payload"]
+@@ -464,9 +489,9 @@
+         return
+     require(
+         args.execution is not None and args.campaign is not None and args.output is not None,
+-        "explicit completed r1 execution, campaign and fresh output required",
+-    )
+-    require(args.output.parent.resolve() == OUT, "output must be in r1 report directory")
++        "explicit completed r3 execution, campaign and fresh output required",
++    )
++    require(args.output.parent.resolve() == OUT, "output must be in r3 report directory")
+     result = audit(args.execution, args.campaign)
+     with args.output.open("x") as handle:
+         json.dump(result, handle, indent=2, allow_nan=False)

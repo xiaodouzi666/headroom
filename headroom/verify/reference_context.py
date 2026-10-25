@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import hashlib
+import math
 import os
 import stat
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from headroom.verify.checkpoint import STRATEGY as CHECKPOINT_STRATEGY
 from headroom.verify.offload import LEGACY_STRATEGY, STRATEGY, bind_original_baseline
@@ -46,6 +47,169 @@ def _source_observation(contract):
         "normalized_contract_sha256": contract.get("contract_sha256"),
         "basis": "bounded static source inspection; no execution or equivalence proof",
     }
+
+
+def _completed_baseline_observation(
+    baseline, original, original_args, required_steps, command_mode
+):
+    """Describe a preserved completed run; this does not certify a candidate."""
+    from headroom.lab.runner import read_artifact_json, selected_capture_directory
+
+    result = {
+        "status": "unknown",
+        "reason": "completed original-baseline execution has not been bound",
+        "run_id": None,
+        "source_and_argv_bound": False,
+        "required_logical_updates": required_steps,
+        "observed_logical_updates": None,
+        "capture_complete": None,
+        "cleanup_verified": None,
+        "precision": "unknown",
+        "loss_scalar_count": None,
+        "loss_scalar_count_matches_logical_updates": None,
+        "observed_updated_parameter_tensors_per_step": None,
+        "candidate_input_pairing_verified": None,
+        "scope": "Preserved original execution and scalar-series availability only; not candidate equivalence or model semantics.",
+    }
+    if baseline.get("status") != "completed":
+        result["reason"] = "original baseline is not completed"
+        return result
+    try:
+        if command_mode or type(required_steps) is not int or required_steps < 1:
+            raise ValueError("Unsupported execution or step contract")
+        if type(original_args) not in (list, tuple) or not all(
+            type(arg) is str for arg in original_args
+        ):
+            raise ValueError("Original argv unavailable")
+        run_id = baseline.get("run_id")
+        if (
+            type(run_id) is not str
+            or len(run_id) != 32
+            or any(char not in "0123456789abcdef" for char in run_id)
+        ):
+            raise ValueError("Original run identity unavailable")
+        directory = Path(baseline["run_dir"])
+        if directory.name != run_id:
+            raise ValueError("Original run identity differs")
+        manifest = read_artifact_json(directory / "manifest.json")
+        host = read_artifact_json(directory / "result.json")
+        capture_directory = selected_capture_directory(directory, baseline, manifest)
+        capture = read_artifact_json(capture_directory / "result.json")
+        fields = (
+            "protocol",
+            "capture_complete",
+            "finalization_incomplete",
+            "steps",
+            "loss_series",
+            "step_records",
+            "optimizer_update_observation",
+            "precision_observation",
+            "env",
+        )
+        if any(
+            baseline.get(field) != host.get(field) or baseline.get(field) != capture.get(field)
+            for field in fields
+        ):
+            raise ValueError("Host and selected capture differ")
+        if (
+            host.get("run_id") != run_id
+            or Path(host.get("run_dir", "")) != directory
+            or host.get("status") != "completed"
+            or capture.get("status") != "completed"
+            or host.get("cleanup_verified") is not True
+            or baseline.get("cleanup_verified") is not True
+            or baseline.get("protocol") != "headroom.lab.v1"
+            or baseline.get("capture_complete") is not True
+            or baseline.get("finalization_incomplete") is not False
+        ):
+            raise ValueError("Incomplete original execution")
+        command = manifest.get("command")
+        if type(command) is not list or not all(type(arg) is str for arg in command):
+            raise ValueError("Missing preserved wrapper command")
+        split = command.index("--") if "--" in command else len(command)
+        wrapper = command[:split]
+        recorded_args = command[split + 1 :] if split < len(command) else []
+        if (
+            wrapper[1:3] != ["-m", "headroom.lab.run_target"]
+            or wrapper.count("--script") != 1
+            or recorded_args != list(original_args)
+        ):
+            raise ValueError("Preserved standalone command/argv differs")
+        relative = PurePosixPath(wrapper[wrapper.index("--script") + 1]).relative_to("/source")
+        if not relative.parts or ".." in relative.parts:
+            raise ValueError("Unsafe preserved source path")
+        entry = manifest["source"]["files"][str(relative)]
+        preserved = _contract(directory / "source" / str(relative))
+        source_hash = original.get("source_sha256")
+        if (
+            type(source_hash) is not str
+            or len(source_hash) != 64
+            or entry.get("sha256") != source_hash
+            or preserved.get("source_sha256") != source_hash
+        ):
+            raise ValueError("Original executed source differs")
+        updates = baseline.get("optimizer_update_observation") or {}
+        steps, records = baseline.get("steps"), baseline.get("step_records")
+        losses = baseline.get("loss_series")
+        if (
+            type(steps) is not int
+            or steps < required_steps
+            or updates.get("protocol") != "headroom.optimizer_updates.v1"
+            or updates.get("complete") is not True
+            or updates.get("logical_boundary_complete") is not True
+            or type(updates.get("logical_updates")) is not int
+            or updates["logical_updates"] != steps
+            or type(records) is not list
+            or len(records) != steps
+            or any(
+                type(record) is not dict
+                or type(record.get("step")) is not int
+                or record["step"] != index
+                for index, record in enumerate(records, 1)
+            )
+            or type(losses) is not list
+            or len(losses) != steps
+            or not all(type(value) in (int, float) and math.isfinite(value) for value in losses)
+        ):
+            raise ValueError("Logical-update or scalar-series evidence incomplete")
+        precision = observed_precision(baseline)
+        if precision not in {"fp32", "bf16"}:
+            raise ValueError("Original precision unknown")
+        counts = []
+        if updates.get("parameter_update_sets_complete") is True:
+            for record in records:
+                identities = record.get("updated_parameter_ids")
+                if (
+                    record.get("parameter_update_coverage_complete") is not True
+                    or type(identities) is not list
+                    or not identities
+                    or any(type(identity) is not str for identity in identities)
+                    or len(set(identities)) != len(identities)
+                ):
+                    counts = []
+                    break
+                counts.append(len(identities))
+        result.update(
+            status="observed",
+            reason="Preserved completed original source/argv, logical updates and scalar losses are available",
+            run_id=run_id,
+            source_sha256=source_hash,
+            source_and_argv_bound=True,
+            observed_logical_updates=steps,
+            capture_complete=True,
+            cleanup_verified=True,
+            precision=precision,
+            loss_scalar_count=len(losses),
+            loss_scalar_count_matches_logical_updates=True,
+            observed_updated_parameter_tensors_per_step=(
+                {"minimum": min(counts), "maximum": max(counts)} if counts else None
+            ),
+        )
+    except (OSError, ValueError, TypeError, KeyError, IndexError, AttributeError, OverflowError):
+        result["reason"] = (
+            "Preserved completed original-baseline evidence is incomplete or inconsistent"
+        )
+    return result
 
 
 def numerical_reference_context(
@@ -112,8 +276,14 @@ def numerical_reference_context(
         "required_update_count_supported": strategy != CHECKPOINT_STRATEGY or required_steps == 20,
     }
     scope = "repository" if repository_mode else "standard"
+    completed_baseline = _completed_baseline_observation(
+        baseline, original, original_args, required_steps, command_mode
+    )
+    completed_observed = completed_baseline["status"] == "observed"
     status = (
         "not_needed_completed_baseline"
+        if completed_observed
+        else "completed_baseline_evidence_unverified"
         if baseline.get("status") == "completed"
         else "preconditions_observed_execution_unverified"
         if explicit and all(checks.values())
@@ -125,9 +295,25 @@ def numerical_reference_context(
         "protocol": "headroom.numerical_reference_context.v1",
         "authority": "host_selected_verification_protocol_and_read_only_observations",
         "selected_strategy": strategy,
+        "configured_strategy_application": "Only used to construct a separate reference when the original baseline OOMs",
+        "comparison_reference": {
+            "kind": "completed_original_baseline"
+            if completed_observed
+            else "oom_reference_required"
+            if is_oom
+            else "unverified",
+            "separate_reference_required": False
+            if completed_observed
+            else True
+            if is_oom
+            else None,
+            "original_baseline": completed_baseline,
+            "candidate_equivalence_verified": None,
+        },
         "acceptance_scope": scope,
         "capability_status": status,
         "reference_execution_verified": None,
+        "reference_execution_verified_scope": "A separate discovered/transformed reference only; null does not negate an observed completed original baseline above",
         "candidate_equivalence_verified": None,
         "required_logical_updates": required_steps,
         "reference_limits": {
@@ -161,7 +347,7 @@ def numerical_reference_context(
             "Retained-source support does not establish support for a future candidate; each proposed edit is checked independently.",
             "Policy permission for batch/accumulation changes does not establish mathematical equivalence or verifier support.",
             "Same seed and equal parameter count alone do not prove identical workload or updated parameters.",
-            "Reference existence, memory fit, cleanup, timing and numerical outcomes remain unverified until actual execution.",
+            "No separate reference is run by this context. An observed completed original baseline above is distinct from unverified candidate pairing and equivalence.",
         ],
     }
     if explicit:

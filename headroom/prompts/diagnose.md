@@ -292,3 +292,51 @@ values. Check prerequisites for the selected current steps. Evidence needed
 only for an alternative proposal is not, by itself, a blocker for those steps.
 Overall feasibility and the required-savings check remain binding; this is not
 permission to execute an insufficient plan or clear genuine needs_more_info.
+
+
+Planning and verification are distinct stages. Plan numerics_impact and
+throughput_impact describe supported prospective effects, not completed benchmark
+measurements. Pending candidate loss/throughput measurements belong in risk and
+the verification plan; they cannot be supplied before a candidate exists. Never
+invent passing results. The host must still run every existing loss, throughput,
+policy, completeness and resource gate with its unchanged thresholds.
+
+For an otherwise allowed transformation, numerics_impact="none" means the plan
+intends to preserve the objective, data, precision and update semantics, supported
+by the supplied source/invariants; it is not a claim of already measured bitwise
+identity or tolerance compliance. Expected floating-point reorder effects remain
+a verification risk, not evidence that a candidate has passed. Deliberate changes
+to precision or mathematical semantics still require the existing policy permission.
+
+Keep needs_more_info for genuine prerequisites that prevent a defensible plan,
+such as unknown loss weighting, RNG behavior, missing source/data semantics,
+unsupported required reference execution, or policy infeasibility. Name that
+specific input/reference/policy field and the blocked step. Do not name a plan
+assessment field as if it were missing runtime evidence, or demand a future
+verification result as a pre-existing input. This distinction never grants missing
+permission or guarantees numerical equivalence or performance.
+
+A complete retained target script_args array is the boundary of the target
+arguments supplied by the host. A missing optional execution_argv shell/launcher
+view does not imply hidden extra target arguments. Do not invent such arguments.
+This is an invocation fact, not proof of the target's parsed values: if visible
+source actually reads environment/configuration, invokes dynamic code, changes
+argv, or delegates argument parsing, preserve that specific unresolved precedence.
+For a visible unconditional assignment with no such input path, reason from the
+supplied code rather than hypothesizing an unobserved override. Label any derived
+value as source-supported, not as measured tensor shape or effective-batch proof;
+incomplete or redacted source can still leave a genuine gap.
+
+Evaluate device placement and resource lifetime changes against the supplied
+policy's actual architecture, parameter, gradient/update, data and objective
+invariants. allow_model_change=false is not a blanket ban on every placement or
+lifetime change, and a placement proposal is not automatically compliant either.
+Changing shape/count, trainable parameters, mathematical behavior, precision or
+needed computation still needs the applicable permission and all unchanged host
+checks. State the relevant invariant and real uncertainty without assuming a
+particular resource is unused or safe to remove.
+
+Evidence dependencies must use their declared scope: current_plan names existing
+blocked_plan_ids; alternative_plan and overall_feasibility use an empty ID list.
+Use a current-plan dependency when an identifiable step is blocked; do not invent
+facts or weaken a genuine blocker merely to repair its scope declaration.

@@ -1,0 +1,36 @@
+{
+  "schema": "headroom.replay_layout_independent_review.v1",
+  "created_at_utc": "2026-10-25T11:53:22.405152+00:00",
+  "mode": "independent_readonly_code_review",
+  "result": "no_blocking_finding",
+  "reviewed_artifacts": [
+    {
+      "path": ".cache/replay-curator-layout-post-r3/candidate.patch",
+      "sha256": "7add3aa52013e53d44a4ca15f36c78a0cad3520238b552a55b051ba232f3f604"
+    }
+  ],
+  "production_change": "One exact fullmatch allowlist pattern for generated nested patch.diff paths",
+  "checks": [
+    "Generated PatchEngine and patch directories use UUID hex; attempts retain the initial-plus-three range",
+    "Pattern admits rounds 01-06, attempts 1-4, lowercase 32-hex identifiers and only patch.diff",
+    "Legacy single-layer path remains supported",
+    "Existing open_regular safety and symlink refusal are unchanged",
+    "Existing 64 MiB per-file and 128 MiB aggregate limits are unchanged",
+    "Original report/DB/round/diff/application/candidate-capture/event/selected-configuration bindings remain unchanged",
+    "No candidate source, response artifact, credential file or pickle is newly allowlisted",
+    "Dry inspection eligibility is distinct from copying assets or declaring target success",
+    "New tests cover malformed layouts, supported attempts, each symlink layer and original binding failures"
+  ],
+  "implementer_reported_focused_tests": 88,
+  "tests_repeated_by_this_reviewer": false,
+  "new_api_calls": 0,
+  "new_gpu_runs": 0,
+  "curation_invoked": false,
+  "database_written": false,
+  "production_written": false,
+  "limits": [
+    "Read-only review; not a new live acceptance result",
+    "Recorded failures and unknowns remain failures and unknowns",
+    "Path recognition alone never establishes a verified model repair"
+  ]
+}

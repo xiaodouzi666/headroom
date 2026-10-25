@@ -173,7 +173,7 @@ def test_offload_limits_and_legacy_exception_are_descriptions_not_new_permission
     assert "source_contract_boundary" not in legacy
     assert legacy["reference_execution_verified"] is None
     baseline["status"] = "completed"
-    assert context(baseline)["capability_status"] == "not_needed_completed_baseline"
+    assert context(baseline)["capability_status"] == "completed_baseline_evidence_unverified"
 
 
 def test_context_does_not_transmit_baseline_argv_or_environment_secrets(tmp_path, monkeypatch):

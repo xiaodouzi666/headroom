@@ -1,0 +1,105 @@
+{
+  "schema": "headroom.incremental_image_independent_review.v1",
+  "reviewed_utc": "2026-10-25T11:55:54.305081+00:00",
+  "reviewer": "research_numerical_solution",
+  "conclusion": "no_blocker; actual image verified, full regression remains separate",
+  "source_pins": [
+    {
+      "path": "reports/acceptance-v2-r3-20261025/image-incremental-plan.json",
+      "sha256": "fb18618c5a3972e3cc5b9272c7d2f72b676740b0aebe702e2a189fe2f5df2c9f"
+    },
+    {
+      "path": "reports/acceptance-v2-r3-20261025/image-incremental-result.json",
+      "sha256": "918b89565f9a58f2634fab87196d386c53fab26a07d99dfe24abbfcc0d5f287f"
+    },
+    {
+      "path": "reports/acceptance-v2-r3-20261025/image-dependency-delta.json",
+      "sha256": "1448690ddcd1f80b94229e308db01e074ff424f53031ddbbb589db04a8334c7e"
+    },
+    {
+      "path": "reports/acceptance-v2-r3-20261025/build_incremental_image.py",
+      "sha256": "4f3f8b9d22f485560fe41d16ac8a7286ab41dbb026a3dd948b4fdcfddc408421"
+    },
+    {
+      "path": ".cache/lab-build/20261024T130210Z-8a90f1b3/requirements.txt",
+      "sha256": "c3bbd6e116cd6adafe5f4be51eb62381abf7d6b957e0b2d260635d433e3fb897"
+    },
+    {
+      "path": "uv.lock",
+      "sha256": "dc2f10eafb7e21a611928dc3699df974231344509b77b3dc533b468589ff4efb"
+    },
+    {
+      "path": ".cache/lab-build/r3-incremental-20261025/.dockerignore",
+      "sha256": "fdb34accf5cfbaf888b578fa42db4be4828576afbbdf6291b918cfa9768e92af"
+    },
+    {
+      "path": ".cache/lab-build/r3-incremental-20261025/Dockerfile",
+      "sha256": "280ae6df92184d6cb93b05a3c8e7f628a3ba1552614f22ab5727586d71527945"
+    },
+    {
+      "path": ".cache/lab-build/r3-incremental-20261025/lock.sha256",
+      "sha256": "b85d0259554f8a73f87d5c67d45f64388363bb9417ef390611963965a05909e5"
+    },
+    {
+      "path": ".cache/lab-build/r3-incremental-20261025/requirements.txt",
+      "sha256": "f846469b1f4c72c6c9c5b0e77c5fa9d29d9c6360ccd9211e6cb263213190805c"
+    },
+    {
+      "path": ".cache/lab-build/r3-incremental-20261025/verify_runtime.py",
+      "sha256": "ba2d7429dddfa42aa18a490a5c44edd5dd05ad3d1d3290600d04494d102650a7"
+    }
+  ],
+  "base_image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7",
+  "new_image_id": "sha256:89fc0bd6ed5d7e95ed73d6e377e6e6e740ba3002cefeacabbdeeff9ad9c331db",
+  "checks": {
+    "plan_context_pins_match": true,
+    "current_uv_lock_matches": true,
+    "base_tag_id_unchanged_during_independent_review": true,
+    "new_layers_extend_exact_old_layer_prefix": true,
+    "requirements_copied_into_each_image_match_bound_exports": true,
+    "all_95_old_requirement_records_byte_identical": true,
+    "sole_added_requirement_is_hash_locked_ruff_0_17_2": true,
+    "actual_package_metadata_difference_only_ruff_0_17_2": true,
+    "ruff_module_version_works_as_inherited_nonroot_user": true,
+    "runtime_label_and_lock_label_match": true,
+    "runtime_json_contract_unchanged_except_lock": true,
+    "final_user_is_65534_65534": true,
+    "dockerfile_performs_install_pip_check_runtime_verify_before_new_label": true,
+    "context_has_no_host_venv_or_source_copy": true
+  },
+  "observations": {
+    "old_requirement_records": 95,
+    "new_requirement_records": 96,
+    "package_changes": {
+      "ruff": [
+        null,
+        "0.17.2"
+      ]
+    },
+    "ruff_module_version": "ruff 0.17.2",
+    "build_exit_code_as_recorded": 0,
+    "build_elapsed_seconds_as_recorded": 24.092367490986362,
+    "dockerignore_allows_only": [
+      "Dockerfile",
+      "requirements.txt",
+      "verify_runtime.py",
+      "lock.sha256"
+    ]
+  },
+  "actions": {
+    "source_writes": false,
+    "image_builds_or_installs": 0,
+    "image_or_tag_mutations": false,
+    "model_calls": 0,
+    "gpu_calls": 0,
+    "metadata_containers": 2,
+    "metadata_container_controls": "image IDs; no network, read-only filesystem, no mounts or GPU flags, all capabilities dropped, no-new-privileges, 256MiB memory, 64 pids, --rm",
+    "dispatcher_or_full_tests_started": false,
+    "report_written_only": true
+  },
+  "limits": [
+    "This verifies incremental-image construction and the resulting dependency/runtime contract; it does not claim complete regression or model acceptance.",
+    "The published build driver was import-format normalized after execution as reported by root; this receipt pins and reviews the current published script, not a separately preserved byte-identical execution script. Actual Dockerfile/context pins and image results were independently rechecked.",
+    "Package metadata versions and unchanged base layers do not claim a byte-by-byte audit of every installed file. Hash-locked installation, original base identity and the complete old/new package map are the reviewed evidence."
+  ]
+}

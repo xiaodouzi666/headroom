@@ -1,3 +1,11 @@
+## Protocol-v2 repair r3 qualified; live result pending — 2026-10-25
+
+3030 offline guarded tests passed against 305 unchanged source entries. These
+tests do not establish model or GPU repair quality. The forthcoming third
+campaign retains the fixed nine-case denominator and both six-required gates;
+R2 and all older results below remain unchanged.
+See ../reports/acceptance-v2-r3-20261025/README.md.
+
 ## Protocol-v2 repair r2 — 2026-10-25
 
 Independent final result: target3/9; valid correct first cause4/9 plus2 unknown

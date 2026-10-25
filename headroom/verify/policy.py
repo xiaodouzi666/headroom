@@ -852,6 +852,30 @@ def merge_cli_changes(base_cli, changes) -> list[str]:
     return result
 
 
+def _explicit_cli_batch_pair(options):
+    """Read only unambiguous, explicit supported flags; never infer defaults.
+
+    This is the host's existing long-option syntax, not execution of a target
+    parser. Other batch/accumulation aliases or non-integer inputs remain unknown.
+    """
+    names = {"batch_size", "gradient_accumulation_steps"}
+    if set(options) & (BATCH_KEYS | ACCUM_KEYS) != names:
+        return None
+    values = []
+    for name in ("batch_size", "gradient_accumulation_steps"):
+        flag, raw = options[name]
+        if flag != "--" + name or not isinstance(raw, str):
+            return None
+        # Match the existing CLI value size bound before integer conversion.
+        if not re.fullmatch(r"[0-9]{1,1000}", raw):
+            return None
+        value = int(raw)
+        if value <= 0:
+            return None
+        values.append(value)
+    return tuple(values)
+
+
 def check_cli_changes(base_cli, changes, *, policy=None, notes=()) -> PolicyReport:
     policy = normalize_policy(policy)
     try:
@@ -901,6 +925,20 @@ def check_cli_changes(base_cli, changes, *, policy=None, notes=()) -> PolicyRepo
         if value is not None and (any(c in value for c in ";|&$\x60\n\r") or len(value) > 1000):
             issues.append(
                 PolicyIssue("CLI_INVALID", "CLI values contain shell syntax or exceed limits.")
+            )
+    old_pair = _explicit_cli_batch_pair(before)
+    new_pair = _explicit_cli_batch_pair({**before, **after})
+    if old_pair is not None and new_pair is not None:
+        old_product, new_product = old_pair[0] * old_pair[1], new_pair[0] * new_pair[1]
+        if old_product != new_product:
+            issues.append(
+                PolicyIssue(
+                    "EFFECTIVE_BATCH_CHANGED",
+                    "Explicit CLI batch_size * gradient_accumulation_steps changed from "
+                    f"{old_pair[0]} * {old_pair[1]} = {old_product} to "
+                    f"{new_pair[0]} * {new_pair[1]} = {new_product}. "
+                    "Preserve the original explicit product; runtime equivalence remains unverified.",
+                )
             )
     return PolicyReport(
         not issues,

@@ -1,3 +1,16 @@
+## Protocol-v2 repair r3 source qualified — 2026-10-25
+
+The last bounded MVP repair iteration is ready for its own nine-case campaign.
+3030 guarded backend tests passed in 749.11 seconds against 305 unchanged source
+entries. The original PLAN and 6/9 target + valid-first-cause gates are unchanged.
+Changes cover patch output/name checks, explicit CLI effective-batch preservation,
+completed-baseline context, planning/verification distinction, annotation framing,
+Sources provenance and exact replay paths. The Lab image now includes the locked
+Ruff dependency; the earlier mismatch failure and old image are retained.
+R3 live results remain pending. R2 remains target3/9 and valid cause4/9.
+No new money, recharge, ledger reset or historical rescore was performed.
+See reports/acceptance-v2-r3-20261025/README.md.
+
 ## Protocol-v2 repair r2 completed — 2026-10-25
 
 Fixed-nine target3/9 (s1/s3/s4); independently valid correct first cause4/9 with2

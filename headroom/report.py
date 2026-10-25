@@ -96,6 +96,98 @@ def _source_url(value):
     return quote(value, safe=":/?#=&%+@,;~.-_")
 
 
+def _source_operations(research, url):
+    """Join only exact retained URLs; do not retrieve or infer target documents."""
+    if not isinstance(url, str) or not _source_url(url):
+        return [], True
+    operations = research.get("operations") if isinstance(research, dict) else None
+    if not isinstance(operations, list):
+        return [], True
+    matches, incomplete = [], len(operations) > 64
+    for operation in operations[:64]:
+        if not isinstance(operation, dict) or not isinstance(operation.get("results"), list):
+            incomplete = True
+            continue
+        rows = operation["results"]
+        incomplete = incomplete or len(rows) > 10
+        for row in rows[:10]:
+            if isinstance(row, dict) and row.get("url") == url:
+                matches.append((operation, row))
+    return matches, incomplete
+
+
+def _research_provenance(operation):
+    calls, cached = operation.get("api_calls"), operation.get("cache_hit")
+    if cached is True and type(calls) is int and calls == 0:
+        return "cache; no new API call"
+    if cached is False and type(calls) is int and calls == 1:
+        return "live API call"
+    if cached is False and type(calls) is int and calls == 0:
+        return "no API call recorded"
+    return "unknown or inconsistent provenance"
+
+
+def _source_research_metadata(source, research):
+    flag = source.get("version_match")
+    version = "matched" if flag is True else "not matched" if flag is False else "unknown"
+    matches, incomplete = _source_operations(research, source.get("url"))
+    provenance = []
+    for operation, _ in matches:
+        method = operation.get("method")
+        method = (
+            method
+            if isinstance(method, str) and method in {"search", "extract"}
+            else "unknown method"
+        )
+        status = operation.get("status")
+        status = (
+            status
+            if isinstance(status, str)
+            and status in {"succeeded", "cached", "failed", "not_executed"}
+            else "unknown"
+        )
+        runtime = operation.get("torch_version")
+        runtime = runtime[:80] if isinstance(runtime, str) else "unknown"
+        item = f"{method} / {status} / {_research_provenance(operation)} / runtime torch {_text(runtime)}"
+        if item not in provenance:
+            provenance.append(item)
+    detail = "; ".join(provenance) if provenance else "unknown"
+    if incomplete:
+        detail += "; operation metadata missing or omitted"
+    return f"Recorded version match: {version}; retrieval: {detail}."
+
+
+def _target_document_extraction(research):
+    """A recorded target URL alone is not retrieval or compatibility evidence."""
+    target = research.get("target_documentation_url") if isinstance(research, dict) else None
+    if not isinstance(target, str) or not _source_url(target):
+        return "unknown (exact target URL not recorded)"
+    matches, incomplete = _source_operations(research, target)
+    for operation, row in matches:
+        size = row.get("content_characters")
+        status = operation.get("status")
+        cache = operation.get("cache_hit")
+        calls = operation.get("api_calls")
+        origin_valid = type(calls) is int and (
+            (status == "succeeded" and cache is False and calls == 1)
+            or (status == "cached" and cache is True and calls == 0)
+        )
+        if (
+            operation.get("provider") == "tavily"
+            and operation.get("method") == "extract"
+            and origin_valid
+            and row.get("kind") == "documentation"
+            and row.get("version_match") is True
+            and type(size) is int
+            and size > 0
+        ):
+            origin = "cache" if cache else "live call"
+            return f"observed in retained {origin} metadata; API compatibility remains unverified"
+    if incomplete:
+        return "unknown (retained operation metadata incomplete)"
+    return "not observed in retained operations"
+
+
 def _analysis(evidence):
     if not isinstance(evidence, dict):
         return {}
@@ -900,10 +992,15 @@ def render_markdown(report):
         )
     if not report["sources"]:
         lines.append("No runtime research sources recorded.")
+    lines.append("Target-document extraction: " + _target_document_extraction(research) + ".")
     for source in report["sources"]:
         title, url = _text(source.get("title", source.get("url"))), _source_url(source.get("url"))
+        citation = f"- [{title}]({url})" if url else f"- {title} (URL omitted: unsupported scheme)"
+        lines.append(citation + " — " + _source_research_metadata(source, research))
+    if report["sources"]:
         lines.append(
-            f"- [{title}]({url})" if url else f"- {title} (URL omitted: unsupported scheme)"
+            "Version matching is recorded metadata, not proof of API compatibility. "
+            "Search results are distinct from extracted documentation; cached evidence is not a new call."
         )
     usage = report["usage"]
     lines += [

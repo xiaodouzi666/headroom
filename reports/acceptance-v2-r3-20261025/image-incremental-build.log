@@ -1,0 +1,139 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 DONE 0.0s
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 711B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/headroom-lab:py312-cu124-pre-r3-20261025
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 104B done
+#3 DONE 0.0s
+
+#4 [internal] load build context
+#4 transferring context: 122.88kB done
+#4 DONE 0.0s
+
+#5 [1/4] FROM docker.io/library/headroom-lab:py312-cu124-pre-r3-20261025
+#5 DONE 0.0s
+
+#6 [2/4] COPY requirements.txt /opt/headroom-lab/requirements.txt
+#6 DONE 0.0s
+
+#7 [3/4] COPY lock.sha256 verify_runtime.py /opt/headroom-lab/
+#7 DONE 0.0s
+
+#8 [4/4] RUN test "$(cat /opt/headroom-lab/lock.sha256)" = "dc2f10eafb7e21a611928dc3699df974231344509b77b3dc533b468589ff4efb" &&     /opt/lab-venv/bin/python -m pip install --no-cache-dir --no-compile --require-hashes --only-binary=:all: -r /opt/headroom-lab/requirements.txt &&     /opt/lab-venv/bin/python -m pip check &&     /opt/lab-venv/bin/python /opt/headroom-lab/verify_runtime.py
+#8 0.522 Looking in indexes: https://pypi.org/simple, https://download.pytorch.org/whl/cu124
+#8 0.523 Ignoring colorama: markers 'sys_platform == "win32"' don't match your environment
+#8 0.523 Ignoring httpx2-jsfetch: markers 'sys_platform == "emscripten"' don't match your environment
+#8 0.524 Ignoring torch: markers 'python_full_version < "3.13" and platform_machine == "aarch64" and platform_python_implementation == "CPython" and sys_platform == "linux"' don't match your environment
+#8 0.525 Requirement already satisfied: accelerate==1.1.1 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 4)) (1.1.1)
+#8 0.526 Requirement already satisfied: annotated-doc==0.0.5 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 7)) (0.0.5)
+#8 0.527 Requirement already satisfied: annotated-types==0.8.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 10)) (0.8.0)
+#8 0.528 Requirement already satisfied: anyio==4.15.1 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 13)) (4.15.1)
+#8 0.529 Requirement already satisfied: attrs==26.1.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 16)) (26.1.0)
+#8 0.530 Requirement already satisfied: certifi==2026.10.19 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 19)) (2026.10.19)
+#8 0.532 Requirement already satisfied: charset-normalizer==3.5.2 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 22)) (3.5.2)
+#8 0.533 Requirement already satisfied: click==8.5.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 147)) (8.5.0)
+#8 0.534 Requirement already satisfied: contourpy==1.4.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 153)) (1.4.0)
+#8 0.535 Requirement already satisfied: cycler==0.12.1 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 224)) (0.12.1)
+#8 0.536 Requirement already satisfied: fastapi==0.162.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 227)) (0.162.0)
+#8 0.537 Requirement already satisfied: filelock==4.2.4 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 230)) (4.2.4)
+#8 0.541 Requirement already satisfied: fonttools==4.67.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 233)) (4.67.0)
+#8 0.542 Requirement already satisfied: fsspec==2026.9.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 284)) (2026.9.0)
+#8 0.543 Requirement already satisfied: gitdb==4.0.12 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 287)) (4.0.12)
+#8 0.544 Requirement already satisfied: gitpython==3.2.1 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 290)) (3.2.1)
+#8 0.545 Requirement already satisfied: h11==0.16.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 293)) (0.16.0)
+#8 0.546 Requirement already satisfied: hf-xet==1.7.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 296)) (1.7.0)
+#8 0.547 Requirement already satisfied: httpcore==1.0.9 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 314)) (1.0.9)
+#8 0.548 Requirement already satisfied: httpcore2==2.16.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 317)) (2.16.0)
+#8 0.549 Requirement already satisfied: httpx==0.28.1 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 320)) (0.28.1)
+#8 0.551 Requirement already satisfied: httpx2==2.16.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 323)) (2.16.0)
+#8 0.552 Requirement already satisfied: huggingface-hub==0.36.2 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 329)) (0.36.2)
+#8 0.553 Requirement already satisfied: idna==3.20 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 332)) (3.20)
+#8 0.554 Requirement already satisfied: jinja2==3.1.6 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 335)) (3.1.6)
+#8 0.555 Requirement already satisfied: jiter==0.17.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 338)) (0.17.0)
+#8 0.556 Requirement already satisfied: jsonschema==4.26.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 427)) (4.26.0)
+#8 0.557 Requirement already satisfied: jsonschema-specifications==2025.9.1 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 430)) (2025.9.1)
+#8 0.558 Requirement already satisfied: kiwisolver==1.5.1 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 433)) (1.5.1)
+#8 0.559 Requirement already satisfied: markdown-it-py==4.2.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 537)) (4.2.0)
+#8 0.560 Requirement already satisfied: markupsafe==3.0.4 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 540)) (3.0.4)
+#8 0.566 Requirement already satisfied: matplotlib==3.11.2 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 647)) (3.11.2)
+#8 0.567 Requirement already satisfied: mdurl==0.1.2 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 691)) (0.1.2)
+#8 0.567 Requirement already satisfied: mpmath==1.3.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 694)) (1.3.0)
+#8 0.568 Requirement already satisfied: networkx==3.7 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 697)) (3.7)
+#8 0.570 Requirement already satisfied: numpy==2.5.4 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 700)) (2.5.4)
+#8 0.570 Requirement already satisfied: nvidia-cublas-cu12==12.4.5.8 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 767)) (12.4.5.8)
+#8 0.571 Requirement already satisfied: nvidia-cuda-cupti-cu12==12.4.127 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 769)) (12.4.127)
+#8 0.572 Requirement already satisfied: nvidia-cuda-nvrtc-cu12==12.4.127 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 771)) (12.4.127)
+#8 0.573 Requirement already satisfied: nvidia-cuda-runtime-cu12==12.4.127 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 773)) (12.4.127)
+#8 0.574 Requirement already satisfied: nvidia-cudnn-cu12==9.1.0.70 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 775)) (9.1.0.70)
+#8 0.575 Requirement already satisfied: nvidia-cufft-cu12==11.2.1.3 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 777)) (11.2.1.3)
+#8 0.575 Requirement already satisfied: nvidia-curand-cu12==10.3.5.147 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 779)) (10.3.5.147)
+#8 0.576 Requirement already satisfied: nvidia-cusolver-cu12==11.6.1.9 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 781)) (11.6.1.9)
+#8 0.577 Requirement already satisfied: nvidia-cusparse-cu12==12.3.1.170 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 783)) (12.3.1.170)
+#8 0.578 Requirement already satisfied: nvidia-nccl-cu12==2.21.5 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 785)) (2.21.5)
+#8 0.578 Requirement already satisfied: nvidia-nvjitlink-cu12==12.4.127 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 787)) (12.4.127)
+#8 0.579 Requirement already satisfied: nvidia-nvtx-cu12==12.4.127 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 789)) (12.4.127)
+#8 0.581 Requirement already satisfied: openai==3.37.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 791)) (3.37.0)
+#8 0.582 Requirement already satisfied: opentelemetry-api==1.45.1 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 794)) (1.45.1)
+#8 0.582 Requirement already satisfied: packaging==26.3 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 797)) (26.3)
+#8 0.583 Requirement already satisfied: pillow==13.0.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 800)) (13.0.0)
+#8 0.585 Requirement already satisfied: psutil==7.2.2 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 870)) (7.2.2)
+#8 0.587 Requirement already satisfied: pydantic==2.14.1 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 892)) (2.14.1)
+#8 0.588 Requirement already satisfied: pydantic-core==2.50.1 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 895)) (2.50.1)
+#8 0.589 Requirement already satisfied: pygments==2.21.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 992)) (2.21.0)
+#8 0.590 Requirement already satisfied: pyparsing==3.3.3 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 995)) (3.3.3)
+#8 0.591 Requirement already satisfied: python-dateutil==3.0.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 998)) (3.0.0)
+#8 0.592 Requirement already satisfied: python-dotenv==1.2.4 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1001)) (1.2.4)
+#8 0.593 Requirement already satisfied: pyyaml==6.0.3 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1004)) (6.0.3)
+#8 0.594 Requirement already satisfied: referencing==0.37.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1044)) (0.37.0)
+#8 0.596 Requirement already satisfied: regex==2026.9.29 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1047)) (2026.9.29)
+#8 0.596 Requirement already satisfied: requests==2.34.2 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1145)) (2.34.2)
+#8 0.598 Requirement already satisfied: rich==15.0.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1148)) (15.0.0)
+#8 0.599 Requirement already satisfied: rpds-py==2026.9.1 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1151)) (2026.9.1)
+#8 1.891 Collecting ruff==0.17.2 (from -r /opt/headroom-lab/requirements.txt (line 1253))
+#8 2.051   Downloading ruff-0.17.2-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (10.5 MB)
+#8 19.65      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.5/10.5 MB 592.4 kB/s eta 0:00:00
+#8 19.68 Requirement already satisfied: safetensors==0.8.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1272)) (0.8.0)
+#8 19.68 Requirement already satisfied: setuptools==84.2.1 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1290)) (84.2.1)
+#8 19.68 Requirement already satisfied: shellingham==1.5.4 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1293)) (1.5.4)
+#8 19.68 Requirement already satisfied: six==1.17.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1296)) (1.17.0)
+#8 19.68 Requirement already satisfied: smmap==5.0.3 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1299)) (5.0.3)
+#8 19.68 Requirement already satisfied: sniffio==1.3.1 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1302)) (1.3.1)
+#8 19.68 Requirement already satisfied: sqlalchemy==2.1.6 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1305)) (2.1.6)
+#8 19.68 Requirement already satisfied: sqlmodel==0.0.48 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1368)) (0.0.48)
+#8 19.68 Requirement already satisfied: starlette==1.9.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1371)) (1.9.0)
+#8 19.69 Requirement already satisfied: sympy==1.13.1 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1374)) (1.13.1)
+#8 19.69 Requirement already satisfied: tavily-python==0.8.5 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1377)) (0.8.5)
+#8 19.69 Requirement already satisfied: tiktoken==0.14.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1380)) (0.14.0)
+#8 19.69 Requirement already satisfied: tokenizers==0.20.3 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1424)) (0.20.3)
+#8 19.69 Requirement already satisfied: torch==2.5.1+cu124 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1452)) (2.5.1+cu124)
+#8 19.69 Requirement already satisfied: tqdm==4.70.1 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1456)) (4.70.1)
+#8 19.69 Requirement already satisfied: transformers==4.46.3 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1459)) (4.46.3)
+#8 19.70 Requirement already satisfied: triton==3.1.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1462)) (3.1.0)
+#8 19.70 Requirement already satisfied: truststore==0.10.5 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1464)) (0.10.5)
+#8 19.70 Requirement already satisfied: typer==0.27.3 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1467)) (0.27.3)
+#8 19.70 Requirement already satisfied: typing-extensions==4.16.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1470)) (4.16.0)
+#8 19.70 Requirement already satisfied: typing-inspection==0.4.4 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1473)) (0.4.4)
+#8 19.70 Requirement already satisfied: tzdata==2026.5 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1476)) (2026.5)
+#8 19.70 Requirement already satisfied: unidiff==1.0.1 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1479)) (1.0.1)
+#8 19.70 Requirement already satisfied: urllib3==2.8.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1482)) (2.8.0)
+#8 19.70 Requirement already satisfied: uvicorn==0.54.0 in /opt/lab-venv/lib/python3.12/site-packages (from -r /opt/headroom-lab/requirements.txt (line 1485)) (0.54.0)
+#8 21.33 Installing collected packages: ruff
+#8 21.46 Successfully installed ruff-0.17.2
+#8 22.47 No broken requirements found.
+#8 23.57 {"runtime_contract": "python312-self-contained-v1", "python": "3.12.3", "executable": "/opt/lab-venv/bin/python", "prefix": "/opt/lab-venv", "uv_lock_sha256": "dc2f10eafb7e21a611928dc3699df974231344509b77b3dc533b468589ff4efb", "torch": "2.5.1+cu124", "cuda_build": "12.4", "transformers": "4.46.3", "accelerate": "1.1.1", "cpu_tensor_check": true, "gpu_executed": false}
+#8 DONE 23.8s
+
+#9 exporting to image
+#9 exporting layers 0.1s done
+#9 writing image sha256:89fc0bd6ed5d7e95ed73d6e377e6e6e740ba3002cefeacabbdeeff9ad9c331db done
+#9 naming to docker.io/library/headroom-lab:py312-cu124-runtime-v1 done
+#9 DONE 0.1s
+{"build_exit_code": 0, "elapsed_seconds": 24.092367490986362, "base_image_id": "sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7", "context": ".cache/lab-build/r3-incremental-20261025", "uv_lock_sha256": "dc2f10eafb7e21a611928dc3699df974231344509b77b3dc533b468589ff4efb", "no_model_or_gpu": true, "image_id": "sha256:89fc0bd6ed5d7e95ed73d6e377e6e6e740ba3002cefeacabbdeeff9ad9c331db", "user": "65534:65534", "package_changes": {"ruff": [null, "0.17.2"]}, "all_previous_package_versions_unchanged": true, "base_tag_unchanged": true, "verified": true}

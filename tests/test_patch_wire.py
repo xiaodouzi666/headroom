@@ -166,7 +166,7 @@ def test_actual_sdk_router_engine_apply_and_compile_with_hash_linked_evidence(tm
     sent = calls[0]
     assert sent["model"] == SUPER_MODEL
     assert sent["max_completion_tokens"] == 4000
-    assert sent["chat_template_kwargs"] == {"enable_thinking": True}
+    assert sent["chat_template_kwargs"] == {"enable_thinking": False}
     schema = sent["response_format"]["json_schema"]["schema"]
     assert schema["properties"]["edits"]["type"] == "array"
     assert "diff" not in schema["properties"] and "diff_lines" not in schema["properties"]

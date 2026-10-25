@@ -31,6 +31,7 @@ from headroom.lab.runner import copy_source
 from headroom.llm.client import CapabilityNotVerified, LLMError
 from headroom.llm.router import LLMRouter, ResponseValidationError
 from headroom.patch_evidence import save_patch_response
+from headroom.patch_names import check_undefined_names
 from headroom.patch_spans import (
     SCHEMA_NAME as PATCH_WIRE_SCHEMA,
 )
@@ -473,6 +474,29 @@ def apply_proposal(
                     base_cli,
                     cli_equals=cli_equals,
                 )
+        if python_files:
+            name_check = check_undefined_names(before, after)
+            _write_json(directory / "name-check.json", name_check)
+            if name_check["status"] != "passed":
+                failures = name_check["new_diagnostics"]
+                detail = "\n".join(
+                    f"{item['path']}:{item['row']}:{item['column']} "
+                    f"{item['code']} {item['message']}"
+                    for item in failures[:20]
+                ) or name_check.get("detail", name_check["reason"])
+                return _result(
+                    directory,
+                    source,
+                    parsed,
+                    replace(
+                        attempt,
+                        status="failed",
+                        reason=name_check["reason"],
+                        detail=detail[:2000],
+                    ),
+                    base_cli,
+                    cli_equals=cli_equals,
+                )
         env_text = "".join(
             f"export {key}={shlex.quote(value)}\n" for key, value in parsed.env_changes.items()
         )
@@ -657,7 +681,7 @@ class PatchEngine:
                     messages,
                     SourceSpanProposal,
                     max_tokens=self.max_completion_tokens,
-                    reasoning=True,
+                    reasoning=False,
                 )
                 if response.usage is None:
                     raise LLMError("PATCH_USAGE_UNVERIFIED")
@@ -850,6 +874,8 @@ class PatchEngine:
                     )
                     _write_json(directory / "result.json", asdict(result))
                     return result
+                if attempt.reason == "NAME_CHECK_UNAVAILABLE":
+                    break
                 failure = {
                     "reason": attempt.reason,
                     "detail": attempt.detail,

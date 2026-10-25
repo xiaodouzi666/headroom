@@ -1,0 +1,105 @@
+{
+  "schema": "headroom.public_delivery_readonly_preflight.v1",
+  "observed_at_utc": "2026-10-25T12:00:33.705004+00:00",
+  "scope": "Headroom repository deployment records, whitelisted process/unit metadata and loopback HTTP reads",
+  "actions": {
+    "dns_mutations": 0,
+    "tunnel_mutations": 0,
+    "service_mutations": 0,
+    "notifications": 0,
+    "new_host_cost": 0,
+    "paid_api_calls": 0,
+    "gpu_jobs": 0,
+    "credential_or_env_files_read": false,
+    "unrelated_tunnel_credentials_or_config_read": false
+  },
+  "local_preview": {
+    "pid": 4188883,
+    "listener": "127.0.0.1:8765",
+    "project_cwd_matches": true,
+    "profile_argument": "/home/xiaodouzi/workspace/headroom/.cache/tokenfactory-runtime.json",
+    "health_http": 200,
+    "health_status": "ok",
+    "database": "ok",
+    "deployment": "localhost",
+    "authentication": "local_session_only",
+    "web_http": 200,
+    "web_dist_present": true,
+    "latest_release_or_full_browser_workflow_verified": false
+  },
+  "service_state": {
+    "system_headroom_api": "not-found/inactive",
+    "user_headroom_api": "not-found/inactive",
+    "user_headroom_health_service": "not-found/inactive",
+    "user_headroom_health_timer": "not-found/inactive"
+  },
+  "cloudflare_state": {
+    "existing_cloudflared_pid": 6338,
+    "belongs_to_headroom": false,
+    "existing_unrelated_project_is_not_headroom_authorization": true,
+    "headroom_approved_hostname_observed": false,
+    "headroom_tunnel_route_observed": false,
+    "headroom_template_only": true,
+    "cloudflare_account_ownership_or_available_domains_checked": false
+  },
+  "configuration_gaps": [
+    "Existing preview selects the older runtime profile; service start must explicitly select the reviewed v2-r2 profile",
+    "Shipped service daily budget is 12; deployment needs reviewed 9.99964904 daily limit, 0.6 per-run and the same lifetime pool",
+    "Template origin is loopback port 8000 while preview is 8765; select one matching service/tunnel port",
+    "No Headroom service or monitor timer is installed; restart/alert delivery acceptance remains unobserved"
+  ],
+  "external_inputs_not_established": [
+    "Approved Headroom bare hostname and authority to configure its Cloudflare DNS/tunnel route",
+    "Usable Headroom tunnel configuration/credentials or explicit authority to create a no-new-host-cost tunnel within the owner's account",
+    "Explicitly chosen and authorized HTTPS notification receiver; private environment was deliberately not inspected"
+  ],
+  "remaining_acceptance": [
+    "Public HTTPS reachable over an independent phone network",
+    "Actual Cloudflare IP handling and the third new run per IP/hour returns 429",
+    "Global preparing/running/queued capacity at most three and existing deadline/cleanup behavior",
+    "Service restart restores health within ten seconds",
+    "Two-minute failure alert reaches the authorized receiver without exposing secrets"
+  ],
+  "concrete_next_steps": [
+    "Continue quality/MVP work independently; obtain only the hostname/tunnel authority and alert-channel decision that are not established",
+    "When the reviewed release is ready, prepare a user-systemd drop-in with exact approved runtime profile/budgets and matching loopback origin port",
+    "Bind the chosen hostname to Headroom's own reviewed Cloudflare route, set exact public_host/trust settings, and keep direct public binding disabled",
+    "Enable the separately authorized health receiver and run bounded public/restart/alert acceptance under the existing expense limits"
+  ],
+  "evidence_pins": [
+    {
+      "path": "docs/DEPLOYMENT.md",
+      "sha256": "fba76175e15f0124807b68a1ac0c58ffc54a9df608f37f389c0e43e911180072"
+    },
+    {
+      "path": "docs/API.md",
+      "sha256": "f4552e94af1ab49c3eee849a5894f7464092b06fd7a8ab0f9f3f8e4e2440f753"
+    },
+    {
+      "path": "docs/WEB.md",
+      "sha256": "fc606e17a2ac12976f24518822a14e9032e2a8d875a4e990a6822ca0f7fd0e36"
+    },
+    {
+      "path": "deploy/headroom-api.service",
+      "sha256": "6e78c46022ed02d4960d1f21d3df12742dd2885f3ed13b5ec2c056daf2c10bcf"
+    },
+    {
+      "path": "deploy/cloudflared.example.yaml",
+      "sha256": "e13155d8cca92eee7bb3d6867378632ed30600e02bb3feb0d81d3d1987f65da4"
+    },
+    {
+      "path": "deploy/headroom-health.service",
+      "sha256": "f99e5f953e641a33b28c7813d5c605bb43f34d47ee9134eba2477c7e2a182ae6"
+    },
+    {
+      "path": "deploy/headroom-health.timer",
+      "sha256": "390d4884e676bd71558e3d01669bc37aa645716041ba4fee12bcee29be566929"
+    }
+  ],
+  "limitations": [
+    "Not finding a hostname in inspected Headroom records does not prove the owner has no domain",
+    "Local HTTP success is not public HTTPS or live full-workflow acceptance",
+    "A Cloudflared process serving another project cannot be assumed available or authorized for Headroom",
+    "No private environment or full private configuration was dumped; receiver existence remains unverified"
+  ]
+}

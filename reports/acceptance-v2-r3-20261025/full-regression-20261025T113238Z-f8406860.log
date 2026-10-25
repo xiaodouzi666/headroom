@@ -1,0 +1,3441 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}}
+........................................................................ [  2%]
+........................................................................ [  4%]
+........................................................................ [  7%]
+........................................................................ [  9%]
+........................................................................ [ 12%]
+........................................................................ [ 14%]
+.........................FF............................................. [ 17%]
+........................................................................ [ 19%]
+........................................................................ [ 21%]
+........................................................................ [ 24%]
+........................................................................ [ 26%]
+........................................................................ [ 29%]
+........................................................................ [ 31%]
+........................................................................ [ 34%]
+............................................................F....FFF.... [ 36%]
+....................................................FFFFF............... [ 38%]
+................................................................FFFFFF.F [ 41%]
+FFFFFF................................F................................. [ 43%]
+........................................................................ [ 46%]
+........................................................................ [ 48%]
+........................................................................ [ 51%]
+........................................................................ [ 53%]
+.................FFFFFFFFFFF............................................ [ 55%]
+.........FFF...............F............................................ [ 58%]
+........................................................................ [ 60%]
+........................................................................ [ 63%]
+........................................................................ [ 65%]
+...............................EEEEFF................................... [ 68%]
+........................................................................ [ 70%]
+........................................................................ [ 72%]
+........................................................................ [ 75%]
+........................................................................ [ 77%]
+....................................FFF.FF.............................. [ 80%]
+........................................................................ [ 82%]
+........................................................................ [ 85%]
+........................................................................ [ 87%]
+........................................................................ [ 90%]
+........................FFFFFF.F........................................ [ 92%]
+..........................................................F............. [ 94%]
+........................................................................ [ 97%]
+.F.........................FFFF....FFFFFFFF.......................FFFFFF [ 99%]
+FFF....                                                                  [100%]
+==================================== ERRORS ====================================
+_____ ERROR at setup of test_actual_cpu_forward_observations_are_persisted _____
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x75a1a30b5940>, _basetemp=PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def captures(tmp_path_factory):
+        root = tmp_path_factory.mktemp("precision-cpu")
+        source = root / "source"
+        source.mkdir()
+        script = source / "train.py"
+        script.write_text(SOURCE)
+        results = {}
+        for name, precision in (
+            ("fp32", "fp32"),
+            ("bf16_before", "bf16"),
+            ("bf16_after", "bf16"),
+            ("unsupported", "fp16"),
+        ):
+            result = run_script(
+                script,
+                script_args=[precision],
+                source_root=source,
+                run_root=root / name,
+                device="cpu",
+                max_steps=3,
+                max_seconds=30,
+            )
+>           assert result["status"] == "completed", result
+E           AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': 'c61bfa192ad3461fa852c27d1fe3a56b', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/precision-cpu0/fp32/c61bfa192ad3461fa852c27d1fe3a56b', ...}
+E           assert 'error' == 'completed'
+E             
+E             - completed
+E             + error
+
+tests/test_precision_integration.py:78: AssertionError
+_ ERROR at setup of test_bf16_baseline_and_candidate_use_bf16_tolerance_without_precision_change _
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x75a1a30b5940>, _basetemp=PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def captures(tmp_path_factory):
+        root = tmp_path_factory.mktemp("precision-cpu")
+        source = root / "source"
+        source.mkdir()
+        script = source / "train.py"
+        script.write_text(SOURCE)
+        results = {}
+        for name, precision in (
+            ("fp32", "fp32"),
+            ("bf16_before", "bf16"),
+            ("bf16_after", "bf16"),
+            ("unsupported", "fp16"),
+        ):
+            result = run_script(
+                script,
+                script_args=[precision],
+                source_root=source,
+                run_root=root / name,
+                device="cpu",
+                max_steps=3,
+                max_seconds=30,
+            )
+>           assert result["status"] == "completed", result
+E           AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': 'c61bfa192ad3461fa852c27d1fe3a56b', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/precision-cpu0/fp32/c61bfa192ad3461fa852c27d1fe3a56b', ...}
+E           assert 'error' == 'completed'
+E             
+E             - completed
+E             + error
+
+tests/test_precision_integration.py:78: AssertionError
+_ ERROR at setup of test_fp32_to_bf16_is_an_observed_change_requiring_existing_policy_permission _
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x75a1a30b5940>, _basetemp=PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def captures(tmp_path_factory):
+        root = tmp_path_factory.mktemp("precision-cpu")
+        source = root / "source"
+        source.mkdir()
+        script = source / "train.py"
+        script.write_text(SOURCE)
+        results = {}
+        for name, precision in (
+            ("fp32", "fp32"),
+            ("bf16_before", "bf16"),
+            ("bf16_after", "bf16"),
+            ("unsupported", "fp16"),
+        ):
+            result = run_script(
+                script,
+                script_args=[precision],
+                source_root=source,
+                run_root=root / name,
+                device="cpu",
+                max_steps=3,
+                max_seconds=30,
+            )
+>           assert result["status"] == "completed", result
+E           AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': 'c61bfa192ad3461fa852c27d1fe3a56b', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/precision-cpu0/fp32/c61bfa192ad3461fa852c27d1fe3a56b', ...}
+E           assert 'error' == 'completed'
+E             
+E             - completed
+E             + error
+
+tests/test_precision_integration.py:78: AssertionError
+_ ERROR at setup of test_unsupported_precision_stays_unknown_and_cannot_select_relaxed_tolerance _
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x75a1a30b5940>, _basetemp=PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope="module")
+    def captures(tmp_path_factory):
+        root = tmp_path_factory.mktemp("precision-cpu")
+        source = root / "source"
+        source.mkdir()
+        script = source / "train.py"
+        script.write_text(SOURCE)
+        results = {}
+        for name, precision in (
+            ("fp32", "fp32"),
+            ("bf16_before", "bf16"),
+            ("bf16_after", "bf16"),
+            ("unsupported", "fp16"),
+        ):
+            result = run_script(
+                script,
+                script_args=[precision],
+                source_root=source,
+                run_root=root / name,
+                device="cpu",
+                max_steps=3,
+                max_seconds=30,
+            )
+>           assert result["status"] == "completed", result
+E           AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': 'c61bfa192ad3461fa852c27d1fe3a56b', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/precision-cpu0/fp32/c61bfa192ad3461fa852c27d1fe3a56b', ...}
+E           assert 'error' == 'completed'
+E             
+E             - completed
+E             + error
+
+tests/test_precision_integration.py:78: AssertionError
+=================================== FAILURES ===================================
+_ test_real_cpu_repair_backend_preserves_flags_imports_argv_and_source_context[False] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_repair_backend_p0')
+module = False
+
+    @pytest.mark.parametrize("module", [False, True])
+    def test_real_cpu_repair_backend_preserves_flags_imports_argv_and_source_context(tmp_path, module):
+        from headroom.evidence import collect_sources
+    
+        source = tmp_path / "source"
+        package = source / "pkg"
+        package.mkdir(parents=True)
+        (package / "__init__.py").write_text("")
+        (package / "helper.py").write_text("VALUE = 17\n")
+        script = package / "entry.py"
+        script.write_text(
+            ("from .helper import VALUE\n" if module else "from helper import VALUE\n")
+            + "import json, sys\n"
+            + "print('REPLAY:' + json.dumps([VALUE, sys.flags.optimize, sys._xoptions, __package__, sys.argv[1:]]))\n"
+        )
+        target = ["-m", "pkg.entry"] if module else ["pkg/entry.py"]
+        command = ["python", "-O", "-X", "dev", *target, "--batch", "8"]
+        prepared = prepare_local_command(source, command)
+        runs = []
+        for arguments in (prepared.script_args, ("--batch", "1")):
+            result = run_script(
+                prepared.script,
+                source_root=source,
+                execution_argv=command,
+                script_args=arguments,
+                run_root=tmp_path / "runs",
+                device="cpu",
+                max_seconds=30,
+            )
+>           assert result["status"] == "completed" and result["capture_complete"]
+E           AssertionError: assert ('error' == 'completed'
+E             
+E             - completed
+E             + error)
+
+tests/test_command_replay.py:164: AssertionError
+_ test_real_cpu_repair_backend_preserves_flags_imports_argv_and_source_context[True] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_repair_backend_p1')
+module = True
+
+    @pytest.mark.parametrize("module", [False, True])
+    def test_real_cpu_repair_backend_preserves_flags_imports_argv_and_source_context(tmp_path, module):
+        from headroom.evidence import collect_sources
+    
+        source = tmp_path / "source"
+        package = source / "pkg"
+        package.mkdir(parents=True)
+        (package / "__init__.py").write_text("")
+        (package / "helper.py").write_text("VALUE = 17\n")
+        script = package / "entry.py"
+        script.write_text(
+            ("from .helper import VALUE\n" if module else "from helper import VALUE\n")
+            + "import json, sys\n"
+            + "print('REPLAY:' + json.dumps([VALUE, sys.flags.optimize, sys._xoptions, __package__, sys.argv[1:]]))\n"
+        )
+        target = ["-m", "pkg.entry"] if module else ["pkg/entry.py"]
+        command = ["python", "-O", "-X", "dev", *target, "--batch", "8"]
+        prepared = prepare_local_command(source, command)
+        runs = []
+        for arguments in (prepared.script_args, ("--batch", "1")):
+            result = run_script(
+                prepared.script,
+                source_root=source,
+                execution_argv=command,
+                script_args=arguments,
+                run_root=tmp_path / "runs",
+                device="cpu",
+                max_seconds=30,
+            )
+>           assert result["status"] == "completed" and result["capture_complete"]
+E           AssertionError: assert ('error' == 'completed'
+E             
+E             - completed
+E             + error)
+
+tests/test_command_replay.py:164: AssertionError
+________ test_real_docker_reads_local_hf_config_and_cannot_modify_cache ________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_docker_reads_local_h0')
+
+    def test_real_docker_reads_local_hf_config_and_cannot_modify_cache(tmp_path):
+        # Dedicated synthetic project cache, not the user's HOME or a credential-bearing Hub cache.
+        project = tmp_path / "project"
+        project.mkdir()
+        (project / "headroom").symlink_to(PROJECT_ROOT / "headroom", target_is_directory=True)
+        (project / "uv.lock").write_bytes((PROJECT_ROOT / "uv.lock").read_bytes())
+        assert not (project / ".venv").exists()
+        make_cache(project)
+        source, output, run_dir = (tmp_path / name for name in ("source", "output", "run"))
+        for directory in (source, output, run_dir):
+            directory.mkdir()
+        (source / "check.py").write_text("""import json, os
+    from pathlib import Path
+    from transformers import GPT2Config
+    assert os.environ["HF_HOME"] == "/tmp/headroom-hf"
+    assert os.environ["HF_HUB_OFFLINE"] == "1"
+    assert not any(os.environ.get(key) for key in ("HF_TOKEN", "NEBIUS_API_KEY", "TAVILY_API_KEY"))
+    config = GPT2Config.from_pretrained("/hf-cache/random-model", local_files_only=True)
+    assert config.n_layer == 1 and config.n_embd == 16
+    try:
+        Path("/hf-cache/random-model/config.json").write_text("{}")
+    except OSError:
+        readonly = True
+    else:
+        readonly = False
+    assert readonly
+    Path(os.environ["HF_HOME"]).mkdir(parents=True, exist_ok=True)
+    Path(os.environ["HF_HOME"], "scratch").write_text("ephemeral")
+    try:
+        GPT2Config.from_pretrained("headroom/not-downloaded", local_files_only=True)
+    except OSError:
+        offline_miss = True
+    else:
+        offline_miss = False
+    assert offline_miss
+    Path("/out/cache-check.json").write_text(json.dumps({"readonly": readonly, "offline_miss": offline_miss}))
+    """)
+        name = "headroom-cache-test-" + uuid.uuid4().hex
+>       args = docker.create_arguments(
+            name=name,
+            project_root=project,
+            source=source,
+            output=output,
+            device="cpu",
+            environment=container_environment(device="cpu", max_steps=2, max_seconds=30, seed=17),
+            command=["/opt/venv/bin/python", "/source/check.py"],
+        )
+
+tests/test_hf_cache.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/lab/docker.py:40: in create_arguments
+    runtime = require_runtime_image(project_root, executable=docker_binary(), environment=HOST_ENV)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/lab/runtime_image.py:71: in require_runtime_image
+    return validate_runtime_image(document, expected)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+document = {'id': 'sha256:91e6d9c9e92130ad50330bb355d903d4e6f88c71cca6583926213378a00a04b7', 'labels': {'org.headroom.lab-runtime...256': '9ef946a38727f9a18c1b951067b5c5c40d154a7bb8f973ab2ed6500cbdd1d1df', 'org.opencontainers.image.version': '24.04'}}
+expected_lock = 'dc2f10eafb7e21a611928dc3699df974231344509b77b3dc533b468589ff4efb'
+
+    def validate_runtime_image(document: dict, expected_lock: str) -> dict:
+        labels = document.get("labels") if isinstance(document, dict) else None
+        if not isinstance(labels, dict) or labels.get(CONTRACT_LABEL) != CONTRACT:
+            raise RuntimeError(
+                "Lab runtime image is missing or incompatible; run bash scripts/build_lab_image.sh"
+            )
+        if labels.get(LOCK_LABEL) != expected_lock:
+>           raise RuntimeError(
+                "Lab image dependencies differ from uv.lock; rebuild with bash scripts/build_lab_image.sh"
+            )
+E           RuntimeError: Lab image dependencies differ from uv.lock; rebuild with bash scripts/build_lab_image.sh
+
+headroom/lab/runtime_image.py:31: RuntimeError
+_______ test_three_cpu_scenarios_match_wrapper_and_injected_command[sgd] _______
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_three_cpu_scenarios_match0')
+scenario = 'sgd'
+
+    @pytest.mark.parametrize("scenario", ["sgd", "adamw", "hf_trainer"])
+    def test_three_cpu_scenarios_match_wrapper_and_injected_command(tmp_path, scenario):
+        args = []
+        steps = 4
+        if scenario == "hf_trainer":
+            script = PROJECT_ROOT / "repos/hf_trainer/train.py"
+            args = ["--profile", "cpu-smoke", "--device", "cpu"]
+            steps = 20
+        else:
+            source = tmp_path / "source"
+            source.mkdir()
+            script = source / "train.py"
+            script.write_text(TRAINING.format(optimizer="SGD" if scenario == "sgd" else "AdamW"))
+        first = run_script(
+            script,
+            script_args=args,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_steps=steps,
+            max_seconds=90,
+            seed=1337,
+        )
+        second = run_command(
+            script.parent,
+            ["python", script.name, *args],
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_steps=steps,
+            max_seconds=90,
+            seed=1337,
+        )
+        for result in (first, second):
+>           assert result["status"] == "completed", result
+E           AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': 'f4645786e3d54c11a3e62007279f1864', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_three_cpu_scenarios_match0/runs/f4645786e3d54c11a3e62007279f1864', ...}
+E           assert 'error' == 'completed'
+E             
+E             - completed
+E             + error
+
+tests/test_hf_trainer.py:68: AssertionError
+______ test_three_cpu_scenarios_match_wrapper_and_injected_command[adamw] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_three_cpu_scenarios_match1')
+scenario = 'adamw'
+
+    @pytest.mark.parametrize("scenario", ["sgd", "adamw", "hf_trainer"])
+    def test_three_cpu_scenarios_match_wrapper_and_injected_command(tmp_path, scenario):
+        args = []
+        steps = 4
+        if scenario == "hf_trainer":
+            script = PROJECT_ROOT / "repos/hf_trainer/train.py"
+            args = ["--profile", "cpu-smoke", "--device", "cpu"]
+            steps = 20
+        else:
+            source = tmp_path / "source"
+            source.mkdir()
+            script = source / "train.py"
+            script.write_text(TRAINING.format(optimizer="SGD" if scenario == "sgd" else "AdamW"))
+        first = run_script(
+            script,
+            script_args=args,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_steps=steps,
+            max_seconds=90,
+            seed=1337,
+        )
+        second = run_command(
+            script.parent,
+            ["python", script.name, *args],
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_steps=steps,
+            max_seconds=90,
+            seed=1337,
+        )
+        for result in (first, second):
+>           assert result["status"] == "completed", result
+E           AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '48f54eefa76f4fd8bb52b96b2c0c05f5', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_three_cpu_scenarios_match1/runs/48f54eefa76f4fd8bb52b96b2c0c05f5', ...}
+E           assert 'error' == 'completed'
+E             
+E             - completed
+E             + error
+
+tests/test_hf_trainer.py:68: AssertionError
+___ test_three_cpu_scenarios_match_wrapper_and_injected_command[hf_trainer] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_three_cpu_scenarios_match2')
+scenario = 'hf_trainer'
+
+    @pytest.mark.parametrize("scenario", ["sgd", "adamw", "hf_trainer"])
+    def test_three_cpu_scenarios_match_wrapper_and_injected_command(tmp_path, scenario):
+        args = []
+        steps = 4
+        if scenario == "hf_trainer":
+            script = PROJECT_ROOT / "repos/hf_trainer/train.py"
+            args = ["--profile", "cpu-smoke", "--device", "cpu"]
+            steps = 20
+        else:
+            source = tmp_path / "source"
+            source.mkdir()
+            script = source / "train.py"
+            script.write_text(TRAINING.format(optimizer="SGD" if scenario == "sgd" else "AdamW"))
+        first = run_script(
+            script,
+            script_args=args,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_steps=steps,
+            max_seconds=90,
+            seed=1337,
+        )
+        second = run_command(
+            script.parent,
+            ["python", script.name, *args],
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_steps=steps,
+            max_seconds=90,
+            seed=1337,
+        )
+        for result in (first, second):
+>           assert result["status"] == "completed", result
+E           AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': 'dfc6d0c8078045efbcc42a91297c7aab', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_three_cpu_scenarios_match2/runs/dfc6d0c8078045efbcc42a91297c7aab', ...}
+E           assert 'error' == 'completed'
+E             
+E             - completed
+E             + error
+
+tests/test_hf_trainer.py:68: AssertionError
+_ test_twenty_cpu_updates_match_every_parameter_and_optimizer_state[options0] __
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_twenty_cpu_updates_match_0')
+options = {}
+
+    @pytest.mark.parametrize("options", [{}, {"amsgrad": True}, {"maximize": True}])
+    def test_twenty_cpu_updates_match_every_parameter_and_optimizer_state(tmp_path, options):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "train.py"
+        script.write_text(PAIR_SCRIPT.replace("OPTIONS", repr(options)))
+        result = run_script(
+            script, device="cpu", max_steps=40, max_seconds=90, run_root=tmp_path / "runs"
+        )
+>       assert result["status"] == "completed", result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': 'c861416e52244012bb7761920ca2341c', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_twenty_cpu_updates_match_0/runs/c861416e52244012bb7761920ca2341c', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_in_backward_adamw.py:84: AssertionError
+_ test_twenty_cpu_updates_match_every_parameter_and_optimizer_state[options1] __
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_twenty_cpu_updates_match_1')
+options = {'amsgrad': True}
+
+    @pytest.mark.parametrize("options", [{}, {"amsgrad": True}, {"maximize": True}])
+    def test_twenty_cpu_updates_match_every_parameter_and_optimizer_state(tmp_path, options):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "train.py"
+        script.write_text(PAIR_SCRIPT.replace("OPTIONS", repr(options)))
+        result = run_script(
+            script, device="cpu", max_steps=40, max_seconds=90, run_root=tmp_path / "runs"
+        )
+>       assert result["status"] == "completed", result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': 'bbf4daf0e4a349cba0571c035a9b879b', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_twenty_cpu_updates_match_1/runs/bbf4daf0e4a349cba0571c035a9b879b', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_in_backward_adamw.py:84: AssertionError
+_ test_twenty_cpu_updates_match_every_parameter_and_optimizer_state[options2] __
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_twenty_cpu_updates_match_2')
+options = {'maximize': True}
+
+    @pytest.mark.parametrize("options", [{}, {"amsgrad": True}, {"maximize": True}])
+    def test_twenty_cpu_updates_match_every_parameter_and_optimizer_state(tmp_path, options):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "train.py"
+        script.write_text(PAIR_SCRIPT.replace("OPTIONS", repr(options)))
+        result = run_script(
+            script, device="cpu", max_steps=40, max_seconds=90, run_root=tmp_path / "runs"
+        )
+>       assert result["status"] == "completed", result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '352489e5d5424dcd919ca269851866f3', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_twenty_cpu_updates_match_2/runs/352489e5d5424dcd919ca269851866f3', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_in_backward_adamw.py:84: AssertionError
+_________ test_parameter_callbacks_do_not_inflate_lab_logical_updates __________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_parameter_callbacks_do_no0')
+
+    def test_parameter_callbacks_do_not_inflate_lab_logical_updates(tmp_path):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "train.py"
+        script.write_text("""
+    import json
+    from pathlib import Path
+    import torch
+    from headroom.optim.in_backward_adamw import AdamWInBackward
+    torch.set_num_threads(1)
+    model=torch.nn.Sequential(torch.nn.Linear(4,8),torch.nn.GELU(),torch.nn.Linear(8,2))
+    optimizer=AdamWInBackward(model.parameters(),lr=.001)
+    x=torch.ones(3,4)
+    for index in range(20):
+        optimizer.zero_grad()
+        loss=model(x).square().mean()
+        loss.backward()
+        assert optimizer.parameter_updates==(index+1)*4
+        assert optimizer.logical_steps==index
+        Path("/out/logical-updates.json").write_text(json.dumps({
+            "parameter_updates":optimizer.parameter_updates,
+            "backwards":index+1,
+            "completed_logical_steps_before_boundary":optimizer.logical_steps,
+        }))
+        optimizer.step()
+    """)
+        result = run_script(
+            script, device="cpu", max_steps=20, max_seconds=60, run_root=tmp_path / "runs"
+        )
+>       assert result["status"] == "completed" and result["steps"] == 20, result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '679843b9c8f64af19fb111d5c778000d', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_parameter_callbacks_do_no0/runs/679843b9c8f64af19fb111d5c778000d', ...}
+E       assert ('error' == 'completed'
+E         
+E         - completed
+E         + error)
+
+tests/test_in_backward_adamw.py:123: AssertionError
+____ test_unsupported_usage_fails_instead_of_silently_claiming_equivalence _____
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_unsupported_usage_fails_i0')
+
+    def test_unsupported_usage_fails_instead_of_silently_claiming_equivalence(tmp_path):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "train.py"
+        script.write_text("""
+    import json
+    from pathlib import Path
+    import torch
+    from headroom.optim.in_backward_adamw import AdamWInBackward
+    torch.set_num_threads(1)
+    checks=[]
+    for option in ("foreach","fused","capturable","differentiable"):
+        try:
+            AdamWInBackward([torch.nn.Parameter(torch.ones(2))],**{option:True})
+        except ValueError:
+            checks.append(option)
+        else:
+            raise AssertionError(option)
+    try:
+        AdamWInBackward([torch.nn.Parameter(torch.ones(2,dtype=torch.bfloat16))])
+    except TypeError:
+        checks.append("dtype")
+    else:
+        raise AssertionError("dtype")
+    p=torch.nn.Parameter(torch.ones(2))
+    optimizer=AdamWInBackward([p])
+    (p.square().sum()).backward()
+    try:
+        (p.square().sum()).backward()
+    except RuntimeError as error:
+        assert "Multiple backwards" in str(error)
+        checks.append("accumulation")
+    else:
+        raise AssertionError("accumulation")
+    optimizer.close()
+    Path("/out/rejected-modes.json").write_text(json.dumps(checks))
+    model=torch.nn.Linear(2,1)
+    ordinary=torch.optim.AdamW(model.parameters(),foreach=False)
+    for _ in range(20):
+        ordinary.zero_grad()
+        loss=model(torch.ones(1,2)).square().mean()
+        loss.backward()
+        ordinary.step()
+    """)
+        result = run_script(
+            script, device="cpu", max_steps=20, max_seconds=60, run_root=tmp_path / "runs"
+        )
+>       assert result["status"] == "completed", result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '56a3e0a510374726960bb2f9a90a50a1', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_unsupported_usage_fails_i0/runs/56a3e0a510374726960bb2f9a90a50a1', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_in_backward_adamw.py:182: AssertionError
+____ test_real_cpu_soft_timeout_retains_complete_capture_and_readonly_clock ____
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_soft_timeout_ret0')
+
+    def test_real_cpu_soft_timeout_retains_complete_capture_and_readonly_clock(tmp_path):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "infer.py"
+        script.write_text(
+            "import json, time\nfrom pathlib import Path\n"
+            "try:\n    Path('/control/deadline.json').write_text('{}')\n"
+            "except OSError:\n    Path('/out/control-readonly.txt').write_text('yes')\n"
+            "else:\n    raise AssertionError('control must be read-only')\n"
+            "while True:\n    time.sleep(0.02)\n"
+        )
+        result = run_script(script, device="cpu", max_seconds=6, run_root=tmp_path / "runs")
+>       assert result["status"] == "timeout" and result["capture_complete"], result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '68faeeeaf18646a1be174fcfb6b6a127', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_soft_timeout_ret0/runs/68faeeeaf18646a1be174fcfb6b6a127', ...}
+E       assert ('error' == 'timeout'
+E         
+E         - timeout
+E         + error)
+
+tests/test_lab_deadline.py:108: AssertionError
+___ test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline[ignored] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_uncapturable_tar0')
+behavior = 'ignored'
+
+    @pytest.mark.parametrize("behavior", ["ignored", "blocked"])
+    def test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline(tmp_path, behavior):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "forever.py"
+        setup = (
+            "signal.signal(signal.SIGALRM, signal.SIG_IGN)"
+            if behavior == "ignored"
+            else "signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGALRM})"
+        )
+        blocked_work = (
+            "read_fd, write_fd = os.pipe()\nos.read(read_fd, 1)\n"
+            if behavior == "blocked"
+            else "while True:\n    time.sleep(0.02)\n"
+        )
+        script.write_text(
+            "import os, signal, time\nfrom pathlib import Path\n"
+            + setup
+            + "\nPath('/out/main-started').write_text('yes')\n"
+            + blocked_work
+        )
+        started = time.monotonic()
+        result = run_script(script, device="cpu", max_seconds=5, run_root=tmp_path / "runs")
+        elapsed = time.monotonic() - started
+>       assert result["status"] == "timeout" and result["execution"]["timed_out"], result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '96bffd400dbd471180436ed90303a8cf', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_uncapturable_tar0/runs/96bffd400dbd471180436ed90303a8cf', ...}
+E       assert ('error' == 'timeout'
+E         
+E         - timeout
+E         + error)
+
+tests/test_lab_deadline.py:150: AssertionError
+___ test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline[blocked] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_uncapturable_tar1')
+behavior = 'blocked'
+
+    @pytest.mark.parametrize("behavior", ["ignored", "blocked"])
+    def test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline(tmp_path, behavior):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "forever.py"
+        setup = (
+            "signal.signal(signal.SIGALRM, signal.SIG_IGN)"
+            if behavior == "ignored"
+            else "signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGALRM})"
+        )
+        blocked_work = (
+            "read_fd, write_fd = os.pipe()\nos.read(read_fd, 1)\n"
+            if behavior == "blocked"
+            else "while True:\n    time.sleep(0.02)\n"
+        )
+        script.write_text(
+            "import os, signal, time\nfrom pathlib import Path\n"
+            + setup
+            + "\nPath('/out/main-started').write_text('yes')\n"
+            + blocked_work
+        )
+        started = time.monotonic()
+        result = run_script(script, device="cpu", max_seconds=5, run_root=tmp_path / "runs")
+        elapsed = time.monotonic() - started
+>       assert result["status"] == "timeout" and result["execution"]["timed_out"], result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '2868595d265a4c24b56b8295e1cfda66', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_uncapturable_tar1/runs/2868595d265a4c24b56b8295e1cfda66', ...}
+E       assert ('error' == 'timeout'
+E         
+E         - timeout
+E         + error)
+
+tests/test_lab_deadline.py:150: AssertionError
+______________ test_real_cpu_parent_and_late_child_share_deadline ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_parent_and_late_0')
+
+    def test_real_cpu_parent_and_late_child_share_deadline(tmp_path):
+        source = tmp_path / "source"
+        source.mkdir()
+        (source / "parent.py").write_text(
+            "import subprocess, sys, time\n"
+            "time.sleep(1)\n"
+            "subprocess.run([sys.executable, 'child.py'])\n"
+        )
+        (source / "child.py").write_text("import time\nwhile True:\n    time.sleep(0.02)\n")
+        result = run_argv(
+            source, ["python", "parent.py"], device="cpu", max_seconds=8, run_root=tmp_path / "runs"
+        )
+        run = Path(result["run_dir"])
+        ready = [
+            json.loads(path.read_text()) for path in (run / "artifacts").rglob("capture-ready.json")
+        ]
+>       assert len(ready) == 2, result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': 'df301d102c864b86816445ea2521fb09', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_parent_and_late_0/runs/df301d102c864b86816445ea2521fb09', ...}
+E       assert 0 == 2
+E        +  where 0 = len([])
+
+tests/test_lab_deadline.py:174: AssertionError
+_____________ test_real_cpu_clock_mismatch_stops_before_user_main ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_clock_mismatch_s0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a06796b5c0>
+
+    def test_real_cpu_clock_mismatch_stops_before_user_main(tmp_path, monkeypatch):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "main.py"
+        script.write_text("from pathlib import Path\nPath('/out/unsafe-main').write_text('ran')\n")
+        original = deadline.clock_identity
+    
+        def wrong_host_clock():
+            identity = original()
+            identity["monotonic_offset"]["seconds"] += 1
+            return identity
+    
+        monkeypatch.setattr(deadline, "clock_identity", wrong_host_clock)
+        result = run_script(script, device="cpu", max_seconds=15, run_root=tmp_path / "runs")
+        assert result["status"] == "error" and result["cleanup_verified"], result
+        assert not (Path(result["artifact_dir"]) / "unsafe-main").exists()
+>       assert result["capture_complete"] is False
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'capture_complete'
+
+tests/test_lab_deadline.py:203: KeyError
+_____ test_real_cpu_natural_no_optimizer_exit_remains_completed_zero_steps _____
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_natural_no_optim0')
+
+    def test_real_cpu_natural_no_optimizer_exit_remains_completed_zero_steps(tmp_path):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "natural.py"
+        script.write_text(
+            "import torch\nm = torch.nn.Linear(2, 1)\n"
+            "with torch.no_grad():\n    result = m(torch.ones(1, 2))\n"
+        )
+        result = run_script(script, device="cpu", max_seconds=15, run_root=tmp_path / "runs")
+>       assert result["status"] == "completed" and result["termination_reason"] == "script_exit", result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '01e642f914e0497bb8f135e162618b97', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_natural_no_optim0/runs/01e642f914e0497bb8f135e162618b97', ...}
+E       assert ('error' == 'completed'
+E         
+E         - completed
+E         + error)
+
+tests/test_lab_deadline.py:216: AssertionError
+_______ test_real_cpu_swallowed_soft_timeout_cannot_become_completed[0] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_swallowed_soft_t0')
+updates = 0
+
+    @pytest.mark.parametrize("updates", [0, 20])
+    def test_real_cpu_swallowed_soft_timeout_cannot_become_completed(tmp_path, updates):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "swallow.py"
+        script.write_text(
+            "import time, torch\n"
+            "m=torch.nn.Linear(1,1)\no=torch.optim.SGD(m.parameters(),lr=.01)\n"
+            "x=torch.ones(1,1)\n"
+            "try:\n    while True: time.sleep(.02)\n"
+            "except BaseException:\n    pass\n"
+            f"for _ in range({updates}):\n"
+            "    o.zero_grad()\n    m(x).square().mean().backward()\n    o.step()\n"
+        )
+        result = run_script(script, device="cpu", max_seconds=10, run_root=tmp_path / "runs")
+>       assert result["status"] == "timeout" and result["deadline_reached"] is True, result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': 'aed8f3fd05a44901881e47c11ef0ffec', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_swallowed_soft_t0/runs/aed8f3fd05a44901881e47c11ef0ffec', ...}
+E       assert ('error' == 'timeout'
+E         
+E         - timeout
+E         + error)
+
+tests/test_lab_deadline.py:247: AssertionError
+_______ test_real_cpu_swallowed_soft_timeout_cannot_become_completed[20] _______
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_swallowed_soft_t1')
+updates = 20
+
+    @pytest.mark.parametrize("updates", [0, 20])
+    def test_real_cpu_swallowed_soft_timeout_cannot_become_completed(tmp_path, updates):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "swallow.py"
+        script.write_text(
+            "import time, torch\n"
+            "m=torch.nn.Linear(1,1)\no=torch.optim.SGD(m.parameters(),lr=.01)\n"
+            "x=torch.ones(1,1)\n"
+            "try:\n    while True: time.sleep(.02)\n"
+            "except BaseException:\n    pass\n"
+            f"for _ in range({updates}):\n"
+            "    o.zero_grad()\n    m(x).square().mean().backward()\n    o.step()\n"
+        )
+        result = run_script(script, device="cpu", max_seconds=10, run_root=tmp_path / "runs")
+>       assert result["status"] == "timeout" and result["deadline_reached"] is True, result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '9ff368bcb6e745968510a8c6218dc79d', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_swallowed_soft_t1/runs/9ff368bcb6e745968510a8c6218dc79d', ...}
+E       assert ('error' == 'timeout'
+E         
+E         - timeout
+E         + error)
+
+tests/test_lab_deadline.py:247: AssertionError
+_________ test_real_cpu_completed_helper_then_soft_timeout_is_timeout __________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_completed_helper0')
+
+    def test_real_cpu_completed_helper_then_soft_timeout_is_timeout(tmp_path):
+        source = tmp_path / "source"
+        source.mkdir()
+        (source / "long.py").write_text("import time\nwhile True:\n    time.sleep(.02)\n")
+        result = run_argv(
+            source,
+            ["/bin/sh", "-c", "python -c 'print(123)'; python long.py"],
+            device="cpu",
+            max_seconds=8,
+            run_root=tmp_path / "runs",
+        )
+>       assert result["status"] == "timeout" and not result["execution"]["timed_out"], result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '58d9608fbabc4908b9fe00ad0a684895', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_completed_helper0/runs/58d9608fbabc4908b9fe00ad0a684895', ...}
+E       assert ('error' == 'timeout'
+E         
+E         - timeout
+E         + error)
+
+tests/test_lab_deadline.py:265: AssertionError
+_ test_descendant_timeout_cannot_mask_other_root_or_capture_failures[0-False-False] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_descendant_timeout_cannot0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a06691c920>
+root_exit = 0, other_error = False, killed = False
+
+    @pytest.mark.parametrize(
+        "root_exit,other_error,killed",
+        [(0, False, False), (7, False, False), (1, True, False), (1, False, True)],
+    )
+    def test_descendant_timeout_cannot_mask_other_root_or_capture_failures(
+        tmp_path, monkeypatch, root_exit, other_error, killed
+    ):
+        from test_multicapture import capture, write_capture
+    
+        from headroom.lab import runner
+    
+        source = tmp_path / "source"
+        source.mkdir()
+        (source / "train.py").write_text("pass\n")
+    
+        def execute(*, run_dir, **kwargs):
+            write_capture(run_dir, "artifacts", capture(1, primary=True))
+            timed_out = capture(7, target=True, status="timeout")
+            timed_out["termination_reason"] = "timeout"
+            timed_out["deadline_reached"] = True
+            write_capture(run_dir, "artifacts/processes/7", timed_out)
+            if other_error:
+                write_capture(run_dir, "artifacts/processes/8", capture(8, status="error"))
+            return {
+                "state": {"ExitCode": root_exit, "OOMKilled": killed, "Running": False},
+                "timed_out": False,
+                "cleanup_verified": True,
+                "image_id": "synthetic",
+            }
+    
+        monkeypatch.setattr(runner.docker, "execute", execute)
+        result = run_argv(source, ["/bin/sh", "launch.sh"], device="cpu", run_root=tmp_path / "runs")
+        assert result["status"] == "error"
+>       assert result["execution"]["state"]["ExitCode"] == root_exit
+               ^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'execution'
+
+tests/test_lab_deadline.py:306: KeyError
+_ test_descendant_timeout_cannot_mask_other_root_or_capture_failures[7-False-False] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_descendant_timeout_cannot1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a06775ce60>
+root_exit = 7, other_error = False, killed = False
+
+    @pytest.mark.parametrize(
+        "root_exit,other_error,killed",
+        [(0, False, False), (7, False, False), (1, True, False), (1, False, True)],
+    )
+    def test_descendant_timeout_cannot_mask_other_root_or_capture_failures(
+        tmp_path, monkeypatch, root_exit, other_error, killed
+    ):
+        from test_multicapture import capture, write_capture
+    
+        from headroom.lab import runner
+    
+        source = tmp_path / "source"
+        source.mkdir()
+        (source / "train.py").write_text("pass\n")
+    
+        def execute(*, run_dir, **kwargs):
+            write_capture(run_dir, "artifacts", capture(1, primary=True))
+            timed_out = capture(7, target=True, status="timeout")
+            timed_out["termination_reason"] = "timeout"
+            timed_out["deadline_reached"] = True
+            write_capture(run_dir, "artifacts/processes/7", timed_out)
+            if other_error:
+                write_capture(run_dir, "artifacts/processes/8", capture(8, status="error"))
+            return {
+                "state": {"ExitCode": root_exit, "OOMKilled": killed, "Running": False},
+                "timed_out": False,
+                "cleanup_verified": True,
+                "image_id": "synthetic",
+            }
+    
+        monkeypatch.setattr(runner.docker, "execute", execute)
+        result = run_argv(source, ["/bin/sh", "launch.sh"], device="cpu", run_root=tmp_path / "runs")
+        assert result["status"] == "error"
+>       assert result["execution"]["state"]["ExitCode"] == root_exit
+               ^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'execution'
+
+tests/test_lab_deadline.py:306: KeyError
+_ test_descendant_timeout_cannot_mask_other_root_or_capture_failures[1-True-False] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_descendant_timeout_cannot2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a0671e0fe0>
+root_exit = 1, other_error = True, killed = False
+
+    @pytest.mark.parametrize(
+        "root_exit,other_error,killed",
+        [(0, False, False), (7, False, False), (1, True, False), (1, False, True)],
+    )
+    def test_descendant_timeout_cannot_mask_other_root_or_capture_failures(
+        tmp_path, monkeypatch, root_exit, other_error, killed
+    ):
+        from test_multicapture import capture, write_capture
+    
+        from headroom.lab import runner
+    
+        source = tmp_path / "source"
+        source.mkdir()
+        (source / "train.py").write_text("pass\n")
+    
+        def execute(*, run_dir, **kwargs):
+            write_capture(run_dir, "artifacts", capture(1, primary=True))
+            timed_out = capture(7, target=True, status="timeout")
+            timed_out["termination_reason"] = "timeout"
+            timed_out["deadline_reached"] = True
+            write_capture(run_dir, "artifacts/processes/7", timed_out)
+            if other_error:
+                write_capture(run_dir, "artifacts/processes/8", capture(8, status="error"))
+            return {
+                "state": {"ExitCode": root_exit, "OOMKilled": killed, "Running": False},
+                "timed_out": False,
+                "cleanup_verified": True,
+                "image_id": "synthetic",
+            }
+    
+        monkeypatch.setattr(runner.docker, "execute", execute)
+        result = run_argv(source, ["/bin/sh", "launch.sh"], device="cpu", run_root=tmp_path / "runs")
+        assert result["status"] == "error"
+>       assert result["execution"]["state"]["ExitCode"] == root_exit
+               ^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'execution'
+
+tests/test_lab_deadline.py:306: KeyError
+_ test_descendant_timeout_cannot_mask_other_root_or_capture_failures[1-False-True] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_descendant_timeout_cannot3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a0671e3c50>
+root_exit = 1, other_error = False, killed = True
+
+    @pytest.mark.parametrize(
+        "root_exit,other_error,killed",
+        [(0, False, False), (7, False, False), (1, True, False), (1, False, True)],
+    )
+    def test_descendant_timeout_cannot_mask_other_root_or_capture_failures(
+        tmp_path, monkeypatch, root_exit, other_error, killed
+    ):
+        from test_multicapture import capture, write_capture
+    
+        from headroom.lab import runner
+    
+        source = tmp_path / "source"
+        source.mkdir()
+        (source / "train.py").write_text("pass\n")
+    
+        def execute(*, run_dir, **kwargs):
+            write_capture(run_dir, "artifacts", capture(1, primary=True))
+            timed_out = capture(7, target=True, status="timeout")
+            timed_out["termination_reason"] = "timeout"
+            timed_out["deadline_reached"] = True
+            write_capture(run_dir, "artifacts/processes/7", timed_out)
+            if other_error:
+                write_capture(run_dir, "artifacts/processes/8", capture(8, status="error"))
+            return {
+                "state": {"ExitCode": root_exit, "OOMKilled": killed, "Running": False},
+                "timed_out": False,
+                "cleanup_verified": True,
+                "image_id": "synthetic",
+            }
+    
+        monkeypatch.setattr(runner.docker, "execute", execute)
+        result = run_argv(source, ["/bin/sh", "launch.sh"], device="cpu", run_root=tmp_path / "runs")
+        assert result["status"] == "error"
+>       assert result["execution"]["state"]["ExitCode"] == root_exit
+               ^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'execution'
+
+tests/test_lab_deadline.py:306: KeyError
+______ test_real_cpu_hard_stop_during_serialization_keeps_partial_timeout ______
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_hard_stop_during0')
+
+    def test_real_cpu_hard_stop_during_serialization_keeps_partial_timeout(tmp_path):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "slow_serialization.py"
+        script.write_text(
+            "import time\n"
+            "from headroom.lab import hooks\n"
+            "def blocked_conversion(value):\n"
+            "    time.sleep(60)\n"
+            "hooks.encode_snapshot = blocked_conversion\n"
+            "while True:\n"
+            "    time.sleep(0.02)\n"
+        )
+        result = run_script(script, device="cpu", max_seconds=6, run_root=tmp_path / "runs")
+>       assert result["status"] == "timeout" and result["execution"]["timed_out"], result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '77d5ef58592e4817b9f8f8f00233fd66', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_hard_stop_during0/runs/77d5ef58592e4817b9f8f8f00233fd66', ...}
+E       assert ('error' == 'timeout'
+E         
+E         - timeout
+E         + error)
+
+tests/test_lab_finalize.py:161: AssertionError
+_ test_root_exit_timeout_and_cleanup_cannot_be_hidden[1-False-False-True-oom] __
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_root_exit_timeout_and_cle0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a0679d3020>
+exit_code = 1, timed_out = False, killed = False, cleanup = True
+expected = 'oom'
+
+    @pytest.mark.parametrize(
+        "exit_code,timed_out,killed,cleanup,expected",
+        [
+            (1, False, False, True, "oom"),
+            (42, False, False, True, "oom"),
+            (0, False, False, True, "error"),
+            (7, False, False, True, "error"),
+            (137, False, True, True, "error"),
+            (124, True, False, True, "timeout"),
+            (1, False, False, False, "error"),
+        ],
+    )
+    def test_root_exit_timeout_and_cleanup_cannot_be_hidden(
+        tmp_path,
+        monkeypatch,
+        exit_code,
+        timed_out,
+        killed,
+        cleanup,
+        expected,
+    ):
+        source = tmp_path / "source"
+        source.mkdir()
+        (source / "train.py").write_text("pass\n")
+    
+        def execute(*, run_dir, **kwargs):
+            write_capture(run_dir, "artifacts", capture(1, primary=True))
+            write_capture(run_dir, "artifacts/processes/7", capture(7, target=True, status="oom"))
+            return {
+                "state": {"ExitCode": exit_code, "OOMKilled": killed, "Running": False},
+                "timed_out": timed_out,
+                "cleanup_verified": cleanup,
+                "image_id": "synthetic",
+            }
+    
+        monkeypatch.setattr(runner.docker, "execute", execute)
+        result = runner.run_argv(source, ["sh", "launch.sh"], run_root=tmp_path / "runs", device="cpu")
+>       assert result["status"] == expected
+E       AssertionError: assert 'error' == 'oom'
+E         
+E         - oom
+E         + error
+
+tests/test_multicapture.py:295: AssertionError
+_ test_root_exit_timeout_and_cleanup_cannot_be_hidden[42-False-False-True-oom] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_root_exit_timeout_and_cle1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a0bd32b2c0>
+exit_code = 42, timed_out = False, killed = False, cleanup = True
+expected = 'oom'
+
+    @pytest.mark.parametrize(
+        "exit_code,timed_out,killed,cleanup,expected",
+        [
+            (1, False, False, True, "oom"),
+            (42, False, False, True, "oom"),
+            (0, False, False, True, "error"),
+            (7, False, False, True, "error"),
+            (137, False, True, True, "error"),
+            (124, True, False, True, "timeout"),
+            (1, False, False, False, "error"),
+        ],
+    )
+    def test_root_exit_timeout_and_cleanup_cannot_be_hidden(
+        tmp_path,
+        monkeypatch,
+        exit_code,
+        timed_out,
+        killed,
+        cleanup,
+        expected,
+    ):
+        source = tmp_path / "source"
+        source.mkdir()
+        (source / "train.py").write_text("pass\n")
+    
+        def execute(*, run_dir, **kwargs):
+            write_capture(run_dir, "artifacts", capture(1, primary=True))
+            write_capture(run_dir, "artifacts/processes/7", capture(7, target=True, status="oom"))
+            return {
+                "state": {"ExitCode": exit_code, "OOMKilled": killed, "Running": False},
+                "timed_out": timed_out,
+                "cleanup_verified": cleanup,
+                "image_id": "synthetic",
+            }
+    
+        monkeypatch.setattr(runner.docker, "execute", execute)
+        result = runner.run_argv(source, ["sh", "launch.sh"], run_root=tmp_path / "runs", device="cpu")
+>       assert result["status"] == expected
+E       AssertionError: assert 'error' == 'oom'
+E         
+E         - oom
+E         + error
+
+tests/test_multicapture.py:295: AssertionError
+_ test_root_exit_timeout_and_cleanup_cannot_be_hidden[0-False-False-True-error] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_root_exit_timeout_and_cle2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a086f21fa0>
+exit_code = 0, timed_out = False, killed = False, cleanup = True
+expected = 'error'
+
+    @pytest.mark.parametrize(
+        "exit_code,timed_out,killed,cleanup,expected",
+        [
+            (1, False, False, True, "oom"),
+            (42, False, False, True, "oom"),
+            (0, False, False, True, "error"),
+            (7, False, False, True, "error"),
+            (137, False, True, True, "error"),
+            (124, True, False, True, "timeout"),
+            (1, False, False, False, "error"),
+        ],
+    )
+    def test_root_exit_timeout_and_cleanup_cannot_be_hidden(
+        tmp_path,
+        monkeypatch,
+        exit_code,
+        timed_out,
+        killed,
+        cleanup,
+        expected,
+    ):
+        source = tmp_path / "source"
+        source.mkdir()
+        (source / "train.py").write_text("pass\n")
+    
+        def execute(*, run_dir, **kwargs):
+            write_capture(run_dir, "artifacts", capture(1, primary=True))
+            write_capture(run_dir, "artifacts/processes/7", capture(7, target=True, status="oom"))
+            return {
+                "state": {"ExitCode": exit_code, "OOMKilled": killed, "Running": False},
+                "timed_out": timed_out,
+                "cleanup_verified": cleanup,
+                "image_id": "synthetic",
+            }
+    
+        monkeypatch.setattr(runner.docker, "execute", execute)
+        result = runner.run_argv(source, ["sh", "launch.sh"], run_root=tmp_path / "runs", device="cpu")
+        assert result["status"] == expected
+>       assert result["execution"]["state"]["ExitCode"] == exit_code
+               ^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'execution'
+
+tests/test_multicapture.py:296: KeyError
+_ test_root_exit_timeout_and_cleanup_cannot_be_hidden[7-False-False-True-error] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_root_exit_timeout_and_cle3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a06736f890>
+exit_code = 7, timed_out = False, killed = False, cleanup = True
+expected = 'error'
+
+    @pytest.mark.parametrize(
+        "exit_code,timed_out,killed,cleanup,expected",
+        [
+            (1, False, False, True, "oom"),
+            (42, False, False, True, "oom"),
+            (0, False, False, True, "error"),
+            (7, False, False, True, "error"),
+            (137, False, True, True, "error"),
+            (124, True, False, True, "timeout"),
+            (1, False, False, False, "error"),
+        ],
+    )
+    def test_root_exit_timeout_and_cleanup_cannot_be_hidden(
+        tmp_path,
+        monkeypatch,
+        exit_code,
+        timed_out,
+        killed,
+        cleanup,
+        expected,
+    ):
+        source = tmp_path / "source"
+        source.mkdir()
+        (source / "train.py").write_text("pass\n")
+    
+        def execute(*, run_dir, **kwargs):
+            write_capture(run_dir, "artifacts", capture(1, primary=True))
+            write_capture(run_dir, "artifacts/processes/7", capture(7, target=True, status="oom"))
+            return {
+                "state": {"ExitCode": exit_code, "OOMKilled": killed, "Running": False},
+                "timed_out": timed_out,
+                "cleanup_verified": cleanup,
+                "image_id": "synthetic",
+            }
+    
+        monkeypatch.setattr(runner.docker, "execute", execute)
+        result = runner.run_argv(source, ["sh", "launch.sh"], run_root=tmp_path / "runs", device="cpu")
+        assert result["status"] == expected
+>       assert result["execution"]["state"]["ExitCode"] == exit_code
+               ^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'execution'
+
+tests/test_multicapture.py:296: KeyError
+_ test_root_exit_timeout_and_cleanup_cannot_be_hidden[137-False-True-True-error] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_root_exit_timeout_and_cle4')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a0671e1eb0>
+exit_code = 137, timed_out = False, killed = True, cleanup = True
+expected = 'error'
+
+    @pytest.mark.parametrize(
+        "exit_code,timed_out,killed,cleanup,expected",
+        [
+            (1, False, False, True, "oom"),
+            (42, False, False, True, "oom"),
+            (0, False, False, True, "error"),
+            (7, False, False, True, "error"),
+            (137, False, True, True, "error"),
+            (124, True, False, True, "timeout"),
+            (1, False, False, False, "error"),
+        ],
+    )
+    def test_root_exit_timeout_and_cleanup_cannot_be_hidden(
+        tmp_path,
+        monkeypatch,
+        exit_code,
+        timed_out,
+        killed,
+        cleanup,
+        expected,
+    ):
+        source = tmp_path / "source"
+        source.mkdir()
+        (source / "train.py").write_text("pass\n")
+    
+        def execute(*, run_dir, **kwargs):
+            write_capture(run_dir, "artifacts", capture(1, primary=True))
+            write_capture(run_dir, "artifacts/processes/7", capture(7, target=True, status="oom"))
+            return {
+                "state": {"ExitCode": exit_code, "OOMKilled": killed, "Running": False},
+                "timed_out": timed_out,
+                "cleanup_verified": cleanup,
+                "image_id": "synthetic",
+            }
+    
+        monkeypatch.setattr(runner.docker, "execute", execute)
+        result = runner.run_argv(source, ["sh", "launch.sh"], run_root=tmp_path / "runs", device="cpu")
+        assert result["status"] == expected
+>       assert result["execution"]["state"]["ExitCode"] == exit_code
+               ^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'execution'
+
+tests/test_multicapture.py:296: KeyError
+_ test_root_exit_timeout_and_cleanup_cannot_be_hidden[124-True-False-True-timeout] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_root_exit_timeout_and_cle5')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a0671e0e60>
+exit_code = 124, timed_out = True, killed = False, cleanup = True
+expected = 'timeout'
+
+    @pytest.mark.parametrize(
+        "exit_code,timed_out,killed,cleanup,expected",
+        [
+            (1, False, False, True, "oom"),
+            (42, False, False, True, "oom"),
+            (0, False, False, True, "error"),
+            (7, False, False, True, "error"),
+            (137, False, True, True, "error"),
+            (124, True, False, True, "timeout"),
+            (1, False, False, False, "error"),
+        ],
+    )
+    def test_root_exit_timeout_and_cleanup_cannot_be_hidden(
+        tmp_path,
+        monkeypatch,
+        exit_code,
+        timed_out,
+        killed,
+        cleanup,
+        expected,
+    ):
+        source = tmp_path / "source"
+        source.mkdir()
+        (source / "train.py").write_text("pass\n")
+    
+        def execute(*, run_dir, **kwargs):
+            write_capture(run_dir, "artifacts", capture(1, primary=True))
+            write_capture(run_dir, "artifacts/processes/7", capture(7, target=True, status="oom"))
+            return {
+                "state": {"ExitCode": exit_code, "OOMKilled": killed, "Running": False},
+                "timed_out": timed_out,
+                "cleanup_verified": cleanup,
+                "image_id": "synthetic",
+            }
+    
+        monkeypatch.setattr(runner.docker, "execute", execute)
+        result = runner.run_argv(source, ["sh", "launch.sh"], run_root=tmp_path / "runs", device="cpu")
+>       assert result["status"] == expected
+E       AssertionError: assert 'error' == 'timeout'
+E         
+E         - timeout
+E         + error
+
+tests/test_multicapture.py:295: AssertionError
+_ test_root_exit_timeout_and_cleanup_cannot_be_hidden[1-False-False-False-error] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_root_exit_timeout_and_cle6')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a0678b0770>
+exit_code = 1, timed_out = False, killed = False, cleanup = False
+expected = 'error'
+
+    @pytest.mark.parametrize(
+        "exit_code,timed_out,killed,cleanup,expected",
+        [
+            (1, False, False, True, "oom"),
+            (42, False, False, True, "oom"),
+            (0, False, False, True, "error"),
+            (7, False, False, True, "error"),
+            (137, False, True, True, "error"),
+            (124, True, False, True, "timeout"),
+            (1, False, False, False, "error"),
+        ],
+    )
+    def test_root_exit_timeout_and_cleanup_cannot_be_hidden(
+        tmp_path,
+        monkeypatch,
+        exit_code,
+        timed_out,
+        killed,
+        cleanup,
+        expected,
+    ):
+        source = tmp_path / "source"
+        source.mkdir()
+        (source / "train.py").write_text("pass\n")
+    
+        def execute(*, run_dir, **kwargs):
+            write_capture(run_dir, "artifacts", capture(1, primary=True))
+            write_capture(run_dir, "artifacts/processes/7", capture(7, target=True, status="oom"))
+            return {
+                "state": {"ExitCode": exit_code, "OOMKilled": killed, "Running": False},
+                "timed_out": timed_out,
+                "cleanup_verified": cleanup,
+                "image_id": "synthetic",
+            }
+    
+        monkeypatch.setattr(runner.docker, "execute", execute)
+        result = runner.run_argv(source, ["sh", "launch.sh"], run_root=tmp_path / "runs", device="cpu")
+        assert result["status"] == expected
+>       assert result["execution"]["state"]["ExitCode"] == exit_code
+               ^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'execution'
+
+tests/test_multicapture.py:296: KeyError
+______ test_direct_fix_cannot_accept_completed_primary_with_failed_helper ______
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_direct_fix_cannot_accept_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a058342270>
+
+    def test_direct_fix_cannot_accept_completed_primary_with_failed_helper(tmp_path, monkeypatch):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "train.py"
+        script.write_text("pass\n")
+    
+        def execute(*, run_dir, **kwargs):
+            write_capture(run_dir, "artifacts", capture(1, primary=True, target=True))
+            write_capture(run_dir, "artifacts/processes/7", capture(7, status="error"))
+            return {
+                "state": {"ExitCode": 0, "OOMKilled": False, "Running": False},
+                "timed_out": False,
+                "cleanup_verified": True,
+                "image_id": "synthetic",
+            }
+    
+        monkeypatch.setattr(runner.docker, "execute", execute)
+        result = runner.run_script(
+            script,
+            source_root=source,
+            execution_argv=["python", "train.py"],
+            script_args=["--batch", "8"],
+            run_root=tmp_path / "runs",
+            device="cpu",
+        )
+        assert result["status"] == "error"
+>       assert result["execution_capture"]["selection"]["selected_capture_relative"] is None
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'execution_capture'
+
+tests/test_multicapture.py:326: KeyError
+__ test_real_cpu_helper_and_training_replay_target_args_and_reference[False] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_helper_and_train0')
+helper_first = False
+
+    @pytest.mark.parametrize("helper_first", [False, True])
+    def test_real_cpu_helper_and_training_replay_target_args_and_reference(tmp_path, helper_first):
+        from headroom.verify.runner import verify_script
+    
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "train.py"
+        script.write_text(
+            "import argparse, torch\np=argparse.ArgumentParser()\n"
+            "p.add_argument('--batch', type=int, default=8)\na=p.parse_args()\n"
+            "if a.batch == 8:\n    raise RuntimeError('synthetic CPU initial failure')\n"
+            "m=torch.nn.Linear(1,1)\no=torch.optim.SGD(m.parameters(),lr=0.01)\n"
+            "x=torch.ones(a.batch,1)\nfor _ in range(30):\n"
+            "    o.zero_grad()\n    loss=m(x).square().mean()\n    loss.backward()\n    o.step()\n"
+        )
+        helper = "python -c \"print('helper-complete')\"\n"
+        training = 'python train.py "$@"\nresult=$?\n'
+        (source / "launch.sh").write_text(
+            (helper + training if helper_first else training + helper) + 'exit "$result"\n'
+        )
+        command = ["/bin/sh", "launch.sh", "--batch", "8"]
+        raw = runner.run_argv(source, command, run_root=tmp_path / "runs", device="cpu")
+>       baseline = synthesize_unique_target_oom(raw)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_multicapture.py:351: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '5c659cef5a8f4dfb85feb1e1181ae0cc', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_helper_and_train0/runs/5c659cef5a8f4dfb85feb1e1181ae0cc', ...}
+
+    def synthesize_unique_target_oom(result):
+        """Relabel only a copied test capture; preserve original CPU evidence beside it."""
+        run = Path(result["run_dir"])
+        manifest = json.loads((run / "manifest.json").read_text())
+        records, _ = runner._read_capture_roster(run, manifest)
+>       target = next(
+            row
+            for row in records
+            if (
+                (row["capture"] or {}).get("execution_entrypoint", {}).get("main_file")
+                == "/source/train.py"
+            )
+        )
+E       StopIteration
+
+tests/test_multicapture.py:125: StopIteration
+___ test_real_cpu_helper_and_training_replay_target_args_and_reference[True] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_helper_and_train1')
+helper_first = True
+
+    @pytest.mark.parametrize("helper_first", [False, True])
+    def test_real_cpu_helper_and_training_replay_target_args_and_reference(tmp_path, helper_first):
+        from headroom.verify.runner import verify_script
+    
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "train.py"
+        script.write_text(
+            "import argparse, torch\np=argparse.ArgumentParser()\n"
+            "p.add_argument('--batch', type=int, default=8)\na=p.parse_args()\n"
+            "if a.batch == 8:\n    raise RuntimeError('synthetic CPU initial failure')\n"
+            "m=torch.nn.Linear(1,1)\no=torch.optim.SGD(m.parameters(),lr=0.01)\n"
+            "x=torch.ones(a.batch,1)\nfor _ in range(30):\n"
+            "    o.zero_grad()\n    loss=m(x).square().mean()\n    loss.backward()\n    o.step()\n"
+        )
+        helper = "python -c \"print('helper-complete')\"\n"
+        training = 'python train.py "$@"\nresult=$?\n'
+        (source / "launch.sh").write_text(
+            (helper + training if helper_first else training + helper) + 'exit "$result"\n'
+        )
+        command = ["/bin/sh", "launch.sh", "--batch", "8"]
+        raw = runner.run_argv(source, command, run_root=tmp_path / "runs", device="cpu")
+>       baseline = synthesize_unique_target_oom(raw)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_multicapture.py:351: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': 'b1ea756686574d30b7e7a4bea572bc71', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_helper_and_train1/runs/b1ea756686574d30b7e7a4bea572bc71', ...}
+
+    def synthesize_unique_target_oom(result):
+        """Relabel only a copied test capture; preserve original CPU evidence beside it."""
+        run = Path(result["run_dir"])
+        manifest = json.loads((run / "manifest.json").read_text())
+        records, _ = runner._read_capture_roster(run, manifest)
+>       target = next(
+            row
+            for row in records
+            if (
+                (row["capture"] or {}).get("execution_entrypoint", {}).get("main_file")
+                == "/source/train.py"
+            )
+        )
+E       StopIteration
+
+tests/test_multicapture.py:125: StopIteration
+___________ test_real_cpu_python_parent_watch_hands_off_child_source ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_python_parent_wa0')
+
+    def test_real_cpu_python_parent_watch_hands_off_child_source(tmp_path):
+        from headroom.watch import watch_command
+    
+        source = tmp_path / "parent-source"
+        source.mkdir()
+        (source / "train.py").write_text("raise RuntimeError('synthetic CPU failure')\n")
+        (source / "launcher.py").write_text(
+            "import subprocess, sys\n"
+            "child = subprocess.call([sys.executable, 'train.py', '--batch', '8'])\n"
+            "raise SystemExit(child)\n"
+        )
+        command = ["python", "launcher.py"]
+        requests = []
+    
+        def lab(root, argv, **options):
+            options["device"] = "cpu"
+            return synthesize_unique_target_oom(runner.run_argv(root, argv, **options))
+    
+        def repair(request, **kwargs):
+            requests.append(request)
+            return {"status": "needs_human", "target_met": False}
+    
+>       result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "watch",
+            device="cuda",
+            lab_runner=lab,
+            fix_runner=repair,
+        )
+
+tests/test_multicapture.py:406: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/watch.py:112: in watch_command
+    result = (lab_runner or run_argv)(
+tests/test_multicapture.py:400: in lab
+    return synthesize_unique_target_oom(runner.run_argv(root, argv, **options))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '68a1bb17a393428db585716ae4bd3200', 'run_dir': '/tmp/pyt...-201/test_real_cpu_python_parent_wa0/watch/f4d3380b2c494b299b0dda5050680d6c/lab/68a1bb17a393428db585716ae4bd3200', ...}
+
+    def synthesize_unique_target_oom(result):
+        """Relabel only a copied test capture; preserve original CPU evidence beside it."""
+        run = Path(result["run_dir"])
+        manifest = json.loads((run / "manifest.json").read_text())
+        records, _ = runner._read_capture_roster(run, manifest)
+>       target = next(
+            row
+            for row in records
+            if (
+                (row["capture"] or {}).get("execution_entrypoint", {}).get("main_file")
+                == "/source/train.py"
+            )
+        )
+E       StopIteration
+
+tests/test_multicapture.py:125: StopIteration
+________ test_real_cpu_default_verifier_produces_auditable_pairing[s1] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_default_verifier0')
+profile = 's1'
+
+    @pytest.mark.parametrize("profile", ["s1", "s3", "s4"])
+    def test_real_cpu_default_verifier_produces_auditable_pairing(tmp_path, profile):
+        baseline_script = script_at(tmp_path, source(profile), "baseline")
+        candidate_script = script_at(tmp_path, repaired(profile, source(profile)), "candidate")
+        root = tmp_path / "runs"
+        baseline = run_script(baseline_script, script_args=ARGS, run_root=root, device="cpu")
+>       assert baseline["status"] == "completed", baseline
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': 'fb6e5a26017f4b6f8014c461b07e473f', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_default_verifier0/runs/fb6e5a26017f4b6f8014c461b07e473f', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_pairing.py:95: AssertionError
+________ test_real_cpu_default_verifier_produces_auditable_pairing[s3] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_default_verifier1')
+profile = 's3'
+
+    @pytest.mark.parametrize("profile", ["s1", "s3", "s4"])
+    def test_real_cpu_default_verifier_produces_auditable_pairing(tmp_path, profile):
+        baseline_script = script_at(tmp_path, source(profile), "baseline")
+        candidate_script = script_at(tmp_path, repaired(profile, source(profile)), "candidate")
+        root = tmp_path / "runs"
+        baseline = run_script(baseline_script, script_args=ARGS, run_root=root, device="cpu")
+>       assert baseline["status"] == "completed", baseline
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '4b0a5bc69bc442f799b8ccae6335088a', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_default_verifier1/runs/4b0a5bc69bc442f799b8ccae6335088a', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_pairing.py:95: AssertionError
+________ test_real_cpu_default_verifier_produces_auditable_pairing[s4] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_default_verifier2')
+profile = 's4'
+
+    @pytest.mark.parametrize("profile", ["s1", "s3", "s4"])
+    def test_real_cpu_default_verifier_produces_auditable_pairing(tmp_path, profile):
+        baseline_script = script_at(tmp_path, source(profile), "baseline")
+        candidate_script = script_at(tmp_path, repaired(profile, source(profile)), "candidate")
+        root = tmp_path / "runs"
+        baseline = run_script(baseline_script, script_args=ARGS, run_root=root, device="cpu")
+>       assert baseline["status"] == "completed", baseline
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '7945125bdc50435fafeb96411ad9fba7', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_default_verifier2/runs/7945125bdc50435fafeb96411ad9fba7', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_pairing.py:95: AssertionError
+___________ test_real_cpu_s1_same_seed_different_batch_is_not_paired ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_s1_same_seed_dif0')
+
+    def test_real_cpu_s1_same_seed_different_batch_is_not_paired(tmp_path):
+        baseline_script = script_at(tmp_path, source("s1"), "baseline")
+        candidate_script = script_at(tmp_path, repaired("s1", source("s1")), "candidate")
+        baseline = run_script(
+            baseline_script, script_args=ARGS, run_root=tmp_path / "runs", device="cpu"
+        )
+        candidate = run_script(
+            candidate_script,
+            script_args=[*ARGS, "--batch", "1"],
+            run_root=tmp_path / "runs",
+            device="cpu",
+        )
+>       assert baseline["steps"] == candidate["steps"] == 20
+               ^^^^^^^^^^^^^^^^^
+E       KeyError: 'steps'
+
+tests/test_pairing.py:341: KeyError
+____ test_cpu_compiled_training_remains_usable_without_precision_mode[jit] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_cpu_compiled_training_rem0')
+compilation = 'jit'
+
+    @pytest.mark.parametrize("compilation", ["jit", "compiled"])
+    def test_cpu_compiled_training_remains_usable_without_precision_mode(tmp_path, compilation):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "train.py"
+        script.write_text(
+            "import sys\nimport torch\n"
+            "class Model(torch.nn.Module):\n"
+            "    def __init__(self):\n"
+            "        super().__init__()\n"
+            "        self.weight = torch.nn.Parameter(torch.eye(4))\n"
+            "    def forward(self, value):\n"
+            "        return torch.nn.functional.linear(value, self.weight)\n"
+            "model = Model()\n"
+            "model = torch.jit.script(model) if sys.argv[1] == 'jit' else torch.compile(model, backend='eager')\n"
+            "optimizer = torch.optim.SGD(model.parameters(), lr=0.01)\n"
+            "value = torch.ones(2, 4)\n"
+            "for _ in range(3):\n"
+            "    optimizer.zero_grad()\n"
+            "    model(value).square().mean().backward()\n"
+            "    optimizer.step()\n"
+        )
+        result = run_script(
+            script,
+            script_args=[compilation],
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_steps=3,
+            max_seconds=30,
+        )
+>       assert result["status"] == "completed", result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '2a527bf9a0434b6ebea1f9e6ebbc9d9f', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_cpu_compiled_training_rem0/runs/2a527bf9a0434b6ebea1f9e6ebbc9d9f', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_precision_integration.py:172: AssertionError
+__ test_cpu_compiled_training_remains_usable_without_precision_mode[compiled] __
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_cpu_compiled_training_rem1')
+compilation = 'compiled'
+
+    @pytest.mark.parametrize("compilation", ["jit", "compiled"])
+    def test_cpu_compiled_training_remains_usable_without_precision_mode(tmp_path, compilation):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "train.py"
+        script.write_text(
+            "import sys\nimport torch\n"
+            "class Model(torch.nn.Module):\n"
+            "    def __init__(self):\n"
+            "        super().__init__()\n"
+            "        self.weight = torch.nn.Parameter(torch.eye(4))\n"
+            "    def forward(self, value):\n"
+            "        return torch.nn.functional.linear(value, self.weight)\n"
+            "model = Model()\n"
+            "model = torch.jit.script(model) if sys.argv[1] == 'jit' else torch.compile(model, backend='eager')\n"
+            "optimizer = torch.optim.SGD(model.parameters(), lr=0.01)\n"
+            "value = torch.ones(2, 4)\n"
+            "for _ in range(3):\n"
+            "    optimizer.zero_grad()\n"
+            "    model(value).square().mean().backward()\n"
+            "    optimizer.step()\n"
+        )
+        result = run_script(
+            script,
+            script_args=[compilation],
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_steps=3,
+            max_seconds=30,
+        )
+>       assert result["status"] == "completed", result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '86214344a19948c6a23d49ddabd295ad', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_cpu_compiled_training_rem1/runs/86214344a19948c6a23d49ddabd295ad', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_precision_integration.py:172: AssertionError
+____________ test_adamw_steps_and_all_three_seeds_are_deterministic ____________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_adamw_steps_and_all_three0/input')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_adamw_steps_and_all_three0')
+
+    def test_adamw_steps_and_all_three_seeds_are_deterministic(source, tmp_path):
+        script = source / "train.py"
+        script.write_text(TRAINING)
+        runs = [
+            run_script(script, device="cpu", run_root=tmp_path / "runs", max_steps=20, seed=seed)
+            for seed in (1337, 1337, 1338)
+        ]
+        for result in runs:
+>           assert result["status"] == "completed", result
+E           AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': 'e15928340dae4489b92f5efa5d3b6fb1', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_adamw_steps_and_all_three0/runs/e15928340dae4489b92f5efa5d3b6fb1', ...}
+E           assert 'error' == 'completed'
+E             
+E             - completed
+E             + error
+
+tests/test_runner.py:43: AssertionError
+_______________ test_command_mode_captures_real_optimizer_steps ________________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_command_mode_captures_rea0/input')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_command_mode_captures_rea0')
+
+    def test_command_mode_captures_real_optimizer_steps(source, tmp_path):
+        (source / "train.py").write_text(TRAINING)
+        result = run_command(
+            source, ["python", "train.py"], device="cpu", run_root=tmp_path / "runs", max_steps=7
+        )
+>       assert result["status"] == "completed", result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '11080181362645ce97576dc9d049ff66', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_command_mode_captures_rea0/runs/11080181362645ce97576dc9d049ff66', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_runner.py:56: AssertionError
+____________________ test_keys_absent_and_source_read_only _____________________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_keys_absent_and_source_re0/input')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_keys_absent_and_source_re0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a086326120>
+
+    def test_keys_absent_and_source_read_only(source, tmp_path, monkeypatch):
+        for name in ("NEBIUS_API_KEY", "TAVILY_API_KEY", "HF_TOKEN", "UNRELATED_SECRET"):
+            monkeypatch.setenv(name, "canary-never-a-real-credential")
+        (source / ".env").write_text("ONLY_A_TEST_CANARY=do-not-copy\n")
+        script = source / "check.py"
+        script.write_text("""import json, os
+    from pathlib import Path
+    keys = {key: os.environ.get(key) for key in
+            ("NEBIUS_API_KEY", "TAVILY_API_KEY", "HF_TOKEN", "UNRELATED_SECRET")}
+    assert all(value is None for value in keys.values()), "environment leak"
+    assert not Path("/source/.env").exists(), "source secret copied"
+    assert not Path("/runtime/.env").exists(), "runtime root mounted"
+    try:
+        Path("/source/unexpected.txt").write_text("unsafe")
+    except OSError:
+        readonly = True
+    else:
+        readonly = False
+    assert readonly, "source writable"
+    Path("/out/boundary-check.json").write_text(json.dumps({"keys":keys,"readonly":readonly}))
+    """)
+        result = run_script(script, device="cpu", run_root=tmp_path / "runs")
+>       assert result["status"] == "completed", result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': 'ff680a8d31d24b97b77242c328a3fad2', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_keys_absent_and_source_re0/runs/ff680a8d31d24b97b77242c328a3fad2', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_runner.py:84: AssertionError
+_____ test_infinite_loop_timeout_30_seconds_cleans_container_and_children ______
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_infinite_loop_timeout_30_0/input')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_infinite_loop_timeout_30_0')
+
+    def test_infinite_loop_timeout_30_seconds_cleans_container_and_children(source, tmp_path):
+        script = source / "forever.py"
+        script.write_text("""import subprocess, sys, time
+    from pathlib import Path
+    child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(180)"])
+    Path("/out/child-started.txt").write_text(str(child.pid))
+    while True:
+        time.sleep(1)
+    """)
+        started = time.monotonic()
+        result = run_script(script, device="cpu", run_root=tmp_path / "runs", max_seconds=30)
+        elapsed = time.monotonic() - started
+>       assert result["status"] == "timeout", result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': 'f46920fb6e95449ca01e2b1ba79dd917', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_infinite_loop_timeout_30_0/runs/f46920fb6e95449ca01e2b1ba79dd917', ...}
+E       assert 'error' == 'timeout'
+E         
+E         - timeout
+E         + error
+
+tests/test_runner.py:112: AssertionError
+_______ test_full_cpp_symbolization_dependency_is_available_without_cuda _______
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_full_cpp_symbolization_de0/input')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_full_cpp_symbolization_de0')
+
+    def test_full_cpp_symbolization_dependency_is_available_without_cuda(source, tmp_path):
+        script = source / "symbolize.py"
+        script.write_text("""import json
+    from pathlib import Path
+    import torch
+    from torch.utils._traceback import CapturedTraceback
+    assert not torch.cuda.is_initialized()
+    frames = CapturedTraceback.extract(cpp=True).format()
+    assert len(frames) > 0
+    assert not torch.cuda.is_initialized()
+    Path("/out/symbolizer.json").write_text(json.dumps({"frames":len(frames),"cuda_initialized":False}))
+    """)
+        result = run_script(script, device="cpu", run_root=tmp_path / "runs")
+>       assert result["status"] == "completed", result
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '0c21562b2e114daa8a8acf1b02130cbd', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_full_cpp_symbolization_de0/runs/0c21562b2e114daa8a8acf1b02130cbd', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_runner.py:137: AssertionError
+_____ test_three_real_cpu_pairs_use_independent_subprocess_controller[sgd] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_three_real_cpu_pairs_use_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a0640c9190>
+scenario = 'sgd'
+
+    @pytest.mark.parametrize("scenario", ["sgd", "adamw", "hf_trainer"])
+    def test_three_real_cpu_pairs_use_independent_subprocess_controller(
+        tmp_path, monkeypatch, scenario
+    ):
+        if scenario == "hf_trainer":
+            script = PROJECT_ROOT / "repos/hf_trainer/train.py"
+            args, steps = ["--profile", "cpu-smoke", "--device", "cpu"], 20
+        else:
+            source = tmp_path / "source"
+            source.mkdir()
+            script = source / "train.py"
+            script.write_text(TRAINING.format(optimizer="SGD" if scenario == "sgd" else "AdamW"))
+            args, steps = [], 4
+        first = run_script(
+            script,
+            script_args=args,
+            run_root=tmp_path / "production",
+            device="cpu",
+            max_steps=steps,
+            max_seconds=60,
+            seed=1337,
+        )
+        with monkeypatch.context() as patcher:
+            patcher.setattr(
+                docker, "execute", lambda **kw: pytest.fail("reference reused production dispatch")
+            )
+            patcher.setattr(
+                isolation,
+                "run_script",
+                lambda *a, **kw: pytest.fail("reference reused production script"),
+            )
+            second = isolation.run_subprocess_reference(
+                script,
+                script_args=args,
+                run_root=tmp_path / "reference",
+                device="cpu",
+                max_steps=steps,
+                max_seconds=60,
+                seed=1337,
+            )
+>       assert first["status"] == second["status"] == "completed", (first, second)
+E       AssertionError: ({'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '244d485b74e8463180f5b71768f22ef5', 'run_dir': '/tmp/py...se_0/reference/87f3c6fc137147198cbb240ddcbb3e1c', 'status': 'error', 'reason': 'REFERENCE_EXECUTION_UNAVAILABLE', ...})
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_subprocess_reference.py:304: AssertionError
+____ test_three_real_cpu_pairs_use_independent_subprocess_controller[adamw] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_three_real_cpu_pairs_use_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a0640ca2a0>
+scenario = 'adamw'
+
+    @pytest.mark.parametrize("scenario", ["sgd", "adamw", "hf_trainer"])
+    def test_three_real_cpu_pairs_use_independent_subprocess_controller(
+        tmp_path, monkeypatch, scenario
+    ):
+        if scenario == "hf_trainer":
+            script = PROJECT_ROOT / "repos/hf_trainer/train.py"
+            args, steps = ["--profile", "cpu-smoke", "--device", "cpu"], 20
+        else:
+            source = tmp_path / "source"
+            source.mkdir()
+            script = source / "train.py"
+            script.write_text(TRAINING.format(optimizer="SGD" if scenario == "sgd" else "AdamW"))
+            args, steps = [], 4
+        first = run_script(
+            script,
+            script_args=args,
+            run_root=tmp_path / "production",
+            device="cpu",
+            max_steps=steps,
+            max_seconds=60,
+            seed=1337,
+        )
+        with monkeypatch.context() as patcher:
+            patcher.setattr(
+                docker, "execute", lambda **kw: pytest.fail("reference reused production dispatch")
+            )
+            patcher.setattr(
+                isolation,
+                "run_script",
+                lambda *a, **kw: pytest.fail("reference reused production script"),
+            )
+            second = isolation.run_subprocess_reference(
+                script,
+                script_args=args,
+                run_root=tmp_path / "reference",
+                device="cpu",
+                max_steps=steps,
+                max_seconds=60,
+                seed=1337,
+            )
+>       assert first["status"] == second["status"] == "completed", (first, second)
+E       AssertionError: ({'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '1e06352f5402496ebeef248f87fe61d2', 'run_dir': '/tmp/py...se_1/reference/5825903b6015497d93e81d3ae2dfc6f2', 'status': 'error', 'reason': 'REFERENCE_EXECUTION_UNAVAILABLE', ...})
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_subprocess_reference.py:304: AssertionError
+_ test_three_real_cpu_pairs_use_independent_subprocess_controller[hf_trainer] __
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_three_real_cpu_pairs_use_2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a0640cb9e0>
+scenario = 'hf_trainer'
+
+    @pytest.mark.parametrize("scenario", ["sgd", "adamw", "hf_trainer"])
+    def test_three_real_cpu_pairs_use_independent_subprocess_controller(
+        tmp_path, monkeypatch, scenario
+    ):
+        if scenario == "hf_trainer":
+            script = PROJECT_ROOT / "repos/hf_trainer/train.py"
+            args, steps = ["--profile", "cpu-smoke", "--device", "cpu"], 20
+        else:
+            source = tmp_path / "source"
+            source.mkdir()
+            script = source / "train.py"
+            script.write_text(TRAINING.format(optimizer="SGD" if scenario == "sgd" else "AdamW"))
+            args, steps = [], 4
+        first = run_script(
+            script,
+            script_args=args,
+            run_root=tmp_path / "production",
+            device="cpu",
+            max_steps=steps,
+            max_seconds=60,
+            seed=1337,
+        )
+        with monkeypatch.context() as patcher:
+            patcher.setattr(
+                docker, "execute", lambda **kw: pytest.fail("reference reused production dispatch")
+            )
+            patcher.setattr(
+                isolation,
+                "run_script",
+                lambda *a, **kw: pytest.fail("reference reused production script"),
+            )
+            second = isolation.run_subprocess_reference(
+                script,
+                script_args=args,
+                run_root=tmp_path / "reference",
+                device="cpu",
+                max_steps=steps,
+                max_seconds=60,
+                seed=1337,
+            )
+>       assert first["status"] == second["status"] == "completed", (first, second)
+E       AssertionError: ({'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '4766792449dd45caa78bbbca2d2898cf', 'run_dir': '/tmp/py...se_2/reference/bd09deebf4f641b290f650c154c20fdc', 'status': 'error', 'reason': 'REFERENCE_EXECUTION_UNAVAILABLE', ...})
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_subprocess_reference.py:304: AssertionError
+_ test_real_cpu_child_has_no_network_secret_or_write_escape_and_hf_cache_is_readonly _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_child_has_no_net0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75a06401c680>
+
+    def test_real_cpu_child_has_no_network_secret_or_write_escape_and_hf_cache_is_readonly(
+        tmp_path, monkeypatch
+    ):
+        project = tmp_path / "project"
+        project.mkdir()
+        (project / "headroom").symlink_to(PROJECT_ROOT / "headroom", target_is_directory=True)
+        (project / "uv.lock").write_bytes((PROJECT_ROOT / "uv.lock").read_bytes())
+        make_cache(project)
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "probe.py"
+        script.write_text("""import json, os, socket
+    from pathlib import Path
+    from transformers import GPT2Config
+    assert not any(os.environ.get(k) for k in ("NEBIUS_API_KEY", "TAVILY_API_KEY", "HF_TOKEN"))
+    assert sorted(p.name for p in Path("/sys/class/net").iterdir()) == ["lo"]
+    s=socket.socket()
+    s.settimeout(0.2)
+    try:
+        s.connect(("192.0.2.1", 443))
+    except OSError:
+        network_blocked=True
+    else:
+        raise AssertionError("network escape")
+    finally:
+        s.close()
+    for location in ("/source/forbidden", "/runtime/headroom/forbidden", "/control/forbidden", "/forbidden", "/hf-cache/forbidden"):
+        try:
+            Path(location).write_text("invalid")
+        except OSError:
+            pass
+        else:
+            raise AssertionError("write escape")
+    config=GPT2Config.from_pretrained("/hf-cache/random-model",local_files_only=True)
+    assert config.n_embd == 16
+    Path("/out/isolation-probe.json").write_text(json.dumps({"network_blocked":network_blocked,"cache_read":True,"writes_blocked":True}))
+    """)
+        monkeypatch.setenv("NEBIUS_API_KEY", "synthetic-no-secret")
+        result = isolation.run_subprocess_reference(
+            script, run_root=tmp_path / "runs", project_root=project, device="cpu", max_seconds=60
+        )
+>       assert result["status"] == "completed" and result["cleanup_verified"], result
+E       AssertionError: {'run_id': 'e8c2478bb7e54156abb453b6757badab', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_child_has_no_net0/runs/e8c2478bb7e54156abb453b6757badab', 'status': 'error', 'reason': 'REFERENCE_EXECUTION_UNAVAILABLE', ...}
+E       assert ('error' == 'completed'
+E         
+E         - completed
+E         + error)
+
+tests/test_subprocess_reference.py:358: AssertionError
+______ test_real_cpu_ignored_signal_is_hard_stopped_and_container_removed ______
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_ignored_signal_i0')
+
+    def test_real_cpu_ignored_signal_is_hard_stopped_and_container_removed(tmp_path):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "loop.py"
+        script.write_text(
+            "import signal,time\nsignal.signal(signal.SIGALRM,signal.SIG_IGN)\nsignal.signal(signal.SIGTERM,signal.SIG_IGN)\nwhile True: time.sleep(0.1)\n"
+        )
+        started = time.monotonic()
+        result = isolation.run_subprocess_reference(
+            script, run_root=tmp_path / "runs", device="cpu", max_seconds=6
+        )
+>       assert result["status"] == "timeout" and result["cleanup_verified"], result
+E       AssertionError: {'run_id': '1205eeb474324dc7b4c33d4f4d8bc8fa', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_ignored_signal_i0/runs/1205eeb474324dc7b4c33d4f4d8bc8fa', 'status': 'error', 'reason': 'REFERENCE_EXECUTION_UNAVAILABLE', ...}
+E       assert ('error' == 'timeout'
+E         
+E         - timeout
+E         + error)
+
+tests/test_subprocess_reference.py:375: AssertionError
+________ test_real_cpu_nonzero_target_exit_is_not_rewritten_as_success _________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_nonzero_target_e0')
+
+    def test_real_cpu_nonzero_target_exit_is_not_rewritten_as_success(tmp_path):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "exit.py"
+        script.write_text("raise SystemExit(7)\n")
+        result = isolation.run_subprocess_reference(
+            script, run_root=tmp_path / "runs", device="cpu", max_seconds=30
+        )
+        assert result["status"] == "error" and result["cleanup_verified"], result
+>       assert result["controller"]["returncode"] == 7
+               ^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'controller'
+
+tests/test_subprocess_reference.py:389: KeyError
+___________ test_real_cpu_normal_exit_reaps_background_process_group ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_normal_exit_reap0')
+
+    def test_real_cpu_normal_exit_reaps_background_process_group(tmp_path):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "background.py"
+        script.write_text(
+            "import subprocess\nsubprocess.Popen(['/bin/sleep','60'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)\n"
+        )
+        result = isolation.run_subprocess_reference(
+            script, run_root=tmp_path / "runs", device="cpu", max_seconds=30
+        )
+>       assert result["status"] == "completed" and result["cleanup_verified"], result
+E       AssertionError: {'run_id': 'd78b257caf3642839f193f31765d9a1f', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_normal_exit_reap0/runs/d78b257caf3642839f193f31765d9a1f', 'status': 'error', 'reason': 'REFERENCE_EXECUTION_UNAVAILABLE', ...}
+E       assert ('error' == 'completed'
+E         
+E         - completed
+E         + error)
+
+tests/test_subprocess_reference.py:424: AssertionError
+_ test_real_cpu_wrapper_attests_transformed_source_original_argv_and_twenty_updates _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_wrapper_attests_0')
+
+    def test_real_cpu_wrapper_attests_transformed_source_original_argv_and_twenty_updates(tmp_path):
+        # A completed CPU run supplies real captured tensors/manifest. Only the OOM
+        # trigger is emulated here; this cannot certify a GPU OOM or acceptance.
+        original = run_script(SCRIPT, script_args=ARGS, device="cpu", run_root=tmp_path / "runs")
+>       assert original["status"] == "completed" and original["steps"] == 20
+E       AssertionError: assert ('error' == 'completed'
+E         
+E         - completed
+E         + error)
+
+tests/test_verify_checkpoint_reference.py:200: AssertionError
+____________ test_cpu_pair_is_identical_and_half_model_is_rejected _____________
+
+training = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_cpu_pair_is_identical_and0/source/train.py')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_cpu_pair_is_identical_and0')
+
+    def test_cpu_pair_is_identical_and_half_model_is_rejected(training, tmp_path):
+        root = tmp_path / "runs"
+        baseline = run_script(training, run_root=root, device="cpu", max_steps=20, seed=17)
+>       assert baseline["status"] == "completed", baseline
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '5bd2e1097a584ca79f5f1deae92661e9', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_cpu_pair_is_identical_and0/runs/5bd2e1097a584ca79f5f1deae92661e9', ...}
+E       assert 'error' == 'completed'
+E         
+E         - completed
+E         + error
+
+tests/test_verify_runner.py:73: AssertionError
+_ test_real_cpu_docker_preserves_exit_and_never_calls_fix[print('successful')-0] _
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_docker_preserves0/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_docker_preserves0')
+body = "print('successful')", exit_code = 0
+
+    @pytest.mark.parametrize(
+        "body,exit_code",
+        [
+            ("print('successful')", 0),
+            ("raise SystemExit(7)", 7),
+            ("print('CUDA out of memory')\nraise RuntimeError('other failure')", 1),
+            ("import torch\nraise torch.OutOfMemoryError('CPU out of memory')", 1),
+        ],
+    )
+    def test_real_cpu_docker_preserves_exit_and_never_calls_fix(source, tmp_path, body, exit_code):
+        (source / "train.py").write_text(body + "\n")
+        result = watch_command(
+            ["python", "train.py"],
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == exit_code, result
+E       AssertionError: {'watch_id': 'd8292600f2d346b9b5be3ca8f4b0afe7', 'search_mode': 'until_target', 'allocator_conf': None, 'numerical_ref...all_batch', 'cpu_saved_tensor_limit_bytes': 17179869184, 'disk_saved_tensor_limit_bytes': 0, 'max_seconds': None}, ...}
+E       assert 125 == 0
+
+tests/test_watch.py:205: AssertionError
+_ test_real_cpu_docker_preserves_exit_and_never_calls_fix[raise SystemExit(7)-7] _
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_docker_preserves1/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_docker_preserves1')
+body = 'raise SystemExit(7)', exit_code = 7
+
+    @pytest.mark.parametrize(
+        "body,exit_code",
+        [
+            ("print('successful')", 0),
+            ("raise SystemExit(7)", 7),
+            ("print('CUDA out of memory')\nraise RuntimeError('other failure')", 1),
+            ("import torch\nraise torch.OutOfMemoryError('CPU out of memory')", 1),
+        ],
+    )
+    def test_real_cpu_docker_preserves_exit_and_never_calls_fix(source, tmp_path, body, exit_code):
+        (source / "train.py").write_text(body + "\n")
+        result = watch_command(
+            ["python", "train.py"],
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == exit_code, result
+E       AssertionError: {'watch_id': '94d3b2249939428a92769e52134f0729', 'search_mode': 'until_target', 'allocator_conf': None, 'numerical_ref...all_batch', 'cpu_saved_tensor_limit_bytes': 17179869184, 'disk_saved_tensor_limit_bytes': 0, 'max_seconds': None}, ...}
+E       assert 125 == 7
+
+tests/test_watch.py:205: AssertionError
+_ test_real_cpu_docker_preserves_exit_and_never_calls_fix[print('CUDA out of memory')\nraise RuntimeError('other failure')-1] _
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_docker_preserves2/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_docker_preserves2')
+body = "print('CUDA out of memory')\nraise RuntimeError('other failure')"
+exit_code = 1
+
+    @pytest.mark.parametrize(
+        "body,exit_code",
+        [
+            ("print('successful')", 0),
+            ("raise SystemExit(7)", 7),
+            ("print('CUDA out of memory')\nraise RuntimeError('other failure')", 1),
+            ("import torch\nraise torch.OutOfMemoryError('CPU out of memory')", 1),
+        ],
+    )
+    def test_real_cpu_docker_preserves_exit_and_never_calls_fix(source, tmp_path, body, exit_code):
+        (source / "train.py").write_text(body + "\n")
+        result = watch_command(
+            ["python", "train.py"],
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == exit_code, result
+E       AssertionError: {'watch_id': '28cce2f0dfad4e04817eca4efc01eeb3', 'search_mode': 'until_target', 'allocator_conf': None, 'numerical_ref...all_batch', 'cpu_saved_tensor_limit_bytes': 17179869184, 'disk_saved_tensor_limit_bytes': 0, 'max_seconds': None}, ...}
+E       assert 125 == 1
+
+tests/test_watch.py:205: AssertionError
+_ test_real_cpu_docker_preserves_exit_and_never_calls_fix[import torch\nraise torch.OutOfMemoryError('CPU out of memory')-1] _
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_docker_preserves3/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_docker_preserves3')
+body = "import torch\nraise torch.OutOfMemoryError('CPU out of memory')"
+exit_code = 1
+
+    @pytest.mark.parametrize(
+        "body,exit_code",
+        [
+            ("print('successful')", 0),
+            ("raise SystemExit(7)", 7),
+            ("print('CUDA out of memory')\nraise RuntimeError('other failure')", 1),
+            ("import torch\nraise torch.OutOfMemoryError('CPU out of memory')", 1),
+        ],
+    )
+    def test_real_cpu_docker_preserves_exit_and_never_calls_fix(source, tmp_path, body, exit_code):
+        (source / "train.py").write_text(body + "\n")
+        result = watch_command(
+            ["python", "train.py"],
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == exit_code, result
+E       AssertionError: {'watch_id': '00fe958f1f2d4ab49dcaa5105b146ca2', 'search_mode': 'until_target', 'allocator_conf': None, 'numerical_ref...all_batch', 'cpu_saved_tensor_limit_bytes': 17179869184, 'disk_saved_tensor_limit_bytes': 0, 'max_seconds': None}, ...}
+E       assert 125 == 1
+
+tests/test_watch.py:205: AssertionError
+___________ test_real_cpu_argv_and_interpreter_semantics[command0-0] ___________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_argv_and_interpr0/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_argv_and_interpr0')
+command = ['python', '-c', "print('inline')\nprint('second line')"], code = 0
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': '3476d16be6a94f65840475036a6c89fe', 'search_mode': 'until_target', 'allocator_conf': None, 'numerical_ref...all_batch', 'cpu_saved_tensor_limit_bytes': 17179869184, 'disk_saved_tensor_limit_bytes': 0, 'max_seconds': None}, ...}
+E       assert 125 == 0
+
+tests/test_watch.py:276: AssertionError
+___________ test_real_cpu_argv_and_interpreter_semantics[command1-9] ___________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_argv_and_interpr1/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_argv_and_interpr1')
+command = ['python', '-O', '-c', 'assert False; raise SystemExit(9)'], code = 9
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': 'b532ff3c49c94ec4b9885d2e69d8d4a2', 'search_mode': 'until_target', 'allocator_conf': None, 'numerical_ref...all_batch', 'cpu_saved_tensor_limit_bytes': 17179869184, 'disk_saved_tensor_limit_bytes': 0, 'max_seconds': None}, ...}
+E       assert 125 == 9
+
+tests/test_watch.py:276: AssertionError
+__________ test_real_cpu_argv_and_interpreter_semantics[command2-11] ___________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_argv_and_interpr2/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_argv_and_interpr2')
+command = ['python', '-I', '-c', 'raise SystemExit(11)'], code = 11
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': '10e3ab9d46104db788db71e7d31f6f87', 'search_mode': 'until_target', 'allocator_conf': None, 'numerical_ref...all_batch', 'cpu_saved_tensor_limit_bytes': 17179869184, 'disk_saved_tensor_limit_bytes': 0, 'max_seconds': None}, ...}
+E       assert 125 == 11
+
+tests/test_watch.py:276: AssertionError
+__________ test_real_cpu_argv_and_interpreter_semantics[command3-12] ___________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_argv_and_interpr3/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_argv_and_interpr3')
+command = ['python', '-S', '-c', 'raise SystemExit(12)'], code = 12
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': '045bb6b5f8f74448a1f6630b2db60118', 'search_mode': 'until_target', 'allocator_conf': None, 'numerical_ref...all_batch', 'cpu_saved_tensor_limit_bytes': 17179869184, 'disk_saved_tensor_limit_bytes': 0, 'max_seconds': None}, ...}
+E       assert 125 == 12
+
+tests/test_watch.py:276: AssertionError
+__________ test_real_cpu_argv_and_interpreter_semantics[command4-13] ___________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_argv_and_interpr4/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_argv_and_interpr4')
+command = ['/bin/sh', '-c', "printf 'plain command\n'; exit 13"], code = 13
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': '9a5c143843b54ef4bdce64b767211a31', 'search_mode': 'until_target', 'allocator_conf': None, 'numerical_ref...all_batch', 'cpu_saved_tensor_limit_bytes': 17179869184, 'disk_saved_tensor_limit_bytes': 0, 'max_seconds': None}, ...}
+E       assert 125 == 13
+
+tests/test_watch.py:276: AssertionError
+___________ test_real_cpu_argv_and_interpreter_semantics[command5-0] ___________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_argv_and_interpr5/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_argv_and_interpr5')
+command = ['/usr/bin/printf', '%s', 'literal;$(not-a-shell)'], code = 0
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': '5d9c7e3809dc445cb30a8682d2e7ff5c', 'search_mode': 'until_target', 'allocator_conf': None, 'numerical_ref...all_batch', 'cpu_saved_tensor_limit_bytes': 17179869184, 'disk_saved_tensor_limit_bytes': 0, 'max_seconds': None}, ...}
+E       assert 125 == 0
+
+tests/test_watch.py:276: AssertionError
+_____________ test_real_cpu_module_keeps_package_imports_and_argv ______________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_module_keeps_pac0/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_module_keeps_pac0')
+
+    def test_real_cpu_module_keeps_package_imports_and_argv(source, tmp_path):
+        package = source / "package"
+        package.mkdir()
+        (package / "__init__.py").write_text("")
+        (package / "helper.py").write_text("VALUE = 17\n")
+        (package / "entry.py").write_text(
+            "from .helper import VALUE\nimport sys\nassert sys.argv[1:] == ['literal;arg']\n"
+            "assert __package__ == 'package'\nraise SystemExit(VALUE)\n"
+        )
+        result = watch_command(
+            ["python", "-m", "package.entry", "literal;arg"],
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == 17 and result["lab"]["cleanup_verified"]
+E       assert (125 == 17)
+
+tests/test_watch.py:301: AssertionError
+__________ test_real_cpu_supported_flags_match_repair_lab_environment __________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_supported_flags_0/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_supported_flags_0')
+
+    def test_real_cpu_supported_flags_match_repair_lab_environment(source, tmp_path):
+        from headroom.lab.runner import run_script
+    
+        (source / "train.py").write_text(
+            "import json, sys\n"
+            "print('FLAGS:' + json.dumps([sys.flags.dont_write_bytecode, "
+            "sys.flags.no_user_site, sys.stdout.write_through, sys.argv[1:]]))\n"
+        )
+        arguments = ["literal;$(not-a-shell)"]
+        watched = watch_command(
+            ["python", "-uBs", "train.py", *arguments],
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+        replay = run_script(
+            source / "train.py",
+            script_args=arguments,
+            source_root=source,
+            run_root=tmp_path / "replay",
+            device="cpu",
+            max_seconds=30,
+        )
+    
+        def flags(path):
+            return next(
+                line for line in Path(path).read_text().splitlines() if line.startswith("FLAGS:")
+            )
+    
+>       assert watched["exit_code"] == 0 and watched["repair_supported"]
+E       assert (125 == 0)
+
+tests/test_watch.py:336: AssertionError
+_ test_real_cpu_wrapper_candidate_and_reference_apply_target_args_and_collect_sources[False] _
+
+wrapper_source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_wrapper_candidat0/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_wrapper_candidat0')
+inline = False
+
+    @pytest.mark.parametrize("inline", [False, True])
+    def test_real_cpu_wrapper_candidate_and_reference_apply_target_args_and_collect_sources(
+        wrapper_source,
+        tmp_path,
+        inline,
+    ):
+        from headroom.evidence import collect_sources
+    
+        arguments = ["--batch=8", "literal space;$(text)"]
+        command = (
+            ["/bin/sh", "-c", 'cd sub && exec python -O -m pkg.entry "$@"', "launcher", *arguments]
+            if inline
+            else ["/bin/sh", "launch.sh", *arguments]
+        )
+        baseline = run_argv(wrapper_source, command, run_root=tmp_path / "runs", device="cpu")
+>       assert baseline["status"] == "completed" and baseline["capture_complete"], baseline
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '2cbaf724646843569460c144da520624', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_wrapper_candidat0/runs/2cbaf724646843569460c144da520624', ...}
+E       assert ('error' == 'completed'
+E         
+E         - completed
+E         + error)
+
+tests/test_wrapper_execution.py:198: AssertionError
+_ test_real_cpu_wrapper_candidate_and_reference_apply_target_args_and_collect_sources[True] _
+
+wrapper_source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_wrapper_candidat1/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_wrapper_candidat1')
+inline = True
+
+    @pytest.mark.parametrize("inline", [False, True])
+    def test_real_cpu_wrapper_candidate_and_reference_apply_target_args_and_collect_sources(
+        wrapper_source,
+        tmp_path,
+        inline,
+    ):
+        from headroom.evidence import collect_sources
+    
+        arguments = ["--batch=8", "literal space;$(text)"]
+        command = (
+            ["/bin/sh", "-c", 'cd sub && exec python -O -m pkg.entry "$@"', "launcher", *arguments]
+            if inline
+            else ["/bin/sh", "launch.sh", *arguments]
+        )
+        baseline = run_argv(wrapper_source, command, run_root=tmp_path / "runs", device="cpu")
+>       assert baseline["status"] == "completed" and baseline["capture_complete"], baseline
+E       AssertionError: {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '5b1a991c2d5149f2ba0bbb2cf0336a79', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_wrapper_candidat1/runs/5b1a991c2d5149f2ba0bbb2cf0336a79', ...}
+E       assert ('error' == 'completed'
+E         
+E         - completed
+E         + error)
+
+tests/test_wrapper_execution.py:198: AssertionError
+___________ test_real_cpu_wrong_wrapper_target_fails_replay_matching ___________
+
+wrapper_source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_wrong_wrapper_ta0/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_wrong_wrapper_ta0')
+
+    def test_real_cpu_wrong_wrapper_target_fails_replay_matching(wrapper_source, tmp_path):
+        command = ["/bin/sh", "launch.sh", "--batch=8"]
+        baseline = run_argv(wrapper_source, command, run_root=tmp_path / "runs", device="cpu")
+        run = Path(baseline["run_dir"])
+>       prepared = prepare_captured_command(
+            run / "source", command, baseline, json.loads((run / "manifest.json").read_text())
+        )
+
+tests/test_wrapper_execution.py:246: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/execution.py:399: in prepare_captured_command
+    descriptor = captured_wrapper_descriptor(argv, capture, manifest)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+command = ('/bin/sh', 'launch.sh', '--batch=8')
+capture = {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': 'cb86b6c77f5041e38918bd8ebc48280d', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_wrong_wrapper_ta0/runs/cb86b6c77f5041e38918bd8ebc48280d', ...}
+manifest = {'source_root': '/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_wrong_wrapper_ta0/source', 'source': {'files': {'la...skipped': [], 'total_bytes': 245}, 'command': ['/bin/sh', 'launch.sh', '--batch=8'], 'target_argv_override': None, ...}
+
+    def captured_wrapper_descriptor(command, capture, manifest):
+        """Resolve an explicitly selected Python target, preserving its root launcher."""
+        inventory = capture.get("execution_capture", {})
+        selection = inventory.get("selection", {})
+        selected = capture.get("selected_capture_relative")
+        approved = (
+            inventory.get("complete") is True
+            and selection.get("status") in {"single", "unique_oom", "matched_replay"}
+            and selection.get("matching_target_count") == 1
+            and selection.get("selected_capture_relative") == selected
+            and isinstance(selected, str)
+        )
+        legacy_single = (
+            not selection
+            and inventory.get("single_python_entrypoint") is True
+            and inventory.get("captured_process_count") == 1
+        )
+        if not approved and not legacy_single:
+>           raise ValueError(
+                selection.get("reason") or inventory.get("reason") or "CAPTURE_ENTRYPOINT_AMBIGUOUS"
+            )
+E           ValueError: CAPTURE_ENTRYPOINT_AMBIGUOUS
+
+headroom/execution.py:268: ValueError
+________ test_real_cpu_multiple_python_entries_are_explicitly_ambiguous ________
+
+wrapper_source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_multiple_python_0/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_multiple_python_0')
+
+    def test_real_cpu_multiple_python_entries_are_explicitly_ambiguous(wrapper_source, tmp_path):
+        (wrapper_source / "launch.sh").write_text("cd sub\npython -m pkg.entry\npython -m pkg.entry\n")
+        command = ["/bin/sh", "launch.sh"]
+        result = run_argv(wrapper_source, command, run_root=tmp_path / "runs", device="cpu")
+>       assert result["execution_capture"]["captured_process_count"] == 2
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'execution_capture'
+
+tests/test_wrapper_execution.py:271: KeyError
+_ test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_report[False] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_watch_synthetic_oom_reach0')
+multiple = False
+
+    @pytest.mark.parametrize("multiple", [False, True])
+    def test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_report(
+        tmp_path, multiple
+    ):
+        """Synthetic CUDA/memory verdicts; actual capture and candidate argv are CPU Docker."""
+        from dataclasses import replace
+        from decimal import Decimal
+    
+        import httpx
+    
+        from headroom.config import RuntimeConfig, VerifiedCapabilities, candidate_models
+        from headroom.llm.client import TokenFactoryClient
+        from headroom.llm.cost import Pricing
+        from headroom.llm.router import LLMRouter
+        from headroom.orchestrator import Services, run_fix
+        from headroom.search import HARD_CHECKS
+        from headroom.store.db import Store
+        from headroom.watch import watch_command
+    
+        source = tmp_path / "flow-source"
+        source.mkdir()
+        (source / "launch.sh").write_text(
+            ('python -c "print(123)"\n' if multiple else "") + 'exec python -O train.py "$@"\n'
+        )
+        (source / "train.py").write_text(
+            "VALUE = 1\nimport json, sys\n"
+            "print('FLOW:' + json.dumps({'value': VALUE, 'args': sys.argv[1:]}))\n"
+            "if VALUE == 1:\n    raise RuntimeError('synthetic CPU failure')\n"
+        )
+        command = ["/bin/sh", "launch.sh", "--batch=8"]
+        calls, observed = [], []
+        store = Store(tmp_path / "flow.sqlite")
+        diagnosis = {
+            "root_causes": [
+                {
+                    "id": "c1",
+                    "title": "Offline fixture",
+                    "category": "activations",
+                    "bytes_gb": 2.0,
+                    "evidence_refs": ["stk_fixture"],
+                    "confidence": 0.9,
+                }
+            ],
+            "plan": [
+                {
+                    "fix_id": "f1",
+                    "type": "code",
+                    "title": "Fixture edit and batch",
+                    "description": "Synthetic workflow test only.",
+                    "expected_saving_gb": 1.0,
+                    "numerics_impact": "none",
+                    "throughput_impact": "none",
+                    "risk": "Offline fixture only.",
+                    "requires_policy": [],
+                }
+            ],
+            "verification": {"max_steps": 20, "compare_loss": True, "tolerance": 0.001},
+            "needs_more_info": False,
+            "notes": ["No real GPU acceptance is claimed."],
+        }
+        proposal = {
+            "diff": "diff --git a/train.py b/train.py\n--- a/train.py\n+++ b/train.py\n"
+            "@@ -1,5 +1,5 @@\n-VALUE = 1\n+VALUE = 2\n import json, sys\n"
+            " print('FLOW:' + json.dumps({'value': VALUE, 'args': sys.argv[1:]}))\n"
+            " if VALUE == 1:\n     raise RuntimeError('synthetic CPU failure')\n",
+            "env_changes": {},
+            "cli_changes": ["--batch=4"],
+            "notes": ["Offline fixture only."],
+        }
+    
+        def runtime(run_id, store, directory):
+            models = {
+                name: replace(
+                    spec,
+                    pricing=Pricing(Decimal(1), Decimal(2), verified=True, source="offline fixture"),
+                )
+                for name, spec in candidate_models().items()
+            }
+    
+            models["ultra"] = replace(
+                models["ultra"],
+                capabilities=VerifiedCapabilities(
+                    reasoning_method="chat_template_kwargs", evidence="offline mock only"
+                ),
+            )
+            models["super"] = replace(models["super"], capabilities=models["ultra"].capabilities)
+    
+            def respond(request):
+                body = json.loads(request.content)
+                calls.append(body)
+                payload = diagnosis if len(calls) == 1 else anchored_fixture(proposal, body)
+                return httpx.Response(
+                    200,
+                    json={
+                        "id": "offline-fixture",
+                        "object": "chat.completion",
+                        "created": 0,
+                        "model": body["model"],
+                        "choices": [
+                            {
+                                "index": 0,
+                                "finish_reason": "stop",
+                                "message": {
+                                    "role": "assistant",
+                                    "content": json.dumps(payload),
+                                },
+                            }
+                        ],
+                        "usage": {"prompt_tokens": 10, "completion_tokens": 10, "total_tokens": 20},
+                    },
+                )
+    
+            client = TokenFactoryClient(
+                config=RuntimeConfig(models=models), transport=httpx.MockTransport(respond)
+            )
+            return SimpleNamespace(
+                router=LLMRouter(client), client=client, evidence_token_budget=1000, close=client.close
+            )
+    
+        def synthetic_oom(result, *, watch=False):
+            assert result["capture_complete"] and result["cleanup_verified"]
+            assert result["execution"]["state"]["ExitCode"] == 1
+            return {
+                **result,
+                "status": "oom",
+                "termination_reason": "oom",
+                "oom": {"traceback": "Explicit synthetic OOM from a captured CPU exception"},
+                "env": {**result["env"], "device": "cuda" if watch else "cpu"},
+                "peak_allocated_bytes": 2_000_000_000,
+                "peak_alloc_gb": 2.0,
+            }
+    
+        def watch_lab(root, argv, **options):
+            options["device"] = "cpu"
+            raw = run_argv(root, argv, **options)
+            if multiple:
+                from test_multicapture import synthesize_unique_target_oom
+    
+                raw = synthesize_unique_target_oom(raw)
+            return synthetic_oom(raw, watch=True)
+    
+        def baseline(script, **options):
+            assert options["execution_argv"] == command
+            options["device"] = "cpu"
+            result = run_script(script, **options)
+            assert result["execution_replay"]["matched"]
+            return synthetic_oom(result)
+    
+        def evidence(run, *, output_dir, **options):
+            output_dir.mkdir(parents=True)
+            data = {
+                "sources": [{"path": "train.py"}],
+                "analysis": {"stack_catalog": {"stk_fixture": []}},
+            }
+            (output_dir / "evidence.json").write_text(json.dumps(data))
+            (output_dir / "evidence.md").write_text("Synthetic fixture stack stk_fixture.\n")
+            return {
+                "evidence_json": str(output_dir / "evidence.json"),
+                "evidence_md": str(output_dir / "evidence.md"),
+                "token_count": 10,
+                "analysis": data["analysis"],
+            }
+    
+        def verify(before, script, **options):
+            assert options["execution_argv"] == command
+            assert options["script_args"] == ("--batch", "4")
+            result = run_script(
+                script,
+                source_root=options["candidate_source_root"],
+                execution_argv=command,
+                execution_entrypoint=options["execution_entrypoint"],
+                script_args=options["script_args"],
+                run_root=options["run_root"],
+                device="cpu",
+            )
+            assert result["status"] == "completed" and result["execution_replay"]["matched"], result
+            output = (Path(result["run_dir"]) / "stdout.log").read_text()
+            assert json.loads(
+                next(line[5:] for line in output.splitlines() if line.startswith("FLOW:"))
+            ) == {"value": 2, "args": ["--batch", "4"]}
+            observed.append(result)
+            return {
+                "candidate": {**result, "peak_allocated_bytes": 1_000_000_000, "peak_alloc_gb": 1.0},
+                "reference": None,
+                "report": {
+                    "completed": True,
+                    "target_met": True,
+                    "loss_equivalence": "identical",
+                    "peak_before": 2.0,
+                    "peak_after": 1.0,
+                    "reduction_pct": 50.0,
+                    "notes": ["Synthetic memory/numerical verdict; CPU argv replay is measured."],
+                    "checks": {
+                        **dict.fromkeys(HARD_CHECKS, True),
+                        "parameter_count_unchanged": True,
+                        "numerical_acceptance": True,
+                        "loss_tolerance": True,
+                        "loss_decreases": True,
+                        "throughput_limit": None,
+                    },
+                },
+            }
+    
+        def repair(request, **options):
+            assert request.execution_entrypoint["root_argv"] == command
+            assert request.execution_entrypoint["script_args"] == ["--batch=8"]
+            assert request.repository_mode is False
+            return run_fix(
+                request.model_copy(update={"device": "cpu", "research_enabled": False}),
+                store=store,
+                services=Services(
+                    baseline=baseline,
+                    evidence=evidence,
+                    verify=verify,
+                    runtime_factory=runtime,
+                    provenance="offline_fixture",
+                ),
+                **options,
+            )
+    
+        try:
+>           result = watch_command(
+                command,
+                source_root=source,
+                run_root=tmp_path / "watch",
+                device="cuda",
+                lab_runner=watch_lab,
+                fix_runner=repair,
+            )
+
+tests/test_wrapper_execution.py:498: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/watch.py:112: in watch_command
+    result = (lab_runner or run_argv)(
+tests/test_wrapper_execution.py:416: in watch_lab
+    return synthetic_oom(raw, watch=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '7ea5373e97bd4f72a3530f3c36ea4256', 'run_dir': '/tmp/pyt...-201/test_watch_synthetic_oom_reach0/watch/38acdfc7b2b64765ae2b8090298463a6/lab/7ea5373e97bd4f72a3530f3c36ea4256', ...}
+watch = True
+
+    def synthetic_oom(result, *, watch=False):
+>       assert result["capture_complete"] and result["cleanup_verified"]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'capture_complete'
+
+tests/test_wrapper_execution.py:397: KeyError
+_ test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_report[True] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_watch_synthetic_oom_reach1')
+multiple = True
+
+    @pytest.mark.parametrize("multiple", [False, True])
+    def test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_report(
+        tmp_path, multiple
+    ):
+        """Synthetic CUDA/memory verdicts; actual capture and candidate argv are CPU Docker."""
+        from dataclasses import replace
+        from decimal import Decimal
+    
+        import httpx
+    
+        from headroom.config import RuntimeConfig, VerifiedCapabilities, candidate_models
+        from headroom.llm.client import TokenFactoryClient
+        from headroom.llm.cost import Pricing
+        from headroom.llm.router import LLMRouter
+        from headroom.orchestrator import Services, run_fix
+        from headroom.search import HARD_CHECKS
+        from headroom.store.db import Store
+        from headroom.watch import watch_command
+    
+        source = tmp_path / "flow-source"
+        source.mkdir()
+        (source / "launch.sh").write_text(
+            ('python -c "print(123)"\n' if multiple else "") + 'exec python -O train.py "$@"\n'
+        )
+        (source / "train.py").write_text(
+            "VALUE = 1\nimport json, sys\n"
+            "print('FLOW:' + json.dumps({'value': VALUE, 'args': sys.argv[1:]}))\n"
+            "if VALUE == 1:\n    raise RuntimeError('synthetic CPU failure')\n"
+        )
+        command = ["/bin/sh", "launch.sh", "--batch=8"]
+        calls, observed = [], []
+        store = Store(tmp_path / "flow.sqlite")
+        diagnosis = {
+            "root_causes": [
+                {
+                    "id": "c1",
+                    "title": "Offline fixture",
+                    "category": "activations",
+                    "bytes_gb": 2.0,
+                    "evidence_refs": ["stk_fixture"],
+                    "confidence": 0.9,
+                }
+            ],
+            "plan": [
+                {
+                    "fix_id": "f1",
+                    "type": "code",
+                    "title": "Fixture edit and batch",
+                    "description": "Synthetic workflow test only.",
+                    "expected_saving_gb": 1.0,
+                    "numerics_impact": "none",
+                    "throughput_impact": "none",
+                    "risk": "Offline fixture only.",
+                    "requires_policy": [],
+                }
+            ],
+            "verification": {"max_steps": 20, "compare_loss": True, "tolerance": 0.001},
+            "needs_more_info": False,
+            "notes": ["No real GPU acceptance is claimed."],
+        }
+        proposal = {
+            "diff": "diff --git a/train.py b/train.py\n--- a/train.py\n+++ b/train.py\n"
+            "@@ -1,5 +1,5 @@\n-VALUE = 1\n+VALUE = 2\n import json, sys\n"
+            " print('FLOW:' + json.dumps({'value': VALUE, 'args': sys.argv[1:]}))\n"
+            " if VALUE == 1:\n     raise RuntimeError('synthetic CPU failure')\n",
+            "env_changes": {},
+            "cli_changes": ["--batch=4"],
+            "notes": ["Offline fixture only."],
+        }
+    
+        def runtime(run_id, store, directory):
+            models = {
+                name: replace(
+                    spec,
+                    pricing=Pricing(Decimal(1), Decimal(2), verified=True, source="offline fixture"),
+                )
+                for name, spec in candidate_models().items()
+            }
+    
+            models["ultra"] = replace(
+                models["ultra"],
+                capabilities=VerifiedCapabilities(
+                    reasoning_method="chat_template_kwargs", evidence="offline mock only"
+                ),
+            )
+            models["super"] = replace(models["super"], capabilities=models["ultra"].capabilities)
+    
+            def respond(request):
+                body = json.loads(request.content)
+                calls.append(body)
+                payload = diagnosis if len(calls) == 1 else anchored_fixture(proposal, body)
+                return httpx.Response(
+                    200,
+                    json={
+                        "id": "offline-fixture",
+                        "object": "chat.completion",
+                        "created": 0,
+                        "model": body["model"],
+                        "choices": [
+                            {
+                                "index": 0,
+                                "finish_reason": "stop",
+                                "message": {
+                                    "role": "assistant",
+                                    "content": json.dumps(payload),
+                                },
+                            }
+                        ],
+                        "usage": {"prompt_tokens": 10, "completion_tokens": 10, "total_tokens": 20},
+                    },
+                )
+    
+            client = TokenFactoryClient(
+                config=RuntimeConfig(models=models), transport=httpx.MockTransport(respond)
+            )
+            return SimpleNamespace(
+                router=LLMRouter(client), client=client, evidence_token_budget=1000, close=client.close
+            )
+    
+        def synthetic_oom(result, *, watch=False):
+            assert result["capture_complete"] and result["cleanup_verified"]
+            assert result["execution"]["state"]["ExitCode"] == 1
+            return {
+                **result,
+                "status": "oom",
+                "termination_reason": "oom",
+                "oom": {"traceback": "Explicit synthetic OOM from a captured CPU exception"},
+                "env": {**result["env"], "device": "cuda" if watch else "cpu"},
+                "peak_allocated_bytes": 2_000_000_000,
+                "peak_alloc_gb": 2.0,
+            }
+    
+        def watch_lab(root, argv, **options):
+            options["device"] = "cpu"
+            raw = run_argv(root, argv, **options)
+            if multiple:
+                from test_multicapture import synthesize_unique_target_oom
+    
+                raw = synthesize_unique_target_oom(raw)
+            return synthetic_oom(raw, watch=True)
+    
+        def baseline(script, **options):
+            assert options["execution_argv"] == command
+            options["device"] = "cpu"
+            result = run_script(script, **options)
+            assert result["execution_replay"]["matched"]
+            return synthetic_oom(result)
+    
+        def evidence(run, *, output_dir, **options):
+            output_dir.mkdir(parents=True)
+            data = {
+                "sources": [{"path": "train.py"}],
+                "analysis": {"stack_catalog": {"stk_fixture": []}},
+            }
+            (output_dir / "evidence.json").write_text(json.dumps(data))
+            (output_dir / "evidence.md").write_text("Synthetic fixture stack stk_fixture.\n")
+            return {
+                "evidence_json": str(output_dir / "evidence.json"),
+                "evidence_md": str(output_dir / "evidence.md"),
+                "token_count": 10,
+                "analysis": data["analysis"],
+            }
+    
+        def verify(before, script, **options):
+            assert options["execution_argv"] == command
+            assert options["script_args"] == ("--batch", "4")
+            result = run_script(
+                script,
+                source_root=options["candidate_source_root"],
+                execution_argv=command,
+                execution_entrypoint=options["execution_entrypoint"],
+                script_args=options["script_args"],
+                run_root=options["run_root"],
+                device="cpu",
+            )
+            assert result["status"] == "completed" and result["execution_replay"]["matched"], result
+            output = (Path(result["run_dir"]) / "stdout.log").read_text()
+            assert json.loads(
+                next(line[5:] for line in output.splitlines() if line.startswith("FLOW:"))
+            ) == {"value": 2, "args": ["--batch", "4"]}
+            observed.append(result)
+            return {
+                "candidate": {**result, "peak_allocated_bytes": 1_000_000_000, "peak_alloc_gb": 1.0},
+                "reference": None,
+                "report": {
+                    "completed": True,
+                    "target_met": True,
+                    "loss_equivalence": "identical",
+                    "peak_before": 2.0,
+                    "peak_after": 1.0,
+                    "reduction_pct": 50.0,
+                    "notes": ["Synthetic memory/numerical verdict; CPU argv replay is measured."],
+                    "checks": {
+                        **dict.fromkeys(HARD_CHECKS, True),
+                        "parameter_count_unchanged": True,
+                        "numerical_acceptance": True,
+                        "loss_tolerance": True,
+                        "loss_decreases": True,
+                        "throughput_limit": None,
+                    },
+                },
+            }
+    
+        def repair(request, **options):
+            assert request.execution_entrypoint["root_argv"] == command
+            assert request.execution_entrypoint["script_args"] == ["--batch=8"]
+            assert request.repository_mode is False
+            return run_fix(
+                request.model_copy(update={"device": "cpu", "research_enabled": False}),
+                store=store,
+                services=Services(
+                    baseline=baseline,
+                    evidence=evidence,
+                    verify=verify,
+                    runtime_factory=runtime,
+                    provenance="offline_fixture",
+                ),
+                **options,
+            )
+    
+        try:
+>           result = watch_command(
+                command,
+                source_root=source,
+                run_root=tmp_path / "watch",
+                device="cuda",
+                lab_runner=watch_lab,
+                fix_runner=repair,
+            )
+
+tests/test_wrapper_execution.py:498: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/watch.py:112: in watch_command
+    result = (lab_runner or run_argv)(
+tests/test_wrapper_execution.py:415: in watch_lab
+    raw = synthesize_unique_target_oom(raw)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = {'status': 'error', 'reason': 'PREPARATION_FAILED', 'run_id': '9a79e51c8e594c52806cefd5566f59a6', 'run_dir': '/tmp/pyt...-201/test_watch_synthetic_oom_reach1/watch/06c159d87f6f42eb8c9c401f98a3d61e/lab/9a79e51c8e594c52806cefd5566f59a6', ...}
+
+    def synthesize_unique_target_oom(result):
+        """Relabel only a copied test capture; preserve original CPU evidence beside it."""
+        run = Path(result["run_dir"])
+        manifest = json.loads((run / "manifest.json").read_text())
+        records, _ = runner._read_capture_roster(run, manifest)
+>       target = next(
+            row
+            for row in records
+            if (
+                (row["capture"] or {}).get("execution_entrypoint", {}).get("main_file")
+                == "/source/train.py"
+            )
+        )
+E       StopIteration
+
+tests/test_multicapture.py:125: StopIteration
+___________ test_real_cpu_executable_wrapper_preserves_non_oom_exit ____________
+
+wrapper_source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_executable_wrapp0/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_executable_wrapp0')
+
+    def test_real_cpu_executable_wrapper_preserves_non_oom_exit(wrapper_source, tmp_path):
+        from headroom.watch import watch_command
+    
+        launcher = wrapper_source / "launch.sh"
+        launcher.write_text("#!/bin/sh\n" + launcher.read_text())
+        launcher.chmod(0o755)
+        entry = wrapper_source / "sub/pkg/entry.py"
+        entry.write_text(entry.read_text() + "raise SystemExit(7)\n")
+        result = watch_command(
+            ["./launch.sh", "--batch=8"],
+            source_root=wrapper_source,
+            run_root=tmp_path / "watch",
+            device="cpu",
+            fix_runner=lambda *a, **k: pytest.fail("Non-OOM must not repair"),
+        )
+>       assert result["exit_code"] == result["original_exit_code"] == 7
+E       assert 125 == 7
+
+tests/test_wrapper_execution.py:540: AssertionError
+_ test_real_cpu_verify_runner_overrides_wrapper_candidate_and_small_batch_reference[False] _
+
+wrapper_source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_verify_runner_ov0/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_verify_runner_ov0')
+module = False
+
+    @pytest.mark.parametrize("module", [False, True])
+    def test_real_cpu_verify_runner_overrides_wrapper_candidate_and_small_batch_reference(
+        wrapper_source,
+        tmp_path,
+        module,
+    ):
+        from headroom.verify.runner import verify_script
+    
+        script = wrapper_source / ("sub/pkg/entry.py" if module else "train.py")
+        if not module:
+            (wrapper_source / "launch.sh").write_text('exec python -O train.py "$@"\n')
+        script.write_text(
+            "import argparse, torch\n"
+            "p = argparse.ArgumentParser()\np.add_argument('--batch', type=int, default=8)\n"
+            "args = p.parse_args()\n"
+            "model = torch.nn.Linear(1, 1)\nopt = torch.optim.SGD(model.parameters(), lr=0.01)\n"
+            "x = torch.ones(args.batch, 1)\n"
+            "for _ in range(30):\n"
+            "    opt.zero_grad()\n    loss = model(x).square().mean()\n"
+            "    loss.backward()\n    opt.step()\n"
+        )
+        command = ["/bin/sh", "launch.sh", "--batch", "8"]
+        captured = run_argv(wrapper_source, command, run_root=tmp_path / "runs", device="cpu")
+>       assert captured["status"] == "completed" and captured["steps"] == 20
+E       AssertionError: assert ('error' == 'completed'
+E         
+E         - completed
+E         + error)
+
+tests/test_wrapper_execution.py:568: AssertionError
+_ test_real_cpu_verify_runner_overrides_wrapper_candidate_and_small_batch_reference[True] _
+
+wrapper_source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_verify_runner_ov1/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-201/test_real_cpu_verify_runner_ov1')
+module = True
+
+    @pytest.mark.parametrize("module", [False, True])
+    def test_real_cpu_verify_runner_overrides_wrapper_candidate_and_small_batch_reference(
+        wrapper_source,
+        tmp_path,
+        module,
+    ):
+        from headroom.verify.runner import verify_script
+    
+        script = wrapper_source / ("sub/pkg/entry.py" if module else "train.py")
+        if not module:
+            (wrapper_source / "launch.sh").write_text('exec python -O train.py "$@"\n')
+        script.write_text(
+            "import argparse, torch\n"
+            "p = argparse.ArgumentParser()\np.add_argument('--batch', type=int, default=8)\n"
+            "args = p.parse_args()\n"
+            "model = torch.nn.Linear(1, 1)\nopt = torch.optim.SGD(model.parameters(), lr=0.01)\n"
+            "x = torch.ones(args.batch, 1)\n"
+            "for _ in range(30):\n"
+            "    opt.zero_grad()\n    loss = model(x).square().mean()\n"
+            "    loss.backward()\n    opt.step()\n"
+        )
+        command = ["/bin/sh", "launch.sh", "--batch", "8"]
+        captured = run_argv(wrapper_source, command, run_root=tmp_path / "runs", device="cpu")
+>       assert captured["status"] == "completed" and captured["steps"] == 20
+E       AssertionError: assert ('error' == 'completed'
+E         
+E         - completed
+E         + error)
+
+tests/test_wrapper_execution.py:568: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_command_replay.py::test_real_cpu_repair_backend_preserves_flags_imports_argv_and_source_context[False]
+FAILED tests/test_command_replay.py::test_real_cpu_repair_backend_preserves_flags_imports_argv_and_source_context[True]
+FAILED tests/test_hf_cache.py::test_real_docker_reads_local_hf_config_and_cannot_modify_cache
+FAILED tests/test_hf_trainer.py::test_three_cpu_scenarios_match_wrapper_and_injected_command[sgd]
+FAILED tests/test_hf_trainer.py::test_three_cpu_scenarios_match_wrapper_and_injected_command[adamw]
+FAILED tests/test_hf_trainer.py::test_three_cpu_scenarios_match_wrapper_and_injected_command[hf_trainer]
+FAILED tests/test_in_backward_adamw.py::test_twenty_cpu_updates_match_every_parameter_and_optimizer_state[options0]
+FAILED tests/test_in_backward_adamw.py::test_twenty_cpu_updates_match_every_parameter_and_optimizer_state[options1]
+FAILED tests/test_in_backward_adamw.py::test_twenty_cpu_updates_match_every_parameter_and_optimizer_state[options2]
+FAILED tests/test_in_backward_adamw.py::test_parameter_callbacks_do_not_inflate_lab_logical_updates
+FAILED tests/test_in_backward_adamw.py::test_unsupported_usage_fails_instead_of_silently_claiming_equivalence
+FAILED tests/test_lab_deadline.py::test_real_cpu_soft_timeout_retains_complete_capture_and_readonly_clock
+FAILED tests/test_lab_deadline.py::test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline[ignored]
+FAILED tests/test_lab_deadline.py::test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline[blocked]
+FAILED tests/test_lab_deadline.py::test_real_cpu_parent_and_late_child_share_deadline
+FAILED tests/test_lab_deadline.py::test_real_cpu_clock_mismatch_stops_before_user_main
+FAILED tests/test_lab_deadline.py::test_real_cpu_natural_no_optimizer_exit_remains_completed_zero_steps
+FAILED tests/test_lab_deadline.py::test_real_cpu_swallowed_soft_timeout_cannot_become_completed[0]
+FAILED tests/test_lab_deadline.py::test_real_cpu_swallowed_soft_timeout_cannot_become_completed[20]
+FAILED tests/test_lab_deadline.py::test_real_cpu_completed_helper_then_soft_timeout_is_timeout
+FAILED tests/test_lab_deadline.py::test_descendant_timeout_cannot_mask_other_root_or_capture_failures[0-False-False]
+FAILED tests/test_lab_deadline.py::test_descendant_timeout_cannot_mask_other_root_or_capture_failures[7-False-False]
+FAILED tests/test_lab_deadline.py::test_descendant_timeout_cannot_mask_other_root_or_capture_failures[1-True-False]
+FAILED tests/test_lab_deadline.py::test_descendant_timeout_cannot_mask_other_root_or_capture_failures[1-False-True]
+FAILED tests/test_lab_finalize.py::test_real_cpu_hard_stop_during_serialization_keeps_partial_timeout
+FAILED tests/test_multicapture.py::test_root_exit_timeout_and_cleanup_cannot_be_hidden[1-False-False-True-oom]
+FAILED tests/test_multicapture.py::test_root_exit_timeout_and_cleanup_cannot_be_hidden[42-False-False-True-oom]
+FAILED tests/test_multicapture.py::test_root_exit_timeout_and_cleanup_cannot_be_hidden[0-False-False-True-error]
+FAILED tests/test_multicapture.py::test_root_exit_timeout_and_cleanup_cannot_be_hidden[7-False-False-True-error]
+FAILED tests/test_multicapture.py::test_root_exit_timeout_and_cleanup_cannot_be_hidden[137-False-True-True-error]
+FAILED tests/test_multicapture.py::test_root_exit_timeout_and_cleanup_cannot_be_hidden[124-True-False-True-timeout]
+FAILED tests/test_multicapture.py::test_root_exit_timeout_and_cleanup_cannot_be_hidden[1-False-False-False-error]
+FAILED tests/test_multicapture.py::test_direct_fix_cannot_accept_completed_primary_with_failed_helper
+FAILED tests/test_multicapture.py::test_real_cpu_helper_and_training_replay_target_args_and_reference[False]
+FAILED tests/test_multicapture.py::test_real_cpu_helper_and_training_replay_target_args_and_reference[True]
+FAILED tests/test_multicapture.py::test_real_cpu_python_parent_watch_hands_off_child_source
+FAILED tests/test_pairing.py::test_real_cpu_default_verifier_produces_auditable_pairing[s1]
+FAILED tests/test_pairing.py::test_real_cpu_default_verifier_produces_auditable_pairing[s3]
+FAILED tests/test_pairing.py::test_real_cpu_default_verifier_produces_auditable_pairing[s4]
+FAILED tests/test_pairing.py::test_real_cpu_s1_same_seed_different_batch_is_not_paired
+FAILED tests/test_precision_integration.py::test_cpu_compiled_training_remains_usable_without_precision_mode[jit]
+FAILED tests/test_precision_integration.py::test_cpu_compiled_training_remains_usable_without_precision_mode[compiled]
+FAILED tests/test_runner.py::test_adamw_steps_and_all_three_seeds_are_deterministic
+FAILED tests/test_runner.py::test_command_mode_captures_real_optimizer_steps
+FAILED tests/test_runner.py::test_keys_absent_and_source_read_only - Assertio...
+FAILED tests/test_runner.py::test_infinite_loop_timeout_30_seconds_cleans_container_and_children
+FAILED tests/test_runner.py::test_full_cpp_symbolization_dependency_is_available_without_cuda
+FAILED tests/test_subprocess_reference.py::test_three_real_cpu_pairs_use_independent_subprocess_controller[sgd]
+FAILED tests/test_subprocess_reference.py::test_three_real_cpu_pairs_use_independent_subprocess_controller[adamw]
+FAILED tests/test_subprocess_reference.py::test_three_real_cpu_pairs_use_independent_subprocess_controller[hf_trainer]
+FAILED tests/test_subprocess_reference.py::test_real_cpu_child_has_no_network_secret_or_write_escape_and_hf_cache_is_readonly
+FAILED tests/test_subprocess_reference.py::test_real_cpu_ignored_signal_is_hard_stopped_and_container_removed
+FAILED tests/test_subprocess_reference.py::test_real_cpu_nonzero_target_exit_is_not_rewritten_as_success
+FAILED tests/test_subprocess_reference.py::test_real_cpu_normal_exit_reaps_background_process_group
+FAILED tests/test_verify_checkpoint_reference.py::test_real_cpu_wrapper_attests_transformed_source_original_argv_and_twenty_updates
+FAILED tests/test_verify_runner.py::test_cpu_pair_is_identical_and_half_model_is_rejected
+FAILED tests/test_watch.py::test_real_cpu_docker_preserves_exit_and_never_calls_fix[print('successful')-0]
+FAILED tests/test_watch.py::test_real_cpu_docker_preserves_exit_and_never_calls_fix[raise SystemExit(7)-7]
+FAILED tests/test_watch.py::test_real_cpu_docker_preserves_exit_and_never_calls_fix[print('CUDA out of memory')\nraise RuntimeError('other failure')-1]
+FAILED tests/test_watch.py::test_real_cpu_docker_preserves_exit_and_never_calls_fix[import torch\nraise torch.OutOfMemoryError('CPU out of memory')-1]
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command0-0]
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command1-9]
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command2-11]
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command3-12]
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command4-13]
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command5-0]
+FAILED tests/test_watch.py::test_real_cpu_module_keeps_package_imports_and_argv
+FAILED tests/test_watch.py::test_real_cpu_supported_flags_match_repair_lab_environment
+FAILED tests/test_wrapper_execution.py::test_real_cpu_wrapper_candidate_and_reference_apply_target_args_and_collect_sources[False]
+FAILED tests/test_wrapper_execution.py::test_real_cpu_wrapper_candidate_and_reference_apply_target_args_and_collect_sources[True]
+FAILED tests/test_wrapper_execution.py::test_real_cpu_wrong_wrapper_target_fails_replay_matching
+FAILED tests/test_wrapper_execution.py::test_real_cpu_multiple_python_entries_are_explicitly_ambiguous
+FAILED tests/test_wrapper_execution.py::test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_report[False]
+FAILED tests/test_wrapper_execution.py::test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_report[True]
+FAILED tests/test_wrapper_execution.py::test_real_cpu_executable_wrapper_preserves_non_oom_exit
+FAILED tests/test_wrapper_execution.py::test_real_cpu_verify_runner_overrides_wrapper_candidate_and_small_batch_reference[False]
+FAILED tests/test_wrapper_execution.py::test_real_cpu_verify_runner_overrides_wrapper_candidate_and_small_batch_reference[True]
+ERROR tests/test_precision_integration.py::test_actual_cpu_forward_observations_are_persisted
+ERROR tests/test_precision_integration.py::test_bf16_baseline_and_candidate_use_bf16_tolerance_without_precision_change
+ERROR tests/test_precision_integration.py::test_fp32_to_bf16_is_an_observed_change_requiring_existing_policy_permission
+ERROR tests/test_precision_integration.py::test_unsupported_precision_stays_unknown_and_cannot_select_relaxed_tolerance
+77 failed, 2878 passed, 4 errors in 188.55s (0:03:08)

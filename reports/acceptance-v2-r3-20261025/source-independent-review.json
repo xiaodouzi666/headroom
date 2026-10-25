@@ -1,0 +1,63 @@
+{
+  "schema": "headroom.source-independent-review.v1",
+  "observed_utc": "2026-10-25T11:43:20.500493+00:00",
+  "reviewer": "research_memory_policy_solution",
+  "mode": "read_only_source_review",
+  "candidate_pins": [
+    {
+      "path": ".cache/annotation-taxonomy-r3-draft/candidate.patch",
+      "sha256": "bad7a3a25dfaeab925a5baa4415e690997d2cc8a31b4c6a0a593fdb32acb5545",
+      "bytes": 11285
+    },
+    {
+      "path": ".cache/verification-stage-r3-draft/candidate.patch",
+      "sha256": "2007a2d42237bc75990f2b605e362622c984b6ce4b151d48686b3a20b0005511",
+      "bytes": 19720
+    },
+    {
+      "path": ".cache/explicit-cli-batch-r3-draft/candidate.patch",
+      "sha256": "5f67426453f64acce073d1f790db75f01546c54a5f5f6f3df591fbec83889de4",
+      "bytes": 9352
+    },
+    {
+      "path": ".cache/patcher-output-r3-draft/candidate.patch",
+      "sha256": "4ecfbb7c9cbc88a6f74e99e60cb99ce46001e75cc20b3be10298b7327a121438",
+      "bytes": 22642
+    }
+  ],
+  "reviews": [
+    {
+      "candidate": "annotation-taxonomy-r3-draft",
+      "blocking_findings": [],
+      "assessment": "Neutral frame-position index and generic ownership guidance; no heuristic answer transported. Raw retained frames stay unchanged and the extra view has its own 8 KiB escaped bound."
+    },
+    {
+      "candidate": "verification-stage-r3-draft",
+      "blocking_findings": [],
+      "assessment": "Only exact schema-owned assessment fields of existing blocked current-plan fixes get corrective feedback. needs_more_info, policy gates and supplement count are unchanged."
+    },
+    {
+      "candidate": "explicit-cli-batch-r3-draft",
+      "blocking_findings": [],
+      "assessment": "Only two explicit, unique, positive ASCII-integer canonical flags are compared after existing merge semantics. Aliases, missing and unknown values are not inferred."
+    },
+    {
+      "candidate": "patcher-output-r3-draft",
+      "blocking_findings": [],
+      "assessment": "Patcher thinking disabled with unchanged 4000 cap and provider reservation. Isolated Ruff receives source on stdin, ignores repository configuration and cannot execute target code; unavailable checker fails closed."
+    }
+  ],
+  "model_calls": 0,
+  "gpu_runs": 0,
+  "production_source_writes": 0,
+  "tests_rerun_by_reviewer": false,
+  "test_claim_scope": "Peer-reported focused checks were not independently rerun; root owns integrated full qualification.",
+  "limitations": [
+    "Candidate-patch review does not certify complete integrated-main equivalence, image compatibility, live efficacy or acceptance scores.",
+    "Annotation content/view bounds are serialization bounds, not a complete peak-RAM bound.",
+    "Incremental F821 is a static name diagnostic, not execution or semantic equivalence proof.",
+    "NAME_CHECK_UNAVAILABLE stops the current PatchEngine internal retry loop, not all Orchestrator rounds.",
+    "Common-4000 study remains private and deferred from R3; no ablation acceptance claimed."
+  ],
+  "conclusion": "No blocking source issue identified in these four pinned candidates."
+}

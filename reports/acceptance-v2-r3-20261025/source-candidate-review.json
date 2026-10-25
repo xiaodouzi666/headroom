@@ -1,0 +1,270 @@
+{
+  "schema": "headroom.r3_source_candidates_offline_review.v1",
+  "created_at_utc": "2026-10-25T11:32:31.735252+00:00",
+  "scope": "Frozen candidate receipts and retained-input offline replay; separate from integration/full regression and future live acceptance",
+  "new_provider_calls": 0,
+  "new_tavily_calls": 0,
+  "new_gpu_runs": 0,
+  "raw_requests_or_reasoning_copied": false,
+  "historical_scores_recomputed": false,
+  "semantic_accuracy_improvement": null,
+  "future_target_success": null,
+  "components": [
+    {
+      "name": "annotation_taxonomy",
+      "focused_passed": 38,
+      "scope": "Storage-role taxonomy and bounded neutral frame-position view; no heuristic labels, category bytes or manual answers are supplied",
+      "unchanged_functions": [
+        "_compact",
+        "_escaped_size",
+        "_bounded_text",
+        "_bounded_frame",
+        "_frame_indices",
+        "_frame_ranges",
+        "annotation_payload",
+        "_selected_stacks",
+        "annotation_fingerprint",
+        "bind_stack_annotations"
+      ],
+      "retained_input_replay": {
+        "run_id": "adc7e667237f46a5a9f71a619fab5c31",
+        "selected_stacks": 10,
+        "retained_frames": 818,
+        "all_frames_complete": true,
+        "original_raw_payload_byte_identical": true,
+        "view_records": 10,
+        "view_escaped_bytes": 2578,
+        "actual_mock_sdk_wire_bytes": 130696,
+        "capture_status": "captured",
+        "reasoning": false,
+        "output_cap": 3000
+      },
+      "limitations": [
+        "MockTransport with synthetic unknown labels; semantic accuracy not measured",
+        "Unchanged agreement metric/80% requirement; heuristic agreement is not independent ground truth",
+        "Workspace/retained-graph ambiguity can legitimately remain disagreement",
+        "Wire bounds do not establish a total annotation-process RAM bound"
+      ]
+    },
+    {
+      "name": "verification_stage",
+      "focused_passed": 112,
+      "scope": "Exact current-plan prospective-assessment field gets machine feedback in the existing finite supplement loop; retained args and placement-policy invariants clarified",
+      "retained_input_replay": [
+        {
+          "run_id": "174e8c3851d54317b1bd7eb8de75edb7",
+          "actual_diagnosis_call_id": 517,
+          "http_payload_status": "captured",
+          "request_fields": [
+            "plan[0].throughput_impact"
+          ],
+          "runtime_input_status": "unsupported",
+          "before": {
+            "issues": [],
+            "requires_supplement": false,
+            "needs_more_info": true
+          },
+          "after": {
+            "issues": [
+              "PLAN_ASSESSMENT_IS_NOT_OBSERVED_INPUT"
+            ],
+            "requires_supplement": true,
+            "needs_more_info": true,
+            "ready_for_patch": false
+          },
+          "diagnosis_unchanged": true
+        },
+        {
+          "run_id": "e3005dc58ffd4a46aa8a9032807f80c1",
+          "actual_diagnosis_call_id": 520,
+          "http_payload_status": "captured",
+          "request_fields": [
+            "plan[0].numerics_impact"
+          ],
+          "runtime_input_status": "unsupported",
+          "before": {
+            "issues": [
+              "NUMERICS_CHANGE_FORBIDDEN"
+            ],
+            "requires_supplement": true,
+            "needs_more_info": true
+          },
+          "after": {
+            "issues": [
+              "PLAN_ASSESSMENT_IS_NOT_OBSERVED_INPUT",
+              "NUMERICS_CHANGE_FORBIDDEN"
+            ],
+            "requires_supplement": true,
+            "needs_more_info": true,
+            "ready_for_patch": false
+          },
+          "diagnosis_unchanged": true
+        }
+      ],
+      "limitations": [
+        "No response rewritten or needs_more_info cleared",
+        "Genuine source/weighting/RNG/reference/policy prerequisites stay unknown",
+        "All original validators, savings threshold and runtime gates retained",
+        "Visible source/complete invocation is not measured runtime configuration"
+      ]
+    },
+    {
+      "name": "explicit_cli_batch_product",
+      "focused_passed": 137,
+      "scope": "Check explicit unique supported positive-decimal batch/accumulation factors before candidate preparation, after existing CLI merge",
+      "retained_input_replay": {
+        "run_id": "cc76ed8d31b246ae96cff4593a39dedf",
+        "actual_patch_call_id": 532,
+        "actual_cli_complete": true,
+        "original_recorded_status": "applied",
+        "before_allowed": true,
+        "after_allowed": false,
+        "before_factors": [
+          32,
+          1
+        ],
+        "before_product": 32,
+        "after_factors": [
+          20,
+          64
+        ],
+        "after_product": 1280,
+        "error_code": "EFFECTIVE_BATCH_CHANGED",
+        "original_artifact_unchanged": true
+      },
+      "limitations": [
+        "Explicit argv arithmetic only; no user parser or target executed",
+        "Missing defaults/aliases/non-integers keep their original unknown boundary",
+        "No manual replacement answer injected; existing finite patch repair handles the error",
+        "Equal products still require runtime and mathematical verification"
+      ]
+    }
+  ],
+  "candidate_source_pins": [
+    {
+      "component": "stage",
+      "path": "headroom/evidence_blockers.py",
+      "sha256": "fafe677f73c01450bf20896a200a2ae2e29727301ecb44c3221ddecc56bed01c",
+      "basis": "frozen candidate bytes"
+    },
+    {
+      "component": "stage",
+      "path": "headroom/prompts/diagnose.md",
+      "sha256": "6eba8899ccd993a068765edb34fe26ace23f41e2e8dea3e4eaf417abb42c3e89",
+      "basis": "frozen candidate bytes"
+    },
+    {
+      "component": "stage",
+      "path": "headroom/diagnose.py",
+      "sha256": "23ace94b47332668c260f224a133b6a21b2a15d34c6fdb93098abc7c462053bb",
+      "basis": "frozen candidate bytes"
+    },
+    {
+      "component": "stage",
+      "path": "tests/test_verification_stage.py",
+      "sha256": "d3024ef6f28c878f4370841df237aa065589b5093ac361147536654086baf51b",
+      "basis": "frozen candidate bytes"
+    },
+    {
+      "component": "cli",
+      "path": "headroom/verify/policy.py",
+      "sha256": "d7fea99c1c6478753496b873d620df5b2ca42a8851380218b3d48d774010c3e0",
+      "basis": "frozen candidate bytes"
+    },
+    {
+      "component": "cli",
+      "path": "tests/test_explicit_cli_batch.py",
+      "sha256": "8eca1a929b69499410e75b9f4873184dd6d637cdf0dd176573006a805b7a6000",
+      "basis": "frozen candidate bytes"
+    },
+    {
+      "component": "annotation",
+      "path": "headroom/annotate.py",
+      "sha256": "577c43873069376e1d6b01d181365ba68f52fff2eed26a722bc1ee1542662101",
+      "basis": "frozen candidate bytes"
+    }
+  ],
+  "evidence_artifact_pins": [
+    {
+      "component": "annotation",
+      "path": ".cache/annotation-taxonomy-r3-draft/candidate.patch",
+      "sha256": "bad7a3a25dfaeab925a5baa4415e690997d2cc8a31b4c6a0a593fdb32acb5545"
+    },
+    {
+      "component": "annotation",
+      "path": ".cache/annotation-taxonomy-r3-draft/candidate-receipt.json",
+      "sha256": "fd736d0064118b529816ffc788a4cbe97c4a02976e6a5a26cc99387a2df64b1d"
+    },
+    {
+      "component": "stage",
+      "path": ".cache/verification-stage-r3-draft/candidate.patch",
+      "sha256": "2007a2d42237bc75990f2b605e362622c984b6ce4b151d48686b3a20b0005511"
+    },
+    {
+      "component": "stage",
+      "path": ".cache/verification-stage-r3-draft/candidate-receipt.json",
+      "sha256": "c0afe26e07b6ab0d0a30f6d9031c16a076e57901bb5b99142c210129eff9090e"
+    },
+    {
+      "component": "cli",
+      "path": ".cache/explicit-cli-batch-r3-draft/candidate.patch",
+      "sha256": "5f67426453f64acce073d1f790db75f01546c54a5f5f6f3df591fbec83889de4"
+    },
+    {
+      "component": "cli",
+      "path": ".cache/explicit-cli-batch-r3-draft/candidate-receipt.json",
+      "sha256": "bae175b38b4a440919a36af7a05424d3716042f93675e3a0a1578fc6d36aed72"
+    },
+    {
+      "component": "annotation",
+      "path": ".cache/annotation-taxonomy-r3-draft/actual-s1-offline-replay.json",
+      "sha256": "c569416a960fcaead27550d442e523f4355e88d53cd46c4a5690f260d10ee191"
+    },
+    {
+      "component": "stage",
+      "path": ".cache/verification-stage-r3-draft/actual-request-replay.json",
+      "sha256": "6647ff2e9e732e6926a3f65325a2b1bdda0f6853e2cfee1a0863fad0b462fa18"
+    },
+    {
+      "component": "cli",
+      "path": ".cache/explicit-cli-batch-r3-draft/actual-cli-replay.json",
+      "sha256": "d1a9583f1a7a8c58e80a693ba4d448472a16934779dd41cf602c6b2ad9a5e1e5"
+    },
+    {
+      "component": "annotation",
+      "path": ".cache/annotation-taxonomy-r3-draft/focused.log",
+      "sha256": "ef7b377a4b3848616aa3cdb45ab3eee372508e19f0e6043e89c7a4292eb580bd"
+    },
+    {
+      "component": "stage",
+      "path": ".cache/verification-stage-r3-draft/focused-s8-first.log",
+      "sha256": "562abd0f37a547d1c9b7eb6c35c79c23103969324127ef2627e8b246a67d9e7f"
+    },
+    {
+      "component": "cli",
+      "path": ".cache/explicit-cli-batch-r3-draft/focused-final.log",
+      "sha256": "3d2dd9ae10abc448d93b6603a2af00efc03c75276fc55066c8b64001e6917a98"
+    }
+  ],
+  "retained_original_evidence": [
+    {
+      "path": "runs/evaluation/live/20261025T104308792414Z-88c59353/jobs/cc76ed8d31b246ae96cff4593a39dedf/rounds/01/patch-result.json",
+      "sha256": "0a75b05c3e6afd81180d19da245248d49a4368c9281cb153d3bbdc29616643b1",
+      "scope": "unchanged original applied-result bytes"
+    },
+    {
+      "path": "runs/headroom.db#llm_calls:532:data_json",
+      "sha256": "0ce8757f1c986c4b3cbb4acc6ac1507ee2f120fb392a6254c59af012538d0dd8",
+      "scope": "raw call-record bytes hash only; contents not published"
+    }
+  ],
+  "additional_readonly_review": {
+    "component": "completed_original_baseline_context",
+    "path": ".cache/completed-baseline-context-r3/candidate.patch",
+    "sha256": "3fe5162a985d9d6936210f40168b563d8bd4bdd30514a99206f4728610f9e847",
+    "result": "No remaining blocking issue after count-only naming correction",
+    "observed_count_field": "loss_scalar_count_matches_logical_updates",
+    "claim_limit": "Count equality does not certify per-update scalar alignment; candidate pairing/equivalence remain unknown",
+    "tests_repeated_by_this_review": false
+  }
+}

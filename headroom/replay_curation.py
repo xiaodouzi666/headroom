@@ -92,6 +92,7 @@ def _allowed_asset(relative):
         r"evidence/(before|after)/(evidence(?:\.unannotated-[0-9a-f]{32})?\.(json|md)|timeline\.png)",
         r"rounds/0[1-6]/verification\.json",
         r"rounds/0[1-6]/patches/[A-Za-z0-9_-]+/patch\.diff",
+        r"rounds/0[1-6]/patches/patch-engine-[0-9a-f]{32}/attempt-[1-4]/patch-[0-9a-f]{32}/patch\.diff",
         r"rounds/0[1-6]/evidence/(evidence\.(json|md)|timeline\.png)",
         r"configurations/round-0[1-6]/(patch\.diff|env\.sh|cli\.json|manifest\.json)",
     )

@@ -236,6 +236,37 @@ def validate_evidence_requests(diagnosis, evidence):
     for number, request in enumerate(diagnosis.evidence_requests):
         scope = request.blocking_scope
         blocked = request.blocked_plan_ids
+        # Exact schema-owned plan assessments are not observed input fields.
+        # Do not infer intent from request.detail or change needs_more_info.
+        if diagnosis.needs_more_info and scope == "current_plan":
+            for plan_index, step in enumerate(diagnosis.plan):
+                assessment_fields = {
+                    f"plan[{plan_index}].numerics_impact",
+                    f"plan[{plan_index}].throughput_impact",
+                    f"/plan/{plan_index}/numerics_impact",
+                    f"/plan/{plan_index}/throughput_impact",
+                }
+                if request.field in assessment_fields and step.fix_id in blocked:
+                    issue(
+                        "PLAN_ASSESSMENT_IS_NOT_OBSERVED_INPUT",
+                        number,
+                        "This field is a prospective plan assessment, not a measured input. "
+                        "Candidate loss/throughput verification remains pending and mandatory. "
+                        "State supported intended invariants and verification risks; if a real "
+                        "source, policy, weighting, RNG or reference prerequisite is missing, "
+                        "request that exact prerequisite instead. No result is presumed passing.",
+                    )
+                    observations.append(
+                        {
+                            "code": "PLAN_ASSESSMENT_IS_NOT_OBSERVED_INPUT",
+                            "request_index": number,
+                            "field": request.field,
+                            "plan_id": step.fix_id,
+                            "observation": "plan assessment field, not observed telemetry",
+                            "candidate_measurement": "not_established_by_this_check",
+                            "genuine_prerequisite_status": "unverified",
+                        }
+                    )
         if (
             len(set(blocked)) != len(blocked)
             or any(identifier not in fixes for identifier in blocked)

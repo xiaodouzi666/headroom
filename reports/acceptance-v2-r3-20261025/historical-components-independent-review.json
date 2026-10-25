@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-10-25T12:05:42.661066+00:00",
+  "scope": "Historical R2 component review; not full T2.2/T2.4 acceptance or R3 score",
+  "run_id": "adc7e667237f46a5a9f71a619fab5c31",
+  "source_commit": "3e8281e1a344a469b025133897aad4d1c6c23e40",
+  "independent_checks": {
+    "campaign_store_audit_agree": true,
+    "exact_11_call_budget_attempt_joins": true,
+    "all_attempts_settled_and_dispatched": true,
+    "historical_file_bytes_unchanged": true
+  },
+  "round_outcomes": [
+    {
+      "round": 1,
+      "decision": "revert",
+      "patch_applied": true,
+      "candidate_completed": false
+    },
+    {
+      "round": 2,
+      "decision": "keep",
+      "patch_applied": true,
+      "candidate_completed": true
+    }
+  ],
+  "model_cost_component": {
+    "supported": true,
+    "known_actual_usd": "0.16662104",
+    "unknown_actual_calls": 1,
+    "retained_unknown_usd": "0.00238788",
+    "verified_upper_usd": "0.16900892",
+    "ceiling_usd": "1.2",
+    "within_ceiling": true,
+    "actual_total_known": false,
+    "roles": {
+      "annotate": 1,
+      "diagnose": 2,
+      "patcher": 3,
+      "super": 5
+    },
+    "accounting_scope": "Model token ledger only. Tavily credits separate; no verified USD conversion/all-provider invoice."
+  },
+  "numerical_basis": "baseline_derived_checkpoint_first_five_backward_scalars",
+  "full_twenty_loss_equivalence_claimed": false,
+  "research_components": {
+    "status": "partial",
+    "stop_reason": "tool_call_limit",
+    "successful_search_calls": 4,
+    "store_research_rows": 4,
+    "extract_calls": 0,
+    "cache_hits": 0,
+    "tavily_credits": 4,
+    "tavily_usd": null,
+    "runtime_torch_version": "2.5.1+cu124",
+    "sources_count": 8,
+    "version_match_true_count": 0,
+    "checkpoint_url_in_sources": true,
+    "torch_2_5_checkpoint_url_in_sources": false,
+    "matched_version_extract_proved": false,
+    "zero_credit_repeat_cache_proved": false,
+    "whole_T2_2_accepted": false
+  },
+  "s5": {
+    "run_id": "174e8c3851d54317b1bd7eb8de75edb7",
+    "status": "needs_human",
+    "sources_count": 0,
+    "research_rows": 0,
+    "research_artifacts": 0,
+    "cuda_sources_gate": "open"
+  },
+  "counts_toward_r3": false,
+  "source_evidence": [
+    {
+      "path": "reports/acceptance-v2-r3-20261025/budget-multiround-component.json",
+      "sha256": "067d774ad8885f586f11976f9cc124d94b561574159e5b5a59b2c6e2782f16f1"
+    },
+    {
+      "path": "runs/evaluation/live/20261025T104308792414Z-88c59353/campaign.json",
+      "sha256": "00c984eaf91bf76b244d3f1aa95752be7c392198832300eafffe4d8247d7c0e8"
+    },
+    {
+      "path": "reports/acceptance-v2-r2-20261025/independent-audit-public.json",
+      "sha256": "9862acc8d7b8b555beecc4c4dc177cdc983626c7c51618ae3ce220ee34795731"
+    },
+    {
+      "path": "runs/evaluation/live/20261025T104308792414Z-88c59353/jobs/adc7e667237f46a5a9f71a619fab5c31/report.json",
+      "sha256": "e681afbae2eacfbe695569a9bacda76dca7162e3567fd8b3fadf3cd5f999caa8"
+    },
+    {
+      "path": "runs/evaluation/live/20261025T104308792414Z-88c59353/jobs/adc7e667237f46a5a9f71a619fab5c31/report.md",
+      "sha256": "011abb15956f5bd1cea11b5a550f7cfa2a661b395e4c69c8469dcba3ddd38d45"
+    },
+    {
+      "path": "runs/evaluation/live/20261025T104308792414Z-88c59353/jobs/adc7e667237f46a5a9f71a619fab5c31/rounds/02/research-checkpoint.json",
+      "sha256": "163784725391b213f2743810fe8b0ae25a264f86b66548352786787ece34194d"
+    },
+    {
+      "path": "runs/evaluation/live/20261025T104308792414Z-88c59353/jobs/174e8c3851d54317b1bd7eb8de75edb7/report.json",
+      "sha256": "54a58fd573d93d9a406988f3c85c194edc262894cfce893ebacfb9a82dea9810"
+    },
+    {
+      "path": "runs/evaluation/live/20261025T104308792414Z-88c59353/jobs/174e8c3851d54317b1bd7eb8de75edb7/report.md",
+      "sha256": "8369d3c682f082d5cfbfdfa8cacf4ec424d64816fb8bf4f2a8684637fe7867d4"
+    }
+  ],
+  "actions": {
+    "new_model_calls": 0,
+    "new_tavily_calls": 0,
+    "new_gpu_runs": 0,
+    "production_test_edits": 0,
+    "historical_edits": 0
+  },
+  "limitations": [
+    "Small-budget and daily-cap refusal tests remain separate.",
+    "Numerical basis covers first five backward scalars, not twenty-loss equivalence.",
+    "No research text, request/cache identifiers, transcript or private credentials published."
+  ]
+}
