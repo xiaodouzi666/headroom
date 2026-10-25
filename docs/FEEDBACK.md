@@ -431,3 +431,5 @@ Final MVPv4 recorded9 research rows with8 actualAPI calls and7 reportedcredits. 
 ## Source-span component observation — 2026-10-25
 
 Super returned source-span IDs and full SHA correctly. The first response included an unchanged second edit and was rejected; its repair added an unreachable duplicate return alongside the requested docstring. The exact source-to-candidate chain and compile passed, while the independent docstring-only AST invariant failed. Two calls cost $0.0013896 in total. Range IDs solve placement and copying ambiguity; they do not establish semantic correctness. Failed artifacts remain in runs/acceptance/source-span-patch-component-20261025-v1 and the public component report remains accepted=false.
+
+Source-span component follow-up: clarifying docstring-only/no duplicated statements yielded an accepted single response. New call $0.0006405; family total $0.0020301 across three calls. Prior failure retained; no benchmark success inferred.
