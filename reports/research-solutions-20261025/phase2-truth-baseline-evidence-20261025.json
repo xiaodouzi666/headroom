@@ -1,0 +1,664 @@
+{
+  "schema": "headroom.independent-truth-review.v1",
+  "created_at": "2026-10-25T10:30:09.692587+00:00",
+  "scope": "Original source/manifests, baseline results and raw JSON allocator history only; no model diagnosis or candidate patch, model call or GPU rerun.",
+  "method": "Replay alloc/free_completed by address in device_traces[0]; sum event size (requested bytes). Copy live set at maximum. Exact source frames identify allocation origins, not individual autograd-saved tensors. Native counters stay authoritative. Group end-snapshot inactive blocks by whether segment also has an active block.",
+  "recommendations": [
+    {
+      "scenario_id": "nanogpt",
+      "future_first_cause": "activations",
+      "confidence": "high for initial FP32 training OOM only"
+    },
+    {
+      "scenario_id": "hf_trainer",
+      "future_first_cause": "activations",
+      "confidence": "high for initial FP32 training OOM only; future optimizer-state risk separate"
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "future_first_cause": null,
+      "confidence": "harmful fragmentation unresolved; keep unverified"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "runs/nanogpt-lab-validation/5e5566267e7b45a3a7e6f75fe738ed08/result.json",
+      "sha256": "6cfac974425952e7f768db6075d26768aa37909e95459383f19d9dce1ce1f5cb",
+      "bytes": 9748
+    },
+    {
+      "path": "runs/nanogpt-lab-validation/5e5566267e7b45a3a7e6f75fe738ed08/manifest.json",
+      "sha256": "ce47baf81ddac08cbd88f21b13d0a0e4c82fe591f33f71c925e2c9c991eefc6d",
+      "bytes": 2459
+    },
+    {
+      "path": "runs/nanogpt-lab-validation/5e5566267e7b45a3a7e6f75fe738ed08/artifacts/snapshot.json",
+      "sha256": "7573be91fbf3620b9e90f565997ac248a8bbec030567e4edf2310f6adcef42d9",
+      "bytes": 42459542
+    },
+    {
+      "path": "runs/hf-full-baseline-20261024/77c5ef8e0948458688116ff68f38c586/result.json",
+      "sha256": "958b27f6092eb9e7c7aab125321f88af6bc974228467176c8e30b2c0a60719a0",
+      "bytes": 11712
+    },
+    {
+      "path": "runs/hf-full-baseline-20261024/77c5ef8e0948458688116ff68f38c586/manifest.json",
+      "sha256": "209b58dff6c8de05f24f9dd8adb64de7da15e7635817cf3147757c904fc0ed6e",
+      "bytes": 1537
+    },
+    {
+      "path": "runs/hf-full-baseline-20261024/77c5ef8e0948458688116ff68f38c586/artifacts/snapshot.json",
+      "sha256": "6b3e79cf705f8aef7b646ce3db2d559972300c35431e771db5d021b3d6ef6fe9",
+      "bytes": 31778352
+    },
+    {
+      "path": "runs/evaluation/live/20261025T095016638167Z-ad191318/jobs/b8849438af8443f0aa4717e859f4b4aa/lab/4c5d3ed8619340cbabe08ae470b1c51b/result.json",
+      "sha256": "15e3a9d1685664174f1f63f6f830d485ad6600e89c248ce25ef6fb534201b1bd",
+      "bytes": 36206
+    },
+    {
+      "path": "runs/evaluation/live/20261025T095016638167Z-ad191318/jobs/b8849438af8443f0aa4717e859f4b4aa/lab/4c5d3ed8619340cbabe08ae470b1c51b/manifest.json",
+      "sha256": "6e9174b18734c6126d9d7abf135e8b0c06a0ff730c0a33432a997542939b0711",
+      "bytes": 2667
+    },
+    {
+      "path": "runs/evaluation/live/20261025T095016638167Z-ad191318/jobs/b8849438af8443f0aa4717e859f4b4aa/lab/4c5d3ed8619340cbabe08ae470b1c51b/artifacts/snapshot.json",
+      "sha256": "998214bd3fd8fb59096c5076d0375a2f4a60931331ee83bda5f5a931449e77d7",
+      "bytes": 994439
+    }
+  ],
+  "rows": [
+    {
+      "scenario_id": "nanogpt",
+      "baseline_run_id": "5e5566267e7b45a3a7e6f75fe738ed08",
+      "status": "oom",
+      "completed_updates": 0,
+      "torch": "2.5.1+cu124",
+      "native_peak_allocated_bytes": 24705183744,
+      "native_peak_reserved_bytes": 24752685056,
+      "trace_requested_bytes_peak": 24705183744,
+      "requested_vs_native_peak_delta_bytes": 0,
+      "trace_event_counts": {
+        "segment_alloc": 95,
+        "alloc": 1023,
+        "free_requested": 728,
+        "free_completed": 728,
+        "oom": 1
+      },
+      "trace_reconstruction_errors": [],
+      "forward_origin_requested_bytes_at_trace_peak": 23286259712,
+      "forward_fraction_of_requested_trace_peak": 0.9425657365392149,
+      "optimizer_origin_requested_bytes_at_trace_peak": 0,
+      "snapshot_final_state_bytes": {
+        "active_allocated": 24705183744,
+        "inactive": 47501312
+      },
+      "snapshot_final_inactive_split_bytes": 47501312,
+      "snapshot_final_wholly_inactive_segment_bytes": 0,
+      "parameter_count": 354599936,
+      "oom": {
+        "requested_bytes": 536870912,
+        "free_bytes": 105775104,
+        "requested_source": "allocator_oom_event",
+        "free_source": "allocator_oom_event",
+        "requested_gb": 0.536870912,
+        "free_gb": 0.105775104
+      },
+      "source_checks": [
+        {
+          "path": "configurator.py",
+          "sha256": "5cc23aca26b4ab3c0d9e5f82740f4781f9444f42718c15abcee70d93c5aabe8f",
+          "matches_manifest": true
+        },
+        {
+          "path": "model.py",
+          "sha256": "7c01703240dbec5d554527dc666e35b3df8391d0b117fddc07afcf325a21d11c",
+          "matches_manifest": true
+        },
+        {
+          "path": "train.py",
+          "sha256": "413bd97b40bb400a2a0d01230e2946f056c263ebac1b7281c2367d964a123085",
+          "matches_manifest": true
+        },
+        {
+          "path": "data/headroom_synthetic/train.bin",
+          "sha256": "33b9c92bced223a2efe20aaa4fae4311f2dcb5be5189c3755f3215c099b8403c",
+          "matches_manifest": true
+        },
+        {
+          "path": "data/headroom_synthetic/val.bin",
+          "sha256": "7add555e1e0a9b9da1084c953804b5e1c91a0b18f67dcd202b18838f6e710b32",
+          "matches_manifest": true
+        }
+      ],
+      "top_source_origins": [
+        {
+          "requested_bytes": 5905580032,
+          "frames": [
+            {
+              "filename": "/source/model.py",
+              "line": 88,
+              "name": "forward"
+            },
+            {
+              "filename": "/source/model.py",
+              "line": 105,
+              "name": "forward"
+            },
+            {
+              "filename": "/source/model.py",
+              "line": 181,
+              "name": "forward"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 5368709120,
+          "frames": [
+            {
+              "filename": "/source/model.py",
+              "line": 89,
+              "name": "forward"
+            },
+            {
+              "filename": "/source/model.py",
+              "line": 105,
+              "name": "forward"
+            },
+            {
+              "filename": "/source/model.py",
+              "line": 181,
+              "name": "forward"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 4462739456,
+          "frames": [
+            {
+              "filename": "/source/model.py",
+              "line": 56,
+              "name": "forward"
+            },
+            {
+              "filename": "/source/model.py",
+              "line": 104,
+              "name": "forward"
+            },
+            {
+              "filename": "/source/model.py",
+              "line": 181,
+              "name": "forward"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 1499463680,
+          "frames": [
+            {
+              "filename": "/source/model.py",
+              "line": 64,
+              "name": "forward"
+            },
+            {
+              "filename": "/source/model.py",
+              "line": 104,
+              "name": "forward"
+            },
+            {
+              "filename": "/source/model.py",
+              "line": 181,
+              "name": "forward"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 1479278592,
+          "frames": [
+            {
+              "filename": "/source/model.py",
+              "line": 27,
+              "name": "forward"
+            },
+            {
+              "filename": "/source/model.py",
+              "line": 104,
+              "name": "forward"
+            },
+            {
+              "filename": "/source/model.py",
+              "line": 181,
+              "name": "forward"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 1479278592,
+          "frames": [
+            {
+              "filename": "/source/model.py",
+              "line": 27,
+              "name": "forward"
+            },
+            {
+              "filename": "/source/model.py",
+              "line": 105,
+              "name": "forward"
+            },
+            {
+              "filename": "/source/model.py",
+              "line": 181,
+              "name": "forward"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 1476395008,
+          "frames": [
+            {
+              "filename": "/source/model.py",
+              "line": 104,
+              "name": "forward"
+            },
+            {
+              "filename": "/source/model.py",
+              "line": 181,
+              "name": "forward"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 300,
+              "name": "<module>"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 1418399744,
+          "frames": [
+            {
+              "filename": "/source/train.py",
+              "line": 193,
+              "name": "<module>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "hf_trainer",
+      "baseline_run_id": "77c5ef8e0948458688116ff68f38c586",
+      "status": "oom",
+      "completed_updates": 0,
+      "torch": "2.5.1+cu124",
+      "native_peak_allocated_bytes": 24805119488,
+      "native_peak_reserved_bytes": 24826085376,
+      "trace_requested_bytes_peak": 24805101708,
+      "requested_vs_native_peak_delta_bytes": 17780,
+      "trace_event_counts": {
+        "segment_alloc": 139,
+        "alloc": 642,
+        "free_requested": 144,
+        "free_completed": 144,
+        "segment_free": 1,
+        "oom": 1
+      },
+      "trace_reconstruction_errors": [],
+      "forward_origin_requested_bytes_at_trace_peak": 23360249896,
+      "forward_fraction_of_requested_trace_peak": 0.9417518287565008,
+      "optimizer_origin_requested_bytes_at_trace_peak": 0,
+      "snapshot_final_state_bytes": {
+        "active_allocated": 24134160896,
+        "inactive": 689827328
+      },
+      "snapshot_final_inactive_split_bytes": 689827328,
+      "snapshot_final_wholly_inactive_segment_bytes": 0,
+      "parameter_count": 354823168,
+      "oom": {
+        "requested_bytes": 268435456,
+        "free_bytes": 68026368,
+        "requested_source": "allocator_oom_event",
+        "free_source": "allocator_oom_event",
+        "requested_gb": 0.268435456,
+        "free_gb": 0.068026368
+      },
+      "source_checks": [
+        {
+          "path": "headroom.yaml",
+          "sha256": "7b482e2b7849ab2ec25ec546c931caec06b922fccab37acb319916f23bc4a5e3",
+          "matches_manifest": true
+        },
+        {
+          "path": "train.py",
+          "sha256": "7d3a714264fc76371c1183da125ec0ffa550bc78c68bbe2acd7868870684923a",
+          "matches_manifest": true
+        }
+      ],
+      "top_source_origins": [
+        {
+          "requested_bytes": 7516192768,
+          "frames": [
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 209,
+              "name": "_attn"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 332,
+              "name": "forward"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 615,
+              "name": "forward"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 7516192768,
+          "frames": [
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/activations.py",
+              "line": 56,
+              "name": "forward"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 576,
+              "name": "forward"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 652,
+              "name": "forward"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 1879048192,
+          "frames": [
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 575,
+              "name": "forward"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 652,
+              "name": "forward"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 1132,
+              "name": "forward"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 1444458592,
+          "frames": [
+            {
+              "filename": "/source/train.py",
+              "line": 99,
+              "name": "main"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 108,
+              "name": "<module>"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 1073741856,
+          "frames": [
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 187,
+              "name": "_attn"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 332,
+              "name": "forward"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 615,
+              "name": "forward"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 1073741828,
+          "frames": [
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 203,
+              "name": "_attn"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 332,
+              "name": "forward"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 615,
+              "name": "forward"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 1073741824,
+          "frames": [
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 184,
+              "name": "_attn"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 332,
+              "name": "forward"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 615,
+              "name": "forward"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 537919488,
+          "frames": [
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 614,
+              "name": "forward"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 1132,
+              "name": "forward"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/transformers/models/gpt2/modeling_gpt2.py",
+              "line": 1271,
+              "name": "forward"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "baseline_run_id": "4c5d3ed8619340cbabe08ae470b1c51b",
+      "status": "completed",
+      "completed_updates": 20,
+      "torch": "2.5.1+cu124",
+      "native_peak_allocated_bytes": 5021758464,
+      "native_peak_reserved_bytes": 19824377856,
+      "trace_requested_bytes_peak": 5020708900,
+      "requested_vs_native_peak_delta_bytes": 1049564,
+      "trace_event_counts": {
+        "segment_alloc": 91,
+        "alloc": 2186,
+        "free_requested": 2133,
+        "free_completed": 2133
+      },
+      "trace_reconstruction_errors": [],
+      "forward_origin_requested_bytes_at_trace_peak": 4167041024,
+      "forward_fraction_of_requested_trace_peak": 0.8299706489655275,
+      "optimizer_origin_requested_bytes_at_trace_peak": 0,
+      "snapshot_final_state_bytes": {
+        "inactive": 19124731904,
+        "active_allocated": 699645952
+      },
+      "snapshot_final_inactive_split_bytes": 527187968,
+      "snapshot_final_wholly_inactive_segment_bytes": 18597543936,
+      "parameter_count": 50362368,
+      "oom": {},
+      "source_checks": [
+        {
+          "path": "README.md",
+          "sha256": "1b2ad48efa0a028085df544da14237acc402814fc8e02c9bc34f74c5ffac1d2e",
+          "matches_manifest": true
+        },
+        {
+          "path": "train.py",
+          "sha256": "627d24ee9e62601455e37f29166df8abe73a43b9e82382a293feec3a6b558169",
+          "matches_manifest": true
+        }
+      ],
+      "top_source_origins": [
+        {
+          "requested_bytes": 4167041024,
+          "frames": [
+            {
+              "filename": "/source/train.py",
+              "line": 92,
+              "name": "forward"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 118,
+              "name": "run"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 67,
+              "name": "main"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 499126304,
+          "frames": []
+        },
+        {
+          "requested_bytes": 100761600,
+          "frames": [
+            {
+              "filename": "/source/train.py",
+              "line": 82,
+              "name": "__init__"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 99,
+              "name": "run"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 67,
+              "name": "main"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 100687872,
+          "frames": [
+            {
+              "filename": "/source/train.py",
+              "line": 84,
+              "name": "__init__"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 99,
+              "name": "run"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 67,
+              "name": "main"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 76546048,
+          "frames": [
+            {
+              "filename": "/source/train.py",
+              "line": 117,
+              "name": "run"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 67,
+              "name": "main"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 146,
+              "name": "<module>"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 76546048,
+          "frames": [
+            {
+              "filename": "/source/train.py",
+              "line": 119,
+              "name": "run"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 67,
+              "name": "main"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 146,
+              "name": "<module>"
+            }
+          ]
+        },
+        {
+          "requested_bytes": 4,
+          "frames": [
+            {
+              "filename": "/source/train.py",
+              "line": 120,
+              "name": "run"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 67,
+              "name": "main"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 146,
+              "name": "<module>"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "production_changes": false,
+  "historical_rescoring": false
+}

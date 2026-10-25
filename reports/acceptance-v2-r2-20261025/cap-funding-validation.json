@@ -1,0 +1,110 @@
+{
+  "preparation_base_commit": "aa42ef502c2eb6e361b1f8e904d4dbfdeb354d8c",
+  "patches": [
+    {
+      "name": "ultra-16384.patch",
+      "sha256": "ef1bb740b3eaaab4c9245345abd1442b5ef6afa821e24b3fdda73135c96889db"
+    },
+    {
+      "name": "standalone-probe-retirement.patch",
+      "sha256": "661c72cce323c752cc06a647e5015f9e86e88b850411962e741e1a6d422ed851"
+    }
+  ],
+  "source_pins": [
+    {
+      "path": "headroom/diagnose.py",
+      "base_sha256": "7ecb52759f9be7b2cded5af5d7b4b6bf5ec510d66eae0f550fc0a346a6ef33ae",
+      "proposed_sha256": "b939a929b94720f1b16a88a17c8c780e974f548e17836d51cb209057eb8cc6fd"
+    },
+    {
+      "path": "headroom/prompts/diagnose.md",
+      "base_sha256": "36b92fbeb38a07a50ccf106217610f4a9f9e06eaa60447aa5b34920f45ad28db",
+      "proposed_sha256": "eaf7aa92d42328dd5251b9c8e3ec8c5ae15c7150c53620ce229793c81855f4c0"
+    },
+    {
+      "path": "tests/test_diagnosis_bounded_repair.py",
+      "base_sha256": "17766ef11bf5d71cd0038aa39513d6effadc5b220d50180c51f37d95ac0d47bf",
+      "proposed_sha256": "7ec232f68e112fa4b7761d5fe2ad3a10acd0bea2cadf34de581c08359aed688b"
+    },
+    {
+      "path": "tests/test_diagnosis_acceptance.py",
+      "base_sha256": "0405fa800809c703c8fc927ac67b7ba6eb9d1c8a02023989e625699c29633e30",
+      "proposed_sha256": "80c36e142bd12f057d8a60d92a63088f5dd63e57eefdf6762eada6d02c1ea70a"
+    },
+    {
+      "path": "tests/test_diagnosis_schema_constraints.py",
+      "base_sha256": "d3fb6c3973efd5bdf9dc0869358938157106041934c9d9c14c387b123862dd08",
+      "proposed_sha256": "97a2d8ece58e8f2392c73ad1ae15a829850e84a42a32834b8046e9747f66ae6d"
+    },
+    {
+      "path": "tests/test_reasoning_request_budget.py",
+      "base_sha256": "8c395f20890e4fb167067f06dce5d391f24985428c101a305f3c009982eecb81",
+      "proposed_sha256": "4aeb4ca6d34ded86dcd16d5fc380e7d54061d8b3a62206d9dcd1c1273f35d58f"
+    },
+    {
+      "path": "tests/test_actual_usage_budget.py",
+      "base_sha256": "98e90cad7a49da47a3f23e776ec5f3771ef5da2d543792d3116e04afc2259f6e",
+      "proposed_sha256": "30dbf08d3403f917233b64f9d398bfc1e8d418ed57d7e5c2b09b0b42bf075def"
+    },
+    {
+      "path": "tests/test_evidence_blockers.py",
+      "base_sha256": "0974ddbc5be10d5d03854d68c4cff96f542a7108949ad03734ae2d03d11d3398",
+      "proposed_sha256": "dff1f7092d83b73d6918660219f4b496bd1a36a362a0776c9744106af1b56f3a"
+    },
+    {
+      "path": "scripts/probe_models.py",
+      "base_sha256": "ca4eafdb316e5b43cdb8cbb66f040d366c6bca44d03d01503bb7b5d7dcf5c03b",
+      "proposed_sha256": "8256f7be0cc698aec1661ccf858a253b1040b0f2c3f3aab74b9ba7c01353398d"
+    },
+    {
+      "path": "tests/test_model_probe.py",
+      "base_sha256": "5b4037b0a224eeb6a9ecd247d1565e67a8de9e4fc26b85d06cef09eebb3d5997",
+      "proposed_sha256": "ec1f2452505e8f1d801aa1a7582588e18a167cd5d9cacdb05507c07d95442787"
+    }
+  ],
+  "test_logs": [
+    {
+      "path": "reports/acceptance-v2-r2-20261025/ultra-cap-focused-v1.log",
+      "sha256": "423fc39a7603178c54c4299448a6be56fa74b7f6289472ad260a5acdfee37208",
+      "result": "1 failed, 174 passed in 21.20s"
+    },
+    {
+      "path": "reports/acceptance-v2-r2-20261025/ultra-cap-focused-v2.log",
+      "sha256": "f4cee9a59554237536072b688b33a59363f7808fdd630dc9cb46a8977785bfc0",
+      "result": "175 passed in 19.72s"
+    },
+    {
+      "path": "reports/acceptance-v2-r2-20261025/ultra-cap-dependent-v1.log",
+      "sha256": "0cb011cab780c6b09a1dbdb8851bda765d2f70f93045fea253c4d512d5b03258",
+      "result": "1 failed, 84 passed in 4.07s"
+    },
+    {
+      "path": "reports/acceptance-v2-r2-20261025/ultra-cap-dependent-v2.log",
+      "sha256": "1bb88de18b9d5e3f33c056a9f6c29fc5953150708efe4506ff7c94f93f6158e5",
+      "result": "85 passed in 3.00s"
+    },
+    {
+      "path": "reports/acceptance-v2-r2-20261025/ledger-state-focused.log",
+      "sha256": "d2a71ac36ea6b8f059355e063ad3deaf4f06bddd7d7863482159abb88647cf3d",
+      "result": "17 passed in 0.04s"
+    },
+    {
+      "path": "reports/acceptance-v2-r2-20261025/probe-retirement-focused.log",
+      "sha256": "0c3948c63f16eab0784cfbe857afd4349c9f1b7634161f43588577e7d9e2d13a",
+      "result": "165 passed in 0.53s"
+    }
+  ],
+  "helper_pin": {
+    "path": "reports/acceptance-v2-r2-20261025/ledger_state_r2.py",
+    "sha256": "b27d8c04117502b65c7be0501cdd86208bb17d50b7ee2c668ed161a130baff6f"
+  },
+  "review_notes_sha256": "3afc262ec30febc7071d705081098752ea555e1aa5b673d3f85aae03ac09a290",
+  "all_tests_offline_with_live_resource_guard": true,
+  "all_live_provider_or_gpu_calls": 0,
+  "known_first_failures_preserved": true,
+  "new_16k_provider_request_verified": false,
+  "single_ultra_acceptance_0_35_unchanged": true,
+  "super_patch_4000_unchanged": true,
+  "six_of_nine_unchanged": true,
+  "full_regression_pending_root_integration": true
+}

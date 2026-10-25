@@ -143,7 +143,7 @@ def reviewed_fixture(tmp_path):
     profile = fixture_runtime(tmp_path, None, profile_only=True, prompt_ceiling=1048576)
     data = profile.model_dump()
     data.update(run_budget_mode="actual_usage", available_credit_usd="3", authorized_total_usd="3")
-    data["models"]["ultra"]["billing"]["max_completion_tokens"] = 8192
+    data["models"]["ultra"]["billing"]["max_completion_tokens"] = 16384
     data["models"]["ultra"]["capabilities"] = {
         "reasoning_method": "chat_template_kwargs",
         "evidence": "offline fixture only",
@@ -398,8 +398,8 @@ def test_kept_success_then_unverified_cost_is_not_run_success(tmp_path, monkeypa
                 elif fault == "bound_invalid":
                     payload["usage"] = {
                         "prompt_tokens": 10,
-                        "completion_tokens": 8193,
-                        "total_tokens": 8203,
+                        "completion_tokens": 16385,
+                        "total_tokens": 16395,
                     }
             return httpx.Response(200, json=payload)
 

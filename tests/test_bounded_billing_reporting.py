@@ -285,8 +285,8 @@ def test_real_runtime_mock_pipeline_retains_target_with_certified_unknown_cost(
             if fault == "cap_invalid":
                 payload["usage"] = {
                     "prompt_tokens": 10,
-                    "completion_tokens": 8193,
-                    "total_tokens": 8203,
+                    "completion_tokens": 16385,
+                    "total_tokens": 16395,
                 }
             return httpx.Response(200, json=payload)
 

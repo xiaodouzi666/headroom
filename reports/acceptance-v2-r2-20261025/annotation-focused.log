@@ -1,0 +1,24 @@
+Isolated candidate-module focused validation before production integration. No model/GPU calls.
+
+COMMAND: .venv/bin/ruff check .cache/r2-annotation-context/headroom/annotate.py .cache/r2-annotation-context/tests/test_annotation_frame_transport.py
+EXIT: 0
+All checks passed!
+
+COMMAND: .venv/bin/ruff format --check .cache/r2-annotation-context/headroom/annotate.py .cache/r2-annotation-context/tests/test_annotation_frame_transport.py
+EXIT: 0
+2 files already formatted
+
+COMMAND: isolated annotation pytest harness
+EXIT: 0
+..............................................................           [100%]
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1345
+  /home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1345: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; anyio
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+62 passed, 1 warning in 6.41s
+
+COMMAND: .venv/bin/python .cache/r2-annotation-context/replay_retained.py
+EXIT: 0
+{"stacks": 119, "frames": 7364, "max_wire_bytes": 190705, "candidate_sha256": "9ceb0fb4c4ea3a375e67a26ed930d65f14628c23549a4b86997b093ed8a62130", "real_provider_calls": 0, "gpu_runs": 0}

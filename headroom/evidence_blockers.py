@@ -10,6 +10,7 @@ from headroom.solver_context import invocation_observation
 
 MAX_CATALOG_BYTES = 8 * 1024
 MAX_SOURCE_FILES = 64
+MAX_FIELD_ENTRIES = 5
 MAX_SOURCE_LINES = 8192
 MAX_LINE_NUMBER = 1_000_000
 MAX_MARKDOWN_BYTES = 1024 * 1024
@@ -151,6 +152,21 @@ def build_evidence_availability_catalog(evidence, evidence_markdown):
             "runtime_values_verified": False,
         }
     )
+    # Partial initialization evidence does not establish complete update coverage.
+    # Child references let the model ask for the unknown component precisely.
+    for child in ("initial_tensors", "logical_updates"):
+        component = observed.get(child) if isinstance(observed, Mapping) else None
+        if not isinstance(component, Mapping):
+            continue
+        entries.append(
+            {
+                "evidence_ref": "execution_context.runtime_input_observations." + child,
+                "kind": "field",
+                "availability": "visible" if component.get("status") == "observed" else "unknown",
+                "text_availability_only": True,
+                "runtime_values_verified": False,
+            }
+        )
     sources = evidence.get("sources") if isinstance(evidence, Mapping) else None
     if isinstance(sources, list):
         result["omitted_entries"] += max(0, len(sources) - MAX_SOURCE_FILES)
@@ -176,7 +192,7 @@ def evidence_reference_catalog(evidence):
     if not isinstance(value, Mapping) or value.get("schema") != "headroom.evidence_availability.v1":
         return {}
     entries = value.get("entries")
-    if not isinstance(entries, list) or len(entries) > MAX_SOURCE_FILES + 3:
+    if not isinstance(entries, list) or len(entries) > MAX_SOURCE_FILES + MAX_FIELD_ENTRIES:
         return {}
     result = {}
     for entry in entries:

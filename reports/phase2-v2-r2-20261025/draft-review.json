@@ -1,0 +1,105 @@
+{
+  "kind": "phase2_r2_offline_draft_review",
+  "created_utc": "2026-10-25T10:33:20.568142+00:00",
+  "selftests": {
+    "self_test": "passed",
+    "checks": 48,
+    "provider_calls": 0,
+    "gpu_jobs": 0,
+    "live_ledger_reads": 0,
+    "cap_frozen": false,
+    "execution_qualification": false,
+    "old_revision_rejected": true,
+    "quality_revision_bound": true,
+    "missing_qualification_rejected_before_helpers": true
+  },
+  "ruff_check": true,
+  "ruff_format_check": true,
+  "source_pins": [
+    {
+      "path": "reports/phase2-v2-r2-20261025/run_phase2_v2.py",
+      "sha256": "6ec6ac9c667bc79b0ab3e936941e7e6975a7077da414e550468b77906917ecad"
+    },
+    {
+      "path": "reports/phase2-v2-r2-20261025/ledger_state_phase2_r2.py",
+      "sha256": "14ac606a5c26c013b6059aac57d9c4186f800597962689bd5bcabab4419411c1"
+    },
+    {
+      "path": "reports/phase2-v2-r2-20261025/selftest.json",
+      "sha256": "ea9803cebb90f1688a526cb62508843eaf4d2eb0d276efab1d9872ad790966be"
+    },
+    {
+      "path": "reports/phase2-v2-r2-20261025/plan.json",
+      "sha256": "7bdc2e23b019976a11b69d66cb93810b2b2908320889d7e77ecd1a61bed2c1d2"
+    },
+    {
+      "path": "reports/phase2-v2-r2-20261025/version-diff.patch",
+      "sha256": "331c85dbc924a4a5feb891af974d66faae8a01260d84054ea7691273c560c533"
+    },
+    {
+      "path": "reports/phase2-v2-r1-20261025/run_phase2_v2.py",
+      "sha256": "870427d95befe970259609f444f07f1f1bdd0846573528bcbde8c5943a7dc2c7"
+    },
+    {
+      "path": "eval/protocol_v2.json",
+      "sha256": "a7218bd0bbe50ac948d3d11fdfe0c5dc4a1a06dcf9ea1756ae31e78494d51a09"
+    },
+    {
+      "path": "eval/scenario_set_v2.yaml",
+      "sha256": "8483f6ae57efba3af264e129b39cfa6e923e7c72295e411994384c5225512da6"
+    }
+  ],
+  "qualification": {
+    "established": false,
+    "cap_frozen": false,
+    "execution_started": false,
+    "fixed_runs": 20,
+    "required_mvp_targets": 6,
+    "required_mvp_valid_causes": 6,
+    "nominal_campaign_usd": "12",
+    "per_run_usd": "0.6",
+    "wall_seconds": 480,
+    "maximum_rounds": 6,
+    "lifetime_pool_usd": "14.17775754",
+    "daily_pool_usd": "9.99964904",
+    "fresh_post_mvp_ledger_required": true,
+    "new_money": false
+  },
+  "truth_boundary": {
+    "unverified_core": [
+      "s5_fragmentation_varlen",
+      "nanogpt",
+      "hf_trainer"
+    ],
+    "fixed_denominator": 20,
+    "maximum_current_scored_first_causes": 14,
+    "required_first_cause_goal": "0.75",
+    "this_is_not_a_measured_score": true,
+    "historical_scores_changed": false,
+    "future_metadata_transition_implemented": false
+  },
+  "actions": {
+    "provider_calls": 0,
+    "gpu_jobs": 0,
+    "live_profile_reads": 0,
+    "live_ledger_reads": 0,
+    "production_or_tests_modified": false
+  },
+  "independent_review": {
+    "status": "passed_no_material_blocker",
+    "reviewer": "/root/research_memory_policy_solution",
+    "driver_sha256": "6ec6ac9c667bc79b0ab3e936941e7e6975a7077da414e550468b77906917ecad",
+    "helper_sha256": "14ac606a5c26c013b6059aac57d9c4186f800597962689bd5bcabab4419411c1",
+    "read_only": true,
+    "repeated_tests": false,
+    "freeze_or_execute": false,
+    "profile_or_ledger_reads": false,
+    "scope": [
+      "fixed 10x2 and original MVP 6+6 gates",
+      "immutable funding event versus fresh post-MVP snapshot",
+      "lifetime/daily separation and retained unknown charges",
+      "full snapshot revalidation and shared lock",
+      "early rejection without own current execution/cap/review"
+    ]
+  }
+}

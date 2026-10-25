@@ -182,6 +182,37 @@ def numerical_reference_context(
                 "verified cleanup",
             ],
         }
+        if (
+            retained.get("supported") is True
+            and original.get("supported") is True
+            and retained.get("contract_sha256") == original.get("contract_sha256")
+            and original.get("profile") == "s1"
+        ):
+            result["source_contract_boundary"]["reviewed_edit_families"] = [
+                {
+                    "kind": "non_reentrant_activation_checkpoint",
+                    "scope": "existing unchanged per-block module call only",
+                    "api": "torch.utils.checkpoint.checkpoint",
+                    "requirements": [
+                        "use_reentrant=False",
+                        "default RNG preservation or preserve_rng_state=True",
+                        "top-level single-name direct checkpoint import or fully qualified module import without aliases",
+                        "no custom context_fn, changed arguments, wrappers, or other keyword options",
+                        "entire remaining normalized program must match the reviewed original contract",
+                    ],
+                }
+            ]
+            result["source_contract_boundary"]["preserve"] = [
+                "original input tensors and initialization",
+                "batch, full training loop, objective and optimizer",
+                "one training root forward and one backward per logical update",
+                "precision and all other program semantics",
+            ]
+            result["source_contract_boundary"]["candidate_support"] = (
+                "Describes a verifier capability, not a proposed repair or success guarantee. "
+                "Every actual candidate is independently checked; public checkpoint variants "
+                "outside these exact constraints remain unsupported."
+            )
         result["failure_behavior"] = (
             "Unavailable, unsupported, failed or incomplete explicit references cannot pass numerical acceptance or borrow the legacy repository exception."
         )

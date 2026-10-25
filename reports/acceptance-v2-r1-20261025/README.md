@@ -36,4 +36,7 @@ automatic retry of a campaign or threshold change.
 Status: the repaired adapter passed 243 focused checks; the subsequent full
 guarded suite passed all 2757 tests in 736.48 seconds, with 293 source entries,
 PLAN and guard unchanged. The initial 30 failures remain retained.
-Live qualification is being frozen; no round-1 live score is yet claimed.
+Live qualification and all nine real cases are now complete: target 3/9, valid
+correct first cause 5/9; MVP remains unpassed. See independent-audit-summary.md
+and the reversible independent-audit-public.json projection. Failed runs remain
+unchanged; subsequent repairs use a new versioned directory.

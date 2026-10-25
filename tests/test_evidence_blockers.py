@@ -316,7 +316,7 @@ def test_actual_diagnosis_entry_rechecks_all_validators_and_keeps_existing_limit
     assert len(router.calls) == 3
     assert "EVIDENCE_AVAILABILITY_CONTRADICTED" in router.calls[1][1][-1]["content"]
     assert "NUMERICS_CHANGE_FORBIDDEN" in router.calls[2][1][-1]["content"]
-    assert all(call[3] == {"reasoning": True, "max_tokens": 8192} for call in router.calls)
+    assert all(call[3] == {"reasoning": True, "max_tokens": 16384} for call in router.calls)
     delivered = json.loads(router.calls[0][1][-1]["content"])["evidence_availability_catalog"]
     assert delivered["evidence_markdown_sha256"] == hashlib.sha256(markdown.encode()).hexdigest()
     Draft202012Validator(router.calls[0][2]).validate(first)

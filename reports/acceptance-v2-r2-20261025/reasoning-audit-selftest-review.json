@@ -1,0 +1,41 @@
+{
+  "script": "reports/acceptance-v2-r2-20261025/audit_reasoning_wire.py",
+  "sha256": "a6276be8227c6f812722f0929187f04c4807e9d35bedb3c14dcdaff24455f695",
+  "only_selftest_fixtures_changed": true,
+  "real_audit_semantics_unchanged": true,
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/python",
+        "reports/acceptance-v2-r2-20261025/audit_reasoning_wire.py",
+        "--self-test"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"self_test\": \"passed\",\n  \"checks\": 33,\n  \"new_provider_calls\": 0,\n  \"new_gpu_runs\": 0\n}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "reports/acceptance-v2-r2-20261025/audit_reasoning_wire.py"
+      ],
+      "exit_code": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "reports/acceptance-v2-r2-20261025/audit_reasoning_wire.py"
+      ],
+      "exit_code": 0,
+      "stdout": "1 file already formatted\n",
+      "stderr": ""
+    }
+  ],
+  "provider_calls": 0,
+  "gpu_runs": 0
+}

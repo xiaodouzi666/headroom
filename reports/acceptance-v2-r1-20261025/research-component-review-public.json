@@ -1,0 +1,132 @@
+{
+  "publication": {
+    "raw_path": "reports/acceptance-v2-r1-20261025/research-component-review.json",
+    "raw_sha256": "280d34783cd2328edeb3fbff89fb2975de3095a163d054c142238adbcb74de6f",
+    "raw_preserved_private": true,
+    "transforms": [
+      {
+        "path": [
+          "current_research",
+          0
+        ],
+        "from": "cache_key",
+        "to": "cache_digest"
+      },
+      {
+        "path": [
+          "current_research",
+          1
+        ],
+        "from": "cache_key",
+        "to": "cache_digest"
+      },
+      {
+        "path": [
+          "historical_zero_credit_cache_rows",
+          0
+        ],
+        "from": "cache_key",
+        "to": "cache_digest"
+      },
+      {
+        "path": [
+          "historical_zero_credit_cache_rows",
+          1
+        ],
+        "from": "cache_key",
+        "to": "cache_digest"
+      }
+    ],
+    "roundtrip_equal": true,
+    "note": "Cache identity SHA256 digests are renamed only in this reversible public projection; no secret-scanner exception added."
+  },
+  "audit": {
+    "recorded_utc": "2026-10-25T10:06:57.796229+00:00",
+    "scope": "T2.2 read-only saved-evidence review; no new provider calls",
+    "campaign_path": "runs/evaluation/live/20261025T095016638167Z-ad191318/campaign.json",
+    "campaign_sha256": "adbd14593d9760c30b8d6caac0ef4836e1b3e2949dab55c967c4ef7b763076b9",
+    "s1_research_records": 0,
+    "s5_research_records": 0,
+    "required_s1_checkpoint_source_gate": false,
+    "required_s5_cuda_source_gate": false,
+    "current_research": [
+      {
+        "id": 15,
+        "run_id": "d2f6b77c39ad40a0947b2cc84921c771",
+        "created_at": "2026-10-25T09:52:24.409247+00:00",
+        "provider": "tavily",
+        "method": "search",
+        "cache_digest": "e937dcbf76c4f7641d08bac15f2eb37864d54ce839e67a0a8bc2ee3b606e02c8",
+        "torch_version": "2.5.1+cu124",
+        "api_calls": 1,
+        "cache_hit": false,
+        "credits_used": 1,
+        "status": "succeeded",
+        "reason": null,
+        "urls": [
+          "https://docs.pytorch.org/docs/main/generated/torch.optim.AdamW.html",
+          "https://pytorch.org/docs/main/generated/torch.optim.AdamW.html",
+          "https://docs.pytorch.org/docs/2.11/generated/torch.optim.AdamW.html",
+          "https://docs.pytorch.org/docs/2.12/generated/torch.optim.AdamW.html",
+          "https://github.com/pytorch/pytorch/issues/183806"
+        ],
+        "scenario_id": "s2_capacity_v2"
+      },
+      {
+        "id": 16,
+        "run_id": "d2f6b77c39ad40a0947b2cc84921c771",
+        "created_at": "2026-10-25T09:52:27.577920+00:00",
+        "provider": "tavily",
+        "method": "search",
+        "cache_digest": "9502182a743b326494c20553e2f7d239c2c987ea123864e0f8caf186a2af8915",
+        "torch_version": "2.5.1+cu124",
+        "api_calls": 1,
+        "cache_hit": false,
+        "credits_used": 1,
+        "status": "failed",
+        "reason": "no_allowed_nonempty_results",
+        "urls": [],
+        "scenario_id": "s2_capacity_v2"
+      }
+    ],
+    "historical_zero_credit_cache_rows": [
+      {
+        "id": 7,
+        "run_id": "77b53dfeb6d74bad9d06c5e2e8495d44",
+        "created_at": "2026-10-24T23:27:07.212182+00:00",
+        "provider": "tavily",
+        "method": "search",
+        "cache_digest": "6d207d023f883c773e03a474405e1df1173a55d34370f6e9c5c630c43828c316",
+        "torch_version": "2.5.1+cu124",
+        "api_calls": 0,
+        "cache_hit": true,
+        "credits_used": 0,
+        "status": "cached",
+        "reason": null,
+        "urls": [
+          "https://github.com/pytorch/pytorch/issues/141896",
+          "https://github.com/pytorch/pytorch/issues/144035"
+        ]
+      },
+      {
+        "id": 12,
+        "run_id": "dfd0e468099042c8916253616d8a07e3",
+        "created_at": "2026-10-25T02:35:58.435738+00:00",
+        "provider": "tavily",
+        "method": "extract",
+        "cache_digest": "afe252f917e48e3919e27d4bf1dfb62fe04def23308f0ecabd0dddaf29f9bc42",
+        "torch_version": "2.5.1+cu124",
+        "api_calls": 0,
+        "cache_hit": true,
+        "credits_used": 0,
+        "status": "cached",
+        "reason": null,
+        "urls": [
+          "https://docs.pytorch.org/docs/2.5/checkpoint.html"
+        ]
+      }
+    ],
+    "acceptance": false,
+    "limitation": "Actual runtime research occurred in s2; it cannot substitute for required s1/s5 report Sources. Cache rows are retained scoped evidence, not new calls or a full current acceptance."
+  }
+}

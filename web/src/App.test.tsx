@@ -250,3 +250,139 @@ it("distinguishes an explicitly empty patch from missing patch evidence", () => 
     screen.queryByText("No source changes in this patch"),
   ).not.toBeInTheDocument();
 });
+
+describe("example target presets", () => {
+  function examplesWithPresets() {
+    const existing = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation((input, init) => {
+      if (input === "/api/examples")
+        return response({
+          examples: [
+            {
+              id: "s2_fp32_adamw_1b",
+              title: "Legacy optimizer example",
+              expected_mode: "reclaim",
+              baseline_verified: true,
+              recommended: { target: "reclaim", allocator_conf: null },
+              baseline_note: "Baseline already fits 22 GB.",
+            },
+            {
+              id: "s2_capacity_v2",
+              title: "Capacity repair",
+              expected_mode: "fit",
+              baseline_verified: true,
+              recommended: {
+                target: "fit:22GB",
+                allocator_conf: "expandable_segments:True",
+              },
+              baseline_note:
+                "Capacity baseline measured; not a verified model repair.",
+            },
+          ],
+        });
+      if (input === "/api/runs")
+        return Promise.resolve(
+          new Response(JSON.stringify({ detail: "Offline preset captured" }), {
+            status: 400,
+          }),
+        );
+      return existing(input, init);
+    });
+  }
+  async function chooseCapacity() {
+    fireEvent.click(
+      await screen.findByRole("button", { name: /Capacity repair/ }),
+    );
+  }
+  async function posted() {
+    fireEvent.click(screen.getByRole("button", { name: /Start analysis/ }));
+    await screen.findByText("Offline preset captured");
+    const call = vi
+      .mocked(fetch)
+      .mock.calls.filter(([path]) => path === "/api/runs")
+      .at(-1)!;
+    return JSON.parse(String(call[1]?.body));
+  }
+  it("uses old reclaim and new fit22 recommendations and sends the capacity environment", async () => {
+    examplesWithPresets();
+    render(<App />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: /Legacy optimizer example/ }),
+    );
+    expect(
+      screen.getByRole("radio", { name: /Reclaim headroom/ }),
+    ).toBeChecked();
+    await chooseCapacity();
+    expect(
+      screen.getByRole("radio", { name: /Fit a memory budget/ }),
+    ).toBeChecked();
+    expect(screen.getByLabelText("Target memory in GB")).toHaveValue(22);
+    expect(
+      screen.getByText(/Example environment: expandable_segments:True/),
+    ).toBeInTheDocument();
+    const body = await posted();
+    expect(body.example_id).toBe("s2_capacity_v2");
+    expect(body.target).toBe("fit:22GB");
+    expect(body.allocator_conf).toBe("expandable_segments:True");
+    expect(body.policy.allow_numerics_change).toBe(false);
+  });
+  it("preserves a manually edited fit limit across cards and supports an explicit reset", async () => {
+    examplesWithPresets();
+    render(<App />);
+    await chooseCapacity();
+    fireEvent.change(screen.getByLabelText("Target memory in GB"), {
+      target: { value: "18" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: /Legacy optimizer example/ }),
+    );
+    expect(screen.getByLabelText("Target memory in GB")).toHaveValue(18);
+    expect(screen.getByText(/Your custom target is kept/)).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Use recommended target" }),
+    );
+    expect(
+      screen.getByRole("radio", { name: /Reclaim headroom/ }),
+    ).toBeChecked();
+    expect((await posted()).allocator_conf).toBeNull();
+  });
+  it("preserves an explicitly chosen fix-oom target even when it matches the initial default", async () => {
+    examplesWithPresets();
+    render(<App />);
+    await chooseCapacity();
+    fireEvent.click(screen.getByRole("radio", { name: /Fix out of memory/ }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /Legacy optimizer example/ }),
+    );
+    await chooseCapacity();
+    expect(
+      screen.getByRole("radio", { name: /Fix out of memory/ }),
+    ).toBeChecked();
+    expect((await posted()).target).toBe("fix-oom");
+  });
+  it.each([false, true])(
+    "does not leak the capacity environment into pasted source (manual=%s)",
+    async (manual) => {
+      examplesWithPresets();
+      render(<App />);
+      await chooseCapacity();
+      if (manual)
+        fireEvent.change(screen.getByLabelText("Target memory in GB"), {
+          target: { value: "18" },
+        });
+      fireEvent.click(screen.getByRole("button", { name: "Paste a script" }));
+      fireEvent.change(screen.getByLabelText("Python training script"), {
+        target: { value: "print('offline')" },
+      });
+      const body = await posted();
+      expect(body.example_id).toBeUndefined();
+      expect(body.script_text).toBe("print('offline')");
+      expect(body.allocator_conf).toBeNull();
+      expect(body.target).toBe(manual ? "fit:18GB" : "fix-oom");
+      fireEvent.click(screen.getByRole("button", { name: "Use an example" }));
+      expect(screen.getByLabelText("Target memory in GB")).toHaveValue(
+        manual ? 18 : 22,
+      );
+    },
+  );
+});

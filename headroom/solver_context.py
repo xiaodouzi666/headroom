@@ -272,17 +272,14 @@ def runtime_input_observations(result, source_files, *, selected_round=None, req
         return unknown("retained runtime run identity unavailable")
     base.update(selected_run_id=run_id, source_sha256=source_sha, protocol=PROTOCOL)
     updates = capture.get("updates")
-    if not (
+    # Initialization precedes the first forward and survives a genuine OOM.
+    # Never infer successful initialization merely from a partial hash dictionary.
+    initialization_complete = result.get("capture_complete") is True and (
         capture.get("complete") is True
-        and result.get("capture_complete") is True
-        and type(required_steps) is int
-        and 1 <= required_steps <= 10000
-        and type(result.get("steps")) is int
-        and result["steps"] == required_steps
-        and isinstance(updates, list)
-        and len(updates) == required_steps
-    ):
-        return unknown("runtime input/update coverage incomplete")
+        or capture.get("reason") == "captured initialized tensors before training loop"
+    )
+    if not initialization_complete:
+        return unknown("runtime initialization capture incomplete")
     tensors = capture.get("tensors")
     if not isinstance(tensors, Mapping):
         return unknown("runtime tensor metadata unavailable")
@@ -303,6 +300,46 @@ def runtime_input_observations(result, source_files, *, selected_round=None, req
         ):
             return unknown("runtime tensor metadata invalid")
         observed[name] = {"shape": shape, "dtype": dtype, "sha256": digest}
+    base["initial_tensors"] = {
+        "status": "observed",
+        "basis": "actual named tensor fingerprints before the first training forward",
+        "tensors": observed,
+        "workload_equivalence_proven": False,
+    }
+    base["logical_updates"] = {
+        "status": "unverified",
+        "reason": "complete optimizer update association unavailable",
+    }
+    if (
+        result.get("status") == "oom"
+        and type(result.get("steps")) is int
+        and result["steps"] == 0
+        and updates == []
+        and isinstance(result.get("optimizer_update_observation"), Mapping)
+        and result["optimizer_update_observation"].get("logical_updates") == 0
+        and type(result["optimizer_update_observation"].get("logical_updates")) is int
+        and result["optimizer_update_observation"].get("optimizer_step_calls") == 0
+        and type(result["optimizer_update_observation"].get("optimizer_step_calls")) is int
+    ):
+        base["logical_updates"] = {
+            "status": "not_reached",
+            "observed_optimizer_updates": 0,
+            "reason": "OOM occurred before the first observed optimizer update",
+        }
+    if not (
+        capture.get("complete") is True
+        and type(required_steps) is int
+        and 1 <= required_steps <= 10000
+        and type(result.get("steps")) is int
+        and result["steps"] == required_steps
+        and isinstance(updates, list)
+        and len(updates) == required_steps
+    ):
+        return bounded_json(
+            unknown("runtime input/update coverage incomplete"),
+            4096,
+            "runtime_input_observations",
+        )
     optimizer_input = known["inputs"][0]
     expected_batch = observed[optimizer_input]["shape"][0]
     for number, update in enumerate(updates, 1):
@@ -316,6 +353,15 @@ def runtime_input_observations(result, source_files, *, selected_round=None, req
             )
         ):
             return unknown("runtime optimizer input association incomplete")
+    base["logical_updates"] = {
+        "status": "observed",
+        "required_optimizer_updates": required_steps,
+        "observed_optimizer_updates": len(updates),
+        "optimizer_input_name": optimizer_input,
+        "effective_batch_per_optimizer_update": expected_batch,
+        "training_forwards_per_optimizer_update": 1,
+        "backwards_per_optimizer_update": 1,
+    }
     return bounded_json(
         {
             **base,

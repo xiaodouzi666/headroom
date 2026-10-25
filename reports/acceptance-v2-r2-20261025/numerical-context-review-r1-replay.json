@@ -1,0 +1,103 @@
+{
+  "protocol": "headroom.private_context_replay.v1",
+  "purpose": "read-only replay of existing failed r1 capture; no new execution or score",
+  "raw_result": "runs/evaluation/live/20261025T095016638167Z-ad191318/jobs/9d1890409c4d4244939cbf8b98d73c82/lab/999a21fb1cef45948fe3af63f5cfe11b/result.json",
+  "raw_result_sha256": "fc53db1ff81ba538fc0d68937ab7666046f1698434d9417474345d1c5e7e1a16",
+  "evidence_sha256": "c2f92cb74e2876511ac39e5f2d6c7a811c91fdcb33f71ffdafa4553ebc7d635c",
+  "baseline_sources_unchanged": true,
+  "before": {
+    "status": "unverified",
+    "scope": "captured_named_tensors_and_optimizer_updates_only",
+    "target_effective_configuration": "unverified",
+    "selected_round": null,
+    "selected_run_id": "999a21fb1cef45948fe3af63f5cfe11b",
+    "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+    "protocol": "headroom.pairing.v1",
+    "reason": "runtime input/update coverage incomplete"
+  },
+  "after": {
+    "status": "unverified",
+    "scope": "captured_named_tensors_and_optimizer_updates_only",
+    "target_effective_configuration": "unverified",
+    "selected_round": null,
+    "selected_run_id": "999a21fb1cef45948fe3af63f5cfe11b",
+    "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+    "protocol": "headroom.pairing.v1",
+    "initial_tensors": {
+      "status": "observed",
+      "basis": "actual named tensor fingerprints before the first training forward",
+      "tensors": {
+        "inputs": {
+          "shape": [
+            32,
+            2048,
+            256
+          ],
+          "dtype": "torch.float32",
+          "sha256": "30fd65445ec7be033a6984763cb3619980aa312a3298bdfb68af44da07587d15"
+        },
+        "targets": {
+          "shape": [
+            32,
+            256
+          ],
+          "dtype": "torch.float32",
+          "sha256": "7af08182d4991829562c0d8e5531b57e6325fb4a1368d2e60b6a212427fb11f3"
+        }
+      },
+      "workload_equivalence_proven": false
+    },
+    "logical_updates": {
+      "status": "not_reached",
+      "observed_optimizer_updates": 0,
+      "reason": "OOM occurred before the first observed optimizer update"
+    },
+    "reason": "runtime input/update coverage incomplete"
+  },
+  "catalogue": {
+    "schema": "headroom.evidence_availability.v1",
+    "entries": [
+      {
+        "evidence_ref": "execution_context.script_args",
+        "kind": "field",
+        "availability": "unsupported",
+        "text_availability_only": true,
+        "runtime_values_verified": false
+      },
+      {
+        "evidence_ref": "execution_context.execution_argv",
+        "kind": "field",
+        "availability": "unsupported",
+        "text_availability_only": true,
+        "runtime_values_verified": false
+      },
+      {
+        "evidence_ref": "execution_context.runtime_input_observations",
+        "kind": "field",
+        "availability": "unknown",
+        "text_availability_only": true,
+        "runtime_values_verified": false
+      },
+      {
+        "evidence_ref": "execution_context.runtime_input_observations.initial_tensors",
+        "kind": "field",
+        "availability": "visible",
+        "text_availability_only": true,
+        "runtime_values_verified": false
+      },
+      {
+        "evidence_ref": "execution_context.runtime_input_observations.logical_updates",
+        "kind": "field",
+        "availability": "unknown",
+        "text_availability_only": true,
+        "runtime_values_verified": false
+      }
+    ],
+    "omitted_entries": 0,
+    "text_availability_only": true,
+    "runtime_values_verified": false,
+    "evidence_markdown_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "historical_outcome_changed": false,
+  "public_scope_note": "Read-only comparison of old and new context builders using an unchanged r1 raw result. The catalogue is an isolated runtime-observation fixture, not the complete HTTP request; script_args/execution_argv were absent from this fixture. No training, reference execution, model call, historical score or numerical equivalence is inferred."
+}

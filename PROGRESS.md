@@ -1,3 +1,24 @@
+## Protocol-v2 repair r2 source qualified — 2026-10-25
+
+R2 full guarded backend regression passed 2825 tests in 742.79 seconds with all
+297 source entries, canonical PLAN and guard unchanged. Frontend73 tests and
+TypeScript/Vite build passed. Earlier full failure and focused81 pass preserved.
+New live results remain pending; prior r1 target3/9 and first-cause5/9 are unchanged.
+Changes: partial initialization evidence, explicit reference capability, Ultra16k
+completion contract, complete bounded annotation frames and example defaults.
+Gift work funding remains16 net after the reviewed zero-sum partition transfer;
+runtime lifetime14.17775754/daily9.99964904 retain all historical charges.
+See reports/acceptance-v2-r2-20261025/README.md and funding-independent-review.json.
+
+## Protocol-v2 repair r1 completed; r2 development — 2026-10-25
+
+R1 fixed-nine target 3/9 and valid first cause 5/9, below retained 6/9 requirements.
+Execution aa42ef5, 903.163 seconds, 29 model attempts, conservative $0.79925580;
+all 293 source entries unchanged, 2757 offline tests passed, complete CLI chains.
+History and unknown charges retained. R2 work targets actual Ultra completion-cap
+exhaustion, OOM initialization evidence delivery and remaining product defects.
+The original PLAN remains unchanged; the r1 failure does not authorize Phase 2.
+
 # Headroom Progress
 
 Initialized: 2026-10-23T00:44:58.397951+00:00

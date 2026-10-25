@@ -1325,6 +1325,9 @@ def test_http_adapter_catalogue_mismatch_exits_nonzero_without_post_and_saves_ev
 ):
     import httpx
 
+    # Preserve this historical catalogue-adapter check behind the retired CLI gate.
+    # The test installs an in-memory HTTP transport that accepts GET only below.
+    monkeypatch.setattr(probe, "require_standalone_paid_dispatch", lambda: None)
     monkeypatch.setenv("NEBIUS_API_KEY", "offline-placeholder-not-real")
     path = tmp_path / "pricing.json"
     path.write_text(json.dumps(verified_prices()))
@@ -1600,3 +1603,50 @@ def test_attempt_publication_resanitizes_transport_metadata():
     )
     assert row["attempts"][0]["rate_limit_headers"] == {"retry-after": "3"}
     assert "private-value" not in json.dumps(row)
+
+
+@pytest.mark.parametrize(
+    "suites", [["all"], ["capabilities"], ["long"], ["concurrency"], ["catalogue", "capabilities"]]
+)
+def test_retired_paid_cli_refuses_fully_armed_legacy_flags_before_any_prerequisite(
+    tmp_path, monkeypatch, capsys, suites
+):
+    original_get = probe.os.environ.get
+
+    def guard_key(name, *args):
+        if name == "NEBIUS_API_KEY":
+            pytest.fail("retired probe read key")
+        return original_get(name, *args)
+
+    monkeypatch.setattr(probe.os.environ, "get", guard_key)
+    monkeypatch.setattr(probe.Path, "read_text", lambda *a, **k: pytest.fail("price read"))
+    monkeypatch.setattr(probe.HTTPTransport, "__init__", lambda *a: pytest.fail("transport"))
+    monkeypatch.setattr(probe, "execute_plan", lambda *a, **k: pytest.fail("dispatch"))
+    target = tmp_path / "no-output"
+    argv = [
+        "--execute",
+        "--allow-paid-requests",
+        "--credit-confirmed",
+        "--budget-usd",
+        "6",
+        "--available-credit-usd",
+        "24.52",
+        "--pricing-file",
+        str(tmp_path / "old-pricing.json"),
+        "--output-dir",
+        str(target),
+        *[part for suite in suites for part in ("--suite", suite)],
+    ]
+    assert probe.main(argv) == 2
+    result = json.loads(capsys.readouterr().out)
+    assert result["accepted"] is False and result["status"] == "refused"
+    assert (
+        result["detail"]
+        == "Standalone paid model probes are retired; use the reviewed shared runtime ledger"
+    )
+    assert not target.exists()
+
+
+def test_paid_retirement_gate_has_no_credit_or_override_argument():
+    with pytest.raises(probe.Refused, match="Standalone paid model probes are retired"):
+        probe.require_standalone_paid_dispatch()

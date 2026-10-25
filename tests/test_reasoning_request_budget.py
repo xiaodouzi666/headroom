@@ -9,12 +9,13 @@ import pytest
 
 from headroom.budget import BudgetExceeded, BudgetLedger
 from headroom.config import candidate_models
-from headroom.runtime import LiveProfile, build_live_runtime
+from headroom.llm.router import ResponseValidationError
+from headroom.runtime import LiveProfile, RuntimeNotReady, build_live_runtime
 from headroom.store.db import Store
 
 # Public reviewed limits and prices are test data; no live profile or DB is read.
 CASES = [
-    ("diagnose", "ultra", 8192, "1.073152", "0.0016"),
+    ("diagnose", "ultra", 16384, "1.097728", "0.0016"),
     ("patcher", "super", 4000, "0.0822432", "0.00048"),
 ]
 SCHEMA = {
@@ -35,7 +36,7 @@ def no_network(monkeypatch):
     monkeypatch.setattr(socket.socket, "connect_ex", denied)
 
 
-def offline_runtime(tmp_path, handler, *, pool="9.99964904", run_limit="0.6"):
+def offline_runtime(tmp_path, handler, *, pool="9.99964904", run_limit="0.6", ultra_cap=16384):
     models = {}
     for role, spec in candidate_models().items():
         ultra = role == "ultra"
@@ -53,7 +54,7 @@ def offline_runtime(tmp_path, handler, *, pool="9.99964904", run_limit="0.6"):
             "billing": {
                 "prompt_token_ceiling": 1048576 if ultra else 262144,
                 "max_prompt_utf8_bytes": 8000000,
-                "max_completion_tokens": 8192,
+                "max_completion_tokens": ultra_cap if ultra else 8192,
                 "output_cap_field": "max_completion_tokens",
                 "output_cap_includes_reasoning": True,
                 "verified": True,
@@ -156,6 +157,8 @@ def test_reasoning_reserves_full_request_and_bills_all_completion_tokens(
         snapshot = budget.close_run("run")
         assert snapshot["billing_complete"] and snapshot["pending_attempts"] == 0
         assert Decimal(snapshot["total_actual_usd"]) == Decimal(actual_cost)
+        # Settlement releases the unused reservation; this is not a card refund.
+        assert Decimal(snapshot["reserved_or_actual_usd"]) == Decimal(actual_cost)
         assert snapshot["halt_reason"] is None
         rows = store.llm_calls("run")
         assert len(rows) == 1 and rows[0]["settled"]
@@ -186,6 +189,90 @@ def test_reasoning_cannot_dispatch_if_shared_pool_cannot_fund_full_bound(
             )
         assert calls == [] and store.llm_calls("run") == []
         assert budget.snapshot("run")["pending_attempts"] == 0
+    finally:
+        bundle.close()
+        store.close()
+
+
+def test_ultra_16k_is_rejected_by_the_old_8192_profile_without_dispatch(tmp_path):
+    calls = []
+    bundle, budget, store = offline_runtime(
+        tmp_path, lambda request: calls.append(request), ultra_cap=8192
+    )
+    try:
+        with pytest.raises(RuntimeNotReady, match="reviewed billing cap"):
+            bundle.router.chat(
+                "diagnose",
+                [{"role": "user", "content": "Offline fixture"}],
+                SCHEMA,
+                max_tokens=16384,
+                reasoning=True,
+            )
+        assert calls == [] and store.llm_calls("run") == []
+        snapshot = budget.close_run("run")
+        assert snapshot["pending_attempts"] == 0 and snapshot["billing_complete"]
+        assert Decimal(snapshot["reserved_or_actual_usd"]) == 0
+    finally:
+        bundle.close()
+        store.close()
+
+
+def test_16k_all_reasoning_length_finish_is_charged_and_not_valid_json(tmp_path):
+    calls = []
+
+    def respond(request):
+        sent = json.loads(request.content)
+        calls.append(sent)
+        assert sent["max_completion_tokens"] == 16384
+        assert Decimal(budget.snapshot("run")["reserved_or_actual_usd"]) == Decimal("1.097728")
+        return httpx.Response(
+            200,
+            json={
+                "id": "offline-length",
+                "created": 0,
+                "object": "chat.completion",
+                "model": candidate_models()["ultra"].model_id,
+                "choices": [
+                    {
+                        "index": 0,
+                        "finish_reason": "length",
+                        "message": {
+                            "role": "assistant",
+                            "content": "",
+                            "reasoning_content": "PRIVATE_REASONING_NOT_FOR_ARTIFACTS",
+                        },
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 100,
+                    "completion_tokens": 16384,
+                    "total_tokens": 16484,
+                    "prompt_tokens_details": {"cached_tokens": 0},
+                    "completion_tokens_details": {"reasoning_tokens": 16384},
+                },
+            },
+        )
+
+    bundle, budget, store = offline_runtime(tmp_path, respond)
+    try:
+        with pytest.raises(ResponseValidationError) as error:
+            bundle.router.chat(
+                "diagnose",
+                [{"role": "user", "content": "Offline fixture"}],
+                SCHEMA,
+                max_tokens=16384,
+                reasoning=True,
+            )
+        assert len(calls) == 1 and error.value.reason == "truncated"
+        assert error.value.response.finish_reason == "length"
+        assert error.value.response.usage.reasoning_tokens == 16384
+        snapshot = budget.close_run("run")
+        assert snapshot["billing_complete"] and snapshot["halt_reason"] is None
+        assert Decimal(snapshot["total_actual_usd"]) == Decimal("0.049252")
+        assert Decimal(snapshot["reserved_or_actual_usd"]) == Decimal("0.049252")
+        rows = store.llm_calls("run")
+        assert len(rows) == 1 and rows[0]["settled"]
+        assert "PRIVATE_REASONING_NOT_FOR_ARTIFACTS" not in json.dumps(rows)
     finally:
         bundle.close()
         store.close()

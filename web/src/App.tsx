@@ -133,6 +133,7 @@ function Home() {
     [example, setExample] = useState(""),
     [script, setScript] = useState(""),
     [target, setTarget] = useState("fix-oom"),
+    [manualTarget, setManualTarget] = useState(false),
     [fit, setFit] = useState("22"),
     [budget, setBudget] = useState("0.60"),
     [searchMode, setSearchMode] = useState<SearchMode>("until_target"),
@@ -180,6 +181,29 @@ function Home() {
     provider = record(health.token_factory);
   const queueFull = queueAtCapacity(queue);
   const availability = availabilityBlocks(health);
+  const selectedExample =
+    mode === "example" ? examples.find((row) => row.id === example) : undefined;
+  const recommended = record(selectedExample?.recommended);
+  function applyRecommended(row?: Dict) {
+    const value = text(record(row?.recommended).target, "fix-oom");
+    const match = /^fit:([0-9]+(?:\.[0-9]+)?)GB$/.exec(value);
+    setTarget(match ? "fit" : value === "reclaim" ? "reclaim" : "fix-oom");
+    if (match) setFit(match[1]);
+    setManualTarget(false);
+  }
+  function selectExample(row: Dict) {
+    setExample(text(row.id, ""));
+    if (!manualTarget) applyRecommended(row);
+  }
+  function selectMode(next: "example" | "script") {
+    setMode(next);
+    if (!manualTarget)
+      applyRecommended(
+        next === "example"
+          ? examples.find((row) => row.id === example)
+          : undefined,
+      );
+  }
   async function start(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
@@ -188,6 +212,10 @@ function Home() {
         ? { example_id: example }
         : { script_text: script }),
       target: target === "fit" ? `fit:${fit}GB` : target,
+      allocator_conf:
+        typeof recommended.allocator_conf === "string"
+          ? recommended.allocator_conf
+          : null,
       budget,
       search_mode: searchMode,
       policy: {
@@ -306,14 +334,14 @@ function Home() {
             <button
               type="button"
               aria-pressed={mode === "example"}
-              onClick={() => setMode("example")}
+              onClick={() => selectMode("example")}
             >
               Use an example
             </button>
             <button
               type="button"
               aria-pressed={mode === "script"}
-              onClick={() => setMode("script")}
+              onClick={() => selectMode("script")}
             >
               Paste a script
             </button>
@@ -328,7 +356,7 @@ function Home() {
                     key={text(row.id)}
                     type="button"
                     className={`example-card ${example === row.id ? "selected" : ""}`}
-                    onClick={() => setExample(text(row.id, ""))}
+                    onClick={() => selectExample(row)}
                     aria-pressed={example === row.id}
                   >
                     <div className="example-top">
@@ -354,6 +382,9 @@ function Home() {
                         ? "baseline recorded"
                         : "baseline status unknown"}
                     </span>
+                    {typeof row.baseline_note === "string" && (
+                      <p className="caption">{row.baseline_note}</p>
+                    )}
                   </button>
                 ))}
               </div>
@@ -411,7 +442,10 @@ function Home() {
                   name="target"
                   value={value}
                   checked={target === value}
-                  onChange={() => setTarget(value)}
+                  onChange={() => {
+                    setTarget(value);
+                    setManualTarget(true);
+                  }}
                 />
                 <span>
                   <strong>{title}</strong>
@@ -430,11 +464,33 @@ function Home() {
                   min="0.1"
                   step="0.1"
                   value={fit}
-                  onChange={(e) => setFit(e.target.value)}
+                  onChange={(e) => {
+                    setFit(e.target.value);
+                    setManualTarget(true);
+                  }}
                 />
                 <span>GB</span>
               </span>
             </label>
+          )}
+          {typeof recommended.target === "string" && (
+            <div className="caption">
+              <p>Recommended target: {recommended.target}.</p>
+              {manualTarget && (
+                <>
+                  <p>Your custom target is kept when switching examples.</p>
+                  <button
+                    type="button"
+                    onClick={() => applyRecommended(selectedExample)}
+                  >
+                    Use recommended target
+                  </button>
+                </>
+              )}
+              {typeof recommended.allocator_conf === "string" && (
+                <p>Example environment: {recommended.allocator_conf}.</p>
+              )}
+            </div>
           )}
           <div className="rule" />
           <p className="field-heading">Preserve what matters</p>

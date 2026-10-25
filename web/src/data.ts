@@ -252,6 +252,7 @@ export interface Submission {
   search_mode?: SearchMode;
   script_text?: string;
   example_id?: string;
+  allocator_conf?: string | null;
   target: string;
   budget: string;
   policy: {

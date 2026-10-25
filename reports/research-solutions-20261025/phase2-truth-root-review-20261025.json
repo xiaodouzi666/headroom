@@ -1,0 +1,109 @@
+{
+  "schema": "headroom.root-baseline-truth-review.v1",
+  "reviewed_utc": "2026-10-25T10:32:11.542535+00:00",
+  "reviewer": "root",
+  "method": "Independent alloc/free_completed address replay; original baseline and source/data hashes only.",
+  "rows": [
+    {
+      "scenario_id": "nanogpt",
+      "baseline": "runs/nanogpt-lab-validation/5e5566267e7b45a3a7e6f75fe738ed08",
+      "result_sha256": "6cfac974425952e7f768db6075d26768aa37909e95459383f19d9dce1ce1f5cb",
+      "snapshot_sha256": "7573be91fbf3620b9e90f565997ac248a8bbec030567e4edf2310f6adcef42d9",
+      "native_allocated_peak_bytes": 24705183744,
+      "replayed_requested_peak_bytes": 24705183744,
+      "replay_errors": [],
+      "forward_origin_requested_bytes_at_peak": 23286259712,
+      "forward_origin_fraction": 0.9425657365392149,
+      "optimizer_origin_requested_bytes_at_peak": 0,
+      "captured_sources": [
+        {
+          "path": ".cache/repositories/370c19d0da644affac8c142cf5d49629/source/configurator.py",
+          "sha256": "5cc23aca26b4ab3c0d9e5f82740f4781f9444f42718c15abcee70d93c5aabe8f",
+          "matches_capture": true
+        },
+        {
+          "path": ".cache/repositories/370c19d0da644affac8c142cf5d49629/source/model.py",
+          "sha256": "7c01703240dbec5d554527dc666e35b3df8391d0b117fddc07afcf325a21d11c",
+          "matches_capture": true
+        },
+        {
+          "path": ".cache/repositories/370c19d0da644affac8c142cf5d49629/source/train.py",
+          "sha256": "413bd97b40bb400a2a0d01230e2946f056c263ebac1b7281c2367d964a123085",
+          "matches_capture": true
+        },
+        {
+          "path": ".cache/repositories/370c19d0da644affac8c142cf5d49629/source/data/headroom_synthetic/train.bin",
+          "sha256": "33b9c92bced223a2efe20aaa4fae4311f2dcb5be5189c3755f3215c099b8403c",
+          "matches_capture": true
+        },
+        {
+          "path": ".cache/repositories/370c19d0da644affac8c142cf5d49629/source/data/headroom_synthetic/val.bin",
+          "sha256": "7add555e1e0a9b9da1084c953804b5e1c91a0b18f67dcd202b18838f6e710b32",
+          "matches_capture": true
+        }
+      ],
+      "current_source_and_data_checks": [
+        {
+          "path": ".cache/upstream/nanoGPT/train.py",
+          "sha256": "413bd97b40bb400a2a0d01230e2946f056c263ebac1b7281c2367d964a123085",
+          "matches_capture": true
+        },
+        {
+          "path": ".cache/upstream/nanoGPT/model.py",
+          "sha256": "7c01703240dbec5d554527dc666e35b3df8391d0b117fddc07afcf325a21d11c",
+          "matches_capture": true
+        },
+        {
+          "path": ".cache/upstream/nanoGPT/configurator.py",
+          "sha256": "5cc23aca26b4ab3c0d9e5f82740f4781f9444f42718c15abcee70d93c5aabe8f",
+          "matches_capture": true
+        },
+        {
+          "path": ".cache/datasets/nanogpt/headroom_synthetic/train.bin",
+          "sha256": "33b9c92bced223a2efe20aaa4fae4311f2dcb5be5189c3755f3215c099b8403c",
+          "matches_capture": true
+        },
+        {
+          "path": ".cache/datasets/nanogpt/headroom_synthetic/val.bin",
+          "sha256": "7add555e1e0a9b9da1084c953804b5e1c91a0b18f67dcd202b18838f6e710b32",
+          "matches_capture": true
+        }
+      ],
+      "prospective_first_cause_supported": "activations",
+      "limitation": "Initial captured FP32 forward OOM only; forward origin does not identify every tensor as autograd-saved. Native allocated peak remains authoritative."
+    },
+    {
+      "scenario_id": "hf_trainer",
+      "baseline": "runs/hf-full-baseline-20261024/77c5ef8e0948458688116ff68f38c586",
+      "result_sha256": "958b27f6092eb9e7c7aab125321f88af6bc974228467176c8e30b2c0a60719a0",
+      "snapshot_sha256": "6b3e79cf705f8aef7b646ce3db2d559972300c35431e771db5d021b3d6ef6fe9",
+      "native_allocated_peak_bytes": 24805119488,
+      "replayed_requested_peak_bytes": 24805101708,
+      "replay_errors": [],
+      "forward_origin_requested_bytes_at_peak": 23360249896,
+      "forward_origin_fraction": 0.9417518287565008,
+      "optimizer_origin_requested_bytes_at_peak": 0,
+      "captured_sources": [
+        {
+          "path": "repos/hf_trainer/headroom.yaml",
+          "sha256": "7b482e2b7849ab2ec25ec546c931caec06b922fccab37acb319916f23bc4a5e3",
+          "matches_capture": true
+        },
+        {
+          "path": "repos/hf_trainer/train.py",
+          "sha256": "7d3a714264fc76371c1183da125ec0ffa550bc78c68bbe2acd7868870684923a",
+          "matches_capture": true
+        }
+      ],
+      "current_source_and_data_checks": [],
+      "prospective_first_cause_supported": "activations",
+      "limitation": "Initial captured FP32 forward OOM only; forward origin does not identify every tensor as autograd-saved. Native allocated peak remains authoritative."
+    }
+  ],
+  "s5": "Keep unverified; no harmful fragmentation proof.",
+  "production_or_manifest_changes": false,
+  "historical_rescoring": false,
+  "model_outputs_read_for_this_review": false,
+  "new_provider_or_gpu_calls": 0,
+  "label_application": "Prospective version only, with frozen matching source/data/configuration and new qualification."
+}

@@ -26,6 +26,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from headroom.api.availability import AvailabilityMonitor
 from headroom.api.evaluations import register_evaluations
+from headroom.api.example_presets import EXAMPLE_PRESETS, PRODUCT_EXAMPLES
 from headroom.api.queue import TERMINAL, AdmissionError, RunQueue
 from headroom.api.security import ARTIFACTS, RUN_ID, artifact_relative, job_directory, open_regular
 from headroom.lab.envs import validate_allocator
@@ -122,7 +123,7 @@ def _catalog(settings):
     except (OSError, ValueError):
         return {}
     result = {}
-    for row in document.get("scenarios", []):
+    for row in [*document.get("scenarios", []), *PRODUCT_EXAMPLES]:
         identifier = row.get("id")
         if not isinstance(identifier, str) or "/" in identifier or not identifier.startswith("s"):
             continue
@@ -136,15 +137,37 @@ def _catalog(settings):
                 text = handle.read().decode("utf-8")
         except (OSError, ValueError, UnicodeError):
             continue
+        source_sha256 = hashlib.sha256(text.encode("utf-8")).hexdigest()
+        preset = EXAMPLE_PRESETS.get(identifier)
+        if preset and source_sha256 != preset["source_sha256"]:
+            continue
         result[identifier] = {
             "id": identifier,
             "script_text": text,
-            "title": identifier.replace("_", " "),
+            "title": row.get("title", identifier.replace("_", " ")),
             "expected_mode": row.get("expected_mode"),
             "root_cause": row.get("root_cause"),
             "baseline_verified": row.get("gpu_baseline_verified") is True,
+            "source_sha256": source_sha256,
         }
+        if preset:
+            result[identifier].update(
+                recommended=dict(preset["recommended"]),
+                baseline_note=preset["baseline_note"],
+            )
     return result
+
+
+def _example_defaults(submission, example):
+    """Omission inherits a preset; an explicit target or allocator null wins."""
+    recommended = example.get("recommended", {})
+    values = submission.model_dump()
+    for field in ("target", "allocator_conf"):
+        if field not in submission.model_fields_set and field in recommended:
+            values[field] = recommended[field]
+    resolved = Submission.model_validate(values)
+    parse_target(resolved.target)
+    return resolved
 
 
 def _public_run(row):
@@ -350,6 +373,10 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
                 if example is None:
                     raise HTTPException(400, "Unknown example")
                 source = example["script_text"]
+                try:
+                    submission = _example_defaults(submission, example)
+                except (ValidationError, ValueError):
+                    raise HTTPException(400, "Invalid example defaults") from None
             else:
                 source = submission.script_text
             try:

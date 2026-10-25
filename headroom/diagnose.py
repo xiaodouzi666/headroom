@@ -641,7 +641,7 @@ def validate_diagnosis(
     )
 
 
-DIAGNOSIS_MAX_COMPLETION_TOKENS = 8192
+DIAGNOSIS_MAX_COMPLETION_TOKENS = 16384
 
 
 def diagnose_with_router(

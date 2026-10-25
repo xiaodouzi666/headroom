@@ -146,7 +146,7 @@ def test_native_schema_contains_only_current_references_and_true_permissions(dir
             [{"role": "user", "content": "Measured evidence"}],
             schema,
             reasoning=False,
-            max_tokens=8192,
+            max_tokens=16384,
         )
         assert len(sdk.ledger.entries) == 1
         assert response.cost.usd is None  # Fixture has no verified provider pricing.
@@ -334,7 +334,7 @@ def test_production_diagnosis_reuses_current_schema_for_the_supplement():
         policy={},
     )
     assert all(r["response_format"]["json_schema"]["schema"] == expected for r in requests)
-    assert all(r["max_tokens"] == 8192 for r in requests)
+    assert all(r["max_tokens"] == 16384 for r in requests)
     assert all(r["chat_template_kwargs"] == {"enable_thinking": True} for r in requests)
     assert len(requests[1]["messages"]) == len(requests[0]["messages"]) + 2
 
@@ -387,7 +387,7 @@ def test_prepared_wrapper_checks_independently_rebuilt_schema_before_dispatch(tm
             LLMRouter(sdk), messages, tmp_path / "response.json", evidence=source, policy=policy
         )
         with pytest.raises(DiagnosisAcceptanceRefused, match="DIAGNOSIS_SCHEMA_CHANGED"):
-            wrapped.chat("diagnose", messages, schema, max_tokens=8192, reasoning=True)
+            wrapped.chat("diagnose", messages, schema, max_tokens=16384, reasoning=True)
     assert requests == [] and not (tmp_path / "response.json").exists()
 
 
@@ -403,10 +403,10 @@ def test_prepared_wrapper_passes_pinned_schema_once_and_retains_messages_gate(tm
             LLMRouter(sdk), messages, tmp_path / "response.json", evidence=source, policy=policy
         )
         with pytest.raises(DiagnosisAcceptanceRefused, match="DIAGNOSIS_REQUEST_CHANGED"):
-            wrapped.chat("diagnose", [], schema, max_tokens=8192, reasoning=True)
-        wrapped.chat("diagnose", messages, schema, max_tokens=8192, reasoning=True)
+            wrapped.chat("diagnose", [], schema, max_tokens=16384, reasoning=True)
+        wrapped.chat("diagnose", messages, schema, max_tokens=16384, reasoning=True)
         with pytest.raises(DiagnosisAcceptanceRefused, match="ONLY_ONE_PREPARED"):
-            wrapped.chat("diagnose", messages, schema, max_tokens=8192, reasoning=True)
+            wrapped.chat("diagnose", messages, schema, max_tokens=16384, reasoning=True)
     assert len(requests) == 1 and (tmp_path / "response.json").is_file()
     assert requests[0]["response_format"]["json_schema"]["schema"] == schema
 
@@ -457,7 +457,7 @@ def test_evaluation_conditions_keep_dynamic_schema_with_only_visible_ids(tmp_pat
     )
     assert request["response_format"]["json_schema"]["schema"] == expected
     assert request["model"] == candidate_models()[role].model_id
-    assert request["max_tokens"] == 8192
+    assert request["max_tokens"] == 16384
     assert request["chat_template_kwargs"] == {"enable_thinking": True}
     if condition == "traceback_ultra":
         references = expected["$defs"]["RootCause"]["properties"]["evidence_refs"]["items"]["enum"]

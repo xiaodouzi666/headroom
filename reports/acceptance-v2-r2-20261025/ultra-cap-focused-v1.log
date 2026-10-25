@@ -1,0 +1,13 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}}
+.................................................................F...... [ 41%]
+........................................................................ [ 82%]
+...............................                                          [100%]
+=================================== FAILURES ===================================
+_ test_invalid_structured_output_cannot_bypass_financial_stop[truncated_bound-LEDGER_NOT_CLEAR] _
+tests/test_diagnosis_acceptance.py:830: in test_invalid_structured_output_cannot_bypass_financial_stop
+    assert len(calls) == 1
+E   assert 8 == 1
+E    +  where 8 = len([{'model': 'nvidia/Nemotron-3-Ultra-550b-a55b', 'messages': [{'role': 'system', 'content': 'Return only valid JSON mat...tatic patterns found.\\n"}'}], 'max_completion_tokens': 16384, 'chat_template_kwargs': {'enable_thinking': True}}, ...])
+=========================== short test summary info ============================
+FAILED tests/test_diagnosis_acceptance.py::test_invalid_structured_output_cannot_bypass_financial_stop[truncated_bound-LEDGER_NOT_CLEAR]
+1 failed, 174 passed in 21.20s

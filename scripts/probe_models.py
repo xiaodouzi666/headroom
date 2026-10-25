@@ -54,6 +54,13 @@ class Refused(ValueError):
     """A local precondition failed; no request should be made."""
 
 
+def require_standalone_paid_dispatch() -> None:
+    """The external probe allocation is retired; historical flags cannot reopen it."""
+    raise Refused(
+        "Standalone paid model probes are retired; use the reviewed shared runtime ledger"
+    )
+
+
 def money(value: Any) -> Decimal:
     try:
         result = Decimal(str(value))
@@ -1295,6 +1302,7 @@ def main(argv=None) -> int:
         if not catalogue_only:
             if not args.allow_paid_requests or not args.credit_confirmed:
                 raise Refused("execute requires explicit paid-request and credit confirmations")
+            require_standalone_paid_dispatch()
             if not args.budget_usd or not args.available_credit_usd or args.pricing_file is None:
                 raise Refused("execute requires budget, available credit and verified pricing file")
             cap = money(args.budget_usd)

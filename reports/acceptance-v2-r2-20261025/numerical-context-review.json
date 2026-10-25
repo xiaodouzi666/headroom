@@ -1,0 +1,139 @@
+{
+  "protocol": "headroom.numerical_context_review.v1",
+  "recorded_at": "2026-10-25T10:09:51.782711+00:00",
+  "status": "offline_qualified_for_integration_not_live_acceptance",
+  "baseline_sources": [
+    {
+      "path": "headroom/evidence_blockers.py",
+      "sha256": "d3fedd6af3252d6fe55153af8f202a8c1d62aa6785e5b91fbef8ac78b8cb775c"
+    },
+    {
+      "path": "headroom/solver_context.py",
+      "sha256": "43748f38694b9ff17f69d88baf183a2e7c0e7afbd3f26381c2aac97b39953fc2"
+    },
+    {
+      "path": "headroom/verify/reference_context.py",
+      "sha256": "a76c64fe3f424397429a59f14e24e2f8ec179933a6a2d0fbd2d93323991303ca"
+    }
+  ],
+  "reviewed_private_sources": [
+    {
+      "path": "headroom/evidence_blockers.py",
+      "sha256": "f96cc70dee1b35e886e153ce80a9176b1a0ae9aa6b2ea13b6ed66f1212c085b5"
+    },
+    {
+      "path": "headroom/solver_context.py",
+      "sha256": "5e1a4025ef8e2f3ded1748dc275f9b02f238ea173b0b71ffb0b23e22717e8a1c"
+    },
+    {
+      "path": "headroom/verify/reference_context.py",
+      "sha256": "b67d2b882242980a4386c145e42a5563bfdf3d070ee384d0dc6f6918becb9118"
+    },
+    {
+      "path": "tests/test_partial_runtime_context.py",
+      "sha256": "1c7270184b373f9450c3121dcd7f3fe773017c0880df14b6efead034342375f1"
+    }
+  ],
+  "production_sources_observed": [
+    {
+      "path": "headroom/evidence_blockers.py",
+      "sha256": "f96cc70dee1b35e886e153ce80a9176b1a0ae9aa6b2ea13b6ed66f1212c085b5"
+    },
+    {
+      "path": "headroom/solver_context.py",
+      "sha256": "5e1a4025ef8e2f3ded1748dc275f9b02f238ea173b0b71ffb0b23e22717e8a1c"
+    },
+    {
+      "path": "headroom/verify/reference_context.py",
+      "sha256": "b67d2b882242980a4386c145e42a5563bfdf3d070ee384d0dc6f6918becb9118"
+    },
+    {
+      "path": "tests/test_partial_runtime_context.py",
+      "sha256": "1c7270184b373f9450c3121dcd7f3fe773017c0880df14b6efead034342375f1"
+    }
+  ],
+  "production_matches_reviewed_private_sources": true,
+  "test_evidence": {
+    "execution_scope": "isolated private package path overlay, existing CPU/mock tests plus new focused tests",
+    "runner": ".cache/r2-numerical-context/run_tests.py",
+    "runner_sha256": "4e6a3d64c1d675ef565daa6ae75086d1d594d4c5ac56621217675aca99b922d4",
+    "result": "89 passed",
+    "seconds": 1.52,
+    "log_path": "reports/acceptance-v2-r2-20261025/numerical-context-review-tests.log",
+    "log_sha256": "f845e0a9e135f4f75e12c7ce147ca76abd0642d903910a8f70b33555fc47c3f1",
+    "suites": [
+      "tests/test_runtime_input_observations.py",
+      "tests/test_reference_context.py",
+      "tests/test_evidence_blockers.py",
+      "tests/test_partial_runtime_context.py"
+    ],
+    "quality_checks_recorded": [
+      "ruff check passed",
+      "ruff format --check passed"
+    ],
+    "full_regression": false,
+    "gpu_executed": false,
+    "model_calls": 0
+  },
+  "independent_review": {
+    "reviewer_task": "/root/research_agent_reliability_solution",
+    "basis": "independent read-only diff review and final SHA confirmation reported through collaboration messages",
+    "production_edits_by_reviewer": false,
+    "tests_rerun_by_reviewer": false,
+    "blocking_findings": [],
+    "checked": [
+      "initialization fingerprint evidence remains distinct from complete logical-update evidence",
+      "source SHA and retained run identity binding remain required",
+      "OOM not_reached requires observed steps=0, pairing updates=[], integer logical_updates=0 and optimizer_step_calls=0",
+      "parent unverified and logical-update child unknown are not promoted by observed initialization",
+      "catalogue final 8 KiB bound and exact child references remain enforced",
+      "checkpoint capability text describes top-level single-name imports and exact supported constraints"
+    ],
+    "resolved_nonblocking_findings": [
+      "made top-level single-name import requirement explicit",
+      "synchronized catalogue count bound to MAX_FIELD_ENTRIES=5 and added count-bound negative test"
+    ],
+    "final_reviewed_source_hashes": [
+      {
+        "path": "headroom/evidence_blockers.py",
+        "sha256": "f96cc70dee1b35e886e153ce80a9176b1a0ae9aa6b2ea13b6ed66f1212c085b5"
+      },
+      {
+        "path": "headroom/verify/reference_context.py",
+        "sha256": "b67d2b882242980a4386c145e42a5563bfdf3d070ee384d0dc6f6918becb9118"
+      }
+    ]
+  },
+  "r1_replay": {
+    "path": "reports/acceptance-v2-r2-20261025/numerical-context-review-r1-replay.json",
+    "sha256": "e94504b28b9d84ded9f56ac46f2390492cbaeaf9c4bf6330e3fb9da7c21c0d35",
+    "original_raw_and_evidence_hashes_rechecked": true,
+    "historical_outcome_changed": false
+  },
+  "scope_limits": [
+    "No PLAN, target, tolerance, reference proof, resource limit, historical score or model budget changed.",
+    "Initialization observations are not complete optimizer-update, full runtime configuration or workload-equivalence proof.",
+    "Exact normalized source contracts still reject arbitrary loop/objective/microbatch rewrites.",
+    "Capability context contains no manual candidate, replacement code, scenario success answer or success guarantee.",
+    "This receipt does not replace full production regression or the next live campaign."
+  ],
+  "publication_check": {
+    "scope": "purpose-built metadata, focused test output and tensor-metadata replay only",
+    "source_bodies_included": false,
+    "manual_candidate_bodies_included": false,
+    "provider_prompt_or_response_bodies_included": false,
+    "credential_values_included": false
+  },
+  "primary_sources": [
+    {
+      "url": "https://raw.githubusercontent.com/pytorch/pytorch/v2.5.1/torch/utils/checkpoint.py",
+      "read_on": "2026-10-25",
+      "supports": "checkpoint trades saved activation memory for recomputation and exposes explicit non-reentrant/RNG options"
+    },
+    {
+      "url": "https://huggingface.co/docs/accelerate/usage_guides/gradient_accumulation",
+      "read_on": "2026-10-25",
+      "supports": "accumulation loss scaling, optimizer-update boundaries, and actual loss-denominator weighting"
+    }
+  ]
+}

@@ -1,5 +1,16 @@
 # Results
 
+The protocol-v2 repair iteration 1 is complete at source aa42ef5: **3/9 targets
+(s3, s4, s8)** and **5/9 valid correct first causes**, below both six-of-nine
+requirements. All nine real CLI chains and 293 unchanged source entries were
+independently checked. Its 29 model attempts conservatively occupy $0.79925580,
+including $0.00475308 retained for unknown actual charges. It does not qualify
+Phase 2. [The independent r1 summary](../reports/acceptance-v2-r1-20261025/independent-audit-summary.md)
+preserves every failed/unknown result; the earlier dated campaigns below remain
+separate. A second repair addresses observed output-cap exhaustion and missing
+partial runtime evidence. No new score is claimed for those changes.
+
+
 Measured GPU baselines now cover twelve workloads. The complete 2026-10-24
 manifest run reproduced five CUDA OOMs and completed twenty steps in seven workloads.
 All captures and cleanup checks passed. This is baseline acceptance, not automated

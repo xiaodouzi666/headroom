@@ -229,7 +229,7 @@ def profile(root, *, ceiling=30000, enabled=True):
                     "billing": {
                         "prompt_token_ceiling": ceiling,
                         "max_prompt_utf8_bytes": 1000000,
-                        "max_completion_tokens": 8192,
+                        "max_completion_tokens": 16384 if role == "ultra" else 8192,
                         "output_cap_field": "max_completion_tokens",
                         "output_cap_includes_reasoning": True,
                         "verified": True,
@@ -328,8 +328,8 @@ def transport_for(prepared, *, mode=None):
             if mode == "truncated_bound":
                 response["usage"] = {
                     "prompt_tokens": 200,
-                    "completion_tokens": 8193,
-                    "total_tokens": 8393,
+                    "completion_tokens": 16385,
+                    "total_tokens": 16585,
                 }
             if mode in {"empty", "schema_invalid", "malformed", "large_invalid"}:
                 response["choices"][0]["message"]["content"] = {
@@ -407,7 +407,7 @@ def test_real_router_runtime_chain_scores_seven_without_fake_live_acceptance(pro
     assert result["rows"][4]["first_cause_match"] is None
     assert all(row["references_valid"] and row["response_identity_valid"] for row in result["rows"])
     assert all(row["runtime"]["usage"]["unknown_cost_calls"] == 0 for row in result["rows"])
-    assert all(body["max_completion_tokens"] == 8192 for body in calls)
+    assert all(body["max_completion_tokens"] == 16384 for body in calls)
     assert all(body["chat_template_kwargs"] == {"enable_thinking": True} for body in calls)
     assert result["diagnosis_reasoning"] is True
     assert all(
@@ -992,7 +992,7 @@ def test_prepared_wrapper_rejects_changed_reasoning_choice_before_call(tmp_path,
         policy={},
     )
     with pytest.raises(DiagnosisAcceptanceRefused, match="ONLY_ONE_PREPARED"):
-        router.chat("diagnose", [], {}, max_tokens=8192, reasoning=reasoning)
+        router.chat("diagnose", [], {}, max_tokens=16384, reasoning=reasoning)
     assert not calls
 
 
@@ -1038,7 +1038,7 @@ def test_prepared_wrapper_exact_request_gate_allows_no_extra_dispatch(
         actual_schema["title"] = "changed after preparation"
     else:
         assert (
-            router.chat("diagnose", messages, schema, max_tokens=8192, reasoning=True) is response
+            router.chat("diagnose", messages, schema, max_tokens=16384, reasoning=True) is response
         )
     before = len(calls)
     with pytest.raises(DiagnosisAcceptanceRefused):
@@ -1046,7 +1046,7 @@ def test_prepared_wrapper_exact_request_gate_allows_no_extra_dispatch(
             "diagnose",
             actual_messages,
             actual_schema,
-            max_tokens=8192,
+            max_tokens=16384,
             reasoning=reasoning,
         )
     assert len(calls) == before == (1 if changed == "second_call" else 0)
@@ -1146,3 +1146,32 @@ def test_legacy_preparation_without_request_code_pins_is_refused_unchanged(proje
         )
     assert path.read_bytes() == frozen
     assert not (path.parent / "execution").exists()
+
+
+@pytest.mark.parametrize("old_or_wrong_cap", [8192, 32768, True])
+def test_prepared_wrapper_rejects_non_16k_cap_before_dispatch(tmp_path, old_or_wrong_cap):
+    from types import SimpleNamespace
+
+    from headroom.acceptance import diagnosis
+    from headroom.diagnosis_schema import build_diagnosis_schema
+
+    evidence, messages = diagnosis._prepared_request(
+        {"stack_catalog": {"stk_fixture": []}},
+        "Frozen evidence only.",
+        goal="reclaim",
+        policy={},
+        required_saving_gb=None,
+    )
+    schema = build_diagnosis_schema(evidence=evidence, policy={})
+    calls = []
+    router = diagnosis._prepared_router(
+        SimpleNamespace(chat=lambda *args, **kwargs: calls.append((args, kwargs))),
+        messages,
+        tmp_path / "unused.json",
+        evidence=evidence,
+        policy={},
+    )
+    with pytest.raises(DiagnosisAcceptanceRefused, match="ONLY_ONE_PREPARED"):
+        router.chat("diagnose", messages, schema, max_tokens=old_or_wrong_cap, reasoning=True)
+    assert calls == []
+    assert not (tmp_path / "unused.json").exists()
