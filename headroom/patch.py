@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import io
 import json
 import re
 import shlex
@@ -28,7 +30,13 @@ from unidiff.errors import UnidiffParseError
 from headroom.lab.runner import copy_source
 from headroom.llm.client import CapabilityNotVerified, LLMError
 from headroom.llm.router import LLMRouter, ResponseValidationError
+from headroom.patch_edits import (
+    SourceAnchoredProposal,
+    normalize_anchored_edits,
+    source_document,
+)
 from headroom.patch_evidence import save_patch_response
+from headroom.patch_validation import bounded_structural_error, verify_exact_application
 from headroom.verify.policy import (
     PatchPolicy,
     PolicyIssue,
@@ -69,7 +77,7 @@ class PatchProposal(BaseModel):
 
 
 class PatchWireProposal(BaseModel):
-    """Model-only transport; each item is exactly one physical unified-diff line."""
+    """Legacy explicit-line codec; the live engine now requests source-anchored edits."""
 
     model_config = ConfigDict(extra="forbid", strict=True)
     diff_lines: list[Annotated[str, StringConstraints(max_length=512000)]] = Field(
@@ -117,6 +125,7 @@ class PatchAttempt:
     llm_usage: dict[str, Any] | None = None
     llm_cost: dict[str, Any] | None = None
     response_artifact: str | None = None
+    application_check: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -160,7 +169,7 @@ def validate_diff(diff: str, source_root: str | Path) -> tuple[str, ...]:
     forbidden = r"^(?:rename (?:from|to)|copy (?:from|to)|similarity index|dissimilarity index|old mode|new mode|deleted file mode|GIT binary patch|Binary files)"
     if re.search(forbidden, diff, re.MULTILINE):
         raise ValueError("renames, deletions, binary and mode changes are forbidden")
-    for line in diff.splitlines():
+    for line in diff.split("\n"):
         if line.startswith(("index ", "new file mode ")) and re.search(
             r"\b(?:120000|160000)\b", line
         ):
@@ -168,9 +177,9 @@ def validate_diff(diff: str, source_root: str | Path) -> tuple[str, ...]:
         if line.startswith("new file mode ") and line != "new file mode 100644":
             raise ValueError("new files must have regular nonexecutable mode")
     try:
-        parsed = PatchSet(diff.splitlines(keepends=True))
+        parsed = PatchSet(io.StringIO(diff))
     except (UnidiffParseError, ValueError) as error:
-        raise ValueError("invalid unified diff") from error
+        raise ValueError(bounded_structural_error(diff, error)) from error
     if not parsed or len(parsed) > 20:
         raise ValueError("diff must touch between one and twenty files")
     files = []
@@ -190,7 +199,7 @@ def validate_diff(diff: str, source_root: str | Path) -> tuple[str, ...]:
             raise ValueError("duplicate diff target")
         files.append(target)
     git_headers = []
-    for line in diff.splitlines():
+    for line in diff.split("\n"):
         if line.startswith("diff --git "):
             match = re.fullmatch(r"diff --git a/([A-Za-z0-9_./-]+) b/([A-Za-z0-9_./-]+)", line)
             if not match or match[1] != match[2]:
@@ -242,14 +251,14 @@ def _source_context(root: Path, selected: Sequence[str] | None) -> dict:
     sources, omitted, used = {}, [], 0
     for name in files:
         name = safe_relative_path(name, root)
-        text = _read_source(root / name)
-        size = len(text.encode())
+        document = source_document(root, name)
+        size = document["utf8_bytes"]
         if used + size > MAX_SOURCE_CONTEXT_BYTES:
             omitted.append(name)
             continue
-        sources[name] = "\n".join(
-            f"{index:04d}: {line}" for index, line in enumerate(text.splitlines(), 1)
-        )
+        # Exact original text is independent of metadata: display labels never
+        # become editable source, and each edit must bind to this source hash.
+        sources[name] = document
         used += size
     if not sources:
         raise ValueError(
@@ -423,6 +432,10 @@ def apply_proposal(
                     base_cli,
                     cli_equals=cli_equals,
                 )
+        if paths:
+            application_check = verify_exact_application(parsed.diff, source, candidate)
+            _write_json(directory / "exact-application.json", application_check)
+            attempt = replace(attempt, application_check=application_check)
         after = {name: _read_source(candidate / name) for name in paths}
         report = check_source_changes(before, after, policy=policy, notes=parsed.notes)
         attempt = replace(attempt, policy_report=report)
@@ -614,7 +627,7 @@ class PatchEngine:
                 response = self.router.chat(
                     "patcher",
                     messages,
-                    PatchWireProposal,
+                    SourceAnchoredProposal,
                     max_tokens=self.max_completion_tokens,
                     reasoning=False,
                 )
@@ -669,25 +682,97 @@ class PatchEngine:
                     break
                 failure = {"reason": attempt.reason, "detail": attempt.detail}
             else:
-                normalized = (
-                    PatchWireProposal.model_validate(response.parsed, strict=True)
-                    .to_proposal()
-                    .model_dump()
-                )
-                response_artifact = save_patch_response(
-                    response_path,
-                    response,
-                    records=self.router.client.ledger.entries[ledger_start:],
-                    normalized_proposal=normalized,
-                )
-                last = apply_proposal(
-                    snapshot,
-                    normalized,
-                    work_root=directory / f"attempt-{index + 1}",
-                    policy=policy,
-                    base_cli=base_cli,
-                    cli_equals=source_profile == "pinned_nanogpt",
-                )
+                try:
+                    conversion = normalize_anchored_edits(
+                        response.parsed,
+                        snapshot,
+                        allowed_source_paths=tuple(source_context["sources"]),
+                    )
+                    normalized = PatchProposal.model_validate(
+                        conversion.proposal, strict=True
+                    ).model_dump()
+                except (ValueError, OSError, UnicodeError) as error:
+                    response_artifact = save_patch_response(
+                        response_path,
+                        response,
+                        error=error,
+                        records=self.router.client.ledger.entries[ledger_start:],
+                    )
+                    detail = (
+                        str(error)[:1800] if isinstance(error, ValueError) else type(error).__name__
+                    )
+                    rejected = PatchAttempt(
+                        index + 1,
+                        "rejected",
+                        "SOURCE_EDIT_REJECTED",
+                        detail=detail,
+                        policy_report=PolicyReport(
+                            False, (PolicyIssue("SOURCE_EDIT_REJECTED", detail),)
+                        ),
+                    )
+                    last = PatchResult(
+                        "rejected",
+                        None,
+                        None,
+                        {},
+                        (),
+                        tuple(base_cli),
+                        (rejected,),
+                        rejected.policy_report,
+                        rejected.reason,
+                        str(directory),
+                        original_source_root=str(snapshot),
+                    )
+                else:
+                    response_artifact = save_patch_response(
+                        response_path,
+                        response,
+                        records=self.router.client.ledger.entries[ledger_start:],
+                        normalized_proposal=normalized,
+                        normalization_metadata=conversion.metadata,
+                    )
+                    last = apply_proposal(
+                        snapshot,
+                        normalized,
+                        work_root=directory / f"attempt-{index + 1}",
+                        policy=policy,
+                        base_cli=base_cli,
+                        cli_equals=source_profile == "pinned_nanogpt",
+                    )
+                if last.applied:
+                    for binding in conversion.metadata["files"]:
+                        actual = (Path(last.candidate_dir) / binding["path"]).read_bytes()
+                        if (
+                            hashlib.sha256(actual).hexdigest() != binding["expected_sha256"]
+                            or len(actual) != binding["expected_bytes"]
+                        ):
+                            rejected_attempt = replace(
+                                last.attempts[0],
+                                status="rejected",
+                                reason="ANCHORED_RESULT_MISMATCH",
+                                detail="Applied file does not match the source-bound edit result.",
+                                policy_report=PolicyReport(
+                                    False,
+                                    (
+                                        PolicyIssue(
+                                            "ANCHORED_RESULT_MISMATCH",
+                                            "Source-bound expected candidate bytes differ.",
+                                        ),
+                                    ),
+                                ),
+                            )
+                            last = replace(
+                                last,
+                                status="rejected",
+                                reason=rejected_attempt.reason,
+                                policy_report=rejected_attempt.policy_report,
+                                attempts=(rejected_attempt,),
+                                env_changes={},
+                                cli_changes=(),
+                                effective_cli=tuple(base_cli),
+                            )
+                            _write_json(Path(last.artifact_dir) / "result.json", asdict(last))
+                            break
                 if last.applied and source_profile is not None:
                     candidate_report = scan_source_forbidden(
                         Path(last.candidate_dir),

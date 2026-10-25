@@ -7,6 +7,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from patch_fixture_helpers import anchored_fixture
 
 from headroom.execution import (
     captured_wrapper_descriptor,
@@ -363,14 +364,7 @@ def test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_repo
         def respond(request):
             body = json.loads(request.content)
             calls.append(body)
-            payload = (
-                diagnosis
-                if len(calls) == 1
-                else {
-                    **{key: value for key, value in proposal.items() if key != "diff"},
-                    "diff_lines": proposal["diff"].splitlines(),
-                }
-            )
+            payload = diagnosis if len(calls) == 1 else anchored_fixture(proposal, body)
             return httpx.Response(
                 200,
                 json={

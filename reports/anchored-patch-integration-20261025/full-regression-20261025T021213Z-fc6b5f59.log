@@ -1,0 +1,45 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}}
+.............................F.......................................... [ 32%]
+........................................................................ [ 65%]
+........................................................................ [ 98%]
+...                                                                      [100%]
+=================================== FAILURES ===================================
+____________ test_model_cannot_edit_immutable_nanogpt_configurator _____________
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-156/test_model_cannot_edit_immutab0')
+
+    def test_model_cannot_edit_immutable_nanogpt_configurator(tmp_path):
+        source = Path(__file__).resolve().parents[1] / ".cache/upstream/nanoGPT"
+        if not source.is_dir():
+            pytest.skip("Pinned local nanoGPT checkout not present")
+        before = (source / "configurator.py").read_text()
+        after = before + "\n# Memory patch tries to edit immutable reviewed loader.\n"
+        payload = {
+            "diff": diff_for(before, after, "configurator.py"),
+            "env_changes": {},
+            "cli_changes": [],
+        }
+        requests = []
+        router = mock_router([payload], requests)
+        try:
+            result = PatchEngine(router, max_repairs=0).generate_and_apply(
+                source,
+                {"fix_id": "f1"},
+                work_root=tmp_path / "work",
+                source_files=["train.py", "model.py"],
+                source_profile="pinned_nanogpt",
+                sandboxed=True,
+            )
+        finally:
+            router.client.close()
+>       assert not result.applied and result.reason == "SOURCE_PROFILE_UNVERIFIED"
+E       AssertionError: assert (not False and 'SOURCE_EDIT_REJECTED' == 'SOURCE_PROFILE_UNVERIFIED'
+E        +  where False = PatchResult(status='rejected', candidate_dir=None, patch_path=None, env_changes={}, cli_changes=(), effective_cli=(), ...', notes=(), original_source_root='/home/xiaodouzi/workspace/headroom/.cache/upstream/nanoGPT', runtime_verified=False).applied
+E         
+E         - SOURCE_PROFILE_UNVERIFIED
+E         + SOURCE_EDIT_REJECTED)
+
+tests/test_patch.py:466: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_patch.py::test_model_cannot_edit_immutable_nanogpt_configurator
+1 failed, 218 passed in 90.72s (0:01:30)

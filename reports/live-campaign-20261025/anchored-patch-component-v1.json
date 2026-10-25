@@ -1,0 +1,209 @@
+{
+  "started_utc": "2026-10-25T02:24:08.119505+00:00",
+  "case": "generic_anchored_patch_component",
+  "accepted": true,
+  "mvp_case": false,
+  "counts_as_mvp_success": false,
+  "gpu_execution": false,
+  "extension_iteration": 1,
+  "corresponding_mvp": "v5",
+  "prior_component_failures_and_mvp_failures_retained": true,
+  "purpose": "Observe native anchored edits, deterministic exact source-bound conversion, real git apply, compile and unchanged executable AST on a generic source.",
+  "request_limit": 4,
+  "patch_repairs": 3,
+  "completion_cap": 4000,
+  "hard_component_limit_usd": "0.10",
+  "root_review": {
+    "path": "reports/anchored-patch-integration-20261025/component-root-review.json",
+    "sha256": "be08e707ef5723eab27938c5a194a7df86d378066b31c242401fb36ef4763185",
+    "source_pins": {
+      ".cache/setup/check_anchored_patch_component_v1.py": "f1c49446638c446728a9ad04bc58af96578385926983d94473ba5da5f922974c",
+      "headroom/patch.py": "e5db86976638d4da5ea23d8f230b5cbd33eff0aa2d926c776b68340787cad8d0",
+      "headroom/patch_edits.py": "ff3518e5188657f874c53bc135e7c67ef629e2c79a931cfe8b112b8c4ec4f5ef",
+      "headroom/patch_validation.py": "9b2b54e781732cc76801d1fa7ae4b06a3deb21507285c5debd57e9cc97b9df55",
+      "headroom/patch_evidence.py": "8d1cd118a6d72b0825c3359df6bf47b7438e870151a26325497df29cc2c4f543",
+      "headroom/prompts/patch.md": "d59e62720fd618e4a8c54f57f7d0f330c25de3015e276302f31ae2949589af14",
+      "headroom/prompts/patch_fix.md": "e6050e0519eff30c4e2a1860ea6feb7ea6c84c1bb561826ea8b9eab294d97a2f"
+    },
+    "quality_receipt": {
+      "path": "reports/anchored-patch-integration-20261025/full-regression-20261025T021416Z-68fda356-receipt.json",
+      "sha256": "b5e81c87e43e382a70c0e1c75db2832373cdda91751ded8880493514161b3f3a"
+    },
+    "profile_sha256": "a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c"
+  },
+  "driver_sha256": "f1c49446638c446728a9ad04bc58af96578385926983d94473ba5da5f922974c",
+  "source_sha256": "edaaeb1663f87186a7d2b9942f72c68fdfb45038cadc123c80897872606d0c10",
+  "full_provider_reservation_usd": "0.0822432",
+  "native_schema_sha256": "bcacf31c05c037a43bd7c2a9078ff471419105894c9a06a92eac20185bbc2f9f",
+  "result": {
+    "status": "applied",
+    "reason": "STATIC_CHECKS_PASSED",
+    "artifact_dir": "/home/xiaodouzi/workspace/headroom/runs/acceptance/anchored-patch-component-20261025-v1/patch/patch-engine-ba758bd3d7cd418da44196b55a28e25a",
+    "attempts": 1,
+    "runtime_verified": false
+  },
+  "exact_application_artifact": "runs/acceptance/anchored-patch-component-20261025-v1/patch/patch-engine-ba758bd3d7cd418da44196b55a28e25a/attempt-1/patch-ac2c7eaa3c8648689ece882d3ad56af2/exact-application.json",
+  "exact_application_artifact_sha256": "e33728722b83619af20c4911bee3b5fdc8ce23d34bf8310a895ffadb151cf705",
+  "patch_sha256": "fa50507698cc781d278e4a4c01e4bef0844ae3732089ebff85a4631eb92a1aca",
+  "patch_lf_count": 6,
+  "candidate_sha256": "f84b6ec6c371be3d6769358c8b65be2d2006cbaa59988886dada1d6b8fa0ff46",
+  "response_artifact": "runs/acceptance/anchored-patch-component-20261025-v1/patch/patch-engine-ba758bd3d7cd418da44196b55a28e25a/attempt-1-response.json",
+  "response_sha256": "a58582d33c8e5abf4df0ddefaf9a47fc7b9ca31bbf8ae50e93d6f926220f8242",
+  "source_binding": {
+    "schema": "source_anchored_edits_v1",
+    "conversion": "exact_original_lines_to_unified_diff",
+    "context_lines": 3,
+    "edit_count": 1,
+    "file_count": 1,
+    "diff_sha256": "fa50507698cc781d278e4a4c01e4bef0844ae3732089ebff85a4631eb92a1aca",
+    "diff_bytes": 130,
+    "files": [
+      {
+        "path": "example.py",
+        "source_sha256": "edaaeb1663f87186a7d2b9942f72c68fdfb45038cadc123c80897872606d0c10",
+        "source_bytes": 38,
+        "expected_sha256": "f84b6ec6c371be3d6769358c8b65be2d2006cbaa59988886dada1d6b8fa0ff46",
+        "expected_bytes": 77,
+        "edits": [
+          {
+            "edit_index": 0,
+            "start_line": 1,
+            "end_line": 1,
+            "start_byte": 0,
+            "end_byte": 21
+          }
+        ]
+      }
+    ]
+  },
+  "application_check": {
+    "protocol": "headroom.exact_application.v1",
+    "verified": true,
+    "files": [
+      {
+        "path": "example.py",
+        "before_sha256": "edaaeb1663f87186a7d2b9942f72c68fdfb45038cadc123c80897872606d0c10",
+        "expected_sha256": "f84b6ec6c371be3d6769358c8b65be2d2006cbaa59988886dada1d6b8fa0ff46",
+        "candidate_sha256": "f84b6ec6c371be3d6769358c8b65be2d2006cbaa59988886dada1d6b8fa0ff46",
+        "hunks": 1,
+        "bytes": 77
+      }
+    ]
+  },
+  "checks": {
+    "bounded_calls": true,
+    "applied": true,
+    "bounded_patch_attempts": true,
+    "source_unchanged": true,
+    "git_apply_recorded": true,
+    "compile_exit_zero": true,
+    "only_example_changed": true,
+    "one_function": true,
+    "docstring_added": true,
+    "behavior_ast_unchanged": true,
+    "physical_lines_present": true,
+    "response_mode_0600": true,
+    "raw_visible_complete": true,
+    "raw_matches_parsed": true,
+    "parsed_not_omitted": true,
+    "anchored_edits_present": true,
+    "all_edits_exact_source": true,
+    "parsed_hash_binding": true,
+    "application_receipt_present": true,
+    "normalization_recorded": true,
+    "source_binding_matches_actual_bytes": true,
+    "exact_application_matches_binding": true,
+    "exact_application_recomputed": true,
+    "normalized_proposal_matches_saved_diff": true
+  },
+  "dispatch_count": 1,
+  "final_source_review_unchanged": true,
+  "runtime_receipt": "runs/acceptance/anchored-patch-component-20261025-v1/runtime/runtime.json",
+  "runtime_sha256": "96eb176245fb56b249b8cea1216906c4e15a4263c3bbff4c0c24910b5b77919e",
+  "usage": {
+    "calls": 1,
+    "known_cost_usd": "0.00054",
+    "total_cost_usd": "0.00054",
+    "unknown_cost_calls": 0,
+    "complete": true,
+    "billing_complete": true,
+    "bounded_cost_calls": 0,
+    "unresolved_cost_calls": 0,
+    "conservative_total_usd": "0.00054",
+    "admission_counts": {
+      "verified_provider_bound": 1,
+      "local_estimate": 0,
+      "unknown": 0
+    },
+    "input_tokens": 1410,
+    "known_input_tokens": 1410,
+    "output_tokens": 130,
+    "known_output_tokens": 130,
+    "by_model": [
+      {
+        "model": "nvidia/nemotron-3-super-120b-a12b",
+        "calls": 1,
+        "known_cost_usd": "0.00054",
+        "total_cost_usd": "0.00054",
+        "unknown_cost_calls": 0,
+        "complete": true,
+        "billing_complete": true,
+        "bounded_cost_calls": 0,
+        "unresolved_cost_calls": 0,
+        "conservative_total_usd": "0.00054",
+        "admission_counts": {
+          "verified_provider_bound": 1,
+          "local_estimate": 0,
+          "unknown": 0
+        },
+        "input_tokens": 1410,
+        "known_input_tokens": 1410,
+        "output_tokens": 130,
+        "known_output_tokens": 130
+      }
+    ]
+  },
+  "budget": {
+    "run_id": "7adaa651e34f4392910fcc43bda17de7",
+    "limit_usd": "0.1",
+    "run_budget_mode": "actual_usage",
+    "shared_pool_requires_provider_bounds": true,
+    "run_limit_basis": "actual_usage",
+    "run_budget_basis": "actual_usage",
+    "billing_complete": true,
+    "conservative_total_usd": "0.00054",
+    "bounded_attempts": 0,
+    "reviewed_retained_attempts": 0,
+    "unresolved_attempts": 0,
+    "run_budget_reached": false,
+    "run_budget_exceeded": false,
+    "remaining_basis": "actual_usage",
+    "conservative_charge_usd": "0.00054",
+    "reserved_or_actual_usd": "0.00054",
+    "contains_local_estimate": false,
+    "known_charge_usd": "0.00054",
+    "total_actual_usd": "0.00054",
+    "unknown_attempts": 0,
+    "pending_attempts": 0,
+    "remaining_usd": "0.09946",
+    "status": "closed",
+    "halt_reason": null,
+    "billing_bound_unresolved": false,
+    "dispatch_blocked": false
+  },
+  "cleanup_errors": [],
+  "financial_checks": {
+    "runtime_completed": true,
+    "cleanup_clean": true,
+    "budget_closed_no_halt": true,
+    "no_pending": true,
+    "no_unresolved": true,
+    "billing_complete": true,
+    "within_component_limit": true,
+    "all_settled_responses": true,
+    "exact_model": true,
+    "ledger_binding": true,
+    "per_call_charge_evidence": true
+  },
+  "completed_utc": "2026-10-25T02:24:09.915094+00:00"
+}

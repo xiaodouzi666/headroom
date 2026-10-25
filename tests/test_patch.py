@@ -9,6 +9,7 @@ from pathlib import Path
 
 import httpx
 import pytest
+from patch_fixture_helpers import anchored_fixture
 
 from headroom.config import SUPER_MODEL, RuntimeConfig, VerifiedCapabilities, candidate_models
 from headroom.llm.client import TokenFactoryClient
@@ -72,8 +73,7 @@ def mock_router(payloads, requests, completion_tokens=100):
         requests.append(body)
         fixture = payloads[min(len(requests) - 1, len(payloads) - 1)]
         # Test fixtures describe public proposals; this mock emits their wire encoding.
-        payload = {key: value for key, value in fixture.items() if key != "diff"}
-        payload["diff_lines"] = fixture["diff"].splitlines()
+        payload = anchored_fixture(fixture, body)
         return httpx.Response(
             200,
             json={
@@ -297,8 +297,9 @@ def test_initial_plus_three_repairs_maximum(project, tmp_path):
     finally:
         router.client.close()
     assert not result.applied and len(requests) == 4 and len(result.attempts) == 4
-    assert all(item.reason == "PATCH_APPLY_FAILED" for item in result.attempts)
-    assert len({item.candidate_dir for item in result.attempts}) == 4
+    assert all(item.reason == "SOURCE_EDIT_REJECTED" for item in result.attempts)
+    assert all(item.candidate_dir is None for item in result.attempts)
+    assert all(item.response_artifact for item in result.attempts)
 
 
 def test_compile_failure_can_be_repaired(tmp_path):
@@ -462,9 +463,11 @@ def test_model_cannot_edit_immutable_nanogpt_configurator(tmp_path):
         )
     finally:
         router.client.close()
-    assert not result.applied and result.reason == "SOURCE_PROFILE_UNVERIFIED"
+    assert not result.applied and result.reason == "SOURCE_EDIT_REJECTED"
     assert len(requests) == 1
+    assert result.candidate_dir is None and result.patch_path is None
+    assert result.attempts[0].response_artifact
+    assert (source / "configurator.py").read_text() == before
     assert (
-        json.loads(Path(result.patch_path).with_name("result.json").read_text())["status"]
-        == "rejected"
+        json.loads((Path(result.artifact_dir) / "result.json").read_text())["status"] == "rejected"
     )

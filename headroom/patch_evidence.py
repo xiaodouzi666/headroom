@@ -87,7 +87,15 @@ def _publish(path, payload):
             os.close(fd)
 
 
-def save_patch_response(path, response=None, *, error=None, records=(), normalized_proposal=None):
+def save_patch_response(
+    path,
+    response=None,
+    *,
+    error=None,
+    records=(),
+    normalized_proposal=None,
+    normalization_metadata=None,
+):
     """Persist visible output verbatim or bounded prefixes, not hidden reasoning/requests."""
     records = tuple(records)
     parsed = getattr(response, "parsed", None)
@@ -104,8 +112,13 @@ def save_patch_response(path, response=None, *, error=None, records=(), normaliz
     normalized_diff = (
         normalized_proposal.get("diff") if isinstance(normalized_proposal, dict) else None
     )
+    if normalization_metadata is not None:
+        metadata_raw = json.dumps(normalization_metadata, allow_nan=False).encode()
+        if len(metadata_raw) > 64 * 1024:
+            raise ValueError("Patch normalization metadata exceeds its evidence bound")
+    anchored = isinstance(parsed, dict) and "edits" in parsed
     record = {
-        "schema_version": 2,
+        "schema_version": 3,
         "content_is_untrusted_data": True,
         "response_available": response is not None,
         "visible": _content(response.text) if response is not None else None,
@@ -125,13 +138,18 @@ def save_patch_response(path, response=None, *, error=None, records=(), normaliz
         "normalized_diff": _content(normalized_diff),
         "normalization": {
             "status": "applied" if normalized_proposal is not None else "not_applied",
-            "algorithm": "diff_lines_join_lf_v1" if normalized_proposal is not None else None,
-            "source_field": "diff_lines" if normalized_proposal is not None else None,
+            "algorithm": ("source_anchored_lines_v1" if anchored else "diff_lines_join_lf_v1")
+            if normalized_proposal is not None
+            else None,
+            "source_field": ("edits" if anchored else "diff_lines")
+            if normalized_proposal is not None
+            else None,
+            "source_binding": normalization_metadata,
             "source_parsed_sha256": (
                 hashlib.sha256(parsed_raw).hexdigest() if parsed_raw is not None else None
             ),
             "line_count": (
-                len(parsed["diff_lines"])
+                (normalized_diff.count("\n") if anchored else len(parsed["diff_lines"]))
                 if normalized_proposal is not None and isinstance(parsed, dict)
                 else None
             ),

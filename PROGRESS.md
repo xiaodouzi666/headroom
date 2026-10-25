@@ -55,6 +55,8 @@ All work, caches, runs, and media remain on azuki.
 
 ## Next acceptance and remaining deliverables
 
+- 2026-10-25T02:08:17.732199+00:00: Frank explicitly authorized up to3 additional MVP repair iterations (v5/v6/v7), with original thresholds/policies and existing gift-only global/day limits unchanged. Extension1 implements exact source-anchored line edits, detailed errors and exact application verification; no success is claimed before integration and real9-case acceptance. The prior stop and failedv1–v4 remain historical evidence.
+
 - FINAL v4 (2026-10-24T23:31:55Z): all9 genuinely executed;0/9targets,7/9firstcauses. Original three repair iterations exhausted. Finish reports/commit/handoff, then stop additional repair work for Frank under PLAN§0.6; no new budget approval is needed for the existing gift-only authorization.
 
 - The dedicated T1.3/T1.4 drivers and native model tool loop are implemented and have now been exercised live. Accepted client capability, partial diagnosis/research evidence and failed repair outcomes remain separately recorded below.
@@ -176,3 +178,13 @@ All work, caches, runs, and media remain on azuki.
 - 2026-10-24T23:16:51.941872+00:00: actual production full regression2026passed551.34s (driver552.932s),236 complete source/config/test/production-prompt hashes unchanged, original PLAN and parent/spawn network/credentials/live-ledger/GPU guards unchanged. Ruffcheck/format anddiffcheck pass before launch. Source fixes include explicit line-array transport/private dual evidence and productionpatcher replay role compatibility; raw failed live results remain preserved. No additional live model orGPU is part of this suite. Formal final9caseMVP still pending; workerexit0 remains distinct from literalfixCLIexit0.
 
 - 2026-10-24T23:35:38.369724+00:00: finalv4 driver exit1/735.240s,full9 executed. Target0/9;firstcause7true/0false/2unknown. Two applied+compiled candidates:s1OOM reverted,s8round2keep20steps/3.556%reduction/loss originalscalar-seriesidentical,targetfalse. Nine literal report-number checks passed;CLI supplemental fails formal allzero (literalunobserved).165modelcalls known1.037464332/conservative1.039832052;all298attempts settled/46runs closed. Runtime conservative3.077893672/remaining6.921755368;externalincludednet4.900136132;no recharge/allocationchange. Finaliterationlimit reached,stop additional repairs pendingFrank. Reports/README/feedback refreshed,ownedloopbackpreview3915279 loadedfrozen78source;health/Home200/no UI submission.
+
+## MVP v5 extension implementation checkpoint — 2026-10-25
+
+- User authorization: additional repair iteration 1/3, original PLAN/manifest and all acceptance thresholds unchanged.
+- Replaced model-authored hunk coordinates with exact original-source SHA256 plus unique physical-line edits; public unified diff API remains unchanged.
+- Added bounded structural failure feedback and independent exact application reconstruction before compile; model-conversion expected candidate hashes are checked again.
+- Guarded focused integration: 175 passed. Guarded full regression: 2,134 passed in 551.75s; all 241 source entries and PLAN unchanged. Earlier focused run's single outdated rejection assertion is retained as failure evidence, then corrected to assert earlier rejection without any candidate copy.
+- Ruff check/format and diff checks passed. Preliminary staged gitleaks: zero findings.
+- Real generic anchored-edit component: accepted on one Super call, 130 output tokens, exact cost $0.00054. Raw response, source hash, generated diff, Git application, compile, exact candidate bytes and unchanged executable AST all verified. This is not a benchmark success.
+- Full nine-scenario v5 campaign is the next step; no new MVP result is asserted here.

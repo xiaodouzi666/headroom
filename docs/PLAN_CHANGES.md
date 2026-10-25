@@ -69,3 +69,8 @@ harnesses and submission drafts. Keep genuine live model accuracy, cost, repaire
 GPU outcomes and evaluations visibly pending until Token Factory is available.
 Frank also asked whether self-funded Token Factory can avoid waiting for promotional
 approval; official documentation will be checked before advising on that option.
+
+
+## 2026-10-25T02:08:17.732199+00:00: explicitly authorized bounded MVP extension
+
+Frank selected “允许再修最多3轮（推荐）” after reviewing the final v4 failure report and source-anchor/error-feedback/application-location proposal. This authorizes at most three ADDITIONAL MVP repair iterations, v5/v6/v7, using the existing gifted-credit global/day pool only. It does not increase that pool, authorize recharge/overrun, change the original nine scenes or acceptance/policy/numerical/cost limits, or erase v1–v4. Original PLAN.md is unchanged. After these three additional iterations, another failure returns to Frank; passing the original MVP resumes the already authorized plan under section0.6.

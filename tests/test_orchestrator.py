@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 import httpx
 import pytest
+from patch_fixture_helpers import anchored_fixture
 
 from headroom.config import RuntimeConfig, VerifiedCapabilities, candidate_models
 from headroom.llm.client import TokenFactoryClient
@@ -144,14 +145,7 @@ def test_sdk_patch_and_report_pipeline_keeps_fixture_provenance(tmp_path, execut
         def respond(request):
             body = json.loads(request.content)
             calls.append(body["model"])
-            payload = (
-                diagnosis
-                if len(calls) == 1
-                else {
-                    **{key: value for key, value in proposal.items() if key != "diff"},
-                    "diff_lines": proposal["diff"].splitlines(),
-                }
-            )
+            payload = diagnosis if len(calls) == 1 else anchored_fixture(proposal, body)
             return httpx.Response(
                 200,
                 json={
@@ -499,12 +493,15 @@ def search_run(
                         tofile="b/train.py",
                     )
                 )
-                payload = {
-                    "diff_lines": diff.splitlines(),
-                    "env_changes": {},
-                    "cli_changes": [],
-                    "notes": ["Offline synthetic fixture."],
-                }
+                payload = anchored_fixture(
+                    {
+                        "diff": diff,
+                        "env_changes": {},
+                        "cli_changes": [],
+                        "notes": ["Offline synthetic fixture."],
+                    },
+                    body,
+                )
             return httpx.Response(
                 200,
                 json={

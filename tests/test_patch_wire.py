@@ -130,25 +130,44 @@ def test_original_joined_character_limit_remains():
             PatchWireProposal(**wire(lines))
 
 
+def anchored(old_lines=None, new_lines=None, **extra):
+    edits = (
+        []
+        if old_lines is None
+        else [
+            {
+                "path": "train.py",
+                "source_sha256": hashlib.sha256(b"x = 1\n").hexdigest(),
+                "old_lines": old_lines,
+                "new_lines": new_lines,
+            }
+        ]
+    )
+    return {"edits": edits, "env_changes": {}, "cli_changes": [], "notes": [], **extra}
+
+
 def test_actual_sdk_router_engine_apply_and_compile_with_hash_linked_evidence(tmp_path):
-    payload = wire(LINES)
+    payload = anchored(["x = 1"], ["x = 2"])
     result, calls, source = run_wire(tmp_path, [payload])
     assert result.applied and result.attempts[0].compile_exit_code == 0
     assert (Path(result.candidate_dir) / "train.py").read_text() == "x = 2\n"
     assert (source / "train.py").read_text() == "x = 1\n"
-    assert len(calls) == 1
     sent = calls[0]
     assert sent["model"] == SUPER_MODEL
     assert sent["max_completion_tokens"] == 4000
     assert sent["chat_template_kwargs"] == {"enable_thinking": False}
     schema = sent["response_format"]["json_schema"]["schema"]
-    assert schema["properties"]["diff_lines"]["type"] == "array"
-    assert "diff" not in schema["properties"]
+    assert schema["properties"]["edits"]["type"] == "array"
+    assert "diff" not in schema["properties"] and "diff_lines" not in schema["properties"]
     assert "pattern" not in json.dumps(schema)
+    requested = json.loads(sent["messages"][-1]["content"])
+    document = requested["sources"]["train.py"]
+    assert document["text"] == "x = 1\n" and "0001:" not in document["text"]
+    assert document["source_sha256"] == payload["edits"][0]["source_sha256"]
     path = Path(result.attempts[0].response_artifact)
     artifact = json.loads(path.read_text())
-    normalized = PatchWireProposal(**payload).to_proposal().model_dump()
     expected = "\n".join(LINES) + "\n"
+    normalized = {"diff": expected, "env_changes": {}, "cli_changes": [], "notes": []}
     assert artifact["parsed"] == payload
     assert json.loads(artifact["visible"]["text"]) == payload
     assert artifact["diff"] is None
@@ -156,7 +175,8 @@ def test_actual_sdk_router_engine_apply_and_compile_with_hash_linked_evidence(tm
     assert artifact["normalized_diff"]["text"] == expected
     assert Path(result.patch_path).read_text() == expected
     transformation = artifact["normalization"]
-    assert transformation["algorithm"] == "diff_lines_join_lf_v1"
+    assert transformation["algorithm"] == "source_anchored_lines_v1"
+    assert transformation["source_field"] == "edits"
     assert transformation["line_count"] == len(LINES) and transformation["terminal_lf"]
     assert (
         transformation["source_parsed_sha256"]
@@ -171,6 +191,11 @@ def test_actual_sdk_router_engine_apply_and_compile_with_hash_linked_evidence(tm
         ).hexdigest()
     )
     assert transformation["output_diff_sha256"] == hashlib.sha256(expected.encode()).hexdigest()
+    assert (
+        transformation["source_binding"]["files"][0]["expected_sha256"]
+        == hashlib.sha256(b"x = 2\n").hexdigest()
+    )
+    assert result.attempts[0].application_check
     assert stat.S_IMODE(path.stat().st_mode) == 0o600
     assert stat.S_IMODE(path.parent.stat().st_mode) == 0o700
     assert len(path.read_bytes()) <= 256 * 1024
@@ -178,14 +203,14 @@ def test_actual_sdk_router_engine_apply_and_compile_with_hash_linked_evidence(tm
 
 
 @pytest.mark.parametrize("flat", ["".join(LINES), r"\n".join(LINES)])
-def test_flat_or_literal_newline_string_is_never_repaired(tmp_path, flat):
-    result, calls, source = run_wire(tmp_path, [wire([flat])])
+def test_old_flat_or_literal_newline_wire_is_never_implicitly_converted(tmp_path, flat):
+    payload = wire([flat])
+    result, calls, source = run_wire(tmp_path, [payload])
     assert not result.applied and len(calls) == 1
-    assert result.attempts[0].detail == "diff must touch between one and twenty files"
+    assert result.attempts[0].reason == "LLM_RESPONSE_REJECTED"
     artifact = json.loads(Path(result.attempts[0].response_artifact).read_text())
-    assert artifact["parsed"]["diff_lines"] == [flat]
-    assert artifact["normalized_diff"]["text"] == flat + "\n"
-    assert artifact["normalized_diff"]["text"].count("\n") == 1
+    assert json.loads(artifact["visible"]["text"]) == payload
+    assert artifact["normalization"]["status"] == "not_applied"
     assert (source / "train.py").read_text() == "x = 1\n"
 
 
@@ -196,48 +221,54 @@ def test_flat_or_literal_newline_string_is_never_repaired(tmp_path, flat):
         ({"cli_changes": ["--batch_size", "2"]}, ("--batch_size", "4")),
     ],
 )
-def test_empty_wire_array_preserves_approved_env_or_cli_only_proposals(tmp_path, extra, base_cli):
-    result, calls, _ = run_wire(tmp_path, [wire(**extra)], base_cli=base_cli)
+def test_empty_edits_preserve_approved_env_or_cli_only_proposals(tmp_path, extra, base_cli):
+    result, calls, _ = run_wire(tmp_path, [anchored(**extra)], base_cli=base_cli)
     assert result.applied and len(calls) == 1
     artifact = json.loads(Path(result.attempts[0].response_artifact).read_text())
     assert artifact["normalized_proposal"]["diff"] == ""
     assert artifact["normalization"]["line_count"] == 0
     assert artifact["normalization"]["terminal_lf"] is False
-    if extra.get("cli_changes"):
-        assert result.effective_cli == ("--batch_size", "2")
-    else:
-        assert result.env_changes == extra["env_changes"]
 
 
-def test_empty_array_does_not_bypass_no_change_policy(tmp_path):
-    result, calls, _ = run_wire(tmp_path, [wire()])
+def test_empty_edits_do_not_bypass_no_change_policy(tmp_path):
+    result, calls, _ = run_wire(tmp_path, [anchored()])
     assert not result.applied and result.reason == "NO_CHANGE" and len(calls) == 1
 
 
-def test_embedded_lf_failure_is_preserved_and_can_use_only_existing_repair_slot(tmp_path):
-    bad = wire(["\n".join(LINES)])
-    result, calls, _ = run_wire(tmp_path, [bad, wire(LINES)], max_repairs=1)
-    assert result.applied and len(calls) == 2 and len(result.attempts) == 2
+def test_bad_source_anchor_is_preserved_and_repaired_against_original(tmp_path):
+    bad = anchored(["wrong original"], ["x = 2"])
+    result, calls, _ = run_wire(tmp_path, [bad, anchored(["x = 1"], ["x = 2"])], max_repairs=1)
+    assert result.applied and len(calls) == len(result.attempts) == 2
+    first = json.loads(Path(result.attempts[0].response_artifact).read_text())
+    assert first["parsed"] == bad and json.loads(first["visible"]["text"]) == bad
+    assert first["normalized_proposal"] is None
+    assert first["normalization"]["status"] == "not_applied"
+    assert result.attempts[0].reason == "SOURCE_EDIT_REJECTED"
+    assert "SOURCE_EDIT_REJECTED" in calls[1]["messages"][-1]["content"]
+    assert all(call["max_completion_tokens"] == 4000 for call in calls)
+
+
+def test_embedded_lf_rejected_without_guessing_and_only_existing_repair_slot(tmp_path):
+    bad = anchored(["x = 1"], ["x = 2\nx = 3"])
+    result, calls, _ = run_wire(tmp_path, [bad, anchored(["x = 1"], ["x = 2"])], max_repairs=1)
+    assert result.applied and len(calls) == 2
     first = json.loads(Path(result.attempts[0].response_artifact).read_text())
     assert json.loads(first["visible"]["text"]) == bad
     assert first["validation_reason"] == "schema_mismatch"
     assert first["normalization"]["status"] == "not_applied"
-    assert first["normalized_proposal"] is None
-    assert result.attempts[0].reason == "LLM_RESPONSE_REJECTED"
-    assert all(call["max_completion_tokens"] == 4000 for call in calls)
 
 
-def test_four_failed_wire_responses_use_no_extra_repair_calls(tmp_path):
-    result, calls, _ = run_wire(tmp_path, [wire(["bad\nline"])], max_repairs=3)
+def test_four_failed_source_responses_use_no_extra_repair_calls(tmp_path):
+    result, calls, _ = run_wire(tmp_path, [anchored(["wrong"], ["replacement"])], max_repairs=3)
     assert not result.applied and len(calls) == len(result.attempts) == 4
-    assert all(a.reason == "LLM_RESPONSE_REJECTED" for a in result.attempts)
+    assert all(a.reason == "SOURCE_EDIT_REJECTED" for a in result.attempts)
 
 
-def test_original_parser_byte_limit_is_still_enforced(tmp_path):
-    result, calls, _ = run_wire(tmp_path, [wire(["字" * 180000])])
+def test_large_source_edits_fail_closed_and_preserve_bounded_visible_evidence(tmp_path):
+    payload = anchored(["x = 1"], ["字" * 180000])
+    result, calls, _ = run_wire(tmp_path, [payload])
     assert not result.applied and len(calls) == 1
-    assert result.attempts[0].reason == "UNSAFE_OR_INVALID_PATCH"
     artifact = json.loads(Path(result.attempts[0].response_artifact).read_text())
-    assert artifact["normalization"]["status"] == "applied"
-    assert artifact["normalized_diff"]["utf8_bytes"] > 512000
-    assert artifact["normalized_diff"]["truncated"]
+    assert artifact["normalization"]["status"] == "not_applied"
+    assert artifact["visible"]["truncated"]
+    assert artifact["visible"]["sha256"] == hashlib.sha256(json.dumps(payload).encode()).hexdigest()
