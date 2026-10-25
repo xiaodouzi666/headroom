@@ -5,14 +5,17 @@ manifest run reproduced five CUDA OOMs and completed twenty steps in seven workl
 All captures and cleanup checks passed. This is baseline acceptance, not automated
 repair or model-quality evidence.
 
-No model-generated repair has yet passed the original acceptance gates, and
-there is no accepted main repair benchmark or ablation score. Authenticated
-capability probing and the real long-evidence client gate are now complete.
-Diagnosis v5 has partial measured success; MVP v1 stopped safely after its first
-Nano call. **MVP v2 and v3 finished without an accepted repair; their failures and
-operational skips are preserved below. The final permitted MVP v4 iteration finished: 0/9 targets, 7/9 first causes. All three original repair iterations are exhausted; further repair work awaits the owner's decision under PLAN section0.6.**
-Tavily API/cache component evidence and the independent T2.7 GPU execution-path
-comparison have passed. These facts do not substitute for a successful repair.
+The latest completed authorized extension, MVP v6, passed one target out of nine.
+Its s3 model-generated repair completed 20 updates, reduced peak memory by
+73.378694%, and preserved all recorded losses and parameter count. The original
+overall MVP gate remains failed (minimum six targets); raw first-cause matches
+are 7/9, or six correct, one invalid and two unknown with the validity gate.
+All nine literal CLI execution chains were verified: one exit 0, eight exit 78.
+V1–v5 failures remain preserved. The owner authorized three additional iterations
+v5/v6/v7; final v7 is integrated and undergoing full regression before live testing.
+Main evaluation, ablations and complete project acceptance remain pending.
+Capability/client, Tavily component and T2.7 isolation evidence do not substitute
+for these remaining gates. See the versioned v6 summary and latest phase summary.
 
 ## 2026-10-25 model and isolation evidence
 
@@ -307,12 +310,12 @@ differences are not memory improvements.
   No threshold or category has been changed to force a pass.
 - The s2 baseline is already below 22 GB. It does not demonstrate T2.1's
   required two-round fit:22GB improvement.
-- No authenticated model-generated GPU repair has been demonstrated.
-  CPU numerical-pairing checks and offline Pareto/search/report tests exist,
-  but do not establish real repaired-GPU memory savings or end-to-end acceptance.
+- MVP v6 demonstrates one authenticated model-generated GPU repair (s3),
+  with the original gates preserved. That single success does not establish
+  overall MVP, main benchmark or ablation acceptance.
 - Capability and long-evidence client gates are accepted as recorded above.
   The reviewed runtime and gifted-credit authorization are available; actual
-  repair, main evaluation and ablation acceptance are still pending. No recharge
+  overall repair, main evaluation and ablation acceptance are still pending. No recharge
   or exceeding the shared global/day pools is authorized. Tavily component
   evidence remains distinct from Sources on a complete model-generated repair.
 
@@ -387,7 +390,7 @@ completed the remaining rows.
 | Evaluation | State | Success / diagnosis / cost claims |
 |---|---|---|
 | Ten original workloads, original two-policy requirement | Runtime available; original full matrix not yet executed | Not measured; current default/strict are equivalent and original wording remains unresolved |
-| Full evidence + Ultra | Diagnosis-only v5 and failed MVP v1/v2/v3 recorded here; final v4 target0/9 and first-cause7/9; no accepted repair main table | No repair success or ablation advantage claimed |
+| Full evidence + Ultra | Latest completed MVP v6: 1/9 targets; 7 raw / 6 valid first causes. Versioned MVP trials are not a fixed-protocol main benchmark | One s3 repair verified; no main benchmark or ablation advantage claimed |
 | Traceback + memory_summary + Ultra diagnosis | Not yet executed under a fixed comparable protocol | Not measured |
 | Full evidence + Super diagnosis | Not yet executed under a fixed comparable protocol | Not measured |
 
@@ -421,7 +424,7 @@ This is reporting functionality, not a new model benchmark. Offline fixtures and
 the manually authored GPU regressions above do not add live repair successes.
 MVP v1, v2 and v3 failed before an accepted repair; the eight later v2 cases
 were operational skips. Accepted main evaluation and ablation results remain
-pending. Final v4 failed with target0/9; its evidence is appended below.
+pending. Historical v4 failed with target0/9; v6 later passed s3 only (1/9 overall). Both records are preserved below.
 
 ## First Token Factory connectivity measurements — not repair results
 
@@ -558,3 +561,9 @@ T0.4全部60项探测已执行并保留失败；Ultra实测500029输入token成�
 Original target gate:0/9. First-category match:7/9 (2 unknown); unchanged auditor also requires valid diagnosis, giving6 true/1 false/2 unknown.17/52 patch attempts applied/compiled with independently verified source-byte chains;5/8 synthetic scenes had an applied candidate. s4 completed20 steps and reduced measured peak89.769367%, but the original scalar-loss check compared batch1 reference with batch8 candidate and rejected it. No final configuration selected. All nine scenes executed; PLAN and manifest unchanged. Details: reports/phase-1-summary-20261025-mvp-v5.md.
 
 98 calls: all-call known$0.89236424, verified bounded remainder$0.00460392, conservative$0.89696816, actual-total null. Campaign known0 is its fully-known-run-only subtotal, not all-call known cost. Real CLI invocation still not observed in v5.
+
+## MVP v6 — fixed-nine live evaluation, 2026-10-25
+
+Source765b64d; original9 executed,1target(s3),6valid firstcauses/1invalid/2unknown. s3:20updates,2.435717632→0.64841984GB (73.378694%),identicalloss,maxdelta0,params37791744unchanged,CLI0,finalpatchclean-reapplybytesmatch. OthersCLI78;all9literalexecutionchainsverified. 32calls knownsubtotal0.531157108USD,verifiedboundedremainder0.00419238,conservative0.535349488;actualtotalunknown. No changedthresholds, no recharge. Full details: reports/phase-1-summary-20261025-mvp-v6.md.
+
+V7 quality checkpoint: full guarded backend 2,218 passed in 560.90s; 247 source entries and original PLAN/guard unchanged, no skips. This is software regression evidence; the final nine-case live result is pending.

@@ -37,6 +37,7 @@ from headroom.search import (
     write_cumulative_patch,
     write_pareto,
 )
+from headroom.solver_context import candidate_context, candidate_evidence, execution_context
 from headroom.store.db import Store, _bounded_cost
 from headroom.verify.compare import parse_target
 from headroom.verify.policy import nanogpt_cli, scan_source_forbidden
@@ -351,6 +352,7 @@ def run_fix(
     evidence, artifacts = {}, {}
     sources, points, history = [], [], []
     verification_feedback = []
+    candidate_history = []
     diagnosis = verification = None
     status, reason = "failed", None
     active_round = None
@@ -370,6 +372,11 @@ def run_fix(
             if data.get("kept")
             else data["search"]["baseline_target_met"],
         )
+        recorded_candidate = candidate_evidence(
+            directory, row, selected_round=data["kept"]["round"] if data.get("kept") else None
+        )
+        candidate_history.append(recorded_candidate)
+        row["candidate_evidence"] = recorded_candidate
         feedback_path = directory / "rounds" / f"{row['number']:02d}" / "verification-feedback.json"
         _write(feedback_path, feedback)
         row["verification_feedback"] = feedback
@@ -530,6 +537,27 @@ def run_fix(
                     inspected, source_files=source_files, **source_kwargs
                 ).allowed:
                     raise RuntimeNotReady("Captured source safety checks rejected model context")
+            invocation = execution_context(
+                script=str(relative),
+                script_args=current_args,
+                execution_argv=(
+                    replay_argv(
+                        request.execution_argv,
+                        current_args,
+                        execution_entrypoint=request.execution_entrypoint,
+                    )
+                    if request.execution_argv is not None
+                    else None
+                ),
+                source_files=evidence_json.get("sources", []),
+                selected_round=data["kept"]["round"] if data.get("kept") else None,
+                repository_mode=request.repository_mode,
+                seed=request.seed,
+                max_steps=request.max_steps,
+                device=request.device,
+                allocator_conf=current_allocator,
+            )
+            prior_candidates = candidate_context(candidate_history)
             prompt_evidence = Path(current_evidence["evidence_md"]).read_text()
             prompt_evidence += "\n\nSEARCH STATE (trusted orchestration metadata):\n" + json.dumps(
                 {
@@ -547,6 +575,8 @@ def run_fix(
             emit("diagnose.started", role="diagnose", round=number)
             diagnostic_evidence = {
                 **evidence_json,
+                "execution_context": invocation,
+                "candidate_evidence": prior_candidates,
                 "search_state": {
                     "round": number,
                     "mode": request.search_mode,
@@ -730,6 +760,9 @@ def run_fix(
             store.update_run(run_id, research=data["research"])
             context = {
                 "diagnosis": diagnosis,
+                "execution_context": invocation,
+                "candidate_evidence": prior_candidates,
+                "verification_feedback": verification_feedback,
                 "goal": request.target,
                 "search_mode": request.search_mode,
                 "target_already_met": data["target_met"],

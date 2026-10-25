@@ -40,6 +40,7 @@ from headroom.patch_spans import (
     source_span_document,
 )
 from headroom.patch_validation import bounded_structural_error, verify_exact_application
+from headroom.solver_context import prompt_arguments, solver_prompt_context
 from headroom.verify.policy import (
     PatchPolicy,
     PolicyIssue,
@@ -615,12 +616,29 @@ class PatchEngine:
             )
             _write_json(directory / "result.json", asdict(result))
             return result
+        visible_cli = prompt_arguments(base_cli)
+        visible_context = dict(context or {})
+        visible_context.update(
+            solver_prompt_context(
+                **{
+                    field: visible_context.get(field)
+                    for field in (
+                        "execution_context",
+                        "candidate_evidence",
+                        "verification_feedback",
+                    )
+                }
+            )
+        )
         requested = {
             "plan_step": step,
             "policy": asdict(policy),
-            "base_cli": list(base_cli),
+            "base_cli": visible_cli["values"],
+            "base_cli_visibility": {
+                key: value for key, value in visible_cli.items() if key != "values"
+            },
             **source_context,
-            "evidence_context": dict(context or {}),
+            "evidence_context": visible_context,
         }
         messages = [
             {"role": "system", "content": (PROMPTS / "patch.md").read_text()},

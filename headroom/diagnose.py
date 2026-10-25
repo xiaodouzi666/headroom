@@ -12,6 +12,7 @@ from pydantic import ValidationError
 
 from headroom.diagnosis_schema import build_diagnosis_schema
 from headroom.schemas import Diagnosis
+from headroom.solver_context import solver_prompt_context
 
 PROMPT_PATH = Path(__file__).parent / "prompts" / "diagnose.md"
 PRECISION_CHANGE = re.compile(
@@ -243,6 +244,8 @@ def build_diagnosis_messages(
     policy: Mapping[str, Any],
     required_saving_gb: float | None = None,
     verification_feedback: list[Mapping[str, Any]] | None = None,
+    execution_context: Mapping[str, Any] | None = None,
+    candidate_evidence: list[Mapping[str, Any]] | None = None,
 ) -> list[dict[str, str]]:
     """No network access; generated request is for the Token Factory router only."""
     _check_required_saving(required_saving_gb)
@@ -264,6 +267,13 @@ def build_diagnosis_messages(
         if len(feedback_json.encode("utf-8")) > FEEDBACK_MAX_BYTES:
             raise ValueError("verification_feedback exceeds its bounded context")
         request["verification_feedback"] = json.loads(feedback_json)
+    request.update(
+        solver_prompt_context(
+            execution_context=execution_context,
+            candidate_evidence=candidate_evidence,
+            verification_feedback=verification_feedback,
+        )
+    )
     return [
         {"role": "system", "content": PROMPT_PATH.read_text()},
         {"role": "user", "content": json.dumps(request, ensure_ascii=False, allow_nan=False)},
@@ -434,6 +444,8 @@ def diagnose_with_router(
         policy=policy,
         required_saving_gb=required_saving_gb,
         verification_feedback=verification_feedback,
+        execution_context=evidence.get("execution_context"),
+        candidate_evidence=evidence.get("candidate_evidence"),
     )
     schema = build_diagnosis_schema(evidence=evidence, policy=policy)
     for attempt in range(max_supplements + 1):

@@ -1,0 +1,96 @@
+{
+  "revision": 3,
+  "prepared_at_utc": "2026-10-25T03:22:51.648903+00:00",
+  "passed": true,
+  "frozen": true,
+  "driver": ".cache/setup/audit_source_span_campaign_v2.py",
+  "driver_sha256": "c7762109878024c6dd842ec5cb7b8e3ac7bd21627ab26c1ee78197452c1c2a76",
+  "tests": ".cache/setup/test_source_span_campaign_audit_v2.py",
+  "tests_sha256": "8f0c6e3b9f7a8bed1007320dcb5e2819e39887d1556cc3b76c8e97a25e7ef2bf",
+  "original_driver": {
+    "path": ".cache/setup/audit_source_span_campaign.py",
+    "sha256": "71ae3d67f6fd345918dd94f143f6c63cfcba4a0a1f19ff67102ea0d70663bbd4"
+  },
+  "original_tests": {
+    "path": ".cache/setup/test_source_span_campaign_audit.py",
+    "sha256": "c999bcc465c23a27afae5d8b4af28a5e3bbed1e5023f2d40da5ac9c9da06ea1b"
+  },
+  "prior_report_preserved": {
+    "path": "reports/live-campaign-20261025/mvp-v6-source-span-review.json",
+    "sha256": "4fe84e696ae64d317206c80e1eb0663844b77c096c0de41917328d0e2ad6c4c0"
+  },
+  "finding_closed": "A rejected/failed candidate directory plus explicit verification_available=false no longer falsely requires an unstarted verification.json. Positive verification, applied status and KEEP retain priority; ambiguous feedback remains unknown.",
+  "ast_changed_functions": [
+    "round_artifact_requirements"
+  ],
+  "unchanged_top_level_ast_except_target": true,
+  "unchanged_inherited_contract_ast_sha256": {
+    "need": "8c419cf0a15cd489252fc4a5a8a34d1006b16cdaaddea4a47201e420f0176ffe",
+    "path": "e352339a72a89a63df1a3e53799270b513dded49fcf41f5759ca9c163de97043",
+    "relative_name": "1299b92b5bf830e071fb1e73c399985dec20365f3714d2e436f5df9a9da0ac5d",
+    "sha": "87191a4a1d6f9f9404d87bb99ad2beeb2e96ca92d77fbcf51ac3740484fdfda6",
+    "read": "7c0788011ac60e9e6d500c379b74af24a78a86151b0081d7e0205d98675e0262",
+    "document": "32f0172dfcbcb17125503b714ccd2d1129ccef04419590291f0a9c89119fef07",
+    "canonical": "1f5f331cb81d3eb64607ce0cd29890c70f8a7fbffa7f7d656178052c41141f94",
+    "tri": "eb31a4942935ce190b217659befc27eb5aa5d0a04a9522a4db2255bd6d5e0004",
+    "report_error": "7cf1595b80b6a54087874332a8ac79267a603071f3ca279c5f3b06837452007b",
+    "physical": "a599ba6f3c2c635c25136f7b64b2125c024dd64d2c17751eb8697453502a52da",
+    "independent_edits": "4573e8f344fc6523e0d56f3720680a7ac2a0fb81e19dc4e7e050b29d19211e2f",
+    "audit_attempt": "f68f1976ddd628e890bbf767c22d2f34b876979cf1a392aa0d2c77dd8f6128ba",
+    "db_snapshot": "487e7e13c1b0c58fdfdfe1352e60bb6676f7bb8b2c16c04083a49032184e3a64",
+    "verify_selected_public_diff": "6c084275dfb5d32c40f927e8d11b8bbfef737979afa0ded48070385d75b392e6",
+    "selected_chain": "79f50f361a5506a4e1030a1026226bcb8902767a1812665de962fac9c753eb2d",
+    "audit_row": "da6e5a37abe27bf46eb286535043b7128436b7c94a86eb2d5587fd7a20f9227b",
+    "number": "c02be0e7bc5883a2537193530d5a60d9f1f8a0b0fcbe2757ee1c54493b1a5faf",
+    "finance": "a71e4b60f43e475bc400f6b2e66a7ed4ee39c6e4e6544611a6680363b53c445c",
+    "guard": "b251ec11015395c71adb99587c7609d6373806c79b087e03b921c0bc61a29609",
+    "main": "104db566f2a86b07494083e9e9cba3391f3380e00d93b4a069cd83c29b78f2a9"
+  },
+  "validation": {
+    "pytest": 34,
+    "pytest_log": "reports/source-span-auditor-20261025/revision-3/pytest.log",
+    "pytest_log_sha256": "55d87220a25854508a3510a4d54b37aaee63703c2ff75244a2a440b74130cf70",
+    "ruff": "All checks passed",
+    "ruff_log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "syntax": "AST parsed",
+    "original_v4_keep_then_revert_chain": "passed unchanged inherited test; selected round 2 and later reverts [3, 4]",
+    "new_regressions": [
+      "actual rejected candidate with explicit false skips verification but preserves parsed-null attempts 3/4 unknown",
+      "applied, KEEP, explicit verification object, positive feedback require missing verification as unknown despite contradictory fields",
+      "rejected candidate with ambiguous feedback still requires missing verification as unknown"
+    ],
+    "v6": {
+      "path": "reports/live-campaign-20261025/mvp-v6-source-span-review-r2.json",
+      "sha256": "f3180a125fedc5213363d5ba671ad454a4bda0a4498450a3ea6ae10e73aeee5f",
+      "exit_code": 2,
+      "sidecar_evidence_complete": false,
+      "full_plan_acceptance": null,
+      "source_artifacts_stable": true,
+      "round_artifact_coverage_complete": true,
+      "missing_required_round_artifacts": [],
+      "unknown_response_evidence_count": 2,
+      "original_status_counts": {
+        "applied": 5,
+        "rejected": 2,
+        "failed": 2
+      },
+      "finance_exactly_equal_to_prior": true,
+      "all_selected_chains_equal_to_prior": true
+    }
+  },
+  "fixture": {
+    "path": "reports/source-span-auditor-20261025/revision-3/fixture.json",
+    "sha256": "f15b9e6aa46e28686443fcc0fb2c7524c01a313bdb07a82898e0ddb0bc897889"
+  },
+  "fix_reason": {
+    "path": "reports/source-span-auditor-20261025/revision-3/fix-reason.md",
+    "sha256": "f0762cf2d72f3e22f8a9ba5fa9df3f4a65b1211628882b8d2ce138ff4b60570f"
+  },
+  "operations": {
+    "production_edits": 0,
+    "API_calls": 0,
+    "GPU_jobs": 0,
+    "ledger_writes": 0,
+    "secret_reads": 0
+  }
+}

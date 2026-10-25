@@ -1,0 +1,64 @@
+{
+  "base_commit": "85435dfbdeac765f902e2f3d21740ba0fcdf7389",
+  "worktree": "/home/xiaodouzi/workspace/headroom/.cache/feedback-v7",
+  "source_hashes": {
+    "headroom/solver_context.py": "cd50e283247ae2a224f25d946098504e19fdf81b0cc90efb47aa7055218d8a65",
+    "headroom/diagnose.py": "c23ee4a61a549151cc4d8da5fe1c3b6157a0c557ec707b8c77fc625c15e39dee",
+    "headroom/orchestrator.py": "e128a0e9b20e78f663adbe8d483d133a5831d5b51afd749edf3db4b00140f73f",
+    "headroom/patch.py": "19f92da02500880297b7805590e6323d340b6978fb4bc7265e5e9e03fa4767d3",
+    "headroom/prompts/diagnose.md": "9e7f2af7ceb8551f395a939c97cabad03b73f0fdba750e53e8d5ee16732d01a5",
+    "headroom/prompts/patch.md": "6467845ae0c580fd71938e6526d6150cd5008308f306db18c846425831a73f03",
+    "headroom/prompts/patch_fix.md": "8d2a75886893bc2e39cc47e0d2e43152cfc560c99eb9f01569ebe32ed3b33ef9",
+    "headroom/verify/runner.py": "7d87ee35828dbcd088191b9e68e3b4c10c920da2c443213799aa0cb4d0865bb8",
+    "tests/test_solver_context.py": "316184e2fdc13fe3d48331b0c3b521a114ca538e8153ae01665c9fc2bd5418c6",
+    "tests/test_orchestrator.py": "39213be895969c13ab51bce08546fabca39885c23c9c1f6a2f7b30dd993ea0c6",
+    "tests/test_verify_runner.py": "f4981275cdb3bf53e2c28dac48a73bdcda6e8e341215ab24c0e1ae559804ebf1"
+  },
+  "source_unchanged_during_final_regression": true,
+  "patch_sha256": "3381a7be312d3fa18cdbc5604b091c14f38d8c71d124aec73d6a9c45ba5bc7ab",
+  "patch_bytes": 57748,
+  "patch_stat": " headroom/diagnose.py          |   12 +\n headroom/orchestrator.py      |   33 ++\n headroom/patch.py             |   22 +-\n headroom/prompts/diagnose.md  |    4 \n headroom/prompts/patch.md     |    6 \n headroom/prompts/patch_fix.md |    6 \n headroom/verify/runner.py     |    4 \n tests/test_orchestrator.py    |    2 \n tests/test_verify_runner.py   |   29 ++\n headroom/solver_context.py    |  409 ++++++++++++++++++++++++++++++\n tests/test_solver_context.py  |  559 +++++++++++++++++++++++++++++++++++++++++\n 11 files changed, 1084 insertions(+), 2 deletions(-)\n",
+  "patch_regression": {
+    "command": [
+      "/home/xiaodouzi/workspace/headroom/.venv/bin/python",
+      "reports/mvp-v6-integration-20261025/full_guarded.py",
+      "tests/test_patch.py",
+      "tests/test_patch_wire.py",
+      "tests/test_patch_edits.py",
+      "tests/test_patch_validation.py",
+      "tests/test_patch_spans.py",
+      "tests/test_patch_response_evidence.py"
+    ],
+    "started_utc": "2026-10-25T03:21:05.326213+00:00",
+    "finished_utc": "2026-10-25T03:21:08.050786+00:00",
+    "exit_code": 0,
+    "log": "/home/xiaodouzi/workspace/headroom/.cache/feedback-v7/.cache/setup/feedback-v7-patch-regression.log"
+  },
+  "prior_focused_regression": {
+    "exit_code": 0,
+    "result": "181 passed in 10.03s",
+    "evidence": "tool session 16804, output chunk 752acb",
+    "guard_parent_and_spawn": {
+      "real_env": "denied",
+      "real_profile": "denied",
+      "real_db": "denied",
+      "dns": "denied",
+      "api_key_env_absent": true
+    },
+    "tests": [
+      "tests/test_solver_context.py",
+      "tests/test_verification_feedback.py",
+      "tests/test_orchestrator.py",
+      "tests/test_diagnose_contract.py",
+      "tests/test_diagnose_schema.py",
+      "tests/test_diagnosis_schema_constraints.py",
+      "tests/test_verify_runner.py::test_oom_candidate_skips_reference_discovery_and_reports_why",
+      "tests/test_verify_runner.py::test_oom_reference_runs_original_smallest_batch_through_lab_only",
+      "tests/test_verify_runner.py::test_undiscoverable_batch_never_runs_a_guessed_reference"
+    ]
+  },
+  "static_checks": "ruff check passed; ruff format unchanged; git diff --check passed",
+  "no_live_execution": true,
+  "no_main_source_or_report_modifications": true,
+  "not_committed_merged_or_pushed": true
+}

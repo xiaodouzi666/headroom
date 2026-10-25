@@ -260,6 +260,10 @@ def verify_script(
                         "GPU_UNAVAILABLE",
                     }:
                         break
+        else:
+            discovery["reason"] = (
+                "Candidate did not complete; small-batch reference was not executed"
+            )
     pairing_evidence = derive_pairing(
         reference if baseline.get("status") == "oom" else baseline, candidate, required_steps
     )

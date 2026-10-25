@@ -299,6 +299,7 @@ def search_run(
     evidence_fail_at=None,
     verify_error_at=None,
     policy=None,
+    script_args=None,
 ):
     import difflib
 
@@ -616,6 +617,7 @@ def search_run(
             max_rounds=max_rounds,
             search_mode=search_mode,
             research_enabled=research_enabled,
+            script_args=script_args or [],
             **({"policy": policy} if policy is not None else {}),
         ),
         store=store,

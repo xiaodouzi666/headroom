@@ -20,7 +20,7 @@ Python, PyTorch allocator traces, Docker, SQLite, FastAPI/SSE, React/TypeScript,
 
 RESULTS records real GPU baselines, sandbox checks, Tavily search/extract/cache reuse, all 60 prescribed T0.4 probe outcomes and the T1.3 client gate. Ultra handled 500,029 measured input tokens and a separate 268,920-token authentic evidence request. The former is a tested lower bound, not the exact maximum or proof of the advertised 1M context; the 900k/429 outcome retains its unknown charge conservatively. The three-scenario Docker-contained independent subprocess comparison passed with 0% peak differences. The development app's existing replays remain clearly labeled baselines.
 
-**Do not turn the following into past-tense achievements yet:** accepted automated scenario repairs, benchmark success rates or ablation gains. Diagnosis v5 matched 7/8 first causes but did not pass full policy/plan acceptance. A generic Super docstring patch applied and compiled after bounded repair; it contributes zero memory-repair benchmark successes. MVP v1/v2/v3 failures are preserved. The final permitted MVP v4 iteration is finished: 0/9 targets and 7/9 first-cause matches. Original repair iterations are exhausted; further repair work awaits the owner's decision under PLAN section0.6.
+MVP v6 verified one automated repair: s3 completed 20 updates with 73.378694% lower peak memory, identical recorded losses and unchanged parameter count. All nine cases ran; the overall score remains 1/9, below the original 6/9 gate. Raw first-cause agreement is 7/9 (six valid, one invalid, two unknown). Do not present the project as having passed MVP, main benchmarks or ablations. The final authorized v7 extension is undergoing regression; its live result is still pending.
 
 ## Challenges and learning
 
@@ -28,18 +28,18 @@ Allocator categories are heuristics with recorded coverage. A large reserved-min
 
 ## What's next
 
-Review the completed failed MVP audit and obtain the owner's decision on any extra repair iteration under the original PLAN section0.6 stop rule. Main/ablation campaigns, qualifying repair replays, public deployment and the demo video remain subject to their original acceptance gates; no outcome is promised.
+Finish the final authorized v7 campaign and audit; if it still fails, return the concrete results for the owner's decision under the original PLAN section0.6 stop rule. Main/ablation campaigns, qualifying repair replays, public deployment and the demo video remain subject to their original acceptance gates; no outcome is promised.
 
 ## Submission checklist
 
 - Track: Coding and Agentic Engineering, to be verified against the current form.
 - Repository: https://github.com/xiaodouzi666/headroom
 - Public demo: pending approved domain/deployment.
-- Public video: pending verified repair and owner recording.
+- Public video: one verified repair is available; owner recording pending.
 - Insert only measured RESULTS and actual provider feedback.
 - Owner review, terms acknowledgment, draft save and final submission remain separate actions. Nothing has been saved or submitted to Devpost by this draft.
 
 
 ## Latest measured readiness — 2026-10-25
 
-The final original MVP iteration executed all nine scenarios: 0/9 targets met, 7/9 first causes matched, 2/8 synthetic scenes applied and compiled. One retained candidate completed20 steps and reduced peak3.556%, below20%; this is not a successful target repair. Full coverage/accuracy of Nano labels and the two required Tavily Sources gates remain incomplete despite genuine service calls/cache. Backend2026 tests and baseline HomeLighthouse99 do not replace real repair acceptance. Draft only: no public submission or deployment has occurred.
+Latest completed MVP v6: 1/9 targets, 7/9 raw first causes (six valid), 3/8 synthetic scenes applied and compiled. The s3 repair passes its original target and independent >=30% reduction gate. Full Nano coverage/accuracy, required Tavily Sources, main evaluation, qualifying replay set and public delivery remain incomplete. Final v7 is pending. Draft only: no public submission or deployment has occurred.

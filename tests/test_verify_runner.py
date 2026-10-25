@@ -202,3 +202,32 @@ def test_reference_batch_preserves_separate_value_and_removes_duplicates():
     ]
     assert batch_arguments(["--batch", "4", "--batch=8"], "--batch", 1) == ["--batch=1"]
     assert batch_arguments([], "--batch", 1) == ["--batch", "1"]
+
+
+def test_oom_candidate_skips_reference_discovery_and_reports_why(training, monkeypatch):
+    from headroom.verify import runner
+
+    calls = []
+
+    def fake_lab(script, **kwargs):
+        calls.append((script, kwargs))
+        return {"status": "oom", "steps": 0, "env": {"seed": 7}}
+
+    def forbidden_discovery(*args, **kwargs):
+        raise AssertionError("An incomplete candidate must not trigger reference discovery")
+
+    monkeypatch.setattr(runner, "run_script", fake_lab)
+    monkeypatch.setattr(runner, "discover_batch", forbidden_discovery)
+    outcome = verify_script(
+        {"status": "oom", "env": {"seed": 7}},
+        training,
+        baseline_script=training,
+        baseline_args=["--batch=4"],
+        device="cpu",
+    )
+    reason = "Candidate did not complete; small-batch reference was not executed"
+    assert len(calls) == 1
+    assert outcome["reference"] is None
+    assert outcome["reference_discovery"] == {"found": False, "reason": reason, "attempts": []}
+    assert not outcome["report"].target_met
+    assert "Reference discovery: " + reason in outcome["report"].notes

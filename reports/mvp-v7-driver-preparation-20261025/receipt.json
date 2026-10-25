@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "prepared_utc": "2026-10-25T03:24:30.697461+00:00",
+  "scope": "Preparation only for final authorized extension 3 = MVP v7; root final-source review and passing new full suite are required before any execution.",
+  "files_sha256": {
+    ".cache/setup/run_mvp_v7.py": "7fecfdc73a9f5a9f83a6daf422d5d34f5decca4ef89c45c1de670de9898d49b5",
+    ".cache/setup/test_mvp_v7_preflight.py": "159dc5e2ee9ee0396fbb1eb7844ba647b45fda5b1712f8c174953fe652942fc8",
+    "reports/live-campaign-20261025/mvp-v7-cap-budget-review.json": "c2566b340cf30f76a3243bf395cc2766074d448a1fe7099d0d2f88d712b97880",
+    "reports/live-campaign-20261025/mvp-v7-catalogue/report.json": "f8ae237b345528b164a1ce104d1fcfcccda5b8173093d084293d1d8a5d164ad2",
+    "reports/mvp-v7-driver-preparation-20261025/format.log": "3bc53bf3e981a98a34a852e175bf9b77af841edea74fca595d9aedcbaf9a4938",
+    "reports/mvp-v7-driver-preparation-20261025/lint.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "reports/mvp-v7-driver-preparation-20261025/tests.log": "89d9f19335001d1fcf94caddc09d5b3bf8131ee880a8e77563d279f814eca20b",
+    "reports/mvp-v7-driver-preparation-20261025/readonly-finance-verification.json": "7a1f4fd8dbdd59a2e508bc72abcc6cf8aea7ea293bc9a532b37573a6b60de47e"
+  },
+  "old_private_drivers_unchanged": {
+    ".cache/setup/check_source_span_component_v1.py": "76a7a57d469499c5e44c7f58d0084a20d580ca93443ee3823a75009ae606372c",
+    ".cache/setup/run_mvp_v6.py": "f3577c87e435ca049b08ef4be5fd867c891b0493bdc6e3afed4bd92924f91109",
+    ".cache/setup/check_source_span_component_v2.py": "c1b4d4a68335aad4e54fe475f0246e9a2da4eb5a4eb00a4a9e59cdb00c835d7d",
+    ".cache/setup/run_mvp_v6_r2.py": "df294825eff6ac04c9a9ab1517dce116271430bf20d3915efbb901e1e22ee0ec"
+  },
+  "guarded_offline_tests": {
+    "passed": 24,
+    "failed": 0,
+    "network_socket_denied": true,
+    "subprocess_denied": true,
+    "sqlite_connect_denied": true,
+    "secrets_profile_ledger_gpu_file_denied": true,
+    "negative_tests": [
+      "full-suite filters/focused/failure/source drift",
+      "new context absent",
+      "missing root approval/source pins/quality binding/actual committed diff/unchanged protocol core",
+      "extra production scope",
+      "additional history/pending/halted/unverified unknown charges",
+      "budget floor and UTC rollover",
+      "known subtotal does not zero unknown charges"
+    ],
+    "source_ast_parse": true,
+    "ruff_check_and_format_passed": true
+  },
+  "readonly_actual_preflight": {
+    "capability_passed": true,
+    "ledger_passed": true,
+    "attempts": 432,
+    "runs": 67,
+    "projection_sha256": "0abae7edac2bfc81435310b0886dce1a4d46f99c24ccf4fa20f33f284ae5e881",
+    "conservative_usd": "4.512781420",
+    "known_subtotal_usd": "4.482150040",
+    "remaining_all_time_usd": "5.486867620",
+    "effective_campaign_usd": "5.4",
+    "history_exclusions": []
+  },
+  "actions": {
+    "inference_requests": 0,
+    "gpu_queries": 0,
+    "gpu_workloads": 0,
+    "profile_writes": 0,
+    "ledger_writes": 0,
+    "production_source_writes": 0,
+    "official_catalogue_GETs": 2
+  },
+  "not_claimed": [
+    "V7 full regression has passed",
+    "root approved final sources",
+    "V7 context has live model validation",
+    "competition target met"
+  ],
+  "execution_requirements": {
+    "clean_worktree": true,
+    "HEAD_equals_origin_main": true,
+    "new_source_full_suite": "passing full -q receipt with exact before/after/current source inventory",
+    "root_review_cli": [
+      "--root-review",
+      "--root-review-sha256",
+      "--quality-receipt"
+    ],
+    "root_review_fields": [
+      "approved=true",
+      "reviewed_by=root",
+      "purpose=mvp_v7_final_source_execution",
+      "extension_iteration=3",
+      "baseline_commit=765b64db073c34038bdd89f564e187f67a119fc3",
+      "driver_sha256",
+      "cap_review_sha256",
+      "profile_sha256",
+      "quality_receipt={path,sha256}",
+      "source_pins=complete current inventory",
+      "unchanged_protocol_core=financial review protocol_core_pins",
+      "changed_source_paths=sorted exact committed source diff from baseline"
+    ],
+    "unchanged_original_plan_manifest_and_protocol_core": true,
+    "same_alltime_day_pool_usd": "9.99964904",
+    "campaign_cap": "min(5.4, remaining_all_time, remaining_day)",
+    "per_case_usd": "0.6",
+    "per_case_seconds": 480,
+    "rounds": 6,
+    "fixed_denominator": 9,
+    "default_full_ultra_until_target": true,
+    "no_quality_early_stop": true,
+    "component_not_repeated": "Prior V6 live component only validates unchanged wire/normalizer/schema. New V7 context requires this original nine-case live campaign.",
+    "no_auto_resume_or_overwrite": true
+  }
+}
