@@ -136,6 +136,7 @@ def _evaluation_entry(
             result_path=str(result_path),
             deadline=float(deadline),
             condition=condition,
+            study_protocol=(preparation or {}).get("study_protocol"),
             argv=cli_arguments(parsed, repository),
             package_root=str(PACKAGE_ROOT),
             console_path=console_path,
@@ -231,6 +232,12 @@ def supervise_evaluation_run(
         "provenance": "live",
         "evaluation_condition": condition,
     }
+    from headroom.diagnosis_protocol import diagnosis_cap
+
+    study_protocol = (preparation or {}).get("study_protocol")
+    diagnosis_cap(study_protocol)
+    if study_protocol is not None:
+        state["study_protocol"] = study_protocol
     if store.get_run(run_id) is None:
         store.create_run(run_id, state)
     process = None

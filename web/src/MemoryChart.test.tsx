@@ -15,7 +15,7 @@ const measured = {
     { event_index: 2, allocated_bytes: 2e9 },
   ],
 };
-it("baseline replay cannot present an After series even with stray after data", () => {
+it("baseline record cannot present an After series even with stray after data", () => {
   render(<MemoryChart before={measured} after={measured} baselineOnly />);
   expect(screen.getByText("Baseline")).toBeInTheDocument();
   expect(screen.queryByText("After")).not.toBeInTheDocument();

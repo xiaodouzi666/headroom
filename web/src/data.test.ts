@@ -51,10 +51,12 @@ describe("measurement and charge honesty", () => {
     expect(values.find((r) => r.label === "Target met")?.value).toBe("Unknown");
   });
   it("labels fixture and historical provenance prominently", () => {
-    expect(provenanceLabel({ provenance: "offline-fixture" }, true)).toMatch(
+    expect(provenanceLabel({ provenance: "offline-fixture" })).toMatch(
       /not a verified repair/,
     );
-    expect(provenanceLabel({ provenance: "live" }, true)).toMatch(/historical/);
+    expect(provenanceLabel({ provenance: "saved_replay" })).toMatch(
+      /Historical record/,
+    );
     expect(provenanceLabel({ provenance: "live" })).toBeNull();
   });
 });
@@ -150,7 +152,7 @@ describe("real evidence shapes and safe links", () => {
   });
 });
 
-it("marks baseline replays separately from verified repairs", () => {
+it("marks baseline records separately from verified repairs", () => {
   expect(provenanceLabel({ provenance: "recorded_baseline" })).toContain(
     "no repair performed",
   );

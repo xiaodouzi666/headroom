@@ -58,7 +58,7 @@ export const TERMINAL = new Set([
   "rejected",
   "timeout",
 ]);
-export function provenanceLabel(run: Dict, replay = false): string | null {
+export function provenanceLabel(run: Dict): string | null {
   const source = text(run.provenance, "").toLowerCase();
   if (
     source.includes("fixture") ||
@@ -68,8 +68,7 @@ export function provenanceLabel(run: Dict, replay = false): string | null {
     return "Offline fixture · not a verified repair";
   if (source === "recorded_baseline")
     return "Recorded GPU baseline · no repair performed";
-  if (replay || source.includes("replay"))
-    return "Saved replay · historical evidence";
+  if (source.includes("replay")) return "Historical record · no new execution";
   return null;
 }
 export interface RunEvent {

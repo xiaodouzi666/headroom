@@ -9,6 +9,14 @@ from datetime import UTC, datetime
 from decimal import Decimal, localcontext
 from pathlib import Path
 
+from headroom.ledger_path import (
+    LedgerPathError,
+    existing_file_identity,
+    require_initialized_ledger,
+    validate_existing_ledger_path,
+    validate_ledger_schema,
+)
+
 _INITIALIZATION_TIMEOUT_SECONDS = 30.0
 _INITIALIZATION_RETRY_SECONDS = 0.05
 
@@ -66,9 +74,33 @@ class BudgetLedger:
     dispatch across this ledger. An abandoned run retains its reservation for review.
     """
 
-    def __init__(self, path, *, daily_limit="12", total_limit=None, day=None):
-        self.path = Path(path)
-        self.path.parent.mkdir(parents=True, exist_ok=True)
+    require_existing = False
+
+    def __init__(
+        self,
+        path,
+        *,
+        daily_limit="12",
+        total_limit=None,
+        day=None,
+        require_existing=False,
+        expected_identity=None,
+    ):
+        self.require_existing = require_existing
+        if expected_identity is not None and not require_existing:
+            raise LedgerPathError("File identity requires existing-only budget selection")
+        self.path = (
+            require_initialized_ledger(path, expected_identity=expected_identity)
+            if require_existing
+            else Path(path)
+        )
+        self.expected_identity = (
+            existing_file_identity(self.path)
+            if require_existing and expected_identity is None
+            else expected_identity
+        )
+        if not require_existing:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
         self.daily_limit = money(daily_limit)
         self.total_limit = None if total_limit is None else money(total_limit)
         self.day = day or current_utc_day()
@@ -140,7 +172,22 @@ class BudgetLedger:
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
                     raise TimeoutError("Budget database initialization deadline exceeded")
-                conn = sqlite3.connect(self.path, timeout=remaining, isolation_level=None)
+                if self.require_existing:
+                    path = validate_existing_ledger_path(
+                        self.path, expected_identity=self.expected_identity
+                    )
+                    conn = sqlite3.connect(
+                        path.as_uri() + "?mode=rw",
+                        uri=True,
+                        timeout=remaining,
+                        isolation_level=None,
+                    )
+                    validate_existing_ledger_path(
+                        self.path, expected_identity=self.expected_identity
+                    )
+                    validate_ledger_schema(conn)
+                else:
+                    conn = sqlite3.connect(self.path, timeout=remaining, isolation_level=None)
                 conn.row_factory = sqlite3.Row
                 for statement in (
                     "PRAGMA journal_mode=WAL",
@@ -172,6 +219,8 @@ class BudgetLedger:
                 )
                 remaining = deadline - time.monotonic()
                 if not retryable or remaining <= 0:
+                    if self.require_existing and isinstance(error, sqlite3.Error):
+                        raise LedgerPathError("Shared budget database is unavailable") from None
                     raise
                 time.sleep(min(_INITIALIZATION_RETRY_SECONDS, remaining))
 

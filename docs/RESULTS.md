@@ -1,3 +1,37 @@
+# Results
+
+## Current result — protocol-v2 R3, 2026-10-25
+
+The independent R3 audit records **3/9 targets (s3, s4, s8)** and **4/9 valid
+correct first causes**, with two unknown cause truths. The fixed denominator is
+nine and both required minima remain six. All nine installed CLI chains were
+verified: three exit 0 and six exit 78. No historical successes or human controls
+are added to these counts.
+
+The campaign remains **partial** after a Super patch request returned HTTP 529
+with unknown actual cost. The ledger halt remains in force. The unchanged wire
+auditor refused the unfinished campaign; no successful wire audit is claimed.
+Phase 2, main evaluation and ablations remain unexecuted/unaccepted by this result.
+Possible host-load interference prevents using its timing as evidence of a speed
+advantage.
+
+The source-bound execution used commit 344cbae4 and all 305 tested source entries
+matched. Its 3030-test regression is software qualification, not repair accuracy.
+Subsequent product cleanup passed a separate 3121-test backend regression, 73
+frontend tests and the production build, with all 310 source entries unchanged.
+This adds no model/GPU repair evidence; see [cleanup qualification](../reports/post-r3-product-20261025/README.md). The user withdrew the Replay product
+(former T3.3); historical artifacts remain archived, but its acceptance is no
+longer owed. Public deployment awaits the owner's final confirmation.
+
+Evidence: [R3 summary](../reports/acceptance-v2-r3-20261025/independent-audit-summary.md)
+and [lossless public audit](../reports/acceptance-v2-r3-20261025/independent-audit-public.json).
+
+## Archived checkpoints
+
+The dated entries below retain their original results, then-current balances,
+pending-work statements and component evidence. They are not current spending
+authorization, active Replay functionality, or additional R3 successes.
+
 ## Protocol-v2 repair r3 qualified; live result pending — 2026-10-25
 
 3030 offline guarded tests passed against 305 unchanged source entries. These
@@ -15,7 +49,7 @@ full regression2825/297unchanged, complete9 CLI chains, conservative charge
 $1.29478102. All historical charges and scores preserved; no recharge.
 See ../reports/acceptance-v2-r2-20261025/independent-audit-summary.md.
 
-# Results
+## Archived result narrative
 
 The protocol-v2 repair iteration 1 is complete at source aa42ef5: **3/9 targets
 (s3, s4, s8)** and **5/9 valid correct first causes**, below both six-of-nine
@@ -427,8 +461,9 @@ completed the remaining rows.
   Four live methods reported three credits total; repeated queries had zero API
   calls and zero credits from the local cache. Store contains eight operation rows.
   This does not yet establish Sources on a complete s1/s5 model-driven repair.
-- Five imported real baseline replays: `reports/baseline-replays.json`.
-  They contain no model diagnosis, patch, repaired after-run or invented agent trace.
+- Archived five-baseline import record: `reports/baseline-replays.json`.
+  It contains no model diagnosis, patch, repaired after-run or invented agent
+  trace. The Replay product was subsequently withdrawn; this is historical evidence.
 - Offline SDK responses, patching, keep/revert and reporting remain separately
   labeled fixtures. They do not enter the main or ablation score table.
 

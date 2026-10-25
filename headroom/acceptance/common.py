@@ -13,6 +13,7 @@ import httpx
 
 from headroom.api.security import open_regular
 from headroom.budget import BudgetLedger, money
+from headroom.ledger_path import select_budget_database
 from headroom.runtime import PROJECT_ROOT, build_live_runtime, read_live_profile
 from headroom.store.db import Store
 
@@ -180,8 +181,13 @@ def acceptance_run(
             raise ValueError("Runtime profile changed during verification")
         record["profile_sha256"] = profile_hash
         record["run_budget_mode"] = profile.run_budget_mode
+        database = select_budget_database(
+            project_root, allowed_root=project_root if transport is not None else None
+        )
         budget = BudgetLedger(
-            project_root / ".cache/budget.db",
+            database.path,
+            require_existing=database.require_existing,
+            expected_identity=database.file_identity,
             daily_limit=daily,
             total_limit=profile.authorized_total_usd,
         )

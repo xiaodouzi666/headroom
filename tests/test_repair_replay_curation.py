@@ -351,10 +351,12 @@ def test_batch_failure_rolls_back_flags_and_only_owned_mirrors(tmp_path, monkeyp
 
 
 @pytest.mark.parametrize("target_met", [True, False])
-def test_curated_campaign_replay_is_readable_through_real_api(tmp_path, target_met):
+def test_historical_curated_marker_no_longer_publishes_through_api(tmp_path, target_met):
     run_id, source = fixture_run(tmp_path, target_met=target_met)
     result = curate_repair_replays([run_id], project_root=tmp_path, execute=True)
     assert result["executed"], result
+    before = saved_records(tmp_path, run_id)
+    assets = {str(p.relative_to(source)): p.read_bytes() for p in source.rglob("*") if p.is_file()}
     settings = ApiSettings(
         project_root=tmp_path,
         db_path=tmp_path / "runs/headroom.db",
@@ -362,31 +364,24 @@ def test_curated_campaign_replay_is_readable_through_real_api(tmp_path, target_m
         web_dist=tmp_path / "no-web",
     )
     with TestClient(create_app(settings)) as client:
-        listing = client.get("/api/replays").json()
-        assert listing["count"] == 1
-        row = listing["replays"][0]
-        assert row["target_met"] is target_met
-        assert row["status"] == ("completed" if target_met else "failed")
-        metadata = client.get(f"/api/runs/{run_id}").json()
-        for name in ("report.json", "report.md", "patch.diff"):
-            response = client.get(metadata["artifacts"][name])
-            assert response.status_code == 200
-            assert response.content == (source / name).read_bytes()
-        report = client.get(metadata["artifacts"]["report.json"]).json()
-        assert report["run"]["run_dir"] == str(source)
-        assert report["summary"]["target_met"] is target_met
-        if target_met:
-            config = client.get(metadata["artifacts"]["configuration.json"])
-            assert config.status_code == 200
-            assert config.content == (source / "configurations/round-01/manifest.json").read_bytes()
-            nested = client.get(f"/api/runs/{run_id}/configurations/round-01/patch.diff")
-            assert nested.status_code == 200
-            assert nested.content == (source / "configurations/round-01/patch.diff").read_bytes()
-        events = client.get(f"/api/runs/{run_id}/events").text
-        assert "event: verify.done" in events and "event: stream.end" in events
-        assert "curation" not in events
-        assert client.get(f"/api/runs/{run_id}/snapshot.pickle").status_code == 404
-        assert client.get(f"/api/runs/{run_id}/.env").status_code == 404
+        assert client.get("/api/replays").status_code == 404
+        assert client.get("/api/runs").json()["runs"] == []
+        for suffix in (
+            "",
+            "/events",
+            "/report.json",
+            "/report.md",
+            "/patch.diff",
+            "/configuration.json",
+            "/configurations/round-01/patch.diff",
+            "/snapshot.pickle",
+            "/.env",
+        ):
+            assert client.get(f"/api/runs/{run_id}{suffix}").status_code == 404
+    assert saved_records(tmp_path, run_id) == before
+    assert {
+        str(p.relative_to(source)): p.read_bytes() for p in source.rglob("*") if p.is_file()
+    } == assets
 
 
 def test_no_database_creation_and_no_implicit_ids(tmp_path):
@@ -637,7 +632,7 @@ def test_uncurated_campaign_stays_private_in_default_store(tmp_path):
         web_dist=tmp_path / "no-web",
     )
     with TestClient(create_app(settings)) as client:
-        assert client.get("/api/replays").json()["count"] == 0
+        assert client.get("/api/replays").status_code == 404
         for suffix in ("", "/events", "/report.json", "/patch.diff"):
             assert client.get(f"/api/runs/{run_id}{suffix}").status_code == 404
     assert saved_records(tmp_path, run_id) == before

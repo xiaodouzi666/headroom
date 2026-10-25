@@ -282,3 +282,23 @@ If the separate call store fails after a response, the authoritative budget
 ledger retains the settled actual fee and blocks further work for accounting
 review. Reconciliation requires evidence and a separate reviewed procedure;
 this change adds no automatic reset or release of uncertain charges.
+
+## Explicit shared ledger across checkouts
+
+HEADROOM_BUDGET_DB_PATH may select an existing initialized budget SQLite database
+by absolute path. The default remains the current project's .cache/budget.db.
+The explicit target, its parents and SQLite sidecars must not be symlinks;
+missing, empty, unrelated or replaced targets fail instead of creating a fresh
+budget pool. Offline acceptance fixtures reject paths outside their private root
+before opening SQLite.
+
+This setting does not reset history, clear unknown charges, select a runtime
+profile or change spending limits. Each CLI/API/acceptance entrypoint must still
+use the same reviewed absolute profile and explicit authorized daily/run limits.
+A copied checkout must not silently acquire a new allowance. Path selection
+assumes a trusted operator filesystem; validation and SQLite open are not an
+atomic no-follow operation.
+
+The development ledger remains halted after the R3 HTTP 529 request with unknown
+actual usage. Configuring this path is not authorization to clear that halt or
+perform another paid evaluation.

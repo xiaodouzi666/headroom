@@ -347,19 +347,6 @@ def report(run_id: str) -> None:
 
 
 @app.command()
-def replay(run_id: str) -> None:
-    """Replay saved events without issuing requests or running the GPU."""
-    store = _store()
-    try:
-        if store.get_run(run_id) is None:
-            raise typer.BadParameter("Unknown run ID")
-        for event in store.events(run_id):
-            typer.echo(json.dumps(event, ensure_ascii=False))
-    finally:
-        store.close()
-
-
-@app.command()
 def serve(host: str = "127.0.0.1", port: int = 8000, runtime_profile: Path | None = None) -> None:
     """Serve the local app. Public deployment requires its separate setup."""
     import uvicorn
@@ -489,6 +476,7 @@ def evaluate(
     conditions: str = "full_ultra",
     policies: str = "default",
     search_mode: SearchModeOption | None = None,
+    study_protocol: str | None = None,
     budget: str = "0.6",
     campaign_budget: str = "0.6",
     daily_budget: str = "12",
@@ -515,6 +503,8 @@ def evaluate(
         raise typer.BadParameter("--conditions/--policies apply only to --plan-only or --live")
     if search_mode is not None and not (live or plan_only):
         raise typer.BadParameter("--search-mode applies only to --plan-only or --live")
+    if study_protocol is not None and not (live or plan_only):
+        raise typer.BadParameter("--study-protocol applies only to --plan-only or --live")
     path = manifest or PROJECT_ROOT / "eval/scenario_set.yaml"
     try:
         if validate_only:
@@ -526,6 +516,7 @@ def evaluate(
                 conditions=tuple(item.strip() for item in conditions.split(",")),
                 policy_names=tuple(item.strip() for item in policies.split(",")),
                 search_mode=search_mode.value if search_mode is not None else None,
+                study_protocol=study_protocol,
                 per_run_budget_usd=budget,
                 campaign_budget_usd=campaign_budget,
                 daily_budget_usd=daily_budget,
@@ -544,6 +535,7 @@ def evaluate(
                 conditions=tuple(item.strip() for item in conditions.split(",")),
                 policy_names=tuple(item.strip() for item in policies.split(",")),
                 search_mode=search_mode.value if search_mode is not None else None,
+                study_protocol=study_protocol,
                 per_run_budget_usd=budget,
                 campaign_budget_usd=campaign_budget,
                 daily_budget_usd=daily_budget,

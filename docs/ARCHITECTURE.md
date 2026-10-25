@@ -16,18 +16,35 @@ Headroom keeps execution evidence separate from model interpretation. The truste
 
 ## Process and queue boundaries
 
-FastAPI provides session-scoped uploads, historical/live SSE with Last-Event-ID, safe artifact downloads and curated replay. The production scheduler launches one supervised process at a time. Its hard deadline and verified owned-container cleanup prevent an abandoned worker from freeing the queue while work remains. An uncertain cleanup halts admission. Startup does not automatically resume an old paid job.
+FastAPI provides owner-session uploads, historical/live SSE with Last-Event-ID and safe artifact downloads. The owner withdrew the Replay product (former T3.3); current source removes its cards, public listing/access exception and CLI command. Historical files remain archived, and actual target-command rerun/configuration replay is preserved. The production scheduler launches one supervised process at a time. Its hard deadline and verified owned-container cleanup prevent an abandoned worker from freeing the queue while work remains. An uncertain cleanup halts admission. Startup does not automatically resume an old paid job.
 
 Docker has no network, read-only source/runtime mounts, an isolated temporary directory, a writable run-artifact directory, resource limits and no inherited API keys. Optional Hugging Face cache is project-local, manifest-reviewed and read-only. Captured source and raw runs are preserved.
 
 ## Evidence and acceptance boundaries
 
-Offline fixtures test control flow, policy and accounting; they cannot prove a model capability, repair success or accuracy. CPU executions test Trainer integration and environment behavior; they cannot establish CUDA memory reduction. Baseline GPU runs prove actual workload behavior, not an automated repair. Imported baseline replay events explicitly identify the import instead of impersonating a historical live agent trace.
+Offline fixtures test control flow, policy and accounting; they cannot prove a model capability, repair success or accuracy. CPU executions test Trainer integration and environment behavior; they cannot establish CUDA memory reduction. Baseline GPU runs prove actual workload behavior, not an automated repair. Archived baseline imports retain their historical provenance and never impersonate a live agent trace; they are not an active Replay product.
 
-An OOM baseline has no comparable completed-run throughput. Numerical equivalence can be equivalent, non-equivalent, changed, or n/a; a missing comparison is not a pass. Parameter counts are observed runtime evidence with coverage limitations. All original plan gates, including s2's failed 40% requirement, remain visible in PROGRESS.
+An OOM baseline has no comparable completed-run throughput. Numerical equivalence can be equivalent, non-equivalent, changed, or n/a; a missing comparison is not a pass. Parameter counts are observed runtime evidence with coverage limitations. Historical failed gates, including s2's original 40% requirement, remain visible in PROGRESS. The approved prospective s2 split and the user-withdrawn Replay requirement are recorded separately; the original plan file is preserved.
 
 Client and diagnosis acceptance have separate prepare/execute drivers. Preparation pins authentic capture files and request bytes without reading account credentials. Explicit live execution uses the same router, reviewed profile and global durable budget ledger as repair runs, with a separate acceptance Store. Local token estimates and transport fixtures never earn live acceptance.
 
 ## Remaining external dependencies
 
-Nebius account/key, actual model access, verified billing bounds and authorized balance are required for real diagnosis/patch/search/ablation. Public HTTPS needs owner-provided Cloudflare/domain access. Final design review, video recording and Devpost submission remain owner actions.
+Nebius account/key, actual model access, verified billing bounds and authorized balance are required for real diagnosis/patch/search/ablation. Public deployment is deferred until the owner's final confirmation; HTTPS, authentication and delivery must then be verified. Final design review, video recording and Devpost submission remain owner actions.
+
+
+## Current qualification and accounting state
+
+R3 achieved 3/9 targets (s3, s4, s8) and 4/9 valid correct first causes, with two
+unknown truths. The unchanged six-of-nine gates remain unmet. A Super HTTP 529
+request with unknown cost left the campaign partial and further paid dispatch
+halted. See the [R3 summary](../reports/acceptance-v2-r3-20261025/independent-audit-summary.md)
+and [public audit](../reports/acceptance-v2-r3-20261025/independent-audit-public.json).
+
+The 3030-test/305-source receipt qualifies that campaign source. Subsequent
+Replay removal and explicit existing-ledger selection await fresh integration
+qualification. The latter shares a selected canonical database across execution,
+API observation and standalone acceptance, with no new funding, history reset or
+unknown-charge release. Public prior work covers both individual memory methods
+and combined optimization workflows; an advantage for this implementation has
+not been demonstrated.

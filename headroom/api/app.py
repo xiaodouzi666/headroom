@@ -320,9 +320,7 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
         if not RUN_ID.fullmatch(run_id):
             raise HTTPException(404, "Run not found")
         row = store.get_run(run_id)
-        if row is None or (
-            row.get("api_owner") != request.state.owner and not row.get("public_replay")
-        ):
+        if row is None or row.get("api_owner") != request.state.owner:
             raise HTTPException(404, "Run not found")
         return row
 
@@ -490,7 +488,6 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
                 state = store.get_run(run_id)
                 if not state.get("api_report_pending", False) and (
                     state.get("api_worker_finished")
-                    or (state.get("public_replay") is True and state["status"] in TERMINAL)
                     or (queue.snapshot()["halted"] and state["status"] in TERMINAL)
                 ):
                     # Re-read after observing terminal state to include events committed
@@ -597,19 +594,6 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
             "unresolved_cost_calls": unresolved,
             "conservative_total_usd": str(conservative) if conservative is not None else None,
             "local_budget": availability.snapshot()["local_budget"],
-        }
-
-    @app.get("/api/replays")
-    def replays():
-        rows = [
-            _public_run(row)
-            for row in store.list_runs(1000)
-            if row.get("public_replay") is True and row["status"] in TERMINAL
-        ]
-        return {
-            "replays": rows,
-            "count": len(rows),
-            "note": "Only explicitly curated existing runs are listed; no synthetic replay is invented.",
         }
 
     @app.get("/api/health")

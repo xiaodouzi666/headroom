@@ -23,6 +23,7 @@ from headroom.evidence import annotate_evidence_bundle, build_evidence
 from headroom.execution import prepare_local_command, replay_argv
 from headroom.lab.envs import validate_allocator
 from headroom.lab.runner import PROJECT_ROOT, run_script
+from headroom.ledger_path import select_budget_database
 from headroom.llm.client import LLMError
 from headroom.patch import PatchEngine
 from headroom.report import generate_report
@@ -439,8 +440,11 @@ def run_fix(
                 if request.runtime_profile
                 else read_live_profile()
             )
+            database = select_budget_database(PROJECT_ROOT)
             budget = BudgetLedger(
-                PROJECT_ROOT / ".cache/budget.db",
+                database.path,
+                require_existing=database.require_existing,
+                expected_identity=database.file_identity,
                 daily_limit=daily,
                 total_limit=profile.authorized_total_usd,
             )

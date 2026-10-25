@@ -21,6 +21,12 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from headroom.api.security import open_regular
 from headroom.budget import money
+from headroom.diagnosis_protocol import (
+    STUDY_CONTROL_FIELDS,
+    diagnosis_cap,
+    study_metadata,
+    validate_study_selection,
+)
 from headroom.lab.envs import validate_allocator
 from headroom.verify.reference_config import NumericalReference
 
@@ -231,6 +237,7 @@ def campaign_plan(
     conditions=("full_ultra",),
     policy_names=("default",),
     search_mode=None,
+    study_protocol=None,
     per_run_budget_usd="0.6",
     campaign_budget_usd="0.6",
     daily_budget_usd="12",
@@ -241,6 +248,7 @@ def campaign_plan(
     if not isinstance(selected_mode, str) or selected_mode not in SEARCH_MODES:
         raise ValueError("Select search_mode: until_target or bounded_pareto")
     cases = _campaign_cases(manifest, scenario_ids, conditions, policy_names)
+    study = validate_study_selection(study_protocol, cases, conditions, policy_names)
     policies = resolve_policies(policy_names)
     per_run, cap, daily = (
         money(per_run_budget_usd),
@@ -263,6 +271,7 @@ def campaign_plan(
     ]
     return {
         "mode": "campaign_plan",
+        **study,
         "search_mode": selected_mode,
         "executed": False,
         "scenarios": [case.id for case in cases],
@@ -1073,6 +1082,33 @@ def ablation_summary(rows):
             )
             continue
         candidates = [variants[condition][0] for condition in CONDITIONS]
+        protocols = [row.get("study_protocol") for row in candidates]
+        # Keep legacy all-unlabelled comparisons; a labelled study must never
+        # borrow ordinary 16k results or rows with different configured controls.
+        if any(protocol is not None for protocol in protocols):
+            expected = study_metadata("common-diagnosis-4000-v1")["study_protocol"]
+            controls = [row.get("study_controls") for row in candidates]
+            if (
+                any(protocol != expected for protocol in protocols)
+                or any(
+                    type(control) is not dict
+                    or set(control) != STUDY_CONTROL_FIELDS
+                    or type(control.get("seed")) is not int
+                    or control["seed"] != 1337
+                    or control.get("search_mode") not in SEARCH_MODES
+                    or control["search_mode"] != row.get("search_mode")
+                    for control, row in zip(controls, candidates, strict=True)
+                )
+                or any(control != controls[0] for control in controls)
+            ):
+                excluded.append(
+                    {
+                        "scenario_id": scenario_id,
+                        "policy_name": policy_name,
+                        "reason": "study_protocol_or_controls_not_comparable",
+                    }
+                )
+                continue
         actual_policies = {json.dumps(row.get("policy", {}), sort_keys=True) for row in candidates}
         if len(actual_policies) != 1:
             excluded.append(
@@ -1126,6 +1162,14 @@ def ablation_summary(rows):
                 "scenario_id": scenario_id,
                 "policy_name": policy_name,
                 "policy": candidates[0].get("policy"),
+                **(
+                    {
+                        "study_protocol": candidates[0]["study_protocol"],
+                        "study_controls": candidates[0]["study_controls"],
+                    }
+                    if protocols[0] is not None
+                    else {}
+                ),
                 "search_mode": modes[0],
                 "runs": {row["condition"]: row["run_id"] for row in candidates},
                 "correct": {row["condition"]: row["first_cause_matches"] for row in candidates},
@@ -1457,6 +1501,7 @@ def _campaign(
     runner,
     provenance,
     services_factory,
+    study_protocol=None,
 ):
     from headroom.orchestrator import FixRequest
     from headroom.store.db import Store
@@ -1469,6 +1514,7 @@ def _campaign(
         conditions=conditions,
         policy_names=policy_names,
         search_mode=search_mode,
+        study_protocol=study_protocol,
         per_run_budget_usd=per_run_budget_usd,
         campaign_budget_usd=campaign_budget_usd,
         daily_budget_usd=daily_budget_usd,
@@ -1480,6 +1526,26 @@ def _campaign(
         money(campaign_budget_usd),
         money(daily_budget_usd),
     )
+
+    def study_fields(case):
+        if study_protocol is None:
+            return {}
+        return {
+            **study_metadata(study_protocol),
+            "study_controls": {
+                "seed": 1337,
+                "script_args": list(case.script_args),
+                "target": case.target,
+                "reclaim_reduction_pct": case.reclaim_reduction_pct,
+                "allocator_conf": case.allocator_conf,
+                "numerical_reference": case.numerical_reference.model_dump(),
+                "search_mode": plan["search_mode"],
+                "per_run_budget_usd": str(per_run),
+                "campaign_budget_usd": str(cap),
+                "daily_budget_usd": str(daily),
+            },
+        }
+
     directory = _directory(output_root, provenance)
     store = Store(
         Path(project_root) / "runs/headroom.db"
@@ -1488,6 +1554,7 @@ def _campaign(
     )
     document = {
         "mode": "campaign",
+        **study_metadata(study_protocol),
         "search_mode": plan["search_mode"],
         "provenance": provenance,
         "status": "running",
@@ -1503,6 +1570,7 @@ def _campaign(
             {
                 "scenario_id": case.id,
                 "condition": condition,
+                **study_fields(case),
                 "policy_name": policy_name,
                 "search_mode": plan["search_mode"],
                 "policy": policy.model_dump(),
@@ -1572,6 +1640,7 @@ def _campaign(
                     daily_budget_usd=str(daily),
                     runtime_profile=str(runtime_profile) if runtime_profile else None,
                     research_enabled=True,
+                    **({"seed": 1337} if study_protocol is not None else {}),
                 )
                 if provenance == "live":
                     from headroom.evaluation_worker import supervise_evaluation_run
@@ -1586,12 +1655,19 @@ def _campaign(
                         started=started,
                         preparation={
                             "case": case.model_dump(),
+                            "study_protocol": study_protocol,
                             "project_root": str(project_root),
                             "input_dir": str(input_dir),
                         },
                     )
                 else:
-                    services = services_factory(condition, directory / ("condition-" + run_id))
+                    services = services_factory(
+                        condition,
+                        directory / ("condition-" + run_id),
+                        **(
+                            {"study_protocol": study_protocol} if study_protocol is not None else {}
+                        ),
+                    )
                     result = runner(
                         request,
                         store=store,
@@ -1601,6 +1677,7 @@ def _campaign(
                     )
                 usage = store.usage(run_id) if store.get_run(run_id) is not None else None
                 row = result_row(case, condition, result, usage, provenance=provenance)
+                row.update(study_fields(case))
                 prepared = _dict(result.get("evaluation_preparation"))
                 row["source_sha256"] = (
                     prepared.get("source_sha256") if provenance == "live" else _source_hash(script)
@@ -1615,6 +1692,7 @@ def _campaign(
                 row = {
                     "scenario_id": case.id,
                     "condition": condition,
+                    **study_fields(case),
                     "provenance": provenance,
                     "status": "error",
                     "run_id": run_id,
@@ -1678,6 +1756,7 @@ def run_campaign(
     conditions=("full_ultra",),
     policy_names=("default",),
     search_mode=None,
+    study_protocol=None,
     per_run_budget_usd="0.6",
     campaign_budget_usd="0.6",
     daily_budget_usd="12",
@@ -1701,6 +1780,7 @@ def run_campaign(
         conditions=conditions,
         policy_names=policy_names,
         search_mode=search_mode,
+        study_protocol=study_protocol,
         per_run_budget_usd=per_run_budget_usd,
         campaign_budget_usd=campaign_budget_usd,
         daily_budget_usd=daily_budget_usd,
@@ -1714,6 +1794,7 @@ def run_campaign(
         conditions=conditions,
         policy_names=policy_names,
         search_mode=search_mode,
+        study_protocol=study_protocol,
         per_run_budget_usd=per_run_budget_usd,
         campaign_budget_usd=campaign_budget_usd,
         daily_budget_usd=daily_budget_usd,
@@ -1806,12 +1887,14 @@ class _SuperDiagnosisRouter:
         return self.router.chat("patcher", *args, **kwargs)
 
 
-def condition_services(condition, audit_dir):
+def condition_services(condition, audit_dir, *, study_protocol=None):
     """Internal Services hooks; no public API request can select these ablations."""
     from headroom.diagnose import build_diagnosis_messages, diagnose_with_router
     from headroom.evidence import build_evidence
+    from headroom.evidence_blockers import build_evidence_availability_catalog
     from headroom.orchestrator import Services
 
+    diagnosis_cap(study_protocol)
     if condition not in CONDITIONS:
         raise ValueError("Unknown evaluation condition")
     audit_dir = Path(audit_dir)
@@ -1854,6 +1937,9 @@ def condition_services(condition, audit_dir):
             verification_feedback=kwargs.get("verification_feedback"),
             execution_context=visible.get("execution_context"),
             candidate_evidence=visible.get("candidate_evidence"),
+            numerical_reference_context=visible.get("numerical_reference_context"),
+            evidence_availability_catalog=build_evidence_availability_catalog(visible, markdown),
+            study_protocol=study_protocol,
         )
         serialized_messages = json.dumps(messages, ensure_ascii=False, allow_nan=False)
         messages_path = audit_dir / (str(counter).zfill(2) + "-initial-messages.json")
@@ -1862,6 +1948,8 @@ def condition_services(condition, audit_dir):
             audit_dir / (str(counter).zfill(2) + "-provenance.json"),
             {
                 "condition": condition,
+                **study_metadata(study_protocol),
+                "diagnosis_max_completion_tokens": diagnosis_cap(study_protocol),
                 "evidence_markdown_sha256": hashlib.sha256(markdown.encode()).hexdigest(),
                 "evidence_markdown_file": prompt_path.name,
                 "initial_messages_before_router_sha256": hashlib.sha256(
@@ -1879,7 +1967,13 @@ def condition_services(condition, audit_dir):
                 "diagnose_role": "patcher" if condition == "full_super" else "diagnose",
             },
         )
-        return diagnose_with_router(router, markdown, evidence=visible, **kwargs)
+        return diagnose_with_router(
+            router,
+            markdown,
+            evidence=visible,
+            **({"study_protocol": study_protocol} if study_protocol is not None else {}),
+            **kwargs,
+        )
 
     return replace(
         Services(), diagnose=diagnose, evidence=evidence_builder, evaluation_condition=condition

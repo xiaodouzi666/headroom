@@ -348,7 +348,7 @@ it("shows a retained target success separately from exhausted exploration", asyn
 });
 
 it("does not present historical baseline completion as successful exploration", async () => {
-  window.history.replaceState({}, "", `/runs/${id}?replay=1`);
+  window.history.replaceState({}, "", `/runs/${id}`);
   const reportPath = detailPath + "/report.json";
   vi.stubGlobal(
     "fetch",

@@ -246,6 +246,9 @@ def test_evaluation_initial_copy_retains_context_and_failure_feedback(tmp_path, 
         execution_context=evidence["execution_context"],
         candidate_evidence=evidence["candidate_evidence"],
         verification_feedback=feedback,
+        evidence_availability_catalog=headroom.diagnose.build_evidence_availability_catalog(
+            evidence, "evidence"
+        ),
     )
     assert messages == expected
     assert seen["evidence"] == evidence and seen["verification_feedback"] == feedback

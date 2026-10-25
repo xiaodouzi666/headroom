@@ -1,4 +1,4 @@
-> Final source qualification: 3030 guarded backend tests passed in 749.11 seconds; all 305 source entries, PLAN and guard stayed unchanged. R3 live evaluation is pending. Earlier preparation and the failed image-mismatch run below are retained.
+> Final result: 3/9 targets (s3, s4, s8), 4/9 valid correct first causes with two unknown truths. Both six-required gates remain unmet. Nine cases were attempted, but the campaign stopped partial on an unresolved Super request charge in nanoGPT. No automatic fourth repair or Phase 2 run is authorized by this result. [Independent audit](independent-audit-summary.md). The dated preparation notes below are preserved.
 
 # Protocol-v2 repair round 3
 

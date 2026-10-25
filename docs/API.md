@@ -1,11 +1,29 @@
 # Local API and supervised queue
 
-Status: offline implementation, verified with FastAPI TestClient, injected
-workers and real short-lived fake worker processes. No listener, model API, GPU
-workload or .env access was used by these API tests. Public HTTPS/authentication,
-live reachability, five curated successful replays, and actual curl/systemd/monitoring acceptance remain pending.
+Status: owner-scoped API implementation with historical offline TestClient and
+worker-process evidence. Replay-removal, shared-ledger and study integration
+passed a fresh 3121-test guarded backend suite; 73 frontend tests and the build
+also passed. The localhost preview was refreshed with the unchanged halted
+ledger; no new paid run was started.
+Public HTTPS/authentication and actual delivery/monitoring acceptance remain
+separate, with deployment deferred until the owner's final confirmation.
+
+The Replay product (former T3.3) was removed at the owner's request. Historical
+records are retained, but there is no public Replay listing or authorization
+exception. Current campaign status: R3 target 3/9, valid correct first cause 4/9
+with two unknown truths, and a partial/unknown-cost halt. See the
+[R3 summary](../reports/acceptance-v2-r3-20261025/independent-audit-summary.md) and
+[public audit](../reports/acceptance-v2-r3-20261025/independent-audit-public.json).
 
 ## Configuration and source input
+
+An optional HEADROOM_BUDGET_DB_PATH selects the same existing initialized
+canonical ledger for execution, API budget display and standalone acceptance.
+Invalid explicit paths fail closed; they do not create or fall back to a fresh
+pool. Original limits, historical charges and unknown-cost holds are unchanged.
+Path selection alone does not prove the intended financial history. New source
+qualification is pending; deployment must retain the reviewed profile and limits.
+
 
 Factory: headroom.api.app.create_app(ApiSettings()). Importing the module binds
 no port and starts no worker. Lifespan starts one scheduler thread. Production
@@ -42,8 +60,8 @@ The explicit local launch command is:
 python -m headroom.api.app
 ```
 It binds only 127.0.0.1:8000 and disables proxy-header rewriting. This command has
-not been run for these offline tests. Public deployment needs a reviewed hostname,
-HTTPS and authentication configuration.
+not been run for these offline tests. Public deployment awaits the owner's final
+confirmation and separate HTTPS/authentication/delivery verification.
 
 POST /api/runs accepts exactly one source form: script_text, example_id, or all
 three of repo/ref/cmd. It also accepts target, canonical policy, search_mode and budget. Budget is a decimal string, default "0.6", positive
@@ -93,7 +111,6 @@ The worker may start before the next status request.
 | GET /api/examples | {examples:[{id,title,expected_mode,root_cause,baseline_verified}]} |
 | GET /api/usage | Current-session calls/costs and separate read-only local authorization budget |
 | GET /api/health | DB/queue, cached GPU activity, anonymous provider reachability and local budget |
-| GET /api/replays | Server-curated public_replay rows, count and provenance note |
 
 Summaries include status, target, search_mode (when recorded), policy, target_met, timestamps, reason,
 provenance, elapsed_seconds, api_worker_finished and api_cleanup_verified.
@@ -139,7 +156,7 @@ without selection metadata retain the original fixed after layout.
 `configurations/round-XX/manifest.json`, including the retained original and
 effective execution metadata. Download it with `cli.json`, `env.sh` and
 `patch.diff`: changing only arguments or environment can legitimately produce
-an empty source diff. These aliases retain session/replay authorization,
+an empty source diff. These aliases retain owner-session authorization,
 regular-file size limits and no-symlink traversal; callers never supply paths.
 
 ## Isolation, limits and lifecycle
@@ -147,9 +164,9 @@ regular-file size limits and no-symlink traversal; callers never supply paths.
 Private runs use a random 128-bit HttpOnly, SameSite=strict cookie. The local HTTP
 cookie is not Secure; configuring an explicit public_host enables Secure cookies.
 Neither mode provides complete public authentication. Other sessions
-cannot inspect a private run, even with its ID. Only server-set public_replay
-metadata permits public reads. The API never invents replays or exposes a flag
-that lets requesters publish them.
+cannot inspect a run, even with its ID. Historical public_replay metadata no
+longer grants access to details, SSE or downloads. The removed public listing
+returns 404; normal owner access and historical stored artifacts remain.
 
 Cross-origin POSTs and untrusted Hosts are rejected. A Vite same-origin proxy
 should preserve Host (changeOrigin:false), matching the browser Origin.
@@ -242,7 +259,7 @@ supervisor cleanup had not finished. No prior test directory was overwritten.
 Fixed Pareto configuration downloads use
 `GET /api/runs/{id}/configurations/{tier}/{artifact}`. Tier is strictly
 `round-01` through `round-06`; artifact is exactly `patch.diff`, `env.sh`,
-`cli.json` or `manifest.json`. The same session/public-replay authorization and
+`cli.json` or `manifest.json`. The same owner-session authorization and
 NOFOLLOW directory/leaf checks apply. The route maps only to
 `configurations/{tier}/{artifact}` below that run; it never accepts an arbitrary
 report-provided host path. Tests cover valid downloads, other sessions, path

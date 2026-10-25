@@ -18,6 +18,8 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from headroom.diagnosis_protocol import StudyProtocol
+
 ENVIRONMENT_KEY = "HEADROOM_EVALUATION_CONTEXT"
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 MAX_CONTEXT_BYTES = 1024 * 1024
@@ -83,6 +85,7 @@ class Invocation(BaseModel):
     result_path: str
     deadline: float = Field(allow_inf_nan=False)
     condition: str
+    study_protocol: StudyProtocol | None = None
     argv: list[str]
     package_root: str
     console_path: str
@@ -200,6 +203,7 @@ class CLIExecution:
                 or Path(state.get("run_dir", "")).resolve()
                 != (Path(invocation.run_root) / invocation.run_id).resolve()
                 or _json(state.get("request")) != _json(invocation.queued_request)
+                or state.get("study_protocol") != invocation.study_protocol
             ):
                 raise ValueError("CLI invocation does not match its queued evaluation intent")
             _write(
@@ -223,6 +227,8 @@ class CLIExecution:
                 "run_dispatched": False,
                 "result_saved": False,
             }
+            if invocation.study_protocol is not None:
+                self.receipt["study_protocol"] = invocation.study_protocol
             _write(self.receipt_path, self.receipt)
         except BaseException:
             self.store.close()
@@ -317,7 +323,15 @@ class CLIExecution:
             raise ValueError("CLI source changed after the evaluation source pin")
         if self.prepared is not None:
             _write(self.directory / ("preparation-" + self.spec.run_id + ".json"), self.prepared)
-        services = condition_services(self.spec.condition, Path(self.spec.audit_dir))
+        services = condition_services(
+            self.spec.condition,
+            Path(self.spec.audit_dir),
+            **(
+                {"study_protocol": self.spec.study_protocol}
+                if self.spec.study_protocol is not None
+                else {}
+            ),
+        )
         self.dispatched = True
         self.receipt["run_dispatched"] = True
         self.receipt["request_sha256"] = hashlib.sha256(

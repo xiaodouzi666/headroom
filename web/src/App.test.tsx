@@ -38,7 +38,6 @@ beforeEach(() => {
             },
           ],
         });
-      if (input === "/api/replays") return response({ replays: [] });
       return Promise.reject(new Error("Unexpected request in offline UI test"));
     }),
   );
@@ -60,8 +59,11 @@ describe("workspace state", () => {
       screen.queryByText(/verified repair succeeded/i),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByText(/No curated replays are available yet/),
-    ).toBeInTheDocument();
+      screen.queryByText(/Saved replay|Explore saved runs/),
+    ).not.toBeInTheDocument();
+    expect(
+      vi.mocked(fetch).mock.calls.some(([path]) => path === "/api/replays"),
+    ).toBe(false);
   });
   it("validates source selection before submitting", async () => {
     render(<App />);
@@ -113,7 +115,7 @@ describe("safe evidence rendering", () => {
   });
 });
 
-describe("availability replay guidance", () => {
+describe("availability guidance", () => {
   it.each([
     [{ gpu: { status: "busy", busy: true, stale: false } }, "The GPU is busy."],
     [
@@ -144,7 +146,7 @@ describe("availability replay guidance", () => {
       "Model billing needs review.",
     ],
   ])(
-    "links existing evidence and prevents a blocked start",
+    "explains the blocker and prevents a blocked start",
     async (observed, message) => {
       vi.stubGlobal(
         "fetch",
@@ -156,27 +158,14 @@ describe("availability replay guidance", () => {
               queue: {},
             });
           if (input === "/api/examples") return response({ examples: [] });
-          if (input === "/api/replays")
-            return response({
-              replays: [
-                {
-                  run_id: "a".repeat(32),
-                  status: "completed",
-                  provenance: "gpu_baseline",
-                  target_met: false,
-                },
-              ],
-            });
           return Promise.reject(new Error("Unexpected request"));
         }),
       );
       render(<App />);
       expect(await screen.findByText(message)).toBeInTheDocument();
-      await waitFor(() =>
-        expect(
-          screen.getByRole("link", { name: /Explore saved evidence/ }),
-        ).toHaveAttribute("href", "#replays"),
-      );
+      expect(
+        screen.queryByRole("link", { name: /Explore saved evidence/ }),
+      ).not.toBeInTheDocument();
       expect(
         screen.getByRole("button", { name: /Start analysis/ }),
       ).toBeDisabled();
@@ -185,15 +174,14 @@ describe("availability replay guidance", () => {
       ).not.toBeInTheDocument();
     },
   );
-  it("does not invent a replay link when there is no saved evidence", async () => {
+  it("keeps automatic availability guidance without a replay endpoint", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn((input: unknown) => {
         if (input === "/api/health")
           return response({ gpu: { status: "busy", busy: true } });
-        return response(
-          input === "/api/examples" ? { examples: [] } : { replays: [] },
-        );
+        if (input === "/api/examples") return response({ examples: [] });
+        return Promise.reject(new Error("Unexpected request"));
       }),
     );
     render(<App />);

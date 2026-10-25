@@ -299,11 +299,11 @@ def _install_pipeline_fixture(base):
 
     real_condition_services = evaluation.condition_services
 
-    def services(condition, audit_dir):
+    def services(condition, audit_dir, *, study_protocol=None):
         from dataclasses import replace
 
         return replace(
-            real_condition_services(condition, audit_dir),
+            real_condition_services(condition, audit_dir, study_protocol=study_protocol),
             baseline=baseline,
             evidence=evidence,
             provenance="offline_fixture",

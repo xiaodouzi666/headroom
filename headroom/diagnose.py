@@ -11,6 +11,7 @@ from typing import Any
 from jsonschema import Draft202012Validator
 from pydantic import ValidationError
 
+from headroom.diagnosis_protocol import DEFAULT_DIAGNOSIS_CAP, diagnosis_cap, diagnosis_prompt
 from headroom.diagnosis_schema import build_diagnosis_schema
 from headroom.evidence_blockers import (
     build_evidence_availability_catalog,
@@ -354,6 +355,7 @@ def build_diagnosis_messages(
     candidate_evidence: list[Mapping[str, Any]] | None = None,
     numerical_reference_context: Mapping[str, Any] | None = None,
     evidence_availability_catalog: Mapping[str, Any] | None = None,
+    study_protocol: str | None = None,
 ) -> list[dict[str, str]]:
     """No network access; generated request is for the Token Factory router only."""
     _check_required_saving(required_saving_gb)
@@ -385,7 +387,7 @@ def build_diagnosis_messages(
     # Put actual invocation facts before long source/evidence snippets.
     request["evidence_markdown"] = evidence_markdown
     return [
-        {"role": "system", "content": PROMPT_PATH.read_text()},
+        {"role": "system", "content": diagnosis_prompt(PROMPT_PATH.read_text(), study_protocol)},
         {"role": "user", "content": json.dumps(request, ensure_ascii=False, allow_nan=False)},
     ]
 
@@ -642,7 +644,7 @@ def validate_diagnosis(
     )
 
 
-DIAGNOSIS_MAX_COMPLETION_TOKENS = 16384
+DIAGNOSIS_MAX_COMPLETION_TOKENS = DEFAULT_DIAGNOSIS_CAP
 
 
 def diagnose_with_router(
@@ -654,6 +656,7 @@ def diagnose_with_router(
     policy: Mapping[str, Any],
     required_saving_gb: float | None = None,
     max_supplements: int = 1,
+    study_protocol: str | None = None,
     verification_feedback: list[Mapping[str, Any]] | None = None,
 ) -> DiagnosisValidation:
     """Call Ultra through the supplied budgeted router; keep invalid evidence invalid.
@@ -662,6 +665,7 @@ def diagnose_with_router(
     bounded supplement allowance. Genuine missing evidence is not
     overridden. Credentials, pricing and budget authorization belong to the caller.
     """
+    completion_cap = diagnosis_cap(study_protocol)
     if type(max_supplements) is not int or not 0 <= max_supplements <= 3:
         raise ValueError("max_supplements must be between 0 and 3")
     # Derive availability from the exact outgoing evidence, not model prose or
@@ -680,6 +684,7 @@ def diagnose_with_router(
         candidate_evidence=evidence.get("candidate_evidence"),
         numerical_reference_context=evidence.get("numerical_reference_context"),
         evidence_availability_catalog=evidence["evidence_availability_catalog"],
+        study_protocol=study_protocol,
     )
     schema = build_diagnosis_schema(evidence=evidence, policy=policy)
     for attempt in range(max_supplements + 1):
@@ -689,7 +694,7 @@ def diagnose_with_router(
                 "diagnose",
                 messages,
                 schema,
-                max_tokens=DIAGNOSIS_MAX_COMPLETION_TOKENS,
+                max_tokens=completion_cap,
                 reasoning=True,
             )
             parsed = response.parsed

@@ -350,3 +350,21 @@ The current CLI maps `completed` to 0, `needs_human` and `budget_exceeded` to 78
 The read-only private helper `.cache/setup/audit_cli_exit_semantics_v1.py` derives `expected_fix_exit_code` only when saved campaign, report, worker-result and Store statuses agree, using a pinned CLI source contract. It always keeps `literal_fix_exit_code=null` and `invocation_observed=false`. Predicted zero is not observed CLI evidence, and the helper never makes the literal CLI acceptance gate pass.
 
 See the [boundary report](../reports/live-campaign-20261025/cli-exit-acceptance-boundary.md) and [v3 supplement](../reports/live-campaign-20261025/mvp-v3-cli-exit-semantics.json). v3 had nine normal worker exits but eight predicted CLI exits of 78 and only one predicted 0. No existing result is regraded and no additional provider or GPU call is required for this status audit. Literal CLI invocation, argument/configuration handling, terminal events and shell exit still need their own execution evidence before claiming the original CLI gate passed.
+
+
+## Explicit common diagnosis budget study
+
+The opt-in study protocol common-diagnosis-4000-v1 is available only through
+eval planning/live execution. It requires exactly the eight v2 synthetic cases,
+all three ordered conditions full_ultra,traceback_ultra,full_super and explicit
+strict policy. Planning is non-executing. The study is implemented but has not
+been run; failed MVP acceptance and the current billing halt remain in force.
+
+All diagnosis arms request 4000 completion tokens, including hidden reasoning;
+ordinary diagnosis keeps 16384. Patching keeps 4000 with thinking disabled,
+whereas diagnosis requests thinking enabled. The recorded protocol/control
+fields bind source settings, seed 1337, target, arguments, reference, allocator,
+search mode and budgets. Incompatible or incompletely labelled rows cannot be
+pooled with this study. Actual runtime evidence and repair trajectories may
+differ, so this is an end-to-end comparison, not an isolated causal model test.
+No option changes provider reservations, authorizes spending or clears a halt.

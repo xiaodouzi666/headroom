@@ -15,6 +15,12 @@ import httpx
 
 from headroom.budget import money
 from headroom.config import OFFICIAL_BASE_URLS
+from headroom.ledger_path import (
+    LedgerPathError,
+    require_initialized_ledger,
+    select_budget_database,
+    validate_existing_ledger_path,
+)
 from headroom.runtime import RuntimeNotReady, read_live_profile
 
 
@@ -122,7 +128,9 @@ def probe_provider(base_url):
         }
 
 
-def read_local_budget(path, *, daily_limit, total_limit, day=None):
+def read_local_budget(
+    path, *, daily_limit, total_limit, day=None, require_existing=False, expected_identity=None
+):
     """Read consistent ledger rows without creating databases/tables or write locks."""
     result = {
         "scope": "local_application_authorization",
@@ -136,7 +144,11 @@ def read_local_budget(path, *, daily_limit, total_limit, day=None):
     try:
         daily, total = money(daily_limit), money(total_limit)
         today = day or datetime.now(UTC).date().isoformat()
-        path = Path(path)
+        path = (
+            require_initialized_ledger(path, expected_identity=expected_identity)
+            if require_existing
+            else Path(path)
+        )
         initialized = path.exists()
         runs, attempts = [], []
         if initialized:
@@ -145,6 +157,8 @@ def read_local_budget(path, *, daily_limit, total_limit, day=None):
             conn = sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=0.05)
             until = time.monotonic() + 0.5
             try:
+                if require_existing:
+                    validate_existing_ledger_path(path, expected_identity=expected_identity)
                 conn.set_progress_handler(lambda: int(time.monotonic() >= until), 1000)
                 conn.execute("PRAGMA query_only=ON")
                 conn.execute("BEGIN")
@@ -280,6 +294,10 @@ class AvailabilityMonitor:
         self.lock = threading.Lock()
         self.thread = None
         self.closed = False
+        try:
+            self.budget_database = select_budget_database(settings.project_root)
+        except LedgerPathError:
+            self.budget_database = None
         self.observed_at = {"gpu": None, "token_factory": None}
         self.gpu = {"status": "unknown", "available": None, "busy": None, "checked_at": None}
         self.provider = {
@@ -390,12 +408,18 @@ class AvailabilityMonitor:
         }
         if profile is not None:
             try:
+                if self.budget_database is None:
+                    raise LedgerPathError("Shared budget database selection is unavailable")
                 daily = min(money("12"), money(os.environ.get("HEADROOM_DAILY_BUDGET_USD", "12")))
                 budget = read_local_budget(
-                    self.settings.project_root / ".cache/budget.db",
+                    self.budget_database.path,
+                    require_existing=self.budget_database.require_existing,
+                    expected_identity=self.budget_database.file_identity,
                     daily_limit=daily,
                     total_limit=profile.authorized_total_usd,
                 )
+            except LedgerPathError:
+                budget["reason"] = "invalid_shared_budget_ledger"
             except (ValueError, TypeError, ArithmeticError):
                 budget["reason"] = "invalid_local_budget_limit"
         return {"gpu": gpu, "token_factory": provider, "local_budget": budget}

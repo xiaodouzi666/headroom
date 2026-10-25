@@ -109,7 +109,7 @@ def test_run_artifacts_sessions_examples_usage_and_terminal_sse(settings):
         assert other.get(f"/api/runs/{run_id}/report.md").status_code == 404
         other.close()
         assert client.get("/api/usage").json()["scope"] == "current_session"
-        assert client.get("/api/replays").json()["replays"] == []
+        assert client.get("/api/replays").status_code == 404
 
 
 def test_sse_includes_events_added_after_stream_started(settings):
@@ -216,14 +216,19 @@ def test_artifacts_never_follow_leaf_or_parent_symlinks(settings, tmp_path):
         assert "env.sh" not in client.get(f"/api/runs/{run_id}").json()["artifacts"]
 
 
-def test_curated_replay_sse_terminates_without_private_session_access(settings):
+def test_legacy_public_flag_no_longer_grants_private_session_access(settings):
     app = create_app(settings, worker=completed_worker)
     run_id = uuid4().hex
     app.state.store.create_run(run_id, status="completed", public_replay=True, target_met=False)
     app.state.store.add_event(run_id, "run.done", {"target_met": False})
+    before = app.state.store.get_run(run_id)
+    events = app.state.store.events(run_id)
     with TestClient(app) as client:
-        assert client.get("/api/replays").json()["count"] == 1
-        assert "event: stream.end" in client.get(f"/api/runs/{run_id}/events").text
+        assert client.get("/api/replays").status_code == 404
+        for suffix in ("", "/events", "/report.md", "/report.json", "/patch.diff"):
+            assert client.get(f"/api/runs/{run_id}{suffix}").status_code == 404
+        assert app.state.store.get_run(run_id) == before
+        assert app.state.store.events(run_id) == events
 
 
 def test_spawn_worker_deadline_kills_ignoring_process_and_preserves_partial_report(settings):

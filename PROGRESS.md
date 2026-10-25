@@ -1,3 +1,45 @@
+# Headroom Progress
+
+## Current status — protocol-v2 R3, 2026-10-25
+
+R3 reached **3/9 targets (s3, s4, s8)** and **4/9 valid correct first causes**;
+s5 and nanoGPT cause truth remain unknown in the fixed denominator of nine.
+Both original six-required gates remain unchanged, so Phase 2 is not authorized
+by this result. The campaign is partial after a Super patch request returned
+HTTP 529 with unknown actual cost. The existing ledger halt remains; no charge
+was cleared, no new pool was created and no recharge occurred.
+
+The independent review bound all 305 tested source entries and nine CLI chains
+(three exit 0, six exit 78). The 3030-test receipt qualifies the R3 campaign
+source only. Subsequent Replay removal, shared-ledger selection and opt-in
+common-budget study controls passed 3121 backend tests and 73 frontend tests;
+the build and local browser removal checks passed. All 310 sources, PLAN and
+guard stayed unchanged. This software qualification adds no repair successes.
+See reports/post-r3-product-20261025/README.md. Possible host-load interference means R3 timing cannot establish
+a speed advantage. The unchanged reasoning-wire auditor refused the unfinished
+campaign, and that refusal is retained.
+
+Current requirement amendments:
+
+- **T3.3 Replay: user removed.** Product cards, public access/listing and the
+  CLI command are removed; historical runs, artifacts and actual execution/rerun
+  machinery remain. It is no longer an acceptance obligation or a claimed success.
+- Public deployment is deferred until the owner's final confirmation. Public
+  delivery, alert delivery, video and submission checks remain separate.
+- Competitive advantage is unproved. Existing public systems cover both
+  optimization components and combined workflows; no novelty or superiority
+  claim follows from the current campaign.
+
+Evidence: [R3 summary](reports/acceptance-v2-r3-20261025/independent-audit-summary.md)
+and [public audit](reports/acceptance-v2-r3-20261025/independent-audit-public.json).
+
+## Archived checkpoints and implementation history
+
+The entries below describe their recorded dates, including then-current budget
+and pending-work statements. They are preserved for traceability, not current
+authorization or scores. The current status and explicit user withdrawal above
+take precedence. The canonical original plan in docs/PLAN.md is unchanged.
+
 ## Protocol-v2 repair r3 source qualified — 2026-10-25
 
 The last bounded MVP repair iteration is ready for its own nine-case campaign.
@@ -44,13 +86,13 @@ History and unknown charges retained. R2 work targets actual Ultra completion-ca
 exhaustion, OOM initialization evidence delivery and remaining product defects.
 The original PLAN remains unchanged; the r1 failure does not authorize Phase 2.
 
-# Headroom Progress
+## Archived project initialization
 
 Initialized: 2026-10-23T00:44:58.397951+00:00
 Canonical plan: docs/PLAN.md (v4.2, preserved verbatim).
 All work, caches, runs, and media remain on azuki.
 
-## Current continuation — acceptance v2 and remaining delivery
+## Historical continuation — acceptance v2 and remaining delivery
 
 Frank approved separate s2 classification/capacity fixtures and explicit
 strict/allow_precision comparisons, preserving historical results and the 6/9 gate.
@@ -106,7 +148,9 @@ Source0792ab7 is pushed; refreshed loopback preview is healthy/idle/configured,
 with unchanged ledger/profile and matching tested source inventory.
 Receipt: reports/preview-research-20261025.json.
 
-## Tasks
+## Task ledger with current scope amendments
+
+Historical evidence remains listed; current campaign status is summarized above.
 
 | Task | Description | Status | Evidence |
 |---|---|---|---|
@@ -127,7 +171,7 @@ Receipt: reports/preview-research-20261025.json.
 | T1.9 | 真实仓库：nanoGPT（P0，~2h） | 真实nanoGPT已执行；修复门未通过 | v7 realCLI32/1 versus model12/40 failure preserved; latest diagnostic probe reads32x1 but fails claim/policy gates, no candidate; reports/final-nano-diagnostic-probe-20261025T050212Z-b19ed759/report.md |
 | T1.10 | Honesty 与安全（P0，~1h） | 静态与CPU真实性检查通过；完整修复待办 | docs/PATCH.md; model shrink/truncation/escape checks and observed parameter counts |
 | T1.11 | Docker Lab（P1，仅 `DOCKER_GPU=ok`，~1.5h） | 自有Python镜像、干净目录CPU及隔离组件通过 | docs/LAB_RUNTIME.md; hash-locked image-owned Python3.12, verified immutable image ID, no host venv mount; clean candidate tree script/module each3updates with capture/cleanup verified |
-| T1.12 | MVP 整体验收 + 报告（P0，~1.5h，10/24 晚） | 历史v7与新版协议v2各1/9分开保留；新版有效首因6/9；目标门未通过 | v7 all9live/25calls; target1/9; cause raw6/valid4true3false2unknown;9CLIchains 1zero8exit78; originalPLAN0.6 stop |
+| T1.12 | 原九场景端到端验收 | R3 目标 3/9、有效首因 4/9，2 unknown；仍未通过 6+6 门 | R3 partial after HTTP 529/unknown-cost halt; all nine CLI chains verified, three exit 0 and six exit 78. |
 | T2.1 | 显存求解循环：keep-or-revert 搜索 + Pareto 前沿（P0，~3h） | 有界搜索与逐轮验证反馈完成；真实验收待办 | docs/SEARCH.md; selected state survives revert; per-round verification-feedback.json exposes actual loss/check/error facts to later rounds; original s2/bf16 policy gates unchanged |
 | T2.2 | Tavily Research（P0，~2h） | 真实模型研究与缓存已测；指定Sources门未通过 | v4 research9rows/8API/7credits;s4PyTorch2.5checkpoint extract;s3->s5cache0API0credits;s1checkpoint/s5CUDA memorySources absent |
 | T2.3 | Nano 栈标注（P1，~1h） | 真实8场景已测；覆盖和一致率未通过 | v4 4/8complete;completed outputs3/40heuristic matches;failed4not excluded;all<=0.02certified upper |
@@ -138,16 +182,16 @@ Receipt: reports/preview-research-20261025.json.
 | T2.8 | 小评测 + 自优化（P0，可夜间自治，~4h） | strict/allow_precision方案已获批；20次真实政策矩阵及75%目标验收待办 | docs/EVALUATION.md; default/strict 实际等价，allow_precision 必须显式选择；全矩阵共享预算，逐行完整 Policy；两档歧义已按批准方案解决；≤3轮优化、target_met/首因各≥75% 和 $12 实测仍未关闭 |
 | T3.1 | FastAPI + SSE（P0，~3h） | API队列/SSE/选中轮次下载已实现并测 | docs/API.md; selected round after PNG/JSON and configuration manifest; missing selected evidence never falls back to stale files; existing ownership/nofollow/deadline rules retained |
 | T3.2 | 前端素版（P0，~4h） | 当前Home性能99及390px无溢出；真实修复UI待办 | reports/home-performance-20261025/receipt.json;one completed Lighthouse13.5/Chrome151 sample,FCP1.36s/LCP1.51s/TBT0/CLS0.0396;currentdist unchanged,390px widths390/no overflowing elements;68frontend tests/typecheck/build retained. Baseline Home only,no live run submitted;browser processes cleaned beforeGPU |
-| T3.3 | Replay（P0，~1.5h） | 5条真实基线回放可用；规定修复回放待办 | reports/baseline-replays.json; explicitly baseline-only; s2 two-round/nanoGPT/reclaim repair replay not fabricated |
+| T3.3 | Replay product | User removed — no remaining acceptance obligation | Product entry points/public access removed in current source; new integration qualification pending. Historical baseline/repaired run artifacts remain archived and do not count as new success. |
 | T3.4 | Claude Design 对齐（P1，~3h；设计稿 10/25–10/26 由 Frank+Claude 产出到 `design/`） | 待Frank设计稿与认可 | No design package has been supplied; theme implementation exists |
-| T3.5 | 公网部署、限流、监控（P0，~2.5h；Frank 提供域名/Cloudflare） | 默认关闭的告警投递已实现；公网/真实收件待办 | docs/DEPLOYMENT.md; explicit HTTPS webhook, durable incident/attempt state, bounded retry, identical idempotent payload and unknown delivery; 57 guarded tests and systemd template verification; no channel configured or service/timer installed |
+| T3.5 | 公网部署、限流、监控 | 等待用户最终部署确认；公网与实际告警验收仍待完成 | Existing deployment/monitoring implementation and historical tests are retained; no new public-service or notification acceptance is claimed. |
 | T3.6 | 预录素材（P0，~1h） | 8张真实基线UI素材完成；完整修复素材待办 | docs/media/ui-20261024T025659Z-baseline-only; baseline-only labels, desktop/mobile Home/Results/About/Run; no repaired before-after/diagnosis/diff fabricated |
 | T4.1 | 评测集定稿 | 基线范围已验收 | reports/evaluation-baselines-20261024.json; all12 matches, 5 OOM/7 completed20, full capture/cleanup; source pins |
 | T4.2 | 主评测 | 工具与表格已准备；真实主评测待办 | docs/EVALUATION.md; docs/RESULTS.md; Nebius live model run required |
 | T4.3 | 消融 | 三条件消融工具完成；实测待办 | full Ultra / traceback+summary Ultra / full Super; no predicted gain presented as measured |
 | T4.4 | 冻结 | 待真实评测后冻结 | No v0.9-eval tag created before acceptance |
 | T5.1 | README | 五命令Quickstart与干净目录CPU通过；真实repair待办 | README.md; locked Python3.12 and self-contained Lab image; reports/portable-lab-20261024 proves script/module capture without local .venv/.env; clean-clone live fix remains pending |
-| T5.2 | docs 定稿 | v7最终结果与交接已整理；完整项目验收未完成 | Versionedv5/v6/v7 summaries and finance/CLI/candidate audits; final-decision-20261025-v7.md; no release or submission claimed |
+| T5.2 | docs 定稿 | 当前文档更新为 R3 3/9 targets、4/9 valid causes；新集成资格待验证 | R3 summary/public audit; older reports and original PLAN retained; no full acceptance/release/submission claimed. |
 | T5.3 | Devpost 描述 | Devpost本地草稿完成；未保存表单 | docs/DEVPOST.md; owner final review/submission pending |
 | T5.4 | 视频 | 视频脚本完成；待真实修复与录制 | docs/VIDEO_SCRIPT.md; <=2:50 storyboard, actual evidence required |
 | T5.5 | 首次完整提交 | 未开始 | — |
@@ -165,8 +209,8 @@ Receipt: reports/preview-research-20261025.json.
 - The owner authorizes remaining original-plan model work using existing gifted credit only, with no recharge/overrun. reports/live-campaign-20261025 records authorization, allocation and the enabled actual_usage profile with verified provider global/day reservations. All60 original T0.4 samples are finalized with failures retained; Ultra900k429 permanently occupies1.049344USD under the completed conservative continuation review. The recorded all-time/daily runtime ceiling is9.99964904USD, including spent usage; combined external probe plus maximum runtime day total11.82189150USD remains below12. No unknown charge is treated as zero. T1.3 is accepted; latest T1.4 v5 is7/8 exact first causes with8/8 valid references but incomplete policy/readiness. Its0.328770USD calls are known; subsequent MVP Nano missing-cache usage retained0.01644864USD and halted the runtime. Earlier v2/v3/v4 failures remain preserved.
 - Keep original failed gates and procedure conflicts visible: s2's 39.8715% optimizer fraction versus40%, default precision policy/bf16 tier. T2.7 isolation comparison is now accepted with its Docker-contained reference boundary.
 - Final authorized T1.12 v7 completed all nine: target1/9, raw cause6/9, valid4true/3false/2unknown; one actualCLI0/eight78, all original cost/time bounds pass. Additional three iterations exhausted; no failed run replaced by offline success.
-- T3.5 / Phase6 webhook delivery is implemented but disabled. The owner must select/authorize a real destination and supply public domain/Cloudflare access before deployment and delivery acceptance; no recipient message or unit installation has occurred.
-- Current requirement-by-requirement source audit found no additional independently implementable feature gap at1452d27; see reports/readiness-after-outcomes-20261024.md. This does not establish full acceptance or release readiness. Owner design, genuine repair replay/media, final review/video/submission and future dated uptime checks remain separately open.
+- T3.5 / Phase6: public deployment remains deferred until the owner's final confirmation. A real alert destination requires authorization before delivery; historical implementation/unit checks are not delivery acceptance.
+- Current requirement-by-requirement source audit found no additional independently implementable feature gap at1452d27; see reports/readiness-after-outcomes-20261024.md. This does not establish full acceptance or release readiness. Owner design, repair media, final review/video/submission and future dated uptime checks remain separately open. Replay product acceptance was later withdrawn by the user.
 - No original threshold is lowered, no old run is replaced, and no evaluation/release tag is created before acceptance.
 
 ## Acceptance log

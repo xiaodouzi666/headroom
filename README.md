@@ -2,10 +2,10 @@
 
 Autoresearch for GPU memory: capture a PyTorch workload, explain its memory use, propose a patch, and measure whether the change works.
 
-**Built with NVIDIA Nemotron 3 (Ultra/Super/Nano) on Nebius Token Factory.** Ultra handled a measured 500,029-token input and a separate 268,920-token authentic evidence request; neither proves a one-million-token request or the exact provider maximum. The 900k probe returned 429 and its unknown charge remains conservatively retained. The latest audited protocol-v2 R2 campaign met 3/9 targets and 4/9 valid correct first causes (two truths unknown), below the unchanged 6/9 gates. R3 has passed 3030 guarded tests; its live result is pending. See [capability results](reports/t0.4-acceptance-20261025.json), [client evidence](reports/t1.3-acceptance-20261025.json) and [current campaign evidence](reports/acceptance-v2-r3-20261025/README.md).
+**Built with NVIDIA Nemotron 3 (Ultra/Super/Nano) on Nebius Token Factory.** Ultra handled a measured 500,029-token input and a separate 268,920-token authentic evidence request; neither proves a one-million-token request or the exact provider maximum. The 900k probe returned 429 and its unknown charge remains conservatively retained. The latest audited protocol-v2 R3 campaign met **3/9 targets (s3, s4, s8)** and **4/9 valid correct first causes**, with two cause truths unknown. Both six-of-nine gates remain unchanged. The campaign is partial: a Super patch request returned HTTP 529 with unknown actual cost, so the ledger halted further paid dispatch. The 3030-test qualification applies to the campaign source; subsequent Replay removal, shared-ledger selection and opt-in study controls passed a separate 3121-test backend regression, 73 frontend tests and a production build; these checks add no repair successes. See [product cleanup](reports/post-r3-product-20261025/README.md). See [capability results](reports/t0.4-acceptance-20261025.json), [client evidence](reports/t1.3-acceptance-20261025.json), [R3 summary](reports/acceptance-v2-r3-20261025/independent-audit-summary.md) and [public audit](reports/acceptance-v2-r3-20261025/independent-audit-public.json).
 **Web research powered by Tavily.** Version-specific search/extraction and cache reuse have been exercised with the real service.
 
-Public demo: pending approved hostname and deployment. Local app: `headroom serve`.
+Public demo: deployment is deferred until the owner's final confirmation. Local app: `headroom serve`.
 Video: one verified repair is available; owner recording remains pending.
 [Current results](docs/RESULTS.md) · [CLI and project config](docs/CLI.md) · [Task status](PROGRESS.md) · [Original plan](docs/PLAN.md)
 
@@ -56,13 +56,13 @@ Without a reviewed live profile, the final command exits 78 and writes a partial
 
 For capture-only work, use `uv run headroom snapshot scenarios/s1_batch_too_big/train.py`. To validate the evaluation manifest without executing anything, use `uv run headroom eval --validate-only`; `--dry-run` actually runs all baselines on the GPU and makes no model request.
 
-## App and replay
+## App
 
 Build `web/` with Node 24 and `npm ci && npm run build`, then `uv run headroom serve` opens a localhost service on port 8000. It provides example/script submission, a durable event timeline, before/after evidence, diff, verification, Sources and downloads. Public deployment is separate.
 
-Five curated GPU **baseline** replays are available on the development server. They are labeled baseline-only: no diagnosis, patch or repair success is fabricated. Rebuild them from existing captures with `uv run python scripts/curate_baseline_replays.py`. A clean clone has no private run data and therefore no replays until evidence is generated/imported.
+The owner withdrew the Replay product (former T3.3). Its cards, public listing/access exception and CLI product command are removed from the current source; integration qualification is pending. Historical run files and reports remain archived. Normal owner-scoped run details, SSE, downloads and selected-configuration rerun instructions remain. This withdrawal is a scope change, not an acceptance success.
 
-Earlier baseline-only interface capture (before the key was configured; it does not show current account status):
+Archived baseline-only interface capture from before the key was configured. It may contain the now-removed Replay UI and does not show current account status or the current interface:
 
 ![Headroom workspace](docs/media/ui-20261024T025659Z-baseline-only/home-desktop.png)
 
@@ -70,13 +70,15 @@ Earlier baseline-only interface capture (before the key was configured; it does 
 
 ## Results and limitations
 
-[RESULTS](docs/RESULTS.md) separates measured baselines, component tests and automated repair campaigns. The latest audited R2 result is 3/9 targets (s1, s3, s4) and 4/9 valid correct first causes, below the original six-required gates. Its s1 repair completed two rounds with a verified model-cost upper bound of $0.16900892; observed numerical comparison covers the first five backward scalars under the original-workload checkpoint reference, not an unobserved twenty-loss comparison. Historical v7 1/9, protocol-v2 baseline 1/9 and R1 3/9 are preserved separately. The approved s2 classification/capacity split and strict/allow_precision policies apply prospectively; the required s2 two-round model gate, Phase 2, main evaluation and ablation remain open. R3 source qualification is complete and its real nine-case result is pending. No ablation win or full acceptance is claimed.
+[RESULTS](docs/RESULTS.md) separates measured baselines, component tests and automated repair campaigns. R3 reached **3/9 targets (s3, s4, s8)** and **4/9 valid correct first causes**, with two unknown truths, below the retained six-required gates. All nine CLI chains were verified: three exit 0, six exit 78. The campaign remains partial after the HTTP 529/unknown-cost halt; the reasoning-wire auditor correctly refused an unfinished campaign. No Phase 2 dispatch or full acceptance follows from these results.
+
+The [R3 summary](reports/acceptance-v2-r3-20261025/independent-audit-summary.md) and [lossless public audit](reports/acceptance-v2-r3-20261025/independent-audit-public.json) bind the 305-source inventory and preserve all earlier runs. R2's separate s1 two-round model-cost component remains historical evidence, not a fourth R3 success. Timing has a possible host-load confound from overlapping private tests and cannot establish a speed advantage. The approved s2 split and strict/allow_precision comparisons apply prospectively; Phase 2, main evaluation and ablation remain open. New Replay-removal and shared-ledger integration changes are not covered by R3's 3030-test receipt and await fresh qualification.
 
 The Lab executes watched commands only in Docker with no network, read-only source/dependencies, bounded resources and verified cleanup. Static policy is defense in depth, not proof that arbitrary hostile programs are safe. Watch observes Python scripts/modules, `-c`, interpreter options and generic argv, including an explicitly requested container shell, while preserving command arguments and exit codes. Automatic repair needs a replayable Python script; other CUDA OOM entrypoints return `needs_human`, and missing instrumentation is reported as unknown. Distributed captures are not aggregate memory evidence. The [independent subprocess comparison](reports/t2.7-acceptance-20261025.json) passed the original <=1% peak-difference gate in three scenarios and six CUDA arms, with observed differences of 0%. Its separate controller runs inside Docker and shares capture instrumentation, image and source checks; this is not a bare-host backend or independent allocator instrumentation. The earlier host namespace EPERM remains historical evidence; see [Watch and HF](docs/WATCH_HF.md). Captures of shared GPUs cannot establish a speed improvement. Random-initialized repository/library fixtures are not evidence of downstream task quality.
 
 ## Related work
 
-Headroom combines runtime allocator evidence, reviewable script patches, same-seed verification and a memory-budget search. These components have substantial prior work. The comparison below describes documented scope, not a measured superiority claim. Headroom's latest model-driven trial failed the original MVP target gate; full evaluation and ablations remain pending.
+Headroom combines runtime allocator evidence, reviewable script patches, same-seed verification and a memory-budget search. Both the components and combined optimization workflows have public precedents. No first-of-its-kind claim or demonstrated advantage is made; the comparison below describes scope only. Headroom's latest model-driven trial failed the original MVP target gate; full evaluation and ablations remain pending.
 
 | Prior work | Documented scope | Headroom's intended focus |
 |---|---|---|

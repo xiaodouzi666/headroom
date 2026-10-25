@@ -16,7 +16,6 @@ function setup(document: unknown = null, fail = false) {
       if (input === "/api/health") return response({});
       if (input === "/api/runs") return response({ runs: [] });
       if (input === "/api/usage") return response({});
-      if (input === "/api/replays") return response({ replays: [] });
       if (input === "/api/evaluations")
         return fail
           ? response(

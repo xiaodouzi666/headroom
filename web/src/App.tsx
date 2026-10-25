@@ -5,7 +5,6 @@ import {
   ChevronRight,
   Download,
   Layers3,
-  Play,
   Terminal,
   FileCode2,
   Check,
@@ -57,8 +56,7 @@ import {
 } from "./components";
 const MemoryChart = lazy(() => import("./MemoryChart"));
 const DiffView = lazy(() => import("./DiffView"));
-const hrefRun = (id: unknown, replay = false) =>
-  `/runs/${encodeURIComponent(text(id, ""))}${replay ? "?replay=1" : ""}`;
+const hrefRun = (id: unknown) => `/runs/${encodeURIComponent(text(id, ""))}`;
 function Brand() {
   return (
     <a href="/" className="brand" aria-label="Headroom home">
@@ -125,7 +123,6 @@ function ProviderBadge() {
 
 function Home() {
   const [examples, setExamples] = useState<Dict[]>([]),
-    [replays, setReplays] = useState<Dict[]>([]),
     [health, setHealth] = useState<Dict>({}),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
@@ -147,12 +144,8 @@ function Home() {
       try {
         const h = await getJSON("/api/health", controller.signal);
         setHealth(h);
-        const [e, r] = await Promise.all([
-          getJSON("/api/examples", controller.signal),
-          getJSON("/api/replays", controller.signal),
-        ]);
+        const e = await getJSON("/api/examples", controller.signal);
         setExamples(rows(e.examples));
-        setReplays(rows(r.replays));
       } catch (e) {
         if (!controller.signal.aborted)
           setError(e instanceof Error ? e.message : "Could not reach the API.");
@@ -280,26 +273,19 @@ function Home() {
       {!loading && provider.configured === false && (
         <Notice>
           <strong>Live analysis is not enabled yet.</strong> Runs may pause
-          while model readiness checks are completed.{" "}
-          {replays.length > 0 && (
-            <a href="#replays">Explore saved evidence instead →</a>
-          )}
+          while model readiness checks are completed.
         </Notice>
       )}
       {queueFull && (
         <Notice>
-          The run queue is currently unavailable. Saved replays remain available
-          below.
+          The run queue is currently unavailable. Availability will refresh
+          automatically.
         </Notice>
       )}
       {availability.gpuBusy && (
         <Notice>
-          <strong>The GPU is busy.</strong> A compute workload is active.{" "}
-          {replays.length > 0 ? (
-            <a href="#replays">Explore saved evidence while you wait →</a>
-          ) : (
-            "Availability will refresh automatically."
-          )}
+          <strong>The GPU is busy.</strong> A compute workload is active.
+          Availability will refresh automatically.
         </Notice>
       )}
       {availability.budgetBlocked && (
@@ -316,9 +302,6 @@ function Home() {
             : availability.budgetReason === "pending_charge"
               ? "Further calls pause until it settles. Availability refreshes automatically."
               : "An earlier call has an unresolved charge or exceeded its budget reservation."}{" "}
-          {replays.length > 0 && (
-            <a href="#replays">Explore saved evidence instead →</a>
-          )}
         </Notice>
       )}
       <form onSubmit={start} className="workspace-grid">
@@ -601,46 +584,6 @@ function Home() {
           <p>Compare memory, speed, and numerical behavior on hardware.</p>
         </div>
       </section>
-      <section id="replays" className="replay-section">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Recorded, not simulated</p>
-            <h2>Explore saved runs</h2>
-          </div>
-          <a className="text-link" href="/results">
-            All results <ArrowRight size={16} />
-          </a>
-        </div>
-        {replays.length ? (
-          <div className="replay-grid">
-            {replays.map((run) => (
-              <a
-                key={text(run.run_id)}
-                className="replay-card"
-                href={hrefRun(run.run_id, true)}
-              >
-                <div>
-                  <Badge>Saved replay</Badge>
-                  <Play size={17} />
-                </div>
-                <strong>{human(run.target)}</strong>
-                <p>
-                  {text(
-                    run.reason,
-                    "Inspect the retained evidence and outcome.",
-                  )}
-                </p>
-                <Status value={run.status} />
-              </a>
-            ))}
-          </div>
-        ) : (
-          <p className="muted">
-            No curated replays are available yet. Completed runs will appear
-            when their evidence is ready to share.
-          </p>
-        )}
-      </section>
     </main>
   );
 }
@@ -654,8 +597,6 @@ function RunPage({ runId }: { runId: string }) {
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
     [stream, setStream] = useState("Connecting");
-  const replay =
-    new URLSearchParams(window.location.search).get("replay") === "1";
   useEffect(() => {
     const controller = new AbortController();
     let source: EventSource | undefined,
@@ -758,7 +699,7 @@ function RunPage({ runId }: { runId: string }) {
       if (timer) clearTimeout(timer);
     };
   }, [runId]);
-  const label = provenanceLabel(run, replay),
+  const label = provenanceLabel(run),
     usage = record(run.usage),
     before = analysisOf(report, "before", evidence),
     after = analysisOf(report, "after"),
@@ -1595,7 +1536,6 @@ function Results() {
   const [items, setItems] = useState<Dict[]>([]),
     [reports, setReports] = useState<Record<string, Dict>>({}),
     [usage, setUsage] = useState<Dict>({}),
-    [replays, setReplays] = useState<Dict[]>([]),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
   useEffect(() => {
@@ -1603,15 +1543,13 @@ function Results() {
     (async () => {
       try {
         await getJSON("/api/health", controller.signal);
-        const [r, u, p] = await Promise.all([
+        const [r, u] = await Promise.all([
           getJSON("/api/runs", controller.signal),
           getJSON("/api/usage", controller.signal),
-          getJSON("/api/replays", controller.signal),
         ]);
         const list = rows(r.runs);
         setItems(list);
         setUsage(u);
-        setReplays(rows(p.replays));
         for (let i = 0; i < Math.min(list.length, 50); i += 4) {
           await Promise.all(
             list.slice(i, i + 4).map(async (row) => {
@@ -1745,28 +1683,6 @@ function Results() {
           table is not a completed benchmark claim.
         </p>
       </Section>
-      <Section title="Curated replays" kicker="Historical evidence">
-        {replays.length ? (
-          <div className="replay-grid">
-            {replays.map((row) => (
-              <a
-                href={hrefRun(row.run_id, true)}
-                className="replay-card"
-                key={text(row.run_id)}
-              >
-                <Badge>Saved replay</Badge>
-                <strong>{human(row.target)}</strong>
-                <Status value={row.status} />
-                <span className="text-link">
-                  Inspect the evidence <ArrowRight size={15} />
-                </span>
-              </a>
-            ))}
-          </div>
-        ) : (
-          <p className="muted">No curated replays have been published.</p>
-        )}
-      </Section>
     </main>
   );
 }
@@ -1888,8 +1804,8 @@ function About() {
               represented as the final total.
             </li>
             <li>
-              Saved replays are historical records. Offline fixtures are marked
-              and do not establish a successful model repair.
+              Offline fixtures are marked and do not establish a successful
+              model repair.
             </li>
             <li>
               Current scope is single-GPU PyTorch. Long-context capacity, model

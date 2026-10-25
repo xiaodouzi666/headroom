@@ -18,8 +18,17 @@ from types import SimpleNamespace
 
 import httpx
 
+from headroom import budget as budget_module
 from headroom import diagnose as diagnosis_module
-from headroom import diagnosis_schema, evidence_blockers, schemas, solver_context
+from headroom import (
+    diagnosis_protocol,
+    diagnosis_schema,
+    evidence_blockers,
+    ledger_path,
+    schemas,
+    solver_context,
+)
+from headroom.acceptance import common as common_module
 from headroom.acceptance.common import (
     acceptance_run,
     file_record,
@@ -65,10 +74,14 @@ MAX_RESPONSE_ARTIFACT_BYTES = 256 * 1024
 REQUEST_IMPLEMENTATION_PATHS = {
     "acceptance/diagnosis.py": Path(__file__),
     "diagnose.py": Path(diagnosis_module.__file__),
+    "diagnosis_protocol.py": Path(diagnosis_protocol.__file__),
     "diagnosis_schema.py": Path(diagnosis_schema.__file__),
     "evidence_blockers.py": Path(evidence_blockers.__file__),
     "schemas.py": Path(schemas.__file__),
     "solver_context.py": Path(solver_context.__file__),
+    "ledger_path.py": Path(ledger_path.__file__),
+    "budget.py": Path(budget_module.__file__),
+    "acceptance/common.py": Path(common_module.__file__),
 }
 
 

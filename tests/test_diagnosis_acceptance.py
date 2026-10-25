@@ -373,10 +373,14 @@ def test_prepare_preserves_eight_inputs_and_truth_without_reading_profile(projec
         for name in (
             "acceptance/diagnosis.py",
             "diagnose.py",
+            "diagnosis_protocol.py",
             "diagnosis_schema.py",
             "evidence_blockers.py",
             "schemas.py",
             "solver_context.py",
+            "ledger_path.py",
+            "budget.py",
+            "acceptance/common.py",
         )
     }
     assert report["thresholds"] == {
@@ -1094,14 +1098,22 @@ def test_preparation_context_is_derived_without_mutating_frozen_evidence(project
 
 
 @pytest.mark.parametrize(
-    "module", ["evidence_blockers.py", "solver_context.py", "diagnosis_schema.py"]
+    "module",
+    [
+        "evidence_blockers.py",
+        "solver_context.py",
+        "diagnosis_schema.py",
+        "ledger_path.py",
+        "budget.py",
+        "acceptance/common.py",
+    ],
 )
 def test_changed_request_implementation_refuses_before_runtime_and_preserves_package(
     project, monkeypatch, module
 ):
     from headroom.acceptance import diagnosis
 
-    copied = project[0] / ("request-" + module)
+    copied = project[0] / ("request-" + module.replace("/", "-"))
     copied.write_bytes(diagnosis.REQUEST_IMPLEMENTATION_PATHS[module].read_bytes())
     monkeypatch.setattr(
         diagnosis,
