@@ -1,0 +1,92 @@
+{
+  "created_utc": "2026-10-25T02:59:18.907733+00:00",
+  "status": "frozen",
+  "revision": 1,
+  "scope": "Private read-only literal CLI campaign auditor. No production/testsource/profile/ledger mutation.",
+  "files": {
+    ".cache/setup/audit_literal_cli_campaign.py": {
+      "sha256": "0da858eafeeced69f98f66dd480d5696a84de3a23103533be1247348ec8926aa",
+      "bytes": 37180
+    },
+    ".cache/setup/test_audit_literal_cli_campaign.py": {
+      "sha256": "bf95f60c2e7ce9ae9bc14f7bee67380f5413f94595eef214e88584a276559990",
+      "bytes": 22501
+    },
+    ".cache/setup/literal-cli-auditor-tests-revision1-fixed.log": {
+      "sha256": "3c5b53dc628ec02439358d0fea8a1c26b8993b4bd3f8f7c5512339e548928219",
+      "bytes": 1803
+    },
+    ".cache/setup/v5-literal-cli-readonly-review-revision1.json": {
+      "sha256": "f62266807a834bdc98fb443377a700b0a0a1b5557319f8e657d43868beef8fa5",
+      "bytes": 6691
+    },
+    ".cache/setup/literal-cli-auditor-receipt.json": {
+      "sha256": "fb63817052169ddd4b63ceebe03a0db21d4de206b4ce57a026b6961f1547ba9d",
+      "bytes": 3557
+    },
+    "reports/mvp-v6-integration-20261025/full-regression-20261025T024644Z-6fac7644-receipt.json": {
+      "sha256": "14bbc7956e0c6ad2ef650853e2da2ffefcdec5eee2f93b5904ccea4136191db6",
+      "bytes": 1421
+    }
+  },
+  "validation": {
+    "unittest_passed": 14,
+    "elapsed_seconds": 1.295,
+    "ruff_check": "passed",
+    "ruff_format": "passed",
+    "fixtures": "Synthetic evidence only, never live acceptance",
+    "additional_negatives": [
+      "missing train/val files plus absent recorded SHA remain false",
+      "missing console stub plus absent context/receipt SHA remain false"
+    ]
+  },
+  "review": {
+    "reviewer": "nebius_cap_semantics",
+    "result": "original missing-file/None-equality finding closed; no new blocker reported",
+    "reviewed_auditor_sha256": "0da858eafeeced69f98f66dd480d5696a84de3a23103533be1247348ec8926aa",
+    "changes": [
+      "digest_matches requires both full 64hex SHA values",
+      "dataset, pinned sources and console stub use strict digest comparison",
+      "formal gate rejects any reader.errors"
+    ]
+  },
+  "retained_history": {
+    "initial_receipt": ".cache/setup/literal-cli-auditor-receipt.json",
+    "initial_v5_review": ".cache/setup/v5-literal-cli-readonly-review.json",
+    "initial_logs": "Both original 12-test logs retained; revision1-fixed log contains the actual 14-test revision."
+  },
+  "v5_readonly_result": {
+    "formal_cli_gate": false,
+    "observed_cli_runs": 0,
+    "not_observed_runs": 9,
+    "nine_exit_zero": null,
+    "exact_original_nine": true,
+    "source_artifacts_stable": true,
+    "store_snapshot": {
+      "read_mode": "not_needed"
+    }
+  },
+  "quality_review": {
+    "accepted": true,
+    "input": "reports/mvp-v6-integration-20261025/full-regression-20261025T024644Z-6fac7644-receipt.json",
+    "rule": "Only exact suite='full' and pytest_arguments=['-q'], exit0/passed, matching before/after source inventories, current supported source hashes and original PLAN. No older metadata inferred equivalent."
+  },
+  "safety": {
+    "provider_calls": 0,
+    "gpu_tasks": 0,
+    "credential_reads": 0,
+    "ledger_access": 0,
+    "production_mutations": 0,
+    "Store": "Only URI mode=ro, query_only, restricted SQL authorizer, snapshot before/after; old v5 needed no Store access."
+  },
+  "usage": ".venv/bin/python -B .cache/setup/audit_literal_cli_campaign.py --campaign runs/evaluation/live/<v6>/campaign.json --quality-receipt reports/mvp-v6-integration-20261025/full-regression-20261025T024644Z-6fac7644-receipt.json --output reports/live-campaign-20261025/mvp-v6-literal-cli-audit.json",
+  "output_policy": "New exclusive JSON only in reports/ or .cache/setup; existing report never overwritten.",
+  "exit_semantics": "Auditor exit0 only formal_cli_gate=true; exit1 otherwise. It never launches/retries a run. Real 78/124/1 remain observed nonzero; killed without returned receipt remains unknown.",
+  "limitations": [
+    "No real v6 campaign audited yet.",
+    "Only installed_console_script invocation is proved, not separate uv launcher.",
+    "Model quality, cost, target and numerical acceptance remain separate original audits.",
+    "Profile path is compared opaquely and never read.",
+    "All generated files in ignored .cache/setup; no untracked reports or source changes."
+  ]
+}

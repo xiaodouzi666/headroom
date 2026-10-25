@@ -17,15 +17,19 @@ def anchored_fixture(proposal, request_body):
             new = [line.value.rstrip("\r\n") for line in hunk if line.is_context or line.is_added]
             if not old:
                 # Independent insertion fixture: anchor to its known preceding source line.
-                original = document["text"].splitlines()
+                original = [item["text"] for item in document["lines"]]
                 assert hunk.source_start > 0
                 anchor = original[hunk.source_start - 1]
                 old, new = [anchor], [anchor, *new]
+            start = hunk.source_start
+            actual = [item["text"] for item in document.get("lines", [])]
+            valid_old = actual[start - 1 : start - 1 + len(old)] == old
             edits.append(
                 {
                     "path": name,
                     "source_sha256": document.get("source_sha256", "0" * 64),
-                    "old_lines": old,
+                    "start_id": f"L{start:06d}" if valid_old else "L99999999",
+                    "end_id": f"L{start + len(old) - 1:06d}" if valid_old else "L99999999",
                     "new_lines": new,
                 }
             )

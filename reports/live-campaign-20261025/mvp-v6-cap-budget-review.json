@@ -1,0 +1,278 @@
+{
+  "schema_version": 1,
+  "reviewed_at_utc": "2026-10-25T02:40:54.843260+00:00",
+  "authorization": "reports/live-campaign-20261025/mvp-extension-authorization.json",
+  "authorization_sha256": "d6d257e8f0fe7357e2a4d0cdb3e0d3c3879937f127df0d3e0bf97c1d5e0b58be",
+  "financial_capability_preflight_passed": true,
+  "production_implementation_ready": false,
+  "live_dispatch_performed": false,
+  "root_execution_prerequisites": [
+    "Freeze, independently review and fully test source-span and literal CLI integration; record final production source hashes.",
+    "Use the source-span component driver only with explicit root final-source review and passing quality receipt; require accepted <=4 dispatch/0.10 USD component before MVPv6.",
+    "Recheck shared all-time/current-UTC-day ledger and GPU immediately before execution; exclude only the single verified new component run to reproduce this baseline projection.",
+    "Native json_schema and reasoning false are proven methods, but the new source_span_edits_v1 live effect is not yet verified; no inference executed by this preflight.",
+    "Retain the prior authenticated account Prices UI basis for Nano cached price; new catalogue still returns null, so do not attribute that price to catalogue."
+  ],
+  "ledger": {
+    "attempts": 397,
+    "runs": 56,
+    "all_settled": true,
+    "all_runs_closed": true,
+    "pending": 0,
+    "unresolved": 0,
+    "halted": 0,
+    "known_actual_subtotal_usd": "3.948962832",
+    "actual_total_usd": null,
+    "conservative_charged_usd": "3.975401832",
+    "remaining_conservative_envelope_usd": "6.024247208",
+    "no_drift_from_v5_final": true,
+    "projection_sha256": "becac878ad0b941de6dbea8279b7c749e73f8dcf65f4ced0fb4a48a1fb894ae3"
+  },
+  "current_day": {
+    "utc_day": "2026-10-25",
+    "prior_allocation_effective_day": "2026-10-24",
+    "budget_run_day_counts": {
+      "2026-10-25": 10,
+      "2026-10-24": 46
+    },
+    "conservative_charged_usd": "0.89750816",
+    "remaining_conservative_daily_envelope_usd": "9.10214088",
+    "proposed_explicit_daily_limit_usd": "9.99964904",
+    "all_time_remaining_is_stricter_than_current_daily_limit": true,
+    "no_new_daily_or_global_allocation_created": true
+  },
+  "profile": {
+    "path": ".cache/tokenfactory-runtime.json",
+    "sha256": "a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c",
+    "live_enabled": true,
+    "run_budget_mode": "actual_usage",
+    "authorized_total_usd": "9.99964904",
+    "evidence_token_budget": 150000,
+    "static_available_credit_usd": "23.17775754",
+    "available_credit_field_is_not_current_balance": true
+  },
+  "catalogue": {
+    "report": "reports/live-campaign-20261025/mvp-v6-catalogue/report.json",
+    "sha256": "e2350905d76b93a432432f88c722c4523fd7220b9f84bd775c3207942405578c",
+    "timestamp_utc": "2026-10-25T02:39:34.902771+00:00",
+    "two_http_200": true,
+    "inference_requests": 0,
+    "model_price_checks": [
+      {
+        "endpoint": "https://api.tokenfactory.us-central1.nebius.com/v1/",
+        "role": "ultra",
+        "model_id": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "context_tokens": 1048576,
+        "input_usd_per_million": "1",
+        "output_usd_per_million": "3",
+        "cached_input_usd_per_million": "0.12",
+        "cached_price_basis": "fresh_catalogue",
+        "catalogue_cached_price_is_null": false,
+        "advertised_nontoken_fees_all_zero": true,
+        "per_request_limits": {
+          "tokens_per_minute": 200000.0,
+          "requests_per_minute": 300.0,
+          "burst_ratio": 1.0
+        }
+      },
+      {
+        "endpoint": "https://api.tokenfactory.us-central1.nebius.com/v1/",
+        "role": "super",
+        "model_id": "nvidia/nemotron-3-super-120b-a12b",
+        "context_tokens": 262144,
+        "input_usd_per_million": "0.3",
+        "output_usd_per_million": "0.9",
+        "cached_input_usd_per_million": "0.06",
+        "cached_price_basis": "fresh_catalogue",
+        "catalogue_cached_price_is_null": false,
+        "advertised_nontoken_fees_all_zero": true,
+        "per_request_limits": {
+          "tokens_per_minute": 200000.0,
+          "requests_per_minute": 300.0,
+          "burst_ratio": 1.0
+        }
+      },
+      {
+        "endpoint": "https://api.tokenfactory.us-central1.nebius.com/v1/",
+        "role": "nano",
+        "model_id": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "context_tokens": 262144,
+        "input_usd_per_million": "0.06",
+        "output_usd_per_million": "0.24",
+        "cached_input_usd_per_million": "0.012",
+        "cached_price_basis": "prior_authenticated_account_Prices_UI_fallback_NOT_catalogue",
+        "catalogue_cached_price_is_null": true,
+        "advertised_nontoken_fees_all_zero": true,
+        "per_request_limits": {
+          "tokens_per_minute": 800000.0,
+          "requests_per_minute": 100.0,
+          "burst_ratio": 1.0
+        }
+      },
+      {
+        "endpoint": "https://api.tokenfactory.nebius.com/v1/",
+        "role": "ultra",
+        "model_id": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "context_tokens": 1048576,
+        "input_usd_per_million": "1",
+        "output_usd_per_million": "3",
+        "cached_input_usd_per_million": "0.12",
+        "cached_price_basis": "fresh_catalogue",
+        "catalogue_cached_price_is_null": false,
+        "advertised_nontoken_fees_all_zero": true,
+        "per_request_limits": {
+          "tokens_per_minute": 200000.0,
+          "requests_per_minute": 300.0,
+          "burst_ratio": 1.0
+        }
+      },
+      {
+        "endpoint": "https://api.tokenfactory.nebius.com/v1/",
+        "role": "super",
+        "model_id": "nvidia/nemotron-3-super-120b-a12b",
+        "context_tokens": 262144,
+        "input_usd_per_million": "0.3",
+        "output_usd_per_million": "0.9",
+        "cached_input_usd_per_million": "0.06",
+        "cached_price_basis": "fresh_catalogue",
+        "catalogue_cached_price_is_null": false,
+        "advertised_nontoken_fees_all_zero": true,
+        "per_request_limits": {
+          "tokens_per_minute": 200000.0,
+          "requests_per_minute": 300.0,
+          "burst_ratio": 1.0
+        }
+      },
+      {
+        "endpoint": "https://api.tokenfactory.nebius.com/v1/",
+        "role": "nano",
+        "model_id": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "context_tokens": 262144,
+        "input_usd_per_million": "0.06",
+        "output_usd_per_million": "0.24",
+        "cached_input_usd_per_million": "0.012",
+        "cached_price_basis": "prior_authenticated_account_Prices_UI_fallback_NOT_catalogue",
+        "catalogue_cached_price_is_null": true,
+        "advertised_nontoken_fees_all_zero": true,
+        "per_request_limits": {
+          "tokens_per_minute": 800000.0,
+          "requests_per_minute": 100.0,
+          "burst_ratio": 1.0
+        }
+      }
+    ],
+    "nano_cached_price_reference": "reports/live-campaign-20261025/mvp-v4-account-price-observation.json"
+  },
+  "request_contracts": {
+    "super": {
+      "max_completion_tokens": 4000,
+      "reasoning": false,
+      "reasoning_method": "chat_template_kwargs",
+      "json_method": "json_schema",
+      "provider_output_cap_includes_reasoning": true,
+      "full_context_request_upper_usd": "0.0822432",
+      "historical_native_JSON_and_reasoning_false_verified": true,
+      "new_source_span_schema_live_effect_unverified": true
+    },
+    "ultra": {
+      "max_completion_tokens": 8192,
+      "reasoning": false,
+      "reasoning_method": "chat_template_kwargs",
+      "json_method": "json_schema",
+      "provider_output_cap_includes_reasoning": true,
+      "full_context_request_upper_usd": "1.073152",
+      "diagnosis_dynamic_schema_and_postvalidator_unchanged_requirement": true
+    },
+    "token_budget_method": null,
+    "full_provider_reservation_can_exceed_per_run_actual_usage_limit": true
+  },
+  "component_proposal": {
+    "base_driver_reference": ".cache/setup/check_anchored_patch_component_v1.py",
+    "base_driver_sha256": "f1c49446638c446728a9ad04bc58af96578385926983d94473ba5da5f922974c",
+    "new_driver_pending": false,
+    "dispatches_max": 4,
+    "hard_component_usd": "0.10",
+    "before_each_attempt_requirement": "Before original runtime before_attempt hook, atomically/serially enforce dispatch count and current component conservative charge + exact full-provider attempt upper <=0.10; original shared-ledger atomic global/day reservation remains mandatory.",
+    "finish_requirements": [
+      "all call budget_attempt_id UUIDs unique and bound to same-run dispatched settled ledger attempts",
+      "billing_complete and conservative charge <=0.10; actual remains null whenever only certified bound is known",
+      "last selected attempt truly applied and compiled",
+      "generic unchanged executable AST except docstring",
+      "no unknown automatic retry; failed v1/v2/history unchanged"
+    ],
+    "new_driver": ".cache/setup/check_source_span_component_v1.py",
+    "new_driver_sha256": "104f9de5761fc34b8ea3e30089887b01f9fc5bf905d1f03258f80951dbd44948"
+  },
+  "MVP_argv_proposal": [
+    "uv",
+    "run",
+    "--offline",
+    "--no-sync",
+    "headroom",
+    "eval",
+    "--manifest",
+    "eval/mvp_phase1.yaml",
+    "--live",
+    "--conditions",
+    "full_ultra",
+    "--policies",
+    "default",
+    "--search-mode",
+    "until_target",
+    "--budget",
+    "0.6",
+    "--campaign-budget",
+    "5.4",
+    "--daily-budget",
+    "9.99964904",
+    "--runtime-profile",
+    ".cache/tokenfactory-runtime.json"
+  ],
+  "gpu": {
+    "observed_at_utc": "2026-10-25T02:40:54.843260+00:00",
+    "device_query": "0, NVIDIA GeForce RTX 3090 Ti, GPU-8eab4f3f-25c8-5465-45b3-c2b5c6fe2526, 24564, 57",
+    "compute_processes": [],
+    "shared_compute_observed": false,
+    "no_process_started_or_killed": true
+  },
+  "source_snapshot": {
+    "git_head": "5f60514a1eac36473616172217b7a4cc4205b426",
+    "headroom/patch.py": "e5db86976638d4da5ea23d8f230b5cbd33eff0aa2d926c776b68340787cad8d0",
+    "headroom/diagnose.py": "06d0ffa6043247a6edc3120a5d86b76617aa2ab4285d0f6397c7ddd403cbb33b",
+    "scripts/probe_models.py": "ca4eafdb316e5b43cdb8cbb66f040d366c6bca44d03d01503bb7b5d7dcf5c03b",
+    "eval/mvp_phase1.yaml": "3bb919336829754a52ec8c90ccc4a5181f33986f9e300e99211bec6678849e88",
+    "note": "Current MVPv5 source before source-span/literal CLI integration; not the final MVPv6 source freeze."
+  },
+  "source_sha256": {
+    "reports/live-campaign-20261025/allocation.json": "3db9675ddc542bb2ba42f9929748deea64d3810e913f13c303615e78f88203c0",
+    "reports/live-campaign-20261025/capability-review.json": "0d3ea7dc484cb8efe86181e2a6dc8ed5363b618d465bd54971e9da5d932a2f3e",
+    "reports/live-campaign-20261025/pricing-reviewed.json": "635c6b90216acfe0505e4f53f0685c8183bc3bc632fff376c3bfcefd7e7eb829",
+    "reports/live-campaign-20261025/mvp-v4-account-price-observation.json": "4d6784365806b82b67f80531da68058fec92437e48611e04ed65ffef01111db1",
+    "reports/live-campaign-20261025/mvp-v5-audit-v2.json": "afcb50f6ccf33297cd8d75a2d43788fbcde7362e02e56d1661c7f03d2b184773",
+    "reports/live-campaign-20261025/mvp-v5-anchored-review.json": "d0ea24b3928334db5d192f1dffabdf169c8564ddef9757f9e7748fca82432310",
+    "reports/live-campaign-20261025/mvp-v5-audit-notes.json": "c2edfa0baff1b1897ed35026764dc2fd589d830daf5766aa088d58a1790d85bb"
+  },
+  "limitations": [
+    "No guarantee all three campaigns can complete within the unchanged remaining envelope; later iterations must stop when full-provider admission cannot fit.",
+    "0.6 per-run and5.4 campaign are actual/conservative acceptance and stopping thresholds in actual_usage mode, not per-POST hard invoice caps. Global/day strict reservations protect gift funds.",
+    "Current account UI was not refreshed by this reviewer. Historical displayed balance is not substituted for the ledger or claimed current.",
+    "No model, GPU job, code/profile/ledger edit or new dependency operation was performed."
+  ],
+  "extension_iteration": 2,
+  "campaign_label": "v6",
+  "historical_retention": {
+    "external_900k_429_retained_usd": "1.049344",
+    "runtime_first_Nano_reviewed_retained_usd": "0.01644864",
+    "actuals_remain_unknown": true,
+    "neither_released": true
+  },
+  "limits_unchanged": {
+    "runtime_all_time_usd": "9.99964904",
+    "runtime_current_day_usd": "9.99964904",
+    "campaign_usd": "5.4",
+    "per_case_usd": "0.6",
+    "component_usd": "0.10",
+    "original_combined_envelope_usd": "16",
+    "unused_probe_pool_reallocated": false
+  }
+}

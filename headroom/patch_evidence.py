@@ -95,6 +95,7 @@ def save_patch_response(
     records=(),
     normalized_proposal=None,
     normalization_metadata=None,
+    wire_schema=None,
 ):
     """Persist visible output verbatim or bounded prefixes, not hidden reasoning/requests."""
     records = tuple(records)
@@ -117,8 +118,11 @@ def save_patch_response(
         if len(metadata_raw) > 64 * 1024:
             raise ValueError("Patch normalization metadata exceeds its evidence bound")
     anchored = isinstance(parsed, dict) and "edits" in parsed
+    schema = wire_schema or (normalization_metadata or {}).get("schema")
+    span_wire = schema == "source_span_edits_v1"
     record = {
-        "schema_version": 3,
+        "schema_version": 4 if span_wire else 3,
+        "wire_schema": schema,
         "content_is_untrusted_data": True,
         "response_available": response is not None,
         "visible": _content(response.text) if response is not None else None,
@@ -138,7 +142,13 @@ def save_patch_response(
         "normalized_diff": _content(normalized_diff),
         "normalization": {
             "status": "applied" if normalized_proposal is not None else "not_applied",
-            "algorithm": ("source_anchored_lines_v1" if anchored else "diff_lines_join_lf_v1")
+            "algorithm": (
+                "source_span_lines_v1"
+                if span_wire
+                else "source_anchored_lines_v1"
+                if anchored
+                else "diff_lines_join_lf_v1"
+            )
             if normalized_proposal is not None
             else None,
             "source_field": ("edits" if anchored else "diff_lines")

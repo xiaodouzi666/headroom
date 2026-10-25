@@ -1,0 +1,85 @@
+{
+  "prepared_at_utc": "2026-10-25T02:50:03.840234+00:00",
+  "passed": true,
+  "frozen": true,
+  "driver": ".cache/setup/audit_source_span_campaign.py",
+  "driver_sha256": "9661e312cb3dbcf2f33b0dc908b6ceba2f7dceaec878c7c6393584587bbc7b75",
+  "test_driver": ".cache/setup/test_source_span_campaign_audit.py",
+  "test_driver_sha256": "a6568545c7bef5fdc1b2c1482ce7e26a7bd9106e1a47aea8f850fa0e1711044d",
+  "original_auditor_unchanged": {
+    "path": ".cache/setup/audit_anchored_campaign.py",
+    "sha256": "e7fabcfbd725f0295b093110e9c467f78a6bc35f57d1ab0965b6d3aab8051c45"
+  },
+  "execution_contract": {
+    "arguments": [
+      "--campaign",
+      "<finished campaign.json>",
+      "--output",
+      "<new reports/*.json>"
+    ],
+    "read_only_inputs": true,
+    "output_requires_new_file": true,
+    "production_imports": 0,
+    "normalizer_oracle_imports": 0,
+    "patch_execution": 0,
+    "model_calls": 0,
+    "GPU_jobs": 0,
+    "ledger_writes": 0,
+    "secret_reads": 0,
+    "original_acceptance_thresholds_changed": false
+  },
+  "protocol": {
+    "schema_version": 4,
+    "wire_schema": "source_span_edits_v1",
+    "normalization_algorithm": "source_span_lines_v1",
+    "metadata_conversion": "exact_original_span_ids_to_unified_diff",
+    "proof": [
+      "original full source SHA and exact original inclusive line IDs",
+      "simultaneous disjoint original spans across multiple files",
+      "independent complete expected bytes respecting LF/CRLF/EOF",
+      "old byte offsets/length/SHA and source/expected metadata",
+      "public diff and exact-application record plus actual candidate bytes",
+      "selected KEEP cumulative patch and later REVERT preservation"
+    ],
+    "legacy_or_missing_evidence": "unknown; original status retained"
+  },
+  "validation": {
+    "final_tests_passed": 24,
+    "pytest_log": "reports/source-span-auditor-20261025/pytest-final-2.log",
+    "pytest_log_sha256": "8b53f7feb4513a9e1520bc9e57b09ea8199f6c5f1d9701c1142277462a675837",
+    "ruff": "All checks passed",
+    "format": "clean",
+    "real_v5_read_only_compatibility": {
+      "path": "reports/source-span-auditor-20261025/v5-compatibility.json",
+      "sha256": "e7712c95d15bbe26e082ef4a2d3b043f9a9648af8701c5a6bf83c24203472bf1",
+      "exit_code": 2,
+      "unknown_attempts": 52,
+      "original_status_counts": {
+        "rejected": 31,
+        "applied": 17,
+        "failed": 4
+      },
+      "source_artifacts_stable": true,
+      "financial_binding_complete": true
+    },
+    "real_v4_selected_keep": "round2 preserved across later reverts3/4; cumulative candidate bytes verified while legacy source-span proof remains unknown",
+    "preserved_initial_failures": [
+      {
+        "log": "reports/source-span-auditor-20261025/pytest.log",
+        "reason": "Initial test incorrectly expected a legacy wire attempt to verify as a new source-span chain; corrected assertion to unknown while requiring cumulative public patch bytes."
+      },
+      {
+        "log": "reports/source-span-auditor-20261025/pytest-final.log",
+        "reason": "Test invocation used a different fixture directory from the explicit write allowlist; guard refused. Rerun used the authorized scratch directory."
+      }
+    ]
+  },
+  "unchanged_inherited_contract_ast_sha256": {
+    "finance": "a71e4b60f43e475bc400f6b2e66a7ed4ee39c6e4e6544611a6680363b53c445c",
+    "db_snapshot": "487e7e13c1b0c58fdfdfe1352e60bb6676f7bb8b2c16c04083a49032184e3a64",
+    "selected_chain": "79f50f361a5506a4e1030a1026226bcb8902767a1812665de962fac9c753eb2d",
+    "verify_selected_public_diff": "6c084275dfb5d32c40f927e8d11b8bbfef737979afa0ded48070385d75b392e6",
+    "guard": "b251ec11015395c71adb99587c7609d6373806c79b087e03b921c0bc61a29609"
+  },
+  "current_run_status": "Prepared only; waiting for real v6 finished campaign before any v6 audit invocation."
+}

@@ -427,3 +427,7 @@ MVPv4 used165 calls; all-call known subtotal1.037464332USD, plus verified missin
 ## TAVILY-003 — Real model-directed research and cross-run cache, incomplete required Sources
 
 Final MVPv4 recorded9 research rows with8 actualAPI calls and7 reportedcredits. s4's native model tool loop searched then extracted https://docs.pytorch.org/docs/2.5/checkpoint.html with version_match=true. s5 reused s3's exact cached query with api_calls=0 and credits_used=0, preserving the origin request. Nevertheless s1 lacks the required checkpoint Source and s5 lacks the required CUDA-memory Source, so the original T2.2 gate fails. Tool execution and organic use are observed; citation completeness is separate. More consistent version-specific ranking would reduce irrelevant-result handling. Evidence: mvp-v4-candidate-verification-review.json.
+
+## Source-span component observation — 2026-10-25
+
+Super returned source-span IDs and full SHA correctly. The first response included an unchanged second edit and was rejected; its repair added an unreachable duplicate return alongside the requested docstring. The exact source-to-candidate chain and compile passed, while the independent docstring-only AST invariant failed. Two calls cost $0.0013896 in total. Range IDs solve placement and copying ambiguity; they do not establish semantic correctness. Failed artifacts remain in runs/acceptance/source-span-patch-component-20261025-v1 and the public component report remains accepted=false.

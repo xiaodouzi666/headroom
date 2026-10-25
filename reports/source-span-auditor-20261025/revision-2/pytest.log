@@ -1,0 +1,46 @@
+.........................F..                                             [100%]
+=================================== FAILURES ===================================
+____ test_missing_later_revert_artifact_cannot_disappear[verification.json] ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7acf84e0bfe0>
+missing_name = 'verification.json'
+
+    @pytest.mark.parametrize("missing_name", ["patch-result.json", "verification.json"])
+    def test_missing_later_revert_artifact_cannot_disappear(monkeypatch, missing_name):
+        campaign = json.loads(
+            (PROJECT / "runs/evaluation/live/20261024T231940915002Z-2098d11d/campaign.json").read_text()
+        )
+        row = next(r for r in campaign["rows"] if r["scenario_id"] == "s8_two_models_resident")
+        states, _, _, _ = MODULE["db_snapshot"]({row["run_id"]})
+        namespace = MODULE["audit_row"].__globals__
+        original_document = namespace["document"]
+        missing = Path(row["run_dir"]) / "rounds/03" / missing_name
+>       original_sha = digest(missing.read_bytes())
+                              ^^^^^^^^^^^^^^^^^^^^
+
+.cache/setup/test_source_span_campaign_audit.py:317: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1021: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261024T231940915002Z-2098d11d/jobs/0e051aac56184f55bd00fc113df5dbcf/rounds/03/verification.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/runs/evaluation/live/20261024T231940915002Z-2098d11d/jobs/0e051aac56184f55bd00fc113df5dbcf/rounds/03/verification.json'
+
+/usr/lib/python3.12/pathlib.py:1015: FileNotFoundError
+=========================== short test summary info ============================
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_missing_later_revert_artifact_cannot_disappear[verification.json]
+1 failed, 27 passed in 0.22s

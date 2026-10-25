@@ -1,0 +1,20 @@
+.......................F                                                 [100%]
+=================================== FAILURES ===================================
+______________ test_real_v4_selected_keep_survives_later_reverts _______________
+
+    def test_real_v4_selected_keep_survives_later_reverts():
+        campaign = json.loads(
+            (PROJECT / "runs/evaluation/live/20261024T231940915002Z-2098d11d/campaign.json").read_text()
+        )
+        row = next(r for r in campaign["rows"] if r["scenario_id"] == "s8_two_models_resident")
+        states, _, _, _ = MODULE["db_snapshot"]({row["run_id"]})
+        result = MODULE["audit_row"](row, states[row["run_id"]])
+        assert result["selection"]["selected_round"] == 2
+        assert result["selection"]["selected_preserved_verified"] is True
+>       assert result["selection"]["selected_code_chain_verified"] is True
+E       assert None is True
+
+.cache/setup/test_source_span_campaign_audit.py:301: AssertionError
+=========================== short test summary info ============================
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_real_v4_selected_keep_survives_later_reverts
+1 failed, 23 passed in 0.16s

@@ -1,0 +1,118 @@
+{
+  "checked_at_utc": "2026-10-25T02:52:23.515529+00:00",
+  "passed": true,
+  "checks": {
+    "head_matches_exact_original_ref": true,
+    "origin_matches_exact_original_url": true,
+    "worktree_clean": true,
+    "no_submodule_manifest": true,
+    "source_profile_pinned": true,
+    "manifest_train_hash_matches_profile": true,
+    "manifest_source_cache_consistent": true,
+    "all_three_files_exact": true
+  },
+  "cache": ".cache/upstream/nanoGPT",
+  "git": {
+    "head": "3adf61e154c3fe3fca428ad6bc3818b27a3b8291",
+    "expected_ref": "3adf61e154c3fe3fca428ad6bc3818b27a3b8291",
+    "expected_origin": "https://github.com/karpathy/nanoGPT.git",
+    "origin_matches": true,
+    "clean": true,
+    "porcelain_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "optional_index_locks_disabled": true,
+    "fsmonitor_disabled": true,
+    "fetches": 0
+  },
+  "pinned_files": {
+    "train.py": {
+      "expected_sha256": "413bd97b40bb400a2a0d01230e2946f056c263ebac1b7281c2367d964a123085",
+      "worktree_sha256": "413bd97b40bb400a2a0d01230e2946f056c263ebac1b7281c2367d964a123085",
+      "commit_blob_sha256": "413bd97b40bb400a2a0d01230e2946f056c263ebac1b7281c2367d964a123085",
+      "bytes": 14857,
+      "matches": true
+    },
+    "configurator.py": {
+      "expected_sha256": "5cc23aca26b4ab3c0d9e5f82740f4781f9444f42718c15abcee70d93c5aabe8f",
+      "worktree_sha256": "5cc23aca26b4ab3c0d9e5f82740f4781f9444f42718c15abcee70d93c5aabe8f",
+      "commit_blob_sha256": "5cc23aca26b4ab3c0d9e5f82740f4781f9444f42718c15abcee70d93c5aabe8f",
+      "bytes": 1758,
+      "matches": true
+    },
+    "model.py": {
+      "expected_sha256": "7c01703240dbec5d554527dc666e35b3df8391d0b117fddc07afcf325a21d11c",
+      "worktree_sha256": "7c01703240dbec5d554527dc666e35b3df8391d0b117fddc07afcf325a21d11c",
+      "commit_blob_sha256": "7c01703240dbec5d554527dc666e35b3df8391d0b117fddc07afcf325a21d11c",
+      "bytes": 16345,
+      "matches": true
+    }
+  },
+  "reviewed_fallback": {},
+  "historical_dataset_cache": {
+    "train": {
+      "path": ".cache/datasets/nanogpt/headroom_synthetic/train.bin",
+      "exists": true,
+      "sha256": "33b9c92bced223a2efe20aaa4fae4311f2dcb5be5189c3755f3215c099b8403c",
+      "bytes": 524288,
+      "consumed_by_v6_repository_prepare": false
+    },
+    "val": {
+      "path": ".cache/datasets/nanogpt/headroom_synthetic/val.bin",
+      "exists": true,
+      "sha256": "7add555e1e0a9b9da1084c953804b5e1c91a0b18f67dcd202b18838f6e710b32",
+      "bytes": 524288,
+      "consumed_by_v6_repository_prepare": false
+    }
+  },
+  "v6_dataset_route": {
+    "new_per_case_repository_destination": true,
+    "upstream_archive_at_exact_ref": true,
+    "source_copy_contains_only_reviewed_train_model_configurator": true,
+    "dataset_generated_in_fresh_source": "data/headroom_synthetic",
+    "kind": "synthetic_uint16",
+    "seed": 1337,
+    "split_order": [
+      "train",
+      "val"
+    ],
+    "tokens_per_split": 262144,
+    "vocabulary_upper_exclusive": 50304,
+    "bytes_per_split": 524288,
+    "legacy_input_argument": "--dataset=/input",
+    "actual_argument": "--dataset=headroom_synthetic",
+    "wrong_existing_bytes": "prepare refuses replacement if generated expected bytes differ",
+    "literal_cli_checks": [
+      "pinned source file hashes",
+      "dataset kind and seed metadata",
+      "both generated data file hashes",
+      "prepared script args and execution argv equal queued manifest intent"
+    ],
+    "historical_dataset_cache_not_reused": true,
+    "meta_pkl_not_copied": true,
+    "basis": "Static current production call-chain review; neither prepare_repository nor _nanogpt_data was executed by this check."
+  },
+  "source_sha256": {
+    "headroom/repository.py": "6c64359e39aa6cb8a7fb3813bce0019795b9cc5b519b26985bdf2920fb7b4675",
+    "headroom/verify/policy.py": "5c020472f1ca5aeb7d088bd68303f341cb794e7669edb0d9a7db801547f55d28",
+    "headroom/cli_execution.py": "65e312bda63ec592dbf07aa9350456683b68dbacd3e8a43598e29dafc36d9010",
+    "headroom/evaluation_worker.py": "4032eda34a3b06ac9cbaeff664289d22632a7e70aea1951fc5008e3f6d2fc3ae",
+    "scripts/prepare_nanogpt.py": "1fd6387fa8129cb15d2238708f4df97ef8ab8bb506477bc9260d3b4b78827c5b",
+    "repos/nanogpt.yaml": "d7d2564b3950658a91da9aaecff3eaf15de9b5e47ebc8e89704a220dfbaf727a",
+    "eval/mvp_phase1.yaml": "3bb919336829754a52ec8c90ccc4a5181f33986f9e300e99211bec6678849e88",
+    "docs/PLAN.md": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56"
+  },
+  "input_files_unchanged_after_check": true,
+  "operations": {
+    "read_only_git_commands": true,
+    "cache_preparation": false,
+    "cache_writes": false,
+    "fetch": false,
+    "API_calls": 0,
+    "GPU_jobs": 0,
+    "runtime_profile_reads": false,
+    "secret_reads": false
+  },
+  "limitations": [
+    "This observes current cache state, not a guarantee against later change; production revalidates HEAD/origin/clean and extracted pinned file hashes before use.",
+    "Final literal CLI acceptance must use observed same-run CLI receipts; the old harness-only exit check is not substituted."
+  ]
+}

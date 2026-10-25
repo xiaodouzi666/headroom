@@ -1,0 +1,61 @@
+{
+  "revision": 2,
+  "prepared_at_utc": "2026-10-25T02:46:02.137915+00:00",
+  "passed": true,
+  "purpose": "Require complete pinned full-suite/source inventory quality before the component can dispatch any paid request.",
+  "source_pins": {
+    ".cache/setup/check_source_span_component_v1.py": "76a7a57d469499c5e44c7f58d0084a20d580ca93443ee3823a75009ae606372c",
+    ".cache/setup/test_source_span_component_preflight.py": "1db52ea2781c829194664692033b975d536cb0e2ae15e7245afa971c14372611",
+    ".cache/setup/run_mvp_v6.py": "f3577c87e435ca049b08ef4be5fd867c891b0493bdc6e3afed4bd92924f91109"
+  },
+  "previous_receipt": {
+    "path": "reports/mvp-v6-driver-preparation-20261025/receipt.json",
+    "sha256": "effc02dfbf91af2644aa2725dc4ee8d0ff02b775373e71ff76e1faca6978680a"
+  },
+  "validation": {
+    "pytest_log": "reports/mvp-v6-driver-preparation-20261025/revision-2/pytest.log",
+    "pytest_log_sha256": "a3a035c0a1954d50955063c38f419bc95528dad397e611a442da2a0ee0beafea",
+    "passed": 14,
+    "ruff": "All checks passed",
+    "format": "clean",
+    "ast": "all three scripts parsed",
+    "guard": "Real environment/profile/ledger/GPU opens and SQLite/network/subprocess operations refused throughout tests. Source inventories and receipts use independent in-memory fixtures.",
+    "negative_cases": [
+      "focused suite",
+      "filtered pytest args",
+      "nonzero exit",
+      "missing source unchanged",
+      "missing PLAN unchanged",
+      "missing guard unchanged",
+      "before/after changed",
+      "current source hash changed",
+      "new nonignored source",
+      "missing prompt",
+      "missing literal CLI source",
+      "wrong quality-helper pin",
+      "intervening source change between consecutive reviews"
+    ]
+  },
+  "implementation": {
+    "quality_verifier": ".cache/setup/run_mvp_v6.py:verify_quality",
+    "quality_verifier_required_sha256": "f3577c87e435ca049b08ef4be5fd867c891b0493bdc6e3afed4bd92924f91109",
+    "quality_verifier_in_required_root_pins": true,
+    "module_name_is_not_main": true,
+    "launcher_main_invoked": false,
+    "scanner_exception_allowed": false,
+    "full_inventory_and_all_prompts_and_literal_cli_required": true,
+    "verification_locations": [
+      "before production runtime imports",
+      "before every provider dispatch",
+      "after component completion"
+    ]
+  },
+  "live_operations": {
+    "inference_requests": 0,
+    "GPU_jobs": 0,
+    "ledger_writes": 0,
+    "profile_edits": 0,
+    "production_edits": 0
+  },
+  "historical_evidence": "Original preparation receipt and capability review remain unchanged. The capability review component_proposal driver SHA is its original preparation snapshot; this revision supersedes only that component-driver preparation. Live execution requires a fresh explicit root review binding this revised component SHA and the quality-helper SHA; financial baseline and allocation remain unchanged."
+}

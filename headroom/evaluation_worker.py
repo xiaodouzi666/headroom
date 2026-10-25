@@ -33,46 +33,122 @@ def _read(path):
         return None
 
 
+def _repository_invocation(case, root, input_dir):
+    """Read the original repo CLI intent without preparing or executing it twice."""
+    import yaml
+
+    from headroom.cli_execution import RepositoryInvocation
+    from headroom.evaluation import _inside
+    from headroom.execution import command_argv, prepare_local_command
+    from headroom.repository import validate_repository
+
+    if not case.repository_manifest:
+        if case.source_profile:
+            raise ValueError("Pinned source policy needs its original repository identity")
+        return None
+    manifest = _inside(root, case.repository_manifest)
+    with open_regular(manifest.parent, manifest.name, 1024 * 1024) as handle:
+        raw = handle.read(1024 * 1024 + 1)
+    if len(raw) > 1024 * 1024:
+        raise ValueError("Repository command manifest exceeds its bound")
+    metadata = yaml.safe_load(raw)
+    if not isinstance(metadata, dict):
+        raise TypeError("Repository command manifest must be an object")
+    if "repository" not in metadata and "ref" not in metadata:
+        if case.source_profile:
+            raise ValueError("Pinned source policy needs its original repository identity")
+        return None
+    repository = validate_repository(metadata.get("repository"), metadata.get("ref"))
+    command = list(command_argv(metadata.get("command")))
+    declared = prepare_local_command(_inside(root, case.source_root), command)
+    if (
+        declared.script != _inside(root, case.script)
+        or list(declared.script_args) != case.script_args
+    ):
+        raise ValueError("Repository command differs from the frozen scenario")
+    return RepositoryInvocation(
+        repository=repository,
+        ref=metadata["ref"],
+        command=command,
+        destination=str(input_dir / "repository"),
+    )
+
+
 def _evaluation_entry(
     request, store_path, run_root, run_id, condition, audit_dir, result_path, deadline, preparation
 ):
-    # Construct closures in the child instead of pickling live SDK/Services objects.
-    from headroom.evaluation import Scenario, _prepare, _source_hash, condition_services
-    from headroom.orchestrator import FixRequest, run_fix
+    # This process becomes the installed CLI, preserving its PID and outer deadline.
+    from headroom.cli_execution import (
+        PACKAGE_ROOT,
+        Invocation,
+        cli_arguments,
+        console_script,
+        digest,
+        launch,
+    )
+    from headroom.evaluation import Scenario, _inside, _prepare
+    from headroom.orchestrator import FixRequest
 
+    queued_request = dict(request)
     store = Store(store_path)
     try:
         if time.monotonic() >= deadline:
             return
-        prepared = None
+        repository = None
+        source_hash = None
         if preparation is not None:
             case = Scenario.model_validate(preparation["case"])
+            root = Path(preparation["project_root"])
             input_dir = Path(preparation["input_dir"])
             input_dir.mkdir()
-            script, source, args, execution = _prepare(
-                case, Path(preparation["project_root"]), input_dir
-            )
-            request = {
-                **request,
-                "script": str(script),
-                "source_root": str(source),
-                "script_args": args,
-                "execution_argv": execution["execution_argv"],
-                "repository_mode": execution["repository_mode"],
-            }
-            prepared = {"source_sha256": _source_hash(script), "execution": execution}
-            _write(Path(result_path).with_name("preparation-" + run_id + ".json"), prepared)
+            source_hash = digest(_inside(root, case.script))
+            if case.source_sha256 is not None and source_hash != case.source_sha256:
+                raise ValueError("Scenario source changed after manifest pin")
+            if case.group == "repository":
+                repository = _repository_invocation(case, root, input_dir)
+            if repository is None:
+                script, source, args, execution = _prepare(case, root, input_dir)
+                request = {
+                    **request,
+                    "script": str(script),
+                    "source_root": str(source),
+                    "script_args": args,
+                    "execution_argv": execution["execution_argv"],
+                    "repository_mode": execution["repository_mode"],
+                }
+                _write(
+                    Path(result_path).with_name("preparation-" + run_id + ".json"),
+                    {"source_sha256": source_hash, "execution": execution},
+                )
         if time.monotonic() >= deadline:
             return
-        result = run_fix(
-            FixRequest.model_validate(request),
-            store=store,
-            run_root=Path(run_root),
+        if request.get("source_root") is None:
+            request = {**request, "source_root": str(Path(request["script"]).parent)}
+        parsed = FixRequest.model_validate(request)
+        console_path, console_hash = console_script()
+        invocation = Invocation(
             run_id=run_id,
-            services=condition_services(condition, Path(audit_dir)),
+            request=parsed.model_dump(),
+            queued_request=queued_request,
+            store_path=str(store_path),
+            run_root=str(run_root),
+            audit_dir=str(audit_dir),
+            result_path=str(result_path),
+            deadline=float(deadline),
+            condition=condition,
+            argv=cli_arguments(parsed, repository),
+            package_root=str(PACKAGE_ROOT),
+            console_path=console_path,
+            console_sha256=console_hash,
+            source_sha256=source_hash or digest(parsed.script),
+            repository=repository,
         )
-        _write(Path(result_path), result)
+        store.close()
+        store = None
+        launch(invocation)
     except Exception as error:  # noqa: BLE001 - public failure state omits exception text
+        if store is None:
+            store = Store(store_path)
         store.update_run(
             run_id,
             status="failed",
@@ -81,7 +157,42 @@ def _evaluation_entry(
         )
         store.add_event(run_id, "run.failed", {"reason": "evaluation_worker_error"})
     finally:
-        store.close()
+        if store is not None:
+            store.close()
+
+
+def _verified_cli_receipt(path, worker_result, worker_exit, run_id, worker_pid):
+    """Observe actual entrypoint/OS exits, never derive CLI success from workflow status."""
+    import hashlib
+
+    receipt = _read(path)
+    if receipt is None:
+        return None, False
+    observed = receipt.get("observed_exit_code")
+    valid = (
+        receipt.get("invocation_kind") == "installed_console_script"
+        and receipt.get("run_id") == run_id
+        and receipt.get("pid") == worker_pid
+        and receipt.get("invoked") is True
+        and receipt.get("returned") is True
+        and type(observed) is int
+        and observed == worker_exit
+        and receipt.get("run_dispatched") is True
+        and receipt.get("result_saved") is True
+        and isinstance(worker_result, dict)
+        and worker_result.get("run_id") == run_id
+    )
+    if valid:
+        result_path = path.with_name("worker-result-" + run_id + ".json")
+        try:
+            with open_regular(result_path.parent, result_path.name, MAX_RESULT_BYTES) as handle:
+                raw = handle.read(MAX_RESULT_BYTES + 1)
+            valid = len(raw) <= MAX_RESULT_BYTES and hashlib.sha256(raw).hexdigest() == receipt.get(
+                "result_sha256"
+            )
+        except (OSError, ValueError):
+            valid = False
+    return receipt, valid
 
 
 def supervise_evaluation_run(
@@ -160,6 +271,13 @@ def supervise_evaluation_run(
         cleanup_seconds = time.monotonic() - cleanup_started
     worker_result = _read(result_path)
     worker_exit = process.exitcode if process is not None else None
+    cli_receipt, cli_valid = _verified_cli_receipt(
+        result_path.with_name("cli-invocation-" + run_id + ".json"),
+        worker_result,
+        worker_exit,
+        run_id,
+        process.pid if process else None,
+    )
     total_seconds = time.monotonic() - started
     timed_out = timed_out or total_seconds > wall_limit_seconds
     status = reason = None
@@ -167,7 +285,11 @@ def supervise_evaluation_run(
         status, reason = "needs_human", "evaluation_cleanup_unverified"
     elif timed_out:
         status, reason = "timeout", "evaluation_wall_deadline_exceeded"
-    elif worker_exit != 0 or worker_result is None:
+    elif (
+        worker_result is None
+        or (worker_exit != 0 and not cli_valid)
+        or (_entrypoint is _evaluation_entry and not cli_valid)
+    ):
         status, reason = "failed", "evaluation_worker_result_unavailable"
 
     timing = {
@@ -178,6 +300,10 @@ def supervise_evaluation_run(
         "deadline_exceeded": timed_out,
         "worker_exit_code": worker_exit,
         "cleanup_verified": cleaned,
+        "cli": {
+            **(cli_receipt or {"invoked": False, "observed_exit_code": None}),
+            "verified": cli_valid,
+        },
     }
     store.update_run(run_id, evaluation_timing=timing)
     if status is not None:

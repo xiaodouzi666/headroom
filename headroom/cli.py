@@ -107,7 +107,26 @@ def evidence(run_id: str, budget: int = typer.Option(150000, min=1)) -> None:
 
 
 def main() -> None:
-    app()
+    from headroom.cli_execution import load_context
+
+    execution = load_context()
+    if execution is None:
+        app()
+        return
+    try:
+        try:
+            app(obj=execution)
+        except SystemExit as error:
+            code = error.code if type(error.code) is int else 0 if error.code is None else 1
+            execution.finish(code, returned=True)
+            raise
+        except BaseException:
+            execution.finish(None, returned=False)
+            raise
+        else:
+            execution.finish(0, returned=True)
+    finally:
+        execution.close()
 
 
 @app.command(context_settings={"allow_extra_args": True, "ignore_unknown_options": True})
@@ -140,6 +159,7 @@ def fix(
     """Run the complete repair pipeline; missing live prerequisites produce a partial report."""
     from rich.console import Console
 
+    from headroom.cli_execution import CLIExecution
     from headroom.orchestrator import FixRequest, Policy, run_fix
     from headroom.project_config import (
         ProjectConfig,
@@ -150,6 +170,7 @@ def fix(
     )
 
     console = Console(stderr=True, markup=False)
+    execution = ctx.obj if isinstance(ctx.obj, CLIExecution) else None
     try:
         config_path = find_project_config(
             config, script=script, source_root=source_root, remote_repository=repo is not None
@@ -182,7 +203,10 @@ def fix(
                 raise ValueError("Repository input needs --repo/--ref/--cmd only")
             from headroom.repository import prepare_repository
 
-            prepared = prepare_repository(repo, ref, cmd)
+            options = execution.repository_options(repo, ref, cmd) if execution else {}
+            prepared = prepare_repository(repo, ref, cmd, **options)
+            if execution:
+                execution.repository_prepared(prepared)
             script, source_root = prepared.script, prepared.source_root
             arguments, profile = list(prepared.script_args), prepared.source_profile
             execution_argv = list(prepared.execution_argv)
@@ -232,7 +256,10 @@ def fix(
         result = run_fix(
             request,
             on_event=lambda event: console.print(f"{event['sequence']:02d} {event['kind']}"),
+            **(execution.before_run(request) if execution else {}),
         )
+        if execution:
+            execution.save_result(result)
     except (OSError, ValueError, TypeError) as error:
         detail = str(error) if isinstance(error, ProjectConfigError) else type(error).__name__
         typer.echo("Fix request failed: " + detail, err=True)

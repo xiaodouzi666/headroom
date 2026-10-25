@@ -91,13 +91,14 @@ def artifacts(tmp_path):
 
 
 def test_rejected_source_anchor_is_saved_verbatim_before_application(source, tmp_path):
-    raw_line = "not the original source\\nwith literal backslash n"
+    raw_id = "L99999999"
     parsed = {
         "edits": [
             {
                 "path": "train.py",
                 "source_sha256": hashlib.sha256(b"x = 1\n").hexdigest(),
-                "old_lines": [raw_line],
+                "start_id": raw_id,
+                "end_id": raw_id,
                 "new_lines": ["x = 2"],
             }
         ],
@@ -190,7 +191,8 @@ def test_pre_dispatch_failure_does_not_copy_previous_call_record(source, tmp_pat
                 {
                     "path": "train.py",
                     "source_sha256": hashlib.sha256(b"x = 1\n").hexdigest(),
-                    "old_lines": ["not present in the baseline"],
+                    "start_id": "L99999999",
+                    "end_id": "L99999999",
                     "new_lines": ["x = 2"],
                 }
             ],
@@ -234,7 +236,8 @@ def test_large_unicode_response_is_bounded_with_full_hashes(source, tmp_path):
             {
                 "path": "train.py",
                 "source_sha256": hashlib.sha256(original.encode()).hexdigest(),
-                "old_lines": ["x = 1"],
+                "start_id": "L000001",
+                "end_id": "L000001",
                 "new_lines": [replacement],
             }
         ],

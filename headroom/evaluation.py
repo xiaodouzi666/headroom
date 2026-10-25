@@ -1596,6 +1596,7 @@ def _campaign(
                 row["condition_audit_dir"] = str(directory / ("condition-" + run_id))
                 if provenance == "live":
                     row["evaluation_timing"] = result.get("evaluation_timing")
+                    row["cli"] = _dict(result.get("evaluation_timing")).get("cli")
             except (OSError, ValueError, TypeError, RuntimeError) as error:
                 usage = store.usage(run_id) if store.get_run(run_id) is not None else None
                 row = {

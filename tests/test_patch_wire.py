@@ -138,7 +138,8 @@ def anchored(old_lines=None, new_lines=None, **extra):
             {
                 "path": "train.py",
                 "source_sha256": hashlib.sha256(b"x = 1\n").hexdigest(),
-                "old_lines": old_lines,
+                "start_id": "L000001" if old_lines == ["x = 1"] else "L99999999",
+                "end_id": "L000001" if old_lines == ["x = 1"] else "L99999999",
                 "new_lines": new_lines,
             }
         ]
@@ -162,7 +163,8 @@ def test_actual_sdk_router_engine_apply_and_compile_with_hash_linked_evidence(tm
     assert "pattern" not in json.dumps(schema)
     requested = json.loads(sent["messages"][-1]["content"])
     document = requested["sources"]["train.py"]
-    assert document["text"] == "x = 1\n" and "0001:" not in document["text"]
+    assert document["lines"] == [{"id": "L000001", "text": "x = 1"}]
+    assert "text" not in document
     assert document["source_sha256"] == payload["edits"][0]["source_sha256"]
     path = Path(result.attempts[0].response_artifact)
     artifact = json.loads(path.read_text())
@@ -175,7 +177,7 @@ def test_actual_sdk_router_engine_apply_and_compile_with_hash_linked_evidence(tm
     assert artifact["normalized_diff"]["text"] == expected
     assert Path(result.patch_path).read_text() == expected
     transformation = artifact["normalization"]
-    assert transformation["algorithm"] == "source_anchored_lines_v1"
+    assert transformation["algorithm"] == "source_span_lines_v1"
     assert transformation["source_field"] == "edits"
     assert transformation["line_count"] == len(LINES) and transformation["terminal_lf"]
     assert (

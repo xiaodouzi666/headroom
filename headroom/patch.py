@@ -30,12 +30,15 @@ from unidiff.errors import UnidiffParseError
 from headroom.lab.runner import copy_source
 from headroom.llm.client import CapabilityNotVerified, LLMError
 from headroom.llm.router import LLMRouter, ResponseValidationError
-from headroom.patch_edits import (
-    SourceAnchoredProposal,
-    normalize_anchored_edits,
-    source_document,
-)
 from headroom.patch_evidence import save_patch_response
+from headroom.patch_spans import (
+    SCHEMA_NAME as PATCH_WIRE_SCHEMA,
+)
+from headroom.patch_spans import (
+    SourceSpanProposal,
+    normalize_span_edits,
+    source_span_document,
+)
 from headroom.patch_validation import bounded_structural_error, verify_exact_application
 from headroom.verify.policy import (
     PatchPolicy,
@@ -248,23 +251,29 @@ def _source_context(root: Path, selected: Sequence[str] | None) -> dict:
             and path.suffix.lower() in {".py", ".json", ".yaml", ".yml", ".toml", ".cfg", ".ini"}
         )
     )
-    sources, omitted, used = {}, [], 0
+    sources, omitted, used, original_bytes = {}, [], 0, 0
     for name in files:
         name = safe_relative_path(name, root)
-        document = source_document(root, name)
-        size = document["utf8_bytes"]
+        document = source_span_document(root, name)
+        size = len(json.dumps(document, allow_nan=False).encode("utf-8"))
         if used + size > MAX_SOURCE_CONTEXT_BYTES:
             omitted.append(name)
             continue
-        # Exact original text is independent of metadata: display labels never
-        # become editable source, and each edit must bind to this source hash.
+        # Count serialized source-document bytes including IDs against the source
+        # budget. This sum excludes the outer request, plan and other fields.
         sources[name] = document
         used += size
+        original_bytes += document["utf8_bytes"]
     if not sources:
         raise ValueError(
             "no supported source fits the prompt context; select relevant source files"
         )
-    return {"sources": sources, "omitted_files": omitted, "source_bytes": used}
+    return {
+        "sources": sources,
+        "omitted_files": omitted,
+        "source_bytes": original_bytes,
+        "source_document_json_bytes": used,
+    }
 
 
 def _make_root(work_root: str | Path, prefix: str) -> Path:
@@ -627,7 +636,7 @@ class PatchEngine:
                 response = self.router.chat(
                     "patcher",
                     messages,
-                    SourceAnchoredProposal,
+                    SourceSpanProposal,
                     max_tokens=self.max_completion_tokens,
                     reasoning=False,
                 )
@@ -641,7 +650,11 @@ class PatchEngine:
                 records = self.router.client.ledger.entries[ledger_start:]
                 try:
                     response_artifact = save_patch_response(
-                        response_path, response, error=error, records=records
+                        response_path,
+                        response,
+                        error=error,
+                        records=records,
+                        wire_schema=PATCH_WIRE_SCHEMA,
                     )
                 except Exception as artifact_error:
                     error.add_note("Private patch-response evidence could not be saved.")
@@ -683,7 +696,7 @@ class PatchEngine:
                 failure = {"reason": attempt.reason, "detail": attempt.detail}
             else:
                 try:
-                    conversion = normalize_anchored_edits(
+                    conversion = normalize_span_edits(
                         response.parsed,
                         snapshot,
                         allowed_source_paths=tuple(source_context["sources"]),
@@ -697,6 +710,7 @@ class PatchEngine:
                         response,
                         error=error,
                         records=self.router.client.ledger.entries[ledger_start:],
+                        wire_schema=PATCH_WIRE_SCHEMA,
                     )
                     detail = (
                         str(error)[:1800] if isinstance(error, ValueError) else type(error).__name__
@@ -728,6 +742,7 @@ class PatchEngine:
                         response_path,
                         response,
                         records=self.router.client.ledger.entries[ledger_start:],
+                        wire_schema=PATCH_WIRE_SCHEMA,
                         normalized_proposal=normalized,
                         normalization_metadata=conversion.metadata,
                     )

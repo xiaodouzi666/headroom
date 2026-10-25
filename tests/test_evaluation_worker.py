@@ -175,7 +175,10 @@ def test_real_production_child_missing_profile_stops_before_gpu_or_key(tmp_path)
         assert result["evaluation_preparation"]["source_sha256"]
         assert (tmp_path / "prepared").is_dir()
         assert result["status"] == "needs_human"
-        assert result["evaluation_timing"]["worker_exit_code"] == 0
+        assert result["evaluation_timing"]["worker_exit_code"] == 78
+        assert result["evaluation_timing"]["cli"]["verified"] is True
+        assert result["evaluation_timing"]["cli"]["observed_exit_code"] == 78
+        assert result["evaluation_timing"]["cli"]["invocation_kind"] == "installed_console_script"
         assert not list((tmp_path / "jobs").rglob("gpu-before.json"))
         assert store.llm_calls(result["run_id"]) == []
     finally:

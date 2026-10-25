@@ -1,0 +1,63 @@
+{
+  "revision": 2,
+  "prepared_at_utc": "2026-10-25T02:55:22.694256+00:00",
+  "passed": true,
+  "frozen": true,
+  "driver": ".cache/setup/audit_source_span_campaign.py",
+  "driver_sha256": "71ae3d67f6fd345918dd94f143f6c63cfcba4a0a1f19ff67102ea0d70663bbd4",
+  "tests": ".cache/setup/test_source_span_campaign_audit.py",
+  "tests_sha256": "c999bcc465c23a27afae5d8b4af28a5e3bbed1e5023f2d40da5ac9c9da06ea1b",
+  "prior_receipt": {
+    "path": "reports/source-span-auditor-20261025/receipt.json",
+    "sha256": "d9767649bb4f101ab5ae1b492cb769cbadb3174bd127719e2d9f8bced2d47d94"
+  },
+  "finding_closed": "A missing later nonselected/reverted patch-result or verification cannot disappear from attempts. Per-round required-stage evidence coverage is now carried to row coverage and required by final sidecar completeness.",
+  "stage_rules": {
+    "explicit_diagnosis_prepatch_stop": "no fix/plan/patch/candidate/verification plus diagnosis_needs_more_info or diagnosis_not_ready: no patch/verification required",
+    "patch_stage": "fix/plan/patch/candidate/verification declaration requires patch-result; ambiguous missing stage remains unknown",
+    "verification_stage": "applied/candidate/explicit verification/KEEP requires verification; recorded rejected/failed patch or explicit feedback no-verification does not require an unstarted stage",
+    "missing_required_artifacts": "unknown/incomplete, original status preserved"
+  },
+  "validation": {
+    "pytest": 28,
+    "pytest_final_log": "reports/source-span-auditor-20261025/revision-2/pytest-final.log",
+    "pytest_final_log_sha256": "72a4afff7c4fb00a63f086ffb31fd0e66def6b5dfdde45a3ee1ea8a93e8073c8",
+    "ruff": "All checks passed",
+    "syntax": "AST parsed",
+    "new_regressions": [
+      "missing later REVERT patch result preserves earlier KEEP but makes evidence incomplete",
+      "missing actual nonselected verification makes evidence incomplete",
+      "normal needs_more_info round needs neither artifact",
+      "recorded rejected patch does not require unstarted verification"
+    ],
+    "initial_r2_failure_preserved": {
+      "path": "reports/source-span-auditor-20261025/revision-2/pytest.log",
+      "reason": "Fixture assumed old v4 rejected round03 had verification; changed missing-verification case to real v5s4 round03. Auditor code was not weakened."
+    },
+    "v5_compatibility": {
+      "path": "reports/source-span-auditor-20261025/revision-2/v5-compatibility.json",
+      "sha256": "8781d77391eeac49d457bfc01bdf92db4e1fd07c020fc7ee77757d0d6bb57cd3",
+      "exit_code": 2,
+      "round_artifact_coverage_complete": true,
+      "missing_required_round_artifacts": [],
+      "legacy_protocol_attempts_unknown": 52,
+      "source_artifacts_stable": true,
+      "financial_binding_complete": true
+    }
+  },
+  "unchanged_inherited_contract_ast_sha256": {
+    "finance": "a71e4b60f43e475bc400f6b2e66a7ed4ee39c6e4e6544611a6680363b53c445c",
+    "db_snapshot": "487e7e13c1b0c58fdfdfe1352e60bb6676f7bb8b2c16c04083a49032184e3a64",
+    "selected_chain": "79f50f361a5506a4e1030a1026226bcb8902767a1812665de962fac9c753eb2d",
+    "verify_selected_public_diff": "6c084275dfb5d32c40f927e8d11b8bbfef737979afa0ded48070385d75b392e6",
+    "guard": "b251ec11015395c71adb99587c7609d6373806c79b087e03b921c0bc61a29609"
+  },
+  "operations": {
+    "production_edits": 0,
+    "API_calls": 0,
+    "GPU_jobs": 0,
+    "ledger_writes": 0,
+    "secret_reads": 0
+  },
+  "waiting_for": "finished actual v6/v7 campaign; no v6 audit executed"
+}

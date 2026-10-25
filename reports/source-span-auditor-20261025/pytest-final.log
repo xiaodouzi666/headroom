@@ -1,0 +1,1178 @@
+FFFFFFFFFFFFFFFFFFFFF...                                                 [100%]
+=================================== FAILURES ===================================
+_______________ test_lf_crlf_eof_and_utf8_offsets[a\nb\n-a\nc\n] _______________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_lf_crlf_eof_and_utf8...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_lf_crlf_eof_and_utf8_offs0/candidate'))
+before = b'a\nb\n', expected = b'a\nc\n'
+
+    @pytest.mark.parametrize(
+        "before,expected",
+        [
+            (b"a\nb\n", b"a\nc\n"),
+            (b"a\r\nb\r\n", b"a\r\nc\r\n"),
+            (b"a\nb", b"a\nc"),
+            ("前\n后\n".encode(), "前\n新\n".encode()),
+        ],
+    )
+    def test_lf_crlf_eof_and_utf8_offsets(area, before, expected):
+        source, candidate = area
+>       (source / "x.py").write_bytes(before)
+
+.cache/setup/test_source_span_campaign_audit.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_lf_crlf_eof_and_utf8_offs0/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+___________ test_lf_crlf_eof_and_utf8_offsets[a\r\nb\r\n-a\r\nc\r\n] ___________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_lf_crlf_eof_and_utf8...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_lf_crlf_eof_and_utf8_offs1/candidate'))
+before = b'a\r\nb\r\n', expected = b'a\r\nc\r\n'
+
+    @pytest.mark.parametrize(
+        "before,expected",
+        [
+            (b"a\nb\n", b"a\nc\n"),
+            (b"a\r\nb\r\n", b"a\r\nc\r\n"),
+            (b"a\nb", b"a\nc"),
+            ("前\n后\n".encode(), "前\n新\n".encode()),
+        ],
+    )
+    def test_lf_crlf_eof_and_utf8_offsets(area, before, expected):
+        source, candidate = area
+>       (source / "x.py").write_bytes(before)
+
+.cache/setup/test_source_span_campaign_audit.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_lf_crlf_eof_and_utf8_offs1/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+_________________ test_lf_crlf_eof_and_utf8_offsets[a\nb-a\nc] _________________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_lf_crlf_eof_and_utf8...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_lf_crlf_eof_and_utf8_offs2/candidate'))
+before = b'a\nb', expected = b'a\nc'
+
+    @pytest.mark.parametrize(
+        "before,expected",
+        [
+            (b"a\nb\n", b"a\nc\n"),
+            (b"a\r\nb\r\n", b"a\r\nc\r\n"),
+            (b"a\nb", b"a\nc"),
+            ("前\n后\n".encode(), "前\n新\n".encode()),
+        ],
+    )
+    def test_lf_crlf_eof_and_utf8_offsets(area, before, expected):
+        source, candidate = area
+>       (source / "x.py").write_bytes(before)
+
+.cache/setup/test_source_span_campaign_audit.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_lf_crlf_eof_and_utf8_offs2/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+_ test_lf_crlf_eof_and_utf8_offsets[\xe5\x89\x8d\n\xe5\x90\x8e\n-\xe5\x89\x8d\n\xe6\x96\xb0\n] _
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_lf_crlf_eof_and_utf8...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_lf_crlf_eof_and_utf8_offs3/candidate'))
+before = b'\xe5\x89\x8d\n\xe5\x90\x8e\n'
+expected = b'\xe5\x89\x8d\n\xe6\x96\xb0\n'
+
+    @pytest.mark.parametrize(
+        "before,expected",
+        [
+            (b"a\nb\n", b"a\nc\n"),
+            (b"a\r\nb\r\n", b"a\r\nc\r\n"),
+            (b"a\nb", b"a\nc"),
+            ("前\n后\n".encode(), "前\n新\n".encode()),
+        ],
+    )
+    def test_lf_crlf_eof_and_utf8_offsets(area, before, expected):
+        source, candidate = area
+>       (source / "x.py").write_bytes(before)
+
+.cache/setup/test_source_span_campaign_audit.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_lf_crlf_eof_and_utf8_offs3/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+___________ test_repeated_text_ids_and_simultaneous_multifile_spans ____________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_repeated_text_ids_an...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_repeated_text_ids_and_sim0/candidate'))
+
+    def test_repeated_text_ids_and_simultaneous_multifile_spans(area):
+        source, candidate = area
+        a = b"same\nsame\nlast\n"
+        b = b"one\r\ntwo\r\n"
+>       (source / "a.py").write_bytes(a)
+
+.cache/setup/test_source_span_campaign_audit.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_repeated_text_ids_and_sim0/source/a.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+__________ test_invalid_coordinates_or_source_fail_closed[<lambda>0] ___________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so0/candidate'))
+change = <function <lambda> at 0x71f33a244360>
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            lambda e: e[0].update(start_id="L000000"),
+            lambda e: e[0].update(end_id="L000003"),
+            lambda e: e[0].update(start_id="L0000001"),
+            lambda e: e[0].update(start_id="L000002", end_id="L000001"),
+            lambda e: e[0].update(source_sha256="0" * 64),
+            lambda e: e[0].update(new_lines=["a\nb"]),
+            lambda e: e[0].update(new_lines=["a\rb"]),
+            lambda e: e[0].update(new_lines=["b"]),
+            lambda e: e.append(copy.deepcopy(e[0])),
+            lambda e: e[0].update(path="../escape.py"),
+            lambda e: e[0].update(old_lines=["fabricated"]),
+        ],
+    )
+    def test_invalid_coordinates_or_source_fail_closed(area, change):
+        source, _ = area
+        before = b"a\nb\n"
+>       (source / "x.py").write_bytes(before)
+
+.cache/setup/test_source_span_campaign_audit.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so0/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+__________ test_invalid_coordinates_or_source_fail_closed[<lambda>1] ___________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so1/candidate'))
+change = <function <lambda> at 0x71f33a244400>
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            lambda e: e[0].update(start_id="L000000"),
+            lambda e: e[0].update(end_id="L000003"),
+            lambda e: e[0].update(start_id="L0000001"),
+            lambda e: e[0].update(start_id="L000002", end_id="L000001"),
+            lambda e: e[0].update(source_sha256="0" * 64),
+            lambda e: e[0].update(new_lines=["a\nb"]),
+            lambda e: e[0].update(new_lines=["a\rb"]),
+            lambda e: e[0].update(new_lines=["b"]),
+            lambda e: e.append(copy.deepcopy(e[0])),
+            lambda e: e[0].update(path="../escape.py"),
+            lambda e: e[0].update(old_lines=["fabricated"]),
+        ],
+    )
+    def test_invalid_coordinates_or_source_fail_closed(area, change):
+        source, _ = area
+        before = b"a\nb\n"
+>       (source / "x.py").write_bytes(before)
+
+.cache/setup/test_source_span_campaign_audit.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so1/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+__________ test_invalid_coordinates_or_source_fail_closed[<lambda>2] ___________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so2/candidate'))
+change = <function <lambda> at 0x71f33a2444a0>
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            lambda e: e[0].update(start_id="L000000"),
+            lambda e: e[0].update(end_id="L000003"),
+            lambda e: e[0].update(start_id="L0000001"),
+            lambda e: e[0].update(start_id="L000002", end_id="L000001"),
+            lambda e: e[0].update(source_sha256="0" * 64),
+            lambda e: e[0].update(new_lines=["a\nb"]),
+            lambda e: e[0].update(new_lines=["a\rb"]),
+            lambda e: e[0].update(new_lines=["b"]),
+            lambda e: e.append(copy.deepcopy(e[0])),
+            lambda e: e[0].update(path="../escape.py"),
+            lambda e: e[0].update(old_lines=["fabricated"]),
+        ],
+    )
+    def test_invalid_coordinates_or_source_fail_closed(area, change):
+        source, _ = area
+        before = b"a\nb\n"
+>       (source / "x.py").write_bytes(before)
+
+.cache/setup/test_source_span_campaign_audit.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so2/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+__________ test_invalid_coordinates_or_source_fail_closed[<lambda>3] ___________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so3/candidate'))
+change = <function <lambda> at 0x71f33a244540>
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            lambda e: e[0].update(start_id="L000000"),
+            lambda e: e[0].update(end_id="L000003"),
+            lambda e: e[0].update(start_id="L0000001"),
+            lambda e: e[0].update(start_id="L000002", end_id="L000001"),
+            lambda e: e[0].update(source_sha256="0" * 64),
+            lambda e: e[0].update(new_lines=["a\nb"]),
+            lambda e: e[0].update(new_lines=["a\rb"]),
+            lambda e: e[0].update(new_lines=["b"]),
+            lambda e: e.append(copy.deepcopy(e[0])),
+            lambda e: e[0].update(path="../escape.py"),
+            lambda e: e[0].update(old_lines=["fabricated"]),
+        ],
+    )
+    def test_invalid_coordinates_or_source_fail_closed(area, change):
+        source, _ = area
+        before = b"a\nb\n"
+>       (source / "x.py").write_bytes(before)
+
+.cache/setup/test_source_span_campaign_audit.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so3/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+__________ test_invalid_coordinates_or_source_fail_closed[<lambda>4] ___________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so4/candidate'))
+change = <function <lambda> at 0x71f33a2445e0>
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            lambda e: e[0].update(start_id="L000000"),
+            lambda e: e[0].update(end_id="L000003"),
+            lambda e: e[0].update(start_id="L0000001"),
+            lambda e: e[0].update(start_id="L000002", end_id="L000001"),
+            lambda e: e[0].update(source_sha256="0" * 64),
+            lambda e: e[0].update(new_lines=["a\nb"]),
+            lambda e: e[0].update(new_lines=["a\rb"]),
+            lambda e: e[0].update(new_lines=["b"]),
+            lambda e: e.append(copy.deepcopy(e[0])),
+            lambda e: e[0].update(path="../escape.py"),
+            lambda e: e[0].update(old_lines=["fabricated"]),
+        ],
+    )
+    def test_invalid_coordinates_or_source_fail_closed(area, change):
+        source, _ = area
+        before = b"a\nb\n"
+>       (source / "x.py").write_bytes(before)
+
+.cache/setup/test_source_span_campaign_audit.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so4/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+__________ test_invalid_coordinates_or_source_fail_closed[<lambda>5] ___________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so5/candidate'))
+change = <function <lambda> at 0x71f33a244680>
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            lambda e: e[0].update(start_id="L000000"),
+            lambda e: e[0].update(end_id="L000003"),
+            lambda e: e[0].update(start_id="L0000001"),
+            lambda e: e[0].update(start_id="L000002", end_id="L000001"),
+            lambda e: e[0].update(source_sha256="0" * 64),
+            lambda e: e[0].update(new_lines=["a\nb"]),
+            lambda e: e[0].update(new_lines=["a\rb"]),
+            lambda e: e[0].update(new_lines=["b"]),
+            lambda e: e.append(copy.deepcopy(e[0])),
+            lambda e: e[0].update(path="../escape.py"),
+            lambda e: e[0].update(old_lines=["fabricated"]),
+        ],
+    )
+    def test_invalid_coordinates_or_source_fail_closed(area, change):
+        source, _ = area
+        before = b"a\nb\n"
+>       (source / "x.py").write_bytes(before)
+
+.cache/setup/test_source_span_campaign_audit.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so5/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+__________ test_invalid_coordinates_or_source_fail_closed[<lambda>6] ___________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so6/candidate'))
+change = <function <lambda> at 0x71f33a244720>
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            lambda e: e[0].update(start_id="L000000"),
+            lambda e: e[0].update(end_id="L000003"),
+            lambda e: e[0].update(start_id="L0000001"),
+            lambda e: e[0].update(start_id="L000002", end_id="L000001"),
+            lambda e: e[0].update(source_sha256="0" * 64),
+            lambda e: e[0].update(new_lines=["a\nb"]),
+            lambda e: e[0].update(new_lines=["a\rb"]),
+            lambda e: e[0].update(new_lines=["b"]),
+            lambda e: e.append(copy.deepcopy(e[0])),
+            lambda e: e[0].update(path="../escape.py"),
+            lambda e: e[0].update(old_lines=["fabricated"]),
+        ],
+    )
+    def test_invalid_coordinates_or_source_fail_closed(area, change):
+        source, _ = area
+        before = b"a\nb\n"
+>       (source / "x.py").write_bytes(before)
+
+.cache/setup/test_source_span_campaign_audit.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so6/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+__________ test_invalid_coordinates_or_source_fail_closed[<lambda>7] ___________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so7/candidate'))
+change = <function <lambda> at 0x71f33a2447c0>
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            lambda e: e[0].update(start_id="L000000"),
+            lambda e: e[0].update(end_id="L000003"),
+            lambda e: e[0].update(start_id="L0000001"),
+            lambda e: e[0].update(start_id="L000002", end_id="L000001"),
+            lambda e: e[0].update(source_sha256="0" * 64),
+            lambda e: e[0].update(new_lines=["a\nb"]),
+            lambda e: e[0].update(new_lines=["a\rb"]),
+            lambda e: e[0].update(new_lines=["b"]),
+            lambda e: e.append(copy.deepcopy(e[0])),
+            lambda e: e[0].update(path="../escape.py"),
+            lambda e: e[0].update(old_lines=["fabricated"]),
+        ],
+    )
+    def test_invalid_coordinates_or_source_fail_closed(area, change):
+        source, _ = area
+        before = b"a\nb\n"
+>       (source / "x.py").write_bytes(before)
+
+.cache/setup/test_source_span_campaign_audit.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so7/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+__________ test_invalid_coordinates_or_source_fail_closed[<lambda>8] ___________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so8/candidate'))
+change = <function <lambda> at 0x71f33a244860>
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            lambda e: e[0].update(start_id="L000000"),
+            lambda e: e[0].update(end_id="L000003"),
+            lambda e: e[0].update(start_id="L0000001"),
+            lambda e: e[0].update(start_id="L000002", end_id="L000001"),
+            lambda e: e[0].update(source_sha256="0" * 64),
+            lambda e: e[0].update(new_lines=["a\nb"]),
+            lambda e: e[0].update(new_lines=["a\rb"]),
+            lambda e: e[0].update(new_lines=["b"]),
+            lambda e: e.append(copy.deepcopy(e[0])),
+            lambda e: e[0].update(path="../escape.py"),
+            lambda e: e[0].update(old_lines=["fabricated"]),
+        ],
+    )
+    def test_invalid_coordinates_or_source_fail_closed(area, change):
+        source, _ = area
+        before = b"a\nb\n"
+>       (source / "x.py").write_bytes(before)
+
+.cache/setup/test_source_span_campaign_audit.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so8/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+__________ test_invalid_coordinates_or_source_fail_closed[<lambda>9] ___________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so9/candidate'))
+change = <function <lambda> at 0x71f33a244900>
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            lambda e: e[0].update(start_id="L000000"),
+            lambda e: e[0].update(end_id="L000003"),
+            lambda e: e[0].update(start_id="L0000001"),
+            lambda e: e[0].update(start_id="L000002", end_id="L000001"),
+            lambda e: e[0].update(source_sha256="0" * 64),
+            lambda e: e[0].update(new_lines=["a\nb"]),
+            lambda e: e[0].update(new_lines=["a\rb"]),
+            lambda e: e[0].update(new_lines=["b"]),
+            lambda e: e.append(copy.deepcopy(e[0])),
+            lambda e: e[0].update(path="../escape.py"),
+            lambda e: e[0].update(old_lines=["fabricated"]),
+        ],
+    )
+    def test_invalid_coordinates_or_source_fail_closed(area, change):
+        source, _ = area
+        before = b"a\nb\n"
+>       (source / "x.py").write_bytes(before)
+
+.cache/setup/test_source_span_campaign_audit.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so9/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+__________ test_invalid_coordinates_or_source_fail_closed[<lambda>10] __________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_...iaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so10/candidate'))
+change = <function <lambda> at 0x71f33a2449a0>
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            lambda e: e[0].update(start_id="L000000"),
+            lambda e: e[0].update(end_id="L000003"),
+            lambda e: e[0].update(start_id="L0000001"),
+            lambda e: e[0].update(start_id="L000002", end_id="L000001"),
+            lambda e: e[0].update(source_sha256="0" * 64),
+            lambda e: e[0].update(new_lines=["a\nb"]),
+            lambda e: e[0].update(new_lines=["a\rb"]),
+            lambda e: e[0].update(new_lines=["b"]),
+            lambda e: e.append(copy.deepcopy(e[0])),
+            lambda e: e[0].update(path="../escape.py"),
+            lambda e: e[0].update(old_lines=["fabricated"]),
+        ],
+    )
+    def test_invalid_coordinates_or_source_fail_closed(area, change):
+        source, _ = area
+        before = b"a\nb\n"
+>       (source / "x.py").write_bytes(before)
+
+.cache/setup/test_source_span_campaign_audit.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_invalid_coordinates_or_so10/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+_______________________ test_mixed_line_endings_refused ________________________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_mixed_line_endings_r...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_mixed_line_endings_refuse0/candidate'))
+
+    def test_mixed_line_endings_refused(area):
+        source, _ = area
+        before = b"a\r\nb\n"
+>       (source / "x.py").write_bytes(before)
+
+.cache/setup/test_source_span_campaign_audit.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_mixed_line_endings_refuse0/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+_______________________ test_full_raw_to_candidate_chain _______________________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_full_raw_to_candidat...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_full_raw_to_candidate_cha0/candidate'))
+
+    def test_full_raw_to_candidate_chain(area):
+>       attempt, patch, _, _ = attempt_fixture(area)
+                               ^^^^^^^^^^^^^^^^^^^^^
+
+.cache/setup/test_source_span_campaign_audit.py:231: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.cache/setup/test_source_span_campaign_audit.py:156: in attempt_fixture
+    (source / "x.py").write_bytes(before)
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_full_raw_to_candidate_cha0/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+_____________________ test_tampered_old_byte_hash_rejected _____________________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_tampered_old_byte_ha...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_tampered_old_byte_hash_re0/candidate'))
+
+    def test_tampered_old_byte_hash_rejected(area):
+>       attempt, patch, response, ev = attempt_fixture(area)
+                                       ^^^^^^^^^^^^^^^^^^^^^
+
+.cache/setup/test_source_span_campaign_audit.py:240: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.cache/setup/test_source_span_campaign_audit.py:156: in attempt_fixture
+    (source / "x.py").write_bytes(before)
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_tampered_old_byte_hash_re0/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+______________ test_candidate_mismatch_is_not_application_success ______________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_candidate_mismatch_i...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_candidate_mismatch_is_not0/candidate'))
+
+    def test_candidate_mismatch_is_not_application_success(area):
+>       attempt, patch, _, _ = attempt_fixture(area)
+                               ^^^^^^^^^^^^^^^^^^^^^
+
+.cache/setup/test_source_span_campaign_audit.py:249: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.cache/setup/test_source_span_campaign_audit.py:156: in attempt_fixture
+    (source / "x.py").write_bytes(before)
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_candidate_mismatch_is_not0/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+________________________ test_missing_raw_stays_unknown ________________________
+
+area = (PosixPath('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_missing_raw_stays_un...xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_missing_raw_stays_unknown0/candidate'))
+
+    def test_missing_raw_stays_unknown(area):
+>       attempt, patch, response, _ = attempt_fixture(area)
+                                      ^^^^^^^^^^^^^^^^^^^^^
+
+.cache/setup/test_source_span_campaign_audit.py:257: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.cache/setup/test_source_span_campaign_audit.py:156: in attempt_fixture
+    (source / "x.py").write_bytes(before)
+/usr/lib/python3.12/pathlib.py:1038: in write_bytes
+    with self.open(mode='wb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'open'
+args = ('/home/xiaodouzi/workspace/headroom/.cache/setup/span-auditor-test-fixtures-final/test_missing_raw_stays_unknown0/source/x.py', 'w', 524865)
+
+    def guard(event, args):
+        if event in ("socket.connect", "socket.getaddrinfo", "subprocess.Popen", "os.system"):
+            raise RuntimeError("network/subprocess denied")
+        if event == "sqlite3.connect" and "mode=ro" not in str(args[0]):
+            raise RuntimeError("non-readonly database denied")
+        if event == "open":
+            try:
+                name = Path(os.fsdecode(args[0]))
+            except TypeError:
+                return
+            text = str(name)
+            if any(x in text for x in ("/.env", "tokenfactory-runtime.json", "/dev/nvidia")):
+                raise RuntimeError("secret/profile/GPU access denied")
+            mode, flags = args[1], args[2]
+            writing = (isinstance(mode, str) and any(x in mode for x in "wax+")) or (
+                isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+            )
+            if writing and name.is_relative_to(PROJECT) and not name.is_relative_to(SCRATCH):
+>               raise RuntimeError("live project writes denied")
+E               RuntimeError: live project writes denied
+
+.cache/setup/test_source_span_campaign_audit.py:33: RuntimeError
+=========================== short test summary info ============================
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_lf_crlf_eof_and_utf8_offsets[a\nb\n-a\nc\n]
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_lf_crlf_eof_and_utf8_offsets[a\r\nb\r\n-a\r\nc\r\n]
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_lf_crlf_eof_and_utf8_offsets[a\nb-a\nc]
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_lf_crlf_eof_and_utf8_offsets[\xe5\x89\x8d\n\xe5\x90\x8e\n-\xe5\x89\x8d\n\xe6\x96\xb0\n]
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_repeated_text_ids_and_simultaneous_multifile_spans
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_invalid_coordinates_or_source_fail_closed[<lambda>0]
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_invalid_coordinates_or_source_fail_closed[<lambda>1]
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_invalid_coordinates_or_source_fail_closed[<lambda>2]
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_invalid_coordinates_or_source_fail_closed[<lambda>3]
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_invalid_coordinates_or_source_fail_closed[<lambda>4]
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_invalid_coordinates_or_source_fail_closed[<lambda>5]
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_invalid_coordinates_or_source_fail_closed[<lambda>6]
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_invalid_coordinates_or_source_fail_closed[<lambda>7]
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_invalid_coordinates_or_source_fail_closed[<lambda>8]
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_invalid_coordinates_or_source_fail_closed[<lambda>9]
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_invalid_coordinates_or_source_fail_closed[<lambda>10]
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_mixed_line_endings_refused
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_full_raw_to_candidate_chain
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_tampered_old_byte_hash_rejected
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_candidate_mismatch_is_not_application_success
+FAILED .cache/setup/test_source_span_campaign_audit.py::test_missing_raw_stays_unknown
+21 failed, 3 passed in 0.60s

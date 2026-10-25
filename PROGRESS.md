@@ -208,3 +208,11 @@ All work, caches, runs, and media remain on azuki.
 | nanogpt | 未知 | 是 | 无 | 未达标 | 0.12575908 | 72.97 |
 
 Audit: reports/live-campaign-20261025/mvp-v5-audit-notes.json. Preparing extension 2/3 in isolated server worktrees; original acceptance gates unchanged.
+
+## MVP v6 implementation checkpoint — extension 2/3, 2026-10-25
+
+- New source-span protocol binds exact original file SHA and inclusive line IDs; the host reconstructs old bytes and candidate bytes, then retains existing apply/compile/policy/GPU gates. Generic diagnosis/patch instructions now check actual producer/consumer, train/eval paths, nonempty sample ranges, loss weighting and optimizer update cadence. No original scenario, manifest, policy, numerical threshold or PLAN change.
+- Evaluation now executes the installed headroom fix console script with one supervised PID and run UUID. Actual OS exit, CLI receipt, raw result and parsed-request hashes are recorded; legacy worker exit 0 is not retroactive CLI evidence.
+- Guarded focused integration: 445 passed. Full regression: 2192 passed in 581.13s (driver 582.74s), all 245 source entries and original PLAN/guard unchanged. Initial fixture-guard failures are retained; no live API/GPU was part of the full suite.
+- Initial source-span component used two Super calls, actual $0.0013896. Exact source/application/compile evidence passed, but the docstring-only AST check failed because the model duplicated an unreachable return statement. This remains failed; it does not prove changed mathematical behavior. No benchmark success is claimed.
+- Preparing a separate bounded component follow-up with at most two more calls and $0.10 total across both attempts, keeping the original shared credit allocation and all historical costs. The v6 nine-case campaign has not started.

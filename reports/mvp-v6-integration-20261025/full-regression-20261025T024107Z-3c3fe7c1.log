@@ -1,0 +1,487 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}}
+FFFFFFF.....FFFFFF...................................................... [ 34%]
+........................................................................ [ 69%]
+..............................................................           [100%]
+=================================== FAILURES ===================================
+_ test_actual_console_exec_keeps_pid_uuid_one_dispatch_and_real_exit[completed-0] _
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_actual_console_exec_keeps0')
+status = 'completed', code = 0
+
+    @pytest.mark.parametrize(
+        "status,code",
+        [
+            ("completed", 0),
+            ("needs_human", 78),
+            ("budget_exceeded", 78),
+            ("timeout", 124),
+            ("failed", 1),
+        ],
+    )
+    def test_actual_console_exec_keeps_pid_uuid_one_dispatch_and_real_exit(tmp_path, status, code):
+        request, run_id, values = setup_case(tmp_path)
+        result, receipt = execute_case(tmp_path, values, mode=status)
+>       assert result.returncode == code, result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 1, in <module>
+E           File "/usr/lib/python3.12/pathlib.py", line 1049, in write_text
+E             with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+E                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+E             return io.open(self, mode, buffering, encoding, errors, newline)
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_actual_console_exec_keeps0/python-startup/sitecustomize.py", line 34, in guarded
+E           File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_actual_console_exec_keeps0/python-startup/sitecustomize.py", line 26, in check_path
+E         PermissionError: Test forbids production credentials/profile/cache/database
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/home/xiaodouzi/workspace/headroom/.venv/bin/python', '-c', "import json,os; from pathlib impo...ecustomize.py", line 26, in check_path\nPermissionError: Test forbids production credentials/profile/cache/database\n').returncode
+
+tests/test_cli_execution.py:409: AssertionError
+_ test_actual_console_exec_keeps_pid_uuid_one_dispatch_and_real_exit[needs_human-78] _
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_actual_console_exec_keeps1')
+status = 'needs_human', code = 78
+
+    @pytest.mark.parametrize(
+        "status,code",
+        [
+            ("completed", 0),
+            ("needs_human", 78),
+            ("budget_exceeded", 78),
+            ("timeout", 124),
+            ("failed", 1),
+        ],
+    )
+    def test_actual_console_exec_keeps_pid_uuid_one_dispatch_and_real_exit(tmp_path, status, code):
+        request, run_id, values = setup_case(tmp_path)
+        result, receipt = execute_case(tmp_path, values, mode=status)
+>       assert result.returncode == code, result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 1, in <module>
+E           File "/usr/lib/python3.12/pathlib.py", line 1049, in write_text
+E             with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+E                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+E             return io.open(self, mode, buffering, encoding, errors, newline)
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_actual_console_exec_keeps1/python-startup/sitecustomize.py", line 34, in guarded
+E           File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_actual_console_exec_keeps1/python-startup/sitecustomize.py", line 26, in check_path
+E         PermissionError: Test forbids production credentials/profile/cache/database
+E         
+E       assert 1 == 78
+E        +  where 1 = CompletedProcess(args=['/home/xiaodouzi/workspace/headroom/.venv/bin/python', '-c', "import json,os; from pathlib impo...ecustomize.py", line 26, in check_path\nPermissionError: Test forbids production credentials/profile/cache/database\n').returncode
+
+tests/test_cli_execution.py:409: AssertionError
+_ test_actual_console_exec_keeps_pid_uuid_one_dispatch_and_real_exit[budget_exceeded-78] _
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_actual_console_exec_keeps2')
+status = 'budget_exceeded', code = 78
+
+    @pytest.mark.parametrize(
+        "status,code",
+        [
+            ("completed", 0),
+            ("needs_human", 78),
+            ("budget_exceeded", 78),
+            ("timeout", 124),
+            ("failed", 1),
+        ],
+    )
+    def test_actual_console_exec_keeps_pid_uuid_one_dispatch_and_real_exit(tmp_path, status, code):
+        request, run_id, values = setup_case(tmp_path)
+        result, receipt = execute_case(tmp_path, values, mode=status)
+>       assert result.returncode == code, result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 1, in <module>
+E           File "/usr/lib/python3.12/pathlib.py", line 1049, in write_text
+E             with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+E                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+E             return io.open(self, mode, buffering, encoding, errors, newline)
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_actual_console_exec_keeps2/python-startup/sitecustomize.py", line 34, in guarded
+E           File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_actual_console_exec_keeps2/python-startup/sitecustomize.py", line 26, in check_path
+E         PermissionError: Test forbids production credentials/profile/cache/database
+E         
+E       assert 1 == 78
+E        +  where 1 = CompletedProcess(args=['/home/xiaodouzi/workspace/headroom/.venv/bin/python', '-c', "import json,os; from pathlib impo...ecustomize.py", line 26, in check_path\nPermissionError: Test forbids production credentials/profile/cache/database\n').returncode
+
+tests/test_cli_execution.py:409: AssertionError
+_ test_actual_console_exec_keeps_pid_uuid_one_dispatch_and_real_exit[timeout-124] _
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_actual_console_exec_keeps3')
+status = 'timeout', code = 124
+
+    @pytest.mark.parametrize(
+        "status,code",
+        [
+            ("completed", 0),
+            ("needs_human", 78),
+            ("budget_exceeded", 78),
+            ("timeout", 124),
+            ("failed", 1),
+        ],
+    )
+    def test_actual_console_exec_keeps_pid_uuid_one_dispatch_and_real_exit(tmp_path, status, code):
+        request, run_id, values = setup_case(tmp_path)
+        result, receipt = execute_case(tmp_path, values, mode=status)
+>       assert result.returncode == code, result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 1, in <module>
+E           File "/usr/lib/python3.12/pathlib.py", line 1049, in write_text
+E             with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+E                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+E             return io.open(self, mode, buffering, encoding, errors, newline)
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_actual_console_exec_keeps3/python-startup/sitecustomize.py", line 34, in guarded
+E           File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_actual_console_exec_keeps3/python-startup/sitecustomize.py", line 26, in check_path
+E         PermissionError: Test forbids production credentials/profile/cache/database
+E         
+E       assert 1 == 124
+E        +  where 1 = CompletedProcess(args=['/home/xiaodouzi/workspace/headroom/.venv/bin/python', '-c', "import json,os; from pathlib impo...ecustomize.py", line 26, in check_path\nPermissionError: Test forbids production credentials/profile/cache/database\n').returncode
+
+tests/test_cli_execution.py:409: AssertionError
+_ test_actual_console_exec_keeps_pid_uuid_one_dispatch_and_real_exit[failed-1] _
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_actual_console_exec_keeps4')
+status = 'failed', code = 1
+
+    @pytest.mark.parametrize(
+        "status,code",
+        [
+            ("completed", 0),
+            ("needs_human", 78),
+            ("budget_exceeded", 78),
+            ("timeout", 124),
+            ("failed", 1),
+        ],
+    )
+    def test_actual_console_exec_keeps_pid_uuid_one_dispatch_and_real_exit(tmp_path, status, code):
+        request, run_id, values = setup_case(tmp_path)
+        result, receipt = execute_case(tmp_path, values, mode=status)
+        assert result.returncode == code, result.stderr
+>       assert receipt["invocation_kind"] == "installed_console_script"
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: 'NoneType' object is not subscriptable
+
+tests/test_cli_execution.py:410: TypeError
+_____ test_real_run_fix_sdk_mock_and_shared_ledger_are_not_executed_twice ______
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_real_run_fix_sdk_mock_and0')
+
+    def test_real_run_fix_sdk_mock_and_shared_ledger_are_not_executed_twice(tmp_path):
+        _, run_id, values = setup_case(tmp_path)
+        result, receipt = execute_case(tmp_path, values, mode="pipeline")
+>       assert result.returncode == 78, result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 1, in <module>
+E           File "/usr/lib/python3.12/pathlib.py", line 1049, in write_text
+E             with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+E                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+E             return io.open(self, mode, buffering, encoding, errors, newline)
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_real_run_fix_sdk_mock_and0/python-startup/sitecustomize.py", line 34, in guarded
+E           File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_real_run_fix_sdk_mock_and0/python-startup/sitecustomize.py", line 26, in check_path
+E         PermissionError: Test forbids production credentials/profile/cache/database
+E         
+E       assert 1 == 78
+E        +  where 1 = CompletedProcess(args=['/home/xiaodouzi/workspace/headroom/.venv/bin/python', '-c', "import json,os; from pathlib impo...ecustomize.py", line 26, in check_path\nPermissionError: Test forbids production credentials/profile/cache/database\n').returncode
+
+tests/test_cli_execution.py:433: AssertionError
+___ test_true_repository_cli_prepares_once_and_preserves_profile_and_prefix ____
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_true_repository_cli_prepa0')
+
+    def test_true_repository_cli_prepares_once_and_preserves_profile_and_prefix(tmp_path):
+        _, run_id, values = setup_case(tmp_path, repository=True)
+        result, receipt = execute_case(tmp_path, values, repository=True)
+>       assert result.returncode == 0, result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 1, in <module>
+E           File "/usr/lib/python3.12/pathlib.py", line 1049, in write_text
+E             with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+E                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+E             return io.open(self, mode, buffering, encoding, errors, newline)
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_true_repository_cli_prepa0/python-startup/sitecustomize.py", line 34, in guarded
+E           File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_true_repository_cli_prepa0/python-startup/sitecustomize.py", line 26, in check_path
+E         PermissionError: Test forbids production credentials/profile/cache/database
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/home/xiaodouzi/workspace/headroom/.venv/bin/python', '-c', "import json,os; from pathlib impo...ecustomize.py", line 26, in check_path\nPermissionError: Test forbids production credentials/profile/cache/database\n').returncode
+
+tests/test_cli_execution.py:457: AssertionError
+_______ test_explicit_false_zero_and_yaml_cannot_change_manifest_request _______
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_explicit_false_zero_and_y0')
+
+    def test_explicit_false_zero_and_yaml_cannot_change_manifest_request(tmp_path):
+        request, _, values = setup_case(
+            tmp_path,
+            policy=Policy(
+                allow_numerics_change=False,
+                allow_batch_grad_accum=False,
+                max_throughput_regression_pct=0,
+            ),
+            seed=0,
+            reclaim_reduction_pct=20.0,
+            target="reclaim",
+        )
+        (tmp_path / "source/headroom.yaml").write_text(
+            "policy:\n  allow_numerics_change: true\n  allow_batch_grad_accum: true\n"
+            "  max_throughput_regression_pct: 100\nseed: 99\nreclaim_reduction_pct: 30\n"
+        )
+        result, _ = execute_case(tmp_path, values)
+>       assert result.returncode == 0
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/home/xiaodouzi/workspace/headroom/.venv/bin/python', '-c', "import json,os; from pathlib impo...ecustomize.py", line 26, in check_path\nPermissionError: Test forbids production credentials/profile/cache/database\n').returncode
+
+tests/test_cli_execution.py:535: AssertionError
+_________________ test_claim_prevents_relaunch_of_the_same_run _________________
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_claim_prevents_relaunch_o0')
+
+    def test_claim_prevents_relaunch_of_the_same_run(tmp_path):
+        _, _, values = setup_case(tmp_path)
+        result, _ = execute_case(tmp_path, values)
+>       assert result.returncode == 0
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/home/xiaodouzi/workspace/headroom/.venv/bin/python', '-c', "import json,os; from pathlib impo...ecustomize.py", line 26, in check_path\nPermissionError: Test forbids production credentials/profile/cache/database\n').returncode
+
+tests/test_cli_execution.py:542: AssertionError
+_ test_receipt_does_not_convert_status_or_missing_return_into_observed_success _
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_receipt_does_not_convert_0')
+
+    def test_receipt_does_not_convert_status_or_missing_return_into_observed_success(tmp_path):
+        _, run_id, values = setup_case(tmp_path)
+        result, receipt = execute_case(tmp_path, values, mode="needs_human")
+>       assert result.returncode == 78
+E       assert 1 == 78
+E        +  where 1 = CompletedProcess(args=['/home/xiaodouzi/workspace/headroom/.venv/bin/python', '-c', "import json,os; from pathlib impo...ecustomize.py", line 26, in check_path\nPermissionError: Test forbids production credentials/profile/cache/database\n').returncode
+
+tests/test_cli_execution.py:555: AssertionError
+________ test_local_repository_command_keeps_existing_no_manifest_path _________
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_local_repository_command_0')
+
+    def test_local_repository_command_keeps_existing_no_manifest_path(tmp_path):
+        request, _, values = setup_case(tmp_path)
+        values[8]["case"]["group"] = "repository"
+        result, receipt = execute_case(tmp_path, values)
+>       assert result.returncode == 0, result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 1, in <module>
+E           File "/usr/lib/python3.12/pathlib.py", line 1049, in write_text
+E             with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+E                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+E             return io.open(self, mode, buffering, encoding, errors, newline)
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_local_repository_command_0/python-startup/sitecustomize.py", line 34, in guarded
+E           File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_local_repository_command_0/python-startup/sitecustomize.py", line 26, in check_path
+E         PermissionError: Test forbids production credentials/profile/cache/database
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/home/xiaodouzi/workspace/headroom/.venv/bin/python', '-c', "import json,os; from pathlib impo...ecustomize.py", line 26, in check_path\nPermissionError: Test forbids production credentials/profile/cache/database\n').returncode
+
+tests/test_cli_execution.py:572: AssertionError
+___ test_supervisor_accepts_legitimate_nonzero_cli_result_without_masking_it ___
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_supervisor_accepts_legiti0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7285d5045c40>
+
+    def test_supervisor_accepts_legitimate_nonzero_cli_result_without_masking_it(tmp_path, monkeypatch):
+        request, run_id, values = setup_case(tmp_path)
+        config = tmp_path / "fixture.json"
+        config.write_text(json.dumps({"base": str(tmp_path), "mode": "needs_human"}))
+        monkeypatch.setenv("LITERAL_CLI_FIXTURE", str(config))
+        monkeypatch.setenv("PYTHONPATH", child_environment(tmp_path)["PYTHONPATH"])
+        store = Store(values[1])
+        try:
+            result = worker.supervise_evaluation_run(
+                request,
+                store=store,
+                run_root=Path(values[2]),
+                run_id=run_id,
+                condition=values[4],
+                audit_dir=Path(values[5]),
+                started=time.monotonic(),
+                preparation=values[8],
+                wall_limit_seconds=15,
+            )
+>           assert result["status"] == "needs_human" and not result["target_met"]
+E           AssertionError: assert ('failed' == 'needs_human'
+E             
+E             - needs_human
+E             + failed)
+
+tests/test_cli_execution.py:599: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Process SpawnProcess-2:
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/xiaodouzi/workspace/headroom/headroom/evaluation_worker.py", line 93, in _evaluation_entry
+    store = Store(store_path)
+            ^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/headroom/store/db.py", line 176, in __init__
+    with self.engine.connect() as connection:
+         ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3275, in connect
+    return self._connection_cls(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 149, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3299, in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 445, in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 1324, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 709, in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 176, in _do_get
+    with util.safe_reraise():
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 166, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 174, in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 386, in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 671, in __init__
+    self.__connect()
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 916, in __connect
+    with util.safe_reraise():
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 166, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 912, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/engine/create.py", line 645, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 869, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_supervisor_accepts_legiti0/python-startup/sitecustomize.py", line 40, in guarded_connect
+  File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_supervisor_accepts_legiti0/python-startup/sitecustomize.py", line 26, in check_path
+PermissionError: Test forbids production credentials/profile/cache/database
+________ test_deadline_kills_real_console_without_inventing_cli_return _________
+
+tmp_path = PosixPath('/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_deadline_kills_real_conso0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7285d2514b00>
+
+    def test_deadline_kills_real_console_without_inventing_cli_return(tmp_path, monkeypatch):
+        request, run_id, values = setup_case(tmp_path)
+        config = tmp_path / "fixture.json"
+        config.write_text(json.dumps({"base": str(tmp_path), "mode": "wait"}))
+        monkeypatch.setenv("LITERAL_CLI_FIXTURE", str(config))
+        monkeypatch.setenv("PYTHONPATH", child_environment(tmp_path)["PYTHONPATH"])
+        store = Store(values[1])
+        try:
+            result = worker.supervise_evaluation_run(
+                request,
+                store=store,
+                run_root=Path(values[2]),
+                run_id=run_id,
+                condition=values[4],
+                audit_dir=Path(values[5]),
+                started=time.monotonic(),
+                preparation=values[8],
+                wall_limit_seconds=4,
+            )
+>           assert result["status"] == "timeout"
+E           AssertionError: assert 'failed' == 'timeout'
+E             
+E             - timeout
+E             + failed
+
+tests/test_cli_execution.py:627: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Process SpawnProcess-3:
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/xiaodouzi/workspace/headroom/headroom/evaluation_worker.py", line 93, in _evaluation_entry
+    store = Store(store_path)
+            ^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/headroom/store/db.py", line 176, in __init__
+    with self.engine.connect() as connection:
+         ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3275, in connect
+    return self._connection_cls(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 149, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3299, in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 445, in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 1324, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 709, in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 176, in _do_get
+    with util.safe_reraise():
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 166, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 174, in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 386, in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 671, in __init__
+    self.__connect()
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 916, in __connect
+    with util.safe_reraise():
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 166, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 912, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/engine/create.py", line 645, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 869, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_deadline_kills_real_conso0/python-startup/sitecustomize.py", line 40, in guarded_connect
+  File "/home/xiaodouzi/workspace/headroom/.cache/tmp/pytest-of-xiaodouzi/pytest-159/test_deadline_kills_real_conso0/python-startup/sitecustomize.py", line 26, in check_path
+PermissionError: Test forbids production credentials/profile/cache/database
+=========================== short test summary info ============================
+FAILED tests/test_cli_execution.py::test_actual_console_exec_keeps_pid_uuid_one_dispatch_and_real_exit[completed-0]
+FAILED tests/test_cli_execution.py::test_actual_console_exec_keeps_pid_uuid_one_dispatch_and_real_exit[needs_human-78]
+FAILED tests/test_cli_execution.py::test_actual_console_exec_keeps_pid_uuid_one_dispatch_and_real_exit[budget_exceeded-78]
+FAILED tests/test_cli_execution.py::test_actual_console_exec_keeps_pid_uuid_one_dispatch_and_real_exit[timeout-124]
+FAILED tests/test_cli_execution.py::test_actual_console_exec_keeps_pid_uuid_one_dispatch_and_real_exit[failed-1]
+FAILED tests/test_cli_execution.py::test_real_run_fix_sdk_mock_and_shared_ledger_are_not_executed_twice
+FAILED tests/test_cli_execution.py::test_true_repository_cli_prepares_once_and_preserves_profile_and_prefix
+FAILED tests/test_cli_execution.py::test_explicit_false_zero_and_yaml_cannot_change_manifest_request
+FAILED tests/test_cli_execution.py::test_claim_prevents_relaunch_of_the_same_run
+FAILED tests/test_cli_execution.py::test_receipt_does_not_convert_status_or_missing_return_into_observed_success
+FAILED tests/test_cli_execution.py::test_local_repository_command_keeps_existing_no_manifest_path
+FAILED tests/test_cli_execution.py::test_supervisor_accepts_legitimate_nonzero_cli_result_without_masking_it
+FAILED tests/test_cli_execution.py::test_deadline_kills_real_console_without_inventing_cli_return
+13 failed, 193 passed in 31.43s
