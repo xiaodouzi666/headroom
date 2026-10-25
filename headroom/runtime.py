@@ -353,11 +353,23 @@ def build_live_runtime(
         if record.cost.usd is None and record.outcome == "response" and not bounded_settled:
             raise BudgetExceeded("Provider charge is unknown; further calls stopped")
 
+    def on_request(role, model, attempt, evidence):
+        # Capture the SDK-serialized body (including merged extra_body and router
+        # schema messages), attached to the already reserved attempt. A local hook
+        # failure stops transport; existing conservative accounting remains intact.
+        if pending.get("model_id") != model or "record_id" not in pending:
+            raise RuntimeNotReady("Prepared request has no matching reserved attempt")
+        store.record_llm_request(
+            pending["record_id"],
+            {**evidence, "role": role, "model": model, "attempt": attempt},
+        )
+
     client = TokenFactoryClient(
         api_key=read_nebius_key(env_file),
         config=config,
         transport=transport,
         before_attempt=before_attempt,
         after_record=after_record,
+        on_request=on_request,
     )
     return RuntimeBundle(LLMRouter(client), client, profile.evidence_token_budget)

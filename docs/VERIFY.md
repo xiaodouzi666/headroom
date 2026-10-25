@@ -320,3 +320,35 @@ intervals; no overhead-free performance claim is made.
 `precision_evidence`. The direct Python comparison interface still accepts an
 explicit `precision` for trusted callers and labels that override; model output
 cannot select this override in the production orchestration path.
+
+
+## Explicit original-workload reference (2026-10-25)
+
+The Python verification API now accepts
+reference_strategy="original_saved_tensor_offload". The default remains
+"legacy_small_batch"; historical outcomes are not rescored. This opt-in path
+requires a preserved OOM baseline manifest, matching original source/argv,
+captured original initialization/data, known original/reference precision,
+complete runtime pairing, and the required optimizer-update count. It currently
+supports only the reviewed standalone s3/s4 source contracts.
+
+reference_offload_bytes caps live saved-tensor CPU copies (up to 16 GiB).
+reference_offload_disk_bytes explicitly enables disk storage (up to 64 GiB);
+reference_max_seconds may select up to 480 s for this reference, still subject to
+the caller's outer deadline. Disk mode stores CUDA saved tensors under the new
+run's disk-backed output directory and bounds actual serialized bytes. It retains
+files for repeated unpack, uses weights_only=True, and records wrapper plus
+post-container-stop host cleanup. CPU staging and the unchanged 32 GiB container
+limit are documented in the research report; the saved-tensor cap is not an RSS
+claim.
+
+Reference time/memory never scores candidate performance. Unsupported source,
+mismatched provenance, incomplete execution, resource exhaustion, unknown
+precision or failed cleanup cannot establish this reference. Existing candidate
+precision policy and tolerances, and the original repository no-reference
+exception, retain their own semantics.
+
+The preserved v7 s4 candidate has separate supplemental evidence: original
+batch 8 disk reference, 20 updates, all 20 loss differences 0; the old nine-scenario
+score remains 1/9. See reports/acceptance-research-20261025/numerical-reference-research.md
+and reports/research-solutions-20261025/summary.md.

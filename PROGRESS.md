@@ -4,11 +4,25 @@ Initialized: 2026-10-23T00:44:58.397951+00:00
 Canonical plan: docs/PLAN.md (v4.2, preserved verbatim).
 All work, caches, runs, and media remain on azuki.
 
+## 2026-10-25 independent research and fixes
+
+Frank authorized independently researching the pending items and implementing
+supported solutions. Request auditing, bounded invocation grounding, runtime
+input observations, lexical argv context, and an opt-in original-workload
+CPU/disk reference are implemented. s4's supplemental20-update reference has
+zero loss difference; this does not rescore historical v7 (still1/9). Four
+diagnosis-only calls cost$0.20808488; s3 reads training/eval inputs correctly,
+nanoGPT now reads32x1 but still fails citation/policy checks. s2's fixed-state
+40%/22GB incompatibility is now independently auditable. Full validation and
+remaining target choices: reports/research-solutions-20261025/summary.md.
+Final guarded backend regression: 2338 passed in 562.33s; all257 source entries,
+canonical PLAN, and offline guard unchanged. Earlier interrupted/failed runs retained.
+
 ## Tasks
 
 | Task | Description | Status | Evidence |
 |---|---|---|---|
-| T0.1 | 账号、额度、密钥、仓库（P0，Codex 主导，Frank 只补无法自动化的部分，~40min） | 已验收 | reports/t0.1-acceptance-promo-20261024.json; official promo face25USD redeemed, UI30.25USD incl.tax; current matching key/0600/env and both authenticated catalogues200 with4/5Nemotron models; public Apache2 and retained live Tavily proof verified; further inference authorization remains separate |
+| T0.1 | 账号、额度、密钥、仓库（P0，Codex 主导，Frank 只补无法自动化的部分，~40min） | 已验收 | reports/t0.1-acceptance-promo-20261024.json; official promo face25USD redeemed, UI30.25USD incl.tax; current matching key/0600/env and both authenticated catalogues200 with4/5Nemotron models; public Apache2 and retained live Tavily proof verified; account acceptance does not itself authorize inference; current gift-only authorization is recorded above and below |
 | T0.2 | 服务器环境勘察（P0，~30min） | 已验收 | docs/ENV.md; reports/env-preflight.json; Docker GPU ok, NET ok, 5694.85 GiB free; shared GPU and no sudo recorded |
 | T0.3 | 仓库骨架与工具链（P0，~40min） | 已验收 | reports/toolchain-checks.json; reports/pre-commit-t0.3.log; commit ca6c86ad099c519b92d1ccb88219b08450aa8da6, Frank author/committer, pushed origin/main |
 | T0.4 | Token Factory 探测（P0，~1h） | 已验收（失败/未支持项保留） | reports/t0.4-acceptance-20261025.json; all60 prescribed samples executed; Ultra500029 provider tokens verified,900k429 retained; Super JSON/tools/concurrency pass; config500029/150000/json_schema/chat_template_kwargs,8 new feedback entries; Nano tools and thinking-budget failures disabled |
@@ -19,17 +33,17 @@ All work, caches, runs, and media remain on azuki.
 | T1.3 | LLM 客户端与路由（P0，~1.5h） | 已验收 | reports/t1.3-acceptance-20261025.json; actual client/router Super schema passed; authentic53-record Ultra evidence returned268920 server input tokens; both1attempt/exact ID/known cost total0.2695014USD; free-text fragmentation overclaim recorded, not diagnosis acceptance |
 | T1.4 | Diagnose（Ultra）（P0，~2.5h） | 首因7/8及全部引用有效；完整验收未通过 | reports/live-campaign-20261025/diagnosis-attempt4-review.json; v5八次真实响应stop/0 reasoning，cost0.328770USD；s1/s6禁止改动及s7需补充信息保留；原6/8与政策门未改 |
 | T1.5 | Patch（Super）与应用（P0，~2.5h） | v7真实3/8应用编译；原≥6/8未通过 | v7 three attempts all applied/compiled(s4/s7/s8); source-span conversion/application/selected chains independently verified; original<=3fixers/4000tokens retained |
-| T1.6 | Verify 与比较（P0，~2h） | 历史v6 s3通过；v7 s8标量门通过；s1仍未通过 | v7 s8 20updates/96.0714217%reduction/scalaridentical/paramsunchanged; pairingunknown; v6s3 fullpairing success preserved; v7s1 no candidate |
+| T1.6 | Verify 与比较（P0，~2h） | 历史门保留；补充s4原工作负载数值通过；s1仍未通过 | reports/acceptance-research-20261025/offload-s4-disk-reference.json: opt-in original batch8/20updates/lossdelta0/fullpairing; v7 s8 scalar pass/pairingunknown and v6s3 preserved; v7s1 no candidate; no historical rescore |
 | T1.7 | 单轮编排 + 存储 + 事件（P0，~2h） | 九条真实CLI链已核；原s1事件及全零退出门未通过 | v7 9CLI chainsverified; s8exit0/others78; s1 stopsbeforepatch and full ordered eventgate notpassed |
 | T1.8 | 报告（P0，~1.5h） | 九报告数字及s8选中补丁干净重应用通过 | mvp-v7-audit-v2.json and mvp-v7-s8-clean-reapply.json; publicpatch reapplies to exact GPUcandidate bytes |
-| T1.9 | 真实仓库：nanoGPT（P0，~2h） | 真实nanoGPT已执行；修复门未通过 | v7 realCLI32/1 but modelplan defaults12/40;needs_human/no candidate/CLI78;cost0.063958528USD |
+| T1.9 | 真实仓库：nanoGPT（P0，~2h） | 真实nanoGPT已执行；修复门未通过 | v7 realCLI32/1 versus model12/40 failure preserved; latest diagnostic probe reads32x1 but fails claim/policy gates, no candidate; reports/final-nano-diagnostic-probe-20261025T050212Z-b19ed759/report.md |
 | T1.10 | Honesty 与安全（P0，~1h） | 静态与CPU真实性检查通过；完整修复待办 | docs/PATCH.md; model shrink/truncation/escape checks and observed parameter counts |
 | T1.11 | Docker Lab（P1，仅 `DOCKER_GPU=ok`，~1.5h） | 自有Python镜像、干净目录CPU及隔离组件通过 | docs/LAB_RUNTIME.md; hash-locked image-owned Python3.12, verified immutable image ID, no host venv mount; clean candidate tree script/module each3updates with capture/cleanup verified |
-| T1.12 | MVP 整体验收 + 报告（P0，~1.5h，10/24 晚） | 追加三轮已用完；v7目标1/9未通过，待Frank决定 | v7 all9live/25calls; target1/9; cause raw6/valid4true3false2unknown;9CLIchains 1zero8exit78; originalPLAN0.6 stop |
+| T1.12 | MVP 整体验收 + 报告（P0，~1.5h，10/24 晚） | 追加三轮已用完；v7目标1/9未通过；新版目标或额外全campaign待决，本轮研究修复已授权 | v7 all9live/25calls; target1/9; cause raw6/valid4true3false2unknown;9CLIchains 1zero8exit78; originalPLAN0.6 stop |
 | T2.1 | 显存求解循环：keep-or-revert 搜索 + Pareto 前沿（P0，~3h） | 有界搜索与逐轮验证反馈完成；真实验收待办 | docs/SEARCH.md; selected state survives revert; per-round verification-feedback.json exposes actual loss/check/error facts to later rounds; original s2/bf16 policy gates unchanged |
 | T2.2 | Tavily Research（P0，~2h） | 真实模型研究与缓存已测；指定Sources门未通过 | v4 research9rows/8API/7credits;s4PyTorch2.5checkpoint extract;s3->s5cache0API0credits;s1checkpoint/s5CUDA memorySources absent |
 | T2.3 | Nano 栈标注（P1，~1h） | 真实8场景已测；覆盖和一致率未通过 | v4 4/8complete;completed outputs3/40heuristic matches;failed4not excluded;all<=0.02certified upper |
-| T2.4 | 预算守卫与成本面板（P0，~45min） | 真实费用链复核通过；原额外预算门待办 | 457settledattempts/76closedruns/0pending unresolved halt; runtimeconservative4.968399436/remaining5.031249604;original.05/.1 cases unexecuted |
+| T2.4 | 预算守卫与成本面板（P0，~45min） | 真实费用链复核通过；原额外预算门待办 | 461settledattempts/79closedruns/0pending unresolved halt; runtimeconservative5.176484316/remaining4.823164724;original.05/.1 cases unexecuted |
 | T2.5 | HF Transformers 场景（P1，~2h） | HF场景CPU/GPU基线通过；修复待办 | reports/hf-trainer-baseline-20261024.json; real Trainer OOM; configuration-only repair gate pending |
 | T2.6 | Watch 模式（P2，~1.5h） | shell/Python启动器可定位唯一CUDA OOM子进程并重跑；真实模型修复验收待办 | docs/WATCH_HF.md; preserved multi-process inventory and selected capture binding; exact target replay; manual real GPU helper+s1 OOM selected correctly; candidate/reference each20updates passed; duplicate/OOM ambiguity and root failures rejected; no host fallback |
 | T2.7 | Docker/HF 缓存稳健性（P1）：验收：三个场景在 Docker 路径下结果与子进程路径一致（峰值差 ≤ 1%）。 | 已验收 | reports/t2.7-acceptance-20261025.json; six actual GPU arms independently audited; s1/s3/HF allocated/reserved peak differences 0% <=1%; s3 both20updates/identical losses, s1/HF genuineOOM; Docker-contained independent subprocess controller, source/image/seed/capture/cleanup verified; original hostEPERM retained |
@@ -60,7 +74,7 @@ All work, caches, runs, and media remain on azuki.
 - Historical v4 checkpoint (superseded by the explicit v5/v6/v7 authorization above; 2026-10-24T23:31:55Z): all9 genuinely executed;0/9targets,7/9firstcauses. Original three repair iterations exhausted. Finish reports/commit/handoff, then stop additional repair work for Frank under PLAN§0.6; no new budget approval is needed for the existing gift-only authorization.
 
 - The dedicated T1.3/T1.4 drivers and native model tool loop are implemented and have now been exercised live. Accepted client capability, partial diagnosis/research evidence and failed repair outcomes remain separately recorded below.
-- The owner authorizes remaining original-plan model work using existing gifted credit only, with no recharge/overrun. reports/live-campaign-20261025 records authorization, allocation and the enabled actual_usage profile with verified provider global/day reservations. All60 original T0.4 samples are finalized with failures retained; Ultra900k429 permanently occupies1.049344USD under the completed conservative continuation review. Runtime all-time/current UTC2026-10-24 daily ceiling is9.99964904USD, including spent usage; combined external probe plus maximum runtime day total11.82189150USD remains below12. No unknown charge is treated as zero. T1.3 is accepted; latest T1.4 v5 is7/8 exact first causes with8/8 valid references but incomplete policy/readiness. Its0.328770USD calls are known; subsequent MVP Nano missing-cache usage retained0.01644864USD and halted the runtime. Earlier v2/v3/v4 failures remain preserved.
+- The owner authorizes remaining original-plan model work using existing gifted credit only, with no recharge/overrun. reports/live-campaign-20261025 records authorization, allocation and the enabled actual_usage profile with verified provider global/day reservations. All60 original T0.4 samples are finalized with failures retained; Ultra900k429 permanently occupies1.049344USD under the completed conservative continuation review. The recorded all-time/daily runtime ceiling is9.99964904USD, including spent usage; combined external probe plus maximum runtime day total11.82189150USD remains below12. No unknown charge is treated as zero. T1.3 is accepted; latest T1.4 v5 is7/8 exact first causes with8/8 valid references but incomplete policy/readiness. Its0.328770USD calls are known; subsequent MVP Nano missing-cache usage retained0.01644864USD and halted the runtime. Earlier v2/v3/v4 failures remain preserved.
 - Keep original failed gates and procedure conflicts visible: s2's 39.8715% optimizer fraction versus40%, default precision policy/bf16 tier. T2.7 isolation comparison is now accepted with its Docker-contained reference boundary.
 - Final authorized T1.12 v7 completed all nine: target1/9, raw cause6/9, valid4true/3false/2unknown; one actualCLI0/eight78, all original cost/time bounds pass. Additional three iterations exhausted; no failed run replaced by offline success.
 - T3.5 / Phase6 webhook delivery is implemented but disabled. The owner must select/authorize a real destination and supply public domain/Cloudflare access before deployment and delivery acceptance; no recipient message or unit installation has occurred.

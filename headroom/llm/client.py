@@ -11,6 +11,7 @@ import openai
 
 from headroom.config import RuntimeConfig
 from headroom.llm.cost import CallRecord, Cost, CostLedger, Usage, calculate_cost
+from headroom.llm.request_audit import capture_request
 
 RETRY_DELAYS = (1, 2, 4, 8, 16)
 
@@ -59,6 +60,7 @@ class TokenFactoryClient:
         clock: Callable[[], float] = time.monotonic,
         before_attempt: Callable | None = None,
         after_record: Callable | None = None,
+        on_request: Callable | None = None,
     ):
         self.config = config or RuntimeConfig()
         if transport is not None and not isinstance(transport, httpx.MockTransport):
@@ -74,6 +76,8 @@ class TokenFactoryClient:
         self.ledger = ledger if ledger is not None else CostLedger()
         self._before_attempt = before_attempt
         self._after_record = after_record
+        self._on_request = on_request
+        self._request_context = None
         self._sdk = None
 
     def _record(self, record):
@@ -107,6 +111,13 @@ class TokenFactoryClient:
                     "User-Agent": "Headroom/0.1",
                 }
             )
+            if self._on_request is not None:
+                if self._request_context is None:
+                    raise LLMError("Request has no admitted attempt context")
+                role, model, attempt = self._request_context
+                self._on_request(
+                    role, model, attempt, capture_request(request.content, secret_values=(key,))
+                )
 
         http_client = httpx.Client(
             transport=self._transport,
@@ -212,6 +223,7 @@ class TokenFactoryClient:
             if self._before_attempt is not None:
                 self._before_attempt(role, spec, attempt, copy.deepcopy(body))
             attempt_started = self._clock()
+            self._request_context = (role, spec.model_id, attempt)
             try:
                 completion = sdk.chat.completions.create(**body)
             except openai.APIStatusError as error:

@@ -299,6 +299,27 @@ class Store:
         )
         return self._append(row)
 
+    def record_llm_request(self, call_id, evidence):
+        """Attach prepared-body evidence once, without settling or changing billing."""
+        evidence = _data(evidence, {})
+        with self._write() as session:
+            row = session.get(LLMCall, call_id)
+            if row is None:
+                raise KeyError("LLM call does not exist")
+            payload = json.loads(row.data_json)
+            if (
+                payload.get("settled") is not False
+                or payload.get("outcome") != "pending"
+                or "request_evidence" in payload
+            ):
+                raise ValueError("Request evidence requires an uncaptured pending attempt")
+            for key in ("role", "model", "attempt"):
+                if evidence.get(key) != payload.get(key):
+                    raise ValueError("Request evidence differs from its admitted attempt")
+            payload["request_evidence"] = evidence
+            row.data_json = _json(payload)
+            session.add(row)
+
     def update_llm_call(self, call_id, data=None, **fields):
         """Settle one pending attempt exactly once, preserving its identity.
 

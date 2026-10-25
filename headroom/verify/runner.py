@@ -10,7 +10,14 @@ import yaml
 
 from headroom.lab.runner import read_artifact_json, run_script
 from headroom.verify.compare import compare_runs
-from headroom.verify.pairing import derive_pairing
+from headroom.verify.offload import (
+    LEGACY_STRATEGY,
+    MAX_SAVED_BYTES,
+    STRATEGY,
+    bind_original_baseline,
+    validate_limit,
+)
+from headroom.verify.pairing import derive_pairing, source_contract
 
 _ALLOWED_BATCH_FLAGS = {"--batch", "--batch_size", "--batch-size"}
 
@@ -152,6 +159,10 @@ def verify_script(
     allocator_conf=None,
     baseline_allocator_conf=None,
     max_reference_attempts=4,
+    reference_strategy=LEGACY_STRATEGY,
+    reference_offload_bytes=MAX_SAVED_BYTES,
+    reference_offload_disk_bytes=0,
+    reference_max_seconds=None,
     **comparison_options,
 ):
     """Return candidate/reference evidence and VerifyReport; never changes source.
@@ -159,6 +170,19 @@ def verify_script(
     max_reference_attempts bounds execution, not acceptance: exhaustion leaves
     reference unavailable. Every attempted reference is retained in the report.
     """
+    if reference_strategy not in {LEGACY_STRATEGY, STRATEGY}:
+        raise ValueError("Unknown numerical reference strategy")
+    if reference_strategy == STRATEGY:
+        validate_limit(reference_offload_bytes)
+        from headroom.verify.offload_disk import validate_disk_limit
+
+        validate_disk_limit(reference_offload_disk_bytes)
+        if reference_max_seconds is not None and (
+            type(reference_max_seconds) not in (int, float) or not 0 < reference_max_seconds <= 480
+        ):
+            raise ValueError("Reference wall-clock budget must be positive and at most 480 seconds")
+        if reference is not None:
+            raise ValueError("Original-workload offload must execute its own bound reference")
     if type(max_reference_attempts) is not int or max_reference_attempts < 1:
         raise ValueError("max_reference_attempts must be a positive integer")
     seed = baseline.get("env", {}).get("seed") if seed is None else seed
@@ -225,7 +249,58 @@ def verify_script(
             else:
                 reference_args = list(baseline_args)
                 discovery = {**discover_batch(baseline_script, reference_args), "attempts": []}
-            if discovery["found"]:
+            if reference_strategy == STRATEGY:
+                binding = bind_original_baseline(baseline, baseline_script, reference_args)
+                supported = (
+                    binding["valid"]
+                    and baseline_args is not None
+                    and not baseline_command_options
+                    and source_contract(Path(baseline_script)).get("supported") is True
+                    and source_contract(Path(candidate_script)).get("supported") is True
+                )
+                discovery = {
+                    "found": False,
+                    "strategy": STRATEGY,
+                    "attempts": [],
+                    "reason": "Original-workload offload requires reviewed standalone sources and original argv",
+                    "baseline_binding": binding,
+                }
+                if supported:
+                    reference = run_script(
+                        baseline_script,
+                        script_args=reference_args,
+                        source_root=baseline_source_root,
+                        run_root=run_root,
+                        max_steps=required_steps,
+                        max_seconds=max_seconds
+                        if reference_max_seconds is None
+                        else reference_max_seconds,
+                        seed=seed,
+                        device=device,
+                        allocator_conf=baseline_allocator_conf,
+                        reference_offload_bytes=reference_offload_bytes,
+                        reference_offload_disk_bytes=reference_offload_disk_bytes,
+                    )
+                    reference["original_baseline_binding"] = binding
+                    if reference.get("run_dir"):
+                        with (Path(reference["run_dir"]) / "result.json").open("w") as handle:
+                            json.dump(reference, handle, indent=2, allow_nan=False)
+                            handle.write("\n")
+                    discovery.update(
+                        found=True,
+                        reason="Original argv/batch saved-tensor offload reference",
+                        original_args=reference_args,
+                        max_saved_bytes=reference_offload_bytes,
+                        max_disk_bytes=reference_offload_disk_bytes,
+                        attempts=[
+                            {
+                                "run_dir": reference.get("run_dir"),
+                                "status": reference.get("status"),
+                                "strategy": STRATEGY,
+                            }
+                        ],
+                    )
+            elif discovery["found"]:
                 upper = discovery["original_batch"] or max_reference_attempts
                 upper = min(upper, max_reference_attempts)
                 for batch in range(1, upper + 1):
@@ -283,6 +358,7 @@ def verify_script(
         reference=reference,
         pairing=pairing,
         required_steps=required_steps,
+        reference_strategy=reference_strategy,
         **comparison_options,
     )
     report.notes.append(

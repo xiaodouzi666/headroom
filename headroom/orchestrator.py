@@ -556,6 +556,7 @@ def run_fix(
                 max_steps=request.max_steps,
                 device=request.device,
                 allocator_conf=current_allocator,
+                runtime_result=current_result,
             )
             prior_candidates = candidate_context(candidate_history)
             prompt_evidence = Path(current_evidence["evidence_md"]).read_text()
@@ -623,6 +624,7 @@ def run_fix(
                 "ready_for_patch": checked.ready_for_patch,
                 "requires_supplement": checked.requires_supplement,
                 "supplement_request": checked.supplement_request,
+                "invocation_provenance": getattr(checked, "invocation_provenance", None),
             }
             _write(round_dir / "diagnosis.json", diagnosis_data)
             _write(directory / "diagnosis.json", diagnosis_data)

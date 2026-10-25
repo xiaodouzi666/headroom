@@ -1,0 +1,42 @@
+{
+  "schema_version": "headroom.acceptance-feasibility.v1",
+  "kind": "conditional_fixed_state_constraint_audit",
+  "inputs": {
+    "optimizer_state_bytes": 8593604608,
+    "minimum_state_fraction": {
+      "numerator": 2,
+      "denominator": 5
+    },
+    "fit_limit_bytes": 22000000000,
+    "observed_peak_bytes": 21553250816
+  },
+  "assumptions": [
+    "State bytes are fixed for the same fixture and allocated-peak accounting domain.",
+    "Demonstrating capacity repair requires the baseline peak to exceed the fit limit.",
+    "Byte counts and their provenance must be established independently."
+  ],
+  "derivation": {
+    "state_share_constraint": "optimizer_state_bytes / peak_bytes >= minimum_state_fraction",
+    "capacity_repair_precondition": "peak_bytes > fit_limit_bytes",
+    "exact_peak_upper_bound_bytes": {
+      "numerator": 21484011520,
+      "denominator": 1
+    },
+    "largest_integer_peak_bytes": 21484011520,
+    "first_integer_peak_above_fit_bytes": 22000000001
+  },
+  "compatibility": {
+    "status": "incompatible",
+    "reason": "Every integer-byte peak satisfying the state-share requirement already fits the capacity target."
+  },
+  "observed": {
+    "state_fraction": {
+      "numerator": 16784384,
+      "denominator": 42096193
+    },
+    "state_share_requirement_met": false,
+    "baseline_already_fits": true
+  },
+  "acceptance_certified": false,
+  "historical_results_modified": false
+}

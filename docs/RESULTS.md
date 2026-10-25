@@ -633,3 +633,16 @@ wrapper seed 与脚本自身重设 seed 分开记录；s4 默认脚本 seed 7、
 具体后续范围见 reports/final-decision-20261025-v7.md；完整余项清单见 reports/remaining-acceptance-20261025-v7.md（其编写时 v7 尚在运行，结果以本摘要为准）。建议先逐项讨论已知验收冲突与模型拒绝/误读原因，再决定是否追加有限修复；在决定前继续保留原标准。
 
 审计索引均在 reports/live-campaign-20261025：mvp-v7-audit-v2.json、mvp-v7-source-span-review.json、mvp-v7-literal-cli-audit.json、mvp-v7-finance-review.json、mvp-v7-candidate-review.json、mvp-v7-s8-clean-reapply.json、mvp-v7-audit-execution.json。
+
+
+## Supplemental research validation, 2026-10-25
+
+reports/research-solutions-20261025/summary.md records the independent research
+and implemented fixes requested after v7. s4 has a new explicit original-workload
+disk reference (20updates,all20loss differences0); this is supplemental validation
+of the retained candidate, not a new nine-casecampaign. Four bounded live
+diagnosis probes cost$0.20808488, all settled; s3's input distinction improved,
+nanoGPT reads32x1 but still fails policy/provenance checks. The original v7 score
+and all original gates remain unchanged.
+
+本轮最终完整 guarded 回归：**2,338 passed，562.33秒**；257个源码/配置/提示词/测试条目前后及当前一致，原PLAN与guard未变。中断运行及旧断言失败记录均保留。收据：`reports/research-solutions-20261025/full-regression-20261025T051427Z-c9f092a7-receipt.json`。

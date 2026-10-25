@@ -16,3 +16,10 @@ The optional execution_context describes the retained effective invocation. Use 
 base_cli_visibility describes omitted or redacted arguments in the prompt-only base_cli. Their values are unknown; never reconstruct or replace a redacted credential. Original execution arguments remain under orchestration control.
 
 solver_context_availability reports whether older paired candidate/verification rounds were omitted to fit the combined context budget. Omitted rounds are unknown; use each recorded round identifier and never pair by array position. Omission does not change the retained configuration or available search rounds.
+
+If execution_context.runtime_input_observations.status is "observed", use its
+source-bound optimizer_input_name and effective_batch_per_optimizer_update for
+retained training-update facts. Other named tensors may have different shapes;
+do not substitute their leading dimension for the optimizer-linked input. These
+observations describe the retained run, not proof that a candidate preserves
+mathematics. Unsupported/unverified runtime observations remain unknown.

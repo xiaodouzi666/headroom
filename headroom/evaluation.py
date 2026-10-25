@@ -1837,6 +1837,9 @@ def condition_services(condition, audit_dir):
             goal=kwargs["goal"],
             policy=kwargs["policy"],
             required_saving_gb=kwargs.get("required_saving_gb"),
+            verification_feedback=kwargs.get("verification_feedback"),
+            execution_context=visible.get("execution_context"),
+            candidate_evidence=visible.get("candidate_evidence"),
         )
         serialized_messages = json.dumps(messages, ensure_ascii=False, allow_nan=False)
         messages_path = audit_dir / (str(counter).zfill(2) + "-initial-messages.json")
@@ -1854,7 +1857,8 @@ def condition_services(condition, audit_dir):
                 "system_prompt_sha256": hashlib.sha256(messages[0]["content"].encode()).hexdigest(),
                 "message_scope": (
                     "Initial diagnosis messages before router schema prepend; "
-                    "not a wire request hash and excludes supplementary turns"
+                    "not a wire request hash and excludes supplementary turns; "
+                    "actual prepared bodies are in llm_calls.request_evidence"
                 ),
                 "snapshot_visible": condition != "traceback_ultra",
                 "reference_ids": sorted(_dict(_dict(visible.get("analysis")).get("stack_catalog"))),

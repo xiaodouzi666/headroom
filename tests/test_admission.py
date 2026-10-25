@@ -3,6 +3,7 @@
 import copy
 import json
 import socket
+import sqlite3
 from decimal import Decimal
 from pathlib import Path
 
@@ -187,7 +188,20 @@ def test_complete_diagnosis_payload_is_measured_and_actual_cost_separate(tmp_pat
         }
         assert budget.snapshot("run")["contains_local_estimate"]
         assert not budget.snapshot("run")["dispatch_blocked"]
-        assert "显存" not in json.dumps(row, ensure_ascii=False)
+        # Admission/accounting stays content-free. The separately scoped prepared
+        # request audit intentionally retains the bounded, redacted transport body.
+        request_evidence = row["request_evidence"]
+        assert request_evidence["payload_status"] == "captured"
+        assert request_evidence["payload"] == sent[0]
+        assert "显存" in json.dumps(request_evidence["payload"], ensure_ascii=False)
+        for metadata in (
+            {key: value for key, value in row.items() if key != "request_evidence"},
+            {key: value for key, value in request_evidence.items() if key != "payload"},
+            budget.snapshot("run"),
+        ):
+            assert "显存" not in json.dumps(metadata, ensure_ascii=False)
+        with sqlite3.connect((tmp_path / "budget.db").as_uri() + "?mode=ro", uri=True) as conn:
+            assert "显存" not in "\n".join(conn.iterdump())
         assert str(ASSETS) not in json.dumps(row)
     finally:
         bundle.close()

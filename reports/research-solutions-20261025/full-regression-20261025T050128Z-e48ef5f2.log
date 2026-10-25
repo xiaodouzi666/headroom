@@ -1,0 +1,102 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}}
+........................................................................ [  3%]
+.F...................................................................... [  6%]
+........................................................................ [  9%]
+........................................................................ [ 12%]
+........................................................................ [ 15%]
+........................................................................ [ 18%]
+........................................................................ [ 21%]
+........................................................................ [ 24%]
+........................................................................ [ 27%]
+........................................................................ [ 30%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 46%]
+........................................................................ [ 49%]
+........................................................................ [ 52%]
+........................................................................ [ 55%]
+........................................................................ [ 58%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 67%]
+........................................................................ [ 70%]
+........................................................................ [ 73%]
+........................................................................ [ 76%]
+........................................................................ [ 80%]
+........................................................................ [ 83%]
+........................................................................ [ 86%]
+........................................................................ [ 89%]
+........................................................................ [ 92%]
+........................................................................ [ 95%]
+........................................................................ [ 98%]
+..................................                                       [100%]
+=================================== FAILURES ===================================
+_____ test_complete_diagnosis_payload_is_measured_and_actual_cost_separate _____
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-99/test_complete_diagnosis_payloa0')
+auditor = <headroom.llm.preflight.PromptAuditor object at 0x7c5f28250560>
+
+    def test_complete_diagnosis_payload_is_measured_and_actual_cost_separate(tmp_path, auditor):
+        sent = []
+    
+        def respond(request):
+            sent.append(json.loads(request.content))
+            response = fixture_completion(request)
+            data = json.loads(response.content)
+            data["choices"][0]["message"]["content"] = '{"ok": true}'
+            return httpx.Response(200, json=data)
+    
+        _, bundle, budget, store = runtime(tmp_path, respond)
+        captured_sdk = []
+        original = bundle.client._before_attempt
+    
+        def capture(role, spec, attempt, body):
+            captured_sdk.append(copy.deepcopy(body))
+            return original(role, spec, attempt, body)
+    
+        bundle.client._before_attempt = capture
+        try:
+            messages = build_diagnosis_messages(
+                "显存证据 🧪\n# Stack fixture", goal="fix-oom", policy={}
+            )
+            bundle.router.chat(
+                "diagnose",
+                messages,
+                {"type": "object", "properties": {"ok": {"type": "boolean"}}, "required": ["ok"]},
+                max_tokens=128,
+            )
+            row = store.llm_calls("run")[0]
+            audit = auditor.audit(captured_sdk[0])
+            assert {k: v for k, v in captured_sdk[0].items() if k != "timeout"} == sent[0]
+            assert audit["local_template"] == auditor.audit(sent[0])["local_template"]
+            assert row["request_input_form"] == "sdk_kwargs"
+            assert len(sent[0]["messages"]) > len(messages)  # Router's full schema fallback counted.
+            assert row["admission_kind"] == "local_estimate"
+            assert row["provider_cost_upper_usd"] is None
+            assert row["provider_prompt_token_ceiling"] is None
+            assert row["request_sha256"] == audit["request"]["compact_json_sha256"]
+            assert row["local_template_tokens"] == audit["local_template"]["tokens"]
+            assert row["estimated_prompt_tokens_with_margin"] == 2 * row["local_template_tokens"] + 1024
+            assert Decimal(row["reservation_usd"]) > Decimal(row["cost_usd"])
+            assert store.usage("run")["total_cost_usd"] == "0.00005"
+            assert store.usage("run")["admission_counts"] == {
+                "verified_provider_bound": 0,
+                "local_estimate": 1,
+                "unknown": 0,
+            }
+            assert budget.snapshot("run")["contains_local_estimate"]
+            assert not budget.snapshot("run")["dispatch_blocked"]
+>           assert "显存" not in json.dumps(row, ensure_ascii=False)
+E           assert '显存' not in '{"admission...s": "known"}'
+E             
+E             '显存' is contained here:
+E               down\": \"显存证据 🧪\\n# Stack fixture\"}"}], "max_completion_tokens": 128}, "payload_status": "captured", "redaction_scope": "runtime API credential, named secret fields, bearer values", "stored_payload_sha256": "63522b6f02ee15b429d3724ebb64eeb7b01cce03a47f30c4cd2f808a6c0be5b9", "role": "diagnose", "model": "nvidia/Nemotron-3-Ultra-550b-a55b", "attempt": 1}, "elapsed_seconds": 0.004551588091999292, "usage": {"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30, "cached_tokens": null, "reasoning_tokens": 19}, "cost": {"usd": "0.00005", "status": "known", "reaso...
+E             
+E             ...Full output truncated (2 lines hidden), use '-vv' to show
+
+tests/test_admission.py:190: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_admission.py::test_complete_diagnosis_payload_is_measured_and_actual_cost_separate
+1 failed, 2337 passed in 570.02s (0:09:30)

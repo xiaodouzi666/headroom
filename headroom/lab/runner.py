@@ -720,12 +720,28 @@ def run_script(
     seed: int = 1337,
     device: str = "cuda",
     allocator_conf: str | None = None,
+    reference_offload_bytes: int | None = None,
+    reference_offload_disk_bytes: int = 0,
 ) -> dict:
+    script_args = () if script_args is None else script_args
     script = Path(script).resolve(strict=True)
     source = Path(source_root).resolve(strict=True) if source_root is not None else script.parent
     if not script.is_file() or not script.is_relative_to(source):
         raise ValueError("script must be a file inside source_root")
     relative = script.relative_to(source)
+    if reference_offload_disk_bytes and reference_offload_bytes is None:
+        raise ValueError("Disk reference requires an explicit CPU staging byte budget")
+    if reference_offload_bytes is not None:
+        from headroom.verify.offload import validate_limit
+        from headroom.verify.offload_disk import validate_disk_limit
+        from headroom.verify.pairing import source_contract
+
+        validate_limit(reference_offload_bytes)
+        validate_disk_limit(reference_offload_disk_bytes)
+        if execution_argv is not None or execution_entrypoint is not None:
+            raise ValueError("Reference offload supports standalone run_script only")
+        if not source_contract(script).get("supported"):
+            raise ValueError("Reference offload requires a reviewed standalone source contract")
     if execution_entrypoint is not None and execution_argv is None:
         raise ValueError("Captured entrypoint requires the original wrapper argv")
     if execution_argv is not None:
@@ -815,9 +831,13 @@ def run_script(
         "--device",
         device,
     ]
+    if reference_offload_bytes is not None:
+        command.extend(["--reference-offload-bytes", str(reference_offload_bytes)])
+    if reference_offload_disk_bytes:
+        command.extend(["--reference-offload-disk-bytes", str(reference_offload_disk_bytes)])
     if script_args:
         command.extend(["--", *script_args])
-    return _run(
+    result = _run(
         source_root=source,
         command=command,
         script_relative=relative,
@@ -828,6 +848,48 @@ def run_script(
         device=device,
         allocator_conf=allocator_conf,
     )
+    if reference_offload_bytes is not None:
+        import hashlib
+
+        from headroom.verify.offload import PROTOCOL, STRATEGY
+        from headroom.verify.offload_disk import cleanup_spill
+
+        if reference_offload_disk_bytes:
+            if result.get("cleanup_verified") is True:
+                directory = Path(
+                    result.get("target_artifact_dir") or Path(result["run_dir"]) / "artifacts"
+                )
+                result["reference_spill_cleanup"] = cleanup_spill(directory)
+            else:
+                result["reference_spill_cleanup"] = {
+                    "verified": False,
+                    "errors": ["Container stop not verified; no host cleanup attempted"],
+                }
+            _write_json(
+                Path(result["run_dir"]) / "reference-spill-cleanup.json",
+                result["reference_spill_cleanup"],
+            )
+        try:
+            artifact = Path(result["target_artifact_dir"]) / "reference-offload.json"
+            evidence = read_artifact_json(artifact)
+            if not isinstance(evidence, dict):
+                raise TypeError("Offload provenance must be a JSON object")
+            verified = (
+                evidence.get("protocol") == PROTOCOL
+                and evidence.get("mode") == STRATEGY
+                and evidence.get("source_sha256") == hashlib.sha256(script.read_bytes()).hexdigest()
+                and evidence.get("script_args") == list(script_args)
+                and evidence.get("max_saved_bytes") == reference_offload_bytes
+                and evidence.get("max_disk_bytes", 0) == reference_offload_disk_bytes
+            )
+            result["reference_offload"] = {**evidence, "request_verified": verified}
+        except (OSError, ValueError, TypeError, KeyError) as error:
+            result["reference_offload"] = {
+                "request_verified": False,
+                "reason": "offload provenance unavailable: " + str(error),
+            }
+        _write_json(Path(result["run_dir"]) / "result.json", result)
+    return result
 
 
 def run_command(

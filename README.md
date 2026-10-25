@@ -9,6 +9,8 @@ Public demo: pending approved hostname and deployment. Local app: `headroom serv
 Video: one verified repair is available; owner recording remains pending.
 [Current results](docs/RESULTS.md) · [CLI and project config](docs/CLI.md) · [Task status](PROGRESS.md) · [Original plan](docs/PLAN.md)
 
+[Independent research and implemented fixes](reports/research-solutions-20261025/summary.md): the retained s4 candidate now has supplemental original-batch, 20-update numerical evidence through bounded disk offload. Request auditing and invocation grounding are implemented; the historical nine-case score remains unchanged.
+
 ## How it works
 
 ```mermaid

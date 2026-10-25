@@ -2,11 +2,37 @@
 
 Canonical plan: `docs/PLAN.md` is immutable and matches the supplied attachment.
 
-## Approved changes
+## Current authorization — 2026-10-25 independent research and fixes
+
+Frank subsequently instructed: independently research all pending discussion items,
+verify public/large-company approaches, implement solutions where supported, and
+bring only unresolved items back for discussion. This supersedes the preceding
+discussion-only sequencing instruction. It permits these implementation repairs
+and bounded validation; it does not silently redefine the original targets,
+retroactively rescore v7, or authorize unlimited new full campaigns.
+
+This update retains the canonical PLAN.md and existing MVP manifest bytes.
+The new original-workload saved-tensor offload reference is an explicit opt-in
+protocol with its own provenance; the default legacy numerical behavior stays
+available. The s2 feasibility audit reports an incompatible combination of
+fixed-fixture requirements rather than lowering the 40% gate. Existing explicit
+allow_precision policy remains necessary for BF16 candidates. Diagnosis evidence
+contracts share the existing bounded supplement allowance, and request capture
+does not expand the spending pool. Frank has separately authorized subsequent
+model calls within existing gifted credit only, with no recharge or overrun; the
+earlier account-setup restrictions below are historical, not a new approval gate.
+
+Implementation and validation evidence are collected in
+reports/research-solutions-20261025/ and the adjacent independent research reports.
+The older sections below record their historical authorization state; current
+authorization and current validation receipts take precedence over stale account
+setup or pending-work descriptions.
+
+## Historical approval state — 2026-10-23
 
 No acceptance or feature-scope changes. On 2026-10-23 Frank explicitly requested retaining the original plan and discussing the proposed corrections individually later. No proposed acceptance correction is approved for implementation.
 
-## Current sequencing instruction
+## Historical account-setup sequencing — 2026-10-23
 
 After stopping the competing GPU service, Frank said to continue other work while he registers accounts. API-independent Lab and evidence-pack implementation proceeds under that instruction. T0.1/T0.4/T0.5 remain pending; their live acceptance is not inferred from offline work. This does not authorize paid calls or any pending acceptance correction.
 
@@ -17,7 +43,7 @@ After stopping the competing GPU service, Frank said to continue other work whil
   stop for Frank.
 - T0.1 explicitly permits work on T0.2, T0.3 and T0.6 while keys are pending.
 
-## Pending decisions
+## Historical pending decisions — 2026-10-23
 
 - True peak reconstruction and valid paired numerical comparisons.
 - Distinguish cached free memory from demonstrated fragmentation.
@@ -26,7 +52,7 @@ After stopping the competing GPU service, Frank said to continue other work whil
 
 No pending proposal is treated as an approved change or as a passed acceptance check.
 
-## Implementation versus pending plan changes
+## Historical implementation versus pending plan changes — 2026-10-23
 
 T1.2 reconstructs the true peak because existing section C.4 already requires
 blocks alive at the peak. Its high cache-gap flag is retained as required, with

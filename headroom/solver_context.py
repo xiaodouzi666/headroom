@@ -91,6 +91,226 @@ def prompt_arguments(values, max_bytes=4096):
     }
 
 
+def invocation_observation(context, source, index=None):
+    """Resolve only literal visible argv tokens, without running/parsing target code.
+
+    Complete argv does not establish the target's effective configuration. Unknown
+    fields, truncated tails, and redacted positions cannot disprove a model's claim.
+    """
+    if source not in ("script_args", "execution_argv") or not isinstance(context, Mapping):
+        return "unsupported", None
+    arguments = context.get(source)
+    if not isinstance(arguments, Mapping):
+        return "unsupported", None
+    values = arguments.get("values")
+    if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
+        return "unsupported", None
+    redacted = arguments.get("redacted_positions")
+    if not isinstance(redacted, list) or any(type(i) is not int for i in redacted):
+        return "unverified", None
+    complete = (
+        arguments.get("complete") is True and arguments.get("omitted_count") == 0 and not redacted
+    )
+    if index is None:
+        return ("available", None) if complete else ("unverified", None)
+    if type(index) is not int or index < 0:
+        return "unsupported", None
+    if index in redacted:
+        return "unverified", None
+    if index < len(values):
+        return "available", values[index]
+    return ("absent", None) if complete else ("unverified", None)
+
+
+def invocation_reading_aid(context):
+    """A bounded lexical view; never parse CLI semantics or select duplicate winners."""
+    context = context if isinstance(context, Mapping) else {}
+    arguments = context.get("script_args")
+    arguments = arguments if isinstance(arguments, Mapping) else {}
+    visible = prompt_arguments(arguments.get("values"))
+    values = visible["values"] or []
+    original_redacted = arguments.get("redacted_positions")
+    redaction_known = isinstance(original_redacted, list) and all(
+        type(index) is int and index >= 0 for index in original_redacted
+    )
+    redacted = set(visible["redacted_positions"])
+    if redaction_known:
+        redacted.update(original_redacted)
+    original_omitted = arguments.get("omitted_count")
+    if type(original_omitted) is not int or not 0 <= original_omitted <= 1000000:
+        original_omitted = None
+    first_state, first = invocation_observation(context, "execution_argv", 0)
+    first_safe = prompt_arguments([first]) if first_state == "available" else None
+    first_visible = _text(first, 256) if first_safe is not None and first_safe["complete"] else None
+    script = _text(context.get("script"), 256)
+    truncated_fields = context.get("truncated_fields", [])
+    script_complete = (
+        isinstance(context.get("script"), str)
+        and script == context["script"]
+        and isinstance(truncated_fields, list)
+        and "script" not in truncated_fields
+    )
+    aid = {
+        "schema": "headroom.literal_invocation_view.v1",
+        "basis": "visible_script_args_tokens_only",
+        "target_effective_configuration": "unverified",
+        "recorded_script_entrypoint": script if script_complete else None,
+        "recorded_script_entrypoint_complete": script_complete,
+        "launch_argv_first_token": first_visible,
+        "launch_token_complete": first_visible is not None and first_visible == first,
+        "launch_scope": "execution_argv[0] is the first launch token: interpreter, launcher or directly executable script; do not assume it equals the recorded script entrypoint",
+        "assignments": [],
+        "unsupported_tokens": [],
+        "unknown_token_indices": [],
+        "script_args_complete": (
+            arguments.get("complete") is True
+            and visible["complete"] is True
+            and original_omitted == 0
+            and redaction_known
+            and not redacted
+        ),
+        "source_omitted_tokens": original_omitted,
+        "bounded_input_omitted_tokens": visible["omitted_count"],
+        "view_complete": True,
+        "view_omitted_visible_tokens": 0,
+        "interpretation": "Only --name=value is split lexically; values stay strings. Repeats retain original indices/order; no precedence, space-option, boolean or target parser semantics inferred.",
+    }
+    pattern = re.compile(r"^--([A-Za-z_][A-Za-z0-9_.-]*)=([\s\S]*)$")
+    for index, token in enumerate(values):
+        if not redaction_known or index in redacted or "[redacted]" in token:
+            field, item = "unknown_token_indices", index
+        else:
+            match = pattern.fullmatch(token)
+            if match:
+                field, item = (
+                    "assignments",
+                    {"index": index, "option": "--" + match[1], "value": match[2], "token": token},
+                )
+            else:
+                field, item = "unsupported_tokens", {"index": index, "token": token}
+        aid[field].append(item)
+        if len(json.dumps(aid, ensure_ascii=True, allow_nan=False).encode()) > 4000:
+            aid[field].pop()
+            aid["view_complete"] = False
+            aid["view_omitted_visible_tokens"] = len(values) - index
+            break
+    # Reserve above leaves room for bounded omission counts. No raw secret value
+    # or redacted token is copied into the reading aid.
+    return bounded_json(aid, 4096, "invocation_reading_aid")
+
+
+def runtime_input_observations(result, source_files, *, selected_round=None, required_steps=20):
+    """Expose existing measured input/update facts, bound to the retained source.
+
+    The existing pairing adapter has a narrow reviewed source contract. This
+    function never derives dimensions from that contract or from source defaults.
+    """
+    from headroom.verify.pairing import CONTRACTS, PROTOCOL
+
+    base = {
+        "status": "unsupported",
+        "scope": "captured_named_tensors_and_optimizer_updates_only",
+        "target_effective_configuration": "unverified",
+        "selected_round": selected_round,
+    }
+
+    def unknown(reason, status="unverified"):
+        return {**base, "status": status, "reason": reason}
+
+    if not isinstance(result, Mapping):
+        return unknown("retained runtime result unavailable", "unsupported")
+    capture = result.get("pairing_capture")
+    if not isinstance(capture, Mapping) or capture.get("protocol") != PROTOCOL:
+        return unknown("supported runtime input capture unavailable", "unsupported")
+    contract = capture.get("source_contract")
+    if not isinstance(contract, Mapping):
+        return unknown("runtime source contract unavailable", "unsupported")
+    profile = contract.get("profile")
+    known = CONTRACTS.get(profile) if isinstance(profile, str) else None
+    if (
+        known is None
+        or contract.get("supported") is not True
+        or contract.get("contract_sha256") != known["digest"]
+        or contract.get("tensor_names") != list(known["inputs"])
+    ):
+        return unknown("runtime source contract unsupported", "unsupported")
+    source_sha = _sha(contract.get("source_sha256"))
+    if not isinstance(source_files, (list, tuple)):
+        return unknown("retained source catalog unavailable")
+    pinned = {_sha(item.get("sha256")) for item in source_files if isinstance(item, Mapping)}
+    if source_sha is None or source_sha not in pinned:
+        return unknown("runtime input source does not match retained evidence source")
+    run_id = result.get("run_id")
+    if not isinstance(run_id, str) or not run_id or _text(run_id, 128) != run_id:
+        return unknown("retained runtime run identity unavailable")
+    base.update(selected_run_id=run_id, source_sha256=source_sha, protocol=PROTOCOL)
+    updates = capture.get("updates")
+    if not (
+        capture.get("complete") is True
+        and result.get("capture_complete") is True
+        and type(required_steps) is int
+        and 1 <= required_steps <= 10000
+        and type(result.get("steps")) is int
+        and result["steps"] == required_steps
+        and isinstance(updates, list)
+        and len(updates) == required_steps
+    ):
+        return unknown("runtime input/update coverage incomplete")
+    tensors = capture.get("tensors")
+    if not isinstance(tensors, Mapping):
+        return unknown("runtime tensor metadata unavailable")
+    observed = {}
+    for name in known["inputs"]:
+        tensor = tensors.get(name)
+        if not isinstance(tensor, Mapping):
+            return unknown("runtime tensor metadata incomplete")
+        shape, dtype, digest = tensor.get("shape"), tensor.get("dtype"), _sha(tensor.get("sha256"))
+        if not (
+            isinstance(shape, list)
+            and 1 <= len(shape) <= 16
+            and all(type(dim) is int and 0 < dim <= 2**63 - 1 for dim in shape)
+            and isinstance(dtype, str)
+            and dtype
+            and _text(dtype, 64) == dtype
+            and digest is not None
+        ):
+            return unknown("runtime tensor metadata invalid")
+        observed[name] = {"shape": shape, "dtype": dtype, "sha256": digest}
+    optimizer_input = known["inputs"][0]
+    expected_batch = observed[optimizer_input]["shape"][0]
+    for number, update in enumerate(updates, 1):
+        if not isinstance(update, Mapping) or any(
+            type(update.get(key)) is not int or update[key] != value
+            for key, value in (
+                ("step", number),
+                ("effective_batch", expected_batch),
+                ("training_forwards", 1),
+                ("backwards", 1),
+            )
+        ):
+            return unknown("runtime optimizer input association incomplete")
+    return bounded_json(
+        {
+            **base,
+            "status": "observed",
+            "required_optimizer_updates": required_steps,
+            "observed_optimizer_updates": len(updates),
+            "optimizer_input_name": optimizer_input,
+            "effective_batch_per_optimizer_update": expected_batch,
+            "training_forwards_per_optimizer_update": 1,
+            "backwards_per_optimizer_update": 1,
+            "tensors": observed,
+            "limitations": [
+                "Only the retained run and source are represented; this is not a reference/candidate equivalence check.",
+                "Other named tensors were captured at initialization; their forward use is not separately counted.",
+                "Pinned standalone adapter and cooperative target only; arbitrary runtime configuration remains unverified.",
+            ],
+        },
+        4096,
+        "runtime_input_observations",
+    )
+
+
 def execution_context(
     *,
     script,
@@ -103,6 +323,7 @@ def execution_context(
     max_steps,
     device,
     allocator_conf,
+    runtime_result=None,
 ):
     """Describe the retained invocation, independently from defaults found in source."""
     sources = []
@@ -129,11 +350,19 @@ def execution_context(
         "basis": "effective_retained_invocation",
         "content_is_untrusted_data": True,
         "source_defaults_are_not_effective_configuration": True,
+        "configuration_resolution": {
+            "status": "unverified",
+            "basis": "retained_invocation_not_target_runtime_state",
+            "runtime_values_verified": False,
+        },
         "selected_round": selected_round,
         "script": _text(str(script), 256),
         "script_args": prompt_arguments(script_args),
         "execution_argv": prompt_arguments(execution_argv) if execution_argv is not None else None,
         "repository_mode": repository_mode is True,
+        "runtime_input_observations": runtime_input_observations(
+            runtime_result, source_files, selected_round=selected_round, required_steps=max_steps
+        ),
         "seed": seed if type(seed) is int else None,
         "required_optimizer_updates": max_steps if type(max_steps) is int else None,
         "device": _text(device, 64),
@@ -349,6 +578,7 @@ def solver_prompt_context(
     """
     fields = {}
     if execution_context is not None:
+        fields["invocation_reading_aid"] = invocation_reading_aid(execution_context)
         fields["execution_context"] = bounded_json(
             execution_context, MAX_EXECUTION_BYTES, "execution_context"
         )
@@ -403,7 +633,7 @@ def solver_prompt_context(
                 fields[field] = kept
         availability["complete"] = False
         if not removed:
-            # The bounded execution object alone is <= 3x16KB after ASCII escaping.
+            # Bounded execution plus the <=4KB lexical aid fits after ASCII escaping.
             # This is an invariant check, never a path for oversized run history.
             raise ValueError("execution_context cannot fit the combined solver bound")
     return fields

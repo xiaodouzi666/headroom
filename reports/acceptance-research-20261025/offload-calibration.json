@@ -1,0 +1,102 @@
+[
+  {
+    "device": "cpu",
+    "normal_run": "/home/xiaodouzi/workspace/headroom/runs/research/offload-reference-20261025/fe1acdaf099a4662afd249aa66fe4e38",
+    "offload_run": "/home/xiaodouzi/workspace/headroom/runs/research/offload-reference-20261025/cbf82b6b19b443c7a3ee6ff364e804e8",
+    "normal_status": "completed",
+    "offload_status": "completed",
+    "normal_steps": 20,
+    "offload_steps": 20,
+    "max_loss_delta": 0.0,
+    "pairing": {
+      "protocol": "headroom.pairing.v1",
+      "checks": {
+        "same_inputs": true,
+        "same_effective_batch": true,
+        "same_objective": true
+      },
+      "reasons": [],
+      "source": "Lab runtime fingerprints and pinned source contracts",
+      "reference_run": "fe1acdaf099a4662afd249aa66fe4e38",
+      "candidate_run": "cbf82b6b19b443c7a3ee6ff364e804e8"
+    },
+    "offload": {
+      "protocol": "headroom.reference_saved_tensor_offload.v1",
+      "mode": "original_saved_tensor_offload",
+      "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+      "script_args": [
+        "--tiny",
+        "--batch",
+        "2",
+        "--steps",
+        "20",
+        "--device",
+        "cpu"
+      ],
+      "torch": "2.5.1+cu124",
+      "pin_memory": false,
+      "max_saved_bytes": 17179869184,
+      "entered": true,
+      "exited": true,
+      "failure": null,
+      "packed_tensors": 420,
+      "unpacked_tensors": 420,
+      "cuda_copies": 0,
+      "live_saved_bytes": 0,
+      "peak_saved_bytes": 0,
+      "performance_comparable": false,
+      "request_verified": true
+    },
+    "note": "Tiny source/argv calibration only; not full workload or nine-scenario acceptance."
+  },
+  {
+    "device": "cuda",
+    "normal_run": "/home/xiaodouzi/workspace/headroom/runs/research/offload-reference-20261025/59dcaae510de44dfbc2af3d1f392fd8b",
+    "offload_run": "/home/xiaodouzi/workspace/headroom/runs/research/offload-reference-20261025/5090a758781346e9ab49b4414f227226",
+    "normal_status": "completed",
+    "offload_status": "completed",
+    "normal_steps": 20,
+    "offload_steps": 20,
+    "max_loss_delta": 0.0,
+    "pairing": {
+      "protocol": "headroom.pairing.v1",
+      "checks": {
+        "same_inputs": true,
+        "same_effective_batch": true,
+        "same_objective": true
+      },
+      "reasons": [],
+      "source": "Lab runtime fingerprints and pinned source contracts",
+      "reference_run": "59dcaae510de44dfbc2af3d1f392fd8b",
+      "candidate_run": "5090a758781346e9ab49b4414f227226"
+    },
+    "offload": {
+      "protocol": "headroom.reference_saved_tensor_offload.v1",
+      "mode": "original_saved_tensor_offload",
+      "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+      "script_args": [
+        "--tiny",
+        "--batch",
+        "2",
+        "--steps",
+        "20",
+        "--device",
+        "cuda"
+      ],
+      "torch": "2.5.1+cu124",
+      "pin_memory": false,
+      "max_saved_bytes": 17179869184,
+      "entered": true,
+      "exited": true,
+      "failure": null,
+      "packed_tensors": 420,
+      "unpacked_tensors": 420,
+      "cuda_copies": 420,
+      "live_saved_bytes": 2150400,
+      "peak_saved_bytes": 2150400,
+      "performance_comparable": false,
+      "request_verified": true
+    },
+    "note": "Tiny source/argv calibration only; not full workload or nine-scenario acceptance."
+  }
+]

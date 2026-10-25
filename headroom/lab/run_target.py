@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import runpy
 import sys
@@ -20,6 +21,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-seconds", type=float, default=120)
     parser.add_argument("--seed", type=int, default=1337)
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
+    parser.add_argument("--reference-offload-bytes", type=int)
+    parser.add_argument("--reference-offload-disk-bytes", type=int, default=0)
     parser.add_argument("script_args", nargs=argparse.REMAINDER)
     args = parser.parse_args(argv)
     target_args = args.script_args[1:] if args.script_args[:1] == ["--"] else args.script_args
@@ -45,7 +48,19 @@ def main(argv: list[str] | None = None) -> int:
         sys.path.insert(0, str(script.parent))
         session.pairing_capture = PairingCapture(script)
         session.pairing_capture.install()
-        runpy.run_path(str(script), run_name="__main__")
+        context = contextlib.nullcontext()
+        if args.reference_offload_bytes is not None:
+            from headroom.verify.offload import SavedTensorOffload
+
+            context = SavedTensorOffload(
+                script,
+                target_args,
+                session.output_dir,
+                args.reference_offload_bytes,
+                args.reference_offload_disk_bytes,
+            )
+        with context:
+            runpy.run_path(str(script), run_name="__main__")
     except SystemExit as exc:
         if exc.code is None or exc.code == 0:
             result = session.finish()

@@ -8,6 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from headroom.verify.offload import LEGACY_STRATEGY, STRATEGY, reference_proof
 from headroom.verify.precision import derive_precision
 
 # Original-plan acceptance gates. Diagnostic observations (including optional
@@ -143,12 +144,15 @@ def compare_runs(
     required_steps=20,
     reclaim_reduction_pct=30,
     acceptance_scope="standard",
+    reference_strategy=LEGACY_STRATEGY,
 ) -> VerifyReport:
     """Apply PLAN C.5, with the explicit T1.9 repository no-reference exception.
 
     Loss states describe the prescribed observed scalar comparison, not a proof
     of workload equivalence. Stronger pairing observations remain diagnostic.
     """
+    if reference_strategy not in {LEGACY_STRATEGY, STRATEGY}:
+        raise ValueError("Unknown numerical reference strategy")
     mode, fit_bytes = parse_target(target)
     if acceptance_scope not in {"standard", "repository"}:
         raise ValueError("Unsupported acceptance scope")
@@ -292,6 +296,28 @@ def compare_runs(
     checks["loss_series_aligned_to_updates"] = aligned_to_updates
     checks["loss_series_comparison_available"] = bool(series_usable)
     comparable = reference_valid and reference_seed and checks["same_seed"] and series_usable
+    if baseline_oom and reference_strategy == STRATEGY:
+        proof = reference_proof(reference, candidate, required_steps, baseline=baseline)
+        checks["original_workload_offload_reference"] = proof["valid"]
+        for name in ("same_inputs", "same_effective_batch", "same_objective"):
+            checks[name] = proof["checks"][name]
+        comparable = comparable and proof["valid"]
+        numerical_basis = "original_workload_offload_first_five_backward_scalars"
+        notes = [
+            note
+            for note in notes
+            if note
+            != "OOM comparison uses the original small-batch reference's first five backward scalars."
+        ]
+        notes.append(
+            "Opt-in original-workload reference preserves argv/batch and uses lossless "
+            "saved-tensor CPU copies. Its memory and timing do not score the candidate."
+        )
+        if not proof["valid"]:
+            notes.append(
+                "Original-workload reference unavailable: "
+                + ", ".join(name for name, passed in proof["checks"].items() if passed is not True)
+            )
     # Retain stronger evidence without inventing it for generic user programs.
     checks["loss_comparable"] = bool(
         comparable
