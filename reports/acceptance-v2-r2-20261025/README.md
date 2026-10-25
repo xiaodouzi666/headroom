@@ -1,3 +1,5 @@
+> Final r2 result: target3/9; independently valid correct first cause4/9, two unknown truths. Both six-required gates remain unpassed. All9 CLI chains and297 source entries verified. Conservative incremental charge$1.29478102. See [independent-audit-summary.md](independent-audit-summary.md). The preparation snapshot below is retained.
+
 # Protocol-v2 repair round 2: qualified source, then independent evaluation
 
 This is the second bounded repair iteration after the approved protocol-v2 baseline. The historical v7 1/9, protocol-v2 baseline 1/9, and r1 3/9 target results remain unchanged. The new campaign must still contain exactly nine strict cases and independently reach both six target successes and six valid correct first causes. Human controls and previous successes cannot fill this campaign's numerator.

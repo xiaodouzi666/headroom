@@ -1,3 +1,12 @@
+## Protocol-v2 repair r2 — 2026-10-25
+
+Independent final result: target3/9; valid correct first cause4/9 plus2 unknown
+truths. Raw category matching (6 of7 known labels) is not the validated cause gate.
+No historical successes or controls are added to this numerator. Source3e8281e,
+full regression2825/297unchanged, complete9 CLI chains, conservative charge
+$1.29478102. All historical charges and scores preserved; no recharge.
+See ../reports/acceptance-v2-r2-20261025/independent-audit-summary.md.
+
 # Results
 
 The protocol-v2 repair iteration 1 is complete at source aa42ef5: **3/9 targets

@@ -1,3 +1,15 @@
+## Protocol-v2 repair r2 completed — 2026-10-25
+
+Fixed-nine target3/9 (s1/s3/s4); independently valid correct first cause4/9 with2
+unknown truths. Original6+6 gates remain unmet. All9 CLI chains and297 source
+entries verified; no source/artifact drift. 56calls conservative$1.29478102,
+including$0.02688174 unknown charges retained. Runtime lifetime remaining
+$6.282554344, same-day remaining$5.182339516; no recharge or new pool.
+R3 private candidates address Super output truncation, undefined-name checking,
+planning/verification phase confusion, reference clarity and annotation input.
+They have not yet been integrated or accepted. Phase2 remains unexecuted.
+See reports/acceptance-v2-r2-20261025/independent-audit-summary.md.
+
 ## Protocol-v2 repair r2 source qualified — 2026-10-25
 
 R2 full guarded backend regression passed 2825 tests in 742.79 seconds with all
