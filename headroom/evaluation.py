@@ -366,7 +366,9 @@ def _policy_summary(rows):
     targets = [row for row in rows if isinstance(row.get("target_met"), bool)]
     truths = [row for row in rows if isinstance(row.get("first_cause_matches"), bool)]
     correct = sum(row["first_cause_matches"] for row in truths)
-    known = _decimal_sum(money(row["cost_usd"]) for row in rows if row.get("cost_usd") is not None)
+    known = _decimal_sum(
+        money(value) for row in rows if (value := known_cost_subtotal(row)) is not None
+    )
     unknown = sum(row.get("cost_usd") is None for row in rows)
     return {
         "attempted": len(rows),
@@ -607,6 +609,27 @@ def _cost(usage):
         return None
     try:
         return str(money(total)) if total is not None else None
+    except (ValueError, TypeError, ArithmeticError):
+        return None
+
+
+def known_cost_subtotal(row):
+    """Known actual charges only, including partial runs; never an upper bound.
+
+    Older campaign rows kept the subtotal only inside usage. New/public rows
+    expose this single allowlisted amount without publishing the usage payload.
+    An exact row total takes precedence and is not counted twice.
+    """
+    exact = row.get("cost_usd")
+    if exact is not None:
+        return str(money(exact))
+    value = (
+        row["known_cost_usd"]
+        if "known_cost_usd" in row
+        else _dict(row.get("usage")).get("known_cost_usd")
+    )
+    try:
+        return str(money(value)) if value is not None else None
     except (ValueError, TypeError, ArithmeticError):
         return None
 
@@ -975,6 +998,7 @@ def result_row(case, condition, result, usage, *, provenance):
         "elapsed_seconds": _number(_dict(document.get("run")).get("elapsed_seconds")),
         "usage": usage,
         "cost_usd": _cost(usage),
+        "known_cost_usd": known_cost_subtotal({"cost_usd": _cost(usage), "usage": usage}),
         **_billing_fields(usage),
         "evidence": {
             side: _dict(_dict(document.get("evidence")).get(side)).get("evidence_json")
@@ -992,7 +1016,7 @@ def summarize(rows):
     eligible = [r for r in measured if isinstance(r.get("target_met"), bool)]
     known_truth = [r for r in measured if isinstance(r.get("first_cause_matches"), bool)]
     known_cost = _decimal_sum(
-        money(r["cost_usd"]) for r in measured if r.get("cost_usd") is not None
+        money(value) for row in measured if (value := known_cost_subtotal(row)) is not None
     )
     unresolved = sum(r.get("cost_usd") is None for r in measured)
     return {

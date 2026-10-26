@@ -1,0 +1,73 @@
+{
+  "source_tree_sha256": {
+    "baseline": "bf3ba67928dd035b14ae5324e6d5435553d6141e5a4c4d8e08617a17caa2a6c9",
+    "candidate": "7dd0a45fb77303b331980db3d21f9a4c2b2790f8044f2d99660b2519d5490daa"
+  },
+  "patch_sha256": "e70cafac43dc810b8f4e69982764eb5e454b89ccb2c6043e09d5e3a8df3bffb1",
+  "workload": {
+    "profile": "s3",
+    "contract_sha256": "0cf09407bc09810ccd15da2c71e73c8ddc2d17827f3498dda5c9bf86bd6d066e",
+    "inputs_sha256": "cc7b5487963159f4955c6cd261240c7b5cebf8106b88bcd3f36690e3e2ca130d",
+    "initial_parameters_sha256": "7520184176100cb4313d5167354cd23fd91664e7bb5c7b6e5d23cfdd4195fb61",
+    "updates_sha256": "ebf673183050a9e0736ceda92979150263a266f93cf48e5b32f2565c3ef0189d"
+  },
+  "original_argv": [],
+  "effective_argv": [],
+  "target": "reclaim",
+  "reclaim_reduction_pct": 20.0,
+  "required_steps": 20,
+  "max_seconds": 120,
+  "device": "cuda",
+  "policy": {
+    "allow_numerics_change": false,
+    "allow_model_change": false,
+    "allow_batch_grad_accum": true,
+    "allow_batch_change": null,
+    "allow_grad_accum": null,
+    "max_throughput_regression_pct": 25.0
+  },
+  "environment": {
+    "baseline": {
+      "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+      "torch": "2.5.1+cu124",
+      "cuda": "12.4",
+      "gpu_name": "NVIDIA GeForce RTX 3090 Ti",
+      "cudnn": 90100,
+      "gpu_total_memory_bytes": 25283526656,
+      "seed": 1337,
+      "image_id": "sha256:89fc0bd6ed5d7e95ed73d6e377e6e6e740ba3002cefeacabbdeeff9ad9c331db",
+      "device": "cuda",
+      "allocator_conf": null,
+      "deterministic_algorithms": true,
+      "seeded": {
+        "python": true,
+        "torch": true,
+        "numpy": true
+      },
+      "CUBLAS_WORKSPACE_CONFIG": ":4096:8"
+    },
+    "candidate": {
+      "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+      "torch": "2.5.1+cu124",
+      "cuda": "12.4",
+      "gpu_name": "untested GPU",
+      "cudnn": 90100,
+      "gpu_total_memory_bytes": 25283526656,
+      "seed": 1337,
+      "image_id": "sha256:89fc0bd6ed5d7e95ed73d6e377e6e6e740ba3002cefeacabbdeeff9ad9c331db",
+      "device": "cuda",
+      "allocator_conf": null,
+      "deterministic_algorithms": true,
+      "seeded": {
+        "python": true,
+        "torch": true,
+        "numpy": true
+      },
+      "CUBLAS_WORKSPACE_CONFIG": ":4096:8"
+    }
+  },
+  "observed_precision": {
+    "baseline": "fp32",
+    "candidate": "fp32"
+  }
+}

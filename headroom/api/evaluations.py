@@ -9,7 +9,13 @@ from fastapi import APIRouter, HTTPException
 
 from headroom.api.security import open_regular
 from headroom.budget import money
-from headroom.evaluation import CONDITIONS, SEARCH_MODES, campaign_tables, public_outcomes
+from headroom.evaluation import (
+    CONDITIONS,
+    SEARCH_MODES,
+    campaign_tables,
+    known_cost_subtotal,
+    public_outcomes,
+)
 
 IDENTIFIER = re.compile(r"[a-z0-9][a-z0-9_-]{0,63}\Z")
 LABEL = re.compile(r"[A-Za-z0-9][A-Za-z0-9_. -]{0,99}\Z")
@@ -117,6 +123,7 @@ def _public_row(row, provenance):
         )
     except (TypeError, ValueError, ArithmeticError):
         result["cost_usd"] = None
+    result["known_cost_usd"] = known_cost_subtotal({**row, "cost_usd": result["cost_usd"]})
     result["billing_complete"] = row.get("billing_complete", result["cost_usd"] is not None) is True
     result["cost_upper_usd"] = None
     result["cost_basis"] = "actual" if result["cost_usd"] is not None else None

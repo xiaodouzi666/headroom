@@ -221,3 +221,12 @@ These settings select verification methods; they do not grant precision changes,
 change acceptance scope, provide credentials or increase any spending limit.
 See [verification contracts](VERIFY.md) for supported source patterns and failure
 semantics.
+
+## Empirical repair-scope records
+
+`headroom scope build selections.json --evidence-root . --output scope.json`
+creates an immutable-by-default record of explicitly selected archived rounds.
+`headroom scope check scope.json query.json --evidence-root .` verifies the
+underlying evidence and performs an exact context lookup. Neither invokes
+models, targets or billing. Check exits 0 only for `tested_pass`, otherwise 78.
+See [Repair scope](REPAIR_SCOPE.md) for selection/query format and limitations.

@@ -1,0 +1,650 @@
+{
+  "protocol": "headroom.repair_scope.v1",
+  "selections": [
+    {
+      "job": "runs/evaluation/live/20261025T121115251021Z-2fe7da84/jobs/b6091354c73d43f88a10e50f01e4d5b2",
+      "round": 2
+    },
+    {
+      "job": "runs/repair-scope-controls-20261027/eval-batch-2",
+      "round": 1
+    },
+    {
+      "job": "runs/repair-scope-controls-20261027/eval-batch-16",
+      "round": 1
+    },
+    {
+      "job": "runs/repair-scope-controls-20261027/eval-batch-64",
+      "round": 1
+    }
+  ],
+  "observations": [
+    {
+      "selection": {
+        "job": "runs/evaluation/live/20261025T121115251021Z-2fe7da84/jobs/b6091354c73d43f88a10e50f01e4d5b2",
+        "round": 2
+      },
+      "context": {
+        "source_tree_sha256": {
+          "baseline": "bf3ba67928dd035b14ae5324e6d5435553d6141e5a4c4d8e08617a17caa2a6c9",
+          "candidate": "7dd0a45fb77303b331980db3d21f9a4c2b2790f8044f2d99660b2519d5490daa"
+        },
+        "patch_sha256": "e70cafac43dc810b8f4e69982764eb5e454b89ccb2c6043e09d5e3a8df3bffb1",
+        "workload": {
+          "profile": "s3",
+          "contract_sha256": "0cf09407bc09810ccd15da2c71e73c8ddc2d17827f3498dda5c9bf86bd6d066e",
+          "inputs_sha256": "cc7b5487963159f4955c6cd261240c7b5cebf8106b88bcd3f36690e3e2ca130d",
+          "initial_parameters_sha256": "7520184176100cb4313d5167354cd23fd91664e7bb5c7b6e5d23cfdd4195fb61",
+          "updates_sha256": "ebf673183050a9e0736ceda92979150263a266f93cf48e5b32f2565c3ef0189d"
+        },
+        "original_argv": [],
+        "effective_argv": [],
+        "target": "reclaim",
+        "reclaim_reduction_pct": 20.0,
+        "required_steps": 20,
+        "max_seconds": 120,
+        "device": "cuda",
+        "policy": {
+          "allow_numerics_change": false,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "allow_batch_change": null,
+          "allow_grad_accum": null,
+          "max_throughput_regression_pct": 25.0
+        },
+        "environment": {
+          "baseline": {
+            "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+            "torch": "2.5.1+cu124",
+            "cuda": "12.4",
+            "gpu_name": "NVIDIA GeForce RTX 3090 Ti",
+            "cudnn": 90100,
+            "gpu_total_memory_bytes": 25283526656,
+            "seed": 1337,
+            "image_id": "sha256:89fc0bd6ed5d7e95ed73d6e377e6e6e740ba3002cefeacabbdeeff9ad9c331db",
+            "device": "cuda",
+            "allocator_conf": null,
+            "deterministic_algorithms": true,
+            "seeded": {
+              "python": true,
+              "torch": true,
+              "numpy": true
+            },
+            "CUBLAS_WORKSPACE_CONFIG": ":4096:8"
+          },
+          "candidate": {
+            "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+            "torch": "2.5.1+cu124",
+            "cuda": "12.4",
+            "gpu_name": "NVIDIA GeForce RTX 3090 Ti",
+            "cudnn": 90100,
+            "gpu_total_memory_bytes": 25283526656,
+            "seed": 1337,
+            "image_id": "sha256:89fc0bd6ed5d7e95ed73d6e377e6e6e740ba3002cefeacabbdeeff9ad9c331db",
+            "device": "cuda",
+            "allocator_conf": null,
+            "deterministic_algorithms": true,
+            "seeded": {
+              "python": true,
+              "torch": true,
+              "numpy": true
+            },
+            "CUBLAS_WORKSPACE_CONFIG": ":4096:8"
+          }
+        },
+        "observed_precision": {
+          "baseline": "fp32",
+          "candidate": "fp32"
+        }
+      },
+      "status": "tested_pass",
+      "reasons": [
+        "All required observations hold at this exact recorded context."
+      ],
+      "metrics": {
+        "peak_before": 2.435717632,
+        "peak_after": 0.64841984,
+        "reduction_pct": 73.37869416876643,
+        "loss_equivalence": "identical",
+        "max_loss_delta": 0.0,
+        "throughput_regression_pct": 0.3200927051495661,
+        "target_met": true
+      },
+      "evidence": {
+        "runs/evaluation/live/20261025T121115251021Z-2fe7da84/jobs/b6091354c73d43f88a10e50f01e4d5b2/report.json": {
+          "sha256": "00d3c430246df6d960d85f5cf79f4394edbea95637edf0a2db4823ff3230a0ee",
+          "bytes": 1820427
+        },
+        "runs/evaluation/live/20261025T121115251021Z-2fe7da84/jobs/b6091354c73d43f88a10e50f01e4d5b2/configurations/round-02/manifest.json": {
+          "sha256": "93b77dd2216f4a751d6fd36f3c0033842ea723ac00d4a5784a2cd4e5e66178f2",
+          "bytes": 765
+        },
+        "runs/evaluation/live/20261025T121115251021Z-2fe7da84/jobs/b6091354c73d43f88a10e50f01e4d5b2/configurations/round-02/patch.diff": {
+          "sha256": "e70cafac43dc810b8f4e69982764eb5e454b89ccb2c6043e09d5e3a8df3bffb1",
+          "bytes": 527
+        },
+        "runs/evaluation/live/20261025T121115251021Z-2fe7da84/jobs/b6091354c73d43f88a10e50f01e4d5b2/configurations/round-02/cli.json": {
+          "sha256": "7e1565dbe5faa887109289bc9ae45706e3d5745f3032f682149ddac0d95e4bb5",
+          "bytes": 40
+        },
+        "runs/evaluation/live/20261025T121115251021Z-2fe7da84/jobs/b6091354c73d43f88a10e50f01e4d5b2/lab/977ccffc19e844d39c05ed69a16c2d78/result.json": {
+          "sha256": "d6a6f846b1550d8540fac3cd8e15be7d7febf817702237b4ccef3ccd5c56d2e1",
+          "bytes": 62365
+        },
+        "runs/evaluation/live/20261025T121115251021Z-2fe7da84/jobs/b6091354c73d43f88a10e50f01e4d5b2/lab/977ccffc19e844d39c05ed69a16c2d78/manifest.json": {
+          "sha256": "9cb3b070031bb2304606f68b4ac3575db4686b2cf3b42b3713474a667b12bcdb",
+          "bytes": 2667
+        },
+        "runs/evaluation/live/20261025T121115251021Z-2fe7da84/jobs/b6091354c73d43f88a10e50f01e4d5b2/lab/977ccffc19e844d39c05ed69a16c2d78/source/README.md": {
+          "sha256": "bc045fce13a50740804319d09c9f3cd59eb123fbc32210c1c3e47b6a3a06c212",
+          "bytes": 3994
+        },
+        "runs/evaluation/live/20261025T121115251021Z-2fe7da84/jobs/b6091354c73d43f88a10e50f01e4d5b2/lab/977ccffc19e844d39c05ed69a16c2d78/source/train.py": {
+          "sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+          "bytes": 4945
+        },
+        "runs/evaluation/live/20261025T121115251021Z-2fe7da84/jobs/b6091354c73d43f88a10e50f01e4d5b2/lab/98e7ad3800ab4ff78036c83a933eaf3f/result.json": {
+          "sha256": "916071a71882e4be0ec851697c260f78c965fba6cad6e44987fb3e20e5a1d478",
+          "bytes": 62326
+        },
+        "runs/evaluation/live/20261025T121115251021Z-2fe7da84/jobs/b6091354c73d43f88a10e50f01e4d5b2/lab/98e7ad3800ab4ff78036c83a933eaf3f/manifest.json": {
+          "sha256": "d74181864e69a1a1f58068ffd02079d234f94920abf8831f6badb23e52ed0c05",
+          "bytes": 2886
+        },
+        "runs/evaluation/live/20261025T121115251021Z-2fe7da84/jobs/b6091354c73d43f88a10e50f01e4d5b2/lab/98e7ad3800ab4ff78036c83a933eaf3f/source/README.md": {
+          "sha256": "bc045fce13a50740804319d09c9f3cd59eb123fbc32210c1c3e47b6a3a06c212",
+          "bytes": 3994
+        },
+        "runs/evaluation/live/20261025T121115251021Z-2fe7da84/jobs/b6091354c73d43f88a10e50f01e4d5b2/lab/98e7ad3800ab4ff78036c83a933eaf3f/source/train.py": {
+          "sha256": "618f0256c2c9c7531e1fa6dea70cae70bf19585fc412909d982a239df3d346f5",
+          "bytes": 4979
+        }
+      },
+      "provenance": "live"
+    },
+    {
+      "selection": {
+        "job": "runs/repair-scope-controls-20261027/eval-batch-2",
+        "round": 1
+      },
+      "context": {
+        "source_tree_sha256": {
+          "baseline": "f79c801073bb1100aa7cb18f8808d94dc6bfa6051eecf0a6a5365698c5b46be6",
+          "candidate": "16e5438e737665c4a18580ce672f2d1bc3c695370010cf1989684f143a261171"
+        },
+        "patch_sha256": "5bd5dd0d1e3e693ddb04fc1db457d087e8c9f711d5831fe0096900f5e9b4aeed",
+        "workload": {
+          "profile": "s3",
+          "contract_sha256": "0cf09407bc09810ccd15da2c71e73c8ddc2d17827f3498dda5c9bf86bd6d066e",
+          "inputs_sha256": "584edebdf75195605c773b57ad9487390cacfac31d312460338fca7baf6a9bad",
+          "initial_parameters_sha256": "85b0313e938be086529a531b6e06e6cbca07d41e0c44718ffde625aa2d07cc1b",
+          "updates_sha256": "ebf673183050a9e0736ceda92979150263a266f93cf48e5b32f2565c3ef0189d"
+        },
+        "original_argv": [
+          "--tiny",
+          "--device",
+          "cuda",
+          "--steps",
+          "20",
+          "--batch",
+          "2",
+          "--seed",
+          "7"
+        ],
+        "effective_argv": [
+          "--tiny",
+          "--device",
+          "cuda",
+          "--steps",
+          "20",
+          "--batch",
+          "2",
+          "--seed",
+          "7"
+        ],
+        "target": "reclaim",
+        "reclaim_reduction_pct": 20,
+        "required_steps": 20,
+        "max_seconds": 60,
+        "device": "cuda",
+        "policy": {
+          "allow_numerics_change": false,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "allow_batch_change": null,
+          "allow_grad_accum": null,
+          "max_throughput_regression_pct": 25
+        },
+        "environment": {
+          "baseline": {
+            "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+            "torch": "2.5.1+cu124",
+            "cuda": "12.4",
+            "gpu_name": "NVIDIA GeForce RTX 3090 Ti",
+            "cudnn": 90100,
+            "gpu_total_memory_bytes": 25283526656,
+            "seed": 1337,
+            "image_id": "sha256:89fc0bd6ed5d7e95ed73d6e377e6e6e740ba3002cefeacabbdeeff9ad9c331db",
+            "device": "cuda",
+            "allocator_conf": null,
+            "deterministic_algorithms": true,
+            "seeded": {
+              "python": true,
+              "torch": true,
+              "numpy": true
+            },
+            "CUBLAS_WORKSPACE_CONFIG": ":4096:8"
+          },
+          "candidate": {
+            "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+            "torch": "2.5.1+cu124",
+            "cuda": "12.4",
+            "gpu_name": "NVIDIA GeForce RTX 3090 Ti",
+            "cudnn": 90100,
+            "gpu_total_memory_bytes": 25283526656,
+            "seed": 1337,
+            "image_id": "sha256:89fc0bd6ed5d7e95ed73d6e377e6e6e740ba3002cefeacabbdeeff9ad9c331db",
+            "device": "cuda",
+            "allocator_conf": null,
+            "deterministic_algorithms": true,
+            "seeded": {
+              "python": true,
+              "torch": true,
+              "numpy": true
+            },
+            "CUBLAS_WORKSPACE_CONFIG": ":4096:8"
+          }
+        },
+        "observed_precision": {
+          "baseline": "fp32",
+          "candidate": "fp32"
+        }
+      },
+      "status": "tested_fail",
+      "reasons": [
+        "memory_target failed"
+      ],
+      "metrics": {
+        "peak_before": 0.068344832,
+        "peak_after": 0.06831616,
+        "reduction_pct": 0.04195196500007492,
+        "loss_equivalence": "identical",
+        "max_loss_delta": 0.0,
+        "throughput_regression_pct": -1.208889582699435,
+        "target_met": false
+      },
+      "evidence": {
+        "runs/repair-scope-controls-20261027/eval-batch-2/report.json": {
+          "sha256": "e77a8e15c7ddc68fa340135dcb05989e354102ad4f9bf9d59d2fcc2c97f56fe6",
+          "bytes": 3109
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-2/configurations/round-01/manifest.json": {
+          "sha256": "3927768e671cf8f597697a937f7b3852b564b041f5c652c4261b8594199ee43a",
+          "bytes": 329
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-2/configurations/round-01/patch.diff": {
+          "sha256": "5bd5dd0d1e3e693ddb04fc1db457d087e8c9f711d5831fe0096900f5e9b4aeed",
+          "bytes": 290
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-2/configurations/round-01/cli.json": {
+          "sha256": "a820b9ac03a083722fbf7e8c18712d8de1c1b870d54806d029ec673595221052",
+          "bytes": 272
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-2/lab/5aff09d2bd094a51ae0ef14c3c34e362/result.json": {
+          "sha256": "b2c0aa104eafddf5320ff4f244860eca22ba56c6ef25167aeb5f93b5ca9f8767",
+          "bytes": 36817
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-2/lab/5aff09d2bd094a51ae0ef14c3c34e362/manifest.json": {
+          "sha256": "0b29037f00827d404166b3d7265d95255394c82ab0a9b5ef13960537aea96c54",
+          "bytes": 2662
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-2/lab/5aff09d2bd094a51ae0ef14c3c34e362/source/train.py": {
+          "sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+          "bytes": 4945
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-2/lab/2ba6510979504687adb85f089a34a6cf/result.json": {
+          "sha256": "9e4da3f04d34bd6db5ce844b809855217373755838d5fa51ec971a7bfb28f671",
+          "bytes": 36814
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-2/lab/2ba6510979504687adb85f089a34a6cf/manifest.json": {
+          "sha256": "dbc1ef225398b0f648d3cbaddcf8de49a98264a61ed15d4688ee5cb42c7e08f0",
+          "bytes": 2663
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-2/lab/2ba6510979504687adb85f089a34a6cf/source/train.py": {
+          "sha256": "192819d69ff6261b28ca284cc3d9989e0098c8519d09775cd140d6eb5b3e0bd2",
+          "bytes": 4962
+        }
+      },
+      "provenance": "human_control"
+    },
+    {
+      "selection": {
+        "job": "runs/repair-scope-controls-20261027/eval-batch-16",
+        "round": 1
+      },
+      "context": {
+        "source_tree_sha256": {
+          "baseline": "f79c801073bb1100aa7cb18f8808d94dc6bfa6051eecf0a6a5365698c5b46be6",
+          "candidate": "16e5438e737665c4a18580ce672f2d1bc3c695370010cf1989684f143a261171"
+        },
+        "patch_sha256": "5bd5dd0d1e3e693ddb04fc1db457d087e8c9f711d5831fe0096900f5e9b4aeed",
+        "workload": {
+          "profile": "s3",
+          "contract_sha256": "0cf09407bc09810ccd15da2c71e73c8ddc2d17827f3498dda5c9bf86bd6d066e",
+          "inputs_sha256": "d3fecad313e46f9f673946aecdf5f4db7d478f2059990917ee2e39fad05b827f",
+          "initial_parameters_sha256": "85b0313e938be086529a531b6e06e6cbca07d41e0c44718ffde625aa2d07cc1b",
+          "updates_sha256": "ebf673183050a9e0736ceda92979150263a266f93cf48e5b32f2565c3ef0189d"
+        },
+        "original_argv": [
+          "--tiny",
+          "--device",
+          "cuda",
+          "--steps",
+          "20",
+          "--batch",
+          "16",
+          "--seed",
+          "7"
+        ],
+        "effective_argv": [
+          "--tiny",
+          "--device",
+          "cuda",
+          "--steps",
+          "20",
+          "--batch",
+          "16",
+          "--seed",
+          "7"
+        ],
+        "target": "reclaim",
+        "reclaim_reduction_pct": 20,
+        "required_steps": 20,
+        "max_seconds": 60,
+        "device": "cuda",
+        "policy": {
+          "allow_numerics_change": false,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "allow_batch_change": null,
+          "allow_grad_accum": null,
+          "max_throughput_regression_pct": 25
+        },
+        "environment": {
+          "baseline": {
+            "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+            "torch": "2.5.1+cu124",
+            "cuda": "12.4",
+            "gpu_name": "NVIDIA GeForce RTX 3090 Ti",
+            "cudnn": 90100,
+            "gpu_total_memory_bytes": 25283526656,
+            "seed": 1337,
+            "image_id": "sha256:89fc0bd6ed5d7e95ed73d6e377e6e6e740ba3002cefeacabbdeeff9ad9c331db",
+            "device": "cuda",
+            "allocator_conf": null,
+            "deterministic_algorithms": true,
+            "seeded": {
+              "python": true,
+              "torch": true,
+              "numpy": true
+            },
+            "CUBLAS_WORKSPACE_CONFIG": ":4096:8"
+          },
+          "candidate": {
+            "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+            "torch": "2.5.1+cu124",
+            "cuda": "12.4",
+            "gpu_name": "NVIDIA GeForce RTX 3090 Ti",
+            "cudnn": 90100,
+            "gpu_total_memory_bytes": 25283526656,
+            "seed": 1337,
+            "image_id": "sha256:89fc0bd6ed5d7e95ed73d6e377e6e6e740ba3002cefeacabbdeeff9ad9c331db",
+            "device": "cuda",
+            "allocator_conf": null,
+            "deterministic_algorithms": true,
+            "seeded": {
+              "python": true,
+              "torch": true,
+              "numpy": true
+            },
+            "CUBLAS_WORKSPACE_CONFIG": ":4096:8"
+          }
+        },
+        "observed_precision": {
+          "baseline": "fp32",
+          "candidate": "fp32"
+        }
+      },
+      "status": "tested_fail",
+      "reasons": [
+        "memory_target failed"
+      ],
+      "metrics": {
+        "peak_before": 0.068647424,
+        "peak_after": 0.068432384,
+        "reduction_pct": 0.3132528323276923,
+        "loss_equivalence": "identical",
+        "max_loss_delta": 0.0,
+        "throughput_regression_pct": -1.095428702909318,
+        "target_met": false
+      },
+      "evidence": {
+        "runs/repair-scope-controls-20261027/eval-batch-16/report.json": {
+          "sha256": "6adbc0f2de915a2393447c3c81004249c72af117a7469ffe66bba00efca7eab3",
+          "bytes": 3110
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-16/configurations/round-01/manifest.json": {
+          "sha256": "3927768e671cf8f597697a937f7b3852b564b041f5c652c4261b8594199ee43a",
+          "bytes": 329
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-16/configurations/round-01/patch.diff": {
+          "sha256": "5bd5dd0d1e3e693ddb04fc1db457d087e8c9f711d5831fe0096900f5e9b4aeed",
+          "bytes": 290
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-16/configurations/round-01/cli.json": {
+          "sha256": "0cb11c54eebb632f93879837be0895fe93de288b1cfce781d224b4cdff43e910",
+          "bytes": 274
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-16/lab/497c4f752e504c97b2b0ac22946fad9b/result.json": {
+          "sha256": "fb309f382aaf7b48c72ccf9f5fff465e91b1a109b519a75bd02f8600a8affa01",
+          "bytes": 36821
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-16/lab/497c4f752e504c97b2b0ac22946fad9b/manifest.json": {
+          "sha256": "30025ddbfeecce994f7203946f106b111fe30580cafa309194373796f1ee13b8",
+          "bytes": 2663
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-16/lab/497c4f752e504c97b2b0ac22946fad9b/source/train.py": {
+          "sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+          "bytes": 4945
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-16/lab/b33a171398d04c06821d680864ddde7c/result.json": {
+          "sha256": "d9174affb0f8686012827b29fa81196c1067f0e38fcc882cd236926cc2100c8a",
+          "bytes": 36816
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-16/lab/b33a171398d04c06821d680864ddde7c/manifest.json": {
+          "sha256": "397082fd0906d2592dd26e6de0983c3df6772745ce7f2a0897b1833d29cbb780",
+          "bytes": 2664
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-16/lab/b33a171398d04c06821d680864ddde7c/source/train.py": {
+          "sha256": "192819d69ff6261b28ca284cc3d9989e0098c8519d09775cd140d6eb5b3e0bd2",
+          "bytes": 4962
+        }
+      },
+      "provenance": "human_control"
+    },
+    {
+      "selection": {
+        "job": "runs/repair-scope-controls-20261027/eval-batch-64",
+        "round": 1
+      },
+      "context": {
+        "source_tree_sha256": {
+          "baseline": "f79c801073bb1100aa7cb18f8808d94dc6bfa6051eecf0a6a5365698c5b46be6",
+          "candidate": "16e5438e737665c4a18580ce672f2d1bc3c695370010cf1989684f143a261171"
+        },
+        "patch_sha256": "5bd5dd0d1e3e693ddb04fc1db457d087e8c9f711d5831fe0096900f5e9b4aeed",
+        "workload": {
+          "profile": "s3",
+          "contract_sha256": "0cf09407bc09810ccd15da2c71e73c8ddc2d17827f3498dda5c9bf86bd6d066e",
+          "inputs_sha256": "48ecc0bcc05dc2b4f2a3ec95801f692bf5982901a1baa5d39c59cf791d5ad564",
+          "initial_parameters_sha256": "85b0313e938be086529a531b6e06e6cbca07d41e0c44718ffde625aa2d07cc1b",
+          "updates_sha256": "ebf673183050a9e0736ceda92979150263a266f93cf48e5b32f2565c3ef0189d"
+        },
+        "original_argv": [
+          "--tiny",
+          "--device",
+          "cuda",
+          "--steps",
+          "20",
+          "--batch",
+          "64",
+          "--seed",
+          "7"
+        ],
+        "effective_argv": [
+          "--tiny",
+          "--device",
+          "cuda",
+          "--steps",
+          "20",
+          "--batch",
+          "64",
+          "--seed",
+          "7"
+        ],
+        "target": "reclaim",
+        "reclaim_reduction_pct": 20,
+        "required_steps": 20,
+        "max_seconds": 60,
+        "device": "cuda",
+        "policy": {
+          "allow_numerics_change": false,
+          "allow_model_change": false,
+          "allow_batch_grad_accum": true,
+          "allow_batch_change": null,
+          "allow_grad_accum": null,
+          "max_throughput_regression_pct": 25
+        },
+        "environment": {
+          "baseline": {
+            "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+            "torch": "2.5.1+cu124",
+            "cuda": "12.4",
+            "gpu_name": "NVIDIA GeForce RTX 3090 Ti",
+            "cudnn": 90100,
+            "gpu_total_memory_bytes": 25283526656,
+            "seed": 1337,
+            "image_id": "sha256:89fc0bd6ed5d7e95ed73d6e377e6e6e740ba3002cefeacabbdeeff9ad9c331db",
+            "device": "cuda",
+            "allocator_conf": null,
+            "deterministic_algorithms": true,
+            "seeded": {
+              "python": true,
+              "torch": true,
+              "numpy": true
+            },
+            "CUBLAS_WORKSPACE_CONFIG": ":4096:8"
+          },
+          "candidate": {
+            "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+            "torch": "2.5.1+cu124",
+            "cuda": "12.4",
+            "gpu_name": "NVIDIA GeForce RTX 3090 Ti",
+            "cudnn": 90100,
+            "gpu_total_memory_bytes": 25283526656,
+            "seed": 1337,
+            "image_id": "sha256:89fc0bd6ed5d7e95ed73d6e377e6e6e740ba3002cefeacabbdeeff9ad9c331db",
+            "device": "cuda",
+            "allocator_conf": null,
+            "deterministic_algorithms": true,
+            "seeded": {
+              "python": true,
+              "torch": true,
+              "numpy": true
+            },
+            "CUBLAS_WORKSPACE_CONFIG": ":4096:8"
+          }
+        },
+        "observed_precision": {
+          "baseline": "fp32",
+          "candidate": "fp32"
+        }
+      },
+      "status": "tested_fail",
+      "reasons": [
+        "memory_target failed"
+      ],
+      "metrics": {
+        "peak_before": 0.069691904,
+        "peak_after": 0.068831744,
+        "reduction_pct": 1.2342323148467862,
+        "loss_equivalence": "identical",
+        "max_loss_delta": 0.0,
+        "throughput_regression_pct": 1.708677418297544,
+        "target_met": false
+      },
+      "evidence": {
+        "runs/repair-scope-controls-20261027/eval-batch-64/report.json": {
+          "sha256": "479a32a75fe4b5a3ac1cba98661dc03f4434757c49395a7ac34cc9f12d435d3a",
+          "bytes": 3108
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-64/configurations/round-01/manifest.json": {
+          "sha256": "3927768e671cf8f597697a937f7b3852b564b041f5c652c4261b8594199ee43a",
+          "bytes": 329
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-64/configurations/round-01/patch.diff": {
+          "sha256": "5bd5dd0d1e3e693ddb04fc1db457d087e8c9f711d5831fe0096900f5e9b4aeed",
+          "bytes": 290
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-64/configurations/round-01/cli.json": {
+          "sha256": "4d8665807e61fbac5382dd0deffbd5d137b6bc3939a05e537ad71e343706347d",
+          "bytes": 274
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-64/lab/0ee40a71ad884ca69f141e67f7e3a831/result.json": {
+          "sha256": "d44df76d0977b7d6390400424f496947634d5f2c6b0c436a5cace6e4e9b7d2a2",
+          "bytes": 36826
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-64/lab/0ee40a71ad884ca69f141e67f7e3a831/manifest.json": {
+          "sha256": "f3488f020ac96b5e6c2c2063ba67101838391c6785f3106f0964f6289545d94a",
+          "bytes": 2663
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-64/lab/0ee40a71ad884ca69f141e67f7e3a831/source/train.py": {
+          "sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+          "bytes": 4945
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-64/lab/dd147e24152640db93f4400c963eea1e/result.json": {
+          "sha256": "dfa35a2c123279c37d1b147caf19bd41d3f68ce44eacf3741ae1c4eab714e8bf",
+          "bytes": 36821
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-64/lab/dd147e24152640db93f4400c963eea1e/manifest.json": {
+          "sha256": "bdf56c13de1df5da9583fbf1de31ec23e06effae5ec4adea192add0002f73f73",
+          "bytes": 2664
+        },
+        "runs/repair-scope-controls-20261027/eval-batch-64/lab/dd147e24152640db93f4400c963eea1e/source/train.py": {
+          "sha256": "192819d69ff6261b28ca284cc3d9989e0098c8519d09775cd140d6eb5b3e0bd2",
+          "bytes": 4962
+        }
+      },
+      "provenance": "human_control"
+    }
+  ],
+  "implementation_hashes": {
+    "headroom/verify/applicability.py": "75338b29ed78db6c03be3a74b582bbe729eacc62d341a5b9c4d41f7fa9dd706f",
+    "headroom/verify/compare.py": "6b246e35ee6f94ea9d0183c1e9b78f520a218d186c3812b85b19abe8de6e196d",
+    "headroom/verify/pairing.py": "0c1418371a14142ff1f8c1ea120cf5f2d62a64fdd5cffa33b19540b336e38ded",
+    "headroom/verify/precision.py": "f87b95e8f3609e49cc445ed5530c3407a4952b64cdd3e9d6630b007430e0cdd9",
+    "headroom/verify/policy.py": "d7fea99c1c6478753496b873d620df5b2ca42a8851380218b3d48d774010c3e0",
+    "headroom/verify/checkpoint.py": "29991e96dc706fb176ef4c1a067c3cb9d53d0dac0740d0d3351cbc9ca9e14583",
+    "headroom/verify/offload.py": "2346dfb752011f9effd93bfb1f9acae43d2f54380b13ad823189c3f0f217113d",
+    "headroom/patch_validation.py": "9b2b54e781732cc76801d1fa7ae4b06a3deb21507285c5debd57e9cc97b9df55"
+  },
+  "limitations": [
+    "Exact observed points only; no interpolation, extrapolation, or future success guarantee.",
+    "Historical reinspection and human controls do not add model repair or MVP successes.",
+    "Trusted local archive; hashes provide change detection, not authenticity or adversarial security.",
+    "Cooperative pinned standalone s1/s3/s4 targets only; no generic equivalence proof.",
+    "V1 requires a completed original baseline; OOM and transformed references remain unknown.",
+    "Runtime precision and scalar losses do not prove every internal operation or final parameter value.",
+    "Host load and sampled GPU sharing can confound timing; no speed superiority is certified."
+  ]
+}

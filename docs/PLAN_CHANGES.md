@@ -2,6 +2,25 @@
 
 Canonical plan: `docs/PLAN.md` is immutable and matches the supplied attachment.
 
+## 2026-10-27 continued research and differentiation
+
+Frank requested continued research/development and an additional novel element.
+This authorizes the opt-in empirical repair-scope feature and bounded local
+feature validation. The prior-art review found adjacent approaches, so no
+world-first claim is made. Original gates, historical results and the six-of-nine
+threshold remain unchanged. The feature reports exact observations, failures
+and unknown contexts separately; it is not a new acceptance criterion.
+
+Three pairs of small GPU executions use an explicitly human-authored no-grad
+control and no model calls. They validate the new evidence lookup, not the
+automated solver. Their 20% reclaim targets are retained even though all three
+missed them. The original three-repair campaign limit is not silently extended,
+and the existing unknown-charge billing halt is not cleared. No public
+deployment, recharge or extra paid campaign is part of this increment.
+
+Replay remains user-withdrawn. Its historical task remains archived. The new
+scope CLI performs evidence lookup, without restoring the Replay product.
+
 ## Current authorization — 2026-10-25 acceptance v2 and continued delivery
 
 Frank explicitly approved the proposed first two changes: split the s2 classification

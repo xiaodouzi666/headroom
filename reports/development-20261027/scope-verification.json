@@ -1,0 +1,179 @@
+{
+  "kind": "historical_reinspection_and_separate_human_controls",
+  "model_calls": 0,
+  "mvp_successes_added": 0,
+  "record_sha256": "1ce48c6e52d93f33f6cf40dd966d2fb4dc62f2f1988b304692eb600c90d4aa3f",
+  "observed_states": [
+    {
+      "selection": {
+        "job": "runs/evaluation/live/20261025T121115251021Z-2fe7da84/jobs/b6091354c73d43f88a10e50f01e4d5b2",
+        "round": 2
+      },
+      "provenance": "live",
+      "status": "tested_pass",
+      "reasons": [
+        "All required observations hold at this exact recorded context."
+      ],
+      "metrics": {
+        "peak_before": 2.435717632,
+        "peak_after": 0.64841984,
+        "reduction_pct": 73.37869416876643,
+        "loss_equivalence": "identical",
+        "max_loss_delta": 0.0,
+        "throughput_regression_pct": 0.3200927051495661,
+        "target_met": true
+      }
+    },
+    {
+      "selection": {
+        "job": "runs/repair-scope-controls-20261027/eval-batch-2",
+        "round": 1
+      },
+      "provenance": "human_control",
+      "status": "tested_fail",
+      "reasons": [
+        "memory_target failed"
+      ],
+      "metrics": {
+        "peak_before": 0.068344832,
+        "peak_after": 0.06831616,
+        "reduction_pct": 0.04195196500007492,
+        "loss_equivalence": "identical",
+        "max_loss_delta": 0.0,
+        "throughput_regression_pct": -1.208889582699435,
+        "target_met": false
+      }
+    },
+    {
+      "selection": {
+        "job": "runs/repair-scope-controls-20261027/eval-batch-16",
+        "round": 1
+      },
+      "provenance": "human_control",
+      "status": "tested_fail",
+      "reasons": [
+        "memory_target failed"
+      ],
+      "metrics": {
+        "peak_before": 0.068647424,
+        "peak_after": 0.068432384,
+        "reduction_pct": 0.3132528323276923,
+        "loss_equivalence": "identical",
+        "max_loss_delta": 0.0,
+        "throughput_regression_pct": -1.095428702909318,
+        "target_met": false
+      }
+    },
+    {
+      "selection": {
+        "job": "runs/repair-scope-controls-20261027/eval-batch-64",
+        "round": 1
+      },
+      "provenance": "human_control",
+      "status": "tested_fail",
+      "reasons": [
+        "memory_target failed"
+      ],
+      "metrics": {
+        "peak_before": 0.069691904,
+        "peak_after": 0.068831744,
+        "reduction_pct": 1.2342323148467862,
+        "loss_equivalence": "identical",
+        "max_loss_delta": 0.0,
+        "throughput_regression_pct": 1.708677418297544,
+        "target_met": false
+      }
+    }
+  ],
+  "exact_query": {
+    "status": "tested_pass",
+    "reasons": [
+      "A recorded failure dominates conflicting passes; otherwise every matching observation must pass."
+    ],
+    "matching_observations": [
+      {
+        "selection": {
+          "job": "runs/evaluation/live/20261025T121115251021Z-2fe7da84/jobs/b6091354c73d43f88a10e50f01e4d5b2",
+          "round": 2
+        },
+        "status": "tested_pass",
+        "provenance": "live"
+      }
+    ],
+    "mismatched_fields": []
+  },
+  "untested_hardware_query": {
+    "status": "unknown",
+    "reasons": [
+      "No exact recorded context matches; untested conditions are not inferred."
+    ],
+    "mismatched_fields": [
+      "effective_argv",
+      "environment",
+      "max_seconds",
+      "original_argv",
+      "patch_sha256",
+      "policy",
+      "reclaim_reduction_pct",
+      "source_tree_sha256",
+      "workload"
+    ],
+    "matching_observations": []
+  },
+  "deleted_observation": {
+    "status": "invalid_evidence",
+    "reasons": [
+      "Scope or archived evidence changed; rebuild and review explicitly"
+    ],
+    "matching_observations": [],
+    "mismatched_fields": []
+  },
+  "cli_checks": [
+    {
+      "query": "query-exact.json",
+      "exit_code": 0,
+      "verdict": {
+        "status": "tested_pass",
+        "reasons": [
+          "A recorded failure dominates conflicting passes; otherwise every matching observation must pass."
+        ],
+        "matching_observations": [
+          {
+            "selection": {
+              "job": "runs/evaluation/live/20261025T121115251021Z-2fe7da84/jobs/b6091354c73d43f88a10e50f01e4d5b2",
+              "round": 2
+            },
+            "status": "tested_pass",
+            "provenance": "live"
+          }
+        ],
+        "mismatched_fields": []
+      }
+    },
+    {
+      "query": "query-new-gpu.json",
+      "exit_code": 78,
+      "verdict": {
+        "status": "unknown",
+        "reasons": [
+          "No exact recorded context matches; untested conditions are not inferred."
+        ],
+        "mismatched_fields": [
+          "effective_argv",
+          "environment",
+          "max_seconds",
+          "original_argv",
+          "patch_sha256",
+          "policy",
+          "reclaim_reduction_pct",
+          "source_tree_sha256",
+          "workload"
+        ],
+        "matching_observations": []
+      }
+    }
+  ],
+  "original_campaign_sha256": "5ef7f80eed43b5a68bf660be9286b1d815ec9a1f01beca6e159582e617ffd175",
+  "original_plan_sha256": "e3afb65480c42066e919e0959ec8df9e03952e113fd2cf456d377056c6b61d56",
+  "public_formatted_driver_note": "gpu_controls_driver.py is a formatting/UTC-alias-only reproduction helper; original executed bytes are retained separately."
+}

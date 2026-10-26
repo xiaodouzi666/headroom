@@ -1,0 +1,267 @@
+{
+  "provenance": "human_control",
+  "counts_as_automated_repair": false,
+  "receipt_path": "runs/repair-scope-controls-20261027/receipt.json",
+  "receipt_sha256": "533e8ec8cb567212d7968dd939e0ecb61ebdd75cf5eb086e8c495d19449d16d8",
+  "executed_driver_path": ".cache/setup/repair-scope-gpu-controls-20261027.py",
+  "executed_driver_sha256": "e472c65b8ff83c17533c5d7954776e00d716c752c1879052d2a4e3fc1de540f9",
+  "executed_driver_public_copy": "reports/development-20261027/gpu_controls_driver.original.txt",
+  "receipt": {
+    "provenance": "human_control",
+    "purpose": "small GPU scope feature validation, not agent or MVP acceptance",
+    "model_calls": 0,
+    "started_at": "2026-10-26T19:42:43.561048+00:00",
+    "jobs": [
+      {
+        "job": "eval-batch-2",
+        "batch": 2,
+        "baseline_run": "5aff09d2bd094a51ae0ef14c3c34e362",
+        "candidate_run": "2ba6510979504687adb85f089a34a6cf",
+        "comparison": {
+          "completed": true,
+          "peak_before": 0.068344832,
+          "peak_after": 0.06831616,
+          "reduction_pct": 0.04195196500007492,
+          "step_ms_before": 5.977842025458813,
+          "step_ms_after": 5.905576515942812,
+          "loss_equivalence": "identical",
+          "target_met": false,
+          "notes": [
+            "Pairing: Lab runtime fingerprints and pinned source contracts; all three pairing checks matched",
+            "Reference discovery: Baseline did not OOM or reference already supplied"
+          ],
+          "checks": {
+            "baseline_capture": true,
+            "target_mode_valid": true,
+            "candidate_completed_required_steps": true,
+            "finite_candidate_losses": true,
+            "parameter_count_unchanged": true,
+            "numerics_policy": true,
+            "same_seed": true,
+            "same_inputs": true,
+            "same_effective_batch": true,
+            "same_objective": true,
+            "loss_series_aligned_to_updates": true,
+            "loss_series_comparison_available": true,
+            "loss_comparable": true,
+            "repository_no_reference_exception": false,
+            "loss_tolerance": true,
+            "numerical_acceptance": true,
+            "parameter_policy": true,
+            "measured_cuda_peaks": true,
+            "same_gpu_hardware": true,
+            "gpu_observation_clear": true,
+            "throughput_limit": true,
+            "memory_target": false
+          },
+          "max_loss_delta": 0.0,
+          "throughput_regression_pct": -1.208889582699435,
+          "numerics_changed": false,
+          "parameter_count_before": 16832,
+          "parameter_count_after": 16832,
+          "target": "reclaim",
+          "units": "GB = 1e9 bytes; percentages are relative to baseline",
+          "run_ids": {
+            "baseline": "5aff09d2bd094a51ae0ef14c3c34e362",
+            "candidate": "2ba6510979504687adb85f089a34a6cf"
+          },
+          "reference_run": null,
+          "acceptance_scope": "standard",
+          "numerical_basis": "original_plan_full_backward_scalar_series",
+          "comparison_precision": "fp32",
+          "loss_tolerance": 0.001,
+          "observed_precision_change": false,
+          "precision_evidence": {
+            "source": "lab_runtime_precision_observer_v1",
+            "before": "fp32",
+            "after": "fp32",
+            "comparison_before": "fp32",
+            "observed_change": false,
+            "comparison_precision": "fp32",
+            "notes": [],
+            "limitations": "Observed Python-dispatched forward precision, not proof of every internal operator dtype or full workload equivalence."
+          }
+        },
+        "pairing": {
+          "protocol": "headroom.pairing.v1",
+          "checks": {
+            "same_inputs": true,
+            "same_effective_batch": true,
+            "same_objective": true
+          },
+          "reasons": [],
+          "source": "Lab runtime fingerprints and pinned source contracts",
+          "reference_run": "5aff09d2bd094a51ae0ef14c3c34e362",
+          "candidate_run": "2ba6510979504687adb85f089a34a6cf"
+        }
+      },
+      {
+        "job": "eval-batch-16",
+        "batch": 16,
+        "baseline_run": "497c4f752e504c97b2b0ac22946fad9b",
+        "candidate_run": "b33a171398d04c06821d680864ddde7c",
+        "comparison": {
+          "completed": true,
+          "peak_before": 0.068647424,
+          "peak_after": 0.068432384,
+          "reduction_pct": 0.3132528323276923,
+          "step_ms_before": 5.963158560916781,
+          "step_ms_after": 5.8978364104405046,
+          "loss_equivalence": "identical",
+          "target_met": false,
+          "notes": [
+            "Pairing: Lab runtime fingerprints and pinned source contracts; all three pairing checks matched",
+            "Reference discovery: Baseline did not OOM or reference already supplied"
+          ],
+          "checks": {
+            "baseline_capture": true,
+            "target_mode_valid": true,
+            "candidate_completed_required_steps": true,
+            "finite_candidate_losses": true,
+            "parameter_count_unchanged": true,
+            "numerics_policy": true,
+            "same_seed": true,
+            "same_inputs": true,
+            "same_effective_batch": true,
+            "same_objective": true,
+            "loss_series_aligned_to_updates": true,
+            "loss_series_comparison_available": true,
+            "loss_comparable": true,
+            "repository_no_reference_exception": false,
+            "loss_tolerance": true,
+            "numerical_acceptance": true,
+            "parameter_policy": true,
+            "measured_cuda_peaks": true,
+            "same_gpu_hardware": true,
+            "gpu_observation_clear": true,
+            "throughput_limit": true,
+            "memory_target": false
+          },
+          "max_loss_delta": 0.0,
+          "throughput_regression_pct": -1.095428702909318,
+          "numerics_changed": false,
+          "parameter_count_before": 16832,
+          "parameter_count_after": 16832,
+          "target": "reclaim",
+          "units": "GB = 1e9 bytes; percentages are relative to baseline",
+          "run_ids": {
+            "baseline": "497c4f752e504c97b2b0ac22946fad9b",
+            "candidate": "b33a171398d04c06821d680864ddde7c"
+          },
+          "reference_run": null,
+          "acceptance_scope": "standard",
+          "numerical_basis": "original_plan_full_backward_scalar_series",
+          "comparison_precision": "fp32",
+          "loss_tolerance": 0.001,
+          "observed_precision_change": false,
+          "precision_evidence": {
+            "source": "lab_runtime_precision_observer_v1",
+            "before": "fp32",
+            "after": "fp32",
+            "comparison_before": "fp32",
+            "observed_change": false,
+            "comparison_precision": "fp32",
+            "notes": [],
+            "limitations": "Observed Python-dispatched forward precision, not proof of every internal operator dtype or full workload equivalence."
+          }
+        },
+        "pairing": {
+          "protocol": "headroom.pairing.v1",
+          "checks": {
+            "same_inputs": true,
+            "same_effective_batch": true,
+            "same_objective": true
+          },
+          "reasons": [],
+          "source": "Lab runtime fingerprints and pinned source contracts",
+          "reference_run": "497c4f752e504c97b2b0ac22946fad9b",
+          "candidate_run": "b33a171398d04c06821d680864ddde7c"
+        }
+      },
+      {
+        "job": "eval-batch-64",
+        "batch": 64,
+        "baseline_run": "0ee40a71ad884ca69f141e67f7e3a831",
+        "candidate_run": "dd147e24152640db93f4400c963eea1e",
+        "comparison": {
+          "completed": true,
+          "peak_before": 0.069691904,
+          "peak_after": 0.068831744,
+          "reduction_pct": 1.2342323148467862,
+          "step_ms_before": 5.967067554593086,
+          "step_ms_after": 6.069025490432978,
+          "loss_equivalence": "identical",
+          "target_met": false,
+          "notes": [
+            "Pairing: Lab runtime fingerprints and pinned source contracts; all three pairing checks matched",
+            "Reference discovery: Baseline did not OOM or reference already supplied"
+          ],
+          "checks": {
+            "baseline_capture": true,
+            "target_mode_valid": true,
+            "candidate_completed_required_steps": true,
+            "finite_candidate_losses": true,
+            "parameter_count_unchanged": true,
+            "numerics_policy": true,
+            "same_seed": true,
+            "same_inputs": true,
+            "same_effective_batch": true,
+            "same_objective": true,
+            "loss_series_aligned_to_updates": true,
+            "loss_series_comparison_available": true,
+            "loss_comparable": true,
+            "repository_no_reference_exception": false,
+            "loss_tolerance": true,
+            "numerical_acceptance": true,
+            "parameter_policy": true,
+            "measured_cuda_peaks": true,
+            "same_gpu_hardware": true,
+            "gpu_observation_clear": true,
+            "throughput_limit": true,
+            "memory_target": false
+          },
+          "max_loss_delta": 0.0,
+          "throughput_regression_pct": 1.708677418297544,
+          "numerics_changed": false,
+          "parameter_count_before": 16832,
+          "parameter_count_after": 16832,
+          "target": "reclaim",
+          "units": "GB = 1e9 bytes; percentages are relative to baseline",
+          "run_ids": {
+            "baseline": "0ee40a71ad884ca69f141e67f7e3a831",
+            "candidate": "dd147e24152640db93f4400c963eea1e"
+          },
+          "reference_run": null,
+          "acceptance_scope": "standard",
+          "numerical_basis": "original_plan_full_backward_scalar_series",
+          "comparison_precision": "fp32",
+          "loss_tolerance": 0.001,
+          "observed_precision_change": false,
+          "precision_evidence": {
+            "source": "lab_runtime_precision_observer_v1",
+            "before": "fp32",
+            "after": "fp32",
+            "comparison_before": "fp32",
+            "observed_change": false,
+            "comparison_precision": "fp32",
+            "notes": [],
+            "limitations": "Observed Python-dispatched forward precision, not proof of every internal operator dtype or full workload equivalence."
+          }
+        },
+        "pairing": {
+          "protocol": "headroom.pairing.v1",
+          "checks": {
+            "same_inputs": true,
+            "same_effective_batch": true,
+            "same_objective": true
+          },
+          "reasons": [],
+          "source": "Lab runtime fingerprints and pinned source contracts",
+          "reference_run": "0ee40a71ad884ca69f141e67f7e3a831",
+          "candidate_run": "dd147e24152640db93f4400c963eea1e"
+        }
+      }
+    ],
+    "completed_at": "2026-10-26T19:43:27.343243+00:00"
+  }
+}

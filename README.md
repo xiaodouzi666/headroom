@@ -11,6 +11,16 @@ Video: one verified repair is available; owner recording remains pending.
 
 [Independent research and implemented fixes](reports/research-solutions-20261025/summary.md): the retained s4 candidate now has supplemental original-batch, 20-update numerical evidence through bounded disk offload. Request auditing and invocation grounding are implemented; the historical nine-case score remains unchanged.
 
+## Repair applicability
+
+The opt-in [repair-scope CLI](docs/REPAIR_SCOPE.md) binds a repair to its exact
+source, inputs, update structure, precision and runtime environment. It rechecks
+the underlying artifacts before answering a context query. Observed failures
+remain visible; untested inputs and hardware remain unknown. Historical runs
+and human controls retain their provenance and add no automatic repair scores.
+See the [prior-art review](reports/development-20261027/prior-art.md) for the
+adjacent work and why this is not presented as a world-first method.
+
 ## How it works
 
 ```mermaid
@@ -60,7 +70,7 @@ For capture-only work, use `uv run headroom snapshot scenarios/s1_batch_too_big/
 
 Build `web/` with Node 24 and `npm ci && npm run build`, then `uv run headroom serve` opens a localhost service on port 8000. It provides example/script submission, a durable event timeline, before/after evidence, diff, verification, Sources and downloads. Public deployment is separate.
 
-The owner withdrew the Replay product (former T3.3). Its cards, public listing/access exception and CLI product command are removed from the current source; integration qualification is pending. Historical run files and reports remain archived. Normal owner-scoped run details, SSE, downloads and selected-configuration rerun instructions remain. This withdrawal is a scope change, not an acceptance success.
+The owner withdrew the Replay product (former T3.3). Its cards, public listing/access exception and CLI product command are removed; the separate cleanup regression and browser checks passed. Historical run files and reports remain archived. Normal owner-scoped run details, SSE, downloads and selected-configuration rerun instructions remain. This withdrawal is a scope change, not an acceptance success.
 
 Archived baseline-only interface capture from before the key was configured. It may contain the now-removed Replay UI and does not show current account status or the current interface:
 
@@ -72,7 +82,7 @@ Archived baseline-only interface capture from before the key was configured. It 
 
 [RESULTS](docs/RESULTS.md) separates measured baselines, component tests and automated repair campaigns. R3 reached **3/9 targets (s3, s4, s8)** and **4/9 valid correct first causes**, with two unknown truths, below the retained six-required gates. All nine CLI chains were verified: three exit 0, six exit 78. The campaign remains partial after the HTTP 529/unknown-cost halt; the reasoning-wire auditor correctly refused an unfinished campaign. No Phase 2 dispatch or full acceptance follows from these results.
 
-The [R3 summary](reports/acceptance-v2-r3-20261025/independent-audit-summary.md) and [lossless public audit](reports/acceptance-v2-r3-20261025/independent-audit-public.json) bind the 305-source inventory and preserve all earlier runs. R2's separate s1 two-round model-cost component remains historical evidence, not a fourth R3 success. Timing has a possible host-load confound from overlapping private tests and cannot establish a speed advantage. The approved s2 split and strict/allow_precision comparisons apply prospectively; Phase 2, main evaluation and ablation remain open. New Replay-removal and shared-ledger integration changes are not covered by R3's 3030-test receipt and await fresh qualification.
+The [R3 summary](reports/acceptance-v2-r3-20261025/independent-audit-summary.md) and [lossless public audit](reports/acceptance-v2-r3-20261025/independent-audit-public.json) bind the 305-source inventory and preserve all earlier runs. R2's separate s1 two-round model-cost component remains historical evidence, not a fourth R3 success. Timing has a possible host-load confound from overlapping private tests and cannot establish a speed advantage. The approved s2 split and strict/allow_precision comparisons apply prospectively; Phase 2, main evaluation and ablation remain open. Replay removal and shared-ledger integration are covered by the separate 3121-test software receipt, not by the R3 campaign score.
 
 The Lab executes watched commands only in Docker with no network, read-only source/dependencies, bounded resources and verified cleanup. Static policy is defense in depth, not proof that arbitrary hostile programs are safe. Watch observes Python scripts/modules, `-c`, interpreter options and generic argv, including an explicitly requested container shell, while preserving command arguments and exit codes. Automatic repair needs a replayable Python script; other CUDA OOM entrypoints return `needs_human`, and missing instrumentation is reported as unknown. Distributed captures are not aggregate memory evidence. The [independent subprocess comparison](reports/t2.7-acceptance-20261025.json) passed the original <=1% peak-difference gate in three scenarios and six CUDA arms, with observed differences of 0%. Its separate controller runs inside Docker and shares capture instrumentation, image and source checks; this is not a bare-host backend or independent allocator instrumentation. The earlier host namespace EPERM remains historical evidence; see [Watch and HF](docs/WATCH_HF.md). Captures of shared GPUs cannot establish a speed improvement. Random-initialized repository/library fixtures are not evidence of downstream task quality.
 

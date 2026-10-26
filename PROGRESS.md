@@ -1,5 +1,25 @@
 # Headroom Progress
 
+## 2026-10-27 independent development increment
+
+Implemented the opt-in repair-scope CLI: exact historical context lookup,
+retained counterexamples, evidence/patch validation and explicit unknown states.
+The prior-art scan found adjacent systems; no world-first claim is made.
+Fixed known-cost subtotals for partial rows without changing actual-total unknowns.
+
+Final related integration: 535 backend tests passed in 128.73s with all 314
+source entries, original PLAN and guard unchanged. Frontend 73 passed in 2.59s;
+no frontend source/build change. Three small human GPU control pairs all miss
+their predeclared 20% reclaim target and remain failures; matched loss/pairing
+does not make them target successes. Existing R3 s3 was reinspected, not rerun.
+No new model calls, recharge, ledger release, R4, or Phase 2 campaign occurred.
+Local preview refreshed with identical ledger rows and the billing halt intact.
+See [development delivery](reports/development-20261027/README.md).
+
+Original MVP status remains target 3/9 and valid first cause 4/9, below both 6/9 gates.
+Public deployment remains deferred. The scope CLI is not the withdrawn Replay
+product; arbitrary-source and automatic boundary-discovery coverage is pending.
+
 ## Current status — protocol-v2 R3, 2026-10-25
 
 R3 reached **3/9 targets (s3, s4, s8)** and **4/9 valid correct first causes**;

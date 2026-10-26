@@ -42,9 +42,19 @@ halted. See the [R3 summary](../reports/acceptance-v2-r3-20261025/independent-au
 and [public audit](../reports/acceptance-v2-r3-20261025/independent-audit-public.json).
 
 The 3030-test/305-source receipt qualifies that campaign source. Subsequent
-Replay removal and explicit existing-ledger selection await fresh integration
-qualification. The latter shares a selected canonical database across execution,
+Replay removal and explicit existing-ledger selection passed the separate
+3121-test backend qualification, 73 frontend tests and build/browser checks. The latter shares a selected canonical database across execution,
 API observation and standalone acceptance, with no new funding, history reset or
 unknown-charge release. Public prior work covers both individual memory methods
 and combined optimization workflows; an advantage for this implementation has
 not been demonstrated.
+
+## Exact repair-scope lookup
+
+The optional scope builder/checker is read-only and does not invoke the solver.
+It recomputes patch application, source identities, pairing and the existing
+comparison over an explicit set of archived rounds, retaining failures and
+provenance. Its stricter applicability state is separate from original
+acceptance. No point is inferred from neighboring configurations. See
+[Repair scope](REPAIR_SCOPE.md) for the trusted-archive boundary and current
+s1/s3/s4, completed-baseline limitation.

@@ -724,3 +724,16 @@ nanoGPT reads32x1 but still fails policy/provenance checks. The original v7 scor
 and all original gates remain unchanged.
 
 本轮最终完整 guarded 回归：**2,338 passed，562.33秒**；257个源码/配置/提示词/测试条目前后及当前一致，原PLAN与guard未变。中断运行及旧断言失败记录均保留。收据：`reports/research-solutions-20261025/full-regression-20261025T051427Z-c9f092a7-receipt.json`。
+
+## 2026-10-27 repair-scope increment (separate from solver scores)
+
+The new optional scope CLI qualified against 535 related backend tests and 73
+frontend tests. 314 source entries stayed fixed. Three paired tiny GPU human
+controls preserved matched inputs/updates/losses but missed their 20% reclaim
+target; all remain recorded failures. An old R3 s3 observation was reinspected,
+not rerun or added to any campaign numerator. The R3 known actual subtotal display
+is corrected to 1.20596190 USD while the actual total remains unknown.
+
+This is neither full-suite requalification nor a new automated repair trial.
+See [the complete delivery](../reports/development-20261027/README.md) for raw
+evidence, limitations and remaining original gates.

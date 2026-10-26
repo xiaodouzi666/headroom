@@ -555,3 +555,57 @@ def evaluate(
         or any(row.get("status") != "completed" for row in result.get("rows", []))
     ):
         raise typer.Exit(1)
+
+
+scope_app = typer.Typer(
+    help="Inspect exact historical repair conditions; never runs a model or target.",
+    no_args_is_help=True,
+)
+app.add_typer(scope_app, name="scope")
+
+
+@scope_app.command("build")
+def scope_build(
+    specification: Path,
+    evidence_root: Annotated[
+        Path, typer.Option(help="Trusted local archive containing selected jobs.")
+    ],
+    output: Annotated[
+        Path, typer.Option(help="New JSON file; existing files are never overwritten.")
+    ],
+) -> None:
+    """Bind selected historical repair rounds to their measured conditions."""
+    from headroom.verify.applicability import build_scope, load_json
+
+    try:
+        document = load_json(specification)
+        if not isinstance(document, dict) or set(document) != {"selections"}:
+            raise ValueError("Specification must contain only selections")
+        result = build_scope(evidence_root, document["selections"])
+        encoded = json.dumps(result, indent=2, allow_nan=False) + "\n"
+        with output.open("x") as handle:
+            handle.write(encoded)
+    except (OSError, ValueError, TypeError) as error:
+        typer.echo("Scope build failed: " + type(error).__name__, err=True)
+        raise typer.Exit(78) from None
+    typer.echo(json.dumps({"output": str(output), "observations": len(result["observations"])}))
+
+
+@scope_app.command("check")
+def scope_check(
+    record: Path,
+    query: Path,
+    evidence_root: Annotated[
+        Path, typer.Option(help="Same trusted archive used to build the record.")
+    ],
+) -> None:
+    """Recheck evidence and look up an exact context; untested conditions remain unknown."""
+    from headroom.verify.applicability import check_scope, load_json
+
+    try:
+        result = check_scope(evidence_root, load_json(record), load_json(query))
+    except (OSError, ValueError, TypeError):
+        result = {"status": "invalid_evidence", "reasons": ["Scope/query could not be read"]}
+    typer.echo(json.dumps(result, indent=2, allow_nan=False))
+    if result["status"] != "tested_pass":
+        raise typer.Exit(78)
