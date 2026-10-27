@@ -1,0 +1,28 @@
+{
+  "schema": "headroom.prelaunch-failure.v1",
+  "reason": "Popen could not find uv because the detached launcher omitted scripts/env.sh",
+  "model_or_gpu_child_started": false,
+  "evidence": [
+    "FileNotFoundError from subprocess.Popen before child creation",
+    "empty execution.log",
+    "no new campaign manifest",
+    "complete shared ledger equals frozen probe-after"
+  ],
+  "ledger_after_sha256": "5f4aa1851586f239dc34f105b38ff2e190a1b0bed1df1ac1b2647ad78b6a8f58",
+  "ledger_changed": false,
+  "new_calls": 0,
+  "new_cost_usd": "0",
+  "preserved_artifacts": [
+    {
+      "path": "reports/acceptance-v2-r5-20261027/prelaunch-attempt-1/preflight.json",
+      "sha256": "7ee2214aa199f7040769924e93251720ed3f6e42626b52ef6a56ed075d972f61"
+    },
+    {
+      "path": "reports/acceptance-v2-r5-20261027/prelaunch-attempt-1/execution.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "driver_source_changed": false,
+  "correction": "Source existing scripts/env.sh before launching the unchanged driver",
+  "new_authorization_or_allocation": false
+}
