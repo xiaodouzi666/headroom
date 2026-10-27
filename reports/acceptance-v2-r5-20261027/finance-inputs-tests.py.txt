@@ -1,0 +1,217 @@
+"""Actual frozen R4 metadata + fake pending probe; never reads a live DB."""
+
+import json
+from pathlib import Path
+
+import finance_chain as f
+import finance_inputs as i
+import pytest
+
+
+def test_actual_r4_read_adapter_preserves_original_full_funding_checks():
+    values, records = i.load_r4_root_inputs(
+        i.ArtifactPin(
+            ".cache/r5-low-effort-finance-20261027/ledger-before.json",
+            "ce620d98b05d4532e5a27a93e1421b7f3be5caded08bccb3cf0092166a34d30f",
+        )
+    )
+    proof = f.verify_r4_root(**values)
+    assert proof["accepted"]
+    assert proof["r4_history"]["accepted"] and proof["r4_funding"]["accepted"]
+    assert i.verify_inputs_still_pinned(records)
+    assert not any(path.endswith(".db") or ".env" in path for path in records)
+
+
+def test_pending_probe_refuses_before_any_read(monkeypatch):
+    pins = json.loads((Path(__file__).parent / "live-pins-PENDING.json").read_bytes())
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("No file read is allowed for a pending manifest")
+
+    monkeypatch.setattr(i, "load_r4_root_inputs", forbidden)
+    with pytest.raises(ValueError, match="pending_or_unknown_pins"):
+        i.verify_frozen_root_and_probe(
+            r4_after_pin=None,
+            probe_artifact_pins={},
+            dynamic_pins=pins,
+            authorization_artifact_pins=None,
+            expected_request_sha256="PENDING",
+        )
+
+
+@pytest.mark.parametrize(
+    "path,sha",
+    [
+        (".env", "a" * 64),
+        ("../profile.json", "a" * 64),
+        ("/etc/passwd", "a" * 64),
+        (".cache/r5-low-effort-finance-20261027/ledger-before.json", "PENDING"),
+        (".cache/r5-low-effort-finance-20261027/ledger-before.json", "0" * 64),
+    ],
+)
+def test_frozen_reader_refuses_unpinned_or_unsafe_path(path, sha):
+    with pytest.raises(ValueError):
+        i.read_pin(i.ArtifactPin(path, sha), {})
+
+
+def test_actual_frozen_probe_authorization_is_independent_of_capability_report():
+    request, records = i.verify_probe_authorization(
+        {
+            "prepared": i.ArtifactPin(
+                ".cache/r5-low-effort-probe-20261027/prepared.json",
+                "6284ef2030d3b802e2368162dd9ab7b8896f665200ba4ed01e88927cce30a028",
+            ),
+            "freeze": i.ArtifactPin(
+                ".cache/r5-low-effort-probe-20261027/root-freeze.json",
+                "30e042dffb32e7890defc919f301d92350deb5efbf8ab279f68598c7fce88de8",
+            ),
+        },
+        expected_request_sha256="fe36ea49b7e5c39cd0a5b30c418113f2076c641480d0648cf5ccde5c97eda25e",
+        ledger_before_sha256="ce620d98b05d4532e5a27a93e1421b7f3be5caded08bccb3cf0092166a34d30f",
+    )
+    assert request == "fe36ea49b7e5c39cd0a5b30c418113f2076c641480d0648cf5ccde5c97eda25e"
+    assert len(records) == 3
+    assert not any(path.endswith(".db") for path in records)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "unreviewed",
+        "unfinished",
+        "revision",
+        "reviewer",
+        "prepared_link",
+        "request_link",
+        "profile",
+        "before",
+        "limit",
+        "retry",
+        "dispatches",
+        "tokens",
+        "regression",
+        "coherent_self_authorized_request",
+    ],
+)
+def test_probe_authorization_rejects_independent_anchor_changes(monkeypatch, mutation):
+    expected, before = "a" * 64, "b" * 64
+    prepared = {
+        "scope": "super_low_effort_schema_code_probe_v1",
+        "profile_sha256": f.BASE_PROFILE_SHA,
+        "profile_path": str(f.ROOT / f.R4.PROFILE),
+        "request_sha256": expected,
+        "run_limit_usd": "0.0823",
+        "daily_limit_usd": str(f.DAILY),
+        "reservation_upper_usd": "0.0822432",
+        "max_completion_tokens": 4000,
+        "sdk_retries": 0,
+        "client_retries": 0,
+        "maximum_dispatches": 1,
+        "promote_profile": False,
+    }
+    quality = b'{"synthetic_quality":true}'
+    freeze = {
+        "scope": prepared["scope"],
+        "reviewed": True,
+        "r4_terminal": True,
+        "reviewer": "root",
+        "source_revision": "c" * 40,
+        "profile_sha256": f.BASE_PROFILE_SHA,
+        "request_sha256": expected,
+        "ledger_before_sha256": before,
+        "run_limit_usd": "0.0823",
+        "daily_limit_usd": str(f.DAILY),
+        "full_regression_receipt_path": "quality.json",
+        "full_regression_receipt_sha256": f.digest(quality),
+    }
+    if mutation == "unreviewed":
+        freeze["reviewed"] = False
+    elif mutation == "unfinished":
+        freeze["r4_terminal"] = False
+    elif mutation == "revision":
+        freeze["source_revision"] = "PENDING"
+    elif mutation == "reviewer":
+        freeze["reviewer"] = "PENDING"
+    elif mutation == "request_link":
+        freeze["request_sha256"] = "0" * 64
+    elif mutation == "profile":
+        freeze["profile_sha256"] = "0" * 64
+    elif mutation == "before":
+        freeze["ledger_before_sha256"] = "0" * 64
+    elif mutation == "limit":
+        freeze["run_limit_usd"] = "0.1"
+    elif mutation == "retry":
+        prepared["sdk_retries"] = 1
+    elif mutation == "dispatches":
+        prepared["maximum_dispatches"] = 2
+    elif mutation == "tokens":
+        prepared["max_completion_tokens"] = 5000
+    elif mutation == "regression":
+        freeze["full_regression_receipt_sha256"] = "0" * 64
+    elif mutation == "coherent_self_authorized_request":
+        freeze["request_sha256"] = prepared["request_sha256"] = "0" * 64
+    prepared_raw = f.canonical(prepared)
+    freeze["prepared_sha256"] = "0" * 64 if mutation == "prepared_link" else f.digest(prepared_raw)
+    freeze_raw = f.canonical(freeze)
+    files = {"prepared.json": prepared_raw, "freeze.json": freeze_raw, "quality.json": quality}
+
+    def read_pinned(pin, records):
+        raw = files[pin.path]
+        f.need(f.digest(raw) == pin.sha256, "fixture_external_sha")
+        records[pin.path] = pin.sha256
+        return raw
+
+    monkeypatch.setattr(i, "read_pin", read_pinned)
+    with pytest.raises(ValueError):
+        i.verify_probe_authorization(
+            {
+                "prepared": i.ArtifactPin("prepared.json", f.digest(prepared_raw)),
+                "freeze": i.ArtifactPin("freeze.json", f.digest(freeze_raw)),
+            },
+            expected_request_sha256=expected,
+            ledger_before_sha256=before,
+        )
+
+
+@pytest.mark.parametrize("mutation", ["wrong_freeze", "missing_freeze", "conflicting_inventory"])
+def test_report_freeze_and_authorization_inventory_cannot_diverge(monkeypatch, mutation):
+    pins = dict.fromkeys(
+        (
+            "r4_after",
+            "probe_before",
+            "probe_after",
+            "probe_calls",
+            "probe_receipt",
+            "profile_transition",
+            "new_profile",
+            "r5_cap",
+            "r5_preflight",
+        ),
+        "a" * 64,
+    )
+    report = {"freeze_sha256": "c" * 64}
+    if mutation == "wrong_freeze":
+        report["freeze_sha256"] = "d" * 64
+    elif mutation == "missing_freeze":
+        report.clear()
+    auth_records = {"shared.json": "different"} if mutation == "conflicting_inventory" else {}
+    monkeypatch.setattr(
+        i, "verify_probe_authorization", lambda *args, **kwargs: ("a" * 64, auth_records)
+    )
+    monkeypatch.setattr(i, "load_r4_root_inputs", lambda *args: ({}, {"shared.json": "same"}))
+    monkeypatch.setattr(
+        i, "load_probe_inputs", lambda *args, **kwargs: ({"probe_receipt": f.canonical(report)}, {})
+    )
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Cannot mint a proof from mismatched authorization evidence")
+
+    monkeypatch.setattr(f, "verify_root_and_probe", forbidden)
+    with pytest.raises(ValueError):
+        i.verify_frozen_root_and_probe(
+            r4_after_pin=None,
+            probe_artifact_pins={},
+            dynamic_pins=pins,
+            authorization_artifact_pins={"freeze": i.ArtifactPin("freeze.json", "c" * 64)},
+            expected_request_sha256="a" * 64,
+        )

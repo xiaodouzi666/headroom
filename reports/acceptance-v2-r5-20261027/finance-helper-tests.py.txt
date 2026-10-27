@@ -1,0 +1,726 @@
+"""Synthetic finance fixtures; none are live probe evidence or verified profiles."""
+
+import copy
+import importlib.util
+import json
+from pathlib import Path
+
+import finance_chain as f
+import pytest
+
+
+def fixture_probe(unknown=False):
+    billing = {
+        "mode": "verified_provider_bound",
+        "prompt_token_ceiling": 262144,
+        "max_prompt_utf8_bytes": 1000000,
+        "max_completion_tokens": 4000,
+        "output_cap_field": "max_completion_tokens",
+        "output_cap_includes_reasoning": True,
+        "verified": True,
+        "evidence": "synthetic unit fixture",
+    }
+    model = {
+        "model_id": "nvidia/nemotron-3-super-120b-a12b",
+        "timeout_seconds": 120,
+        "input_usd_per_million": "0.3",
+        "output_usd_per_million": "0.9",
+        "cached_input_usd_per_million": "0.06",
+        "billing": billing,
+        "evidence": "synthetic fixture",
+        "capabilities": {
+            "json_method": "json_schema",
+            "reasoning_method": "chat_template_kwargs",
+            "evidence": "synthetic fixture",
+        },
+    }
+    profile = {
+        "live_enabled": True,
+        "credit_confirmed": True,
+        "run_budget_mode": "actual_usage",
+        "authorized_total_usd": str(f.LIFETIME),
+        "available_credit_usd": str(f.LIFETIME),
+        "verified_at": "2026-10-27T00:00:00+00:00",
+        "evidence": "synthetic fixture only",
+        "base_url": "https://api.tokenfactory.nebius.com/v1/",
+        "evidence_token_budget": 140000,
+        "models": {
+            "super": model,
+            "ultra": {"synthetic": "unchanged"},
+            "nano": {"synthetic": "unchanged"},
+        },
+    }
+    before = {
+        "budget_runs": [
+            {
+                "id": "4" * 32,
+                "day": "2026-10-26",
+                "limit_usd": "0.0823",
+                "status": "closed",
+                "halt_reason": None,
+                "budget_mode": "actual_usage",
+            }
+        ],
+        "budget_attempts": [
+            {
+                "id": "5" * 32,
+                "run_id": "4" * 32,
+                "upper_usd": "0.01",
+                "charged_usd": "0.000001",
+                "actual_usd": "0.000001",
+                "settled": 1,
+                "dispatched": 1,
+                "admission_kind": "verified_provider_bound",
+                "charge_status": "exact",
+                "charge_basis": None,
+                "review_sha256": None,
+            }
+        ],
+        "budget_retention_reviews": [],
+    }
+    run_id, attempt_id = "1" * 32, "2" * 32
+    actual = None if unknown else "0.000039"
+    attempt = {
+        "id": attempt_id,
+        "run_id": run_id,
+        "upper_usd": "0.0822432",
+        "charged_usd": "0.000039",
+        "actual_usd": actual,
+        "settled": 1,
+        "dispatched": 1,
+        "admission_kind": "verified_provider_bound",
+        "charge_status": "upper_bound" if unknown else "exact",
+        "charge_basis": "verified_tariff_missing_cache_count" if unknown else None,
+        "review_sha256": None,
+    }
+    after = {
+        "budget_runs": [
+            {
+                "id": run_id,
+                "day": "2026-10-27",
+                "limit_usd": "0.0823",
+                "status": "closed",
+                "halt_reason": None,
+                "budget_mode": "actual_usage",
+            }
+        ],
+        "budget_attempts": [attempt],
+        "budget_retention_reviews": [],
+    }
+    after["budget_runs"] += copy.deepcopy(before["budget_runs"])
+    after["budget_attempts"] += copy.deepcopy(before["budget_attempts"])
+    cost = (
+        {
+            "usd": None,
+            "status": "upper_bound",
+            "reason": "missing_cached_token_usage",
+            "upper_usd": "0.000039",
+            "basis": "verified_tariff_missing_cache_count",
+        }
+        if unknown
+        else {"usd": actual, "status": "known", "reason": None}
+    )
+    calls = [
+        {
+            "id": 1,
+            "run_id": run_id,
+            "budget_attempt_id": attempt_id,
+            "created_at": "2026-10-27T00:00:00+00:00",
+            "model": model["model_id"],
+            "response_model": model["model_id"],
+            "role": "patcher",
+            "attempt": 1,
+            "outcome": "response",
+            "http_status": 200,
+            "settled": True,
+            "usage": {
+                "prompt_tokens": 100,
+                "completion_tokens": 10,
+                "total_tokens": 110,
+                "cached_tokens": None if unknown else 0,
+                "reasoning_tokens": 8,
+            },
+            "cost": cost,
+            "billing_status": "bounded" if unknown else "known",
+            "output_cap_field": "max_completion_tokens",
+            "output_cap_tokens": 4000,
+            "request_evidence": {
+                "capture_point": "httpx_pre_transport",
+                "wire_body_sha256": "a" * 64,
+                "wire_body_utf8_bytes": 1000,
+                "stored_payload_sha256": "b" * 64,
+                "payload_status": "captured",
+                "delivery_confirmed": False,
+            },
+        }
+    ]
+    payload = {
+        "model": model["model_id"],
+        "messages": [{"role": "system", "content": "Synthetic fixture only."}],
+        "max_completion_tokens": 4000,
+        "response_format": {
+            "type": "json_schema",
+            "json_schema": {"name": "fixture", "schema": {"type": "object"}},
+        },
+        "chat_template_kwargs": {"enable_thinking": True, "low_effort": True},
+    }
+    request_payload_raw = json.dumps(payload, ensure_ascii=False, allow_nan=False).encode()
+    wire = json.dumps(payload, ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode()
+    calls[0]["request_evidence"].update(
+        stored_payload_sha256=f.digest(request_payload_raw),
+        wire_body_sha256=f.digest(wire),
+        wire_body_utf8_bytes=len(wire),
+    )
+    base_raw = f.canonical(profile)
+    receipt = {
+        "request_sha256": f.digest(
+            json.dumps(
+                payload, sort_keys=True, ensure_ascii=False, allow_nan=False, separators=(",", ":")
+            ).encode()
+        ),
+        "scope": "super_low_effort_schema_code_probe_v1",
+        "provenance": "live",
+        "accepted": True,
+        "verdict": "request_combination_usable_in_one_sample",
+        "finish_reason": "stop",
+        "response_model": model["model_id"],
+        "base_url": profile["base_url"],
+        "profile_model_compatibility": {
+            key: value for key, value in model.items() if key != "capabilities"
+        },
+        "reasoning_tokens": 8,
+        "completion_tokens": 10,
+        "prompt_tokens": 100,
+        "billing_status": "bounded" if unknown else "known",
+        "run_id": run_id,
+        "budget_attempt_id": attempt_id,
+        "call_id": 1,
+        "profile_sha256": f.digest(base_raw),
+        "ledger_path": ".cache/budget.db",
+        "store_path": "runs/acceptance/headroom.db",
+    }
+    raw = {
+        "before": f.canonical(before),
+        "after": f.canonical(after),
+        "calls": f.canonical(calls),
+        "probe_receipt": f.canonical(receipt),
+    }
+    return raw | {
+        "before_sha256": f.digest(raw["before"]),
+        "after_sha256": f.digest(raw["after"]),
+        "probe_receipt_sha256": f.digest(raw["probe_receipt"]),
+        "base_profile_sha256": f.digest(base_raw),
+        "base_profile_raw": base_raw,
+        "request_payload_raw": request_payload_raw,
+        "expected_request_sha256": receipt["request_sha256"],
+    }
+
+
+@pytest.fixture(autouse=True)
+def synthetic_probe_pins_only_in_test_process(request, monkeypatch):
+    if "r4_root" in request.node.name or "r5_dispatch" in request.node.name:
+        return
+    data = fixture_probe()
+    before = f.snapshot(data["before"])
+    monkeypatch.setattr(f, "BASE_PROFILE_SHA", data["base_profile_sha256"])
+    monkeypatch.setattr(f, "R4_FINAL_PROJECTION", f.projection(before))
+    monkeypatch.setattr(f, "R4_FINAL_RUNS", len(before["budget_runs"]))
+    monkeypatch.setattr(f, "R4_FINAL_ATTEMPTS", len(before["budget_attempts"]))
+
+
+def mutate(data, key, change, *, repin=True):
+    value = json.loads(data[key])
+    change(value)
+    data[key] = f.canonical(value)
+    pin = {
+        "before": "before_sha256",
+        "after": "after_sha256",
+        "probe_receipt": "probe_receipt_sha256",
+        "base_profile_raw": "base_profile_sha256",
+    }.get(key)
+    if repin and pin:
+        data[pin] = f.digest(data[key])
+
+
+@pytest.mark.parametrize("unknown", [False, True])
+def test_probe_exact_and_bounded_unknown(unknown):
+    data = fixture_probe(unknown)
+    before = copy.deepcopy(data)
+    result = f.verify_probe_delta(**data)
+    assert f.is_verified_probe_finance(result)
+    assert result.conservative_charged_usd == "0.000039"
+    assert result.actual_usd == (None if unknown else "0.000039")
+    assert data == before
+    assert not f.is_verified_probe_finance({"accepted": True})
+
+
+@pytest.mark.parametrize(
+    "key,change",
+    [
+        ("calls", lambda x: x.append(copy.deepcopy(x[0]))),
+        ("calls", lambda x: x[0].__setitem__("attempt", 2)),
+        ("calls", lambda x: x[0].__setitem__("http_status", 529)),
+        ("calls", lambda x: x[0].__setitem__("response_model", "other")),
+        ("calls", lambda x: x[0].__setitem__("budget_attempt_id", "3" * 32)),
+        ("calls", lambda x: x[0].__setitem__("role", "diagnose")),
+        ("calls", lambda x: x[0].__setitem__("raw_body", "forbidden")),
+        (
+            "calls",
+            lambda x: x[0]["request_evidence"].__setitem__("payload", {"secret": "forbidden"}),
+        ),
+        ("calls", lambda x: x[0]["request_evidence"].__setitem__("wire_body_sha256", "PENDING")),
+        ("calls", lambda x: x[0]["usage"].__setitem__("total_tokens", 111)),
+        ("calls", lambda x: x[0]["usage"].__setitem__("completion_tokens", 5000)),
+        ("calls", lambda x: x[0]["usage"].__setitem__("reasoning_tokens", 1000)),
+        ("calls", lambda x: x[0].__setitem__("created_at", "2026-10-28T00:00:00+00:00")),
+        ("after", lambda x: x["budget_attempts"][0].__setitem__("charged_usd", "0")),
+        ("after", lambda x: x["budget_attempts"][0].__setitem__("upper_usd", "1")),
+        ("after", lambda x: x["budget_attempts"][0].__setitem__("settled", 0)),
+        ("after", lambda x: x["budget_attempts"][0].__setitem__("dispatched", 0)),
+        ("after", lambda x: x["budget_runs"][0].__setitem__("limit_usd", "1")),
+        ("after", lambda x: x["budget_runs"][0].__setitem__("halt_reason", "unknown_charge")),
+        ("after", lambda x: x["budget_retention_reviews"].append({})),
+        ("probe_receipt", lambda x: x.__setitem__("profile_sha256", "0" * 64)),
+        ("probe_receipt", lambda x: x.__setitem__("call_id", 2)),
+        ("probe_receipt", lambda x: x.__setitem__("ledger_path", ".cache/new-budget.db")),
+        ("probe_receipt", lambda x: x.__setitem__("store_path", "runs/headroom.db")),
+        ("base_profile_raw", lambda x: x.__setitem__("authorized_total_usd", "20")),
+    ],
+)
+def test_probe_rejects_mutation(key, change):
+    data = fixture_probe()
+    mutate(data, key, change)
+    with pytest.raises((ValueError, KeyError, TypeError)):
+        f.verify_probe_delta(**data)
+
+
+def test_actual_unknown_cannot_be_zeroed_or_released():
+    for field, value in [("actual_usd", "0"), ("charged_usd", "0"), ("charge_status", "exact")]:
+        data = fixture_probe(True)
+        mutate(
+            data,
+            "after",
+            lambda x, field=field, value=value: x["budget_attempts"][0].__setitem__(field, value),
+        )
+        with pytest.raises(ValueError):
+            f.verify_probe_delta(**data)
+
+
+def test_all_old_rows_and_review_history_must_survive():
+    data = fixture_probe()
+    assert f.is_verified_probe_finance(f.verify_probe_delta(**data))
+    mutate(data, "after", lambda x: x["budget_attempts"][1].__setitem__("charged_usd", "0"))
+    with pytest.raises(ValueError):
+        f.verify_probe_delta(**data)
+
+
+def test_pins_and_json_duplicates_fail_closed():
+    data = fixture_probe()
+    for key in ("before_sha256", "after_sha256", "probe_receipt_sha256", "base_profile_sha256"):
+        bad = copy.deepcopy(data)
+        bad[key] = "PENDING"
+        with pytest.raises(ValueError):
+            f.verify_probe_delta(**bad)
+    with pytest.raises(ValueError):
+        f.parse(b'{"id":1,"id":2}')
+    with pytest.raises(ValueError):
+        f.require_frozen_pins(
+            json.loads((Path(__file__).parent / "live-pins-PENDING.json").read_bytes())
+        )
+
+
+def fixture_r4_root():
+    root = f.ROOT
+    folder = root / "reports/acceptance-v2-r4-20261027"
+    spec = importlib.util.spec_from_file_location(
+        "r4_fixture_reader", folder / "test_financial_history_v2.py"
+    )
+    oldtests = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(oldtests)
+    old = oldtests.fixture()
+    r4_raw = {
+        "audit": (folder / "independent-audit-history-v2-final.json").read_bytes(),
+        "execution": (folder / "execution.json").read_bytes(),
+        "cap": (folder / "cap-review.json").read_bytes(),
+        "preflight": (folder / "preflight.json").read_bytes(),
+        "campaign": (
+            root / "runs/evaluation/live/20261027T002717226380Z-119f2528/campaign.json"
+        ).read_bytes(),
+    }
+    r4_docs = {key: json.loads(value) for key, value in r4_raw.items()}
+    funding, retirement, allocation = (
+        json.loads((root / name).read_bytes())
+        for name in (f.R4.FUNDING_PATH, f.R4.RETIREMENT_PATH, f.R4.ALLOCATION_PATH)
+    )
+    profile = json.loads((root / f.R4.PROFILE).read_bytes())
+    hashes = {}
+    for pin in f.R4.FUNDING_PINS:
+        hashes[pin["path"]] = f.digest((root / pin["path"]).read_bytes())
+        assert hashes[pin["path"]] == pin["sha256"]
+    for entry in retirement["entrypoints"]:
+        for key in ("path", "archived_path"):
+            if key in entry:
+                hashes[entry[key]] = f.digest((root / entry[key]).read_bytes())
+    driver = f.R4.driver_funding_pins((folder / "run_mvp_v2.py").read_text())
+    after = (root / ".cache/r5-low-effort-finance-20261027/ledger-before.json").read_bytes()
+    assert f.digest(after) == "ce620d98b05d4532e5a27a93e1421b7f3be5caded08bccb3cf0092166a34d30f"
+    return {
+        "legacy_documents": old["documents"],
+        "legacy_hashes": old["hashes"],
+        "funding_args": [funding, retirement, allocation, profile, r4_docs["cap"], driver, hashes],
+        "r4_documents": r4_docs,
+        "r4_raw": r4_raw,
+        "r4_after": after,
+    }
+
+
+def test_real_frozen_r4_root_calls_unchanged_history_and_funding_proofs():
+    data = fixture_r4_root()
+    result = f.verify_r4_root(**data)
+    assert (
+        result["accepted"] and result["r4_history"]["accepted"] and result["r4_funding"]["accepted"]
+    )
+    assert result["r4_extension"]["r4_after"]["runs"] == 124
+    assert result["r4_extension"]["r4_after"]["attempts"] == 690
+    assert result["r4_extension"]["r4_after"]["conservative_charged_usd"] == "10.541246576"
+    assert not result["historical_scores_used"]
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "old_amount",
+        "old_row_drop",
+        "new_row_drop",
+        "duplicate",
+        "audit",
+        "funding",
+        "legacy_review",
+    ],
+)
+def test_r4_root_rejects_history_or_anchor_changes(mutation):
+    data = fixture_r4_root()
+    if mutation in {"old_amount", "old_row_drop", "new_row_drop", "duplicate"}:
+        value = json.loads(data["r4_after"])
+        if mutation == "old_amount":
+            value["budget_attempts"][0]["charged_usd"] = "0"
+        elif mutation == "old_row_drop":
+            value["budget_runs"].pop(0)
+        elif mutation == "new_row_drop":
+            value["budget_attempts"].pop()
+        else:
+            value["budget_attempts"].append(copy.deepcopy(value["budget_attempts"][0]))
+        data["r4_after"] = f.canonical(value)
+    elif mutation == "audit":
+        data["r4_documents"]["audit"]["finance"]["all_time"]["conservative_charged_usd"] = "0"
+    elif mutation == "funding":
+        data["funding_args"][0]["runtime_conservative_net_usd"] = "0"
+    else:
+        data["legacy_documents"]["after"]["budget_attempts"][0]["review_sha256"] = "a" * 64
+    with pytest.raises((ValueError, KeyError, TypeError)):
+        f.verify_r4_root(**data)
+
+
+def fixture_dispatch():
+    after = fixture_r4_root()["r4_after"]
+    snapshot = f.snapshot(after)
+    summary = f.summary(snapshot)
+    totals = f.R4.totals(snapshot["budget_attempts"])
+    profile_path = ".cache/tokenfactory-runtime-v2-r5-low-effort.json"
+    profile_sha = "d" * 64
+    day = "2026-10-27"
+    days = {r["id"]: r["day"] for r in snapshot["budget_runs"]}
+    day_charged = sum(
+        (
+            f.R4.money(a["charged_usd"])
+            for a in snapshot["budget_attempts"]
+            if days[a["run_id"]] == day
+        ),
+        f.Decimal(0),
+    )
+    charged = f.R4.money(totals["conservative_charged_usd"])
+    remaining, day_remaining = f.LIFETIME - charged, f.DAILY - day_charged
+    effective = min(f.Decimal("5.4"), remaining, day_remaining)
+    cap = {
+        "ledger": summary,
+        "no_history_exclusions": True,
+        "unknown_costs_retain_verified_bounds": True,
+        "authorization": {"gift_only": True, "recharge": False, "new_budget_pool": False},
+        "pool_usd": str(f.LIFETIME),
+        "daily_pool_usd": str(f.DAILY),
+        "per_case_stop_usd": "0.6",
+        "campaign_max_usd": "5.4",
+        "profile_sha256": f.BASE_PROFILE_SHA,
+        "active_profile_path": profile_path,
+        "active_profile_sha256": profile_sha,
+    }
+    preflight = {
+        "started_utc": day + "T03:00:00+00:00",
+        "active_profile_sha256": profile_sha,
+        "base_funding_profile_sha256": f.BASE_PROFILE_SHA,
+        "argv": [
+            "--runtime-profile",
+            profile_path,
+            "--budget",
+            "0.6",
+            "--daily-budget",
+            str(f.DAILY),
+            "--campaign-budget",
+            str(effective),
+        ],
+        "budget_before": {
+            "projection_sha256": f.projection(snapshot),
+            "closed_runs": 124,
+            "settled_attempts": 690,
+            "history_exclusions": [],
+            "utc_day": day,
+            "conservative_usd": str(charged),
+            "known_subtotal_usd": totals["known_actual_subtotal_usd"],
+            "actual_total_usd": None,
+            "day_conservative_usd": str(day_charged),
+            "all_time_limit_usd": str(f.LIFETIME),
+            "daily_limit_usd": str(f.DAILY),
+            "remaining_all_time_usd": str(remaining),
+            "remaining_day_usd": str(day_remaining),
+            "effective_campaign_usd": str(effective),
+            "campaign_max_usd": "5.4",
+        },
+    }
+    return {
+        "after": after,
+        "cap": cap,
+        "preflight": preflight,
+        "active_profile_path": profile_path,
+        "active_profile_sha256": profile_sha,
+    }
+
+
+def test_r5_dispatch_keeps_base_profile_anchor_and_binds_active_profile():
+    result = f.verify_r5_dispatch(**fixture_dispatch())
+    assert result["accepted"] and result["remaining_net_usd"] == "3.636510964"
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "recharge",
+        "new_pool",
+        "base_sha",
+        "active_sha",
+        "active_path",
+        "projection",
+        "exclude",
+        "known",
+        "unknown_zero",
+        "utc",
+        "lifetime",
+        "daily",
+        "remaining",
+        "case",
+        "duplicate_argv",
+    ],
+)
+def test_r5_dispatch_rejects_changes(mutation):
+    data = fixture_dispatch()
+    cap, before, argv = data["cap"], data["preflight"]["budget_before"], data["preflight"]["argv"]
+    if mutation == "recharge":
+        cap["authorization"]["recharge"] = True
+    elif mutation == "new_pool":
+        cap["authorization"]["new_budget_pool"] = True
+    elif mutation == "base_sha":
+        cap["profile_sha256"] = data["active_profile_sha256"]
+    elif mutation == "active_sha":
+        cap["active_profile_sha256"] = "0" * 64
+    elif mutation == "active_path":
+        cap["active_profile_path"] = ".cache/other.json"
+    elif mutation == "projection":
+        before["projection_sha256"] = "0" * 64
+    elif mutation == "exclude":
+        before["history_exclusions"] = ["old"]
+    elif mutation == "known":
+        before["known_subtotal_usd"] = "0"
+    elif mutation == "unknown_zero":
+        before["actual_total_usd"] = "0"
+    elif mutation == "utc":
+        before["utc_day"] = "2026-10-28"
+    elif mutation == "lifetime":
+        before["all_time_limit_usd"] = "20"
+    elif mutation == "daily":
+        before["daily_limit_usd"] = "12"
+    elif mutation == "remaining":
+        before["remaining_all_time_usd"] = "14"
+    elif mutation == "case":
+        argv[argv.index("--budget") + 1] = "1"
+    else:
+        argv.extend(["--budget", "0.6"])
+    with pytest.raises((ValueError, KeyError, TypeError)):
+        f.verify_r5_dispatch(**data)
+
+
+def test_sealed_proof_rejects_replace_mutation():
+    from dataclasses import replace
+
+    proof = f.verify_probe_delta(**fixture_probe())
+    for key, value in (
+        ("run_id", "9" * 32),
+        ("actual_usd", "0"),
+        ("after_ledger_sha256", "0" * 64),
+    ):
+        assert not f.is_verified_probe_finance(replace(proof, **{key: value}))
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    ["limit", "cap", "request_sha", "low_effort", "image", "model", "wire", "old_projection"],
+)
+def test_frozen_probe_and_request_contract_rejects_changes(mutation):
+    data = fixture_probe()
+    if mutation == "limit":
+        mutate(data, "after", lambda x: x["budget_runs"][0].__setitem__("limit_usd", "0.1"))
+    elif mutation == "cap":
+        mutate(data, "calls", lambda x: x[0].__setitem__("output_cap_tokens", 3999))
+    elif mutation == "request_sha":
+        mutate(data, "probe_receipt", lambda x: x.__setitem__("request_sha256", "0" * 64))
+    elif mutation == "wire":
+        mutate(
+            data,
+            "calls",
+            lambda x: x[0]["request_evidence"].__setitem__("wire_body_sha256", "0" * 64),
+        )
+    elif mutation == "old_projection":
+        mutate(data, "before", lambda x: x["budget_runs"][0].__setitem__("limit_usd", "0.02"))
+    else:
+        payload = json.loads(data["request_payload_raw"])
+        if mutation == "low_effort":
+            payload["chat_template_kwargs"]["low_effort"] = False
+        elif mutation == "image":
+            payload["messages"][0]["content"] = [{"type": "image_url", "url": "synthetic"}]
+        else:
+            payload["model"] = "wrong"
+        data["request_payload_raw"] = json.dumps(
+            payload, ensure_ascii=False, allow_nan=False
+        ).encode()
+        wire = json.dumps(
+            payload, ensure_ascii=False, allow_nan=False, separators=(",", ":")
+        ).encode()
+        mutate(
+            data,
+            "calls",
+            lambda x: x[0]["request_evidence"].update(
+                wire_body_sha256=f.digest(wire),
+                wire_body_utf8_bytes=len(wire),
+                stored_payload_sha256=f.digest(data["request_payload_raw"]),
+            ),
+        )
+        mutate(
+            data,
+            "probe_receipt",
+            lambda x: x.__setitem__(
+                "request_sha256",
+                f.digest(
+                    json.dumps(
+                        payload,
+                        sort_keys=True,
+                        ensure_ascii=False,
+                        allow_nan=False,
+                        separators=(",", ":"),
+                    ).encode()
+                ),
+            ),
+        )
+    with pytest.raises(ValueError):
+        f.verify_probe_delta(**data)
+
+
+def test_composition_proves_probe_start_and_cannot_authorize_dispatch(monkeypatch):
+    # Root math has separate real pinned tests; this isolates orchestration order.
+    data = fixture_probe()
+    monkeypatch.setattr(
+        f, "verify_r4_root", lambda **kwargs: {"accepted": True, "fixture_only": True}
+    )
+    pins = dict.fromkeys(
+        (
+            "r4_after",
+            "probe_before",
+            "probe_after",
+            "probe_calls",
+            "probe_receipt",
+            "profile_transition",
+            "new_profile",
+            "r5_cap",
+            "r5_preflight",
+        ),
+        "PENDING",
+    )
+    pins.update(
+        r4_after=data["before_sha256"],
+        probe_before=data["before_sha256"],
+        probe_after=data["after_sha256"],
+        probe_calls=f.digest(data["calls"]),
+        probe_receipt=data["probe_receipt_sha256"],
+    )
+    result = f.verify_root_and_probe(
+        r4_inputs={"r4_after": data["before"]}, probe_inputs=data, pins=pins
+    )
+    assert result["accepted"] and not result["dispatch_permitted"]
+    assert not result["profile_transition_verified"]
+    assert f.is_verified_probe_finance(result["probe_finance"])
+    with pytest.raises(ValueError):
+        f.require_frozen_pins(pins)  # Audit/dispatch cannot use probe-only readiness.
+    bad_root = json.loads(data["before"])
+    bad_root["budget_runs"][0]["day"] = "2026-10-25"
+    raw = f.canonical(bad_root)
+    pins["r4_after"] = f.digest(raw)
+    with pytest.raises(ValueError, match="probe_begins_at_exact_r4_end"):
+        f.verify_root_and_probe(r4_inputs={"r4_after": raw}, probe_inputs=data, pins=pins)
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("reasoning_tokens", 0),
+        ("reasoning_tokens", None),
+        ("reasoning_tokens", 9),
+        ("completion_tokens", 9),
+        ("prompt_tokens", 99),
+        ("finish_reason", "length"),
+        ("response_model", "other"),
+        ("accepted", False),
+        ("provenance", "offline_fixture"),
+        ("billing_status", "unknown"),
+        ("scope", "other"),
+    ],
+)
+def test_probe_receipt_must_match_real_call(field, value):
+    data = fixture_probe()
+    mutate(data, "probe_receipt", lambda x: x.__setitem__(field, value))
+    with pytest.raises(ValueError):
+        f.verify_probe_delta(**data)
+
+
+def test_request_anchor_is_independent_of_self_consistent_payload_and_report():
+    data = fixture_probe()
+    payload = json.loads(data["request_payload_raw"])
+    payload["messages"][0]["content"] = "A different but fully self-consistent request."
+    data["request_payload_raw"] = json.dumps(payload, ensure_ascii=False, allow_nan=False).encode()
+    wire = json.dumps(payload, ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode()
+    fingerprint = f.digest(
+        json.dumps(
+            payload, sort_keys=True, ensure_ascii=False, allow_nan=False, separators=(",", ":")
+        ).encode()
+    )
+    mutate(
+        data,
+        "calls",
+        lambda x: x[0]["request_evidence"].update(
+            wire_body_sha256=f.digest(wire),
+            wire_body_utf8_bytes=len(wire),
+            stored_payload_sha256=f.digest(data["request_payload_raw"]),
+        ),
+    )
+    mutate(data, "probe_receipt", lambda x: x.__setitem__("request_sha256", fingerprint))
+    with pytest.raises(ValueError, match="exact_wire_and_reviewed_request_fingerprint"):
+        f.verify_probe_delta(**data)
+    data["expected_request_sha256"] = "PENDING"
+    with pytest.raises(ValueError, match="independent_expected_request_pin"):
+        f.verify_probe_delta(**data)
