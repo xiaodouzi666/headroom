@@ -506,8 +506,12 @@ def _owned_diff(run_root, relative, number):
     }
 
 
-def candidate_outcome_stage(row, *, patch_status=None):
-    """Label only this candidate's recorded stage; retained state is not consulted."""
+def candidate_outcome_stage(row, *, patch_status=None, patch_reason=None):
+    """Label candidate facts from host-owned patch status/reason and capture only.
+
+    Callers must not substitute model prose, row.reason, or retained state for the
+    status/reason read from this round's owned patch-result artifact.
+    """
     verification = row.get("verification")
     available = isinstance(verification, Mapping)
     result = {
@@ -515,8 +519,11 @@ def candidate_outcome_stage(row, *, patch_status=None):
         "candidate_runtime_observed": None,
         "candidate_numerical_comparison": "unknown",
     }
-    if patch_status == "rejected":
-        if available:
+    # This exact host F821 rejection returns before services.verify. Other
+    # failed reasons do not establish whether candidate execution was attempted.
+    failed_name_check = patch_status == "failed" and patch_reason == "NEW_UNDEFINED_NAME"
+    if patch_status == "rejected" or failed_name_check:
+        if available or (failed_name_check and verification is not None):
             result["stage"] = "inconsistent_patch_and_verification_evidence"
         else:
             result.update(stage="rejected_before_execution", candidate_runtime_observed=False)
@@ -587,7 +594,7 @@ def candidate_outcome_stage(row, *, patch_status=None):
     return result
 
 
-def candidate_capture_counts(row, *, patch_status=None):
+def candidate_capture_counts(row, *, patch_status=None, patch_reason=None):
     """Summarize recorded candidate quantities, without changing numerical gates.
 
     A recorded scalar is an argument seen at Tensor.backward entry, including
@@ -603,7 +610,7 @@ def candidate_capture_counts(row, *, patch_status=None):
         "logical_update_count": None,
         "logical_update_scope": "unavailable",
     }
-    stage = candidate_outcome_stage(row, patch_status=patch_status)
+    stage = candidate_outcome_stage(row, patch_status=patch_status, patch_reason=patch_reason)
     if stage["candidate_runtime_observed"] is not True:
         return result
     after = row["verification"]["after"]
@@ -690,8 +697,12 @@ def candidate_evidence(run_root, row, *, selected_round):
         return value
     value.update(
         patch_result_available=True,
-        outcome_stage=candidate_outcome_stage(row, patch_status=result.get("status")),
-        capture_counts=candidate_capture_counts(row, patch_status=result.get("status")),
+        outcome_stage=candidate_outcome_stage(
+            row, patch_status=result.get("status"), patch_reason=result.get("reason")
+        ),
+        capture_counts=candidate_capture_counts(
+            row, patch_status=result.get("status"), patch_reason=result.get("reason")
+        ),
         patch_result_sha256=hashlib.sha256(raw).hexdigest(),
         patch_result_reason=None,
         status=_text(result.get("status"), 64),

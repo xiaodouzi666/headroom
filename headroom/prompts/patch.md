@@ -58,6 +58,13 @@ updates. Any optimizer/gradient-lifetime rewrite must preserve the update cadenc
 parameter groups, state, weight decay and scheduler semantics; unresolved
 accumulation or global-gradient dependencies remain mathematical prerequisites.
 
+Trace the unreduced loss and its reduction axes before choosing a denominator.
+An unqualified mean covers every element it reduces, which can include feature
+or token axes as well as the leading batch axis. Preserve broadcasting, masks,
+weights and any sequence of reductions. Do not substitute the batch length or
+chunk count for the full source-defined denominator. If those semantics are
+unclear, keep the weighting prerequisite unresolved rather than inventing a scale.
+
 For every accumulation edit, derive the loss weights before writing code:
 if the original loss is a mean over N valid reduction elements, each nonempty
 chunk mean must be weighted by its valid-element count divided by N before

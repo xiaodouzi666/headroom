@@ -1,5 +1,11 @@
 # Token Factory model probes — T0.4 reviewed and accepted
 
+## Current runtime update — 2026-10-27 R5/R6
+
+The active R5 profile enables the single-sample-verified Super thinking-plus-low-effort combination, with its exact shared-ledger probe receipt and unchanged prices/limits. It adds only three capability evidence fields to the original funding profile; see [R5 evidence](../reports/acceptance-v2-r5-20261027/README.md).
+
+The R6 implementation keeps the initial Ultra diagnosis thinking-enabled. Only a first truncated/length response under the default 16384-token cap may use its one existing supplement with thinking disabled, using the previously reviewed Ultra template control. Other protocols/errors and all schema/policy/financial checks retain their prior behavior. Requested modes and bounded validation failures are public metadata; no hidden reasoning is copied. Full backend regression passes, but complex live recovery efficacy is not yet measured. The historical probe snapshots below retain their original dates and acceptance boundaries.
+
 Status on 2026-10-25 (Asia/Shanghai): all 60 original inference probes have now been executed: 52 capability samples, four Ultra long-input samples and four concurrent Super calls. This includes failures and unverified controls, not 60 successful capabilities. **Full T0.4 accepted=false pending root's installed-configuration/evidence-budget review and final acceptance receipt.** Nano tool generation failed, /no_think did not disable reasoning, Lightning exceeded both requested 128-token reasoning parameters, and the 900k Ultra sample returned HTTP 429 with unknown usage retained at its full upper charge. The disabled candidate profile has only a static review; no configuration is enabled by this document.
 
 

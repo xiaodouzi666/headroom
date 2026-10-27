@@ -30,8 +30,13 @@ from unidiff.errors import UnidiffParseError
 from headroom.lab.runner import copy_source
 from headroom.llm.client import CapabilityNotVerified, LLMError
 from headroom.llm.router import LLMRouter, ResponseValidationError
+from headroom.patch_binding_feedback import rejected_model_binding_feedback
 from headroom.patch_evidence import save_patch_response
-from headroom.patch_feedback import candidate_content_fingerprint, rejected_syntax_feedback
+from headroom.patch_feedback import (
+    candidate_content_fingerprint,
+    rejected_name_feedback,
+    rejected_syntax_feedback,
+)
 from headroom.patch_names import check_undefined_names
 from headroom.patch_spans import (
     SCHEMA_NAME as PATCH_WIRE_SCHEMA,
@@ -916,6 +921,39 @@ class PatchEngine:
                     "previous_proposal": response.parsed,
                     "candidate_syntax": syntax_feedback,
                 }
+                if attempt.reason == "NEW_UNDEFINED_NAME":
+                    try:
+                        failure["candidate_names"] = rejected_name_feedback(
+                            attempt.candidate_dir,
+                            attempt.changed_files,
+                            reason=attempt.reason,
+                            detail=attempt.detail,
+                            application_check=attempt.application_check,
+                        )
+                    except (OSError, ValueError, TypeError, KeyError, RuntimeError, OverflowError):
+                        failure["candidate_names"] = {
+                            "coordinate_space": "rejected_candidate",
+                            "original_source_span_ids": False,
+                            "status": "unavailable",
+                            "reason": "diagnostic_unavailable",
+                            "diagnostics": [],
+                        }
+                if attempt.reason == "MODEL_CHANGED":
+                    try:
+                        failure["candidate_model_bindings"] = rejected_model_binding_feedback(
+                            snapshot,
+                            attempt.candidate_dir,
+                            attempt.changed_files,
+                            reason=attempt.reason,
+                            issues=attempt.policy_report.issues if attempt.policy_report else (),
+                            application_check=attempt.application_check,
+                        )
+                    except (OSError, ValueError, TypeError, KeyError, RuntimeError, OverflowError):
+                        failure["candidate_model_bindings"] = {
+                            "status": "unavailable",
+                            "reason": "diagnostic_unavailable",
+                            "diagnostics": [],
+                        }
                 if conversion is not None and normalized is not None:
                     fingerprint = candidate_content_fingerprint(conversion.metadata, normalized)
                     failure["candidate_content"] = {

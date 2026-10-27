@@ -310,7 +310,32 @@ def _key(value):
     return value.rsplit(".", 1)[-1].lstrip("-").replace("-", "_").lower()
 
 
-def _bindings(tree):
+def _bindings(tree, *, origins=None):
+    # Optional explanatory origins do not participate in policy decisions.
+    parents = (
+        {id(child): parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
+        if origins is not None
+        else {}
+    )
+
+    def record_origin(key, node, kind):
+        if origins is None:
+            return
+        parent = node
+        while parent is not None and not isinstance(parent, ast.Call):
+            parent = parents.get(id(parent))
+        origin = None
+        if id(node) in parents and getattr(node, "lineno", None) is not None:
+            origin = {
+                "kind": kind,
+                "line": node.lineno,
+                "column_bytes": node.col_offset,
+                "end_line": node.end_lineno,
+                "end_column_bytes": node.end_col_offset,
+                "enclosing_call": _name(parent.func) if parent is not None else None,
+            }
+        origins.setdefault(key, []).append(origin)
+
     constants = {}
     for _ in range(3):
         for node in ast.walk(tree):
@@ -322,15 +347,16 @@ def _bindings(tree):
     values = defaultdict(list)
     interesting = MODEL_KEYS | TRAIN_KEYS | BATCH_KEYS | ACCUM_KEYS
 
-    def add(name, value):
+    def add(name, value, *, origin=None, kind=None):
         name = _key(name)
         if name in interesting and value is not None:
             values[name].append(
                 (_number(value, constants), ast.dump(value, include_attributes=False))
             )
+            record_origin(name, origin, kind)
             if isinstance(value, ast.IfExp):
-                add(name, value.body)
-                add(name, value.orelse)
+                add(name, value.body, origin=origin, kind=kind)
+                add(name, value.orelse, origin=origin, kind=kind)
 
     def add_assignment(target, value):
         if isinstance(target, (ast.Tuple, ast.List)):
@@ -351,7 +377,7 @@ def _bindings(tree):
                 for element in target.elts:
                     add_assignment(element, value)
         else:
-            add(_name(target), value)
+            add(_name(target), value, origin=target, kind="assignment_target")
 
     constructors = Counter()
     for node in ast.walk(tree):
@@ -371,15 +397,18 @@ def _bindings(tree):
                 values[f"constructor:{name}:{occurrence}:{index}"].append(
                     (_number(argument, constants), ast.dump(argument))
                 )
+                record_origin(
+                    f"constructor:{name}:{occurrence}:{index}", argument, "constructor_argument"
+                )
         if isinstance(node, (ast.Assign, ast.AnnAssign)):
             for target in node.targets if isinstance(node, ast.Assign) else [node.target]:
                 add_assignment(target, node.value)
         elif isinstance(node, ast.keyword) and node.arg:
-            add(node.arg, node.value)
+            add(node.arg, node.value, origin=node, kind="keyword_argument")
         elif isinstance(node, ast.Dict):
             for key, value in zip(node.keys, node.values, strict=True):
                 if isinstance(key, ast.Constant) and isinstance(key.value, str):
-                    add(key.value, value)
+                    add(key.value, value, origin=value, kind="dictionary_value")
         elif isinstance(node, ast.Call) and _name(node.func).endswith("add_argument"):
             flag = next(
                 (
@@ -393,7 +422,7 @@ def _bindings(tree):
             )
             default = next((kw.value for kw in node.keywords if kw.arg == "default"), None)
             if flag and default is not None:
-                add(flag, default)
+                add(flag, default, origin=default, kind="cli_default")
         elif (
             isinstance(node, ast.For)
             and _key(_name(node.target))
@@ -406,6 +435,7 @@ def _bindings(tree):
             values["loop:" + _name(node.target)].append(
                 (_number(bound, constants), ast.dump(bound))
             )
+            record_origin("loop:" + _name(node.target), bound, "loop_bound")
     return dict(values)
 
 

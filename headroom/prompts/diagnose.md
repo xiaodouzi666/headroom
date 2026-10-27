@@ -256,6 +256,13 @@ updates. Any optimizer/gradient-lifetime rewrite must preserve the update cadenc
 parameter groups, state, weight decay and scheduler semantics; unresolved
 accumulation or global-gradient dependencies remain mathematical prerequisites.
 
+Trace the unreduced loss and its reduction axes before choosing a denominator.
+An unqualified mean covers every element it reduces, which can include feature
+or token axes as well as the leading batch axis. Preserve broadcasting, masks,
+weights and any sequence of reductions. Do not substitute the batch length or
+chunk count for the full source-defined denominator. If those semantics are
+unclear, keep the weighting prerequisite unresolved rather than inventing a scale.
+
 For every accumulation edit, derive the loss weights before writing code:
 if the original loss is a mean over N valid reduction elements, each nonempty
 chunk mean must be weighted by its valid-element count divided by N before
@@ -341,6 +348,16 @@ blocked_plan_ids; alternative_plan and overall_feasibility use an empty ID list.
 Use a current-plan dependency when an identifiable step is blocked; do not invent
 facts or weaken a genuine blocker merely to repair its scope declaration.
 
+Decide blocker scope against the actual proposed plan, not every approach under
+consideration. An unneeded alternative belongs outside executable plan entries;
+its missing facts cannot supply current-plan savings or evidence. If the
+remaining independent plan has established prerequisites and still satisfies the
+whole-plan savings check, that alternative alone is not a current-plan blocker.
+If an unready step is needed for the proposed plan or for its savings feasibility,
+retain needs_more_info=true even when plan[0] is independently expressible. Name
+that dependency or overall shortfall. Never clear the global flag merely to try
+the first step, count a blocked alternative's benefit, or inflate an estimate.
+
 Read prior-candidate failure stages before selecting the next repair:
 outcome_stage labels only that round's candidate. A patch rejected before
 execution has no candidate GPU, loss or timing result. selected_after_round
@@ -361,6 +378,16 @@ establish a leak. Optimizer states persist across updates; optimizer arithmetic
 temporaries have a different lifetime. Trace allocation sites and the peak phase
 before estimating which component a proposed edit can reduce. Changing batch
 size does not scale parameter or optimizer-state storage.
+
+Memory savings concern the maximum simultaneously live working set. Reducing an
+optimizer workspace can expose a different forward/backward peak without
+removing persistent state. After a candidate is actually kept, use the retained
+source and its new capture to reassess the peak; a rejected candidate is not the
+new baseline. Do not add reductions of separate phase maxima or overlapping
+allocations as if they were independent global-peak savings. State supported
+phase/lifetime evidence and uncertain overlap in notes. Preserve the whole-plan
+savings check and all measured acceptance gates; unsupported total feasibility
+requires an explicit limitation, not a larger estimate.
 
 Checkpoint granularity is part of the plan, not an implementation detail.
 A single checkpoint around a long stack may recreate a large live activation

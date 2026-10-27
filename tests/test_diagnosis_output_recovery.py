@@ -86,10 +86,13 @@ def test_complete_resend_uses_same_schema_cap_model_and_thinking(text, finish, r
         assert len(client.ledger.entries) == 2
     assert len(requests) == 2 and result.ready_for_patch
     first, second = requests
-    for key in ("model", "response_format", "max_completion_tokens", "chat_template_kwargs"):
+    for key in ("model", "response_format", "max_completion_tokens"):
         assert first[key] == second[key]
     assert first["max_completion_tokens"] == (4000 if protocol else 16384)
     assert first["chat_template_kwargs"]["enable_thinking"] is True
+    assert second["chat_template_kwargs"]["enable_thinking"] is (
+        not (reason == "truncated" and protocol is None)
+    )
     assert second["messages"][:-1] == first["messages"]
     assert not any(message["role"] == "assistant" for message in second["messages"])
     assert "partial-response-canary" not in json.dumps(second)

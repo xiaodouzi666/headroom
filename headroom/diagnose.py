@@ -19,6 +19,7 @@ from headroom.evidence_blockers import (
     validate_evidence_requests,
 )
 from headroom.llm.router import ResponseValidationError, parse_json, response_validation_metadata
+from headroom.llm.validation_history import attach_validation_failure_history
 from headroom.schemas import Diagnosis
 from headroom.solver_context import (
     candidate_capture_counts,
@@ -192,6 +193,7 @@ class DiagnosisValidation:
     supplement_request: str | None = None
     invocation_provenance: Mapping[str, Any] | None = None
     response_validation_failures: tuple[Mapping[str, Any], ...] = ()
+    response_request_modes: tuple[Mapping[str, Any], ...] = ()
 
     @property
     def valid(self) -> bool:
@@ -246,6 +248,94 @@ def _schema_pointer(parts):
     )
 
 
+def _precision_rejection_trigger(step, step_path):
+    """Describe the existing rejection predicate; never grant permission."""
+    from headroom.verify.policy import _CREDENTIAL_PATTERN
+
+    base = {
+        "basis": "existing_precision_intent_screen",
+        "content_is_untrusted_data": True,
+        "semantic_precision_change_proven": False,
+    }
+    if step.numerics_impact != "none":
+        return {
+            **base,
+            "path": step_path + "/numerics_impact",
+            "criterion": "declared_numerics_impact",
+            "value": step.numerics_impact,
+        }
+    text = step.title + "\n" + step.description
+    has_precision = PRECISION_CHANGE.search(text) is not None
+    start = 0
+    boundaries = [*(_PRECISION_CLAUSE_BREAK.finditer(text)), None]
+    for boundary in boundaries:
+        end = boundary.start() if boundary is not None else len(text)
+        clause = text[start:end]
+        mentions = list(PRECISION_CHANGE.finditer(clause))
+        criterion = None
+        if not mentions:
+            if has_precision and (
+                re.search(
+                    r"\b(?:cast\w*|convert\w*|downcast\w*|upcast\w*)\b", clause, re.IGNORECASE
+                )
+                or (
+                    re.search(r"\b(?:dtype|precision|fp32|float32)\b", clause, re.IGNORECASE)
+                    and re.search(
+                        r"\b(?:change\w*|set\w*|switch\w*|force\w*|replace\w*|run|train\w*)\b",
+                        clause,
+                        re.IGNORECASE,
+                    )
+                )
+            ):
+                criterion = "precision_context_with_cast_or_dtype_action"
+        elif len(mentions) != 1:
+            criterion = "multiple_precision_mentions_in_clause"
+        else:
+            mention = mentions[0]
+            normalized = (clause[: mention.start()] + "<dtype>" + clause[mention.end() :]).strip()
+            if not any(pattern.fullmatch(normalized) for pattern in _PRECISION_FACT_CLAUSES):
+                criterion = "unrecognized_precision_wording"
+        if criterion is not None:
+            field = "title" if start <= len(step.title) else "description"
+            item = {**base, "path": step_path + "/" + field, "criterion": criterion}
+            # The whole pair is inspected, so a nearby secret cannot leak via
+            # a bounded excerpt or even a model-supplied identifier.
+            if _CREDENTIAL_PATTERN.search(text):
+                return {**item, "status": "withheld", "reason": "credential_like_plan_text"}
+            excerpt = clause.strip()
+            bounded = excerpt[:1024]
+            while len(json.dumps(bounded, ensure_ascii=False).encode()) > 1024:
+                bounded = bounded[:-1]
+            return {
+                **item,
+                "status": "observed",
+                "clause": bounded,
+                "clause_truncated": bounded != excerpt,
+            }
+        start = boundary.end() if boundary is not None else len(text)
+    return {**base, "status": "unavailable", "reason": "trigger_not_reconstructed"}
+
+
+def _precision_issue_trigger(diagnosis, issue):
+    """Ancillary bounded evidence cannot replace a rejection or break repair."""
+    if diagnosis is None or issue.code != "NUMERICS_CHANGE_FORBIDDEN":
+        return {}
+    try:
+        match = re.fullmatch(r"/plan/([0-9]+)", issue.path or "")
+        if match is None:
+            return {}
+        step = diagnosis.plan[int(match[1])]
+        return {"precision_trigger": _precision_rejection_trigger(step, issue.path)}
+    except (IndexError, TypeError, ValueError, AttributeError, RecursionError, OverflowError):
+        return {
+            "precision_trigger": {
+                "status": "unavailable",
+                "reason": "diagnostic_unavailable",
+                "semantic_precision_change_proven": False,
+            }
+        }
+
+
 def _repair_validation(
     diagnosis, issues, *, provenance=None, observations=(), schema_errors=(), savings=None
 ):
@@ -261,7 +351,15 @@ def _repair_validation(
     if savings is not None:
         data["savings_gb"] = savings
     entries = [
-        ("issues", {"code": issue.code, "path": issue.path, "repair": _REPAIR_RULES[issue.code]})
+        (
+            "issues",
+            {
+                "code": issue.code,
+                "path": issue.path,
+                "repair": _REPAIR_RULES[issue.code],
+                **_precision_issue_trigger(diagnosis, issue),
+            },
+        )
         for issue in repairable
     ]
     entries += [("literal_observations", item) for item in observations]
@@ -316,7 +414,13 @@ _FEEDBACK_TEXT = ("loss_equivalence", "numerical_basis", "comparison_precision",
 
 
 def round_verification_feedback(
-    row, *, selected_result, selected_round, selected_target_met, patch_status=None
+    row,
+    *,
+    selected_result,
+    selected_round,
+    selected_target_met,
+    patch_status=None,
+    patch_reason=None,
 ):
     """Bound recorded verification facts; never promote a rejected candidate to retained state."""
     truncated = []
@@ -416,8 +520,12 @@ def round_verification_feedback(
         "reason": text(row.get("reason"), "reason"),
         "failure": text(row.get("failure"), "failure", 512),
         "verification_available": available,
-        "capture_counts": candidate_capture_counts(row, patch_status=patch_status),
-        "outcome_stage": candidate_outcome_stage(row, patch_status=patch_status),
+        "capture_counts": candidate_capture_counts(
+            row, patch_status=patch_status, patch_reason=patch_reason
+        ),
+        "outcome_stage": candidate_outcome_stage(
+            row, patch_status=patch_status, patch_reason=patch_reason
+        ),
         "verification": verification,
         "candidate": observation(original.get("after"), "candidate") if available else None,
         "candidate_selected": row.get("decision") == "keep" and row.get("number") == selected_round,
@@ -750,6 +858,21 @@ def validate_diagnosis(
 DIAGNOSIS_MAX_COMPLETION_TOKENS = DEFAULT_DIAGNOSIS_CAP
 
 
+def _verified_ultra_template_toggle(router):
+    """Use only the already reviewed Ultra template control, never infer support."""
+    from headroom.config import ULTRA_MODEL
+
+    try:
+        spec = router.client.config.model_for("diagnose")
+        return (
+            spec.model_id == ULTRA_MODEL
+            and spec.capabilities.reasoning_method == "chat_template_kwargs"
+            and spec.capabilities.json_method == "json_schema"
+        )
+    except (AttributeError, KeyError, TypeError, ValueError):
+        return False
+
+
 def diagnose_with_router(
     router,
     evidence_markdown: str,
@@ -792,19 +915,36 @@ def diagnose_with_router(
     schema = build_diagnosis_schema(evidence=evidence, policy=policy)
     initial_messages = copy.deepcopy(messages)
     response_failures = []
+    request_modes = []
+    requested_reasoning = True
     for attempt in range(max_supplements + 1):
         schema_errors = []
+        request_modes.append(
+            {
+                "request_index": attempt + 1,
+                "requested_reasoning": requested_reasoning,
+                "max_completion_tokens": completion_cap,
+                "scope": "host_requested_mode_only",
+            }
+        )
         try:
             response = router.chat(
                 "diagnose",
                 messages,
                 schema,
                 max_tokens=completion_cap,
-                reasoning=True,
+                reasoning=requested_reasoning,
             )
             parsed = response.parsed
         except ResponseValidationError as error:
-            response_failures.append(response_validation_metadata(error))
+            response_failures.append(
+                {
+                    **response_validation_metadata(error),
+                    "request_index": attempt + 1,
+                    "requested_reasoning": requested_reasoning,
+                }
+            )
+            attach_validation_failure_history(error, response_failures)
             # All response repairs share the existing supplement count. Never
             # retry filtered/unknown failures or an absent response, and never
             # make a request after the configured supplement allowance is spent.
@@ -817,8 +957,20 @@ def diagnose_with_router(
             ):
                 raise
             if error.reason in {"truncated", "empty_json", "invalid_json"}:
+                # One existing format supplement may use the previously verified
+                # Ultra thinking switch. No new call, token cap, profile or
+                # semantic-policy exemption is created. Other protocols retain
+                # their original mode and budget.
+                requested_reasoning = not (
+                    attempt == 0
+                    and max_supplements == 1
+                    and completion_cap == DEFAULT_DIAGNOSIS_CAP
+                    and error.reason == "truncated"
+                    and getattr(error.response, "finish_reason", None) == "length"
+                    and _verified_ultra_template_toggle(router)
+                )
                 # Start from the full original evidence/schema, not partial JSON
-                # or hidden reasoning. Same model, thinking mode and output cap;
+                # or hidden reasoning. Same model, evidence, schema and output cap;
                 # the normal runtime must admit and account for this new call.
                 messages = copy.deepcopy(initial_messages)
                 messages.append(
@@ -876,7 +1028,11 @@ def diagnose_with_router(
                 schema_errors=schema_errors,
             )
         if not result.requires_supplement or attempt == max_supplements:
-            return replace(result, response_validation_failures=tuple(response_failures))
+            return replace(
+                result,
+                response_validation_failures=tuple(response_failures),
+                response_request_modes=tuple(request_modes),
+            )
         messages.extend(
             [
                 {"role": "assistant", "content": json.dumps(parsed, allow_nan=False)},

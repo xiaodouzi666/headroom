@@ -26,6 +26,7 @@ from headroom.lab.runner import PROJECT_ROOT, run_script
 from headroom.ledger_path import select_budget_database
 from headroom.llm.client import LLMError
 from headroom.llm.router import ResponseValidationError, response_validation_metadata
+from headroom.llm.validation_history import response_validation_history
 from headroom.patch import PatchEngine
 from headroom.report import generate_report
 from headroom.research.tavily_tool import ResearchSession
@@ -383,6 +384,9 @@ def run_fix(
             patch_status=recorded_candidate["status"]
             if recorded_candidate["patch_result_available"]
             else None,
+            patch_reason=recorded_candidate["reason"]
+            if recorded_candidate["patch_result_available"]
+            else None,
             selected_result=data.get("after") or data.get("baseline"),
             selected_round=data["kept"]["round"] if data.get("kept") else None,
             selected_target_met=data["target_met"]
@@ -657,6 +661,7 @@ def run_fix(
                 "response_validation_failures": list(
                     getattr(checked, "response_validation_failures", ())
                 ),
+                "response_request_modes": list(getattr(checked, "response_request_modes", ())),
             }
             _write(round_dir / "diagnosis.json", diagnosis_data)
             _write(directory / "diagnosis.json", diagnosis_data)
@@ -666,6 +671,7 @@ def run_fix(
                 ready_for_patch=checked.ready_for_patch,
                 round=number,
                 response_validation_failures=diagnosis_data["response_validation_failures"],
+                response_request_modes=diagnosis_data["response_request_modes"],
                 **_llm_phase(store, run_id, diagnose_start),
             )
             if not checked.ready_for_patch:
@@ -1070,7 +1076,10 @@ def run_fix(
         status, reason = "failed", "Pipeline failed: " + type(error).__name__
         data["search"]["stop_reason"] = "pipeline_error"
         response_failure = (
-            {"response_validation": response_validation_metadata(error)}
+            {
+                "response_validation": response_validation_metadata(error),
+                "response_validation_history": response_validation_history(error),
+            }
             if isinstance(error, ResponseValidationError)
             else {}
         )
