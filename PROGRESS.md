@@ -1,5 +1,12 @@
 # Headroom Progress
 
+## 2026-10-27 R4 measured result and continued repair
+
+The audited R4 campaign completed all nine slots at commit `cfeb67f`: **3/9 automatic targets (s3, s4, s8)** and **6/9 valid correct first causes** (three unknown). Automatic repair remains below the unchanged 6/9 requirement. Its conservative charge is $1.33017102 net, including $0.02808822 retained unknown; the remaining runtime allocation is $3.636510964 net. No recharge, reserve transfer or unresolved billing halt.
+
+The versioned financial audit proves the full original funding/history chain; the original audit and every old result are retained. R5 is being prepared for confirmed atomicity, feedback and model-output failures. Software changes alone do not add repair successes. See [R4 evidence](reports/acceptance-v2-r4-20261027/README.md).
+
+
 ## 2026-10-27 billing resolution and authorized R4 preparation
 
 The sole HTTP 529 billing halt was resolved through an independently reviewed,

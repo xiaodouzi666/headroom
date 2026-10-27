@@ -1,0 +1,473 @@
+--- reports/acceptance-v2-r4-20261027/audit_mvp_v2.py
++++ .cache/r4-audit-fix-20261027/audit_mvp_v2_history_v2.py
+@@ -161,7 +161,331 @@
+     return values if set(values) == wanted and all(type(v) is str for v in values.values()) else {}
+ 
+ 
+-def funding_binding(funding, retirement, allocation, profile, cap, driver, hashes):
++
++# Fixed historical evidence is finance-only; historical target/cause scores are never read.
++HISTORY_VERSION = "headroom.r4-financial-history-chain.v2"
++ORIGINAL_AUDIT_SHA = "8dfb2c23f0b5ddf357e577875a21c138498dd4d85f4f4295837ca89d377263b4"
++REVIEW_DIR = ".cache/billing-http529-review-20261027/"
++REVIEW_RECEIPT_SHA = "9fe0f381c706b103a692ca63e36ceb1f143660e6b8f01c7a431129a6934bea0f"
++REVIEW_RUN = "25c824097c84424ea31362ef43ebe47b"
++REVIEW_ATTEMPT = "e5ef4dc6a56e4b629b932f6639dabc94"
++HISTORY_PINS = {
++    "r2_cap": ("reports/acceptance-v2-r2-20261025/cap-review.json", "0c032b15d2214ebfa125b10cc3b494170f2277ff68def7f59615ac61be848f58"),
++    "r2_execution": ("reports/acceptance-v2-r2-20261025/execution.json", "af1060f3c3db07ddbe863d8b809ce5b0239b416bea76dcd458e7743aa110de41"),
++    "r2_campaign": ("runs/evaluation/live/20261025T104308792414Z-88c59353/campaign.json", "00c984eaf91bf76b244d3f1aa95752be7c392198832300eafffe4d8247d7c0e8"),
++    "r2_audit": ("reports/acceptance-v2-r2-20261025/independent-audit.json", "7cf8dc9ac127bc904c3650b58ff0c76646c764214ab81b9bdd128e23725d603f"),
++    "r3_cap": ("reports/acceptance-v2-r3-20261025/cap-review.json", "79302595744a3769b070c44dec1585f5668391fad098ca8fc89320d0369dc928"),
++    "r3_execution": ("reports/acceptance-v2-r3-20261025/execution.json", "968f595c15c9f3d0635360c277086a2a6b6c2de8073a4584ddf49872c639e3e9"),
++    "r3_campaign": ("runs/evaluation/live/20261025T121115251021Z-2fe7da84/campaign.json", "5ef7f80eed43b5a68bf660be9286b1d815ec9a1f01beca6e159582e617ffd175"),
++    "r3_audit": ("reports/acceptance-v2-r3-20261025/independent-audit.json", "fd77ff7590e760d61341a898f9db2d873e7f2d9b5f1a30eecd15f3347c7c4bfd"),
++    "receipt": (REVIEW_DIR + "receipt.json", REVIEW_RECEIPT_SHA),
++    "before": (REVIEW_DIR + "ledger-before.json", "ef8413786626e8b055928fdfa88216b0687168c4222683a9cf43a211ba66f9e0"),
++    "after": (REVIEW_DIR + "ledger-after.json", "239cde4ed8bbc6be48eeb085cd5b02d522a2184852fd62502bf53d1d44091765"),
++}
++# These three original funded diagnostic probes predate campaign UUID naming.
++# Their entire rows remain bound by the original funding projection; no prefix rule.
++HISTORICAL_NON_UUID_RUN_IDS = {
++    "diagnostic_probe_c95957f7de614c42a5871f8c91c4412f",
++    "diagnostic_probe_d563beb562a44008b9d6e77e9bc952b1",
++    "diagnostic_probe_aab1b8ad8a5a47b4b515c1bfec5fd5cc",
++}
++RUN_FIELDS = {"id", "day", "limit_usd", "status", "halt_reason", "budget_mode"}
++ATTEMPT_FIELDS = {
++    "id", "run_id", "upper_usd", "charged_usd", "actual_usd", "settled",
++    "admission_kind", "dispatched", "charge_status", "charge_basis", "review_sha256",
++}
++REVIEW_FIELDS = {"attempt_id", "receipt_sha256", "run_id", "evidence_json", "reviewed_at"}
++
++
++def exact_rows(rows, fields, key="id"):
++    """Reject duplicate identities, schema drift, and noncanonical row types."""
++    if not isinstance(rows, list) or not all(
++        isinstance(row, dict) and set(row) == fields and type(row[key]) is str
++        for row in rows
++    ):
++        raise ValueError("Incomplete historical row schema")
++    if len({row[key] for row in rows}) != len(rows):
++        raise ValueError("Duplicate historical row identity")
++    return sorted(rows, key=lambda row: row[key])
++
++
++def history_ledger(rows, attempts):
++    rows = exact_rows(rows, RUN_FIELDS)
++    attempts = exact_rows(attempts, ATTEMPT_FIELDS)
++    ids = {row["id"] for row in rows}
++    if any(
++        (not UUID.fullmatch(row["id"]) and row["id"] not in HISTORICAL_NON_UUID_RUN_IDS)
++        or row["status"] != "closed" for row in rows
++    ):
++        raise ValueError("Unknown or unclosed historical run")
++    if any(
++        not UUID.fullmatch(row["id"]) or row["run_id"] not in ids
++        or type(row["settled"]) is not int or row["settled"] != 1
++        or type(row["dispatched"]) is not int or row["dispatched"] not in {0, 1}
++        for row in attempts
++    ):
++        raise ValueError("Unknown, orphan or unsettled historical attempt")
++    for row in attempts:
++        upper, charged = money(row["upper_usd"]), money(row["charged_usd"])
++        if charged > upper:
++            raise ValueError("Historical reservation exceeded")
++        if row["actual_usd"] is not None:
++            if money(row["actual_usd"]) != charged:
++                raise ValueError("Known charge disagrees with actual")
++        elif not row["dispatched"]:
++            raise ValueError("Unknown undispatched charge")
++    return rows, attempts
++
++
++def history_summary(rows, attempts):
++    financial = totals(attempts)
++    return {
++        "projection_sha256": ledger_projection(rows, attempts),
++        "runs": len(rows),
++        "attempts": len(attempts),
++        "conservative_charged_usd": financial["conservative_charged_usd"],
++        "known_actual_subtotal_usd": financial["known_actual_subtotal_usd"],
++    }
++
++
++def same_summary(summary, cap_ledger):
++    return (
++        summary["projection_sha256"] == cap_ledger["projection_sha256"]
++        and type(cap_ledger["runs"]) is int
++        and type(cap_ledger["attempts"]) is int
++        and summary["runs"] == cap_ledger["runs"]
++        and summary["attempts"] == cap_ledger["attempts"]
++        and money(summary["conservative_charged_usd"])
++        == money(cap_ledger["conservative_charged_usd"])
++        and money(summary["known_actual_subtotal_usd"])
++        == money(cap_ledger["known_actual_subtotal_usd"])
++    )
++
++
++def same_totals(actual, recorded):
++    if not isinstance(recorded, dict) or set(actual) != set(recorded):
++        return False
++    for key, value in actual.items():
++        other = recorded[key]
++        if value is None:
++            if other is not None:
++                return False
++        elif key.endswith("_usd"):
++            if money(value) != money(other):
++                return False
++        elif type(other) is not int or value != other:
++            return False
++    return True
++
++
++def history_campaign_ids(documents, version):
++    execution = documents[version + "_execution"]
++    path, sha = HISTORY_PINS[version + "_campaign"]
++    references = execution["campaigns"]
++    if not isinstance(references, list) or len(references) != 1:
++        raise ValueError("Exactly one historical campaign identity required")
++    if references[0].get("path") != path or references[0].get("sha256") != sha:
++        raise ValueError("Historical execution/campaign binding changed")
++    rows = documents[version + "_campaign"]["rows"]
++    if not isinstance(rows, list) or len(rows) != len(IDS):
++        raise ValueError("Complete historical identity inventory required")
++    if [row.get("scenario_id") for row in rows] != list(IDS):
++        raise ValueError("Historical slot identity changed")
++    ids = [row["run_id"] for row in rows]
++    if len(set(ids)) != 9 or any(type(value) is not str or not UUID.fullmatch(value) for value in ids):
++        raise ValueError("Unique historical run identities required")
++    return set(ids)
++
++
++def financial_history_binding(funding, cap, preflight, documents, hashes,
++                              current_runs, current_attempts, current_reviews):
++    """Prove immutable baseline + exact campaign additions + one retained-charge review.
++
++    This does not consume historical acceptance/score booleans, infer provider bills,
++    release unknown money, or permit any additional review/mutation.
++    """
++    checks, stages = {}, {}
++    try:
++        if set(documents) != set(HISTORY_PINS):
++            raise ValueError("Complete fixed history evidence required")
++        checks["all_history_sources_pinned"] = all(
++            hashes.get(path) == sha for path, sha in HISTORY_PINS.values()
++        )
++        before, after, receipt = (documents[k] for k in ("before", "after", "receipt"))
++        required = {"budget_runs", "budget_attempts", "budget_retention_reviews"}
++        if set(before) != required or set(after) != required:
++            raise ValueError("Complete ledger snapshots required")
++        before_runs, before_attempts = history_ledger(before["budget_runs"], before["budget_attempts"])
++        after_runs, after_attempts = history_ledger(after["budget_runs"], after["budget_attempts"])
++        old_reviews = exact_rows(before["budget_retention_reviews"], REVIEW_FIELDS, "attempt_id")
++        new_reviews = exact_rows(after["budget_retention_reviews"], REVIEW_FIELDS, "attempt_id")
++        current_runs, current_attempts = history_ledger(current_runs, current_attempts)
++        current_reviews = exact_rows(current_reviews, REVIEW_FIELDS, "attempt_id")
++        r2, r3 = (history_campaign_ids(documents, value) for value in ("r2", "r3"))
++        checks["historical_campaign_identities_disjoint"] = not (r2 & r3) and REVIEW_RUN in r3
++        checks["historical_run_inventory_complete"] = r2 | r3 <= {r["id"] for r in before_runs}
++        stages["before_review"] = history_summary(before_runs, before_attempts)
++        stages["r4_preflight"] = history_summary(after_runs, after_attempts)
++
++        # Compare every row/column, allowing only the four exact audited metadata changes.
++        expected_after_runs, expected_after_attempts = copy.deepcopy(before_runs), copy.deepcopy(before_attempts)
++        target_run = next(row for row in expected_after_runs if row["id"] == REVIEW_RUN)
++        target = next(row for row in expected_after_attempts if row["id"] == REVIEW_ATTEMPT)
++        checks["review_exact_target_and_bound"] = (
++            receipt["schema"] == "headroom.http529-full-retention.v1"
++            and receipt["run_id"] == REVIEW_RUN and receipt["attempt_id"] == REVIEW_ATTEMPT
++            and receipt["http_status"] == 529 and type(receipt["http_status"]) is int
++            and receipt["actual_usd"] is None and receipt["historical_result_reassessment"] is False
++            and money(receipt["retained_full_upper_usd"]) == Decimal("0.0822432")
++            and target_run == receipt["expected_run"]
++            and {key: target[key] for key in receipt["expected_attempt"]} == receipt["expected_attempt"]
++            and exact_rows(receipt["expected_attempts"], ATTEMPT_FIELDS)
++            == [row for row in before_attempts if row["run_id"] == REVIEW_RUN]
++            and target["actual_usd"] is None
++            and target["charged_usd"] == target["upper_usd"] == "0.0822432"
++            and target["charge_status"] == "unknown"
++            and target["charge_basis"] is None and target["review_sha256"] is None
++            and target["settled"] == 1 and target["dispatched"] == 1
++            and target["admission_kind"] == "verified_provider_bound"
++            and target_run["halt_reason"] == "provider_charge_unknown"
++        )
++        target_run["halt_reason"] = None
++        target["charge_status"] = "reviewed_retained"
++        target["charge_basis"] = "manual_full_reservation_retained"
++        target["review_sha256"] = REVIEW_RECEIPT_SHA
++        checks["only_exact_review_metadata_changed"] = (
++            canonical(expected_after_runs) == canonical(after_runs)
++            and canonical(expected_after_attempts) == canonical(after_attempts)
++        )
++        additions = [row for row in new_reviews if row["attempt_id"] not in {r["attempt_id"] for r in old_reviews}]
++        retained = [row for row in new_reviews if row["attempt_id"] in {r["attempt_id"] for r in old_reviews}]
++        expected_evidence = receipt | {"reviewed_by": "root; independent receipt/code review by repair_s6_s7_nano"}
++        checks["one_review_appended_old_reviews_preserved"] = (
++            len(old_reviews) == 1 and len(new_reviews) == 2 and retained == old_reviews
++            and len(additions) == 1
++            and additions[0]["attempt_id"] == REVIEW_ATTEMPT
++            and additions[0]["run_id"] == REVIEW_RUN
++            and additions[0]["receipt_sha256"] == REVIEW_RECEIPT_SHA
++            and additions[0]["reviewed_at"] == "2026-10-26T23:50:35.857155+00:00"
++            and json.loads(additions[0]["evidence_json"]) == expected_evidence
++            and digest(additions[0]["evidence_json"].encode()) == "f12e40024cb645f71725b1d7a489cb10bb801f0653c76c6fe2af2f25243068e6"
++        )
++        checks["all_current_prior_rows_exactly_preserved"] = (
++            canonical(current_runs) == canonical(after_runs)
++            and canonical(current_attempts) == canonical(after_attempts)
++            and canonical(current_reviews) == canonical(new_reviews)
++        )
++
++        def subset(excluded):
++            return (
++                [row for row in before_runs if row["id"] not in excluded],
++                [row for row in before_attempts if row["run_id"] not in excluded],
++            )
++
++        baseline_runs, baseline_attempts = subset(r2 | r3)
++        r2_runs, r2_attempts = subset(r3)
++        baseline = history_summary(baseline_runs, baseline_attempts)
++        after_r2 = history_summary(r2_runs, r2_attempts)
++        stages["funding_baseline"], stages["after_r2"] = baseline, after_r2
++        checks["original_funding_snapshot_immutable"] = (
++            funding["runtime_ledger_path"] == ".cache/budget.db"
++            and baseline["projection_sha256"] == funding["runtime_ledger_projection_sha256"]
++            and type(funding["runtime_closed_runs"]) is int
++            and type(funding["runtime_settled_attempts"]) is int
++            and baseline["runs"] == funding["runtime_closed_runs"] == 97
++            and baseline["attempts"] == funding["runtime_settled_attempts"] == 517
++            and money(baseline["conservative_charged_usd"]) == money(funding["runtime_conservative_net_usd"])
++            and money(funding["remaining_runtime_lifetime_net_usd"])
++            == POOL - money(baseline["conservative_charged_usd"])
++            and same_summary(baseline, documents["r2_cap"]["ledger"])
++        )
++        f2, f3 = (documents[k]["finance"] for k in ("r2_audit", "r3_audit"))
++        checks["r2_addition_exact_all_rows_and_money"] = (
++            len(r2_runs) == 106 and len(r2_attempts) == 573
++            and after_r2["projection_sha256"] == f2["all_time_projection_before"] == f2["all_time_projection_after"]
++            and f2["prior_projection"] == baseline["projection_sha256"]
++            and same_totals(totals(r2_attempts), f2["all_time"])
++            and same_totals(totals([a for a in before_attempts if a["run_id"] in r2]), f2["campaign"])
++            and same_summary(after_r2, documents["r3_cap"]["ledger"])
++        )
++        checks["r3_addition_exact_all_rows_and_money"] = (
++            len(before_runs) == 115 and len(before_attempts) == 632
++            and stages["before_review"]["projection_sha256"] == f3["all_time_projection_before"] == f3["all_time_projection_after"]
++            and f3["prior_projection"] == after_r2["projection_sha256"]
++            and same_totals(totals(before_attempts), f3["all_time"])
++            and same_totals(totals([a for a in before_attempts if a["run_id"] in r3]), f3["campaign"])
++        )
++        before_totals, after_totals = totals(before_attempts), totals(after_attempts)
++        checks["all_money_and_unknown_actuals_unchanged"] = all(
++            before_totals[key] == after_totals[key] for key in before_totals if key != "unresolved"
++        ) and before_totals["unresolved"] == 1 and after_totals["unresolved"] == 0
++        checks["reviewed_prior_history_closed_and_bounded"] = (
++            after_totals["pending"] == 0 and after_totals["unresolved"] == 0
++            and all(row["halt_reason"] is None for row in after_runs)
++            and daily_ledger_bounds(after_runs, after_attempts)["accepted"] is True
++        )
++        budget = preflight["budget_before"]
++        checks["r4_cap_binds_complete_post_review_history"] = same_summary(stages["r4_preflight"], cap["ledger"])
++        checks["r4_preflight_full_history_and_original_caps"] = (
++            funding_dispatch_binding(cap, preflight)
++            and type(budget["closed_runs"]) is int and budget["closed_runs"] == len(after_runs)
++            and type(budget["settled_attempts"]) is int and budget["settled_attempts"] == len(after_attempts)
++            and money(budget["known_subtotal_usd"]) == money(after_totals["known_actual_subtotal_usd"])
++            and budget["actual_total_usd"] is None
++            and budget["charge_status_counts"] == {
++                name: sum(row["charge_status"] == name for row in after_attempts)
++                for name in ("exact", "upper_bound", "reviewed_retained")
++            }
++            and money(budget["day_conservative_usd"]) == sum(
++                (money(row["charged_usd"]) for row in after_attempts
++                 if next(run["day"] for run in after_runs if run["id"] == row["run_id"]) == budget["utc_day"]),
++                Decimal(0),
++            )
++        )
++    except (KeyError, TypeError, ValueError, ArithmeticError, StopIteration, AttributeError, IndexError):
++        checks["complete_well_formed_history_chain"] = False
++    return {
++        "schema": HISTORY_VERSION,
++        "accepted": bool(checks) and all(value is True for value in checks.values()),
++        "checks": checks,
++        "stages": stages,
++        "historical_scores_used": False,
++        "historical_results_reassessed": False,
++        "original_funding_modified": False,
++        "money_released": False,
++        "new_funding": False,
++        "provider_actual_inferred": False,
++        "review_receipt_sha256": REVIEW_RECEIPT_SHA,
++    }
++
++
++def read_history_binding(reader, funding, cap, preflight, runs, attempts, reviews):
++    documents, hashes, private_hashes = {}, {}, {}
++    allowed = {path for path, _ in HISTORY_PINS.values() if path.startswith(".cache/")}
++    for name, (path, expected) in HISTORY_PINS.items():
++        raw = restricted_funding_bytes(path, allowed, private_hashes) if path in allowed else reader.raw(path)
++        hashes[path] = digest(raw)
++        if hashes[path] != expected:
++            raise ValueError("Changed or missing fixed historical finance evidence: " + name)
++        documents[name] = json.loads(raw)
++    result = financial_history_binding(funding, cap, preflight, documents, hashes, runs, attempts, reviews)
++    return result, private_hashes, allowed
++
++
++def retention_snapshot(base):
++    connection = base.database(".cache/budget.db")
++    if connection is None:
++        raise ValueError("Retention review ledger unavailable")
++    try:
++        return [dict(row) for row in connection.execute(
++            "SELECT * FROM budget_retention_reviews ORDER BY attempt_id"
++        )]
++    finally:
++        connection.close()
++
++
++
++def funding_binding(funding, retirement, allocation, profile, cap, driver, hashes, history=None):
+     """Independent exact monetary and provenance checks; no I/O or execution."""
+     checks = {}
+     try:
+@@ -270,7 +594,7 @@
+             and money(profile["available_credit_usd"]) == POOL
+         )
+         ledger = cap["ledger"]
+-        checks["same_ledger_and_full_history_snapshot"] = (
++        same_snapshot = (
+             funding["runtime_ledger_path"] == ".cache/budget.db"
+             and HEX.fullmatch(funding["runtime_ledger_projection_sha256"]) is not None
+             and ledger["projection_sha256"] == funding["runtime_ledger_projection_sha256"]
+@@ -282,6 +606,28 @@
+             == money(funding["runtime_conservative_net_usd"])
+             and money(funding["remaining_runtime_lifetime_net_usd"])
+             == POOL - money(ledger["conservative_charged_usd"])
++            and cap["historical_driver_sha256"] == expected[HISTORICAL_HELPER_PATH]
++        )
++        # Original same-snapshot path remains valid; later caps require the full
++        # versioned row-level chain, never a rewritten funding-transition balance.
++        history_chain = (
++            isinstance(history, dict)
++            and history.get("schema") == HISTORY_VERSION
++            and history.get("accepted") is True
++            and isinstance(history.get("checks"), dict)
++            and bool(history["checks"])
++            and all(value is True for value in history["checks"].values())
++            and history["stages"]["funding_baseline"]["projection_sha256"]
++            == funding["runtime_ledger_projection_sha256"]
++            and history["stages"]["r4_preflight"]["projection_sha256"]
++            == ledger["projection_sha256"]
++            and history.get("original_funding_modified") is False
++            and history.get("money_released") is False
++            and history.get("new_funding") is False
++        )
++        checks["same_ledger_and_verified_history_chain"] = (
++            (same_snapshot or history_chain)
++            and funding["runtime_ledger_path"] == ".cache/budget.db"
+             and cap["historical_driver_sha256"] == expected[HISTORICAL_HELPER_PATH]
+         )
+         auth = cap["authorization"]
+@@ -347,7 +693,7 @@
+     return raw
+ 
+ 
+-def read_funding_binding(reader, cap):
++def read_funding_binding(reader, cap, history=None):
+     expected = {r["path"]: r["sha256"] for r in FUNDING_PINS}
+     # Refuse absent, pending or replaced receipts before allowing any private read.
+     for name in (
+@@ -377,7 +723,7 @@
+         restricted_funding_bytes(name, allowed, records)
+     hashes = dict(reader.hashes) | records
+     driver = driver_funding_pins(reader.raw(OUT / "run_mvp_v2.py").decode())
+-    result = funding_binding(funding, retirement, allocation, profile, cap, driver, hashes)
++    result = funding_binding(funding, retirement, allocation, profile, cap, driver, hashes, history)
+     return result, records, allowed
+ 
+ 
+@@ -737,6 +1083,7 @@
+ 
+ 
+ def audit(execution_path):
++    audit_source_before = digest(Path(__file__).read_bytes())
+     helpers = load_helpers()
+     base, cli, span = (helpers[k] for k in ("base", "cli", "span"))
+     reader = cli.Reader(ROOT)
+@@ -803,10 +1150,8 @@
+     source_binding["accepted"] = (
+         source_binding["accepted"] and source_binding["quality_receipts_bound"]
+     )
+-    funding_review, private_funding_hashes, private_funding_allowed = read_funding_binding(
+-        reader, cap
+-    )
+     gates = {
++        "original_frozen_audit_preserved": reader.digest(OUT / "audit_mvp_v2.py") == ORIGINAL_AUDIT_SHA,
+         "new_execution_campaign_sha": reader.digest(campaign_path) == reference.get("sha256"),
+         "bound_root_review": reader.digest(OUT / "root-review.json")
+         == preflight.get("review_sha256"),
+@@ -831,7 +1176,6 @@
+             and r.get("search_mode") == "until_target"
+             for r in rows
+         ),
+-        "reviewed_zero_sum_gift_partition": funding_review["accepted"],
+         "original_dispatch_daily_and_case_limits": funding_dispatch_binding(cap, preflight),
+     }
+     states, store_projection = cli.store_snapshot(reader, ids)
+@@ -847,6 +1191,18 @@
+     # Reject a reused historical campaign before reading any of its score artifacts.
+     if not history_matches:
+         raise ValueError("Current campaign IDs do not preserve the complete pre-execution ledger")
++    review_rows_before = retention_snapshot(base)
++    history_review, history_private_hashes, history_private_allowed = read_history_binding(
++        reader, reader.json(FUNDING_PATH), cap, preflight, history_runs, history_attempts,
++        review_rows_before,
++    )
++    funding_review, private_funding_hashes, private_funding_allowed = read_funding_binding(
++        reader, cap, history_review
++    )
++    private_funding_hashes.update(history_private_hashes)
++    private_funding_allowed |= history_private_allowed
++    gates["complete_financial_history_chain_v2"] = history_review["accepted"]
++    gates["reviewed_zero_sum_gift_partition"] = funding_review["accepted"]
+     store, ledger = base.database("runs/headroom.db"), base.database(".cache/budget.db")
+     prices = base.read_json("reports/live-campaign-20261025/pricing-reviewed.json")
+     audited = []
+@@ -940,6 +1296,7 @@
+         "all_prior_rows_preserved": len(history_runs) == cap["ledger"]["runs"]
+         and len(history_attempts) == cap["ledger"]["attempts"],
+         "funding_partition": funding_review,
++        "financial_history_transition": history_review,
+         "daily_ledger_bounds": daily_bounds,
+         "pool_usd": str(POOL),
+         "daily_pool_usd": str(DAILY_POOL),
+@@ -999,12 +1356,14 @@
+     for path, expected in private_funding_hashes.items():
+         if digest(restricted_funding_bytes(path, private_funding_allowed, {})) != expected:
+             changed.append(path)
++    gates["retention_review_rows_stable"] = canonical(retention_snapshot(base)) == canonical(review_rows_before)
++    gates["audit_source_stable"] = digest(Path(__file__).read_bytes()) == audit_source_before
+     gates["artifact_sources_stable"] = not changed
+     errors = reader.errors + base.ERRORS
+     gates["no_artifact_read_errors"] = not errors
+     return {
+-        "schema_version": 1,
+-        "audit_kind": "independent_v2_r4_mvp_nine_zero_sum_partition",
++        "schema_version": 2,
++        "audit_kind": "independent_v2_r4_mvp_nine_financial_history_chain_v2",
+         "created_at_utc": datetime.now(UTC).isoformat(),
+         "campaign": str(campaign_path.relative_to(ROOT)),
+         "fixed_denominator": 9,
+@@ -1033,7 +1392,8 @@
+         "funding_private_artifact_hashes": [
+             {"path": k, "sha256": v} for k, v in sorted(private_funding_hashes.items())
+         ],
+-        "audit_source_sha256": reader.digest(Path(__file__)),
++        "audit_source_sha256": audit_source_before,
++        "original_frozen_audit_sha256": ORIGINAL_AUDIT_SHA,
+         "actions": {
+             "model_calls": 0,
+             "gpu_jobs": 0,
