@@ -20,6 +20,7 @@ from headroom.evidence_blockers import (
 from headroom.llm.router import ResponseValidationError, parse_json
 from headroom.schemas import Diagnosis
 from headroom.solver_context import (
+    candidate_outcome_stage,
     invocation_observation,
     invocation_reference_catalog,
     solver_prompt_context,
@@ -85,6 +86,85 @@ def _proposes_model_shrink(text: str) -> bool:
         ):
             continue
         return True
+    return False
+
+
+# Prose is only an intent screen; actual source/precision verification remains
+# authoritative. Exempt complete, narrowly descriptive clauses, never an arbitrary
+# suffix after "preserve/existing BF16". Unrecognized precision wording fails closed.
+_PRECISION_CLAUSE_BREAK = re.compile(
+    r"[;!?\n,]|\.(?!\w)|\b(?:but|however|yet|whereas|then|and)\b", re.IGNORECASE
+)
+_PRECISION_MODIFIERS = r"(?:(?:the|existing|original|current|same|unchanged)\s+){0,3}"
+_PRECISION_NOUN = r"(?:logits|tensors?|activations?|gradients?|buffers?|weights|parameters|producer|dtype|precision)"
+_PRECISION_FACT_CLAUSES = tuple(
+    re.compile(pattern, re.IGNORECASE)
+    for pattern in (
+        # Exact preservation, including the existing cast followed by chunking.
+        r"(?:preserve|preserving|keep|keeping|retain|retaining|maintain|maintaining)\s+"
+        + _PRECISION_MODIFIERS
+        + r"<dtype>(?:\s+"
+        + _PRECISION_NOUN
+        + r"(?:\s+(?:in\s+(?:the\s+)?(?:current|existing|same)\s+dtype|unchanged))?"
+        + r"|\s+logits\s+to\s+FP32\s+conversion\s+while\s+chunking\s+(?:its|the)\s+consumer"
+        r"|\s+while\s+chunking\s+the\s+existing\s+FP32\s+consumer)?",
+        # A current source fact, without future actions or arbitrary trailing text.
+        r"(?:the\s+)?(?:existing|original|current|unchanged)\s+<dtype>\s+"
+        + _PRECISION_NOUN
+        + r"\s+(?:remains?|is|are)\s+unchanged",
+        r"(?:source|model|producer|baseline|code)\s+(?:already|currently)\s+"
+        r"(?:uses?|produces?|computes?|has)\s+<dtype>\s+" + _PRECISION_NOUN,
+        r"<dtype>\s+"
+        + _PRECISION_NOUN
+        + r"\s+(?:is|are)\s+(?:already|currently)\s+produced\s+by\s+the\s+model",
+        # Storage lifetime descriptions do not introduce a dtype. They still
+        # require real consumer/liveness/policy/runtime checks.
+        r"(?:release|free|delete|offload|move|chunk|tile|checkpoint|recompute)\s+"
+        + _PRECISION_MODIFIERS
+        + r"<dtype>\s+"
+        + _PRECISION_NOUN
+        + r"(?:\s+after\s+(?:their|its|the)\s+(?:final|last)\s+(?:consumer|use)"
+        r"|\s+before\s+(?:the\s+unchanged\s+FP32\s+conversion|logits\.float\(\)))?",
+        # One explicit negated action, not double negatives or an extra action.
+        (
+            r"(?:do\s+not|does\s+not|must\s+not|should\s+not|cannot|never|not|"
+            r"without|avoid|avoiding|rather\s+than|instead\s+of)\s+"
+            r"(?:(?:use|using|enable|enabling|introduce|introducing|add|adding|"
+            r"apply|applying|cast|casting|convert|converting|switch|switching)\s+)?"
+            r"(?:(?:the|model|weights|parameters|to|in)\s+){0,4}<dtype>"
+        ),
+    )
+)
+
+
+def _proposes_precision_change(text: str) -> bool:
+    has_precision = PRECISION_CHANGE.search(text) is not None
+    for clause in _PRECISION_CLAUSE_BREAK.split(text):
+        mentions = list(PRECISION_CHANGE.finditer(clause))
+        if not mentions:
+            # A later clause may refer to that dtype without repeating BF16.
+            # It cannot borrow an earlier preservation claim's exemption.
+            if has_precision and (
+                re.search(
+                    r"\b(?:cast\w*|convert\w*|downcast\w*|upcast\w*)\b", clause, re.IGNORECASE
+                )
+                or (
+                    re.search(r"\b(?:dtype|precision|fp32|float32)\b", clause, re.IGNORECASE)
+                    and re.search(
+                        r"\b(?:change\w*|set\w*|switch\w*|force\w*|replace\w*|run|train\w*)\b",
+                        clause,
+                        re.IGNORECASE,
+                    )
+                )
+            ):
+                return True
+            continue
+        if len(mentions) != 1:
+            return True
+        mention = mentions[0]
+        normalized = (clause[: mention.start()] + "<dtype>" + clause[mention.end() :]).strip()
+        if not any(pattern.fullmatch(normalized) for pattern in _PRECISION_FACT_CLAUSES):
+            return True
     return False
 
 
@@ -330,6 +410,7 @@ def round_verification_feedback(row, *, selected_result, selected_round, selecte
         "reason": text(row.get("reason"), "reason"),
         "failure": text(row.get("failure"), "failure", 512),
         "verification_available": available,
+        "outcome_stage": candidate_outcome_stage(row),
         "verification": verification,
         "candidate": observation(original.get("after"), "candidate") if available else None,
         "candidate_selected": row.get("decision") == "keep" and row.get("number") == selected_round,
@@ -598,12 +679,13 @@ def validate_diagnosis(
                 )
             )
         if policy.get("allow_numerics_change") is not True and (
-            step.numerics_impact != "none" or PRECISION_CHANGE.search(text)
+            step.numerics_impact != "none"
+            or _proposes_precision_change(step.title + "\n" + step.description)
         ):
             issues.append(
                 DiagnosisIssue(
                     "NUMERICS_CHANGE_FORBIDDEN",
-                    f"Step {step.fix_id} changes numerics or names a disallowed precision method.",
+                    f"Step {step.fix_id} changes numerics or proposes a disallowed precision method.",
                     f"/plan/{step_number}",
                 )
             )

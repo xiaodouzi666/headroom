@@ -505,6 +505,87 @@ def _owned_diff(run_root, relative, number):
     }
 
 
+def candidate_outcome_stage(row, *, patch_status=None):
+    """Label only this candidate's recorded stage; retained state is not consulted."""
+    verification = row.get("verification")
+    available = isinstance(verification, Mapping)
+    result = {
+        "stage": "candidate_verification_unavailable",
+        "candidate_runtime_observed": None,
+        "candidate_numerical_comparison": "unknown",
+    }
+    if patch_status == "rejected":
+        if available:
+            result["stage"] = "inconsistent_patch_and_verification_evidence"
+        else:
+            result.update(stage="rejected_before_execution", candidate_runtime_observed=False)
+        return result
+    if not available:
+        if patch_status == "applied":
+            result["stage"] = "patch_applied_verification_unavailable"
+        return result
+
+    after = verification.get("after")
+    after = after if isinstance(after, Mapping) else {}
+    status = after.get("status")
+    status = status if isinstance(status, str) else None
+    # A runner allocates run_id before preparation; status/exception and even
+    # a Docker execution dictionary do not establish that target capture ran.
+    reason = after.get("reason")
+    execution = after.get("execution")
+    execution = execution if isinstance(execution, Mapping) else {}
+    preparation_reasons = {
+        "GPU_BUSY",
+        "GPU_UNAVAILABLE",
+        "PREPARATION_FAILED",
+        "CONTAINER_CREATE_FAILED",
+    }
+    preparation_failure = any(
+        isinstance(item, str) and item in preparation_reasons
+        for item in (reason, execution.get("error"))
+    )
+    pid = after.get("pid")
+    execution_status = after.get("execution_status")
+    observed = (
+        after.get("protocol") == "headroom.lab.v1"
+        and type(pid) is int
+        and 0 < pid <= 2_147_483_647
+        and type(after.get("capture_complete")) is bool
+        and isinstance(execution_status, str)
+        and execution_status in {"completed", "oom", "error", "timeout"}
+    )
+    if preparation_failure:
+        # PREPARATION_FAILED can also be a host failure while reading artifacts
+        # after Docker returned. Absence of target evidence is not proof that
+        # execution never started; contradictory fields are unknown as well.
+        result["stage"] = (
+            "inconsistent_preparation_and_capture_evidence"
+            if observed
+            else "runner_failure_without_target_capture"
+        )
+        return result
+    if observed:
+        result["candidate_runtime_observed"] = True
+        if status in {"oom", "error", "failed", "timeout", "cancelled"}:
+            result["stage"] = "candidate_execution_failed"
+        elif verification.get("completed") is False:
+            result["stage"] = "candidate_execution_incomplete"
+        elif verification.get("completed") is True:
+            result["stage"] = "candidate_execution_completed"
+        else:
+            result["stage"] = "candidate_execution_completion_unknown"
+    else:
+        result["stage"] = "verification_without_candidate_execution_evidence"
+    checks = verification.get("checks")
+    checks = checks if isinstance(checks, Mapping) else {}
+    comparable = checks.get("loss_series_comparison_available")
+    if comparable is True:
+        result["candidate_numerical_comparison"] = "available"
+    elif comparable is False:
+        result["candidate_numerical_comparison"] = "unavailable"
+    return result
+
+
 def candidate_evidence(run_root, row, *, selected_round):
     """Whitelist fields from a fixed round artifact; missing bytes remain unavailable."""
     number = row.get("number")
@@ -518,6 +599,7 @@ def candidate_evidence(run_root, row, *, selected_round):
         "selected_after_round": selected_round,
         "decision": _text(row.get("decision"), 32),
         "patch_result_available": False,
+        "outcome_stage": candidate_outcome_stage(row),
         "patch_result_sha256": None,
         "patch_result_reason": "missing_unsafe_or_oversized",
         "diff": _owned_diff(run_root, row.get("patch"), number),
@@ -541,6 +623,7 @@ def candidate_evidence(run_root, row, *, selected_round):
         return value
     value.update(
         patch_result_available=True,
+        outcome_stage=candidate_outcome_stage(row, patch_status=result.get("status")),
         patch_result_sha256=hashlib.sha256(raw).hexdigest(),
         patch_result_reason=None,
         status=_text(result.get("status"), 64),

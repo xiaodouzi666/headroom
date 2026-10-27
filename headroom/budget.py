@@ -1,10 +1,11 @@
 """Persistent, conservative dollar reservations; unknown charges never become zero."""
 
+import hashlib
 import json
 import re
 import sqlite3
 import time
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from datetime import UTC, datetime
 from decimal import Decimal, localcontext
 from pathlib import Path
@@ -547,8 +548,12 @@ class BudgetLedger:
         """Explicit review preserves the historical full reservation and unknown actual."""
         if not isinstance(receipt_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", receipt_sha256):
             raise ValueError("Review receipt SHA256 is required")
-        if not isinstance(evidence, dict) or evidence.get("reason") != "missing_cached_token_usage":
-            raise ValueError("Only the narrowly verified missing-cache case can be reviewed")
+        if not isinstance(evidence, dict) or evidence.get("reason") not in {
+            "missing_cached_token_usage",
+            "http_529_missing_usage_full_reservation",
+        }:
+            raise ValueError("Only narrowly verified retained-charge cases can be reviewed")
+        http_review = evidence["reason"] == "http_529_missing_usage_full_reservation"
         required = {
             "id",
             "run_id",
@@ -586,6 +591,70 @@ class BudgetLedger:
                 expected_run, sort_keys=True
             ):
                 raise ValueError("Reviewed run changed")
+            if http_review:
+                # Recheck every sibling and every immutable call while holding the
+                # ledger write lock. Legitimate dispatch cannot append another call:
+                # it must first reserve under this same lock; this run is closed.
+                if (
+                    evidence.get("schema") != "headroom.http529-full-retention.v1"
+                    or evidence.get("http_status") != 529
+                    or evidence.get("actual_usd") is not None
+                    or evidence.get("historical_result_reassessment") is not False
+                    or money(evidence.get("retained_full_upper_usd")) != money(row["upper_usd"])
+                ):
+                    raise ValueError("HTTP retention evidence is not the narrow reviewed case")
+                attempts = [
+                    dict(item)
+                    for item in conn.execute(
+                        "SELECT * FROM budget_attempts WHERE run_id=? ORDER BY id", (run_id,)
+                    )
+                ]
+                if json.dumps(attempts, sort_keys=True) != json.dumps(
+                    evidence.get("expected_attempts"), sort_keys=True
+                ):
+                    raise ValueError("Reviewed run attempt set changed")
+                store_uri = Path(evidence["store_path"]).resolve().as_uri() + "?mode=ro"
+                with closing(sqlite3.connect(store_uri, uri=True)) as source:
+                    source.row_factory = sqlite3.Row
+                    source.execute("PRAGMA query_only=ON")
+                    calls = []
+                    for item in source.execute(
+                        "SELECT * FROM llm_calls WHERE run_id=? ORDER BY id", (run_id,)
+                    ):
+                        calls.append(
+                            {
+                                **{
+                                    key: item[key]
+                                    for key in (
+                                        "id",
+                                        "run_id",
+                                        "model",
+                                        "role",
+                                        "input_tokens",
+                                        "output_tokens",
+                                        "cost_usd",
+                                        "created_at",
+                                    )
+                                },
+                                "data_sha256": hashlib.sha256(
+                                    item["data_json"].encode()
+                                ).hexdigest(),
+                            }
+                        )
+                if json.dumps(calls, sort_keys=True) != json.dumps(
+                    evidence.get("expected_calls"), sort_keys=True
+                ):
+                    raise ValueError("Reviewed run call set changed")
+                mapping = json.dumps(
+                    {"attempts": attempts, "calls": calls},
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    allow_nan=False,
+                )
+                if hashlib.sha256(mapping.encode()).hexdigest() != evidence.get(
+                    "run_mapping_sha256"
+                ):
+                    raise ValueError("Reviewed run mapping digest changed")
             if (
                 run["status"] != "closed"
                 or run["halt_reason"] != "provider_charge_unknown"

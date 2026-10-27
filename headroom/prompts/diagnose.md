@@ -340,3 +340,55 @@ Evidence dependencies must use their declared scope: current_plan names existing
 blocked_plan_ids; alternative_plan and overall_feasibility use an empty ID list.
 Use a current-plan dependency when an identifiable step is blocked; do not invent
 facts or weaken a genuine blocker merely to repair its scope declaration.
+
+Read prior-candidate failure stages before selecting the next repair:
+outcome_stage labels only that round's candidate. A patch rejected before
+execution has no candidate GPU, loss or timing result. selected_after_round
+describes the retained configuration and may still contain the original baseline
+OOM; it is not a fresh execution of the rejected patch. When candidate runtime
+evidence is unavailable, preserve that unknown. An unavailable numerical
+comparison (for example incomplete execution or unaligned loss/update series)
+is not a measured numerical mismatch. Use the recorded exception or static
+issue as the failure to address, without converting a secondary failed gate
+into evidence of a different failure. These labels do not replace any gate.
+
+Distinguish normal activation lifetime from unintended graph retention:
+intermediate tensors needed for the current forward/backward are activations.
+Use retained_graph only when source/runtime evidence supports unnecessary
+retention, such as graph-bearing values accumulated across updates or an
+unnecessary retained backward graph. A large first-forward peak alone does not
+establish a leak. Optimizer states persist across updates; optimizer arithmetic
+temporaries have a different lifetime. Trace allocation sites and the peak phase
+before estimating which component a proposed edit can reduce. Changing batch
+size does not scale parameter or optimizer-state storage.
+
+Checkpoint granularity is part of the plan, not an implementation detail.
+A single checkpoint around a long stack may recreate a large live activation
+set during backward recomputation; do not estimate its peak as one block.
+For a visible repeated-block stack, consider individual blocks or bounded
+segments, account for retained boundary inputs plus the largest recomputed
+segment, and inspect the supported numerical-reference contract before selecting
+a boundary. Specify use_reentrant=False explicitly when that variant is
+supported, preserve RNG behavior and avoid changing captured mutable state.
+Expected savings and equivalence remain hypotheses for real verification.
+
+For optimizer lifetime proposals, trace actual optimizer membership, existing
+state, gradient production/reset and the optimizer-step boundary. A zero gradient
+or requires_grad=False does not alone demonstrate that an existing gradient or
+state allocation has been released. Preserve all trainable-parameter updates,
+parameter groups and optimizer semantics; unsupported global-gradient or
+accumulation dependencies remain blockers.
+
+When the evidenced peak includes optimizer workspace or simultaneously live
+gradients, consider optimizer scheduling/lifetime as well as activation/batch
+changes. Per-parameter updates after a parameter's final gradient accumulation
+and prompt gradient release are a possible hypothesis only if the visible
+training path establishes a compatible update boundary. Check accumulation across
+backward calls, global clipping/norms, shared parameters, remaining backward
+consumers, distributed reductions, scaling, scheduler and state/checkpoint
+semantics before proposing this. Preserve every existing update and the optimizer
+algorithm; deleting required state or freezing parameters is not a substitute.
+Do not require an unknown literal batch size for a transformation whose relevant
+prerequisites are established independently from the source/update path. If that
+path is ambiguous, name the actual missing dependency. Peak movement, numerical
+roundoff and runtime cost still require the unchanged host checks.

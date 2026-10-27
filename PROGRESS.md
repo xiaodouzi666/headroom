@@ -1,5 +1,25 @@
 # Headroom Progress
 
+## 2026-10-27 billing resolution and authorized R4 preparation
+
+The sole HTTP 529 billing halt was resolved through an independently reviewed,
+exact-receipt full-retention procedure. Its $0.0822432 reservation remains fully
+charged conservatively and actual cost remains unknown. All historical call rows,
+monetary fields, limits and original campaign artifacts are unchanged. No new
+credit pool, recharge or reserve transfer occurred. The shared runtime has
+$4.966681984 net remaining before new calls.
+
+The owner explicitly authorized further automatic repair toward at least 6/9.
+Candidate-stage grounding, exact syntax feedback/repeated-candidate detection and
+generic checkpoint/optimizer guidance are being qualified for a new fixed-nine
+strict campaign. R3 remains partial at 3/9; a later ledger review does not rescore
+it. New repair success is not yet measured. Public deployment remains deferred.
+
+Evidence: [reports/acceptance-v2-r4-20261027](reports/acceptance-v2-r4-20261027/README.md).
+The dated sections below preserve then-current state; their old halt and repair
+authorization statements do not override this update.
+
+
 ## 2026-10-27 independent development increment
 
 Implemented the opt-in repair-scope CLI: exact historical context lookup,

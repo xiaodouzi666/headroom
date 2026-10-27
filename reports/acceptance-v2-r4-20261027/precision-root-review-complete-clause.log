@@ -1,0 +1,33 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}}
+...........................................F....                         [100%]
+=================================== FAILURES ===================================
+_ test_real_diagnosis_validation_preserves_numeric_impact_gate[Preserve existing BF16 while chunking the existing FP32 consumer.-none-False] _
+
+description = 'Preserve existing BF16 while chunking the existing FP32 consumer.'
+impact = 'none', forbidden = False
+
+    @pytest.mark.parametrize(
+        "description,impact,forbidden",
+        [
+            ("Preserve existing BF16 while chunking the existing FP32 consumer.", "none", False),
+            ("Preserve BF16 but cast weights to FP16.", "none", True),
+            ("Preserve existing BF16.", "minor", True),
+            ("Autocast memory optimization.", "none", True),
+        ],
+    )
+    def test_real_diagnosis_validation_preserves_numeric_impact_gate(description, impact, forbidden):
+        value = payload(description, impact=impact)
+        original = copy.deepcopy(value)
+        verdict = validate_diagnosis(
+            value,
+            evidence={"stack_catalog": {"stk_actual": []}},
+            policy={"allow_numerics_change": False},
+            required_saving_gb=0.5,
+        )
+>       assert ("NUMERICS_CHANGE_FORBIDDEN" in [issue.code for issue in verdict.issues]) is forbidden
+E       AssertionError: assert ('NUMERICS_CHANGE_FORBIDDEN' in ['NUMERICS_CHANGE_FORBIDDEN']) is False
+
+tests/test_diagnosis_precision_intent.py:120: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_diagnosis_precision_intent.py::test_real_diagnosis_validation_preserves_numeric_impact_gate[Preserve existing BF16 while chunking the existing FP32 consumer.-none-False]
+1 failed, 47 passed in 0.58s

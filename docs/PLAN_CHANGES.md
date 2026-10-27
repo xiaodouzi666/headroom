@@ -159,3 +159,13 @@ approval; official documentation will be checked before advising on that option.
 ## 2026-10-25T02:08:17.732199+00:00: explicitly authorized bounded MVP extension
 
 Frank selected “允许再修最多3轮（推荐）” after reviewing the final v4 failure report and source-anchor/error-feedback/application-location proposal. This authorizes at most three ADDITIONAL MVP repair iterations, v5/v6/v7, using the existing gifted-credit global/day pool only. It does not increase that pool, authorize recharge/overrun, change the original nine scenes or acceptance/policy/numerical/cost limits, or erase v1–v4. Original PLAN.md is unchanged. After these three additional iterations, another failure returns to Frank; passing the original MVP resumes the already authorized plan under section0.6.
+
+## 2026-10-27 — Owner-authorized billing review and further automatic repair
+
+The owner explicitly requested: “那个计费异常你先排查解决一下，然后继续修剩下没通过的场景，重点把自动修复从3/9做到至少6/9。还是只用现有赠送额度，不充值、不超额。”
+
+This authorizes continuing repair work beyond the previously exhausted R1–R3 sequence. It does not change the original fixed-nine denominator, minimum six automatic target successes, strict numerical checks, six rounds/480 seconds per case, or gift-only financial limits. R3 remains partial at 3/9; historical results are immutable and are not pooled.
+
+The narrow HTTP 529 review path can retain a fully verified request reservation while leaving actual cost unknown. It is an explicit receipt-bound review, not an automatic retry or permission to discard unknown charges. No recharge, new allocation, reserve transfer, or credit-limit increase is introduced.
+
+The new candidate feedback distinguishes static rejection from GPU execution and retained-baseline observations; syntax repair now receives bounded actual rejected-source diagnostics and repeated-content identity. General checkpoint/optimizer guidance remains a hypothesis for measured verification. See reports/acceptance-v2-r4-20261027 for source qualification and the separately recorded new campaign outcome. Public deployment remains deferred.

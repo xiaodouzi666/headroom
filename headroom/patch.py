@@ -31,6 +31,7 @@ from headroom.lab.runner import copy_source
 from headroom.llm.client import CapabilityNotVerified, LLMError
 from headroom.llm.router import LLMRouter, ResponseValidationError
 from headroom.patch_evidence import save_patch_response
+from headroom.patch_feedback import candidate_content_fingerprint, rejected_syntax_feedback
 from headroom.patch_names import check_undefined_names
 from headroom.patch_spans import (
     SCHEMA_NAME as PATCH_WIRE_SCHEMA,
@@ -671,8 +672,11 @@ class PatchEngine:
         ]
         attempts = []
         last = None
+        rejected_contents = {}
         for index in range(self.max_repairs + 1):
             response = None
+            conversion = None
+            normalized = None
             ledger_start = len(self.router.client.ledger.entries)
             response_path = directory / f"attempt-{index + 1}-response.json"
             try:
@@ -876,6 +880,21 @@ class PatchEngine:
                     return result
                 if attempt.reason == "NAME_CHECK_UNAVAILABLE":
                     break
+                try:
+                    syntax_feedback = rejected_syntax_feedback(
+                        attempt.candidate_dir,
+                        attempt.changed_files,
+                        reason=attempt.reason,
+                        issues=attempt.policy_report.issues if attempt.policy_report else (),
+                    )
+                except (OSError, ValueError, TypeError, KeyError, RuntimeError, OverflowError):
+                    # Ancillary diagnostics must not replace the original
+                    # rejection or prevent the existing bounded repair loop.
+                    syntax_feedback = {
+                        "coordinate_space": "rejected_candidate",
+                        "status": "unavailable",
+                        "reason": "diagnostic_unavailable",
+                    }
                 failure = {
                     "reason": attempt.reason,
                     "detail": attempt.detail,
@@ -883,7 +902,16 @@ class PatchEngine:
                     if attempt.policy_report
                     else [],
                     "previous_proposal": response.parsed,
+                    "candidate_syntax": syntax_feedback,
                 }
+                if conversion is not None and normalized is not None:
+                    fingerprint = candidate_content_fingerprint(conversion.metadata, normalized)
+                    failure["candidate_content"] = {
+                        "sha256": fingerprint,
+                        "prior_rejected_attempts": list(rejected_contents.get(fingerprint, ())),
+                        "notes_excluded": True,
+                    }
+                    rejected_contents.setdefault(fingerprint, []).append(index + 1)
             messages = [
                 {"role": "system", "content": (PROMPTS / "patch_fix.md").read_text()},
                 {
