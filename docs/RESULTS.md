@@ -1,5 +1,13 @@
 # Results
 
+## 2026-10-27 R5 measured result and continued repair
+
+R5 completed all nine slots at source commit a42fb7c. Independent audit: **3/9 automatic targets (s2, s3, s4)** and **6/9 valid correct first causes**, with two unknown. The unchanged 6/9 repair requirement is not met. R4 successes are not pooled. Five nonzero scenario exits and s7's incomplete source-application evidence remain failed/unknown gates.
+
+Conservative R5 charge is $2.05112772 net (known $2.02308846 plus retained unknown $0.02803926); the original runtime allocation now has $1.584776044 net remaining. Ledger and preserved financial history pass, with 134 closed runs, 789 settled attempts and no pending/unresolved charges. No recharge or reserve transfer. Source-qualified R6 candidates are being prepared; no later acceptance success is claimed.
+
+Evidence: [R5 audit and details](../reports/acceptance-v2-r5-20261027/README.md).
+
 ## 2026-10-27 R4 measured result and continued repair
 
 The audited R4 campaign completed all nine slots at commit `cfeb67f`: **3/9 automatic targets (s3, s4, s8)** and **6/9 valid correct first causes** (three unknown). Automatic repair remains below the unchanged 6/9 requirement. Its conservative charge is $1.33017102 net, including $0.02808822 retained unknown; the remaining runtime allocation is $3.636510964 net. No recharge, reserve transfer or unresolved billing halt.

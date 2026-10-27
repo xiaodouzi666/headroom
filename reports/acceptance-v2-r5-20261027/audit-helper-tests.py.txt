@@ -1,0 +1,419 @@
+"""Isolated pure gate tests: no live audit, database, network or GPU."""
+import copy
+import hashlib
+import importlib.util
+import json
+import os
+import sys
+from decimal import Decimal
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+
+ROOT = Path("/home/xiaodouzi/workspace/headroom")
+DIR = ROOT / ".cache/r5-audit-candidate-20261027"
+CORE = ROOT / ".cache/r5-finance-chain-20261027/finance_chain.py"
+CORE_SHA = "e9219dbfdce76019a153fff41e71beb522056734e3ebf398a5a473f027ebd660"
+assert hashlib.sha256(CORE.read_bytes()).hexdigest() == CORE_SHA
+
+
+def load(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    obj = importlib.util.module_from_spec(spec)
+    sys.modules[name] = obj
+    spec.loader.exec_module(obj)
+    return obj
+
+
+audit = load("isolated_r5_candidate", DIR / "audit_mvp_v2_history_v3.py")
+finance = load("isolated_real_finance_chain", CORE)
+
+
+def guard(event, args):
+    if event.startswith("socket.") or event in {"sqlite3.connect", "subprocess.Popen", "os.system", "os.exec"}:
+        raise AssertionError("Pure tests forbid network, SQLite and process execution")
+    if event == "open" and isinstance(args[0], (str, bytes, os.PathLike)):
+        p = Path(os.fsdecode(args[0]))
+        if any(x.startswith(".env") for x in p.parts) or str(p) in {
+            str(ROOT / ".cache/budget.db"), str(ROOT / "runs/headroom.db")
+        }:
+            raise AssertionError("Pure tests forbid credentials and production databases")
+
+
+sys.addaudithook(guard)
+
+
+def uid(value):
+    return f"{value:032x}"
+
+
+def run(value, limit="0.6"):
+    return {"id": uid(value), "day": "2026-10-27", "limit_usd": limit,
+            "status": "closed", "halt_reason": None, "budget_mode": "actual_usage"}
+
+
+def attempt(value, run_id, amount="0.01", unknown=False):
+    return {"id": uid(value), "run_id": run_id, "upper_usd": amount,
+            "charged_usd": amount, "actual_usd": None if unknown else amount,
+            "settled": 1, "admission_kind": "verified_provider_bound",
+            "dispatched": 1, "charge_status": "reviewed_retained" if unknown else "actual",
+            "charge_basis": "full_retention_review" if unknown else "provider_usage",
+            "review_sha256": "b" * 64 if unknown else None}
+
+
+def snapshots():
+    prior = {
+        "budget_runs": [run(1), run(2)],
+        "budget_attempts": [
+            attempt(101, uid(1), "0.0822432", True),
+            attempt(102, uid(2), "0.0006072"),
+        ],
+        "budget_retention_reviews": [{
+            "attempt_id": uid(101), "receipt_sha256": "b" * 64,
+            "run_id": uid(1), "evidence_json": '{"full_retention":true}',
+            "reviewed_at": "2026-10-27T00:00:00+00:00",
+        }],
+    }
+    current = copy.deepcopy(prior)
+    ids = [uid(i) for i in range(10, 19)]
+    current["budget_runs"] += [run(i) for i in range(10, 19)]
+    current["budget_attempts"] += [attempt(200 + i, uid(i)) for i in range(10, 19)]
+    return prior, current, ids
+
+
+def extension(prior, current, ids):
+    return audit.r5_campaign_extension(
+        finance, finance.canonical(prior), current["budget_runs"],
+        current["budget_attempts"], current["budget_retention_reviews"], ids,
+    )
+
+
+def test_exact_addition_preserves_unknown_debt():
+    prior, current, ids = snapshots()
+    result = extension(prior, current, ids)
+    assert result["accepted"] is True
+    assert result["unknown_actual_never_zeroed"] is True
+    assert prior["budget_attempts"][0]["actual_usd"] is None
+    assert result["prior"]["conservative_charged_usd"] == "0.0828504"
+
+
+@pytest.mark.parametrize("field,value", [
+    ("actual_usd", "0"), ("charged_usd", "0"), ("charged_usd", "0.0822431"),
+    ("upper_usd", "0.1"), ("charge_status", "actual"), ("charge_basis", "other"),
+    ("settled", 0), ("review_sha256", None),
+])
+def test_historical_attempt_columns_fail(field, value):
+    prior, current, ids = snapshots()
+    current["budget_attempts"][0][field] = value
+    assert extension(prior, current, ids)["accepted"] is False
+
+
+@pytest.mark.parametrize("field,value", [
+    ("status", "open"), ("halt_reason", "changed"), ("day", "2026-10-26"),
+    ("budget_mode", "reservations"), ("limit_usd", "0.7"),
+])
+def test_historical_run_columns_fail(field, value):
+    prior, current, ids = snapshots()
+    current["budget_runs"][0][field] = value
+    assert extension(prior, current, ids)["accepted"] is False
+
+
+@pytest.mark.parametrize("change", ["remove", "add", "evidence", "timestamp", "receipt"])
+def test_retention_review_full_rows_fail(change):
+    prior, current, ids = snapshots()
+    if change == "remove":
+        current["budget_retention_reviews"] = []
+    elif change == "add":
+        row = copy.deepcopy(current["budget_retention_reviews"][0])
+        row["attempt_id"] = uid(999)
+        current["budget_retention_reviews"].append(row)
+    else:
+        field = {"evidence": "evidence_json", "timestamp": "reviewed_at", "receipt": "receipt_sha256"}[change]
+        current["budget_retention_reviews"][0][field] = "changed"
+    # Ordinary ledger projection excludes retention review rows.
+    assert finance.projection(finance.snapshot(finance.canonical(current))) == finance.projection(
+        finance.snapshot(finance.canonical(snapshots()[1]))
+    )
+    assert extension(prior, current, ids)["accepted"] is False
+
+
+@pytest.mark.parametrize("change", [
+    "missing_run", "duplicate_run", "duplicate_attempt", "removed_history_attempt",
+    "historical_reuse", "eight_ids", "ten_ids", "duplicate_ids", "non_uuid",
+    "extra_foreign_run", "extra_call_on_old_run", "orphan_call",
+    "case_limit", "case_mode",
+])
+def test_inventory_and_extra_calls_fail(change):
+    prior, current, ids = snapshots()
+    if change == "missing_run":
+        current["budget_runs"].pop()
+    elif change == "duplicate_run":
+        current["budget_runs"].append(copy.deepcopy(current["budget_runs"][-1]))
+    elif change == "duplicate_attempt":
+        current["budget_attempts"].append(copy.deepcopy(current["budget_attempts"][-1]))
+    elif change == "removed_history_attempt":
+        current["budget_attempts"].pop(0)
+    elif change == "historical_reuse":
+        ids[-1] = uid(1)
+    elif change == "eight_ids":
+        ids.pop()
+    elif change == "ten_ids":
+        ids.append(uid(30))
+    elif change == "duplicate_ids":
+        ids[-1] = ids[0]
+    elif change == "non_uuid":
+        ids[-1] = "bad"
+    elif change == "extra_foreign_run":
+        current["budget_runs"].append(run(30))
+    elif change == "extra_call_on_old_run":
+        current["budget_attempts"].append(attempt(999, uid(1)))
+    elif change == "orphan_call":
+        current["budget_attempts"].append(attempt(999, uid(30)))
+    elif change == "case_limit":
+        current["budget_runs"][-1]["limit_usd"] = "0.7"
+    elif change == "case_mode":
+        current["budget_runs"][-1]["budget_mode"] = "reservations"
+    assert extension(prior, current, ids)["accepted"] is False
+
+
+def dispatch_fixture():
+    prior, _, _ = snapshots()
+    snap = finance.snapshot(finance.canonical(prior))
+    total = finance.R4.totals(snap["budget_attempts"])
+    charged = Decimal(total["conservative_charged_usd"])
+    remaining = finance.LIFETIME - charged
+    day_remaining = finance.DAILY - charged
+    effective = min(Decimal("5.4"), remaining, day_remaining)
+    active, sha = ".cache/active-fixture.json", "a" * 64
+    cap = {
+        "ledger": finance.summary(snap), "no_history_exclusions": True,
+        "unknown_costs_retain_verified_bounds": True,
+        "authorization": {"gift_only": True, "recharge": False, "new_budget_pool": False},
+        "pool_usd": str(finance.LIFETIME), "daily_pool_usd": str(finance.DAILY),
+        "per_case_stop_usd": "0.6", "campaign_max_usd": "5.4",
+        "profile_sha256": finance.BASE_PROFILE_SHA,
+        "active_profile_path": active, "active_profile_sha256": sha,
+    }
+    budget = {
+        "projection_sha256": finance.projection(snap),
+        "closed_runs": len(snap["budget_runs"]), "settled_attempts": len(snap["budget_attempts"]),
+        "history_exclusions": [], "utc_day": "2026-10-27",
+        "conservative_usd": str(charged), "known_subtotal_usd": total["known_actual_subtotal_usd"],
+        "actual_total_usd": None, "day_conservative_usd": str(charged),
+        "all_time_limit_usd": str(finance.LIFETIME), "daily_limit_usd": str(finance.DAILY),
+        "remaining_all_time_usd": str(remaining), "remaining_day_usd": str(day_remaining),
+        "effective_campaign_usd": str(effective), "campaign_max_usd": "5.4",
+    }
+    preflight = {
+        "started_utc": "2026-10-27T00:10:00+00:00", "budget_before": budget,
+        "base_funding_profile_sha256": finance.BASE_PROFILE_SHA, "active_profile_sha256": sha,
+        "argv": ["headroom", "eval", "--runtime-profile", active, "--budget", "0.6",
+                 "--daily-budget", str(finance.DAILY), "--campaign-budget", str(effective)],
+    }
+    return prior, cap, preflight, active, sha
+
+
+def test_real_dispatch_positive_keeps_actual_unknown():
+    prior, cap, preflight, active, sha = dispatch_fixture()
+    assert finance.verify_r5_dispatch(finance.canonical(prior), cap, preflight,
+        active_profile_path=active, active_profile_sha256=sha)["accepted"] is True
+    assert preflight["budget_before"]["actual_total_usd"] is None
+
+
+@pytest.mark.parametrize("change", [
+    "prior_unknown_zero", "extra_after_probe_call", "cap_projection", "preflight_projection",
+    "preflight_actual_zero", "base_profile", "active_profile", "old_runtime_argv",
+    "duplicate_runtime_option", "case_budget", "daily_budget", "campaign_budget", "excluded_history",
+])
+def test_real_dispatch_probe_after_preflight_mismatch(change):
+    prior, cap, preflight, active, sha = dispatch_fixture()
+    argv = preflight["argv"]
+    if change == "prior_unknown_zero":
+        prior["budget_attempts"][0]["actual_usd"] = "0"
+    elif change == "extra_after_probe_call":
+        prior["budget_attempts"].append(attempt(999, uid(2)))
+    elif change == "cap_projection":
+        cap["ledger"]["projection_sha256"] = "0" * 64
+    elif change == "preflight_projection":
+        preflight["budget_before"]["projection_sha256"] = "0" * 64
+    elif change == "preflight_actual_zero":
+        preflight["budget_before"]["actual_total_usd"] = "0"
+    elif change == "base_profile":
+        preflight["base_funding_profile_sha256"] = "0" * 64
+    elif change == "active_profile":
+        preflight["active_profile_sha256"] = "0" * 64
+    elif change == "old_runtime_argv":
+        argv[argv.index("--runtime-profile") + 1] = finance.R4.PROFILE
+    elif change == "duplicate_runtime_option":
+        argv += ["--runtime-profile", active]
+    elif change == "case_budget":
+        argv[argv.index("--budget") + 1] = "0.7"
+    elif change == "daily_budget":
+        argv[argv.index("--daily-budget") + 1] = "20"
+    elif change == "campaign_budget":
+        argv[argv.index("--campaign-budget") + 1] = "6"
+    elif change == "excluded_history":
+        preflight["budget_before"]["history_exclusions"] = [uid(1)]
+    with pytest.raises((ValueError, KeyError, IndexError)):
+        finance.verify_r5_dispatch(finance.canonical(prior), cap, preflight,
+            active_profile_path=active, active_profile_sha256=sha)
+
+
+@pytest.fixture
+def driver_files(tmp_path, monkeypatch):
+    monkeypatch.setattr(audit, "ROOT", tmp_path)
+    monkeypatch.setattr(audit, "OUT", tmp_path / "reports/acceptance-v2-r5-20261027")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setitem(sys.modules, "reviewed_r5_dispatch_contract", None)
+    funding = {p["path"]: p["sha256"] for p in audit.FUNDING_PINS}
+    source = "\n".join([
+        f"PROFILE = {audit.PROFILE!r}", f"PROFILE_SHA = {funding[audit.PROFILE]!r}",
+        f"FUNDING_SHA = {funding[audit.FUNDING_PATH]!r}",
+        f"BUDGET_HELPER_SHA = {funding[audit.BUDGET_HELPER_PATH]!r}",
+        "MARKER = 'synthetic-only'",
+    ]).encode()
+    pairs = [
+        ("R5_DRIVER_SHA", audit.OUT / "run_mvp_v2.py", source),
+        ("R5_ROOT_REVIEW_SHA", audit.OUT / "root-review.json", b'{"root":true}'),
+        ("R5_CAP_SHA", audit.OUT / "cap-review.json", b'{"cap":true}'),
+        ("R5_PREFLIGHT_SHA", audit.OUT / "preflight.json", b'{"preflight":true}'),
+        ("R5_EXECUTION_SHA", audit.OUT / "execution.json", b'{"execution":true}'),
+    ]
+    for key, path, raw in pairs:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(raw)
+        monkeypatch.setattr(audit, key, audit.digest(raw))
+    for relative in [audit.R4_HISTORY_AUDIT, audit.BUDGET_HELPER_PATH, audit.HISTORICAL_HELPER_PATH]:
+        p = tmp_path / relative
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes((ROOT / relative).read_bytes())
+    return pairs
+
+
+def test_pinned_synthetic_driver_positive(driver_files):
+    driver, records = audit.r5_pinned_driver()
+    assert driver.MARKER == "synthetic-only"
+    assert len(records) == 8
+
+
+@pytest.mark.parametrize("key", [
+    "R5_DRIVER_SHA", "R5_ROOT_REVIEW_SHA", "R5_CAP_SHA", "R5_PREFLIGHT_SHA", "R5_EXECUTION_SHA",
+])
+def test_pending_refuses_before_file_read(driver_files, monkeypatch, key):
+    monkeypatch.setattr(audit, key, "PENDING")
+    def forbidden(*args):
+        raise AssertionError("file read reached before PENDING refusal")
+    monkeypatch.setattr(audit, "restricted_funding_bytes", forbidden)
+    with pytest.raises(ValueError, match="independently frozen"):
+        audit.r5_pinned_driver()
+
+
+@pytest.mark.parametrize("key", [
+    "R5_DRIVER_SHA", "R5_ROOT_REVIEW_SHA", "R5_CAP_SHA", "R5_PREFLIGHT_SHA", "R5_EXECUTION_SHA",
+])
+def test_actual_frozen_file_mismatch_refuses(driver_files, key):
+    next(path for name, path, _ in driver_files if name == key).write_bytes(b"changed")
+    with pytest.raises(ValueError, match="prerequisite changed"):
+        audit.r5_pinned_driver()
+    assert sys.modules["reviewed_r5_dispatch_contract"] is None
+
+
+@pytest.mark.parametrize("relative_name", ["BUDGET_HELPER_PATH", "HISTORICAL_HELPER_PATH"])
+def test_import_time_helper_drift_refuses(driver_files, relative_name):
+    (audit.ROOT / getattr(audit, relative_name)).write_bytes(b"changed")
+    with pytest.raises(ValueError, match="prerequisite changed"):
+        audit.r5_pinned_driver()
+    assert sys.modules["reviewed_r5_dispatch_contract"] is None
+
+
+@pytest.mark.parametrize("field", ["PROFILE", "PROFILE_SHA", "FUNDING_SHA", "BUDGET_HELPER_SHA"])
+def test_driver_funding_anchor_cannot_change(driver_files, monkeypatch, field):
+    p = audit.OUT / "run_mvp_v2.py"
+    s = p.read_text()
+    lines = [f"{field} = 'changed'" if x.startswith(field + " =") else x for x in s.splitlines()]
+    p.write_text("\n".join(lines))
+    monkeypatch.setattr(audit, "R5_DRIVER_SHA", audit.digest(p.read_bytes()))
+    with pytest.raises(ValueError, match="original funding anchors"):
+        audit.r5_pinned_driver()
+    assert sys.modules["reviewed_r5_dispatch_contract"] is None
+
+
+class ReachedIndependentSeal(Exception):
+    pass
+
+
+@pytest.fixture
+def context_fixture(tmp_path, monkeypatch):
+    # Only upstream profile loading is represented by explicit fixture metadata.
+    # The tested current binding comparisons and real finance pin gate stay real.
+    monkeypatch.setattr(audit, "ROOT", tmp_path)
+    monkeypatch.setattr(audit, "OUT", tmp_path / "reports/acceptance-v2-r5-20261027")
+    sha = {k: str(i) * 64 for i, k in enumerate([
+        "R5_DRIVER_SHA", "R5_ROOT_REVIEW_SHA", "R5_CAP_SHA", "R5_PREFLIGHT_SHA", "R5_EXECUTION_SHA"
+    ], 1)}
+    for k, v in sha.items():
+        monkeypatch.setattr(audit, k, v)
+    binding = {
+        "base_funding_profile_sha256": finance.BASE_PROFILE_SHA,
+        "active_profile_path": ".cache/active-fixture.json", "active_profile_sha256": "a" * 64,
+    }
+    expected_paths = {
+        audit.OUT / "root-review.json": sha["R5_ROOT_REVIEW_SHA"],
+        audit.OUT / "cap-review.json": sha["R5_CAP_SHA"],
+        audit.OUT / "preflight.json": sha["R5_PREFLIGHT_SHA"],
+        audit.OUT / "execution.json": sha["R5_EXECUTION_SHA"],
+    }
+    reader = SimpleNamespace(digest=lambda path: expected_paths[path])
+    def seal_boundary(**kwargs):
+        raise ReachedIndependentSeal()
+    adapter = SimpleNamespace(ArtifactPin=lambda *args: args,
+                              verify_frozen_root_and_probe=seal_boundary)
+    driver = SimpleNamespace(
+        PROFILE_SHA=finance.BASE_PROFILE_SHA, ACTIVE_PROFILE=binding["active_profile_path"],
+        ACTIVE_PROFILE_SHA=binding["active_profile_sha256"],
+        R4_AFTER_PIN=("fixture", "a" * 64),
+        PROBE_ARTIFACT_PINS={"before": ("fixture", "a" * 64)},
+        PROBE_AUTHORIZATION_ARTIFACT_PINS={"prepared": ("fixture", "a" * 64)},
+        PREPARED_REQUEST_SHA="a" * 64,
+        active_profile_binding=lambda: (None, binding, finance, adapter, {}),
+        _reviewed_dynamic_pins=lambda: dict.fromkeys(
+            ["r4_after", "probe_before", "probe_after", "probe_calls", "probe_receipt",
+             "profile_transition", "new_profile", "r5_cap", "r5_preflight"], "a" * 64),
+    )
+    monkeypatch.setattr(audit, "r5_pinned_driver", lambda: (driver, {}))
+    review = {"driver_sha256": sha["R5_DRIVER_SHA"], "cap_sha256": sha["R5_CAP_SHA"],
+              "runtime_profile_binding": copy.deepcopy(binding)}
+    cap = {"catalogue": {"runtime_profile_binding": copy.deepcopy(binding)}}
+    preflight = {"review_sha256": sha["R5_ROOT_REVIEW_SHA"]}
+    return reader, review, cap, preflight, expected_paths
+
+
+def test_context_positive_reaches_real_seal_boundary(context_fixture):
+    reader, review, cap, preflight, _ = context_fixture
+    with pytest.raises(ReachedIndependentSeal):
+        audit.r5_financial_context(reader, review, cap, preflight)
+
+
+@pytest.mark.parametrize("change", [
+    "root_file", "cap_file", "preflight_file", "execution_file",
+    "review_driver", "review_cap", "preflight_review", "review_active", "cap_active",
+])
+def test_context_binding_mismatch_before_seal(context_fixture, change):
+    reader, review, cap, preflight, paths = context_fixture
+    if change.endswith("_file"):
+        name = {"root_file": "root-review.json", "cap_file": "cap-review.json",
+                "preflight_file": "preflight.json", "execution_file": "execution.json"}[change]
+        paths[audit.OUT / name] = "0" * 64
+    elif change == "review_driver":
+        review["driver_sha256"] = "0" * 64
+    elif change == "review_cap":
+        review["cap_sha256"] = "0" * 64
+    elif change == "preflight_review":
+        preflight["review_sha256"] = "0" * 64
+    elif change == "review_active":
+        review["runtime_profile_binding"]["active_profile_sha256"] = "0" * 64
+    elif change == "cap_active":
+        cap["catalogue"]["runtime_profile_binding"]["active_profile_sha256"] = "0" * 64
+    with pytest.raises(ValueError, match="capability chain is not bound"):
+        audit.r5_financial_context(reader, review, cap, preflight)

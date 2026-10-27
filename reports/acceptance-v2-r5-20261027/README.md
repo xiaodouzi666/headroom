@@ -1,5 +1,36 @@
 # R5 automatic repair qualification and bounded capability check
 
+## Measured R5 outcome — 2026-10-27
+
+The independently audited fixed-nine campaign finished at source commit a42fb7c12eb73845ac5447c28a6b1a80e6acaa0f with **3/9 automatic targets (s2, s3, s4)** and **6/9 valid correct first causes** (two unknown). The automatic-repair target remains below the unchanged 6/9 minimum. s2 is newly successful in this campaign; R4's s8 success is not pooled into this result.
+
+| Scenario | Target | Final observation |
+| --- | --- | --- |
+| s1 | Failed | Six rounds exhausted; undefined names, syntax errors and incomplete GPU candidates |
+| s2 capacity | Passed | Two retained improvements; original workload, strict numerical and memory gates passed |
+| s3 | Passed | First-round repair passed |
+| s4 | Passed | First-round repair and numerical reference passed |
+| s5 | Failed | One candidate reduced measured peak by 66.4%, but backward scalars did not align; no numerical acceptance |
+| s6 | Failed | Diagnostic prerequisites/precision policy remained unresolved |
+| s7 | Failed | Second-round diagnosis exhausted its one bounded supplement with truncated output |
+| s8 | Failed | Edits/names/syntax and verification failed; later diagnosis requested evidence |
+| nanoGPT | Failed | Verification failed, then bounded diagnosis supplement remained insufficient |
+
+The campaign process exited 1. Five scenario CLI chains exited nonzero, and s7's interrupted round leaves source-application evidence unknown. These technical failures remain in the audit; they are not waived or converted to successful execution. All financial, original-history preservation, source binding, cleanup, time and spend-bound checks passed. The output is a partial MVP, not full-plan acceptance.
+
+98 shared-ledger attempts have known token cost $2.02308846 net plus $0.02803926 retained unknown charges, for a conservative $2.05112772 net. Actual total remains unknown. Across all runtime history, conservative charges are $12.592981496 of the unchanged $14.17775754 allocation, leaving **$1.584776044 net**. All 134 runs are closed and 789 attempts settled; no pending or unresolved charge remains. No recharge, extra allocation, or judging-reserve transfer occurred.
+
+The independent wire review covered 28 diagnosis requests and 49 patcher requests, with zero request-integrity issues. Diagnosis used thinking; all patcher requests used the verified thinking-plus-low-effort combination. No causal claim that this mode improves repair accuracy is supported by this campaign.
+
+- [Independent acceptance and financial audit](independent-audit-history-v3-final.json)
+- [Prepared request wire audit](reasoning-wire-audit.json)
+- [Execution receipt](execution.json)
+- [Final artifact freeze](final-artifact-freeze-v3.json)
+
+Further development targets precise rejected-source name/model-binding feedback, source-derived loss scaling and bounded diagnosis-output recovery. Offline fixes and earlier successes do not increase the measured 3/9 result. The remaining original allocation must pass all existing reservation gates before another live campaign.
+
+## Earlier preparation record
+
 Owner authorization: continue automatic repair toward at least 6/9, existing gifted allocation only, no recharge or overspend. The original PLAN, all historical runs and the fixed-nine threshold are unchanged. Public deployment remains deferred.
 
 R4 completed at 3/9 automatic targets and 6/9 valid first causes. Its conservative charge was $1.33017102 net; the runtime allocation remaining before any R5 work is $3.636510964 net. This document is preparation, not a new success score.
