@@ -54,3 +54,36 @@ identical proposed source bytes and env/CLI changes, ignoring notes. Changing
 only notes or claiming an error is fixed does not fix candidate content. When
 this list is nonempty, make an actual source/configuration correction addressing
 the rejection. The original repair-count and completion-token limits still apply.
+
+Repair one complete candidate implementing the selected step, including any
+inseparable imports, configuration/setup and consuming behavior. The host
+verifies this candidate immediately; later plan entries are not deployed
+prerequisites. A setup-only fragment cannot rely on a future round to become a
+repair. Keep the original policy, measurement, verification and repair limits.
+
+
+The current numerical contract compares captured Tensor.backward scalar
+arguments under the selected numerical_basis; it does not use a user emit(),
+print, progress logger or separately reported aggregate loss. A backward scalar
+is recorded at call entry, so its count is not a count of successful backwards.
+Candidate capture_counts, when present, describe only that recorded candidate:
+null means unavailable, zero requires an observed empty sequence, and
+captured_prefix does not establish completion. Logical updates and backward
+scalars are different units. Counts alone prove neither loss equivalence nor
+the correctness of an update. Keep unavailable comparison distinct from a
+measured mismatch and consult the existing checks, numerical_basis and reference.
+
+Several weighted backwards may preserve a mathematical full-batch gradient yet
+change the scalar series this contract compares. Changing or deleting user
+logging cannot fix that difference. Do not alter hooks, reduce the comparison,
+rescale its observations or claim a gate passed. Use the source and existing
+numerical/reference evidence to decide whether a candidate can be compared.
+
+Choose a source-supported repair with the smallest relevant semantic change.
+When activation lifetimes, recomputation boundaries or an implementation
+workspace explain the measured peak, consider a repair to that mechanism which
+preserves the existing backward/update cadence, effective workload, objective,
+dtype and training path. This is a relevance-based preference, not a fixed
+optimization order or a guarantee that recomputation saves memory. If such a
+repair is unsupported or insufficient, preserve that limitation and the real
+prerequisites of alternatives; do not invent an edit or change acceptance rules.

@@ -273,8 +273,8 @@ def test_schema_feedback_does_not_echo_invalid_input_or_extra_field_text():
     assert "JSON_SCHEMA_MISMATCH" in feedback and "INVALID_SCHEMA" in feedback
 
 
-@pytest.mark.parametrize("reason", ["invalid_json", "truncated", "filtered"])
-def test_non_schema_provider_failure_does_not_enter_repair_loop(reason):
+@pytest.mark.parametrize("reason", ["filtered", "unknown"])
+def test_filtered_or_unknown_provider_failure_does_not_enter_repair_loop(reason):
     class Router:
         calls = 0
 

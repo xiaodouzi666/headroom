@@ -673,6 +673,8 @@ class PatchEngine:
         attempts = []
         last = None
         rejected_contents = {}
+        patch_caps = self.router.client.config.model_for("patcher").capabilities
+        use_low_effort = patch_caps.low_effort_method == "chat_template_kwargs"
         for index in range(self.max_repairs + 1):
             response = None
             conversion = None
@@ -685,7 +687,8 @@ class PatchEngine:
                     messages,
                     SourceSpanProposal,
                     max_tokens=self.max_completion_tokens,
-                    reasoning=False,
+                    reasoning=use_low_effort,
+                    **({"low_effort": True} if use_low_effort else {}),
                 )
                 if response.usage is None:
                     raise LLMError("PATCH_USAGE_UNVERIFIED")
@@ -694,6 +697,15 @@ class PatchEngine:
             except BaseException as error:
                 if isinstance(error, ResponseValidationError):
                     response = error.response
+                    if error.reason in {
+                        "truncated",
+                        "empty_json",
+                        "invalid_json",
+                        "schema_mismatch",
+                    }:
+                        # Never append hidden reasoning or continue partial JSON. A later
+                        # ordinary retry uses the existing source and bounded failure data.
+                        use_low_effort = False
                 records = self.router.client.ledger.entries[ledger_start:]
                 try:
                     response_artifact = save_patch_response(

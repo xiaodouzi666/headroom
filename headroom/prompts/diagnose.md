@@ -392,3 +392,64 @@ Do not require an unknown literal batch size for a transformation whose relevant
 prerequisites are established independently from the source/update path. If that
 path is ambiguous, name the actual missing dependency. Peak movement, numerical
 roundoff and runtime cost still require the unchanged host checks.
+
+Each proposed plan step is one complete, independently executable candidate
+against the current retained source. The host executes only plan[0] next, then
+verifies that candidate and keeps or reverts it before diagnosing again. Later
+plan entries have not been applied and cannot supply prerequisites to plan[0].
+Include mutually dependent imports, setup/configuration and their consuming
+behavior in the same selected step; a setup-only edit with no expected memory
+reduction cannot survive the existing keep gate. Keep unrelated optimizations
+separate. expected_saving_gb belongs only to the complete candidate described by
+that step, with no borrowed saving from a later unexecuted step. The whole-plan
+savings sum remains a prospective feasibility check, not an estimate of what
+this single candidate has implemented or a reason to claim verified success.
+Do not inflate the first step's estimate to pass validation; preserve genuine
+missing prerequisites and all unchanged policy, numerical and performance gates.
+
+Trace optional argument sentinels through to their consumers. A parser default
+of None does not by itself make the effective value unknown: follow the visible
+fallback assignment and subsequent uses. If complete target argv and the supplied
+parser/source establish the branch with no unresolved mutation, configuration
+input or delegation, describe its value as source-derived rather than measured.
+If a real override or dynamic path exists, name that specific ambiguity. Do not
+request the sentinel itself as missing runtime evidence, and do not require a
+batch value for an independent transformation whose premises do not depend on it.
+
+Separate optimizer arithmetic workspace from persistent state. Allocation sites
+inside optimizer.step may create transient tensor-list intermediates while the
+same moment tensors persist. For a supported AdamW path whose source establishes
+foreach execution, the documented single-tensor implementation (foreach=False)
+is one candidate family to consider after checking fused/group overrides and
+mode compatibility. It does not inherently depend on a literal batch size or
+remove moment state. Preserve parameter membership, state, dtype, hyperparameters
+and update cadence; label any memory/runtime benefit as a hypothesis. Choose it
+only when current evidence supports its relevance and all existing verification
+gates remain applicable. Do not assume fixed savings or mandatory applicability.
+
+
+The current numerical contract compares captured Tensor.backward scalar
+arguments under the selected numerical_basis; it does not use a user emit(),
+print, progress logger or separately reported aggregate loss. A backward scalar
+is recorded at call entry, so its count is not a count of successful backwards.
+Candidate capture_counts, when present, describe only that recorded candidate:
+null means unavailable, zero requires an observed empty sequence, and
+captured_prefix does not establish completion. Logical updates and backward
+scalars are different units. Counts alone prove neither loss equivalence nor
+the correctness of an update. Keep unavailable comparison distinct from a
+measured mismatch and consult the existing checks, numerical_basis and reference.
+
+Several weighted backwards may preserve a mathematical full-batch gradient yet
+change the scalar series this contract compares. Changing or deleting user
+logging cannot fix that difference. Do not alter hooks, reduce the comparison,
+rescale its observations or claim a gate passed. Use the source and existing
+numerical/reference evidence to decide whether a candidate can be compared.
+
+Choose a source-supported repair with the smallest relevant semantic change.
+When activation lifetimes, recomputation boundaries or an implementation
+workspace explain the measured peak, consider a repair to that mechanism which
+preserves the existing backward/update cadence, effective workload, objective,
+dtype and training path. This is a relevance-based preference, not a fixed
+optimization order or a guarantee that recomputation saves memory. If such a
+repair is unsupported or insufficient, preserve that limitation and the real
+prerequisites of alternatives; do not invent an edit or change acceptance rules.

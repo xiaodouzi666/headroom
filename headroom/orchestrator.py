@@ -25,6 +25,7 @@ from headroom.lab.envs import validate_allocator
 from headroom.lab.runner import PROJECT_ROOT, run_script
 from headroom.ledger_path import select_budget_database
 from headroom.llm.client import LLMError
+from headroom.llm.router import ResponseValidationError, response_validation_metadata
 from headroom.patch import PatchEngine
 from headroom.report import generate_report
 from headroom.research.tavily_tool import ResearchSession
@@ -374,16 +375,19 @@ def run_fix(
     def finish_round(payload):
         nonlocal active_round
         row = {**(active_round or {}), **payload}
+        recorded_candidate = candidate_evidence(
+            directory, row, selected_round=data["kept"]["round"] if data.get("kept") else None
+        )
         feedback = round_verification_feedback(
             row,
+            patch_status=recorded_candidate["status"]
+            if recorded_candidate["patch_result_available"]
+            else None,
             selected_result=data.get("after") or data.get("baseline"),
             selected_round=data["kept"]["round"] if data.get("kept") else None,
             selected_target_met=data["target_met"]
             if data.get("kept")
             else data["search"]["baseline_target_met"],
-        )
-        recorded_candidate = candidate_evidence(
-            directory, row, selected_round=data["kept"]["round"] if data.get("kept") else None
         )
         candidate_history.append(recorded_candidate)
         row["candidate_evidence"] = recorded_candidate
@@ -650,6 +654,9 @@ def run_fix(
                 "requires_supplement": checked.requires_supplement,
                 "supplement_request": checked.supplement_request,
                 "invocation_provenance": getattr(checked, "invocation_provenance", None),
+                "response_validation_failures": list(
+                    getattr(checked, "response_validation_failures", ())
+                ),
             }
             _write(round_dir / "diagnosis.json", diagnosis_data)
             _write(directory / "diagnosis.json", diagnosis_data)
@@ -658,6 +665,7 @@ def run_fix(
                 valid=checked.valid,
                 ready_for_patch=checked.ready_for_patch,
                 round=number,
+                response_validation_failures=diagnosis_data["response_validation_failures"],
                 **_llm_phase(store, run_id, diagnose_start),
             )
             if not checked.ready_for_patch:
@@ -1061,7 +1069,12 @@ def run_fix(
     except (LLMError, OSError, ValueError, TypeError) as error:
         status, reason = "failed", "Pipeline failed: " + type(error).__name__
         data["search"]["stop_reason"] = "pipeline_error"
-        emit("run.failed", reason=reason)
+        response_failure = (
+            {"response_validation": response_validation_metadata(error)}
+            if isinstance(error, ResponseValidationError)
+            else {}
+        )
+        emit("run.failed", reason=reason, **response_failure)
     finally:
         if active_round is not None:
             committed = (

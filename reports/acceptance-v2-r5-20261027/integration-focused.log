@@ -1,0 +1,35 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}}
+........................................................................ [ 16%]
+...........................F............................................ [ 33%]
+........................................................................ [ 50%]
+........................................................................ [ 67%]
+........................................................................ [ 84%]
+.................................................................        [100%]
+=================================== FAILURES ===================================
+_ test_static_rejection_and_retained_oom_remain_distinct_at_both_solver_boundaries _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-219/test_static_rejection_and_reta0')
+
+    def test_static_rejection_and_retained_oom_remain_distinct_at_both_solver_boundaries(tmp_path):
+        bad = {"before": "VALUE = 1\n", "after": "VALUE = (\n"}
+        result, store, calls, verifies, _ = search_run(tmp_path, [bad, bad], max_rounds=2)
+        try:
+            assert not verifies and not result["target_met"]
+            ultra, patcher = request_payload(calls[5]), request_payload(calls[6])
+            candidate = ultra["candidate_evidence"][0]
+            assert candidate == patcher["evidence_context"]["candidate_evidence"][0]
+            assert candidate["outcome_stage"] == {
+                "stage": "rejected_before_execution",
+                "candidate_runtime_observed": False,
+                "candidate_numerical_comparison": "unknown",
+            }
+            feedback = ultra["verification_feedback"][0]
+            assert feedback == patcher["evidence_context"]["verification_feedback"][0]
+            assert feedback["candidate"] is None
+>           assert feedback["outcome_stage"]["candidate_runtime_observed"] is None
+E           assert False is None
+
+tests/test_solver_failure_stages.py:30: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_solver_failure_stages.py::test_static_rejection_and_retained_oom_remain_distinct_at_both_solver_boundaries
+1 failed, 424 passed in 23.63s

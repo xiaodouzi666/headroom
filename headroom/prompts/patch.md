@@ -98,3 +98,39 @@ read, reset and reused across updates. Do not discard state or remove optimizer
 members merely because one iteration has no gradient: preserve trainable
 parameter updates, group settings, weight decay, momentum, scheduling and any
 later unfreeze behavior. Treat unresolved dependencies as prerequisites.
+
+Implement the selected plan step as one complete candidate. Its required imports,
+configuration/setup and consuming behavior must work together in this patch.
+The host verifies immediately and reverts a candidate that does not improve
+memory; another plan entry is not already applied and cannot complete a partial
+setup later. Do not implement only a prerequisite while omitting the repair that
+uses it, or import a later unrelated optimization into the selected step.
+If the selected step is incomplete or depends on unavailable premises, report
+that limitation rather than inventing a measured benefit or altering any gate.
+
+
+The current numerical contract compares captured Tensor.backward scalar
+arguments under the selected numerical_basis; it does not use a user emit(),
+print, progress logger or separately reported aggregate loss. A backward scalar
+is recorded at call entry, so its count is not a count of successful backwards.
+Candidate capture_counts, when present, describe only that recorded candidate:
+null means unavailable, zero requires an observed empty sequence, and
+captured_prefix does not establish completion. Logical updates and backward
+scalars are different units. Counts alone prove neither loss equivalence nor
+the correctness of an update. Keep unavailable comparison distinct from a
+measured mismatch and consult the existing checks, numerical_basis and reference.
+
+Several weighted backwards may preserve a mathematical full-batch gradient yet
+change the scalar series this contract compares. Changing or deleting user
+logging cannot fix that difference. Do not alter hooks, reduce the comparison,
+rescale its observations or claim a gate passed. Use the source and existing
+numerical/reference evidence to decide whether a candidate can be compared.
+
+Choose a source-supported repair with the smallest relevant semantic change.
+When activation lifetimes, recomputation boundaries or an implementation
+workspace explain the measured peak, consider a repair to that mechanism which
+preserves the existing backward/update cadence, effective workload, objective,
+dtype and training path. This is a relevance-based preference, not a fixed
+optimization order or a guarantee that recomputation saves memory. If such a
+repair is unsupported or insufficient, preserve that limitation and the real
+prerequisites of alternatives; do not invent an edit or change acceptance rules.

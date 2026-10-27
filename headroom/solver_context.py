@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import math
 import re
 from collections.abc import Mapping
 from pathlib import PurePosixPath
@@ -586,6 +587,71 @@ def candidate_outcome_stage(row, *, patch_status=None):
     return result
 
 
+def candidate_capture_counts(row, *, patch_status=None):
+    """Summarize recorded candidate quantities, without changing numerical gates.
+
+    A recorded scalar is an argument seen at Tensor.backward entry, including
+    nonfinite entries represented as None. It is not a successful backward or
+    optimizer-update count. Prefix evidence does not establish training completion.
+    """
+    result = {
+        "schema": "headroom.candidate_capture_counts.v1",
+        "basis": "recorded_candidate_capture_only",
+        "capture_complete": None,
+        "backward_scalar_count": None,
+        "backward_scalar_scope": "unavailable",
+        "logical_update_count": None,
+        "logical_update_scope": "unavailable",
+    }
+    stage = candidate_outcome_stage(row, patch_status=patch_status)
+    if stage["candidate_runtime_observed"] is not True:
+        return result
+    after = row["verification"]["after"]
+    complete = after["capture_complete"]
+    result["capture_complete"] = complete
+    scope = "finalized_capture" if complete else "captured_prefix"
+    scalars = after.get("loss_series")
+
+    def recorded_scalar(value):
+        if value is None:
+            return True
+        if type(value) not in (int, float):
+            return False
+        try:
+            return math.isfinite(value)
+        except OverflowError:
+            return False
+
+    if (
+        isinstance(scalars, list)
+        and len(scalars) <= 1_000_000
+        and all(recorded_scalar(value) for value in scalars)
+    ):
+        result.update(backward_scalar_count=len(scalars), backward_scalar_scope=scope)
+
+    observation = after.get("optimizer_update_observation")
+    observation = observation if isinstance(observation, Mapping) else {}
+    steps, records = after.get("steps"), after.get("step_records")
+    if (
+        observation.get("protocol") == "headroom.optimizer_updates.v1"
+        and observation.get("logical_boundary_complete") is True
+        and type(steps) is int
+        and 0 <= steps <= 10000
+        and type(observation.get("logical_updates")) is int
+        and observation["logical_updates"] == steps
+        and isinstance(records, list)
+        and len(records) == steps
+        and all(
+            isinstance(record, Mapping)
+            and type(record.get("step")) is int
+            and record["step"] == number
+            for number, record in enumerate(records, 1)
+        )
+    ):
+        result.update(logical_update_count=steps, logical_update_scope=scope)
+    return result
+
+
 def candidate_evidence(run_root, row, *, selected_round):
     """Whitelist fields from a fixed round artifact; missing bytes remain unavailable."""
     number = row.get("number")
@@ -600,6 +666,7 @@ def candidate_evidence(run_root, row, *, selected_round):
         "decision": _text(row.get("decision"), 32),
         "patch_result_available": False,
         "outcome_stage": candidate_outcome_stage(row),
+        "capture_counts": candidate_capture_counts(row),
         "patch_result_sha256": None,
         "patch_result_reason": "missing_unsafe_or_oversized",
         "diff": _owned_diff(run_root, row.get("patch"), number),
@@ -624,6 +691,7 @@ def candidate_evidence(run_root, row, *, selected_round):
     value.update(
         patch_result_available=True,
         outcome_stage=candidate_outcome_stage(row, patch_status=result.get("status")),
+        capture_counts=candidate_capture_counts(row, patch_status=result.get("status")),
         patch_result_sha256=hashlib.sha256(raw).hexdigest(),
         patch_result_reason=None,
         status=_text(result.get("status"), 64),

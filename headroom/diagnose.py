@@ -1,10 +1,11 @@
 """Prepare diagnosis requests and check model claims against evidence and policy."""
 
+import copy
 import json
 import math
 import re
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -17,9 +18,10 @@ from headroom.evidence_blockers import (
     build_evidence_availability_catalog,
     validate_evidence_requests,
 )
-from headroom.llm.router import ResponseValidationError, parse_json
+from headroom.llm.router import ResponseValidationError, parse_json, response_validation_metadata
 from headroom.schemas import Diagnosis
 from headroom.solver_context import (
+    candidate_capture_counts,
     candidate_outcome_stage,
     invocation_observation,
     invocation_reference_catalog,
@@ -189,6 +191,7 @@ class DiagnosisValidation:
     requires_supplement: bool = False
     supplement_request: str | None = None
     invocation_provenance: Mapping[str, Any] | None = None
+    response_validation_failures: tuple[Mapping[str, Any], ...] = ()
 
     @property
     def valid(self) -> bool:
@@ -200,6 +203,7 @@ class DiagnosisValidation:
 
 
 _REPAIR_RULES = {
+    "SELECTED_STEP_NO_EXPECTED_SAVING": "The host executes only plan[0] before verification and keep/revert. Merge required setup, imports/configuration and their consumer changes into one complete candidate with a source-supported positive expected reduction. Do not inflate its estimate or borrow savings from unexecuted steps. Keep genuine prerequisites or infeasibility explicit.",
     "PLAN_ASSESSMENT_IS_NOT_OBSERVED_INPUT": "Distinguish supported prospective plan effects from pending candidate measurements. Keep all verification gates; name genuine missing source, weighting, RNG, reference or policy prerequisites, and retain needs_more_info for those. Do not invent measured success or merely relabel a forbidden change.",
     "INVALID_SCHEMA": "Return a complete object matching the supplied schema and field types.",
     "JSON_SCHEMA_MISMATCH": "Use only choices admitted by the current request schema.",
@@ -311,7 +315,9 @@ _FEEDBACK_FLAGS = ("completed", "target_met", "numerics_changed", "observed_prec
 _FEEDBACK_TEXT = ("loss_equivalence", "numerical_basis", "comparison_precision", "acceptance_scope")
 
 
-def round_verification_feedback(row, *, selected_result, selected_round, selected_target_met):
+def round_verification_feedback(
+    row, *, selected_result, selected_round, selected_target_met, patch_status=None
+):
     """Bound recorded verification facts; never promote a rejected candidate to retained state."""
     truncated = []
 
@@ -410,7 +416,8 @@ def round_verification_feedback(row, *, selected_result, selected_round, selecte
         "reason": text(row.get("reason"), "reason"),
         "failure": text(row.get("failure"), "failure", 512),
         "verification_available": available,
-        "outcome_stage": candidate_outcome_stage(row),
+        "capture_counts": candidate_capture_counts(row, patch_status=patch_status),
+        "outcome_stage": candidate_outcome_stage(row, patch_status=patch_status),
         "verification": verification,
         "candidate": observation(original.get("after"), "candidate") if available else None,
         "candidate_selected": row.get("decision") == "keep" and row.get("number") == selected_round,
@@ -689,6 +696,20 @@ def validate_diagnosis(
                     f"/plan/{step_number}",
                 )
             )
+    # Keep the original whole-plan feasibility check below. A setup-only first
+    # step cannot survive the existing per-candidate positive-improvement gate.
+    if (
+        not diagnosis.needs_more_info
+        and diagnosis.plan
+        and diagnosis.plan[0].expected_saving_gb <= 0
+    ):
+        issues.append(
+            DiagnosisIssue(
+                "SELECTED_STEP_NO_EXPECTED_SAVING",
+                "The selected first step has no independently expected memory reduction.",
+                "/plan/0/expected_saving_gb",
+            )
+        )
     try:
         expected_total = math.fsum(step.expected_saving_gb for step in diagnosis.plan)
     except OverflowError:
@@ -769,6 +790,8 @@ def diagnose_with_router(
         study_protocol=study_protocol,
     )
     schema = build_diagnosis_schema(evidence=evidence, policy=policy)
+    initial_messages = copy.deepcopy(messages)
+    response_failures = []
     for attempt in range(max_supplements + 1):
         schema_errors = []
         try:
@@ -781,16 +804,39 @@ def diagnose_with_router(
             )
             parsed = response.parsed
         except ResponseValidationError as error:
-            # SDK response accounting has already settled. Only well-formed JSON
-            # rejected by this exact schema can enter the ordinary bounded repair
-            # loop; network, budget, filter and truncated responses still propagate.
+            response_failures.append(response_validation_metadata(error))
+            # All response repairs share the existing supplement count. Never
+            # retry filtered/unknown failures or an absent response, and never
+            # make a request after the configured supplement allowance is spent.
             if (
-                error.reason != "schema_mismatch"
-                or error.response is None
+                error.response is None
+                or type(error.reason) is not str
                 or attempt == max_supplements
+                or error.reason == "filtered"
+                or getattr(error.response, "finish_reason", None) == "content_filter"
             ):
-                # Preserve the historical failed-response/scoring boundary when
-                # no correction call is permitted or the allowance is exhausted.
+                raise
+            if error.reason in {"truncated", "empty_json", "invalid_json"}:
+                # Start from the full original evidence/schema, not partial JSON
+                # or hidden reasoning. Same model, thinking mode and output cap;
+                # the normal runtime must admit and account for this new call.
+                messages = copy.deepcopy(initial_messages)
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": (
+                            "The previous response failed structured-output validation ("
+                            + error.reason
+                            + "). Return one complete JSON object matching the supplied schema. "
+                            "Start again from the original evidence; do not continue the prior response. "
+                            "Keep fields concise while preserving evidence references, uncertainty, "
+                            "all policy constraints and required verification. Do not invent missing "
+                            "facts or omit required fields. Return JSON only."
+                        ),
+                    }
+                )
+                continue
+            if error.reason != "schema_mismatch":
                 raise
             parsed = parse_json(error.response.text)
             schema_errors = [
@@ -830,7 +876,7 @@ def diagnose_with_router(
                 schema_errors=schema_errors,
             )
         if not result.requires_supplement or attempt == max_supplements:
-            return result
+            return replace(result, response_validation_failures=tuple(response_failures))
         messages.extend(
             [
                 {"role": "assistant", "content": json.dumps(parsed, allow_nan=False)},

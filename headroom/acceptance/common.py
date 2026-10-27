@@ -14,6 +14,7 @@ import httpx
 from headroom.api.security import open_regular
 from headroom.budget import BudgetLedger, money
 from headroom.ledger_path import select_budget_database
+from headroom.llm.client import DEFAULT_HTTP_RETRIES
 from headroom.runtime import PROJECT_ROOT, build_live_runtime, read_live_profile
 from headroom.store.db import Store
 
@@ -121,6 +122,8 @@ def acceptance_run(
     project_root=PROJECT_ROOT,
     transport=None,
     env_file=None,
+    max_http_retries=DEFAULT_HTTP_RETRIES,
+    low_effort_probe_request_sha256=None,
 ):
     """One case, one normal runtime and the existing authoritative shared ledger.
 
@@ -212,6 +215,8 @@ def acceptance_run(
             store=store,
             env_file=Path(env_file) if env_file is not None else project_root / ".env",
             transport=transport,
+            max_http_retries=max_http_retries,
+            low_effort_probe_request_sha256=low_effort_probe_request_sha256,
         )
         session = AcceptanceRun(run_id, provenance, store, budget, bundle, profile, directory)
         record["status"] = "running"

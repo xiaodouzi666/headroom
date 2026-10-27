@@ -1,6 +1,8 @@
 """Explicitly enabled, endpoint-scoped Token Factory requests through OpenAI SDK."""
 
 import copy
+import hashlib
+import json
 import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
@@ -9,11 +11,12 @@ from typing import Any
 import httpx
 import openai
 
-from headroom.config import RuntimeConfig
+from headroom.config import SUPER_MODEL, RuntimeConfig
 from headroom.llm.cost import CallRecord, Cost, CostLedger, Usage, calculate_cost
 from headroom.llm.request_audit import capture_request
 
 RETRY_DELAYS = (1, 2, 4, 8, 16)
+DEFAULT_HTTP_RETRIES = len(RETRY_DELAYS)
 
 
 class LLMError(RuntimeError):
@@ -42,6 +45,24 @@ class ClientResponse:
     finish_reason: str | None
 
 
+def low_effort_probe_fingerprint(body):
+    """Bind a reviewed candidate request without granting a production capability.
+
+    Hash the canonical wire fields; SDK-only timeout is excluded. The actual
+    serialized wire payload is still captured by the existing runtime hook.
+    """
+    value = copy.deepcopy(dict(body))
+    value.pop("timeout", None)
+    extra = value.pop("extra_body", {})
+    if type(extra) is not dict or set(extra) & set(value):
+        raise ValueError("Probe request has ambiguous extra-body fields")
+    value.update(extra)
+    raw = json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False
+    )
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
 class TokenFactoryClient:
     """No environment credentials are read and construction never sends a request.
 
@@ -61,7 +82,25 @@ class TokenFactoryClient:
         before_attempt: Callable | None = None,
         after_record: Callable | None = None,
         on_request: Callable | None = None,
+        max_http_retries: int = DEFAULT_HTTP_RETRIES,
+        low_effort_probe_request_sha256: str | None = None,
     ):
+        if type(max_http_retries) is not int or not 0 <= max_http_retries <= len(RETRY_DELAYS):
+            raise ValueError("HTTP retries must be an integer within the existing retry bound")
+        if low_effort_probe_request_sha256 is not None:
+            digest = low_effort_probe_request_sha256
+            if (
+                type(digest) is not str
+                or len(digest) != 64
+                or any(c not in "0123456789abcdef" for c in digest)
+                or max_http_retries != 0
+            ):
+                raise ValueError(
+                    "Candidate capability probes require one request and a frozen SHA256"
+                )
+        self._retry_delays = RETRY_DELAYS[:max_http_retries]
+        self._low_effort_probe_sha256 = low_effort_probe_request_sha256
+        self._low_effort_probe_consumed = False
         self.config = config or RuntimeConfig()
         if transport is not None and not isinstance(transport, httpx.MockTransport):
             raise ValueError("Only an offline MockTransport may be injected")
@@ -157,6 +196,7 @@ class TokenFactoryClient:
         schema: Mapping[str, Any] | None = None,
         tools: Sequence[Mapping[str, Any]] | None = None,
         reasoning: bool | None = None,
+        low_effort: bool = False,
         token_budget: int | None = None,
         max_tokens: int = 4000,
         temperature: float | None = None,
@@ -167,6 +207,34 @@ class TokenFactoryClient:
             raise ValueError("max_tokens must be a positive integer")
         if reasoning is not None and type(reasoning) is not bool:
             raise ValueError("reasoning must be a boolean or None")
+        if type(low_effort) is not bool:
+            raise ValueError("low_effort must be a boolean")
+        if low_effort:
+            if reasoning is not True or caps.reasoning_method != "chat_template_kwargs":
+                raise CapabilityNotVerified("Low-effort requires explicit template thinking")
+            if (
+                caps.low_effort_method != "chat_template_kwargs"
+                and self._low_effort_probe_sha256 is None
+            ):
+                raise CapabilityNotVerified(
+                    "Low-effort request combination has no saved probe evidence"
+                )
+        if self._low_effort_probe_sha256 is not None and (
+            self._low_effort_probe_consumed
+            or role != "patcher"
+            or spec.model_id != SUPER_MODEL
+            or reasoning is not True
+            or low_effort is not True
+            or max_tokens != 4000
+            or token_budget is not None
+            or tools
+            or schema is None
+            or caps.json_method != "json_schema"
+            or spec.output_cap_field != "max_completion_tokens"
+        ):
+            raise CapabilityNotVerified(
+                "Candidate probe request is outside its one-shot frozen scope"
+            )
         if token_budget is not None and (type(token_budget) is not int or token_budget <= 0):
             raise ValueError("token_budget must be a positive integer")
         if not messages or isinstance(messages, (str, bytes)):
@@ -187,6 +255,8 @@ class TokenFactoryClient:
                 raise CapabilityNotVerified("Reasoning toggle has no successful probe evidence")
             if caps.reasoning_method == "chat_template_kwargs":
                 extra["chat_template_kwargs"] = {"enable_thinking": reasoning}
+                if low_effort:
+                    extra["chat_template_kwargs"]["low_effort"] = True
             elif caps.reasoning_method == "reasoning_effort":
                 extra["reasoning_effort"] = caps.reasoning_on if reasoning else caps.reasoning_off
             elif caps.reasoning_method == "system_prefix":
@@ -217,9 +287,14 @@ class TokenFactoryClient:
             # Text fallback is local parsing, not a claimed provider capability.
         if extra:
             body["extra_body"] = extra
+        if self._low_effort_probe_sha256 is not None:
+            if low_effort_probe_fingerprint(body) != self._low_effort_probe_sha256:
+                raise CapabilityNotVerified("Candidate probe differs from its frozen request")
+            # Consumed before admission: even a local failure cannot dispatch a second call.
+            self._low_effort_probe_consumed = True
         sdk = self._get_sdk()
         started = self._clock()
-        for attempt in range(1, len(RETRY_DELAYS) + 2):
+        for attempt in range(1, len(self._retry_delays) + 2):
             if self._before_attempt is not None:
                 self._before_attempt(role, spec, attempt, copy.deepcopy(body))
             attempt_started = self._clock()
@@ -240,8 +315,8 @@ class TokenFactoryClient:
                         status,
                     )
                 )
-                if (status == 429 or 500 <= status <= 599) and attempt <= len(RETRY_DELAYS):
-                    self._sleep(RETRY_DELAYS[attempt - 1])
+                if (status == 429 or 500 <= status <= 599) and attempt <= len(self._retry_delays):
+                    self._sleep(self._retry_delays[attempt - 1])
                     continue
                 raise LLMError(f"Token Factory HTTP {status}; attempts={attempt}") from None
             except (openai.OpenAIError, httpx.HTTPError) as error:

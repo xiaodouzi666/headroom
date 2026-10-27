@@ -12,6 +12,7 @@ from jsonschema import Draft202012Validator
 from pydantic import BaseModel, ValidationError
 
 from headroom.llm.client import ClientResponse, LLMError, TokenFactoryClient
+from headroom.llm.cost import Usage
 
 
 class ResponseValidationError(LLMError):
@@ -21,6 +22,45 @@ class ResponseValidationError(LLMError):
         super().__init__(message)
         self.reason = reason
         self.response = response
+
+
+_RESPONSE_ERROR_REASONS = frozenset(
+    {"invalid_json", "empty_json", "truncated", "filtered", "schema_mismatch"}
+)
+_RESPONSE_FINISH_REASONS = frozenset(
+    {"stop", "length", "tool_calls", "content_filter", "function_call"}
+)
+
+
+def response_validation_metadata(error: ResponseValidationError) -> dict[str, Any]:
+    """Public error facts only: no exception text, response text or hidden reasoning."""
+    response = error.response
+    reason = error.reason
+    finish = getattr(response, "finish_reason", None)
+    role = getattr(response, "role", None)
+    usage = getattr(response, "usage", None)
+    return {
+        "schema": "headroom.response-validation-metadata.v1",
+        "error_reason": reason
+        if type(reason) is str and reason in _RESPONSE_ERROR_REASONS
+        else "unknown",
+        "finish_reason": finish
+        if type(finish) is str and finish in _RESPONSE_FINISH_REASONS
+        else None,
+        "role": role
+        if type(role) is str and role in {"annotate", "diagnose", "patcher", "research"}
+        else None,
+        "usage": {
+            name: getattr(usage, name) if isinstance(usage, Usage) else None
+            for name in (
+                "prompt_tokens",
+                "completion_tokens",
+                "total_tokens",
+                "cached_tokens",
+                "reasoning_tokens",
+            )
+        },
+    }
 
 
 def _reject_constant(_):
@@ -100,6 +140,7 @@ class LLMRouter:
         tools: Sequence[Mapping[str, Any]] | None = None,
         *,
         reasoning: bool | None = None,
+        low_effort: bool = False,
         token_budget: int | None = None,
         max_tokens: int = 4000,
         temperature: float | None = None,
@@ -132,6 +173,7 @@ class LLMRouter:
             schema=schema,
             tools=tools,
             reasoning=reasoning,
+            low_effort=low_effort,
             token_budget=token_budget,
             max_tokens=max_tokens,
             temperature=temperature,

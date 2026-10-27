@@ -1,0 +1,119 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true}}
+...................................F.................................... [ 45%]
+........................................................................ [ 90%]
+................                                                         [100%]
+=================================== FAILURES ===================================
+_________ test_probe_uses_existing_ledger_and_promotion_remains_manual _________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-221/test_probe_uses_existing_ledge0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d3dd17bcef0>
+
+    def test_probe_uses_existing_ledger_and_promotion_remains_manual(tmp_path, monkeypatch):
+        from headroom.acceptance.super_low_effort import execute_low_effort_probe
+        from headroom.runtime import _verify_low_effort_evidence, read_live_profile
+    
+        root, profile_path, env, prepared, freeze, digest = probe_fixture(tmp_path)
+        seen = []
+    
+        def reply(req):
+            seen.append(req)
+            return probe_completion(req)
+    
+        artifact = tmp_path / "probe-result"
+        report = execute_low_effort_probe(
+            prepared,
+            freeze,
+            artifact,
+            expected_freeze_sha256=digest,
+            execute=True,
+            live_authorized=True,
+            project_root=root,
+            env_file=env,
+            transport=httpx.MockTransport(reply),
+        )
+        assert len(seen) == 1 and report["accepted"]
+        assert report["server_recognition_verified"] is False
+        assert report["relative_reasoning_reduction_verified"] is False
+        assert report["auto_promoted"] is False
+        original = read_live_profile(profile_path)
+        assert original.models["super"].capabilities.get("low_effort_method") is None
+        receipt = artifact / "capability-report.json"
+        receipt_hash = hashlib.sha256(receipt.read_bytes()).hexdigest()
+        candidate = original.model_copy(deep=True)
+        candidate.models["super"].capabilities.update(
+            low_effort_method="chat_template_kwargs",
+            low_effort_evidence=str(receipt),
+            low_effort_evidence_sha256=receipt_hash,
+        )
+        candidate.runtime_config()
+        monkeypatch.setattr("headroom.runtime.PROJECT_ROOT", tmp_path)
+>       _verify_low_effort_evidence(candidate)
+
+tests/test_low_effort.py:433: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+profile = LiveProfile(live_enabled=True, credit_confirmed=True, available_credit_usd='2', authorized_total_usd='2', verified_at=...verified=True, evidence='offline fixture, never provider bound'), evidence='offline fixture, never provider pricing')})
+
+    def _verify_low_effort_evidence(profile):
+        """Verify the independent compatibility receipt without changing money/state."""
+        for item in profile.models.values():
+            caps = item.capabilities
+            if caps.get("low_effort_method") is None:
+                continue
+            path = Path(caps["low_effort_evidence"])
+            project_root = Path(PROJECT_ROOT)
+            if path.is_absolute():
+                try:
+                    relative = path.relative_to(project_root)
+                except ValueError:
+                    raise RuntimeNotReady(
+                        "Low-effort evidence must remain within the project"
+                    ) from None
+            else:
+                relative = path
+            if relative.is_absolute() or ".." in relative.parts or not relative.parts:
+                raise RuntimeNotReady("Low-effort evidence must remain within the project")
+            if (
+                any(part.lower().startswith(".env") for part in relative.parts)
+                or relative.suffix != ".json"
+            ):
+                raise RuntimeNotReady(
+                    "Low-effort evidence must be a bounded noncredential JSON artifact"
+                )
+            # Keep the lexical relative path. Resolving it first could hide a symlink
+            # component from open_regular's per-component O_NOFOLLOW traversal.
+            with open_regular(project_root, relative.as_posix(), max_bytes=256 * 1024) as handle:
+                raw = handle.read(256 * 1024 + 1)
+            if (
+                len(raw) > 256 * 1024
+                or hashlib.sha256(raw).hexdigest() != caps["low_effort_evidence_sha256"]
+            ):
+                raise RuntimeNotReady("Low-effort evidence hash differs")
+            report = json.loads(raw)
+            if type(report) is not dict:
+                raise RuntimeNotReady("Low-effort evidence must be an object")
+            reasoning = report.get("reasoning_tokens")
+            completion = report.get("completion_tokens")
+            if (
+                report.get("scope") != "super_low_effort_schema_code_probe_v1"
+                or report.get("accepted") is not True
+                or report.get("provenance") != "live"
+                or report.get("verdict") != "request_combination_usable_in_one_sample"
+                or report.get("finish_reason") != "stop"
+                or report.get("response_model") != item.model_id
+                or report.get("base_url") != profile.base_url
+                or report.get("profile_model_compatibility")
+                != item.model_dump(exclude={"capabilities"})
+                or type(reasoning) is not int
+                or type(completion) is not int
+                or not 0 < reasoning <= completion <= 4000
+            ):
+>               raise RuntimeNotReady(
+                    "Low-effort receipt does not match the reviewed request combination"
+                )
+E               headroom.llm.admission.RuntimeNotReady: Low-effort receipt does not match the reviewed request combination
+
+headroom/runtime.py:188: RuntimeNotReady
+=========================== short test summary info ============================
+FAILED tests/test_low_effort.py::test_probe_uses_existing_ledger_and_promotion_remains_manual
+1 failed, 159 passed in 3.37s

@@ -1,5 +1,6 @@
 """Explicit live-runtime setup from a reviewed profile; never guess prices or caps."""
 
+import hashlib
 import json
 import stat
 import uuid
@@ -11,10 +12,11 @@ from typing import Literal
 from dotenv import dotenv_values
 from pydantic import BaseModel, ConfigDict, Field
 
+from headroom.api.security import open_regular
 from headroom.budget import BudgetExceeded, RunBudgetReached, money
 from headroom.config import ROLE_MODELS, ModelSpec, RuntimeConfig, VerifiedCapabilities
 from headroom.llm.admission import LocalEstimateAdmission, RuntimeNotReady, output_limit
-from headroom.llm.client import TokenFactoryClient
+from headroom.llm.client import DEFAULT_HTTP_RETRIES, TokenFactoryClient
 from headroom.llm.cost import Pricing
 from headroom.llm.preflight import MODEL_ID
 from headroom.llm.router import LLMRouter
@@ -129,6 +131,65 @@ class LiveProfile(BaseModel):
         return RuntimeConfig(base_url=self.base_url, live_enabled=True, models=models)
 
 
+def _verify_low_effort_evidence(profile):
+    """Verify the independent compatibility receipt without changing money/state."""
+    for item in profile.models.values():
+        caps = item.capabilities
+        if caps.get("low_effort_method") is None:
+            continue
+        path = Path(caps["low_effort_evidence"])
+        project_root = Path(PROJECT_ROOT)
+        if path.is_absolute():
+            try:
+                relative = path.relative_to(project_root)
+            except ValueError:
+                raise RuntimeNotReady(
+                    "Low-effort evidence must remain within the project"
+                ) from None
+        else:
+            relative = path
+        if relative.is_absolute() or ".." in relative.parts or not relative.parts:
+            raise RuntimeNotReady("Low-effort evidence must remain within the project")
+        if (
+            any(part.lower().startswith(".env") for part in relative.parts)
+            or relative.suffix != ".json"
+        ):
+            raise RuntimeNotReady(
+                "Low-effort evidence must be a bounded noncredential JSON artifact"
+            )
+        # Keep the lexical relative path. Resolving it first could hide a symlink
+        # component from open_regular's per-component O_NOFOLLOW traversal.
+        with open_regular(project_root, relative.as_posix(), max_bytes=256 * 1024) as handle:
+            raw = handle.read(256 * 1024 + 1)
+        if (
+            len(raw) > 256 * 1024
+            or hashlib.sha256(raw).hexdigest() != caps["low_effort_evidence_sha256"]
+        ):
+            raise RuntimeNotReady("Low-effort evidence hash differs")
+        report = json.loads(raw)
+        if type(report) is not dict:
+            raise RuntimeNotReady("Low-effort evidence must be an object")
+        reasoning = report.get("reasoning_tokens")
+        completion = report.get("completion_tokens")
+        if (
+            report.get("scope") != "super_low_effort_schema_code_probe_v1"
+            or report.get("accepted") is not True
+            or report.get("provenance") != "live"
+            or report.get("verdict") != "request_combination_usable_in_one_sample"
+            or report.get("finish_reason") != "stop"
+            or report.get("response_model") != item.model_id
+            or report.get("base_url") != profile.base_url
+            or report.get("profile_model_compatibility")
+            != item.model_dump(exclude={"capabilities"})
+            or type(reasoning) is not int
+            or type(completion) is not int
+            or not 0 < reasoning <= completion <= 4000
+        ):
+            raise RuntimeNotReady(
+                "Low-effort receipt does not match the reviewed request combination"
+            )
+
+
 def read_live_profile(path=PROJECT_ROOT / ".cache/tokenfactory-runtime.json"):
     path = Path(path)
     if not path.exists():
@@ -144,6 +205,7 @@ def read_live_profile(path=PROJECT_ROOT / ".cache/tokenfactory-runtime.json"):
         if not 0 < money(profile.authorized_total_usd) <= money(profile.available_credit_usd):
             raise RuntimeNotReady("Authorized budget exceeds confirmed available credit")
         profile.runtime_config()
+        _verify_low_effort_evidence(profile)
         return profile
     except RuntimeNotReady:
         raise
@@ -174,7 +236,15 @@ class RuntimeBundle:
 
 
 def build_live_runtime(
-    run_id, *, profile, budget, store, env_file=PROJECT_ROOT / ".env", transport=None
+    run_id,
+    *,
+    profile,
+    budget,
+    store,
+    env_file=PROJECT_ROOT / ".env",
+    transport=None,
+    max_http_retries=DEFAULT_HTTP_RETRIES,
+    low_effort_probe_request_sha256=None,
 ):
     """No request on construction; each actual retry reserves before transport."""
     config = profile.runtime_config()
@@ -371,5 +441,7 @@ def build_live_runtime(
         before_attempt=before_attempt,
         after_record=after_record,
         on_request=on_request,
+        max_http_retries=max_http_retries,
+        low_effort_probe_request_sha256=low_effort_probe_request_sha256,
     )
     return RuntimeBundle(LLMRouter(client), client, profile.evidence_token_budget)

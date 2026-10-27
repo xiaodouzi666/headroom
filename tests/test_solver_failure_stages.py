@@ -27,7 +27,7 @@ def test_static_rejection_and_retained_oom_remain_distinct_at_both_solver_bounda
         feedback = ultra["verification_feedback"][0]
         assert feedback == patcher["evidence_context"]["verification_feedback"][0]
         assert feedback["candidate"] is None
-        assert feedback["outcome_stage"]["candidate_runtime_observed"] is None
+        assert feedback["outcome_stage"] == candidate["outcome_stage"]
         # No fictitious candidate OOM or numerical failure may be synthesized from retained state.
         row = store.rounds(result["run_id"])[0]
         retained = {"run_id": "baseline-oom", "status": "oom", "steps": 0}

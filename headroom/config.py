@@ -59,6 +59,11 @@ class VerifiedCapabilities:
     json_method: str = "text"
     reasoning_method: str | None = None
     token_budget_method: str | None = None
+    # Evidence certifies this exact request combination completed in one sample.
+    # It does not certify server recognition, a token budget, or quality gains.
+    low_effort_method: str | None = None
+    low_effort_evidence: str | None = None
+    low_effort_evidence_sha256: str | None = None
     tools: bool = False
     reasoning_on: str | None = None
     reasoning_off: str | None = None
@@ -76,10 +81,34 @@ class VerifiedCapabilities:
             raise ValueError("Unsupported reasoning method")
         if self.token_budget_method not in {None, "reasoning_budget", "max_thinking_tokens"}:
             raise ValueError("Unsupported token-budget method")
+        if self.low_effort_method not in {None, "chat_template_kwargs"}:
+            raise ValueError("Unsupported low-effort request method")
+        if self.low_effort_method is None:
+            if self.low_effort_evidence is not None or self.low_effort_evidence_sha256 is not None:
+                raise ValueError("Low-effort evidence requires its request method")
+        else:
+            if self.reasoning_method != "chat_template_kwargs" or self.json_method != "json_schema":
+                raise ValueError(
+                    "Low-effort requires the tested thinking and JSON-schema combination"
+                )
+            if (
+                type(self.low_effort_evidence) is not str
+                or not self.low_effort_evidence.strip()
+                or len(self.low_effort_evidence) > 2048
+            ):
+                raise ValueError("Low-effort requires independent saved probe evidence")
+            digest = self.low_effort_evidence_sha256
+            if (
+                type(digest) is not str
+                or len(digest) != 64
+                or any(c not in "0123456789abcdef" for c in digest)
+            ):
+                raise ValueError("Low-effort evidence requires an exact SHA256")
         configured = (
             self.json_method != "text"
             or self.reasoning_method is not None
             or self.token_budget_method is not None
+            or self.low_effort_method is not None
             or self.tools
         )
         if configured and not self.evidence:
@@ -103,6 +132,8 @@ class ModelSpec:
     def __post_init__(self):
         if not self.model_id.startswith("nvidia/") or any(c.isspace() for c in self.model_id):
             raise ValueError("Model ID must be a nonempty nvidia/ model identifier")
+        if self.capabilities.low_effort_method is not None and self.model_id != SUPER_MODEL:
+            raise ValueError("The reviewed low-effort request combination is specific to Super")
         if not 0 < self.timeout_seconds <= 600:
             raise ValueError("Model timeout must be positive and at most 600 seconds")
         if self.model_verified and not self.evidence:
