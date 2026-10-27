@@ -1,5 +1,15 @@
 # Results
 
+## 2026-10-27 R6 budget-limited result
+
+R6 finished all nine recorded slots at source commit `4f4e67d`: **2/9 targets (s3, s4), 3/9 valid correct first causes, five unknown causes**. s1/s2 needed human input; s5/s6/s7/s8/nanoGPT were stopped before their Ultra/Super calls because the complete request reservation no longer fit the original development allocation. No repair improvement is claimed. R5's separate 3/9 result is retained, and the required 6/9 threshold is unchanged.
+
+Independent history/finance/source checks passed while technical failure gates remained failed/unknown. The wire auditor refused the absent diagnosis/patch attempts. R6 conservative usage was $0.50181554 net; original runtime headroom is now $1.082960504, less than the $1.097728 Ultra reservation. All historical unknown charges remain reserved; no recharge, reserve transfer or new funding pool occurred. This is not a claim that the provider gift balance is exhausted.
+
+The HTTP 529 ledger block was resolved without releasing its unknown charge. Further generic feedback fixes are being completed offline; no further model dispatch is authorized by an implementation receipt alone.
+
+Evidence: [R6 measured result](../reports/acceptance-v2-r6-20261027/README.md).
+
 ## 2026-10-27 R5 measured result and continued repair
 
 R5 completed all nine slots at source commit a42fb7c. Independent audit: **3/9 automatic targets (s2, s3, s4)** and **6/9 valid correct first causes**, with two unknown. The unchanged 6/9 repair requirement is not met. R4 successes are not pooled. Five nonzero scenario exits and s7's incomplete source-application evidence remain failed/unknown gates.

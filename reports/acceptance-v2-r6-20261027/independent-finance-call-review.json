@@ -1,0 +1,99 @@
+{
+  "schema": "headroom.r6-independent-finance-and-call-review.v1",
+  "scope": "Read-only independent snapshot-delta, call mapping, retained unknown cost, and existing wire refusal review; not a new score audit",
+  "inputs": {
+    "r5_ledger_after": {
+      "path": ".cache/r5-final-finance-20261027/ledger-after.json",
+      "sha256": "539fab908493295aa84f0f65a79f9a54f601c62a34e7535e733a851f11f3aeb7"
+    },
+    "r6_ledger_after": {
+      "path": ".cache/r6-final-finance-20261027/ledger-after.json",
+      "sha256": "5bd844739c528c660af9ca02fc546cc68ba5bfa7afd422bc0ee4f10555a0f3ba"
+    },
+    "campaign": {
+      "path": "runs/evaluation/live/20261027T022818939585Z-151818b1/campaign.json",
+      "sha256": "7a1b490b4cf545991ccfd3ff07cf442786dda740f55f346a94588448528ce221"
+    },
+    "independent_audit": {
+      "path": "reports/acceptance-v2-r6-20261027/independent-audit-history-v4.json",
+      "sha256": "01cb2ecef964b30ac4b325296126396536a90c28e33744890c15942ed5774b51"
+    },
+    "independent_audit_raw_archive": {
+      "path": ".cache/r6-audit-preformat-20261027/independent-audit-history-v4.json",
+      "sha256": "deb7a3be6a1eedc1e685b17e644e636c34e401447d7f3135a9ede35f80889ab5"
+    },
+    "audit_json_formatting": {
+      "path": "reports/acceptance-v2-r6-20261027/audit-json-formatting.json",
+      "sha256": "792d207ee3bda0a7b9afd019195e1e99339e094349822d91cd4fc4cdc807946c"
+    }
+  },
+  "checks": {
+    "input_hashes_recomputed": true,
+    "old_134_runs_789_attempts_all_columns_preserved": true,
+    "two_retention_review_rows_exactly_preserved": true,
+    "added_runs_exactly_campaign_nine": true,
+    "added_attempts_exactly_23": true,
+    "live_three_table_snapshot_equals_frozen_after": true,
+    "all_runs_closed_and_no_halt": true,
+    "all_attempts_settled": true,
+    "no_pending_or_unresolved_unknown": true,
+    "store_calls_and_added_budget_attempts_bijective": true,
+    "all_23_store_calls_http_200_attempt_1": true,
+    "known_costs_equal_ledger_actual_and_charged": true,
+    "all_nine_new_unknowns_are_nano_missing_cache_count": true,
+    "all_nine_unknown_bounds_recomputed_at_uncached_input_price": true,
+    "unknown_actual_values_remain_null": true,
+    "audit_raw_and_formatted_json_parsed_values_independently_equal": true
+  },
+  "campaign_finance": {
+    "attempts": 23,
+    "known_actual_subtotal_usd": "0.47373284",
+    "actual_total_usd": null,
+    "conservative_charged_usd": "0.50181554",
+    "unknown_retained_usd": "0.02808270",
+    "unknown_attempts": 9,
+    "pending": 0,
+    "unresolved": 0
+  },
+  "original_lifetime_pool_usd": "14.17775754",
+  "all_time_conservative_charged_usd": "13.094797036",
+  "remaining_original_lifetime_usd": "1.082960504",
+  "role_counts": {
+    "annotate": 9,
+    "diagnose": 7,
+    "patcher": 7
+  },
+  "wire_refusal": {
+    "contract_requires_all_nine_runs_have_diagnose_or_patcher_calls": true,
+    "observed_covered_runs": 4,
+    "uncovered_scenarios": [
+      "s5_fragmentation_varlen",
+      "s6_full_vocab_logits_fp32",
+      "s7_frozen_params_optimizer_state",
+      "s8_two_models_resident",
+      "nanogpt"
+    ],
+    "uncovered_runs_each_have_only_one_nano_annotate_call": true,
+    "uncovered_runs_host_event": "diagnose.started followed by budget.exceeded",
+    "budget_reason": "Total authorized pool cannot reserve the next model attempt",
+    "refusal_reason": "not all nine runs have diagnosis/patch attempts",
+    "refusal_matches_existing_contract": true,
+    "full_wire_audit_pass_claimed": false,
+    "unknown_missing_diagnosis_not_imputed": true
+  },
+  "conclusion": "No additional blocker found in this review scope. Preserve the wire refusal, all unknown costs, all historical rows, and the original fixed denominator; do not waive the coverage gate.",
+  "actions": {
+    "production_source_edits": false,
+    "profile_or_cap_edits": false,
+    "ledger_writes": false,
+    "new_provider_calls": 0,
+    "new_gpu_runs": 0,
+    "auditor_waiver": false
+  },
+  "limitations": [
+    "This independently rechecks the pinned R5-to-R6 snapshot delta and actual Store mapping; it does not rerun earlier historical campaigns or the GPU acceptance tests.",
+    "The original budget partition is not a live provider account balance.",
+    "A diagnose.started event without an admitted call is not provider dispatch evidence."
+  ],
+  "audit_formatting_note": "The financial review originally used the raw audit SHA retained above. Only the public audit byte-format pin was updated after independently proving every parsed JSON value unchanged; the financial conclusions and amounts are unchanged."
+}
