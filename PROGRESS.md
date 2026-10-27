@@ -6,7 +6,7 @@ R6 finished all nine recorded slots at source commit `4f4e67d`: **2/9 targets (s
 
 Independent history/finance/source checks passed while technical failure gates remained failed/unknown. The wire auditor refused the absent diagnosis/patch attempts. R6 conservative usage was $0.50181554 net; original runtime headroom is now $1.082960504, less than the $1.097728 Ultra reservation. All historical unknown charges remain reserved; no recharge, reserve transfer or new funding pool occurred. This is not a claim that the provider gift balance is exhausted.
 
-The HTTP 529 ledger block was resolved without releasing its unknown charge. Further generic feedback fixes are being completed offline; no further model dispatch is authorized by an implementation receipt alone.
+The HTTP 529 ledger block was resolved without releasing its unknown charge. Two generic reference/CLI feedback fixes are now implemented and passed 910 focused guarded tests, with all 336 source entries unchanged during testing. This adds no live repair successes. See [follow-up qualification](reports/post-r6-feedback-20261027/README.md). No further model dispatch is authorized by an implementation receipt alone.
 
 Evidence: [R6 measured result](reports/acceptance-v2-r6-20261027/README.md).
 

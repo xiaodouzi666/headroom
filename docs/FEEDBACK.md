@@ -446,3 +446,10 @@ V7 added effective invocation and shared failed-candidate/verification context. 
 The s4/s7 second diagnoses referred to the earlier candidate peaks, loss checks and pairing failures, providing behavior evidence of feedback use. Evaluation's separately reconstructed initial-message audit copies omit the new context, so they are not complete wire records; actual full Ultra/Super input bytes remain unverified. Source routing and captured fake-SDK tests are distinct evidence, not replacements for provider-wire logging.
 
 V7's25 calls have known subtotal0.454596996USD and conservative total0.455618016USD; two bounded actual charges remain unknown. No model-quality improvement is inferred merely from lower call count. Additional v5/v6/v7 rounds are exhausted; all original gates remain intact.
+
+## 2026-10-27 R6 follow-up
+
+- Full-context provider reservation can block a short actual request while a positive local balance remains. At s5, Nano annotation left $1.095801704, below Ultra's unchanged $1.097728 verified bound. No provider-tokenizer/billable-input ceiling has been verified that safely replaces it. See the R6 reservation-boundary report.
+- A source-contract refusal must identify candidate versus original prerequisites. R6 s1's original source/argv were available; candidate AST support was the limiting prerequisite. The previous generic reason incorrectly implied missing original binding.
+- A CLI allowlist failure needs the exact option and supported host names. R6 s2 repeated unsupported --accum-steps while also retaining syntax errors; the existing CLI guard correctly ran before syntax validation. New feedback explains the existing contract, without adding an alias or permission.
+- Five R6 cases never dispatched Ultra/Super. Their budget stops are not evidence that the new precision or truncated-diagnosis fallback failed on those scenarios. The full wire audit correctly refused missing diagnosis/patch coverage.

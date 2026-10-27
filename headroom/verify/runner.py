@@ -313,24 +313,32 @@ def verify_script(
                         ],
                     )
             elif reference_strategy == CHECKPOINT_STRATEGY:
+                original_contract = source_contract(Path(baseline_script))
+                candidate_contract = source_contract(Path(candidate_script))
+                prerequisites = {
+                    "original_argv_available": baseline_args is not None,
+                    "standalone_execution": not baseline_command_options,
+                    "original_source_supported": original_contract.get("supported") is True,
+                    "original_profile_supported": original_contract.get("profile") == "s1",
+                    "original_uncheckpointed": original_contract.get("checkpointed") is False,
+                    "candidate_source_supported": candidate_contract.get("supported") is True,
+                    "candidate_profile_supported": candidate_contract.get("profile") == "s1",
+                }
+                supported = all(prerequisites.values())
+                unmet = [key for key, value in prerequisites.items() if not value]
                 discovery = {
                     "found": False,
                     "strategy": CHECKPOINT_STRATEGY,
                     "attempts": [],
-                    "reason": "Checkpoint reference requires bound original standalone s1 source and argv",
+                    "prerequisites": prerequisites,
+                    "unmet_prerequisites": unmet,
+                    "preparation_attempted": False,
+                    "reason": "Checkpoint reference prerequisites unmet: " + ", ".join(unmet)
+                    if unmet
+                    else "Checkpoint reference prerequisites satisfied; preparation not attempted",
                 }
-                original_contract = source_contract(Path(baseline_script))
-                candidate_contract = source_contract(Path(candidate_script))
-                supported = (
-                    baseline_args is not None
-                    and not baseline_command_options
-                    and original_contract.get("supported") is True
-                    and original_contract.get("profile") == "s1"
-                    and original_contract.get("checkpointed") is False
-                    and candidate_contract.get("supported") is True
-                    and candidate_contract.get("profile") == "s1"
-                )
                 if supported:
+                    discovery["preparation_attempted"] = True
                     try:
                         transformed_script, receipt = prepare_reference(
                             baseline,

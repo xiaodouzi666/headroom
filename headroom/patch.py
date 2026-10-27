@@ -31,6 +31,7 @@ from headroom.lab.runner import copy_source
 from headroom.llm.client import CapabilityNotVerified, LLMError
 from headroom.llm.router import LLMRouter, ResponseValidationError
 from headroom.patch_binding_feedback import rejected_model_binding_feedback
+from headroom.patch_cli_feedback import cli_override_contract, rejected_cli_feedback
 from headroom.patch_evidence import save_patch_response
 from headroom.patch_feedback import (
     candidate_content_fingerprint,
@@ -664,6 +665,7 @@ class PatchEngine:
         requested = {
             "plan_step": step,
             "policy": asdict(policy),
+            "cli_override_contract": cli_override_contract(),
             "base_cli": visible_cli["values"],
             "base_cli_visibility": {
                 key: value for key, value in visible_cli.items() if key != "values"
@@ -921,6 +923,12 @@ class PatchEngine:
                     "previous_proposal": response.parsed,
                     "candidate_syntax": syntax_feedback,
                 }
+                if attempt.reason == "CLI_OPTION_FORBIDDEN":
+                    failure["candidate_cli"] = rejected_cli_feedback(
+                        normalized.get("cli_changes") if isinstance(normalized, dict) else None,
+                        reason=attempt.reason,
+                        issues=attempt.policy_report.issues if attempt.policy_report else (),
+                    )
                 if attempt.reason == "NEW_UNDEFINED_NAME":
                     try:
                         failure["candidate_names"] = rejected_name_feedback(

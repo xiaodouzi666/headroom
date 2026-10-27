@@ -505,6 +505,32 @@ def round_verification_feedback(
             ],
             notes_omitted=max(0, len(notes) - 8),
         )
+        discovery = original.get("reference_discovery")
+        if (
+            isinstance(discovery, Mapping)
+            and discovery.get("strategy") == "original_workload_checkpoint"
+            and isinstance(discovery.get("prerequisites"), Mapping)
+        ):
+            prerequisite_keys = (
+                "original_argv_available",
+                "standalone_execution",
+                "original_source_supported",
+                "original_profile_supported",
+                "original_uncheckpointed",
+                "candidate_source_supported",
+                "candidate_profile_supported",
+            )
+            prerequisite_checks = {
+                key: flag(discovery["prerequisites"].get(key)) for key in prerequisite_keys
+            }
+            verification["reference_prerequisites"] = {
+                "strategy": "original_workload_checkpoint",
+                "checks": prerequisite_checks,
+                "unmet": [key for key, value in prerequisite_checks.items() if value is False],
+                "unknown": [key for key, value in prerequisite_checks.items() if value is None],
+                "preparation_attempted": flag(discovery.get("preparation_attempted")),
+                "scope": "host discovery preconditions only; not baseline binding or execution proof",
+            }
     plan = row.get("plan_step")
     plan = plan if isinstance(plan, Mapping) else {}
     result = {
