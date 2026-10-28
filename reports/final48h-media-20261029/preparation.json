@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-10-28T17:55:14.027851+00:00",
+  "scope": "F6 free preparation only; gallery publication and live run remain pending",
+  "public_url": "https://headroom.tail45186b.ts.net/",
+  "oom": {
+    "source_run_id": "810e0803757740dfaaa65fd4ecd2adf9",
+    "scenario_id": "s1_batch_too_big",
+    "capture_run_id": "88c750285bea486db86ce30d197a1ebf",
+    "capture_status": "oom",
+    "source_path": "runs/evaluation/live/20261027T022818939585Z-151818b1/jobs/810e0803757740dfaaa65fd4ecd2adf9/lab/88c750285bea486db86ce30d197a1ebf/artifacts/traceback.txt",
+    "source_sha256": "06a76fa597e670e9345f05490d9da9ae2e8b7247e289414b0c7534e6b6e57d7c",
+    "source_bytes": 3867,
+    "original_stderr_path": "runs/evaluation/live/20261027T022818939585Z-151818b1/jobs/810e0803757740dfaaa65fd4ecd2adf9/lab/88c750285bea486db86ce30d197a1ebf/stderr.log",
+    "original_stderr_bytes": 0,
+    "destination_path": "docs/media/final/oom-traceback.txt",
+    "destination_sha256": "06a76fa597e670e9345f05490d9da9ae2e8b7247e289414b0c7534e6b6e57d7c",
+    "byte_identical": true,
+    "redactions": [],
+    "secret_screen": "Pattern screen and manual review passed; only container paths in traceback",
+    "source_result_sha256": "d8f2be1f3acc19199b313ba8e0b804c5e6939ac35f2b3a1e37226dbc1f0fa852"
+  },
+  "disk": {
+    "project_free_bytes": 6079378669568,
+    "docker_storage_free_bytes": 1607085391872
+  },
+  "docker": {
+    "status": "image_pulled_and_python_container_checked",
+    "official_docs_url": "https://playwright.dev/python/docs/docker",
+    "requested_image": "mcr.microsoft.com/playwright/python:v1.64.1-noble",
+    "initial_pull": "SSH transport disconnected before image was available; retry with keepalive running",
+    "version_check": {
+      "command": [
+        "docker",
+        "version",
+        "--format",
+        "{{.Client.Version}} {{.Server.Version}}"
+      ],
+      "returncode": 0,
+      "stdout": "29.7.2 29.7.2"
+    },
+    "registry_manifest": {
+      "url": "https://mcr.microsoft.com/v2/playwright/python/manifests/v1.64.1-noble",
+      "digest": "sha256:330d401ae23c905896a0c26c66c36fc971b621519e7b11b435a8328d7bf6e031",
+      "platform": "linux/amd64",
+      "compressed_total_bytes": 1032349420,
+      "last_layer_bytes": 859792148
+    },
+    "pull_command": [
+      "docker",
+      "pull",
+      "mcr.microsoft.com/playwright/python:v1.64.1-noble"
+    ],
+    "matching_pull_processes_at_check": 1,
+    "pull_observation": {
+      "checked_at": "2026-10-28T17:50:04.133546+00:00",
+      "elapsed_seconds": 499,
+      "owned_pull_pid": 1536583,
+      "started_at_estimate": "2026-10-28T17:41:45.133546+00:00",
+      "max_elapsed_seconds": 5400
+    },
+    "pull_returncode": 0,
+    "pull_completed_at_observed": "2026-10-28T17:55:14.027851+00:00",
+    "reported_pull_digest": "sha256:330d401ae23c905896a0c26c66c36fc971b621519e7b11b435a8328d7bf6e031",
+    "image": {
+      "id": "sha256:b6862d3036a770b5c0e8a0987e9546dc1844f10ba70925f746e7a44ca84660c0",
+      "repo_digests": [
+        "mcr.microsoft.com/playwright/python@sha256:330d401ae23c905896a0c26c66c36fc971b621519e7b11b435a8328d7bf6e031"
+      ],
+      "architecture": "amd64",
+      "os": "linux",
+      "size_bytes": 2426604076
+    },
+    "container_check": {
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--init",
+        "--runtime=runc",
+        "--network=none",
+        "--read-only",
+        "--cap-drop=ALL",
+        "--security-opt=no-new-privileges",
+        "--pids-limit=64",
+        "--memory=256m",
+        "--cpus=0.5",
+        "mcr.microsoft.com/playwright/python@sha256:330d401ae23c905896a0c26c66c36fc971b621519e7b11b435a8328d7bf6e031",
+        "python",
+        "-c",
+        "import json,sys\ntry:\n import playwright\n found=True\nexcept ModuleNotFoundError:\n found=False\nprint(json.dumps({\"python_version\":sys.version.split()[0],\"playwright_imported\":found}))"
+      ],
+      "returncode": 0,
+      "stdout": "{\"python_version\": \"3.12.3\", \"playwright_imported\": false}",
+      "stderr": "",
+      "network": "none",
+      "gpu_requested": false,
+      "host_mounts": [],
+      "browser_launched": false
+    }
+  },
+  "f6": {
+    "a_gallery": "pending C; no public gallery enabled by this preparation",
+    "b_live_run": "pending A; no judge token created and no live run triggered",
+    "c_oom": "complete from preserved capture artifact; original stderr is empty",
+    "d_docker": "complete: official fixed image pulled, digest verified, isolated Python container ran",
+    "e_asset_index": "complete for available assets; F6(a)/(b) still pending",
+    "handoff_complete": false,
+    "video_generated": false
+  },
+  "assets": [
+    {
+      "path": "docs/media/final/oom-traceback.txt",
+      "bytes": 3867,
+      "sha256": "06a76fa597e670e9345f05490d9da9ae2e8b7247e289414b0c7534e6b6e57d7c"
+    },
+    {
+      "path": "docs/media/final/home.png",
+      "bytes": 74446,
+      "sha256": "a973c6e093f95c6fda4585bc541584aff0cc8be11c172819c8bb50f71a4686c6"
+    },
+    {
+      "path": "docs/media/final/README.md",
+      "bytes": 4565,
+      "sha256": "fbdbf680bdd36730089324de5fa194b5af7299f60a55af083ea2fa7780fd65ae"
+    }
+  ]
+}

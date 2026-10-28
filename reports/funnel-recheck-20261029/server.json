@@ -1,0 +1,178 @@
+{
+  "checked_at_utc": "2026-10-28T17:56:08.608625+00:00",
+  "public_url": "https://headroom.tail45186b.ts.net/",
+  "no_model_calls": true,
+  "services": {
+    "headroom-public.service": {
+      "Result": "success",
+      "ActiveState": "active",
+      "SubState": "running",
+      "UnitFileState": "enabled"
+    },
+    "headroom-tailscaled.service": {
+      "Result": "success",
+      "ActiveState": "active",
+      "SubState": "running",
+      "UnitFileState": "enabled"
+    },
+    "headroom-funnel-health.timer": {
+      "Result": "success",
+      "ActiveState": "active",
+      "SubState": "waiting",
+      "UnitFileState": "enabled"
+    }
+  },
+  "requests": [
+    {
+      "url": "https://headroom.tail45186b.ts.net/",
+      "status": 200,
+      "seconds": 0.373,
+      "bytes": 695,
+      "verified_tls": true,
+      "assets": [
+        {
+          "path": "/assets/index-DZtmrJJ1.js",
+          "status": 200,
+          "bytes": 304091
+        },
+        {
+          "path": "/assets/index-zlRQGVcz.css",
+          "status": 200,
+          "bytes": 29970
+        }
+      ]
+    },
+    {
+      "url": "https://headroom.tail45186b.ts.net/results",
+      "status": 200,
+      "seconds": 0.254,
+      "bytes": 695,
+      "verified_tls": true
+    },
+    {
+      "url": "https://headroom.tail45186b.ts.net/run",
+      "status": 200,
+      "seconds": 0.356,
+      "bytes": 695,
+      "verified_tls": true
+    },
+    {
+      "url": "https://headroom.tail45186b.ts.net/about",
+      "status": 200,
+      "seconds": 0.253,
+      "bytes": 695,
+      "verified_tls": true
+    },
+    {
+      "url": "https://headroom.tail45186b.ts.net/api/health",
+      "status": 200,
+      "seconds": 0.253,
+      "bytes": 542,
+      "verified_tls": true,
+      "health_status": "ok"
+    },
+    {
+      "url": "https://headroom.tail45186b.ts.net/api/config",
+      "status": 200,
+      "seconds": 0.246,
+      "bytes": 246,
+      "verified_tls": true,
+      "config": {
+        "run_submissions": {
+          "enabled": false,
+          "reason": "Live analysis is temporarily paused."
+        },
+        "public_demo": true,
+        "verified_runs_enabled": false
+      }
+    },
+    {
+      "url": "http://127.0.0.1:8766/api/health",
+      "status": 200,
+      "seconds": 0.012,
+      "bytes": 542,
+      "verified_tls": false,
+      "health_status": "ok"
+    }
+  ],
+  "dns": {
+    "google": {
+      "http_status": 200,
+      "rcode": 0,
+      "answers": [
+        "176.58.88.82",
+        "176.58.88.108",
+        "176.58.92.199"
+      ]
+    },
+    "cloudflare": {
+      "http_status": 200,
+      "rcode": 0,
+      "answers": [
+        "176.58.88.82",
+        "176.58.88.108",
+        "176.58.92.199"
+      ]
+    }
+  },
+  "linger": "yes",
+  "funnel": {
+    "TCP": {
+      "443": {
+        "HTTPS": true
+      }
+    },
+    "Web": {
+      "headroom.tail45186b.ts.net:443": {
+        "Handlers": {
+          "/": {
+            "Proxy": "http://127.0.0.1:8766"
+          }
+        }
+      }
+    },
+    "AllowFunnel": {
+      "headroom.tail45186b.ts.net:443": true
+    }
+  },
+  "tailscale": {
+    "BackendState": "Running",
+    "Health": []
+  },
+  "self": {
+    "Online": true,
+    "DNSName": "headroom.tail45186b.ts.net.",
+    "KeyExpiry": "2027-04-26T14:51:43Z"
+  },
+  "last_timer_check": {
+    "checked_at_utc": "2026-10-28T17:54:09.168783+00:00",
+    "checks": {
+      "origin": {
+        "consecutive_failures": 0,
+        "http_status": 200,
+        "last_success_at_utc": "2026-10-28T17:54:09.168783+00:00",
+        "latency_ms": 79.99,
+        "slow": false,
+        "status": "ok"
+      },
+      "public": {
+        "consecutive_failures": 0,
+        "http_status": 200,
+        "last_success_at_utc": "2026-10-28T17:54:09.168783+00:00",
+        "latency_ms": 319.255,
+        "slow": false,
+        "status": "ok"
+      }
+    },
+    "consecutive_failures": 0,
+    "healthy": true,
+    "last_success_at_utc": "2026-10-28T17:54:09.168783+00:00",
+    "schema_version": 1
+  },
+  "limitations": [
+    "Not a phone cellular test",
+    "No whole-host reboot performed",
+    "Local health state only; no human notification destination configured",
+    "Public submissions remain disabled"
+  ]
+}

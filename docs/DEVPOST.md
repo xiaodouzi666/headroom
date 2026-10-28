@@ -1,45 +1,48 @@
-# Devpost draft — not ready to submit
+## Project name
+Headroom
 
-Working title: **Headroom — autoresearch for GPU memory**
-
-One line: Give Headroom a PyTorch workload and a memory target; it captures allocator evidence, proposes a focused patch, and checks the tradeoff on real hardware.
+## Tagline
+Autoresearch for GPU memory: an agent that reads CUDA memory evidence, patches your PyTorch script and tests the fix on the GPU — built on NVIDIA Nemotron 3 via Nebius Token Factory.
 
 ## Inspiration
-
-An out-of-memory traceback tells an engineer where an allocation failed, but not which combination of activations, optimizer state, temporary buffers and retained graphs made the workload run out of room. Headroom is designed to turn that investigation into a repeatable, inspectable loop.
+Every PyTorch engineer has met `torch.OutOfMemoryError` at 3 a.m. PyTorch can record allocations with their call stacks, but large snapshots are difficult to inspect line by line. Nemotron 3 Ultra's long-input capability on Token Factory made an evidence-driven workflow practical for this project: give the model a snapshot-derived evidence pack, ask it to explain the peak, and test its proposed fix on the hardware.
 
 ## What it does
+Headroom runs your script on a real GPU with allocator history on, captures the memory snapshot at the point of failure, and sends a token-budgeted evidence pack — peak composition by call stack, hot allocation paths, fragmentation indicators, timeline and source — to Nemotron 3 Ultra for root-cause diagnosis. Nemotron 3 Super writes the patch as exact line edits; Headroom applies it, re-runs the script under the same seed, and keeps a result that meets the selected memory and numerical policy without shrinking the model or shortening training. It searches keep-or-revert for up to six rounds toward your memory target and records the PyTorch documentation consulted through Tavily.
 
-Headroom packages memory history and relevant source, routes diagnosis to NVIDIA Nemotron 3 Ultra on Nebius Token Factory, uses Super for bounded patches and Nano for stack labels, and retrieves version-specific documentation through Tavily. Candidates are run in an isolated GPU Lab. Their memory, numerical behavior, parameter count and timing checks determine whether the search keeps or reverts them.
+Across seven recorded campaigns, **5 of 9** distinct scenarios have reached their configured memory targets; the best single campaign reached **3 of 9**. The latest campaign reached **2 of 9**, with **3 of 9** valid correct first-cause diagnoses. <!-- numbers: summary -->
+
+- **s3 eval loop:** peak memory fell **73.4%**, with all 20 compared losses identical and matched inputs, effective batch, objective and seed. <!-- numbers: best.s3_eval_no_grad_missing -->
+- **s8 idle teacher:** peak memory fell **96.1%**, with identical observed scalar losses; full workload pairing was not established. <!-- numbers: best.s8_two_models_resident -->
+- **s4 retained graph:** peak memory fell **89.8%** from its observed OOM peak; the candidate completed 20 updates and its first five compared losses matched the documented reference. <!-- numbers: best.s4_loss_accumulation_graph -->
+
+The saved-snapshot CLI can diagnose a capture without running the supplied training script and can suggest an unverified patch draft. The complete result history and comparison details are in [RESULTS](RESULTS.md).
 
 ## How we built it
+- **Lab:** Docker-isolated runner (no network, read-only source), `torch.cuda.memory._record_memory_history`, optimizer-step hooks for step counting and loss capture, same-seed re-runs, parameter-count and training-length checks.
+- **Evidence pack:** a restricted snapshot reader groups allocations by stack, reconstructs allocator history and prepares a token-budgeted representation.
+- **Models on Nebius Token Factory:** Nemotron 3 Ultra for diagnosis and planning, Nemotron 3 Super for structured line-edit patches and the Tavily tool loop, and Nemotron 3 Nano for optional stack labelling.
+- **Measured input handling:** Ultra accepted **268,920 input tokens** in an authentic evidence request and **500,029 input tokens** in a retrieval probe. <!-- numbers: long_context -->
+- **Verification and search:** keep-or-revert rounds with per-round verification feedback sent back to the planner.
+- **App:** FastAPI + SSE backend and React front end with a live timeline, memory charts, diagnosis cards with clickable evidence stacks, diff and validation views, and prepared historical-case pages.
 
-Python, PyTorch allocator traces, Docker, SQLite, FastAPI/SSE, React/TypeScript, Tailwind, Recharts and diff2html. Every run records evidence, usage and intermediate decisions. Local accounting reserves spend before each model attempt and preserves unknown charges.
+## Challenges we ran into
+Getting patches to apply was harder than producing a plausible diagnosis: malformed or truncated unified diffs led us to exact line edits bound to the original file hash, with structured error feedback. Verification needs care — a patch can appear to save memory by shrinking the model, skipping steps or changing the objective. Headroom checks parameter counts, update counts and loss series, and records when workload pairing is incomplete. Measuring and limiting long-input model use within a small credit allowance was another engineering task.
 
-## Verified so far
+## Accomplishments that we're proud of
+Real repairs produced end to end by open models and tested on hardware; diagnoses tied to captured allocation stacks; a result history that preserves failed attempts alongside measured improvements; and an open-source project with a public results site.
 
-RESULTS records real GPU baselines, sandbox checks, Tavily search/extract/cache reuse, all 60 prescribed T0.4 probe outcomes and the T1.3 client gate. Ultra handled 500,029 measured input tokens and a separate 268,920-token authentic evidence request. The former is a tested lower bound, not the exact maximum or proof of the advertised 1M context; the 900k/429 outcome retains its unknown charge conservatively. The three-scenario Docker-contained independent subprocess comparison passed with 0% peak differences. The development app's existing replays remain clearly labeled baselines.
-
-Final MVP v7 measured 1/9 target success (s8) and 6/9 raw first causes (4 valid, 3 failed, 2 unknown). Its patch kept an unused teacher on CPU: 20 updates, 96.071422% lower GPU peak, identical observed scalar losses and unchanged parameter count. Full workload pairing remains unknown, so this is the original scalar gate, not proof of full mathematical equivalence. Earlier v6 s3 evidence is separately preserved. Overall MVP and main/ablation acceptance remain failed or pending; the three additional iterations are exhausted.
-
-## Challenges and learning
-
-Allocator categories are heuristics with recorded coverage. A large reserved-minus-allocated gap alone does not prove harmful fragmentation. An unknown numerical comparison or API charge must remain unknown. Source preservation and partial reports make failure useful evidence.
+## What we learned
+Large context is useful when the evidence format is explicit and the model must cite recorded stack IDs. A valid JSON response is only the first step: diagnosis references, patch application and numerical comparisons need separate checks. Exact line edits made patch failures easier to explain and repair. The hardest part of an automatic optimization loop is deciding what the measurements actually support.
 
 ## What's next
+Run the new micro-batch and chunked-loss strategies across the fixed suite; measure the planned evidence ablation and precision-policy comparisons; extend diagnosis to FSDP/DeepSpeed workloads; and evaluate longer training runs.
 
-Review the completed v7 audit and choose the next bounded scope under the original PLAN section0.6 stop rule; see reports/final-decision-20261025-v7.md. Main/ablation campaigns, qualifying repair replays, public deployment and the demo video remain subject to their original acceptance gates; no outcome is promised.
+## Limitations
+Historical memory-target successes come from separate runs and do not establish identical full-training behaviour. Numerical coverage varies by case, as detailed above and in RESULTS. The new ablation and HF Trainer repair have not run. Saved-snapshot diagnosis has passed offline engineering checks and awaits live model validation. The public site currently provides recorded results; live examples, uploads and the Verified runs gallery are paused.
 
-## Submission checklist
+## Built with
+Nebius Token Factory · NVIDIA Nemotron 3 Ultra · NVIDIA Nemotron 3 Super · NVIDIA Nemotron 3 Nano · Tavily · PyTorch · CUDA · Docker · FastAPI · React
 
-- Track: Coding and Agentic Engineering, to be verified against the current form.
-- Repository: https://github.com/xiaodouzi666/headroom
-- Public demo: pending approved domain/deployment.
-- Public video: one verified repair is available; owner recording pending.
-- Insert only measured RESULTS and actual provider feedback.
-- Owner review, terms acknowledgment, draft save and final submission remain separate actions. Nothing has been saved or submitted to Devpost by this draft.
-
-
-## Latest measured readiness — 2026-10-25
-
-Final MVP v7: 1/9 targets, 6/9 raw first causes (4 valid), 3/8 synthetic scenes applied and compiled. Source-span and literal CLI evidence are complete, but overall target and all-zero CLI gates fail. Backend 2,218 tests passed. Required Nano/Sources, full UI repair flow, main evaluation, qualifying replays, public demo and video remain incomplete. Draft only: no public submission or deployment has occurred.
+## Try it
+Demo: https://headroom.tail45186b.ts.net/ — open Results to inspect the recorded evaluations without logging in. Repo: https://github.com/xiaodouzi666/headroom . Video: {{VIDEO_URL}}
