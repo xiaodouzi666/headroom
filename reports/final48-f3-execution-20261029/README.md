@@ -59,3 +59,5 @@ imports its own checkout and exposes both explicit numerical options. Dependency
 files were unchanged, so no install or Lab-image rebuild was repeated.
 [Post-push receipt](post-push-clean-check.json) also verifies both frozen packs.
 No real s3 repair or submission tag was produced, so F5 remains incomplete.
+
+The follow-up [scope integration audit](remaining-scope-integration.md) records the remaining snapshot/Watch/Web work; R7 integration does not imply that every live entrypoint is already connected.
