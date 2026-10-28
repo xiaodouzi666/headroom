@@ -1,0 +1,62 @@
+{
+  "schema": "headroom.sqlite-incident.v1",
+  "captured_at_utc": "2026-10-28T23:16:03.583752+00:00",
+  "run_id": "12150a5b0cf445378edb784e6cc6c091",
+  "status": "fix_tested_recovery_copy_prepared_production_unchanged_at_handoff",
+  "private_evidence_directory": ".cache/sqlite-incidents/20261028T230959269852Z-public",
+  "private_metadata_sha256": "d93a8aba0221e6fc6be18a9072cda60f6cf28fcf643136621e2e235be8117c4a",
+  "comparison_sha256": "ae36e9c349a7a52f8c3999a53f1dd36c2a5ebb6410e47c6faf9a0a9b1b2d6e56",
+  "schema_sha256": "559e4d8e77de9218857ea494dd518a6a261dc139e1c02550caa365fab973a3eb",
+  "recovery_candidate": {
+    "relative_path": ".cache/sqlite-incidents/20261028T230959269852Z-public/analysis/recovered-complete.db",
+    "sha256": "e5d1129aa52fb8564357c3911f39748da2c815f9b411adbde12f54cd1ebd22d0",
+    "bytes": 503808,
+    "integrity_check": "ok",
+    "installed_by_this_agent": false
+  },
+  "states": {
+    "base": {
+      "api_worker_finished": false,
+      "api_cleanup_verified": null,
+      "updated_at": "2026-10-28T23:03:11.000056+00:00"
+    },
+    "recovered": {
+      "api_worker_finished": true,
+      "api_cleanup_verified": true,
+      "updated_at": "2026-10-28T23:03:11.601629+00:00"
+    },
+    "both_status": "failed",
+    "unchanged_tables": [
+      "events",
+      "llm_calls",
+      "research",
+      "rounds"
+    ]
+  },
+  "environment": {
+    "filesystem": "ext4",
+    "mount_read_write": true,
+    "disk_used_percent": 54,
+    "inode_used_percent": 1,
+    "service_restarts_at_capture": 0
+  },
+  "tests": {
+    "command": ".venv/bin/pytest -q tests/test_sqlite_wal_lifetime.py tests/test_verified_publication.py tests/test_verified_routes.py tests/test_snapshot_integration.py tests/test_snapshot_routes.py",
+    "passed": 77,
+    "elapsed_seconds": 9.56,
+    "new_regression_cases": 7,
+    "original_counterchecks": [
+      "API worker removes WAL still used by parent: reproduced failure with original loader",
+      "Snapshot reader releases another connection lock: reproduced failure with original registry opener"
+    ]
+  },
+  "source_hashes": {
+    "headroom/api/diagnosis_evidence.py": "f6858707a06912bb26257bf444ee818912379edff9a4dcdeb0e84b5c252e47e4",
+    "headroom/api/snapshot_queue.py": "6e2429dd6db4dee273bad473760dc451412b92c59d793526e3b31d6b79f8c1c0",
+    "tests/test_sqlite_wal_lifetime.py": "57b830b303de9c443ab2fa047581f3cead4dcc68bfce249003b43a1fb39c282f"
+  },
+  "budget_files_changed": false,
+  "new_provider_calls": 0,
+  "new_gpu_executions": 0,
+  "service_restarted_by_this_agent": false
+}

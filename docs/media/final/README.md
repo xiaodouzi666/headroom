@@ -147,3 +147,11 @@ Transfer bundle: `clips/headroom-demo-clips-part1-20261029.zip`,
 `f0d6b83e59df01666c9eba83e54a21aac7ebf5d5078337ab1f02f165a0ca3b68`.
 The bundle contains six MP4s, safe metadata, editing notes and public patch
 downloads. It excludes browser owner sessions and judge credentials.
+
+## Part 2 — real failed live attempt
+
+clips/headroom-part2-real-failed-attempt-20261029.zip preserves run 12150a5b0cf445378edb784e6cc6c091: one browser submission, a completed GPU baseline, one Nano request, then a stop before Ultra diagnosis. This is a **failed attempt**, not a new repair success. The archive includes the original WebM, an 85.40-second 1920×1080 MP4, the unchanged recorder receipt and an explanation of the recovered database completion flags. No audio has been added.
+
+Archive SHA256: 34e0ce0a6ff52b7bc4a2987d730125d9f80b7a3eae12ee0287b4bc11fcf4bc1d. The same bytes were delivered to Frank's local Downloads/Headroom-demo-materials/ alongside Part 1. Cookies and private session files are excluded.
+
+The failure clip is available for honest failure coverage or debugging; do not pair it with narration claiming that this run produced the historical s3 patch. The published diagnosis comparison now has measured results in reports/ablation-20261028/; the earlier Part 1 Results clip shows the historical evaluation only.

@@ -6,6 +6,8 @@ import hashlib
 import json
 import re
 import sqlite3
+import stat
+from contextlib import closing
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -45,10 +47,14 @@ def _load(run_dir, database, project):
         or any(p.is_symlink() for p in [run_dir, *run_dir.parents, database, *database.parents])
     ):
         return None
-    # Prove a bounded regular DB file without creating it or migrating its schema.
-    with open_regular(database.parent, database.name, max_bytes=1024 * 1024 * 1024):
-        pass
-    with sqlite3.connect(database.as_uri() + "?mode=ro", uri=True) as db:
+    # Never raw-open/close an active SQLite inode in this process: POSIX close
+    # drops all of its advisory locks, including locks owned by the pooled Store.
+    # The path checks above and lstat retain the bounded regular-file check
+    # without opening a descriptor outside SQLite.
+    info = database.lstat()
+    if not stat.S_ISREG(info.st_mode) or info.st_size > 1024 * 1024 * 1024:
+        return None
+    with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as db:
         db.row_factory = sqlite3.Row
         row = db.execute(
             "SELECT json_extract(data_json,'$.run_dir') AS run_dir, "

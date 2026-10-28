@@ -21,6 +21,7 @@ from headroom.acceptance.allocation import (
     VerifiedChildBinding,
     _budget_state,
     _checked_document,
+    _cost_summary,
     _quiet_pool,
     _signed,
     digest,
@@ -387,11 +388,11 @@ def feature_accounting(parent):
         ]
     child_ids = {row["run_id"] for row in children}
     own = [row for row in state["attempts"] if row["run_id"] in child_ids]
-    known = all(row["settled"] and row["actual_usd"] is not None for row in own)
-    actual = sum((money(row["actual_usd"]) for row in own), Decimal(0)) if known else None
+    cost = _cost_summary(state, own)
+    known, actual = cost["known"], cost["actual"]
     blocked = (
-        not known
-        or not state["known"]
+        not cost["resolved"]
+        or not state["resolved"]
         or any(row["halt_reason"] for row in state["runs"].values())
         or any(row["state"] == "blocked" for row in children)
         or state["charged"] > money(parent["total_limit_usd"])
@@ -406,6 +407,8 @@ def feature_accounting(parent):
         "parent_id": parent["parent_id"],
         "scope": parent["scope"],
         "scope_spent_usd": str(actual) if actual is not None else None,
+        "scope_charged_usd": str(cost["charged"]),
+        "all_costs_resolved": cost["resolved"] and state["resolved"],
         "scope_limit_usd": parent["scope_limit_usd"],
         "total_limit_usd": parent["total_limit_usd"],
         "new_pool_charged_usd": str(state["charged"]),
@@ -423,24 +426,30 @@ def finish_feature_child(binding, *, execution_terminal, cleanup_verified):
         require(row and row["state"] == "claimed", "FEATURE_CHILD_NOT_ACTIVE")
         state = _budget_state(receipt)
         own = [row for row in state["attempts"] if row["run_id"] == binding["run_id"]]
-        known = all(row["settled"] and row["actual_usd"] is not None for row in own)
-        actual = sum((money(row["actual_usd"]) for row in own), Decimal(0)) if known else None
+        cost = _cost_summary(state, own)
+        known, actual = cost["known"], cost["actual"]
         settled = (
             execution_terminal is True
             and cleanup_verified is True
-            and known
-            and state["known"]
+            and cost["resolved"]
+            and state["resolved"]
             and all(
                 row["status"] == "closed" and not row["halt_reason"]
                 for row in state["runs"].values()
             )
-            and actual is not None
-            and actual <= money(binding["run_limit_usd"])
+            and cost["charged"] <= money(binding["run_limit_usd"])
             and state["charged"] <= money(binding["total_limit_usd"])
         )
         result = {
             "status": "settled" if settled else "blocked",
             "actual_usd": str(actual) if actual is not None else None,
+            "charged_usd": str(cost["charged"]),
+            "cost_resolved": cost["resolved"],
+            "cost_basis": "exact"
+            if known
+            else "conservative_bound"
+            if cost["resolved"]
+            else "unresolved",
         }
         conn.execute(
             "UPDATE feature_children SET state=?,settlement=? WHERE run_id=?",

@@ -17,3 +17,9 @@ See [receipt.json](receipt.json), [focused-tests.txt](focused-tests.txt), [build
 ## Deployment and first browser pass
 
 The staged build was published without restarting the backend. The five routes rendered at 390px without page overflow, and the measured comparison appeared with the expected values. API health and run-list requests returned 500 during the separate SQLite incident, so the overall browser check is failed pending database recovery. See deployment.json and browser-check.json; these initial records will be retained.
+
+## Recovery check and copy correction
+
+After the database recovery all five routes passed the same read-only browser check: HTTP 200, no console/page errors, no failing API requests and no page overflow at 390px. The original failed check remains unchanged. See recovered/browser-check.json.
+
+Visual inspection found an old historical-results sentence saying the diagnosis comparison was unavailable. That sentence now says the diagnosis-only measurements are reported separately; all result data is unchanged. Node 18 could not build the current Vite version; the existing pinned Node 24.22.1 runtime built successfully and the corrected static assets were deployed without a backend restart.

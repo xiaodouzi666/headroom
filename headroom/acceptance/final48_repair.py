@@ -425,6 +425,8 @@ def _empty_row(cell, provenance):
         "target_met": None,
         "cost_usd": None,
         "known_cost_usd": None,
+        "charged_usd": None,
+        "cost_resolved": False,
         "run_id": None,
         "ground_truth": case.get("ground_truth"),
         "truth_status": case["truth_status"],
@@ -534,7 +536,9 @@ def execute_f3(
         "new_spending_scope_granted": False,
         "rows": [_empty_row(cell, provenance) for cell in prepared["cells"]],
         "scope_spent_usd": None,
+        "scope_charged_usd": None,
         "all_costs_known": False,
+        "all_costs_resolved": False,
         "historical_scores_modified": False,
         "report_path": str(output / "campaign.json"),
     }
@@ -554,15 +558,17 @@ def execute_f3(
             document["accounting"] = account
             document["scope_spent_usd"] = account.get("scope_spent_usd")
             document["all_costs_known"] = account.get("all_costs_known") is True
+            document["scope_charged_usd"] = account.get("scope_charged_usd")
+            document["all_costs_resolved"] = account.get("all_costs_resolved") is True
             if (
                 account.get("status") == "blocked"
-                or not document["all_costs_known"]
-                or account.get("scope_spent_usd") is None
+                or not document["all_costs_resolved"]
+                or account.get("scope_charged_usd") is None
             ):
                 document["stop_reason"] = "unresolved_scope_cost"
                 break
-            spent = money(account["scope_spent_usd"])
-            if spent < 0 or spent + PER_RUN > min(cap, money(account["scope_limit_usd"])):
+            charged = money(account["scope_charged_usd"])
+            if charged < 0 or charged + PER_RUN > min(cap, money(account["scope_limit_usd"])):
                 document["stop_reason"] = "insufficient_scope_for_next_full_run"
                 break
             run_id = uuid4().hex
@@ -633,6 +639,8 @@ def execute_f3(
                 settlement=settlement,
                 cost_usd=settlement.get("actual_usd"),
                 known_cost_usd=settlement.get("actual_usd"),
+                charged_usd=settlement.get("charged_usd"),
+                cost_resolved=settlement.get("cost_resolved") is True,
                 cost_source="receipt_bound_scope_accounting",
                 error_type=failure,
             )
@@ -644,8 +652,9 @@ def execute_f3(
                 and timing.get("within_wall_limit") is True
                 and timing.get("cli", {}).get("verified") is True
                 and settlement.get("status") == "settled"
-                and settlement.get("actual_usd") is not None
-                and money(settlement["actual_usd"]) <= PER_RUN
+                and settlement.get("cost_resolved") is True
+                and settlement.get("charged_usd") is not None
+                and 0 <= money(settlement["charged_usd"]) <= PER_RUN
             )
             row["execution_certified"] = safe_result
             if not safe_result:
@@ -682,7 +691,9 @@ def execute_f3(
             document.update(
                 accounting=account,
                 scope_spent_usd=account.get("scope_spent_usd"),
+                scope_charged_usd=account.get("scope_charged_usd"),
                 all_costs_known=account.get("all_costs_known") is True,
+                all_costs_resolved=account.get("all_costs_resolved") is True,
             )
             persist()
             if settlement.get("status") != "settled" or not safe_result:
@@ -704,7 +715,9 @@ def execute_f3(
             document.update(
                 accounting=account,
                 scope_spent_usd=account.get("scope_spent_usd"),
+                scope_charged_usd=account.get("scope_charged_usd"),
                 all_costs_known=account.get("all_costs_known") is True,
+                all_costs_resolved=account.get("all_costs_resolved") is True,
             )
             allocation_api.finish_f3_parent(
                 parent,

@@ -202,16 +202,11 @@ class SnapshotQueue:
     def _connect(self, *, read_only=False):
         descriptor = directory_fd(self.registry.parent)
         try:
-            handle = os.open(
-                self.registry.name,
-                os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
-                dir_fd=descriptor,
-            )
-            try:
-                if not stat.S_ISREG(os.fstat(handle).st_mode):
-                    raise ValueError("Invalid snapshot registry")
-            finally:
-                os.close(handle)
+            # Closing a raw fd for an active SQLite inode releases every
+            # POSIX advisory lock this process holds on that inode.
+            info = os.stat(self.registry.name, dir_fd=descriptor, follow_symlinks=False)
+            if not stat.S_ISREG(info.st_mode):
+                raise ValueError("Invalid snapshot registry")
         finally:
             os.close(descriptor)
         target = self.registry.absolute().as_uri() + "?mode=ro" if read_only else self.registry
@@ -244,17 +239,18 @@ class SnapshotQueue:
                     os.close(self._lock_handle)
                     self._lock_handle = None
                     return False
-                # SQLite must never be asked to follow an existing symlink.
-                descriptor = os.open(
-                    self.registry.name,
-                    os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW,
-                    0o600,
-                    dir_fd=data_fd,
-                )
+                # Only raw-open a brand-new inode. An existing registry may
+                # already have SQLite readers in this process.
                 try:
-                    if not stat.S_ISREG(os.fstat(descriptor).st_mode):
-                        raise ValueError("Invalid snapshot registry")
-                finally:
+                    descriptor = os.open(
+                        self.registry.name,
+                        os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                        0o600,
+                        dir_fd=data_fd,
+                    )
+                except FileExistsError:
+                    pass  # _connect validates existing entries without opening a raw fd.
+                else:
                     os.close(descriptor)
                 with self._connect() as db:
                     db.execute(

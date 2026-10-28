@@ -77,7 +77,9 @@ def main(argv=None):
                             "executed_cells",
                             "remaining_unrun_cells",
                             "scope_spent_usd",
+                            "scope_charged_usd",
                             "all_costs_known",
+                            "all_costs_resolved",
                             "report_path",
                         )
                     },

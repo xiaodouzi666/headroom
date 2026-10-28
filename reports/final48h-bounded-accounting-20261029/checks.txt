@@ -1,0 +1,18 @@
+Scoped offline verification; no provider/GPU calls or live ledger mutation.
+
+uv run pytest -q tests/test_demo_allocation.py tests/test_feature_allocation.py tests/test_final48_allocation.py
+45 passed in 10.81s.
+
+uv run pytest -q tests/test_resolved_allocation.py tests/test_final48_f3_allocation.py
+32 passed in 3.07s (before adding two recovery/retention cases).
+
+uv run pytest -q tests/test_resolved_allocation.py tests/test_demo_api.py tests/test_bounded_billing.py
+48 passed in 7.64s (includes final 18 resolved/recovery cases).
+
+ruff check/format and git diff --check passed after unused-import and import-order fixes.
+gitleaks targeted source scan exit=0.
+
+After explicit closing() of the read-only allocation DB connection:
+uv run pytest -q tests/test_resolved_allocation.py
+18 passed in 1.95s; ruff check passed; format check: 5 files already formatted.
+Final targeted source + instructions gitleaks scan exit=0.

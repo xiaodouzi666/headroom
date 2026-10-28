@@ -1,6 +1,7 @@
 """Offline F3 pack/sequence checks. Workload source is never imported or executed."""
 
 import copy
+import importlib.util
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -179,6 +180,7 @@ class FakeAllocation:
             repair.Decimal(0),
         )
         self.blocked = False
+        self.known = True
         self.finished = None
 
     def verify_receipt(self, receipt, *, project_root):
@@ -198,9 +200,11 @@ class FakeAllocation:
     def f3_accounting(self, parent):
         return {
             "status": "blocked" if self.blocked else "active",
-            "all_costs_known": not self.blocked,
+            "all_costs_known": self.known and not self.blocked,
+            "all_costs_resolved": not self.blocked,
+            "scope_charged_usd": str(self.spent),
             "scope_limit_usd": parent["scope_limit_usd"],
-            "scope_spent_usd": None if self.blocked else str(self.spent),
+            "scope_spent_usd": None if self.blocked or not self.known else str(self.spent),
         }
 
     def claim_f3_child(self, parent, *, cell_id, request, run_id):
@@ -211,18 +215,30 @@ class FakeAllocation:
 
     def finish_f3_child(self, binding, *, execution_terminal, cleanup_verified):
         value = self.costs[binding["index"]]
+        result = (
+            dict(value)
+            if isinstance(value, dict)
+            else {
+                "actual_usd": value,
+                "charged_usd": value,
+                "cost_resolved": value is not None,
+            }
+        )
+        charged = result.get("charged_usd")
+        self.known = self.known and result.get("actual_usd") is not None
         self.blocked = (
-            value is None
+            result.get("cost_resolved") is not True
+            or charged is None
             or not execution_terminal
             or not cleanup_verified
-            or repair.Decimal(value) > repair.PER_RUN
+            or result.get("status") == "blocked"
+            or not 0 <= repair.Decimal(charged) <= repair.PER_RUN
         )
-        if value is not None:
-            self.spent += repair.Decimal(value)
-        return {
+        if charged is not None:
+            self.spent += repair.Decimal(charged)
+        return result | {
             "status": "blocked" if self.blocked else "settled",
-            "actual_usd": value,
-            "scope_spent_usd": None if value is None else str(self.spent),
+            "scope_spent_usd": None if not self.known else str(self.spent),
         }
 
     def finish_f3_parent(self, parent, *, status):
@@ -363,7 +379,8 @@ def test_legacy_default_profile_is_rejected_before_parent_claim(prepared):
     assert not (root / "runs/execution").exists()
 
 
-def test_real_temporary_allocation_driver_binding_and_settlement(prepared):
+@pytest.mark.parametrize("bounded", [False, True])
+def test_real_temporary_allocation_driver_binding_and_settlement(prepared, bounded):
     from test_diagnosis_acceptance import profile
 
     from headroom.acceptance import allocation
@@ -445,7 +462,15 @@ def test_real_temporary_allocation_driver_binding_and_settlement(prepared):
         run_id = kwargs["run_id"]
         budget.open_run(run_id, binding["run_limit_usd"])
         budget.reserve(run_id, run_id + "-offline", "0.6")
-        budget.settle(run_id, run_id + "-offline", "0.3")
+        if bounded:
+            budget.settle_upper_bound(
+                run_id,
+                run_id + "-offline",
+                "0.3",
+                basis="verified_tariff_missing_cache_count",
+            )
+        else:
+            budget.settle(run_id, run_id + "-offline", "0.3")
         budget.close_run(run_id)
         dispatched.append((binding["cell_id"], request.policy.numerical_requirement))
         return fake_supervisor(request, **kwargs)
@@ -467,10 +492,18 @@ def test_real_temporary_allocation_driver_binding_and_settlement(prepared):
         ("s2-allow-precision", "observed-bf16-v1"),
         ("hf-trainer", "legacy"),
     ]
-    assert result["scope_spent_usd"] == "3.6" and result["all_costs_known"] is True
+    assert result["scope_spent_usd"] == (None if bounded else "3.6")
+    assert result["all_costs_known"] is (not bounded)
+    assert result["scope_charged_usd"] == "3.6"
+    assert result["all_costs_resolved"] is True
     assert result["status"] == "finished" and result["provenance"] == "offline_fixture"
     assert result["fixed_nine"]["threshold_met"] is False
-    assert all(row["settlement"]["actual_usd"] == "0.3" for row in result["rows"])
+    for row in result["rows"]:
+        assert row["settlement"]["actual_usd"] == (None if bounded else "0.3")
+        assert row["cost_usd"] == row["known_cost_usd"] == (None if bounded else "0.3")
+        assert row["charged_usd"] == "0.3" and row["cost_resolved"] is True
+        assert row["execution_certified"] is True
+        assert row["settlement"]["cost_basis"] == ("conservative_bound" if bounded else "exact")
 
     assert result["accounting"]["new_pool_charged_usd"] == "5.1"
     assert result["accounting"]["total_limit_usd"] == "5.5"
@@ -500,3 +533,105 @@ def test_cleanup_uncertainty_stops_after_first_cell(prepared):
     assert result["rows"][0]["execution_certified"] is False
     assert result["rows"][0]["cost_usd"] == "0.1"
     assert allocation.finished == "blocked"
+
+
+def test_conservative_bound_consumes_same_scope_cap_without_inventing_actuals(prepared):
+    bound = {"actual_usd": None, "charged_usd": "0.6", "cost_resolved": True}
+    allocation, result = execute(prepared, [bound] * 12)
+    assert len(allocation.children) == 6
+    assert result["scope_charged_usd"] == "3.6"
+    assert result["scope_spent_usd"] is None and result["all_costs_known"] is False
+    assert result["all_costs_resolved"] is True
+    assert result["remaining_unrun_cells"] == 6
+    assert result["stop_reason"] == "insufficient_scope_for_next_full_run"
+    assert allocation.finished == "stopped"
+    persisted = json.loads(Path(result["report_path"]).read_text())
+    assert persisted["scope_spent_usd"] is None
+    assert persisted["scope_charged_usd"] == "3.6"
+    for row in persisted["rows"][:6]:
+        assert row["cost_usd"] is None and row["known_cost_usd"] is None
+        assert row["charged_usd"] == "0.6" and row["execution_certified"] is True
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"cost_resolved": False},
+        {"charged_usd": None},
+        {"charged_usd": "0.60000001"},
+        {"charged_usd": "-0.01"},
+        {"status": "blocked"},
+    ],
+)
+def test_unresolved_unclosed_or_invalid_bound_stops_driver(prepared, change):
+    bound = {"actual_usd": None, "charged_usd": "0.2", "cost_resolved": True} | change
+    allocation, result = execute(prepared, [bound] + ["0.1"] * 11)
+    assert len(allocation.children) == 1 and result["remaining_unrun_cells"] == 11
+    assert result["rows"][0]["cost_usd"] is None
+    assert result["rows"][0]["known_cost_usd"] is None
+    assert result["rows"][0]["execution_certified"] is False
+    assert result["rows"][0]["target_met"] is False
+    assert allocation.finished == "blocked"
+
+
+def test_missing_resolved_accounting_never_falls_back_to_known_actual(prepared, monkeypatch):
+    accounting = FakeAllocation.f3_accounting
+
+    def old_interface(self, parent):
+        account = accounting(self, parent)
+        del account["all_costs_resolved"]
+        return account
+
+    monkeypatch.setattr(FakeAllocation, "f3_accounting", old_interface)
+    allocation, result = execute(prepared, ["0.1"] * 12)
+    assert not allocation.children and result["executed_cells"] == 0
+    assert result["all_costs_known"] is True
+    assert result["all_costs_resolved"] is False
+    assert result["stop_reason"] == "unresolved_scope_cost"
+
+
+def test_cli_summary_distinguishes_bound_from_unknown_actual(monkeypatch, capsys):
+    script = Path(repair.__file__).resolve().parents[2] / "scripts/prepare_final48_repair.py"
+    spec = importlib.util.spec_from_file_location("repair_cli_summary_test", script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    observed = []
+
+    def synthetic_execute(*args, **kwargs):
+        observed.append(kwargs)
+        return {
+            "status": "finished",
+            "stop_reason": None,
+            "executed_cells": 12,
+            "remaining_unrun_cells": 0,
+            "scope_spent_usd": None,
+            "scope_charged_usd": "3.6",
+            "all_costs_known": False,
+            "all_costs_resolved": True,
+            "report_path": "offline-fixture/campaign.json",
+        }
+
+    monkeypatch.setattr(module, "execute_f3", synthetic_execute)
+    assert (
+        module.main(
+            [
+                "--execute",
+                "--live-authorized",
+                "--prepared",
+                "unused-preparation.json",
+                "--expected-sha256",
+                "a" * 64,
+                "--allocation-receipt",
+                "unused-receipt.json",
+                "--profile",
+                "unused-profile.json",
+                "--output",
+                "unused-output",
+            ]
+        )
+        == 0
+    )
+    summary = json.loads(capsys.readouterr().out)
+    assert summary["scope_spent_usd"] is None and summary["all_costs_known"] is False
+    assert summary["scope_charged_usd"] == "3.6" and summary["all_costs_resolved"] is True
+    assert len(observed) == 1

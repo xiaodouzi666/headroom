@@ -696,7 +696,7 @@ export default function EvaluationView() {
               : "The recorded evaluations use a single GPU. They do not establish performance on other hardware or distributed training."}{" "}
             {pairs.length
               ? "Diagnosis comparisons include only matched workloads with comparable evidence and a known cause."
-              : "A matched comparison of the three diagnosis methods is not available yet."}
+              : "Diagnosis-only measurements are reported separately."}
           </p>
         </>
       )}

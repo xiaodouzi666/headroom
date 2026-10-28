@@ -8,7 +8,7 @@ import os
 import re
 import sqlite3
 import stat
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
@@ -514,22 +514,71 @@ def _checked_document(document, schema):
     )
 
 
+def _attempt_resolved(row, reviewed=()):
+    """A finalized tariff bound is safe to reserve against, never an exact charge."""
+    if not row["settled"]:
+        return False
+    if row["actual_usd"] is not None:
+        return money(row["actual_usd"]) == money(row["charged_usd"])
+    if (
+        row["dispatched"] != 1
+        or row["admission_kind"] != "verified_provider_bound"
+        or not 0 <= money(row["charged_usd"]) <= money(row["upper_usd"])
+    ):
+        return False
+    if row.get("charge_status") == "upper_bound":
+        return row.get("charge_basis") == "verified_tariff_missing_cache_count"
+    return (
+        row.get("charge_status") == "reviewed_retained"
+        and row.get("charge_basis") == "manual_full_reservation_retained"
+        and money(row["charged_usd"]) == money(row["upper_usd"])
+        and (row.get("review_sha256"), row["id"], row["run_id"]) in reviewed
+    )
+
+
+def _cost_summary(state, attempts):
+    """Keep exact actuals distinct from the conservative amount charged to caps."""
+    known = all(row["settled"] and row["actual_usd"] is not None for row in attempts)
+    return {
+        "known": known,
+        "resolved": all(row["id"] in state["resolved_attempt_ids"] for row in attempts),
+        "actual": sum((money(row["actual_usd"]) for row in attempts), Decimal(0))
+        if known
+        else None,
+        "charged": sum((money(row["charged_usd"]) for row in attempts), Decimal(0)),
+    }
+
+
 def _budget_state(receipt):
     """Read only the new pool; old historical unknown charges are deliberately excluded."""
     path = Path(receipt["ledger_path"])
-    with sqlite3.connect(path.as_uri() + "?mode=ro", uri=True) as conn:
+    with closing(sqlite3.connect(path.as_uri() + "?mode=ro", uri=True)) as conn:
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA query_only=ON")
         conn.execute("BEGIN")
         runs = {row["id"]: dict(row) for row in conn.execute("SELECT * FROM budget_runs")}
         attempts = [dict(row) for row in conn.execute("SELECT * FROM budget_attempts")]
+        reviewed = {
+            tuple(row)
+            for row in conn.execute(
+                "SELECT receipt_sha256,attempt_id,run_id FROM budget_retention_reviews"
+            )
+        }
     known = all(row["settled"] and row["actual_usd"] is not None for row in attempts)
+    resolved_ids = {row["id"] for row in attempts if _attempt_resolved(row, reviewed)}
     total = sum((money(row["charged_usd"]) for row in attempts), Decimal(0))
-    return {"runs": runs, "attempts": attempts, "known": known, "charged": total}
+    return {
+        "runs": runs,
+        "attempts": attempts,
+        "known": known,
+        "charged": total,
+        "resolved": len(resolved_ids) == len(attempts),
+        "resolved_attempt_ids": resolved_ids,
+    }
 
 
 def _quiet_pool(state, *, allowed_run=None):
-    require(state["known"], "F3_NEW_POOL_UNSETTLED")
+    require(state["resolved"], "F3_NEW_POOL_UNSETTLED")
     require(
         all(not row["halt_reason"] for row in state["runs"].values()),
         "F3_NEW_POOL_HALTED",
@@ -789,11 +838,11 @@ def f3_accounting(parent):
         ]
     child_ids = {row["run_id"] for row in children}
     own = [row for row in state["attempts"] if row["run_id"] in child_ids]
-    known = all(row["settled"] and row["actual_usd"] is not None for row in own)
-    actual = sum((money(row["actual_usd"]) for row in own), Decimal(0)) if known else None
+    cost = _cost_summary(state, own)
+    known, actual = cost["known"], cost["actual"]
     blocked = (
-        not known
-        or not state["known"]
+        not cost["resolved"]
+        or not state["resolved"]
         or any(row["halt_reason"] for row in state["runs"].values())
         or any(row["state"] == "blocked" for row in children)
         or state["charged"] > money(parent["total_limit_usd"])
@@ -806,6 +855,8 @@ def f3_accounting(parent):
         else "active",
         "parent_id": parent["parent_id"],
         "scope_spent_usd": str(actual) if actual is not None else None,
+        "scope_charged_usd": str(cost["charged"]),
+        "all_costs_resolved": cost["resolved"] and state["resolved"],
         "scope_limit_usd": parent["scope_limit_usd"],
         "total_limit_usd": parent["total_limit_usd"],
         "new_pool_charged_usd": str(state["charged"]),
@@ -815,7 +866,7 @@ def f3_accounting(parent):
 
 
 def finish_f3_child(binding, *, execution_terminal, cleanup_verified):
-    """Unknown/retained charges and uncertain cleanup permanently stop sequential continuation."""
+    """Only finalized known/bounded costs and confirmed cleanup permit continuation."""
     receipt, parent = _child_record(binding)
     with registry(binding["project_root"]) as conn:
         row = conn.execute(
@@ -825,24 +876,30 @@ def finish_f3_child(binding, *, execution_terminal, cleanup_verified):
         state = _budget_state(receipt)
         run = state["runs"].get(binding["run_id"])
         own = [r for r in state["attempts"] if r["run_id"] == binding["run_id"]]
-        known = all(r["settled"] and r["actual_usd"] is not None for r in own)
-        actual = sum((money(r["actual_usd"]) for r in own), Decimal(0)) if known else None
+        cost = _cost_summary(state, own)
+        known, actual = cost["known"], cost["actual"]
         settled = (
             execution_terminal is True
             and cleanup_verified is True
-            and known
-            and state["known"]
+            and cost["resolved"]
+            and state["resolved"]
             and all(
                 r["status"] == "closed" and not r["halt_reason"] for r in state["runs"].values()
             )
             and (run is not None or not own)
-            and actual is not None
-            and actual <= money(binding["run_limit_usd"])
+            and cost["charged"] <= money(binding["run_limit_usd"])
             and state["charged"] <= money(binding["total_limit_usd"])
         )
         result = {
             "status": "settled" if settled else "blocked",
             "actual_usd": str(actual) if actual is not None else None,
+            "charged_usd": str(cost["charged"]),
+            "cost_resolved": cost["resolved"],
+            "cost_basis": "exact"
+            if known
+            else "conservative_bound"
+            if cost["resolved"]
+            else "unresolved",
         }
         conn.execute(
             "UPDATE f3_children SET state=?,settlement=? WHERE run_id=?",

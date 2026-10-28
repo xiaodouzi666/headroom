@@ -14,6 +14,7 @@ from pathlib import Path
 from headroom.acceptance.allocation import (
     AllocationRefused,
     _budget_state,
+    _cost_summary,
     _quiet_pool,
     registry,
     request_sha256,
@@ -105,11 +106,9 @@ class DemoAllocation:
             )
         ids = {r["run_id"] for r in rows}
         own = [a for a in state["attempts"] if a["run_id"] in ids]
-        require(
-            all(a["settled"] and a["actual_usd"] is not None for a in own),
-            "DEMO_COST_UNKNOWN",
-        )
-        spent = sum((money(a["actual_usd"]) for a in own), Decimal(0))
+        cost = _cost_summary(state, own)
+        require(cost["resolved"], "DEMO_COST_UNKNOWN")
+        spent = cost["charged"]
         require(spent <= self.cap, "DEMO_SCOPE_EXCEEDED")
         return min(
             self.cap - spent,
@@ -185,24 +184,30 @@ class DemoAllocation:
             state = _budget_state(receipt)
             run = state["runs"].get(binding["run_id"])
             own = [a for a in state["attempts"] if a["run_id"] == binding["run_id"]]
-            known = all(a["settled"] and a["actual_usd"] is not None for a in own)
-            actual = sum((money(a["actual_usd"]) for a in own), Decimal(0)) if known else None
+            cost = _cost_summary(state, own)
+            known, actual = cost["known"], cost["actual"]
             settled = (
                 execution_terminal is True
                 and cleanup_verified is True
-                and known
-                and state["known"]
+                and cost["resolved"]
+                and state["resolved"]
                 and all(
                     r["status"] == "closed" and not r["halt_reason"] for r in state["runs"].values()
                 )
                 and (run is not None or not own)
-                and actual is not None
-                and actual <= money(binding["run_limit_usd"])
+                and cost["charged"] <= money(binding["run_limit_usd"])
                 and state["charged"] <= money(binding["total_limit_usd"])
             )
             result = {
                 "status": "settled" if settled else "blocked",
                 "actual_usd": str(actual) if actual is not None else None,
+                "charged_usd": str(cost["charged"]),
+                "cost_resolved": cost["resolved"],
+                "cost_basis": "exact"
+                if known
+                else "conservative_bound"
+                if cost["resolved"]
+                else "unresolved",
             }
             conn.execute(
                 "UPDATE f2_demo_runs SET state=?,settlement=? WHERE run_id=?",
