@@ -49,3 +49,13 @@ video are not verified by these offline checks. The earlier real campaign scores
 remain unchanged. New-pool amount approval, then current balance/price checks and
 activation, precede any funded execution. Public Verified runs still requires C.
 The video smoke is isolated test material and cannot substitute for a real s3 run.
+
+## Published revision and independent checkout
+
+Commit `42c954ebf921122ad228c0a5455202a2edfcf39b` was pushed and matched
+GitHub main. Commit hooks passed Ruff, format and Gitleaks. The existing clean
+F5 checkout was fetched to that exact revision; its installed Python 3.12.3 CLI
+imports its own checkout and exposes both explicit numerical options. Dependency
+files were unchanged, so no install or Lab-image rebuild was repeated.
+[Post-push receipt](post-push-clean-check.json) also verifies both frozen packs.
+No real s3 repair or submission tag was produced, so F5 remains incomplete.
