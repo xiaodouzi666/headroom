@@ -70,3 +70,7 @@ before recording narration.
 5. Keep generated MP4, WebM, and MP3 files out of Git. The main task owns the requested ignore rules.
 
 F6(a) and F6(b) remain pending. Do not mark “F6 materials ready, handed to Opus” until all five prerequisites in FINAL_48H are satisfied.
+
+### Homepage refresh — 2026-10-29
+
+`home.png` now shows the actual published read-only homepage from physical Chrome after the ab8b4f3 product build. The gallery and live analysis are visibly unavailable pending the separate confirmations. This image is a website screenshot, not evidence of a new live run, and does not complete F6. Source and browser checks: reports/final48h-product-view-20261029/deployment.json and reports/final48h-product-browser-20261029/layout.json.
