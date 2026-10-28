@@ -1,6 +1,6 @@
 # Deployment preparation
 
-No public tunnel, hostname, service installation, persistent timer, or notification destination has been enabled. The default API listens on localhost only. The development preview uses an SSH loopback tunnel; it does not expose an Internet service.
+The original deployment preparation is retained below. A dedicated Tailscale Funnel deployment is now being configured; see [FUNNEL.md](FUNNEL.md) and reports/funnel-deployment-20261028 for its current verification status. The development preview remains separate and localhost-only. No notification destination has been configured.
 
 `deploy/headroom-api.service` is a user-systemd template for this server. It restarts failures and terminates its process group on stop. Production admission creates one deadline (default/max 600 seconds) shared by source preparation, queue waiting, process startup and worker execution. Preparation runs in an owned spawn session, with remaining-time Git and publication-lock limits; timeout kills that group, including its Git descendants, before returning. Expired queued jobs never start a worker. The executing worker uses only the time remaining, then TERM cleanup grace and hard stop, followed by owned-container cleanup. HTTP upload/validation before admission and cleanup/report finalization afterwards are explicitly outside this execution bound. An unconfirmed cleanup freezes the queue. Linux parent-death notification also cleans the owned preparation group if its supervisor disappears. After a server restart, paid/GPU jobs are not silently resumed.
 

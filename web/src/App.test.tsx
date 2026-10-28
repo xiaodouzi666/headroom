@@ -101,6 +101,45 @@ describe("workspace state", () => {
     expect(screen.queryByLabelText(/API key/i)).not.toBeInTheDocument();
   });
 });
+describe("paused public workspace", () => {
+  it("explains the pause, links to evaluations, and rejects form submission", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: unknown) => {
+        if (input === "/api/health")
+          return response({
+            run_submissions: {
+              enabled: false,
+              reason: "Model budget is currently unavailable.",
+            },
+          });
+        if (input === "/api/examples") return response({ examples: [] });
+        return Promise.reject(new Error("Paused UI must not submit work"));
+      }),
+    );
+    const { container } = render(<App />);
+    expect(await screen.findByText("New runs are paused.")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Model budget is currently unavailable/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /browse published evaluation results/ }),
+    ).toHaveAttribute("href", "/results");
+    expect(
+      screen.getByRole("button", { name: /Start analysis/ }),
+    ).toBeDisabled();
+    fireEvent.submit(container.querySelector("form")!);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Model budget is currently unavailable.",
+    );
+    expect(
+      vi.mocked(fetch).mock.calls.some(([path]) => path === "/api/runs"),
+    ).toBe(false);
+    expect(
+      vi.mocked(fetch).mock.calls.some(([path]) => path === "/api/replays"),
+    ).toBe(false);
+  });
+});
 describe("safe evidence rendering", () => {
   it("renders patch HTML as text rather than executable markup", () => {
     const diff =

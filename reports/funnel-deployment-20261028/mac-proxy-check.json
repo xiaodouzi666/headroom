@@ -1,0 +1,73 @@
+{
+  "checked_at": "2026-10-28T15:25:45.779964+00:00",
+  "public_url": "https://headroom.tail45186b.ts.net/",
+  "client": "Mac with existing Clash proxy; no Tailscale client installed for this check",
+  "route": "ordinary domain URL through existing HTTP proxy, no curl IP override",
+  "before": {
+    "ordinary_domain": "TLS connection closed",
+    "same_proxy_forced_public_ipv4": "HTTP 200; certificate verified",
+    "forced_public_ipv6": "TLS connection closed",
+    "dns_cache_flush": "did not resolve failure"
+  },
+  "workaround": {
+    "scope": "only headroom.tail45186b.ts.net; existing subscription hosts retained",
+    "method": "Clash Verge global enhancement script appends exact-host IPv4 mapping",
+    "public_ipv4": [
+      "176.58.88.82",
+      "176.58.92.199",
+      "176.58.88.108"
+    ],
+    "certificate_verification": "enabled throughout",
+    "global_proxy_selection": "unchanged",
+    "backup": "Script.js.headroom-backup-20261028 beside the local script",
+    "caveat": "Temporary compatibility workaround; refresh or remove this host entry if public DNS addresses change or the upstream proxy resolves the domain correctly.",
+    "rollback": "Restore the backup Script.js and reactivate the subscription.",
+    "merge_trial": "A shallow hosts replacement briefly removed upstream subscription mappings; it was reverted before the additive script was applied."
+  },
+  "checks": [
+    {
+      "path": "/",
+      "curl_exit": 0,
+      "http_status": 200,
+      "tls_verify_result": 0,
+      "seconds": 1.143685,
+      "error": null
+    },
+    {
+      "path": "/api/config",
+      "curl_exit": 0,
+      "http_status": 200,
+      "tls_verify_result": 0,
+      "seconds": 1.069519,
+      "error": null
+    },
+    {
+      "path": "/api/health",
+      "curl_exit": 0,
+      "http_status": 200,
+      "tls_verify_result": 0,
+      "seconds": 0.786873,
+      "error": null
+    },
+    {
+      "path": "/results",
+      "curl_exit": 0,
+      "http_status": 200,
+      "tls_verify_result": 0,
+      "seconds": 1.009457,
+      "error": null
+    },
+    {
+      "path": "/about",
+      "curl_exit": 0,
+      "http_status": 200,
+      "tls_verify_result": 0,
+      "seconds": 1.923698,
+      "error": null
+    }
+  ],
+  "chrome": {
+    "home": "rendered with scenario list and disabled submit button",
+    "results": "rendered curated R5/R6 evidence, including corrected s4 numerical comparison basis"
+  }
+}

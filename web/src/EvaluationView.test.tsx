@@ -434,7 +434,7 @@ describe("recorded patch and completion outcomes", () => {
     });
     const allRows = within(table).getAllByRole("row");
     const columnCount = within(table).getAllByRole("columnheader").length;
-    expect(columnCount).toBe(23);
+    expect(columnCount).toBe(25);
     for (const row of allRows) expect(row.children).toHaveLength(columnCount);
     expect(outcomeCell(table, "Any patch/config applied", 2)).toHaveTextContent(
       "2 Yes / 1 No; 3 Unknown",
@@ -510,4 +510,56 @@ it("shows certified upper bounds separately from unknown actual charges", async 
   expect(
     screen.getByText(/An upper bound is not a confirmed actual charge/),
   ).toBeInTheDocument();
+});
+
+it("explains fixed-nine failure and pre-diagnosis budget stops without pooling history", async () => {
+  const document = {
+    ...fixture("live"),
+    acceptance: {
+      basis: "independent_fixed_suite_review_v1",
+      fixed_denominator: 9,
+      minimum_targets: 6,
+      target_met_count: 2,
+      target_gate_met: false,
+      stopped_before_diagnosis_and_patch: 5,
+    },
+  };
+  setup(document);
+  render(<App />);
+  expect(
+    await screen.findByText("Fixed-suite result: 2/9 automatic targets."),
+  ).toBeInTheDocument();
+  expect(screen.getByText(/Required: 6\/9/)).toHaveTextContent(
+    "The target gate is not met",
+  );
+  expect(screen.getByText(/Required: 6\/9/)).toHaveTextContent(
+    "5 scenarios stopped at the budget gate before any diagnosis or patch model attempt",
+  );
+  expect(screen.getByText(/Required: 6\/9/)).toHaveTextContent(
+    "historical successes are not pooled",
+  );
+  expect(screen.getByText(/Required: 6\/9/)).toHaveTextContent(
+    "Nano annotation ran",
+  );
+});
+
+it("labels the original-workload offload numerical reference precisely", async () => {
+  const document = fixture("live");
+  document.rows[0].numerical_basis =
+    "original_workload_offload_first_five_backward_scalars";
+  document.rows[0].loss_equivalence = "identical";
+  setup(document);
+  render(<App />);
+  const table = await screen.findByRole("table", {
+    name: "Main evaluation results",
+  });
+  expect(
+    within(table).getByText(
+      "Observed first five backward losses with original-workload offload reference",
+    ),
+  ).toBeInTheDocument();
+  expect(within(table).getByText("identical")).toBeInTheDocument();
+  expect(
+    within(table).queryByText("Comparison basis not recorded"),
+  ).not.toBeInTheDocument();
 });

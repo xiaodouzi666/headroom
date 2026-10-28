@@ -330,3 +330,65 @@ def test_public_projection_preserves_na_and_known_basis_without_private_strings(
     assert data["rows"][1]["numerical_basis"] is None
     assert data["rows"][1]["acceptance_scope"] is None
     assert "/private" not in response.text
+
+
+def test_reviewed_public_suites_keep_fixed_denominators_and_private_data_out():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "public-evidence"
+    with client(root) as api:
+        listing = api.get("/api/evaluations").json()["evaluations"]
+        assert [item["id"] for item in listing] == ["r6-20261027", "r5-20261027"]
+        for identifier, targets, causes, blocked in (
+            ("r6-20261027", 2, 3, 5),
+            ("r5-20261027", 3, 6, 0),
+        ):
+            response = api.get("/api/evaluations/" + identifier)
+            assert response.status_code == 200
+            data = response.json()
+            assert len(data["rows"]) == 9
+            assert len({row["run_id"] for row in data["rows"]}) == 9
+            assert data["summary"]["target_met_count"] == targets
+            assert data["summary"]["target_measured_denominator"] == 9
+            assert data["summary"]["first_cause_correct"] == causes
+            s4 = next(
+                row for row in data["rows"] if row["scenario_id"] == "s4_loss_accumulation_graph"
+            )
+            assert s4["numerical_basis"] == "original_workload_offload_first_five_backward_scalars"
+            assert s4["loss_equivalence"] == "identical"
+            acceptance = data["acceptance"]
+            assert acceptance["fixed_denominator"] == 9 and acceptance["minimum_targets"] == 6
+            assert acceptance["target_met_count"] == targets
+            assert acceptance["target_gate_met"] is False
+            assert acceptance["stopped_before_diagnosis_and_patch"] == blocked
+            for row in data["rows"]:
+                if row["status"] == "budget_exceeded":
+                    assert row["annotation_attempt_recorded"] is True
+                    assert row["diagnosis_attempt_recorded"] is False
+                    assert row["patch_attempt_recorded"] is False
+                    assert row["target_met"] is False
+                    assert row["first_cause_matches"] is None
+            for marker in ("/home/", "/Users/", ".cache/", "NEBIUS_API_KEY", "TAVILY_API_KEY"):
+                assert marker not in response.text
+        r5 = api.get("/api/evaluations/r5-20261027").json()
+        s6 = next(row for row in r5["rows"] if row["scenario_id"] == "s6_full_vocab_logits_fp32")
+        assert s6["first_cause_matches"] is False  # Independent audit overrides raw campaign claim.
+
+
+def test_fixed_suite_recomputes_claims_and_rejects_missing_slots(tmp_path):
+    from pathlib import Path
+
+    source = (
+        Path(__file__).resolve().parents[1]
+        / "public-evidence/published-evaluations/r6-20261027.json"
+    )
+    document = json.loads(source.read_text())
+    document["acceptance"].update(target_met_count=9, target_gate_met=True)
+    publish(tmp_path, document)
+    with client(tmp_path) as api:
+        result = api.get("/api/evaluations/reviewed").json()
+        assert result["acceptance"]["target_met_count"] == 2
+        assert result["acceptance"]["target_gate_met"] is False
+        document["rows"].pop()
+        (tmp_path / "published-evaluations/reviewed.json").write_text(json.dumps(document))
+        assert api.get("/api/evaluations/reviewed").status_code == 503

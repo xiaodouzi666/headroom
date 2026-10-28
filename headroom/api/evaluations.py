@@ -79,6 +79,7 @@ def _public_row(row, provenance):
             {
                 "original_plan_first_five_backward_scalars",
                 "original_plan_full_backward_scalar_series",
+                "original_workload_offload_first_five_backward_scalars",
                 "repository_no_reference_exception",
                 "unavailable",
             },
@@ -99,7 +100,14 @@ def _public_row(row, provenance):
         else "unknown"
     )
     result["condition"] = row.get("condition") if row.get("condition") in CONDITIONS else None
-    for name in ("target_met", "first_cause_matches", "baseline_target_met"):
+    for name in (
+        "target_met",
+        "first_cause_matches",
+        "baseline_target_met",
+        "annotation_attempt_recorded",
+        "diagnosis_attempt_recorded",
+        "patch_attempt_recorded",
+    ):
         result[name] = row.get(name) if type(row.get(name)) is bool else None
     for name in (
         "peak_before_bytes",
@@ -217,6 +225,47 @@ def _campaign(root, entry):
             "rows": [_public_row(row, provenance) for row in rows],
         }
     )
+    acceptance = source.get("acceptance")
+    if acceptance is not None:
+        # Only a complete, independently reviewed fixed-nine suite gets this banner.
+        if (
+            not isinstance(acceptance, dict)
+            or acceptance.get("basis") != "independent_fixed_suite_review_v1"
+            or acceptance.get("fixed_denominator") != 9
+            or acceptance.get("minimum_targets") != 6
+            or len(document["rows"]) != 9
+            or len({row["scenario_id"] for row in document["rows"]}) != 9
+            or provenance != "live"
+            or any(type(row["target_met"]) is not bool for row in document["rows"])
+        ):
+            raise ValueError("Invalid fixed-suite publication")
+        pins = acceptance.get("source_sha256", {})
+        required_pins = {"campaign", "execution_receipt", "independent_audit"}
+        if (
+            not isinstance(pins, dict)
+            or set(pins) != required_pins
+            or any(
+                not isinstance(value, str) or not re.fullmatch("[a-f0-9]{64}", value)
+                for value in pins.values()
+            )
+        ):
+            raise ValueError("Fixed-suite source hashes are required")
+        targets = sum(row["target_met"] is True for row in document["rows"])
+        stopped = sum(
+            row["status"] == "budget_exceeded"
+            and row["diagnosis_attempt_recorded"] is False
+            and row["patch_attempt_recorded"] is False
+            for row in document["rows"]
+        )
+        document["acceptance"] = {
+            "basis": "independent_fixed_suite_review_v1",
+            "fixed_denominator": 9,
+            "minimum_targets": 6,
+            "target_met_count": targets,
+            "target_gate_met": targets >= 6,
+            "stopped_before_diagnosis_and_patch": stopped,
+            "source_sha256": pins,
+        }
     return {"id": entry["id"], "title": entry["title"], **document}
 
 

@@ -61,6 +61,8 @@ class ApiSettings:
     runtime_configured: bool = False
     public_host: str | None = None
     trust_cloudflared: bool = False
+    run_submissions_enabled: bool | None = None
+    run_submission_disabled_reason: str | None = None
     deadline_seconds: float = 600
     shutdown_grace_seconds: float = 5
     event_poll_seconds: float = 0.1
@@ -74,6 +76,16 @@ class ApiSettings:
         self.public_host = self.public_host or os.environ.get("HEADROOM_PUBLIC_HOST")
         self.trust_cloudflared = (
             self.trust_cloudflared or os.environ.get("HEADROOM_TRUST_CLOUDFLARED") == "true"
+        )
+        if self.run_submissions_enabled is None:
+            configured = os.environ.get("HEADROOM_RUN_SUBMISSIONS_ENABLED", "true")
+            if configured not in {"true", "false"}:
+                raise ValueError("HEADROOM_RUN_SUBMISSIONS_ENABLED must be true or false")
+            self.run_submissions_enabled = configured == "true"
+        self.run_submission_disabled_reason = (
+            self.run_submission_disabled_reason
+            or os.environ.get("HEADROOM_RUN_SUBMISSION_DISABLED_REASON")
+            or "New runs are temporarily paused."
         )
         if self.public_host:
             if (
@@ -324,8 +336,66 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
             raise HTTPException(404, "Run not found")
         return row
 
+    def submission_config():
+        return {
+            "enabled": settings.run_submissions_enabled,
+            "reason": (
+                None
+                if settings.run_submissions_enabled
+                else settings.run_submission_disabled_reason
+            ),
+        }
+
+    def observed_availability():
+        observed = availability.snapshot()
+        if not settings.public_host:
+            return observed
+        # Public viewers need readiness, never account totals, paths or diagnostic details.
+        public = {}
+        for name, fields, statuses in (
+            ("gpu", ("busy", "available", "stale"), {"available", "busy", "unavailable"}),
+            (
+                "token_factory",
+                ("configured", "reachable", "authentication_checked", "stale"),
+                {"reachable", "unreachable", "degraded"},
+            ),
+        ):
+            source = observed.get(name, {})
+            public[name] = {
+                "status": source.get("status") if source.get("status") in statuses else "unknown",
+                **{
+                    key: source.get(key) if type(source.get(key)) is bool else None
+                    for key in fields
+                },
+            }
+        budget_status = observed.get("local_budget", {}).get("status")
+        public["local_budget"] = {
+            "scope": "service_availability",
+            "status": (
+                "available"
+                if budget_status == "available"
+                else "unavailable"
+                if budget_status in {"exhausted", "pending_charge", "billing_review_required"}
+                else "unknown"
+            ),
+        }
+        return public
+
+    def queue_status():
+        state = queue.snapshot()
+        if settings.public_host:
+            state["running"] = bool(state["running"])
+        return state
+
+    @app.get("/api/config")
+    def config():
+        return {"run_submissions": submission_config()}
+
     @app.post("/api/runs", status_code=202)
     async def submit(request: Request):
+        # Reject before reading uploads, preparing repositories, admission or worker dispatch.
+        if not settings.run_submissions_enabled:
+            raise HTTPException(503, settings.run_submission_disabled_reason)
         origin = request.headers.get("origin")
         if origin and urlsplit(origin).netloc != request.url.netloc:
             raise HTTPException(403, "Cross-origin submissions are not allowed")
@@ -447,7 +517,7 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
             for r in store.list_runs(1000)
             if r.get("api_owner") == request.state.owner
         ]
-        return {"runs": rows, "queue": queue.snapshot()}
+        return {"runs": rows, "queue": queue_status()}
 
     @app.get("/api/runs/{run_id}")
     def run(run_id: str, request: Request):
@@ -593,17 +663,18 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
             "bounded_cost_calls": bounded,
             "unresolved_cost_calls": unresolved,
             "conservative_total_usd": str(conservative) if conservative is not None else None,
-            "local_budget": availability.snapshot()["local_budget"],
+            "local_budget": observed_availability()["local_budget"],
         }
 
     @app.get("/api/health")
     def health():
         store.list_runs(1)
-        observed = availability.snapshot()
+        observed = observed_availability()
         return {
             "status": "ok",
             "db": "ok",
-            "queue": queue.snapshot(),
+            "queue": queue_status(),
+            "run_submissions": submission_config(),
             **observed,
             "deployment": "public_host_configured" if settings.public_host else "localhost",
             "authentication": "local_session_only",

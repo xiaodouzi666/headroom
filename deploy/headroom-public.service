@@ -1,0 +1,26 @@
+[Unit]
+Description=Headroom public read-only app origin
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/xiaodouzi/workspace/headroom
+ExecStart=/home/xiaodouzi/workspace/headroom/.venv/bin/python -m scripts.serve_public
+EnvironmentFile=/home/xiaodouzi/workspace/headroom/.cache/funnel-public.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=HEADROOM_RUN_SUBMISSIONS_ENABLED=false
+Environment=HEADROOM_TRUST_CLOUDFLARED=false
+Environment=HEADROOM_BUDGET_DB_PATH=/home/xiaodouzi/workspace/headroom/.cache/budget.db
+Environment=HEADROOM_RUNTIME_PROFILE=/home/xiaodouzi/workspace/headroom/.cache/tokenfactory-runtime-v2-r5.json
+Environment=HEADROOM_DAILY_BUDGET_USD=9.99964904
+Environment=HEADROOM_RUN_BUDGET_USD=0.6
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=20
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

@@ -789,3 +789,105 @@ def test_session_usage_keeps_certified_bound_separate_from_actual(settings):
             assert other.get("/api/usage").json()["calls"] == 0
         finally:
             other.close()
+
+
+def test_submission_switch_defaults_and_environment(tmp_path, monkeypatch):
+    monkeypatch.delenv("HEADROOM_RUN_SUBMISSIONS_ENABLED", raising=False)
+    monkeypatch.delenv("HEADROOM_RUN_SUBMISSION_DISABLED_REASON", raising=False)
+    assert ApiSettings(project_root=tmp_path).run_submissions_enabled is True
+    monkeypatch.setenv("HEADROOM_RUN_SUBMISSIONS_ENABLED", "false")
+    monkeypatch.setenv("HEADROOM_RUN_SUBMISSION_DISABLED_REASON", "Model budget is unavailable.")
+    configured = ApiSettings(project_root=tmp_path)
+    assert configured.run_submissions_enabled is False
+    assert configured.run_submission_disabled_reason == "Model budget is unavailable."
+    assert ApiSettings(project_root=tmp_path, run_submissions_enabled=True).run_submissions_enabled
+    monkeypatch.setenv("HEADROOM_RUN_SUBMISSIONS_ENABLED", "flase")
+    with pytest.raises(ValueError, match="must be true or false"):
+        ApiSettings(project_root=tmp_path)
+
+
+def test_paused_submissions_reject_before_preparation_or_admission(settings, monkeypatch):
+    settings.run_submissions_enabled = False
+    settings.run_submission_disabled_reason = "Model budget is unavailable."
+
+    def denied(*args, **kwargs):
+        pytest.fail("Paused submissions must not prepare, enqueue or execute work")
+
+    app = create_app(settings, worker=denied)
+    manifest = settings.data_root / "public-evaluations.json"
+    manifest.write_text(
+        json.dumps({"version": 1, "campaigns": [{"id": "reviewed", "title": "Reviewed evidence"}]})
+    )
+    published = settings.data_root / "published-evaluations"
+    published.mkdir()
+    campaign = published / "reviewed.json"
+    campaign.write_text(
+        json.dumps(
+            {"mode": "campaign", "provenance": "offline_fixture", "status": "finished", "rows": []}
+        )
+    )
+    before = {path: path.read_bytes() for path in (manifest, campaign)}
+    monkeypatch.setattr(app.state.queue, "submit", denied)
+    monkeypatch.setattr("headroom.api.app.prepare_repository", denied)
+    with TestClient(app) as client:
+        expected = {"enabled": False, "reason": "Model budget is unavailable."}
+        assert client.get("/api/config").json()["run_submissions"] == expected
+        assert client.get("/api/health").json()["run_submissions"] == expected
+        for body in (
+            "not JSON",
+            json.dumps({"script_text": "print(1)"}),
+            json.dumps({"example_id": "s1_batch_too_big"}),
+            json.dumps({"repo": "https://github.com/example/repo", "cmd": "python train.py"}),
+        ):
+            response = client.post("/api/runs", content=body)
+            assert response.status_code == 503
+            assert response.json() == {"detail": expected["reason"]}
+        assert app.state.store.list_runs(10) == []
+        assert list(settings.run_root.iterdir()) == []
+        assert client.get("/api/examples").status_code == 200
+        assert client.get("/api/evaluations").json()["evaluations"][0]["id"] == "reviewed"
+        assert client.get("/api/evaluations/reviewed").json()["provenance"] == "offline_fixture"
+        assert before == {path: path.read_bytes() for path in before}
+        assert client.get("/api/replays").status_code == 404
+
+
+def test_public_availability_redacts_finances_paths_and_configuration(settings):
+    class Monitor:
+        def snapshot(self):
+            return {
+                "gpu": {"status": "busy", "busy": True, "devices": [{"total_mib": 24000}]},
+                "token_factory": {
+                    "configured": True,
+                    "configuration_scope": "/private/runtime-profile.json",
+                    "reachable": True,
+                    "reason": "/private/provider-diagnostic",
+                },
+                "local_budget": {
+                    "status": "exhausted",
+                    "scope": "local_application_authorization",
+                    "remaining_usd": "123.456",
+                    "account_balance": "654.321",
+                    "ledger_path": "/private/budget.db",
+                },
+                "private_diagnostic": "/private/account-info",
+            }
+
+        def close(self):
+            pass
+
+    settings.public_host = "demo.example"
+    app = create_app(settings, worker=completed_worker, availability_monitor=Monitor())
+    with TestClient(app) as client:
+        health, usage = client.get("/api/health").json(), client.get("/api/usage").json()
+        assert health["local_budget"] == {"scope": "service_availability", "status": "unavailable"}
+        assert usage["local_budget"] == health["local_budget"]
+        assert health["gpu"]["busy"] is True
+        assert health["token_factory"]["configured"] is True
+        assert health["queue"]["running"] is False
+        serialized = json.dumps([health, usage])
+        for private in ("123.456", "654.321", "/private", "ledger_path", "configuration_scope"):
+            assert private not in serialized
+        assert client.get("/api/config").json()["run_submissions"] == {
+            "enabled": True,
+            "reason": None,
+        }

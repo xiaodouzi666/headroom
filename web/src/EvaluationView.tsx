@@ -21,6 +21,8 @@ const columns: [string, string][] = [
   ["policy_name", "Policy"],
   ["provenance", "Evidence"],
   ["status", "State"],
+  ["diagnosis_attempt_recorded", "Diagnosis attempt recorded"],
+  ["patch_attempt_recorded", "Patch attempt recorded"],
   ["ground_truth", "Authored cause"],
   ["first_cause_matches", "First cause matches"],
   ["target_met", "Target met"],
@@ -57,6 +59,8 @@ const numericalBasis = (basis: unknown) =>
         "Observed first five backward losses (original plan)",
       original_plan_full_backward_scalar_series:
         "Observed full backward-loss sequence (original plan)",
+      original_workload_offload_first_five_backward_scalars:
+        "Observed first five backward losses with original-workload offload reference",
       repository_no_reference_exception:
         "Repository without reference; numerical equivalence unverified",
       unavailable: "Comparison unavailable",
@@ -194,6 +198,7 @@ export default function EvaluationView() {
   const measured = record(summary.measured_metrics),
     comparable = record(measured.numerical_equivalence);
   const outcomeCounts = record(summary.outcomes);
+  const acceptance = record(document.acceptance);
   const summaryCells: Record<string, string> = {
     scenario_id: "Summary (live only)",
     condition: "all",
@@ -306,6 +311,29 @@ export default function EvaluationView() {
             </Badge>{" "}
             <Badge>{human(document.status)}</Badge>
           </p>
+          {acceptance.basis === "independent_fixed_suite_review_v1" && (
+            <Notice>
+              <strong>
+                Fixed-suite result: {value(acceptance.target_met_count)}/
+                {value(acceptance.fixed_denominator)} automatic targets.
+              </strong>{" "}
+              Required: {value(acceptance.minimum_targets)}/
+              {value(acceptance.fixed_denominator)}. The target gate is{" "}
+              {acceptance.target_gate_met === true ? "met" : "not met"}.
+              Campaigns are scored separately; historical successes are not
+              pooled. First-cause results follow the independent review.
+              {Number(acceptance.stopped_before_diagnosis_and_patch) > 0 && (
+                <>
+                  {" "}
+                  {value(acceptance.stopped_before_diagnosis_and_patch)}{" "}
+                  scenarios stopped at the budget gate before any diagnosis or
+                  patch model attempt. Their baseline and Nano annotation ran;
+                  they remain in the fixed denominator and are not successful
+                  repairs.
+                </>
+              )}
+            </Notice>
+          )}
           <p className="caption">
             Search mode: {searchModeLabel(document.search_mode)}. Only
             explicitly published evidence appears here. Unknown outcomes remain

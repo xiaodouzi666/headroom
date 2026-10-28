@@ -1,5 +1,34 @@
 # Headroom Progress
 
+## FINAL_48H 执行中 — 2026-10-28
+
+执行计划：[最终执行计划 v5.1](docs/FINAL_48H.md)。该文件按 Frank 提供的原文件逐字保存；`docs/PLAN.md` 保持原样。Phase 3–6 的后续安排按 FINAL_48H 执行。下方旧记录作为历史保留，不代表本次执行状态。
+
+当前授权与依赖：
+
+- **A：待 Frank 明确新运行池金额 $X。** 尚未创建新 allocation、转移评审预留或更改预算准入；仅凭计划中的计算公式不推定金额。不得充值或超额；历史费用与未知实际费用记录继续保留。与新运行池有关的模型调用、消融和实测等待金额授权，其间推进不花钱的工程准备。
+- **B：Tailscale 账号、设备、最小访问策略及 HTTPS 已获用户确认并配置。** 专用免费账号原无其他设备；采用无需 sudo 的 rootless 用户服务，已有 `Linger=yes`。只读公网源站已启动；服务器经公网 URL 测试返回 200。本机代理对该域名的连接问题已用保留原映射的精确域名追加配置临时解决，Chrome 普通网址已加载首页、场景列表与 Results，五个 HTTPS 路由均为 200 且证书校验通过。该本机映射在公网 IP 改变时需更新或移除。手机网络和 F2 全部交付尚未验收。
+- **C：待 Frank 单独确认恢复 Verified runs。** 当前公开的是已有评测结果；尚未恢复 Verified runs 画廊，也未恢复 Replay 动画。上传、预置示例实时运行及 judge token 尚未开放。
+- 当前公网服务禁用新运行，未因部署新增模型/GPU 调用或运行池。任务内只跑相关 focused tests、ruff、gitleaks；全量回归留待 F8。公开文案改写、历史最佳按场景展示与最近单轮结果分别记录，不能改变历史原始结果。
+- 执行顺序：F0 → F1 → F2/F2b → F3 → F3b-1 → F4（含 F3b-4）→ F5 → F6 → F3b-2 → F7 → F8。A 未到先推进不花钱的 F2/F2b；单项超过预计时间 1.5 倍时记录现状并转下一项。
+
+| 项目 | 当前状态 | 下一步 / 尚缺证据 |
+|---|---|---|
+| F0 固化与准备 | 文件与跟踪区块已完成；A/C 待确认 | 新计划已原样保存，原 PLAN 未改；收到明确 $X 后才登记新运行池 |
+| F1 消融实验 | 未开始，等待 A | 27 次真实诊断、费用与延迟记录；本次没有新增调用 |
+| F2 Verified runs 与公网部署 | 公网只读入口与 Chrome 访问已验证；画廊待 C | 手机网络尚未测；随后完成画廊、受限示例与真实运行验收 |
+| F2b 前端瘦身 | 未开始 | 五页结构、面向评委的文案、390px、构建和性能检查 |
+| F3 R7 修复与补强 | 未开始，真实调用等待 A | 小范围修复、固定九场景、s2 两档及 HF Trainer 独立记录 |
+| F3b-1 自带快照诊断 | 未开始 | CLI/Web、受限 pickle 解析、上传限制；真实诊断等待 A |
+| F3b-2 Watch 演示 | 未开始 | 一次真实 OOM 触发及可追溯 run；依赖前序工程与 A |
+| F3b-3 显存回归检查 | 已按新计划取消 | 不开发、不写入 README |
+| F3b-4 Related work | 未开始，随 F4 | 核实并补充 pt-snap-cli 引用 |
+| F4 文档替换 | 未开始 | 用经核实的实际结果填定稿占位符；缺少实测的句子删除 |
+| F5 干净环境复跑 | 未开始 | 新目录 Quickstart、真实 s3 结果与提交标签；调用等待 A |
+| F6 视频素材 | 未开始 | 画廊、可重复真实入口、traceback、镜像与素材清单；尚未交 Opus |
+| F7 Devpost 提交 | 未开始，Frank 操作 | 定稿、公开视频、测试说明就绪后，取得 Submitted 实际状态 |
+| F8 最终检查 | 未开始 | 最终公网冒烟、余额核验、检查与最终报告；不能用服务启动替代验收 |
+
 ## 2026-10-27 R6 budget-limited result
 
 R6 finished all nine recorded slots at source commit `4f4e67d`: **2/9 targets (s3, s4), 3/9 valid correct first causes, five unknown causes**. s1/s2 needed human input; s5/s6/s7/s8/nanoGPT were stopped before their Ultra/Super calls because the complete request reservation no longer fit the original development allocation. No repair improvement is claimed. R5's separate 3/9 result is retained, and the required 6/9 threshold is unchanged.

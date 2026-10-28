@@ -1,0 +1,103 @@
+{
+  "/": {
+    "http_status": 200,
+    "body_bytes": 695
+  },
+  "/api/config": {
+    "http_status": 200,
+    "body_bytes": 87,
+    "data": {
+      "run_submissions": {
+        "enabled": false,
+        "reason": "Model budget is currently unavailable."
+      }
+    }
+  },
+  "/api/health": {
+    "http_status": 200,
+    "body_bytes": 544,
+    "data": {
+      "status": "ok",
+      "db": "ok",
+      "queue": {
+        "running": false,
+        "pending": 0,
+        "preparing": 0,
+        "capacity": 3,
+        "halted": false,
+        "closing": false
+      },
+      "run_submissions": {
+        "enabled": false,
+        "reason": "Model budget is currently unavailable."
+      },
+      "gpu": {
+        "status": "available",
+        "busy": false,
+        "available": true,
+        "stale": false
+      },
+      "token_factory": {
+        "status": "reachable",
+        "configured": true,
+        "reachable": true,
+        "authentication_checked": false,
+        "stale": false
+      },
+      "local_budget": {
+        "scope": "service_availability",
+        "status": "available"
+      },
+      "deployment": "public_host_configured",
+      "authentication": "local_session_only"
+    }
+  },
+  "/api/runs": {
+    "http_status": 200,
+    "body_bytes": 107,
+    "data": {
+      "runs": [],
+      "queue": {
+        "running": false,
+        "pending": 0,
+        "preparing": 0,
+        "capacity": 3,
+        "halted": false,
+        "closing": false
+      }
+    }
+  },
+  "/api/usage": {
+    "http_status": 200,
+    "body_bytes": 299,
+    "data": {
+      "runs": [],
+      "scope": "current_session",
+      "calls": 0,
+      "known_cost_usd": "0",
+      "total_cost_usd": "0",
+      "unknown_cost_calls": 0,
+      "complete": true,
+      "billing_complete": true,
+      "bounded_cost_calls": 0,
+      "unresolved_cost_calls": 0,
+      "conservative_total_usd": "0",
+      "local_budget": {
+        "scope": "service_availability",
+        "status": "available"
+      }
+    }
+  },
+  "/api/evaluations": {
+    "http_status": 200,
+    "body_bytes": 37,
+    "data": {
+      "status": "pending",
+      "evaluations": []
+    }
+  },
+  "post_blocked_before_parsing": true,
+  "untrusted_host_rejected": true,
+  "explicit_restart_recovery_seconds": 1.212,
+  "scope": "loopback origin only; no public URL or transport authenticated yet"
+}

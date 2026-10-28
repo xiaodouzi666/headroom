@@ -172,6 +172,12 @@ function Home() {
   }, []);
   const queue = record(health.queue),
     provider = record(health.token_factory);
+  const submissions = record(health.run_submissions);
+  const submissionsPaused = submissions.enabled === false;
+  const submissionPauseReason = text(
+    submissions.reason,
+    "New runs are temporarily paused.",
+  );
   const queueFull = queueAtCapacity(queue);
   const availability = availabilityBlocks(health);
   const selectedExample =
@@ -200,6 +206,10 @@ function Home() {
   async function start(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
+    if (submissionsPaused) {
+      setError(submissionPauseReason);
+      return;
+    }
     const payload: Submission = {
       ...(mode === "example"
         ? { example_id: example }
@@ -270,7 +280,13 @@ function Home() {
         </div>
       </div>
       {error && <Notice tone="red">{error}</Notice>}
-      {!loading && provider.configured === false && (
+      {submissionsPaused && (
+        <Notice>
+          <strong>New runs are paused.</strong> {submissionPauseReason} You can
+          still <a href="/results">browse published evaluation results</a>.
+        </Notice>
+      )}
+      {!submissionsPaused && !loading && provider.configured === false && (
         <Notice>
           <strong>Live analysis is not enabled yet.</strong> Runs may pause
           while model readiness checks are completed.
@@ -288,7 +304,7 @@ function Home() {
           Availability will refresh automatically.
         </Notice>
       )}
-      {availability.budgetBlocked && (
+      {!submissionsPaused && availability.budgetBlocked && (
         <Notice>
           <strong>
             {availability.budgetReason === "exhausted"
@@ -557,6 +573,7 @@ function Home() {
             disabled={
               busy ||
               loading ||
+              submissionsPaused ||
               queueFull ||
               availability.gpuBusy ||
               availability.budgetBlocked
