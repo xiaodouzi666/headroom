@@ -41,7 +41,7 @@ def _finish_result(store, run_id, result):
         store.add_event(run_id, "run.done" if status == "completed" else "needs_human", {})
 
 
-def _process_entry(worker, request, store_path, run_root, run_id, deadline):
+def _process_entry(worker, request, store_path, run_root, run_id, deadline, demo_binding=None):
     store = Store(store_path)
     try:
         if time.monotonic() >= deadline:
@@ -50,9 +50,22 @@ def _process_entry(worker, request, store_path, run_root, run_id, deadline):
             )
             store.add_event(run_id, "run.failed", {"reason": "queue_deadline_exceeded"})
             return
-        result = (worker or run_fix)(
-            FixRequest.model_validate(request), store=store, run_root=Path(run_root), run_id=run_id
-        )
+        parsed = FixRequest.model_validate(request)
+        if demo_binding is not None:
+            from headroom.acceptance.demo_binding import run_bound_demo
+
+            result = run_bound_demo(
+                parsed,
+                store=store,
+                run_root=Path(run_root),
+                run_id=run_id,
+                binding=demo_binding,
+                worker=worker,
+            )
+        else:
+            result = (worker or run_fix)(
+                parsed, store=store, run_root=Path(run_root), run_id=run_id
+            )
         _finish_result(store, run_id, result)
     except Exception:  # noqa: BLE001 - preserve failed worker state and halt unsafe scheduling
         store.update_run(
@@ -228,9 +241,11 @@ class RunQueue:
         grace=5,
         clock=time.time,
         hourly_limit=2,
+        demo_allocation=None,
     ):
         self.store, self.run_root = store, Path(run_root)
         self.worker, self.mode = worker, mode
+        self.demo_allocation = demo_allocation
         self.deadline, self.grace, self.clock = deadline, grace, clock
         if type(hourly_limit) is not int or hourly_limit < 1:
             raise ValueError("Hourly run limit must be a positive integer")
@@ -497,7 +512,7 @@ class RunQueue:
                 self.preparing.discard(run_id)
                 self.condition.notify_all()
 
-    def _supervised(self, run_id, request, deadline):
+    def _supervised(self, run_id, request, deadline, demo_binding=None):
         if time.monotonic() >= deadline:
             self._finish_unstarted(run_id, reason="queue_deadline_exceeded")
             return True
@@ -510,6 +525,7 @@ class RunQueue:
                 str(self.run_root),
                 run_id,
                 deadline,
+                demo_binding,
             ),
             daemon=True,
         )
@@ -594,17 +610,41 @@ class RunQueue:
                 run_id, request, deadline = self.pending.popleft()
                 self.running = run_id
             cleaned = False
+            demo_binding = None
             self.store.update_run(run_id, status="running")
             try:
+                if self.demo_allocation is not None:
+                    source_sha = (
+                        self.store.get_run(run_id).get("api_source", {}).get("source_sha256")
+                    )
+                    # No model or GPU work precedes this durable allocation check.
+                    cleaned = True
+                    request, demo_binding = self.demo_allocation.begin(
+                        run_id, request, source_sha256=source_sha
+                    )
+                    cleaned = False
+                    self.store.update_run(run_id, api_demo_binding=demo_binding)
                 if self.mode == "process":
-                    cleaned = self._supervised(run_id, request, deadline)
+                    cleaned = self._supervised(run_id, request, deadline, demo_binding)
                 elif time.monotonic() >= deadline:
                     self._finish_unstarted(run_id, reason="queue_deadline_exceeded")
                     cleaned = True
                 else:
-                    result = self.worker(
-                        request, store=self.store, run_root=self.run_root, run_id=run_id
-                    )
+                    if demo_binding is not None:
+                        from headroom.acceptance.demo_binding import run_bound_demo
+
+                        result = run_bound_demo(
+                            request,
+                            store=self.store,
+                            run_root=self.run_root,
+                            run_id=run_id,
+                            binding=demo_binding,
+                            worker=self.worker,
+                        )
+                    else:
+                        result = self.worker(
+                            request, store=self.store, run_root=self.run_root, run_id=run_id
+                        )
                     _finish_result(self.store, run_id, result)
                     cleaned = True
             except Exception:  # noqa: BLE001 - preserve failed worker state and halt unsafe scheduling
@@ -613,12 +653,23 @@ class RunQueue:
                 )
                 self.store.add_event(run_id, "run.failed", {"reason": "queue_worker_error"})
             finally:
+                accounting_ok = True
+                if demo_binding is not None:
+                    try:
+                        accounting = self.demo_allocation.finish(
+                            demo_binding,
+                            execution_terminal=self.store.get_run(run_id).get("status") in TERMINAL,
+                            cleanup_verified=cleaned,
+                        )
+                        accounting_ok = accounting["status"] == "settled"
+                    except Exception:  # noqa: BLE001 - retain active claim; fail closed
+                        accounting_ok = False
                 self.store.update_run(
                     run_id, api_worker_finished=cleaned, api_cleanup_verified=cleaned
                 )
                 with self.condition:
                     self.running = None
-                    self.halted = self.halted or not cleaned
+                    self.halted = self.halted or not cleaned or not accounting_ok
                     self.condition.notify_all()
 
     def close(self):

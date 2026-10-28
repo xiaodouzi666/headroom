@@ -68,6 +68,7 @@ class ApiSettings:
     run_root: Path | None = None
     web_dist: Path | None = None
     runtime_profile: str | None = None
+    daily_budget_usd: str = "12"
     runtime_configured: bool = False
     public_host: str | None = None
     trust_cloudflared: bool = False
@@ -207,6 +208,9 @@ def _catalog(settings):
                 recommended=dict(preset["recommended"]),
                 baseline_note=preset["baseline_note"],
             )
+        elif identifier == "s3_eval_no_grad_missing":
+            # This example already fits; the demo must request a measurable reduction.
+            result[identifier]["recommended"] = {"target": "reclaim", "allocator_conf": None}
     return result
 
 
@@ -298,6 +302,7 @@ def _prepare_submission(settings, submission, source, run_id, *, deadline):
         max_seconds=180,
         device="cuda",
         runtime_profile=settings.runtime_profile,
+        daily_budget_usd=settings.daily_budget_usd,
     )
 
 
@@ -309,8 +314,14 @@ def create_app(
     availability_monitor=None,
     snapshot_worker=None,
     snapshot_allocation_parent=None,
+    demo_allocation=None,
 ):
     settings = settings or ApiSettings()
+    if demo_allocation is not None:
+        if not settings.public_host or demo_allocation.root != settings.project_root:
+            raise ValueError("Public allocation requires its matching project and public host")
+        settings.runtime_profile = demo_allocation.receipt["profile_path"]
+        settings.daily_budget_usd = demo_allocation.receipt["amounts"]["daily_limit_usd"]
     settings.data_root.mkdir(parents=True, exist_ok=True, mode=0o700)
     settings.run_root.mkdir(parents=True, exist_ok=True, mode=0o700)
     store = Store(settings.db_path)
@@ -326,6 +337,7 @@ def create_app(
         deadline=settings.deadline_seconds,
         grace=settings.shutdown_grace_seconds,
         hourly_limit=1 if settings.public_host else 2,
+        demo_allocation=demo_allocation,
     )
     catalog = _catalog(settings)
     availability = availability_monitor or AvailabilityMonitor(
@@ -360,6 +372,7 @@ def create_app(
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(settings.allowed_hosts))
     app.state.store, app.state.queue, app.state.settings = store, queue, settings
     app.state.availability = availability
+    app.state.demo_allocation = demo_allocation
     register_evaluations(app, settings.data_root)
     register_verified(app, settings)
     from headroom.api.snapshot_routes import register_snapshot_routes
@@ -410,13 +423,13 @@ def create_app(
         return row
 
     def submission_config():
+        enabled = bool(
+            settings.run_submissions_enabled
+            and (demo_allocation is None or demo_allocation.available)
+        )
         return {
-            "enabled": settings.run_submissions_enabled,
-            "reason": (
-                None
-                if settings.run_submissions_enabled
-                else settings.run_submission_disabled_reason
-            ),
+            "enabled": enabled,
+            "reason": None if enabled else settings.run_submission_disabled_reason,
         }
 
     def observed_availability():
@@ -483,7 +496,9 @@ def create_app(
                 "runs_per_ip_per_hour": 2,
                 "retention_hours": 24,
             },
-            "judge_scripts_available": bool(settings.public_host and settings.judge_token),
+            "judge_scripts_available": bool(
+                settings.public_host and settings.judge_token and submission_config()["enabled"]
+            ),
             "limits": {
                 "runs_per_ip_per_hour": 1 if settings.public_host else 2,
                 "max_waiting_runs": 2,
@@ -494,7 +509,7 @@ def create_app(
     @app.post("/api/runs", status_code=202)
     async def submit(request: Request):
         # Reject before reading uploads, preparing repositories, admission or worker dispatch.
-        if not settings.run_submissions_enabled:
+        if not submission_config()["enabled"]:
             raise HTTPException(503, settings.run_submission_disabled_reason)
         origin = request.headers.get("origin")
         if origin and urlsplit(origin).netloc != request.url.netloc:
@@ -580,6 +595,9 @@ def create_app(
                     if repository_input
                     else ("example" if submission.example_id else "upload"),
                     "example_id": submission.example_id,
+                    "source_sha256": hashlib.sha256(source.encode("utf-8")).hexdigest()
+                    if source is not None
+                    else None,
                     "target": submission.target,
                     "search_mode": submission.search_mode,
                     "policy": submission.policy.model_dump(),

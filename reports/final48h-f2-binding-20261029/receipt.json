@@ -1,0 +1,63 @@
+{
+  "checked_at": "2026-10-28T22:51:07.679584+00:00",
+  "status": "offline_engineering_verified_not_live_acceptance",
+  "focused_tests": {
+    "passed": 104,
+    "seconds": 39.74,
+    "log": "focused-tests.txt",
+    "command": ".tools/bin/uv run pytest -q tests/test_demo_allocation.py tests/test_demo_api.py tests/test_public_launcher.py tests/test_public_access.py tests/test_api.py tests/test_api_deadline.py tests/test_api_example_presets.py"
+  },
+  "normal_runtime": {
+    "api_process": true,
+    "real_run_fix": true,
+    "real_build_live_runtime": true,
+    "sdk_transport": "httpx.MockTransport",
+    "lab": "synthetic_no_script_execution",
+    "cleanup": "offline_fixture_acknowledgement",
+    "model_calls": false,
+    "gpu_calls": false,
+    "live_validation_complete": false
+  },
+  "limits": {
+    "scope_usd": "0.30",
+    "run_usd_at_most": "0.30",
+    "daily_limit": "inherits_receipt",
+    "total_limit": "inherits_receipt",
+    "waiters_at_most": 2,
+    "per_ip_hour": 1,
+    "public_deadline_seconds": 480
+  },
+  "source_files": [
+    {
+      "path": "headroom/acceptance/demo_binding.py",
+      "sha256": "67477d850fc6fc51d33e99a1a0ee6588081f9d5ed74df92f5644ccd351d1d4d4"
+    },
+    {
+      "path": "headroom/api/app.py",
+      "sha256": "e30643815e2e7fcfa6f49599ce45569c4f1d819ffb1d4bb52f9c9befb5520ba7"
+    },
+    {
+      "path": "headroom/api/queue.py",
+      "sha256": "754704be53b413514d0d0b004ec5ef117e9207907fa426beac0e92f341b20aca"
+    },
+    {
+      "path": "scripts/serve_public.py",
+      "sha256": "830a6f6b546a9d2ca55415a2fd7d5f9ffff33caeb5de7f4a8faf86914a5ed740"
+    },
+    {
+      "path": "tests/test_demo_allocation.py",
+      "sha256": "5518754da1d5954b4bf4d1be67fcd351478230169347f6bc9ac81e150a2e250b"
+    },
+    {
+      "path": "tests/test_demo_api.py",
+      "sha256": "89d1a09cd9b67a6f5f16f086e251c12a32c7ca5ef6001273aa890e0b407f9385"
+    }
+  ],
+  "ruff_check": "passed",
+  "ruff_format_check": "passed",
+  "gitleaks_findings": 0,
+  "production_allocation_created": false,
+  "public_live_enabled": false,
+  "credentials_created": false,
+  "committed": false
+}

@@ -1,4 +1,4 @@
-"""Dedicated read-only public origin; live workers remain disabled."""
+"""Public origin; live work requires an explicit, verified FINAL48 demo allowance."""
 
 import os
 import shutil
@@ -16,8 +16,23 @@ def main():
         raise SystemExit("HEADROOM_PUBLIC_HOST must be configured before public startup")
     if os.environ.get("HEADROOM_TRUST_CLOUDFLARED") == "true":
         raise SystemExit("The Funnel origin must not trust Cloudflare headers")
-    if os.environ.get("HEADROOM_RUN_SUBMISSIONS_ENABLED", "false") != "false":
-        raise SystemExit("This public launcher permits read-only operation only")
+    requested = os.environ.get("HEADROOM_RUN_SUBMISSIONS_ENABLED", "false")
+    if requested not in {"true", "false"}:
+        raise SystemExit("Use explicit true or false; the default public mode is read-only")
+    demo = None
+    if requested == "true":
+        receipt_path = os.environ.get("HEADROOM_PUBLIC_ALLOCATION_RECEIPT")
+        if not receipt_path:
+            raise SystemExit("The read-only default requires an explicit public allocation receipt")
+        from headroom.acceptance.demo_binding import DemoAllocation
+
+        try:
+            demo = DemoAllocation(receipt_path, project_root=root)
+        except (OSError, ValueError):
+            raise SystemExit("The public allocation could not be verified") from None
+        # Process-local selection also keeps availability observations on this pool.
+        os.environ["HEADROOM_BUDGET_DB_PATH"] = demo.receipt["ledger_path"]
+        os.environ["HEADROOM_DAILY_BUDGET_USD"] = demo.receipt["amounts"]["daily_limit_usd"]
     state = root / "runs/public-api"
     data = state / "submissions"
     for relative in (
@@ -40,12 +55,12 @@ def main():
         run_root=state / "jobs",
         public_host=hostname,
         trust_tailscale_funnel=True,
-        run_submissions_enabled=False,
+        run_submissions_enabled=demo is not None,
         snapshot_submissions_enabled=False,
-        verified_runs_enabled=False,
         run_submission_disabled_reason="Live analysis is temporarily paused.",
     )
-    uvicorn.run(create_app(settings), host="127.0.0.1", port=8766, proxy_headers=False)
+    application = create_app(settings, demo_allocation=demo) if demo else create_app(settings)
+    uvicorn.run(application, host="127.0.0.1", port=8766, proxy_headers=False)
 
 
 if __name__ == "__main__":

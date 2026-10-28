@@ -1,0 +1,294 @@
+"""Trusted FINAL48 public-demo binding; HTTP input never selects funding.
+
+Metadata extends the existing allocation registry, not the budget database.
+The ordinary live runtime retains open_run/close_run and provider settlement.
+"""
+
+import hashlib
+import json
+import re
+import sqlite3
+from decimal import Decimal
+from pathlib import Path
+
+from headroom.acceptance.allocation import (
+    AllocationRefused,
+    _budget_state,
+    _quiet_pool,
+    registry,
+    request_sha256,
+    require,
+    verify_receipt,
+)
+from headroom.api.security import open_regular
+from headroom.budget import BudgetLedger, money
+from headroom.orchestrator import Services, run_fix
+
+CAP = Decimal("0.30")
+
+
+def _source_record(request):
+    require(not request.repository_mode, "DEMO_REPOSITORY_FORBIDDEN")
+    root = Path(request.source_root)
+    script = Path(request.script)
+    require(
+        root.is_absolute()
+        and root == root.resolve()
+        and script == root / "train.py"
+        and not root.is_symlink(),
+        "DEMO_SOURCE_PATH_CHANGED",
+    )
+    with open_regular(root, "train.py", 1024 * 1024) as handle:
+        content = handle.read()
+    return {"sha256": hashlib.sha256(content).hexdigest(), "bytes": len(content)}
+
+
+class DemoAllocation:
+    """Server-owned aggregate allowance, durable across service restarts."""
+
+    def __init__(self, receipt_path, *, project_root, scope_limit_usd="0.30"):
+        self.root = Path(project_root).resolve()
+        self.receipt_path = Path(receipt_path)
+        self.cap = money(scope_limit_usd)
+        require(0 < self.cap <= CAP, "DEMO_SCOPE_LIMIT_INVALID")
+        self.receipt = self._receipt()
+        with registry(self.root) as conn:
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS f2_demo_scope("
+                "allocation_id TEXT PRIMARY KEY, receipt_sha TEXT NOT NULL, cap TEXT NOT NULL)"
+            )
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS f2_demo_runs("
+                "run_id TEXT PRIMARY KEY, allocation_id TEXT NOT NULL, payload TEXT NOT NULL,"
+                "state TEXT NOT NULL, settlement TEXT)"
+            )
+            conn.execute(
+                "INSERT OR IGNORE INTO f2_demo_scope VALUES(?,?,?)",
+                (self.receipt["allocation_id"], self.receipt["receipt_sha256"], str(self.cap)),
+            )
+            row = conn.execute(
+                "SELECT receipt_sha,cap FROM f2_demo_scope WHERE allocation_id=?",
+                (self.receipt["allocation_id"],),
+            ).fetchone()
+            require(
+                tuple(row) == (self.receipt["receipt_sha256"], str(self.cap)),
+                "DEMO_SCOPE_CHANGED",
+            )
+
+    def _receipt(self):
+        receipt = verify_receipt(self.receipt_path, project_root=self.root)
+        cap = receipt["task_run_caps_usd"].get("F2_demo")
+        require(
+            "F2_demo" in receipt["task_scopes"] and cap is not None and self.cap <= money(cap),
+            "DEMO_SCOPE_NOT_AUTHORIZED",
+        )
+        if hasattr(self, "receipt"):
+            require(receipt == self.receipt, "DEMO_RECEIPT_CHANGED")
+        return receipt
+
+    def _remaining(self, conn, receipt, state, *, allowed_run=None):
+        rows = list(
+            conn.execute(
+                "SELECT run_id,state FROM f2_demo_runs WHERE allocation_id=?",
+                (receipt["allocation_id"],),
+            )
+        )
+        require(
+            all(r["state"] == "settled" or r["run_id"] == allowed_run for r in rows),
+            "DEMO_PREVIOUS_RUN_UNSETTLED",
+        )
+        for table in ("feature_children", "f3_children"):
+            require(
+                conn.execute(f"SELECT 1 FROM {table} WHERE state!='settled' LIMIT 1").fetchone()
+                is None,
+                "DEMO_OTHER_RUN_UNSETTLED",
+            )
+        ids = {r["run_id"] for r in rows}
+        own = [a for a in state["attempts"] if a["run_id"] in ids]
+        require(
+            all(a["settled"] and a["actual_usd"] is not None for a in own),
+            "DEMO_COST_UNKNOWN",
+        )
+        spent = sum((money(a["actual_usd"]) for a in own), Decimal(0))
+        require(spent <= self.cap, "DEMO_SCOPE_EXCEEDED")
+        return min(
+            self.cap - spent,
+            money(receipt["amounts"]["approved_net_usd"]) - state["charged"],
+        )
+
+    @property
+    def available(self):
+        try:
+            receipt = self._receipt()
+            state = _budget_state(receipt)
+            _quiet_pool(state)
+            with registry(self.root) as conn:
+                return self._remaining(conn, receipt, state) > 0
+        except (OSError, ValueError, sqlite3.Error, ArithmeticError):
+            return False
+
+    def begin(self, run_id, request, *, source_sha256):
+        """Bind the prepared source, then claim only the remaining aggregate allowance."""
+        require(re.fullmatch(r"[a-f0-9]{32}", run_id) is not None, "DEMO_RUN_INVALID")
+        receipt = self._receipt()
+        require(
+            request.runtime_profile == receipt["profile_path"]
+            and money(request.daily_budget_usd) == money(receipt["amounts"]["daily_limit_usd"])
+            and 0 < money(request.budget_usd) <= CAP,
+            "DEMO_REQUEST_CONFIGURATION_CHANGED",
+        )
+        source = _source_record(request)
+        require(source["sha256"] == source_sha256, "DEMO_UPLOAD_CHANGED")
+        with registry(self.root) as conn:
+            state = _budget_state(receipt)
+            _quiet_pool(state)
+            remaining = self._remaining(conn, receipt, state)
+            limit = min(remaining, money(request.budget_usd))
+            require(limit > 0, "DEMO_SCOPE_EXHAUSTED")
+            request = request.model_copy(update={"budget_usd": str(limit)})
+            binding = {
+                "schema": "headroom.final48.demo-run.v1",
+                "project_root": str(self.root),
+                "receipt_path": str(self.receipt_path),
+                "receipt_sha256": receipt["receipt_sha256"],
+                "run_id": run_id,
+                "scope_limit_usd": str(self.cap),
+                "run_limit_usd": str(limit),
+                "daily_limit_usd": receipt["amounts"]["daily_limit_usd"],
+                "total_limit_usd": receipt["amounts"]["approved_net_usd"],
+                "request_sha256": request_sha256(request),
+                "source": source,
+            }
+            try:
+                conn.execute(
+                    "INSERT INTO claims VALUES('F2_demo',?,?,?,NULL,'claimed')",
+                    (run_id, run_id, binding["request_sha256"]),
+                )
+                conn.execute(
+                    "INSERT INTO f2_demo_runs VALUES(?,?,?,'claimed',NULL)",
+                    (run_id, receipt["allocation_id"], json.dumps(binding, sort_keys=True)),
+                )
+            except sqlite3.IntegrityError:
+                raise AllocationRefused("DEMO_RUN_ALREADY_CLAIMED") from None
+        return request, binding
+
+    def finish(self, binding, *, execution_terminal, cleanup_verified):
+        receipt = self._receipt()
+        with registry(self.root) as conn:
+            row = conn.execute(
+                "SELECT payload,state FROM f2_demo_runs WHERE run_id=?", (binding["run_id"],)
+            ).fetchone()
+            require(
+                row and json.loads(row["payload"]) == binding and row["state"] == "claimed",
+                "DEMO_CLAIM_CHANGED",
+            )
+            state = _budget_state(receipt)
+            run = state["runs"].get(binding["run_id"])
+            own = [a for a in state["attempts"] if a["run_id"] == binding["run_id"]]
+            known = all(a["settled"] and a["actual_usd"] is not None for a in own)
+            actual = sum((money(a["actual_usd"]) for a in own), Decimal(0)) if known else None
+            settled = (
+                execution_terminal is True
+                and cleanup_verified is True
+                and known
+                and state["known"]
+                and all(
+                    r["status"] == "closed" and not r["halt_reason"] for r in state["runs"].values()
+                )
+                and (run is not None or not own)
+                and actual is not None
+                and actual <= money(binding["run_limit_usd"])
+                and state["charged"] <= money(binding["total_limit_usd"])
+            )
+            result = {
+                "status": "settled" if settled else "blocked",
+                "actual_usd": str(actual) if actual is not None else None,
+            }
+            conn.execute(
+                "UPDATE f2_demo_runs SET state=?,settlement=? WHERE run_id=?",
+                (result["status"], json.dumps(result), binding["run_id"]),
+            )
+            conn.execute(
+                "UPDATE claims SET state=? WHERE run_id=?", (result["status"], binding["run_id"])
+            )
+        if not settled:
+            # Other task scopes also see the ordinary ledger stop, including a
+            # worker killed before opening its budget. Never infer zero charge.
+            ledger = _ledger(receipt, binding)
+            if run is None:
+                ledger.open_run(binding["run_id"], binding["run_limit_usd"])
+            ledger.halt(binding["run_id"], "local_accounting_incomplete")
+        return result
+
+
+def _ledger(receipt, binding, cls=BudgetLedger):
+    return cls(
+        Path(receipt["ledger_path"]),
+        require_existing=True,
+        expected_identity=tuple(receipt["ledger_identity"]),
+        daily_limit=binding["daily_limit_usd"],
+        total_limit=binding["total_limit_usd"],
+    )
+
+
+def verify_demo_binding(binding, request, run_id):
+    require(binding.get("schema") == "headroom.final48.demo-run.v1", "DEMO_BINDING_INVALID")
+    require(binding["run_id"] == run_id, "DEMO_RUN_CHANGED")
+    receipt = verify_receipt(binding["receipt_path"], project_root=binding["project_root"])
+    require(receipt["receipt_sha256"] == binding["receipt_sha256"], "DEMO_RECEIPT_CHANGED")
+    require(
+        request_sha256(request) == binding["request_sha256"]
+        and _source_record(request) == binding["source"],
+        "DEMO_INPUT_CHANGED",
+    )
+    with registry(binding["project_root"]) as conn:
+        row = conn.execute(
+            "SELECT payload,state FROM f2_demo_runs WHERE run_id=?", (run_id,)
+        ).fetchone()
+        claim = conn.execute("SELECT state FROM claims WHERE run_id=?", (run_id,)).fetchone()
+        require(
+            row
+            and json.loads(row["payload"]) == binding
+            and row["state"] == "claimed"
+            and claim
+            and claim["state"] == "claimed",
+            "DEMO_CLAIM_NOT_ACTIVE",
+        )
+        scope = conn.execute(
+            "SELECT cap,receipt_sha FROM f2_demo_scope WHERE allocation_id=?",
+            (receipt["allocation_id"],),
+        ).fetchone()
+        require(
+            scope and tuple(scope) == (binding["scope_limit_usd"], binding["receipt_sha256"]),
+            "DEMO_SCOPE_CHANGED",
+        )
+    state = _budget_state(receipt)
+    _quiet_pool(state, allowed_run=run_id)
+    return receipt
+
+
+def demo_budget_factory(binding, original_request):
+    class BoundLedger(BudgetLedger):
+        def reserve(self, *args, **kwargs):
+            verify_demo_binding(binding, original_request, binding["run_id"])
+            return super().reserve(*args, **kwargs)
+
+    def factory(run_id, request, profile):
+        receipt = verify_demo_binding(binding, request, run_id)
+        require(
+            profile.run_budget_mode == "strict_reservation"
+            and money(profile.authorized_total_usd) == money(binding["total_limit_usd"]),
+            "DEMO_PROFILE_LIMIT_CHANGED",
+        )
+        return _ledger(receipt, binding, BoundLedger)
+
+    return factory
+
+
+def run_bound_demo(request, *, store, run_root, run_id, binding, worker=None):
+    """Normal live branch; an optional worker is only an injected offline test seam."""
+    verify_demo_binding(binding, request, run_id)
+    services = Services(budget_factory=demo_budget_factory(binding, request))
+    return (worker or run_fix)(
+        request, store=store, run_root=run_root, run_id=run_id, services=services
+    )

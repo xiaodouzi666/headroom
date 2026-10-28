@@ -19,16 +19,24 @@ def launcher(tmp_path, monkeypatch):
         "HEADROOM_TRUST_CLOUDFLARED",
         "HEADROOM_RUN_SUBMISSIONS_ENABLED",
         "HEADROOM_RUNTIME_PROFILE",
+        "HEADROOM_VERIFIED_RUNS_ENABLED",
+        "HEADROOM_SNAPSHOT_SUBMISSIONS_ENABLED",
+        "HEADROOM_JUDGE_TOKEN",
         "HEADROOM_RUN_SUBMISSION_DISABLED_REASON",
     ):
         monkeypatch.delenv(name, raising=False)
     return module, project
 
 
-def test_public_launcher_copies_only_curated_files_and_uses_isolated_state(launcher, monkeypatch):
+@pytest.mark.parametrize("configured_gallery", [None, "false", "true"])
+def test_public_launcher_copies_only_curated_files_and_uses_isolated_state(
+    launcher, monkeypatch, configured_gallery
+):
     module, project = launcher
     monkeypatch.setenv("HEADROOM_PUBLIC_HOST", "headroom.example")
-    monkeypatch.setenv("HEADROOM_VERIFIED_RUNS_ENABLED", "true")
+    if configured_gallery is not None:
+        monkeypatch.setenv("HEADROOM_VERIFIED_RUNS_ENABLED", configured_gallery)
+    monkeypatch.setenv("HEADROOM_SNAPSHOT_SUBMISSIONS_ENABLED", "true")
     expected = {
         "public-evaluations.json": '{"version":1,"campaigns":[]}',
         "published-evaluations/r6-20261027.json": '{"fixture":"r6"}',
@@ -60,7 +68,9 @@ def test_public_launcher_copies_only_curated_files_and_uses_isolated_state(launc
     assert settings.db_path == project / "runs/public-api/headroom.db"
     assert settings.run_root == project / "runs/public-api/jobs"
     assert settings.run_submissions_enabled is False
-    assert settings.verified_runs_enabled is False
+    assert settings.verified_runs_enabled is (configured_gallery == "true")
+    assert settings.snapshot_submissions_enabled is False
+    assert settings.judge_token is None
     assert settings.public_host == "headroom.example"
     assert settings.trust_cloudflared is False
     assert settings.trust_tailscale_funnel is True
