@@ -29,6 +29,12 @@
 | F7 Devpost 提交 | 定稿与独立字段/测试说明草稿已备；尚未提交 | docs/SUBMISSION_FIELDS.md 区分当前只读步骤和启用后模板；Frank 完成实际提交后核实 Submitted |
 | F8 最终检查 | 未开始 | 最终公网冒烟、余额核验、检查与最终报告；不能用服务启动替代验收 |
 
+## 2026-10-29 文案与价格收尾
+
+- 按 FINAL_48H 的产品文案要求移除 RESULTS 顶部摘要中的内部轮次标签；四张表的测量值、结果、费用与分母不变，完整历史逐字保留。验证见 [摘要检查](reports/final48h-docs-20261029/results-summary-refresh.json)。
+- 已只读核对官方账单页面的 Ultra/Super/Nano 九项输入、输出与缓存价格，均与现有 profile 相同；F1 费用预估不因价格变化重算。地域标签不当作实际处理地点保证，详见 [价格来源](reports/final48h-price-refresh-20261029.md)。
+- 未新增模型/GPU调用、预算池或公共功能开关。A的明确金额与C的图库决定仍未收到；接下来的实测及其视频素材依赖这些决定。
+
 ## 2026-10-29 剩余交付审查与 Tailscale 收尾
 
 - 当前物理 Chrome 首页与完整 Results 九行数据加载成功；系统代理仍开启。服务器普通公网 HTTPS 与本机代理请求均成功；服务、Funnel、健康 timer 与 Linger 正常，无剩余必需 Tailscale 配置。

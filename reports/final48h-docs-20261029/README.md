@@ -1,5 +1,7 @@
 # F4 result-number evidence notes
 
+Current results summary follow-up: [results-summary-refresh.json](results-summary-refresh.json) binds the latest prose cleanup. Dates/source commits replace internal round labels; all four tables retain their original measurement/result cells and source links, with no rounding. The full historical suffix is byte-identical. Earlier document hashes remain historical checks of their original versions.
+
 This is a read-only extraction at source revision `b2a923133f22b2a03a412780c213c76290f1f96c`
 on 2026-10-29. No model, GPU, ledger, allocation, or service call was made.
 The original campaign thresholds and denominators are unchanged.

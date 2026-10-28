@@ -2,50 +2,44 @@
 
 ## Summary
 
-Results below summarize the recorded runs through R6, completed on 2026-10-27.
+These results cover the recorded nine-scenario evaluations completed on 2026-10-25 and 2026-10-27.
 
-The latest measured campaign is **R6: 2/9 memory targets and 3/9 valid correct first causes, with 5 unknown first causes**. R7 has not run. Across the separate protocol-v2 campaigns R0–R6, **5 distinct scenarios have a recorded automatic memory-target success**: s1, s2, s3, s4, and s8. This is historical coverage, not a combined campaign success rate. The best single campaign reached **3/9**.
-
-The narrower R4–R6 window and the current successful gallery cover 4 scenarios; they omit the earlier R2 s1 success. Numerical qualifications below remain attached to each run. Only the selected s3 result has 20 identical compared scalars with all recorded input, effective-batch, objective, and seed pairing checks matched. This is empirical comparison, not a mathematical proof.
-
-All memory values in these summary tables are **decimal GB = bytes / 1,000,000,000**. [Detailed measurements](../reports/final48h-docs-20261029/numbers.json) include exact byte counts, separate GiB conversions and full run IDs. OOM baselines ended early: their peaks are observed allocation maxima, not the unobserved memory required to finish training.
+The latest evaluation met **2/9 memory targets** and produced **3/9 valid correct first-cause diagnoses**, with **5 unknown first causes**. Across the separate evaluations, **5 distinct scenarios have a recorded automatic memory-target success**: s1, s2, s3, s4, and s8. The best single evaluation reached **3/9**.
 
 ### Historical results
 
-Selection: lowest after-peak among recorded target successes in R0–R6, breaking ties with the latest campaign. Unsolved rows show the latest R6 baseline, with no accepted after value. The s2 row is the revised capacity-v2 workload, not the earlier fp32-AdamW baseline.
+Each successful row selects the lowest recorded peak after repair, using the latest evaluation to break ties. Unsolved rows use the latest baseline. The s2 row uses the larger AdamW workload. Memory values are **decimal GB = bytes / 1,000,000,000**.
 
-| Scenario | Expected cause | Selected diagnosis / memory target | Observed peak before → after (GB) | Numerical evidence | Campaign / commit |
+| Scenario | Expected cause | Selected diagnosis / memory target | Observed peak before → after (GB) | Numerical evidence | Date / source commit |
 | --- | --- | --- | --- | --- | --- |
-| s1: oversized batch | Activations | Correct / target met | 24.750 (OOM) → 14.297 (−42.23%) | Identical first 5 scalars vs. baseline-derived checkpoint reference; pairing matched. | [R2 / 3e8281e](../reports/acceptance-v2-r2-20261025/README.md) |
-| s2: AdamW capacity v2 | Optimizer state | Correct / target met | 22.919 → 18.639 (−18.67%) | 20 scalars within tolerance, not identical; input/batch/objective pairing unknown. | [R5 / a42fb7c](../reports/acceptance-v2-r5-20261027/README.md) |
-| s3: evaluation autograd | Activations | Correct / target met | 2.436 → 0.648 (−73.38%) | 20 identical scalars; input/batch/objective/seed pairing matched. | [R6 / 4f4e67d](../reports/acceptance-v2-r6-20261027/README.md) |
-| s4: retained graphs | Retained graph | Correct / target met | 24.769 (OOM) → 2.534 (−89.77%) | Identical first 5 scalars vs. original-workload offload reference; pairing matched. | [R6 / 4f4e67d](../reports/acceptance-v2-r6-20261027/README.md) |
-| s5: variable lengths | Fragmentation candidate; unverified | No R6 diagnosis dispatched / no accepted repair | 5.022 → — | Not established | [R6 / 4f4e67d](../reports/acceptance-v2-r6-20261027/README.md) |
-| s6: full-vocabulary logits | Temporaries | No R6 diagnosis dispatched / no accepted repair | 21.588 (OOM) → — | Not established | [R6 / 4f4e67d](../reports/acceptance-v2-r6-20261027/README.md) |
-| s7: frozen optimizer parameters | Optimizer state | No R6 diagnosis dispatched / no accepted repair | 17.820 → — | Not established | [R6 / 4f4e67d](../reports/acceptance-v2-r6-20261027/README.md) |
-| s8: unused teacher model | Parameters | Correct / target met | 3.100 → 0.122 (−96.07%) | 20 identical recorded scalars; input/batch/objective pairing unknown. | [R4 / cfeb67f](../reports/acceptance-v2-r4-20261027/README.md) |
-| pinned nanoGPT | Unverified | No R6 diagnosis dispatched / no accepted repair | 24.705 (OOM) → — | Not established | [R6 / 4f4e67d](../reports/acceptance-v2-r6-20261027/README.md) |
+| s1: oversized batch | Activations | Correct / target met | 24.750 (OOM) → 14.297 (−42.23%) | Identical first 5 scalars vs. baseline-derived checkpoint reference; pairing matched. | [2026-10-25 / 3e8281e](../reports/acceptance-v2-r2-20261025/README.md) |
+| s2: AdamW capacity | Optimizer state | Correct / target met | 22.919 → 18.639 (−18.67%) | 20 scalars within tolerance, not identical; input/batch/objective pairing unknown. | [2026-10-27 / a42fb7c](../reports/acceptance-v2-r5-20261027/README.md) |
+| s3: evaluation autograd | Activations | Correct / target met | 2.436 → 0.648 (−73.38%) | 20 identical scalars; input/batch/objective/seed pairing matched. | [2026-10-27 / 4f4e67d](../reports/acceptance-v2-r6-20261027/README.md) |
+| s4: retained graphs | Retained graph | Correct / target met | 24.769 (OOM) → 2.534 (−89.77%) | Identical first 5 scalars vs. original-workload offload reference; pairing matched. | [2026-10-27 / 4f4e67d](../reports/acceptance-v2-r6-20261027/README.md) |
+| s5: variable lengths | Fragmentation candidate; unverified | Stopped before diagnosis / no selected repair | 5.022 → — | Not established | [2026-10-27 / 4f4e67d](../reports/acceptance-v2-r6-20261027/README.md) |
+| s6: full-vocabulary logits | Temporaries | Stopped before diagnosis / no selected repair | 21.588 (OOM) → — | Not established | [2026-10-27 / 4f4e67d](../reports/acceptance-v2-r6-20261027/README.md) |
+| s7: frozen optimizer parameters | Optimizer state | Stopped before diagnosis / no selected repair | 17.820 → — | Not established | [2026-10-27 / 4f4e67d](../reports/acceptance-v2-r6-20261027/README.md) |
+| s8: unused teacher model | Parameters | Correct / target met | 3.100 → 0.122 (−96.07%) | 20 identical recorded scalars; input/batch/objective pairing unknown. | [2026-10-27 / cfeb67f](../reports/acceptance-v2-r4-20261027/README.md) |
+| pinned nanoGPT | Unverified | Stopped before diagnosis / no selected repair | 24.705 (OOM) → — | Not established | [2026-10-27 / 4f4e67d](../reports/acceptance-v2-r6-20261027/README.md) |
 
-Selected successful run IDs and exact measurement boundaries:
+Selected successful runs:
 
 | Scenario | Run ID | Baseline → candidate optimizer updates | Compared loss scalars | Parameter count before = after |
 | --- | --- | ---: | ---: | ---: |
 | s1: oversized batch | adc7e667237f46a5a9f71a619fab5c31 | 0 → 20 | 5 | 101,007,360 |
-| s2: AdamW capacity v2 | 2942b1e3d8e34ead80baef0cdc468753 | 20 → 20 | 20 | 1,141,338,112 |
+| s2: AdamW capacity | 2942b1e3d8e34ead80baef0cdc468753 | 20 → 20 | 20 | 1,141,338,112 |
 | s3: evaluation autograd | 84f929ba8ace49b3829df6455419641d | 20 → 20 | 20 | 37,791,744 |
 | s4: retained graphs | b7f348d0dc8d423f8076b81fd2c15375 | 12 → 20 | 5 | 50,374,656 |
 | s8: unused teacher model | d10adf0ffac74dcf8d874a460a2a3628 | 20 → 20 | 20 | 747,474,432 |
 
-For s1 and s4, the candidate completed 20 optimizer updates but the accepted numerical comparison covered only the first 5 backward-loss scalars. The s1 candidate peak is reconstructed and is not marked exact. Their OOM baselines do not certify completed-run throughput. The s2 maximum recorded loss difference was 4.76837158203125e-7; its fp32 result is tolerance-based. The s8 scalar match does not establish runtime pairing for input, effective batch or objective.
+### Latest evaluation — 2026-10-27
 
-### Latest campaign: R6
-
-Source commit: 4f4e67dca3d031dcf64983fe0e5f467a765c5c80. All nine slots remain in the denominator. s5, s6, s7, s8 and nanoGPT stopped before Ultra/Super dispatch when the existing allowance could not admit the next request; these slots are not evidence of model diagnosis failure or repair success.
+Source commit: 4f4e67dca3d031dcf64983fe0e5f467a765c5c80. All nine scenarios remain in the denominator.
 
 | Scenario | Valid correct first cause | Result | Run ID |
 | --- | --- | --- | --- |
 | s1: oversized batch | Yes | Needs more information; no selected repair | 810e0803757740dfaaa65fd4ecd2adf9 |
-| s2: AdamW capacity v2 | No | Needs more information; no selected repair | 05ab015193c1458392b4082629dd5050 |
+| s2: AdamW capacity | No | Needs more information; no selected repair | 05ab015193c1458392b4082629dd5050 |
 | s3: evaluation autograd | Yes | Memory target met | 84f929ba8ace49b3829df6455419641d |
 | s4: retained graphs | Yes | Memory target met | b7f348d0dc8d423f8076b81fd2c15375 |
 | s5: variable lengths | Unknown | Stopped before diagnosis/patch | 450d5f43de35422a8c5323c6b0b0b61b |
@@ -54,40 +48,41 @@ Source commit: 4f4e67dca3d031dcf64983fe0e5f467a765c5c80. All nine slots remain i
 | s8: unused teacher model | Unknown | Stopped before diagnosis/patch | a7e2bff86ce849eea3c0798d2097c642 |
 | pinned nanoGPT | Unknown | Stopped before diagnosis/patch | 9445bf3c9fa040738f23a78ee582b724 |
 
-R6 s1 did execute a lower-memory candidate, but the required numerical reference was unavailable and the candidate was reverted. R6 s2's first cause was temporaries, not its authored optimizer-state cause; it ended without a selected repair. The latest four campaigns recorded **R3 4/9, R4 6/9, R5 6/9 and R6 3/9** valid correct first causes.
-
 ### Cost and time
 
-Reported API usage includes calls with complete usage and pricing information. Some calls have incomplete usage, so the full cost of each campaign is unknown. Time adds the recorded per-run end-to-end wall time, including model and orchestration work; it is not GPU compute time.
+The following table lists the API usage supported by complete records and the sum of recorded end-to-end run times.
 
-| Campaign | Memory targets met | Valid correct first causes | Reported API usage (USD) | Sum of run wall time (s) |
+| Date / source commit | Memory targets met | Valid correct first causes | API usage with complete records (USD) | Sum of run wall time (s) |
 | --- | ---: | ---: | ---: | ---: |
-| [R0](../reports/acceptance-v2-20261025/README.md) | 1/9 | 6/9 | 0.62027986 | 435.79 |
-| [R1](../reports/acceptance-v2-r1-20261025/README.md) | 3/9 | 5/9 | 0.79450272 | 902.17 |
-| [R2](../reports/acceptance-v2-r2-20261025/README.md) | 3/9 | 4/9 | 1.26789928 | 1592.62 |
-| [R3](../reports/acceptance-v2-r3-20261025/README.md) | 3/9 | 4/9 | 1.20596190 | 1185.04 |
-| [R4](../reports/acceptance-v2-r4-20261027/README.md) | 3/9 | 6/9 | 1.30208280 | 1089.22 |
-| [R5](../reports/acceptance-v2-r5-20261027/README.md) | 3/9 | 6/9 | 2.02308846 | 1721.65 |
-| [R6](../reports/acceptance-v2-r6-20261027/README.md) | 2/9 | 3/9 | 0.47373284 | 863.73 |
+| [2026-10-25 / ce38d3c](../reports/acceptance-v2-20261025/README.md) | 1/9 | 6/9 | 0.62027986 | 435.79 |
+| [2026-10-25 / aa42ef5](../reports/acceptance-v2-r1-20261025/README.md) | 3/9 | 5/9 | 0.79450272 | 902.17 |
+| [2026-10-25 / 3e8281e](../reports/acceptance-v2-r2-20261025/README.md) | 3/9 | 4/9 | 1.26789928 | 1592.62 |
+| [2026-10-25 / 344cbae](../reports/acceptance-v2-r3-20261025/README.md) | 3/9 | 4/9 | 1.20596190 | 1185.04 |
+| [2026-10-27 / cfeb67f](../reports/acceptance-v2-r4-20261027/README.md) | 3/9 | 6/9 | 1.30208280 | 1089.22 |
+| [2026-10-27 / a42fb7c](../reports/acceptance-v2-r5-20261027/README.md) | 3/9 | 6/9 | 2.02308846 | 1721.65 |
+| [2026-10-27 / 4f4e67d](../reports/acceptance-v2-r6-20261027/README.md) | 2/9 | 3/9 | 0.47373284 | 863.73 |
 
-Reported API usage across R0–R6 totals **$7.68754786** for calls with complete information. The full cost remains unknown. This subtotal excludes earlier MVP campaigns, capability probes and other project work.
+The recorded API usage in this table totals **$7.68754786**.
 
-R6 individual runs took 21.497278 to 261.325889 seconds in recorded wall time. This range includes early stops as well as completed repairs.
+### Limitations
 
-### Unsolved and not yet measured
+Historical coverage combines successful examples from different evaluations; it is not a single-run success rate. The four successful gallery examples come from the evaluations on 2026-10-27 and exclude the earlier s1 success. A new evaluation has not yet run.
 
-- s5: the fragmentation cause remains unverified; a large reserved-minus-allocated gap alone does not prove harmful fragmentation. R6 did not reach diagnosis.
-- s6: no historical accepted repair in the reviewed protocol-v2 campaigns; R6 did not reach diagnosis.
-- s7: prior candidates did not establish an accepted numerical/source-qualified repair; R6 did not reach diagnosis.
-- nanoGPT: no historical accepted repair; the R5 configuration candidate still OOMed, and R6 did not reach diagnosis.
+Only the selected s3 result has 20 identical compared loss scalars with every recorded input, effective-batch, objective and seed check matched. These are empirical comparisons. The s2 result is fp32 and tolerance-based, with a maximum recorded loss difference of 4.76837158203125e-7; its input, effective-batch and objective pairing is unknown. The same pairing information is incomplete for s8 despite its identical recorded scalars.
 
-The matched three-condition nine-case ablation, HF Trainer automatic repair, and the prospective s2 strict-versus-bf16 two-tier comparison have not run. Existing HF baseline captures do not count as a repair. The measured s2 fp32 tolerance result above is one configuration, not a Pareto pair. No synthetic result rows stand in for these missing experiments.
+The s1 and s4 repairs each completed 20 optimizer updates, but their numerical comparisons cover only the first 5 backward-loss scalars. Their reference methods are identified in the table. The s1 repaired peak is reconstructed and is not marked exact. OOM baseline peaks are the largest observed allocations before failure; the memory needed to finish and completed-run throughput remain unknown.
 
-The proposed s2 comparison currently has only its historical R5 point: 18.639258624 GB peak and 1113.342833938077 ms median step interval, with the numerical limitations above. No second tier or dominance relationship is established.
+In the latest evaluation, s5, s6, s7, s8 and nanoGPT stopped before an Ultra or Super request because the remaining spending allowance could not cover the next call. Their unknown diagnoses remain in the nine-scenario denominator. The s1 lower-memory candidate was reverted because the required numerical reference was unavailable. The s2 diagnosis identified temporary allocations instead of the authored optimizer-state cause and ended without a selected repair.
+
+The variable-length workload's fragmentation cause remains unverified: a large gap between reserved and allocated memory is insufficient evidence. The full-vocabulary-logit and frozen-parameter workloads still lack a verified repair. nanoGPT also remains unsolved; its earlier configuration change still ran out of memory.
+
+Some model calls have incomplete usage information, so each evaluation's full API cost remains unknown. The subtotal above also excludes earlier prototype evaluations, capability probes and other project work. Recorded wall time includes model calls and orchestration and is not GPU compute time.
+
+The matched three-condition diagnosis comparison, HF Trainer automatic repair and s2 strict-versus-bf16 comparison have not run. Existing HF baseline captures do not demonstrate a repair. The measured s2 fp32 result supplies only one configuration; a memory-versus-speed comparison between the two precision settings remains pending.
 
 ### Run details
 
-The [measurement notes](../reports/final48h-docs-20261029/README.md) explain how results were selected and calculated. [Detailed measurements and sources](../reports/final48h-docs-20261029/numbers.json) include the underlying records. The earlier dated sections below are retained verbatim and describe the project at their original dates.
+The [measurement notes](../reports/final48h-docs-20261029/README.md) explain selection and calculation. [Detailed measurements and sources](../reports/final48h-docs-20261029/numbers.json) include exact bytes, GiB conversions and run IDs. The earlier dated sections below are retained verbatim.
 
 ## Full campaign history
 
