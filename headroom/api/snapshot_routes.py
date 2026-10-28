@@ -427,8 +427,8 @@ def _markdown(result):
     return ("\n".join(lines) + "\n").encode()
 
 
-def register_snapshot_routes(app, settings, *, worker=None):
-    manager = SnapshotQueue(settings, worker=worker)
+def register_snapshot_routes(app, settings, *, worker=None, allocation_parent=None):
+    manager = SnapshotQueue(settings, worker=worker, allocation_parent=allocation_parent)
 
     def owner(request):
         value = getattr(request.state, "owner", None)

@@ -11,6 +11,7 @@ import json
 import os
 import shlex
 import stat
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -93,12 +94,15 @@ class Invocation(BaseModel):
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     repository: RepositoryInvocation | None = None
     allocation_child_binding: dict | None = None
+    feature_intent: dict | None = None
 
     @model_serializer(mode="wrap")
     def omit_unbound_allocation(self, handler):
         value = handler(self)
         if self.allocation_child_binding is None:
             value.pop("allocation_child_binding", None)
+        if self.feature_intent is None:
+            value.pop("feature_intent", None)
         return value
 
 
@@ -156,17 +160,144 @@ def cli_arguments(request, repository=None):
     return args
 
 
-def verify_invocation_allocation(binding, queued_request, run_id, *, require_selected=False):
+def _checkout_snapshot(root):
+    """Pin a clean checkout's own import sources without executing its Python."""
+    root = Path(root)
+    if not root.is_absolute() or root.resolve(strict=True) != root or not root.is_dir():
+        raise ValueError("F5 needs a canonical existing checkout")
+    environment = dict(os.environ)
+    environment.update(
+        GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL="/dev/null", GIT_CONFIG_SYSTEM="/dev/null"
+    )
+
+    def git(*args):
+        return subprocess.run(
+            ["git", "-C", str(root), *args],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=10,
+            env=environment,
+        ).stdout
+
+    commit = git("rev-parse", "HEAD").strip()
+    if len(commit) != 40 or git("status", "--porcelain", "--untracked-files=no").strip():
+        raise ValueError("F5 needs an unchanged committed checkout")
+    tracked = {p for p in git("ls-files", "-z", "--", "headroom").split("\0") if p.endswith(".py")}
+    actual = {str(p.relative_to(root)) for p in (root / "headroom").rglob("*.py")}
+    if not tracked or actual != tracked:
+        raise ValueError("F5 Python sources differ from the tracked checkout")
+    # Lab copies the complete fixed workload directory. Pin that same file
+    # domain too, including names ignored by Git, so a stray torch.py/json.py
+    # cannot change the supposedly clean workload while code pins stay equal.
+    from headroom.lab.runner import _excluded
+
+    workload = root / "scenarios/s3_eval_no_grad_missing"
+    workload_tracked = {
+        name
+        for name in git("ls-files", "-z", "--", str(workload.relative_to(root))).split("\0")
+        if name and not any(_excluded(part) for part in Path(name).parts)
+    }
+    workload_actual = set()
+    for directory, dirs, names in os.walk(workload, followlinks=False):
+        current = Path(directory)
+        for name in [*dirs, *names]:
+            if not _excluded(name) and (current / name).is_symlink():
+                raise ValueError("F5 workload cannot contain linked source")
+        dirs[:] = [name for name in dirs if not _excluded(name)]
+        for name in names:
+            path = current / name
+            if _excluded(name):
+                continue
+            if not stat.S_ISREG(path.lstat().st_mode):
+                raise ValueError("F5 workload needs regular source files")
+            workload_actual.add(str(path.relative_to(root)))
+    if not workload_tracked or workload_actual != workload_tracked:
+        raise ValueError("F5 workload differs from its tracked Lab copy file set")
+    pins = {}
+    for name in sorted(tracked | workload_tracked | {"pyproject.toml", "uv.lock"}):
+        path = root / name
+        if path.is_symlink() or not path.resolve(strict=True).is_relative_to(root):
+            raise ValueError("F5 source pin escapes its checkout")
+        pins[name] = digest(path)
+    return {"path": str(root), "commit": commit, "source_files": pins}
+
+
+def prepare_feature_fix_intent(request, *, checkout):
+    """Prepare F5 intent without claiming funds or importing that checkout."""
+    from headroom.orchestrator import FixRequest
+
+    request = FixRequest.model_validate(request)
+    root = Path(checkout).resolve(strict=True)
+    if Path(request.script).resolve(
+        strict=True
+    ) != root / "scenarios/s3_eval_no_grad_missing/train.py" or Path(
+        request.source_root or Path(request.script).parent
+    ).resolve(strict=True) != (root / "scenarios/s3_eval_no_grad_missing"):
+        raise ValueError("F5 requires the fixed clean s3 workload")
+    return {
+        "kind": "fix",
+        "runtime_profile": request.runtime_profile,
+        "budget_usd": request.budget_usd,
+        "daily_budget_usd": request.daily_budget_usd,
+        "payload": {
+            "queued_request": request.model_dump(mode="json"),
+            "checkout": _checkout_snapshot(root),
+        },
+    }
+
+
+def feature_checkout(intent):
+    """Validate code identity before F5 prepares input or dispatches."""
+    if not isinstance(intent, dict) or intent.get("kind") != "fix":
+        raise ValueError("CLI feature route supports only the fixed F5 repair")
+    declared = intent.get("payload", {}).get("checkout")
+    if not isinstance(declared, dict) or _checkout_snapshot(declared.get("path")) != declared:
+        raise ValueError("F5 clean checkout identity changed")
+    return Path(declared["path"])
+
+
+def verify_invocation_allocation(
+    binding, queued_request, run_id, *, require_selected=False, feature_intent=None
+):
     """Validate frozen intent without changing global state or opening a budget run."""
     if binding is None:
+        if feature_intent is not None:
+            raise ValueError("A feature intent needs its allocation binding")
         return None
     from headroom.acceptance.allocation import verify_child_binding
     from headroom.ledger_path import BUDGET_DB_ENV
     from headroom.orchestrator import FixRequest
 
-    verified = verify_child_binding(
-        binding, request=FixRequest.model_validate(queued_request), run_id=run_id
-    )
+    request = FixRequest.model_validate(queued_request)
+    if feature_intent is not None:
+        from headroom.acceptance.feature_allocation import verify_feature_child_binding
+
+        if feature_intent.get("kind") != "fix":
+            raise ValueError("CLI feature route supports only F5 fix")
+        expected = FixRequest.model_validate(feature_intent["payload"]["queued_request"])
+        if request.model_dump(mode="json") != expected.model_dump(mode="json"):
+            raise ValueError("F5 queued request changed")
+        from headroom.budget import money
+
+        root = feature_checkout(feature_intent)
+        if (
+            request.runtime_profile != feature_intent["runtime_profile"]
+            or money(request.budget_usd) != money(feature_intent["budget_usd"])
+            or money(request.daily_budget_usd) != money(feature_intent["daily_budget_usd"])
+            or Path(request.script).resolve(strict=True)
+            != root / "scenarios/s3_eval_no_grad_missing/train.py"
+            or Path(request.source_root or Path(request.script).parent).resolve(strict=True)
+            != root / "scenarios/s3_eval_no_grad_missing"
+        ):
+            raise ValueError("F5 queued workload or budget differs from its feature intent")
+        verified = verify_feature_child_binding(binding, intent=feature_intent, run_id=run_id)
+        if binding.get("scope") != "F5" or binding.get("slot_id") != "clean-s3":
+            raise ValueError("CLI feature route requires F5 clean-s3")
+        if feature_intent["payload"]["checkout"]["path"] == binding["project_root"]:
+            raise ValueError("F5 must use a separate clean checkout")
+    else:
+        verified = verify_child_binding(binding, request=request, run_id=run_id)
     selected = os.environ.get(BUDGET_DB_ENV)
     if (selected is not None or require_selected) and selected != str(verified.database.path):
         raise ValueError("CLI allocation database selection differs from its receipt")
@@ -186,6 +317,7 @@ def allocation_budget_factory(spec):
                 spec.queued_request,
                 spec.run_id,
                 require_selected=True,
+                feature_intent=getattr(spec, "feature_intent", None),
             )
             return super().reserve(*args, **kwargs)
 
@@ -193,7 +325,11 @@ def allocation_budget_factory(spec):
         if run_id != spec.run_id:
             raise ValueError("CLI allocation run identity changed")
         verified = verify_invocation_allocation(
-            spec.allocation_child_binding, spec.queued_request, run_id, require_selected=True
+            spec.allocation_child_binding,
+            spec.queued_request,
+            run_id,
+            require_selected=True,
+            feature_intent=getattr(spec, "feature_intent", None),
         )
         if (
             money(request.budget_usd) != money(verified.run_limit_usd)
@@ -217,7 +353,10 @@ def launch(invocation):
     """Replace this owned worker with the installed console script, never a second run."""
     invocation = Invocation.model_validate(invocation)
     verified = verify_invocation_allocation(
-        invocation.allocation_child_binding, invocation.queued_request, invocation.run_id
+        invocation.allocation_child_binding,
+        invocation.queued_request,
+        invocation.run_id,
+        feature_intent=invocation.feature_intent,
     )
     directory = Path(invocation.run_root).parent
     path = directory / ("cli-context-" + invocation.run_id + ".json")
@@ -228,8 +367,21 @@ def launch(invocation):
 
         environment[BUDGET_DB_ENV] = str(verified.database.path)
     environment[ENVIRONMENT_KEY] = str(path)
-    # The installed stub may live in a shared venv; bind its imports to this checkout.
-    environment["PYTHONPATH"] = str(PACKAGE_ROOT) + os.pathsep + environment.get("PYTHONPATH", "")
+    if invocation.feature_intent is not None:
+        checkout = feature_checkout(invocation.feature_intent)
+        if Path(invocation.package_root) != checkout or Path(invocation.console_path) != (
+            checkout / ".venv/bin/headroom"
+        ):
+            raise ValueError("F5 CLI must be installed in its own checkout")
+        environment.pop("PYTHONPATH", None)
+        environment.pop("PYTHONHOME", None)
+        environment["PYTHONNOUSERSITE"] = "1"
+        os.chdir(checkout)
+    else:
+        # Ordinary evaluation retains its existing shared-venv import behavior.
+        environment["PYTHONPATH"] = (
+            str(PACKAGE_ROOT) + os.pathsep + environment.get("PYTHONPATH", "")
+        )
     output = []
     try:
         for fd, suffix in ((1, "stdout"), (2, "stderr")):
@@ -266,7 +418,13 @@ class CLIExecution:
             invocation.queued_request,
             invocation.run_id,
             require_selected=True,
+            feature_intent=invocation.feature_intent,
         )
+        if (
+            invocation.feature_intent is not None
+            and feature_checkout(invocation.feature_intent) != PACKAGE_ROOT
+        ):
+            raise ValueError("F5 imported a package outside its clean checkout")
         self.spec = invocation
         self.expected = FixRequest.model_validate(invocation.request)
         self.directory = Path(invocation.run_root).parent
@@ -285,6 +443,7 @@ class CLIExecution:
                 or _json(state.get("request")) != _json(invocation.queued_request)
                 or state.get("study_protocol") != invocation.study_protocol
                 or state.get("allocation_child_binding") != invocation.allocation_child_binding
+                or state.get("feature_intent") != invocation.feature_intent
             ):
                 raise ValueError("CLI invocation does not match its queued evaluation intent")
             _write(
@@ -401,7 +560,13 @@ class CLIExecution:
             self.spec.queued_request,
             self.spec.run_id,
             require_selected=True,
+            feature_intent=self.spec.feature_intent,
         )
+        if (
+            self.spec.feature_intent is not None
+            and feature_checkout(self.spec.feature_intent) != PACKAGE_ROOT
+        ):
+            raise ValueError("F5 imported a package outside its clean checkout")
         if self.dispatched:
             raise ValueError("A CLI evaluation invocation may dispatch only once")
         if _json(request.model_dump()) != _json(self.expected.model_dump()):

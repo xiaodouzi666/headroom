@@ -85,6 +85,7 @@ def _evaluation_entry(
     deadline,
     preparation,
     allocation_child_binding=None,
+    feature_intent=None,
 ):
     # This process becomes the installed CLI, preserving its PID and outer deadline.
     from headroom.cli_execution import (
@@ -93,6 +94,7 @@ def _evaluation_entry(
         cli_arguments,
         console_script,
         digest,
+        feature_checkout,
         launch,
         verify_invocation_allocation,
     )
@@ -104,7 +106,14 @@ def _evaluation_entry(
     try:
         if time.monotonic() >= deadline:
             return
-        verify_invocation_allocation(allocation_child_binding, queued_request, run_id)
+        verify_invocation_allocation(
+            allocation_child_binding, queued_request, run_id, feature_intent=feature_intent
+        )
+        execution_root = (
+            feature_checkout(feature_intent) if feature_intent is not None else PACKAGE_ROOT
+        )
+        if feature_intent is not None and preparation is not None:
+            raise ValueError("F5 uses its fixed clean workload without preparation rewriting")
         repository = None
         source_hash = None
         if preparation is not None:
@@ -136,7 +145,11 @@ def _evaluation_entry(
         if request.get("source_root") is None:
             request = {**request, "source_root": str(Path(request["script"]).parent)}
         parsed = FixRequest.model_validate(request)
-        console_path, console_hash = console_script()
+        if feature_intent is None:
+            console_path, console_hash = console_script()
+        else:
+            console_path = str(execution_root / ".venv/bin/headroom")
+            console_hash = digest(console_path, 65536)
         invocation = Invocation(
             run_id=run_id,
             request=parsed.model_dump(),
@@ -149,12 +162,13 @@ def _evaluation_entry(
             condition=condition,
             study_protocol=(preparation or {}).get("study_protocol"),
             argv=cli_arguments(parsed, repository),
-            package_root=str(PACKAGE_ROOT),
+            package_root=str(execution_root),
             console_path=console_path,
             console_sha256=console_hash,
             source_sha256=source_hash or digest(parsed.script),
             repository=repository,
             allocation_child_binding=allocation_child_binding,
+            feature_intent=feature_intent,
         )
         store.close()
         store = None
@@ -219,6 +233,7 @@ def supervise_evaluation_run(
     started,
     preparation=None,
     allocation_child_binding=None,
+    feature_intent=None,
     wall_limit_seconds=RUN_WALL_LIMIT_SECONDS,
     _entrypoint=_evaluation_entry,
     _grace_seconds=WORKER_GRACE_SECONDS,
@@ -234,7 +249,13 @@ def supervise_evaluation_run(
         raise ValueError("Evaluation supervision cannot extend its reviewed deadlines")
     from headroom.cli_execution import verify_invocation_allocation
 
-    verify_invocation_allocation(allocation_child_binding, request, run_id)
+    verify_invocation_allocation(
+        allocation_child_binding, request, run_id, feature_intent=feature_intent
+    )
+    if feature_intent is not None:
+        from headroom.cli_execution import feature_checkout
+
+        feature_checkout(feature_intent)
     deadline = started + wall_limit_seconds
     run_root = Path(run_root)
     directory = job_directory(run_root, run_id)
@@ -256,6 +277,8 @@ def supervise_evaluation_run(
         state["study_protocol"] = study_protocol
     if allocation_child_binding is not None:
         state["allocation_child_binding"] = allocation_child_binding
+    if feature_intent is not None:
+        state["feature_intent"] = feature_intent
     existing = store.get_run(run_id)
     if (
         existing is not None
@@ -263,6 +286,7 @@ def supervise_evaluation_run(
         and (
             existing.get("allocation_child_binding") != allocation_child_binding
             or existing.get("request") != request.model_dump()
+            or existing.get("feature_intent") != feature_intent
         )
     ):
         raise ValueError("Queued F3 allocation intent changed")
@@ -286,7 +310,13 @@ def supervise_evaluation_run(
                     deadline,
                     preparation,
                 )
-                + ((allocation_child_binding,) if allocation_child_binding is not None else ()),
+                + (
+                    (allocation_child_binding, feature_intent)
+                    if feature_intent is not None
+                    else (allocation_child_binding,)
+                    if allocation_child_binding is not None
+                    else ()
+                ),
                 daemon=True,
             )
             process.start()

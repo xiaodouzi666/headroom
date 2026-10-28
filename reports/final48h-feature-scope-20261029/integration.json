@@ -1,0 +1,179 @@
+{
+  "checked_at": "2026-10-28T20:10:09.013378+00:00",
+  "base_commit": "264a9b76c91b0c71609b8fa04b4e669e714c0232",
+  "status": "focused_engineering_verified_live_acceptance_pending",
+  "source_files": [
+    {
+      "path": "headroom/acceptance/allocation.py",
+      "sha256": "0195458d738eaa7adef0a9e673957a0d84fe7e6a7a9ab2ffa8e95b11a6346fd4"
+    },
+    {
+      "path": "headroom/acceptance/feature_allocation.py",
+      "sha256": "20ee834606f9419c460fcb25ca134d9465f598ebc9c8725f5f11788a1737effb"
+    },
+    {
+      "path": "headroom/acceptance/final48_ablation.py",
+      "sha256": "c66ccec9325542a6d104286ea8c20c98f8ac11283068cb541d76c9c336bd81ed"
+    },
+    {
+      "path": "headroom/acceptance/snapshot_binding.py",
+      "sha256": "5481fc17c3baa931c1573e2bc8dad15caac895246b2b1e5a77c6a34a182ae1e2"
+    },
+    {
+      "path": "headroom/acceptance/watch_binding.py",
+      "sha256": "84fdf33e6184e646a651ec347d136b247b12b8ae3802c9c5fbbe69557569b93f"
+    },
+    {
+      "path": "headroom/api/app.py",
+      "sha256": "c3a9fe127fa7dc82c1d056a18a1cd9f5be1d14fc043264f247d266407148d4f1"
+    },
+    {
+      "path": "headroom/api/snapshot_queue.py",
+      "sha256": "44629d5d8f3f0db6ee53d34ee74e8aaf2478b444da2895577cae5fb6963d51e4"
+    },
+    {
+      "path": "headroom/api/snapshot_routes.py",
+      "sha256": "be620e7dd5670be581cd3ebf5794920affd444087f5a90b615e8a65759219e86"
+    },
+    {
+      "path": "headroom/cli.py",
+      "sha256": "9e3e96e02a241ae42e128a1e97f38b5bae22ee2b42632144e24d6a6b29cf5b54"
+    },
+    {
+      "path": "headroom/cli_execution.py",
+      "sha256": "9cfff6c9efd8c4ff38d3e70a3bd868ac7284e2310f36a08ca60e9f4700e2f0a6"
+    },
+    {
+      "path": "headroom/evaluation_worker.py",
+      "sha256": "1825859b18bbc31054007e46932801af4f2c01f45349aae67ffa2d2ffa285ebd"
+    },
+    {
+      "path": "headroom/snapshot_diagnosis.py",
+      "sha256": "cd455f3f491819e45fb0604fc6cda84225428ca617fb002a07086412645a0bd0"
+    },
+    {
+      "path": "headroom/watch.py",
+      "sha256": "877d68d616b56a3371724b7e4f67e07083fbbc5206711ccec10a3797d552599f"
+    },
+    {
+      "path": "tests/test_feature_allocation.py",
+      "sha256": "cdf6039bdeb17f9012a961fdc193d78e75299cc740ca46308ae798f351ec2234"
+    },
+    {
+      "path": "tests/test_feature_bridges.py",
+      "sha256": "b825d49f8e1a5d4ed04c6b11d07ff57fdbb8a41057ed7f5d8102f6c690af8ea0"
+    },
+    {
+      "path": "tests/test_final48_allocation.py",
+      "sha256": "db7366469274b68ea4dd5a61198a9cd570200d12d3a5384e16c22f30e720ccda"
+    },
+    {
+      "path": "tests/test_snapshot_allocation_binding.py",
+      "sha256": "5cf0d395bc0f0a4055b4dba23ca5e5b960e0208580db79fbbcaf1371813c8205"
+    }
+  ],
+  "test_groups": [
+    {
+      "scope": "feature and original F1/F3 allocation",
+      "passed": 51,
+      "seconds": 11.79,
+      "evidence": "delegated command result; no duplicate rerun"
+    },
+    {
+      "scope": "snapshot CLI, real application upload and normal SDK accounting",
+      "passed": 75,
+      "seconds": 10.79,
+      "receipt": "../final48h-snapshot-binding-20261029/receipt.json"
+    },
+    {
+      "scope": "Watch, clean-checkout CLI and evaluation compatibility",
+      "passed": 97,
+      "deselected_real_cpu": 12,
+      "seconds": 53.76,
+      "log": "../final48h-watch-f5-bridge-20261029/focused-tests.log"
+    },
+    {
+      "scope": "original CLI and project configuration",
+      "passed": 105,
+      "seconds": 1.51,
+      "log": "cli-tests.txt"
+    },
+    {
+      "scope": "F1 preparation dependency compatibility",
+      "passed": 18,
+      "seconds": 36.37,
+      "log": "f1-tests.txt"
+    }
+  ],
+  "distinct_focused_tests": 346,
+  "full_regression_run": false,
+  "f1": {
+    "checked_at": "2026-10-28T20:06:44.541976+00:00",
+    "prepared_version": "v8",
+    "preparation_path": "runs/final48-f1/prepared-20261029-v8/preparation.json",
+    "preparation_file_sha256": "0fd07f892f83bd38a4cc59a28934f4a645264d18d99bfb2eb03505a692af74fa",
+    "preparation_sha256": "ae7ae3e60f0deb7bb1ee13a5d1db45c6529ecb561946962912ab8f93355d26c1",
+    "scoring_policy_sha256": "fca45c3be1332b0da3aa23d7bacea438a1cf34942d5853cda1b01da18df0cf7e",
+    "verified": true,
+    "ready_requests": 27,
+    "executed_requests": 0,
+    "input_pin_count": 102,
+    "implementation_pin_count": 29,
+    "all_27_request_bytes_identical_to_v7": true,
+    "inputs_and_scoring_unchanged": true,
+    "changed_implementation_pins": [
+      "headroom/acceptance/final48_ablation.py",
+      "headroom/acceptance/allocation.py",
+      "headroom/acceptance/feature_allocation.py"
+    ],
+    "provider_price_refresh_performed": false
+  },
+  "f3": {
+    "checked_at": "2026-10-28T20:07:59.303723+00:00",
+    "version": "v2",
+    "path": "runs/final48-repair-preparation-20261029-v2/preparation.json",
+    "preparation_sha256": "c4d503c9a475d62d8c5db6539c28fdfe888405a686c88b2c7895ae1bbd321e23",
+    "file_sha256": "32c14a150bbf04bc97d6f2cf849865a35a7b4ea9a67d88460826420f02da2c00",
+    "verified": true,
+    "planned_cells": 12,
+    "executed_cells": 0,
+    "input_pin_count": 30,
+    "implementation_pin_count": 154,
+    "all_other_preparation_fields_unchanged": true,
+    "changed_implementation_files": [
+      "headroom/acceptance/allocation.py",
+      "headroom/acceptance/feature_allocation.py",
+      "headroom/acceptance/final48_ablation.py",
+      "headroom/acceptance/snapshot_binding.py",
+      "headroom/acceptance/watch_binding.py",
+      "headroom/api/app.py",
+      "headroom/api/snapshot_queue.py",
+      "headroom/api/snapshot_routes.py",
+      "headroom/cli.py",
+      "headroom/cli_execution.py",
+      "headroom/evaluation_worker.py",
+      "headroom/snapshot_diagnosis.py",
+      "headroom/watch.py"
+    ]
+  },
+  "review_fixes": [
+    "Bind fixed s3 whole Lab copy file set and reject stray untracked or ignored modules.",
+    "Recheck clean checkout before every model reservation, not only before starting the CLI.",
+    "Bind Watch capture directory to child run id and refuse repeat capture before Lab execution."
+  ],
+  "live_actions": {
+    "actual_allocation_created": false,
+    "actual_registry_created": false,
+    "provider_calls": 0,
+    "gpu_acceptance_runs": 0,
+    "public_flags_changed": false,
+    "judge_token_created": false
+  },
+  "remaining": [
+    "A explicit new running-pool amount and fresh price/balance check before activation.",
+    "C explicit publication of the prepared Verified runs gallery.",
+    "Actual F1/F3/snapshot/Watch/clean-s3/public-example acceptance remains unrun.",
+    "Final video, user upload, Devpost submission and F8 are incomplete."
+  ],
+  "original_plan_files_unchanged": true
+}

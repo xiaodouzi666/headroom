@@ -1,6 +1,7 @@
 """Bounded argv Watch, always using the isolated Docker Lab."""
 
 import json
+import re
 import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, replace
@@ -81,6 +82,7 @@ def watch_command(
     fix_options: Mapping | None = None,
     lab_runner=None,
     fix_runner=None,
+    watch_id: str | None = None,
 ) -> dict:
     """Observe once; invoke run_fix only after captured CUDA OOM and verified cleanup.
 
@@ -106,7 +108,15 @@ def watch_command(
         seed=seed,
         **options,
     )
-    directory = Path(run_root or PROJECT_ROOT / "runs/watch").resolve() / uuid.uuid4().hex
+    if watch_id is not None and (
+        not isinstance(watch_id, str) or re.fullmatch(r"[0-9a-f]{32}", watch_id) is None
+    ):
+        raise ValueError("Private Watch identity must be a canonical run ID")
+    directory = Path(run_root or PROJECT_ROOT / "runs/watch").resolve() / (
+        watch_id or uuid.uuid4().hex
+    )
+    # A bound child consumes its identity before capture, even if the observed
+    # process never reaches OOM. Existing evidence is never reused or removed.
     directory.mkdir(parents=True, mode=0o700)
     lab_root = directory / "lab"
     result = (lab_runner or run_argv)(

@@ -308,6 +308,7 @@ def create_app(
     worker_mode=None,
     availability_monitor=None,
     snapshot_worker=None,
+    snapshot_allocation_parent=None,
 ):
     settings = settings or ApiSettings()
     settings.data_root.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -363,7 +364,9 @@ def create_app(
     register_verified(app, settings)
     from headroom.api.snapshot_routes import register_snapshot_routes
 
-    snapshots = register_snapshot_routes(app, settings, worker=snapshot_worker)
+    snapshots = register_snapshot_routes(
+        app, settings, worker=snapshot_worker, allocation_parent=snapshot_allocation_parent
+    )
     app.state.snapshots = snapshots
 
     @app.middleware("http")

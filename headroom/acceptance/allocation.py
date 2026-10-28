@@ -68,9 +68,12 @@ def prepare_allocation_plan():
         "balance_evidence_sha256": None,
         "task_scopes": list(SCOPES),
         "task_run_caps_usd": {name: None for name in SCOPES},
+        "feature_scope_caps_usd": {"F3b": None, "F5": None},
         "task_pins": {
             "F1": {"preparation_sha256": None, "scoring_policy_sha256": None},
             "F3": {"preparation_sha256": None, "cell_requests_sha256": None},
+            "F3b": {"preparation_sha256": None, "slot_intents_sha256": None},
+            "F5": {"preparation_sha256": None, "slot_intents_sha256": None},
         },
         "gift_only": True,
         "no_topup": True,
@@ -128,6 +131,13 @@ def registry(root, *, create=False):
                 run_id TEXT PRIMARY KEY, parent_id TEXT NOT NULL, cell_id TEXT NOT NULL,
                 payload TEXT NOT NULL, state TEXT NOT NULL, settlement TEXT,
                 UNIQUE(parent_id,cell_id))""")
+            conn.execute("""CREATE TABLE IF NOT EXISTS feature_parents(
+                parent_id TEXT PRIMARY KEY, scope TEXT UNIQUE NOT NULL,
+                payload TEXT NOT NULL, state TEXT NOT NULL)""")
+            conn.execute("""CREATE TABLE IF NOT EXISTS feature_children(
+                run_id TEXT PRIMARY KEY, parent_id TEXT NOT NULL, slot_id TEXT NOT NULL,
+                payload TEXT NOT NULL, state TEXT NOT NULL, settlement TEXT,
+                UNIQUE(parent_id,slot_id))""")
         yield conn
         conn.commit()
     except BaseException:
@@ -235,6 +245,9 @@ def activate_allocation(plan, authorization, profile_document, *, project_root):
             and hash64(f3_pins.get("cell_requests_sha256")),
             "F3_REVIEWED_INPUT_REQUIRED",
         )
+    from headroom.acceptance.feature_allocation import validate_feature_plan
+
+    feature_caps = validate_feature_plan(plan, approved=approved)
     profile = LiveProfile.model_validate(profile_document)
     profile.runtime_config()
     require(
@@ -284,6 +297,7 @@ def activate_allocation(plan, authorization, profile_document, *, project_root):
             "profile_sha256": profile_sha,
             "task_scopes": list(SCOPES),
             "task_run_caps_usd": caps,
+            "feature_scope_caps_usd": feature_caps,
             "task_pins": plan["task_pins"],
             "run_budget_mode": "strict_reservation",
             "gift_only": True,
@@ -417,6 +431,10 @@ def verify_and_claim_allocation(
     scoring_policy_sha256=None,
 ):
     require(task_scope != "F3", "F3_PARENT_CHILD_BINDING_REQUIRED")
+    require(
+        task_scope not in {"F3b_snapshot", "F3b_watch", "F5"},
+        "FEATURE_PARENT_CHILD_BINDING_REQUIRED",
+    )
     receipt = verify_receipt(receipt_path, project_root=project_root)
     require(
         task_scope in SCOPES and task_scope in receipt["task_scopes"], "TASK_SCOPE_NOT_AUTHORIZED"

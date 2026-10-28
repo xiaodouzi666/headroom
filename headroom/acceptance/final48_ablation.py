@@ -119,6 +119,7 @@ def implementation_pins():
         "headroom/acceptance/final48_ablation.py",
         "headroom/acceptance/common.py",
         "headroom/acceptance/allocation.py",
+        "headroom/acceptance/feature_allocation.py",
         "headroom/diagnose.py",
         "headroom/diagnosis_protocol.py",
         "headroom/diagnosis_schema.py",

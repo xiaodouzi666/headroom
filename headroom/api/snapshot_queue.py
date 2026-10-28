@@ -13,7 +13,7 @@ import stat
 import threading
 import time
 from collections.abc import Callable
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from decimal import Decimal
 from pathlib import Path
 from types import SimpleNamespace
@@ -56,7 +56,9 @@ def directory_fd(path, *, create=False):
         raise
 
 
-def _child_entry(worker, request_values, run_root, run_id, channel, parent_pid):
+def _child_entry(
+    worker, request_values, run_root, run_id, channel, parent_pid, allocation_binding=None
+):
     """Run only trusted diagnosis code; uploaded input is never imported or executed."""
     os.setsid()
     os.umask(0o077)
@@ -94,17 +96,25 @@ def _child_entry(worker, request_values, run_root, run_id, channel, parent_pid):
             key: Path(value) if key != "budget_usd" and value is not None else value
             for key, value in request_values.items()
         }
-        if worker is None:
-            from headroom.snapshot_diagnosis import (
-                SnapshotDiagnosisRequest,
-                run_snapshot_diagnosis,
-            )
+        allocation_context = nullcontext()
+        if allocation_binding is not None:
+            from headroom.acceptance.snapshot_binding import snapshot_feature_context
 
-            request = SnapshotDiagnosisRequest(**values)
-            result = run_snapshot_diagnosis(request, run_root=Path(run_root), run_id=run_id)
-        else:
-            # Explicit offline test workers receive the same attribute contract.
-            result = worker(SimpleNamespace(**values), run_root=Path(run_root), run_id=run_id)
+            allocation_context = snapshot_feature_context(
+                allocation_binding, project_root=Path(run_root).parent.parent
+            )
+        with allocation_context:
+            if worker is None:
+                from headroom.snapshot_diagnosis import (
+                    SnapshotDiagnosisRequest,
+                    run_snapshot_diagnosis,
+                )
+
+                request = SnapshotDiagnosisRequest(**values)
+                result = run_snapshot_diagnosis(request, run_root=Path(run_root), run_id=run_id)
+            else:
+                # Explicit offline test workers receive the same attribute contract.
+                result = worker(SimpleNamespace(**values), run_root=Path(run_root), run_id=run_id)
         if isinstance(result, dict) and result.get("status") in TERMINAL:
             status = result["status"]
     except Exception:  # noqa: BLE001 - contain provider failures without exposing private data
@@ -140,11 +150,22 @@ def _group_running(group):
 
 
 class SnapshotQueue:
-    def __init__(self, settings, *, worker: Callable | None = None, clock=time.time):
+    def __init__(
+        self, settings, *, worker: Callable | None = None, clock=time.time, allocation_parent=None
+    ):
         self.settings = settings
         self.root = Path(settings.project_root) / "runs" / "uploads"
         self.registry = Path(settings.project_root) / ".cache" / "snapshot-admissions.sqlite3"
         self.worker = worker
+        self.allocation = None
+        if allocation_parent is not None:
+            from headroom.acceptance.snapshot_binding import SnapshotWebAllocation
+
+            self.allocation = SnapshotWebAllocation(
+                allocation_parent, project_root=settings.project_root
+            )
+            if str(Path(settings.runtime_profile or "").absolute()) != self.allocation.profile_path:
+                raise ValueError("Snapshot server profile differs from its private allocation")
         self.clock = clock
         self.deadline = min(float(settings.deadline_seconds), 480.0)
         allowance = Decimal(str(settings.public_run_budget))
@@ -454,15 +475,24 @@ class SnapshotQueue:
                     values[key] = None
         except (OSError, ValueError):
             return "failed"
+        binding = None
+        if self.allocation is not None:
+            from headroom.snapshot_diagnosis import SnapshotDiagnosisRequest
+
+            try:
+                binding = self.allocation.claim(SnapshotDiagnosisRequest(**values), identifier)
+            except (OSError, ValueError, TypeError, KeyError):
+                return "failed"
         context = multiprocessing.get_context("spawn")
         receiver, sender = context.Pipe()
         process = context.Process(
             target=_child_entry,
-            args=(self.worker, values, str(self.root), identifier, sender, os.getpid()),
+            args=(self.worker, values, str(self.root), identifier, sender, os.getpid(), binding),
             daemon=False,
         )
-        deadline = time.monotonic() + remaining
+        deadline = time.monotonic() + max(0, created + self.deadline - self.clock())
         ready = False
+        reported_terminal = False
         status = "failed"
         try:
             process.start()
@@ -480,12 +510,13 @@ class SnapshotQueue:
                         ready = True
                         receiver.send("proceed")
                     elif message in TERMINAL:
+                        reported_terminal = True
                         status = message
                         break
-            return status
         except (OSError, EOFError, RuntimeError, ValueError):
-            return "failed"
+            status = "failed"
         finally:
+            cleanup_verified = not process.pid
             if process.pid:
                 try:
                     # A crashed leader can still leave a parser descendant in
@@ -500,7 +531,29 @@ class SnapshotQueue:
                 cleanup_until = time.monotonic() + 1
                 while ready and _group_running(process.pid) and time.monotonic() < cleanup_until:
                     time.sleep(0.01)
-                if process.is_alive() or (ready and _group_running(process.pid)):
+                cleanup_verified = not process.is_alive() and not (
+                    ready and _group_running(process.pid)
+                )
+                if not cleanup_verified:
                     self._stop.set()
             receiver.close()
             sender.close()
+            if binding is not None:
+                try:
+                    from headroom.acceptance.snapshot_binding import snapshot_cleanup_verified
+
+                    cleanup_verified = cleanup_verified and snapshot_cleanup_verified(
+                        self.root, identifier
+                    )
+                    settlement = self.allocation.finish(
+                        binding,
+                        execution_terminal=reported_terminal,
+                        cleanup_verified=cleanup_verified,
+                    )
+                    if settlement.get("status") != "settled":
+                        status = "failed"
+                        self._stop.set()
+                except Exception:  # noqa: BLE001 -- unknown settlement blocks further dispatch
+                    status = "failed"
+                    self._stop.set()
+        return status

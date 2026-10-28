@@ -1,0 +1,100 @@
+{
+  "checked_at": "2026-10-28T19:53:58.914207+00:00",
+  "url": "https://headroom.tail45186b.ts.net/",
+  "units": {
+    "exit": 0,
+    "output": "Restart=on-failure\nNRestarts=0\nId=headroom-public.service\nActiveState=active\nSubState=running\nUnitFileState=enabled\n\nRestart=on-failure\nNRestarts=0\nId=headroom-tailscaled.service\nActiveState=active\nSubState=running\nUnitFileState=enabled\n\nId=headroom-funnel-health.timer\nActiveState=active\nSubState=waiting\nUnitFileState=enabled"
+  },
+  "linger": {
+    "exit": 0,
+    "output": "Linger=yes"
+  },
+  "funnel": {
+    "exit": 0,
+    "output": "# Funnel on:\n#     - https://headroom.tail45186b.ts.net\n\nhttps://headroom.tail45186b.ts.net (Funnel on)\n|-- / proxy http://127.0.0.1:8766"
+  },
+  "tailscale": {
+    "BackendState": "Running",
+    "Online": true,
+    "Health": [],
+    "KeyExpiry": "2027-04-26T14:51:43Z"
+  },
+  "public_ipv4": [
+    "176.58.88.108",
+    "176.58.88.82",
+    "176.58.92.199"
+  ],
+  "http": [
+    {
+      "path": "/",
+      "status": 200,
+      "seconds": 0.187,
+      "certificate_validation": "enabled"
+    },
+    {
+      "path": "/results",
+      "status": 200,
+      "seconds": 0.201,
+      "certificate_validation": "enabled"
+    },
+    {
+      "path": "/api/health",
+      "status": 200,
+      "seconds": 0.185,
+      "certificate_validation": "enabled",
+      "health_status": "ok"
+    },
+    {
+      "path": "/api/config",
+      "status": 200,
+      "seconds": 0.176,
+      "certificate_validation": "enabled",
+      "config": {
+        "run_submissions": {
+          "enabled": false,
+          "reason": "Live analysis is temporarily paused."
+        },
+        "public_demo": true,
+        "verified_runs_enabled": false,
+        "snapshot_submissions": {
+          "enabled": false,
+          "reason": "Snapshot analysis is temporarily paused.",
+          "max_bytes": 52428800,
+          "runs_per_ip_per_hour": 2,
+          "retention_hours": 24
+        },
+        "judge_scripts_available": false,
+        "limits": {
+          "runs_per_ip_per_hour": 1,
+          "max_waiting_runs": 2,
+          "deadline_seconds": 480
+        }
+      }
+    }
+  ],
+  "monitor": {
+    "checked_at_utc": "2026-10-28T19:49:55.171116+00:00",
+    "checks": {
+      "origin": {
+        "consecutive_failures": 0,
+        "http_status": 200,
+        "last_success_at_utc": "2026-10-28T19:49:55.171116+00:00",
+        "latency_ms": 79.16,
+        "slow": false,
+        "status": "ok"
+      },
+      "public": {
+        "consecutive_failures": 0,
+        "http_status": 200,
+        "last_success_at_utc": "2026-10-28T19:49:55.171116+00:00",
+        "latency_ms": 328.975,
+        "slow": false,
+        "status": "ok"
+      }
+    },
+    "consecutive_failures": 0,
+    "healthy": true,
+    "last_success_at_utc": "2026-10-28T19:49:55.171116+00:00",
+    "schema_version": 1
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "schema": "headroom.snapshot-feature-binding-check.v1",
+  "checked_at_utc": "2026-10-28T19:59:21.023532+00:00",
+  "outcome": "offline_integration_passed_not_live_acceptance",
+  "command": ".venv/bin/pytest -q tests/test_snapshot_allocation_binding.py tests/test_snapshot_diagnosis.py tests/test_snapshot_routes.py",
+  "tests": {
+    "passed": 75,
+    "new_focused_cases": 9,
+    "seconds": 10.79
+  },
+  "checks": [
+    "normal build_live_runtime with real SDK client and MockTransport settles known synthetic usage",
+    "real CliRunner diagnose reads a private binding and uses the registered run id",
+    "real create_app private configuration reaches multipart, spawned worker, normal runtime, cleanup and settlement",
+    "snapshot-web is fixed by server configuration; HTTP receipt field rejected",
+    "foreign owner cannot read result or download",
+    "source and snapshot replacement are rechecked before each reserve",
+    "content-equivalent server copies retain intent identity",
+    "symlinks and nonprivate CLI binding files refused",
+    "offline runtime_factory cannot consume a live feature binding"
+  ],
+  "provenance_boundary": "Tests exercise the normal live_model branch with fake credentials and SDK MockTransport; they are not provider calls, real charges, GPU results or a new funding approval.",
+  "controls": {
+    "web_slot": "snapshot-web",
+    "single_request_max_usd": "0.30",
+    "aggregate_F3b_scope_enforced_by": "feature_allocation receipt parent (maximum 1 USD)",
+    "daily_limit": "inherits approved receipt daily, not a new cap",
+    "http_can_select_receipt_budget_or_slot": false,
+    "public_schema_changed": false,
+    "public_flags_changed": false
+  },
+  "cleanup": "Trusted private cleanup.json plus parent process-group cleanup are required before Web settlement. CLI controller reads snapshot_cleanup_verified after normal return; absent/false remains unverified.",
+  "source_files": [
+    {
+      "path": "headroom/snapshot_diagnosis.py",
+      "sha256": "cd455f3f491819e45fb0604fc6cda84225428ca617fb002a07086412645a0bd0",
+      "bytes": 17442
+    },
+    {
+      "path": "headroom/api/snapshot_queue.py",
+      "sha256": "44629d5d8f3f0db6ee53d34ee74e8aaf2478b444da2895577cae5fb6963d51e4",
+      "bytes": 22735
+    },
+    {
+      "path": "headroom/api/snapshot_routes.py",
+      "sha256": "be620e7dd5670be581cd3ebf5794920affd444087f5a90b615e8a65759219e86",
+      "bytes": 22590
+    },
+    {
+      "path": "headroom/acceptance/snapshot_binding.py",
+      "sha256": "5481fc17c3baa931c1573e2bc8dad15caac895246b2b1e5a77c6a34a182ae1e2",
+      "bytes": 7690
+    },
+    {
+      "path": "tests/test_snapshot_allocation_binding.py",
+      "sha256": "5cf0d395bc0f0a4055b4dba23ca5e5b960e0208580db79fbbcaf1371813c8205",
+      "bytes": 15558
+    }
+  ],
+  "integration_files": [
+    {
+      "path": "headroom/cli.py",
+      "sha256": "9e3e96e02a241ae42e128a1e97f38b5bae22ee2b42632144e24d6a6b29cf5b54"
+    },
+    {
+      "path": "headroom/api/app.py",
+      "sha256": "c3a9fe127fa7dc82c1d056a18a1cd9f5be1d14fc043264f247d266407148d4f1"
+    },
+    {
+      "path": "headroom/acceptance/feature_allocation.py",
+      "sha256": "20ee834606f9419c460fcb25ca134d9465f598ebc9c8725f5f11788a1737effb"
+    }
+  ],
+  "ruff": {
+    "check": "passed",
+    "format": "passed"
+  },
+  "gitleaks": {
+    "status": "passed",
+    "exit_code": 0,
+    "findings": 0,
+    "redacted": true,
+    "files_scanned": [
+      "headroom/snapshot_diagnosis.py",
+      "headroom/api/snapshot_queue.py",
+      "headroom/api/snapshot_routes.py",
+      "headroom/acceptance/snapshot_binding.py",
+      "tests/test_snapshot_allocation_binding.py",
+      "reports/final48h-snapshot-binding-20261029/receipt.json",
+      "reports/final48h-snapshot-binding-20261029/README.md",
+      "reports/final48h-snapshot-binding-20261029/focused-tests.txt"
+    ]
+  },
+  "live_actions": {
+    "model_calls": 0,
+    "Tavily_calls": 0,
+    "GPU_executions": 0,
+    "actual_allocation_created": false,
+    "judge_token_created": false,
+    "production_restarted": false,
+    "public_submission_enabled": false,
+    "commit_created": false
+  },
+  "limits": [
+    "Only temporary test allocation databases were activated. No real receipt or parent was created.",
+    "The real s2/nanoGPT/Web diagnoses, source repairs and billing remain unrun.",
+    "The server must explicitly receive a verified parent; private constructor support alone does not enable the public feature.",
+    "CLI settlement remains the trusted controller responsibility; the CLI itself does not create or settle claims.",
+    "The 24-hour upload retention, owner checks and no-source-execution boundaries remain in force."
+  ]
+}

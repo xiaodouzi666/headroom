@@ -1,0 +1,81 @@
+{
+  "schema": "headroom.offline-watch-f5-bridge.v1",
+  "created_at_utc": "2026-10-28T20:09:30.873554+00:00",
+  "base_commit": "264a9b76c91b0c71609b8fa04b4e669e714c0232",
+  "provenance": "offline_fixture",
+  "source_sha256": {
+    "headroom/watch.py": "877d68d616b56a3371724b7e4f67e07083fbbc5206711ccec10a3797d552599f",
+    "headroom/acceptance/watch_binding.py": "84fdf33e6184e646a651ec347d136b247b12b8ae3802c9c5fbbe69557569b93f",
+    "headroom/cli_execution.py": "9cfff6c9efd8c4ff38d3e70a3bd868ac7284e2310f36a08ca60e9f4700e2f0a6",
+    "headroom/evaluation_worker.py": "1825859b18bbc31054007e46932801af4f2c01f45349aae67ffa2d2ffa285ebd",
+    "tests/test_feature_bridges.py": "b825d49f8e1a5d4ed04c6b11d07ff57fdbb8a41057ed7f5d8102f6c690af8ea0"
+  },
+  "dependency_sha256": {
+    "headroom/cli.py": "9e3e96e02a241ae42e128a1e97f38b5bae22ee2b42632144e24d6a6b29cf5b54",
+    "headroom/acceptance/allocation.py": "0195458d738eaa7adef0a9e673957a0d84fe7e6a7a9ab2ffa8e95b11a6346fd4",
+    "headroom/acceptance/feature_allocation.py": "20ee834606f9419c460fcb25ca134d9465f598ebc9c8725f5f11788a1737effb"
+  },
+  "validation": {
+    "passed": 97,
+    "deselected": 12,
+    "seconds": 53.76,
+    "new_cases_included": 25,
+    "modules": [
+      "tests/test_feature_bridges.py",
+      "tests/test_final48_cli_binding.py",
+      "tests/test_cli_execution.py",
+      "tests/test_evaluation_worker.py",
+      "tests/test_watch.py"
+    ],
+    "selection": "-k 'not real_cpu'",
+    "network_guard_attempts": 0,
+    "source_unchanged": true,
+    "ruff": "passed",
+    "format": "passed",
+    "gitleaks_findings": 0
+  },
+  "development_receipts": {
+    "before_watch_once_fix": "24 focused passed in 5.12s",
+    "with_watch_once_fix": "25 focused passed in 5.30s",
+    "before_watch_once_combined": "96 passed,12 deselected in 53.59s; retained pre-once-96-tests.log",
+    "counts_overlap": "All 25 new cases are included in final97; do not add these totals."
+  },
+  "selection_failure": {
+    "log": "initial-selection-guard-failure.log",
+    "result": "8 failed,96 passed,4 deselected",
+    "cause": "Initial not real_cpu_docker selection missed eight other test_real_cpu_* cases.",
+    "containment": "Outer subprocess guard refused Docker before container execution; observed Lab PREPARATION_FAILED with Outer external-workload guard.",
+    "resolution": "Exclude all12 real_cpu tests; no source relaxation."
+  },
+  "verified_boundaries": [
+    "owner0600 regular bounded private Watch context verified before Lab",
+    "actual captured argv/source file map/cleanup match approved Watch intent",
+    "normal Services.budget_factory uses feature pool daily/total/run caps; no runtime_factory substitution",
+    "SDK MockTransport one response in focused Watch fixture settles known cost",
+    "same Watch child cannot capture twice or use a different run root",
+    "F5 installed console imports its own clean checkout and receives no PYTHONPATH/PYTHONHOME",
+    "F5 whole fixed s3 Lab-copy file set rejects Git-ignored torch.py/json.py",
+    "F5 each reserve rechecks actual checkout; tracked-code/workload drift rejects second attempt",
+    "original CLI/F3/default Watch and supervision paths retain prior contracts"
+  ],
+  "limits": {
+    "real_pool_created": false,
+    "production_ledger_accessed": false,
+    "real_profile_changed": false,
+    "provider_network_calls": 0,
+    "gpu_runs": 0,
+    "real_watch_container_runs": 0,
+    "project_commit_created": false,
+    "public_flags_changed": false,
+    "live_acceptance": false
+  },
+  "artifacts_sha256": {
+    "focused-tests.log": "1d9730d9a44f44d12fe42f42f5657179b4f02b184f9c10a94a9340388998ae5e",
+    "source-hashes.json": "e2d39c7719b8ab66ff3f2aa652607eb11dddfaccf043281b5d7353378316931e",
+    "ruff.log": "cd7f41cf1ad5ba8b6263217889865f18d2b85df5ad631a05d6d321f51fd1b7b2",
+    "gitleaks.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "gitleaks.log": "0c2f9c02145ed868ac1f9971f242c4291b74db9c03b2f8091f54a013738059aa",
+    "initial-selection-guard-failure.log": "e070a8c76c9f72a46f99510b3cfd004217b9c731da10b64547b17df6077d46fa",
+    "pre-once-96-tests.log": "14dd35e4e4e82baa2bc27a74ddcf946107b6cafe79710a4b0a917f4c94ab44ee"
+  }
+}

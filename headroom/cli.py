@@ -1,6 +1,8 @@
 """Headroom command-line entry point."""
 
 import json
+import os
+from contextlib import nullcontext
 from enum import Enum
 from pathlib import Path
 from typing import Annotated
@@ -135,16 +137,31 @@ def diagnose(
 
     output_root = run_root or PROJECT_ROOT / "runs/uploads"
     try:
-        result = run_snapshot_diagnosis(
-            SnapshotDiagnosisRequest(
-                snapshot=snapshot,
-                traceback=traceback,
-                source=source,
-                budget_usd=budget,
-                runtime_profile=runtime_profile,
-            ),
-            run_root=output_root,
+        request = SnapshotDiagnosisRequest(
+            snapshot=snapshot,
+            traceback=traceback,
+            source=source,
+            budget_usd=budget,
+            runtime_profile=runtime_profile,
         )
+        binding = None
+        context = nullcontext()
+        if binding_path := os.environ.pop("HEADROOM_SNAPSHOT_FEATURE_BINDING", None):
+            from headroom.acceptance.snapshot_binding import (
+                load_snapshot_feature_binding,
+                snapshot_feature_context,
+            )
+
+            binding = load_snapshot_feature_binding(
+                binding_path, request=request, project_root=PROJECT_ROOT
+            )
+            context = snapshot_feature_context(binding, project_root=PROJECT_ROOT)
+        with context:
+            result = run_snapshot_diagnosis(
+                request,
+                run_root=output_root,
+                **({"run_id": binding["run_id"]} if binding else {}),
+            )
     except (OSError, ValueError):
         typer.echo(
             "Snapshot diagnosis could not start. Check the input and runtime configuration.",
@@ -468,14 +485,13 @@ def watch(
             and getattr(ctx.get_parameter_source("search_mode"), "name", None) != "COMMANDLINE"
         ):
             mode = project.search_mode
-        result = watch_command(
-            list(ctx.args),
-            source_root=source_root or Path.cwd(),
-            max_steps=max_steps,
-            max_seconds=max_seconds,
-            device=device,
-            seed=seed,
-            fix_options={
+        options = {
+            "source_root": source_root or Path.cwd(),
+            "max_steps": max_steps,
+            "max_seconds": max_seconds,
+            "device": device,
+            "seed": seed,
+            "fix_options": {
                 "target": target,
                 "search_mode": mode,
                 "budget_usd": budget,
@@ -487,7 +503,20 @@ def watch(
                 if project
                 else NumericalReference(),
             },
-        )
+        }
+        command = list(ctx.args)
+        if context_path := os.environ.pop("HEADROOM_WATCH_FEATURE_CONTEXT", None):
+            from headroom.acceptance.watch_binding import (
+                load_watch_feature_context,
+                run_bound_watch,
+            )
+
+            binding, intent = load_watch_feature_context(context_path, command=command, **options)
+            result = run_bound_watch(
+                command, intent=intent, allocation_child_binding=binding, **options
+            )
+        else:
+            result = watch_command(command, **options)
     except (OSError, ValueError, TypeError):
         typer.echo(
             "Watch requires supported Docker argv and a valid source directory; "

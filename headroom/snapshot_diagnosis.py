@@ -56,6 +56,7 @@ class SnapshotServices:
 
     runtime_factory: object = None
     patch_factory: object = PatchEngine
+    budget_factory: object = None
 
 
 class SnapshotEvidenceUnavailable(ValueError):
@@ -165,7 +166,7 @@ def render_diagnosis_markdown(result):
     return "\n".join(lines) + "\n"
 
 
-def _live_runtime(request, run_id, store):
+def _live_runtime(request, run_id, store, *, budget_factory=None):
     profile = (
         read_live_profile(request.runtime_profile)
         if request.runtime_profile
@@ -174,23 +175,26 @@ def _live_runtime(request, run_id, store):
     # Bound every attempt by this request's allowance without changing the reviewed
     # admission calculation, global profile, or shared allocation.
     profile = profile.model_copy(update={"run_budget_mode": "strict_reservation"})
-    database = select_budget_database(PROJECT_ROOT)
-    require_initialized_ledger(database.path, expected_identity=database.file_identity)
-    daily = min(
-        money(os.environ.get("HEADROOM_DAILY_BUDGET_USD", profile.authorized_total_usd)),
-        money(profile.authorized_total_usd),
-    )
     allowance = min(
         money(request.budget_usd),
         money(os.environ.get("HEADROOM_RUN_BUDGET_USD", request.budget_usd)),
     )
-    budget = BudgetLedger(
-        database.path,
-        require_existing=True,
-        expected_identity=database.file_identity,
-        daily_limit=daily,
-        total_limit=profile.authorized_total_usd,
-    )
+    if budget_factory is not None:
+        budget = budget_factory(run_id, request, profile)
+    else:
+        database = select_budget_database(PROJECT_ROOT)
+        require_initialized_ledger(database.path, expected_identity=database.file_identity)
+        daily = min(
+            money(os.environ.get("HEADROOM_DAILY_BUDGET_USD", profile.authorized_total_usd)),
+            money(profile.authorized_total_usd),
+        )
+        budget = BudgetLedger(
+            database.path,
+            require_existing=True,
+            expected_identity=database.file_identity,
+            daily_limit=daily,
+            total_limit=profile.authorized_total_usd,
+        )
     budget.open_run(run_id, allowance, budget_mode=profile.run_budget_mode)
     try:
         runtime = build_live_runtime(
@@ -243,6 +247,14 @@ def run_snapshot_diagnosis(
     """Produce a diagnosis and optional Super draft, with no Lab/GPU execution."""
     request = SnapshotDiagnosisRequest.model_validate(request)
     services = services or SnapshotServices()
+    from headroom.acceptance.snapshot_binding import current_snapshot_budget_factory
+
+    context_factory = current_snapshot_budget_factory()
+    if context_factory is not None and services.budget_factory is not None:
+        raise ValueError("Conflicting snapshot budget bindings")
+    budget_factory = services.budget_factory or context_factory
+    if budget_factory is not None and services.runtime_factory is not None:
+        raise ValueError("An offline runtime cannot consume a live snapshot allocation")
     if services.runtime_factory is None and services.patch_factory is not PatchEngine:
         raise ValueError("A custom patch factory requires an explicit offline runtime")
     run_id = run_id or uuid.uuid4().hex
@@ -284,7 +296,11 @@ def run_snapshot_diagnosis(
         result["evidence"] = _bind_evidence(prepared, None)
         evidence = _visible_evidence(prepared)
         if services.runtime_factory is None:
-            runtime, budget = _live_runtime(request, run_id, store)
+            runtime, budget = (
+                _live_runtime(request, run_id, store)
+                if budget_factory is None
+                else _live_runtime(request, run_id, store, budget_factory=budget_factory)
+            )
         else:
             runtime = services.runtime_factory(run_id, store, directory)
         evidence["evidence_availability_catalog"] = build_evidence_availability_catalog(
@@ -381,18 +397,29 @@ def run_snapshot_diagnosis(
                 action()
             except Exception:  # noqa: BLE001 -- preserve a readable diagnosis after cleanup failure
                 failed_cleanup.append(label)
+        cleanup_verified = not failed_cleanup
         if failed_cleanup:
             result.update(status="failed", error="worker_error")
             _write_json(private / "cleanup-failures.json", {"steps": failed_cleanup})
         try:
             store.update_run(run_id, {"status": result["status"], "public_result": result})
         except Exception:  # noqa: BLE001 -- retain the bounded report if the scoped database fails
+            cleanup_verified = False
             result.update(status="failed", error="worker_error")
         finally:
             try:
                 store.close()
             except Exception:  # noqa: BLE001 -- redact database cleanup errors
+                cleanup_verified = False
                 result.update(status="failed", error="worker_error")
+    _write_json(
+        private / "cleanup.json",
+        {
+            "schema": "headroom.snapshot-cleanup.v1",
+            "run_id": run_id,
+            "cleanup_verified": cleanup_verified,
+        },
+    )
     _write_json(directory / "public-report.json", result)
     _write_json(directory / "diagnosis.json", result)
     (directory / "diagnosis.md").write_text(render_diagnosis_markdown(result))

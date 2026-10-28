@@ -1,0 +1,267 @@
+........................................................................ [ 69%]
+........................FFFFFFFF                                         [100%]
+=================================== FAILURES ===================================
+___________ test_real_cpu_argv_and_interpreter_semantics[command0-0] ___________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-337/test_real_cpu_argv_and_interpr0/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-337/test_real_cpu_argv_and_interpr0')
+command = ['python', '-c', "print('inline')\nprint('second line')"], code = 0
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': 'f9dc898c6a4b46cda8e84893d70d0c8a', 'search_mode': 'until_target', 'allocator_conf': None, 'numerical_ref...all_batch', 'cpu_saved_tensor_limit_bytes': 17179869184, 'disk_saved_tensor_limit_bytes': 0, 'max_seconds': None}, ...}
+E       assert 125 == 0
+
+tests/test_watch.py:276: AssertionError
+___________ test_real_cpu_argv_and_interpreter_semantics[command1-9] ___________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-337/test_real_cpu_argv_and_interpr1/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-337/test_real_cpu_argv_and_interpr1')
+command = ['python', '-O', '-c', 'assert False; raise SystemExit(9)'], code = 9
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': '24e74f033f5b4335b480ebdc2b700184', 'search_mode': 'until_target', 'allocator_conf': None, 'numerical_ref...all_batch', 'cpu_saved_tensor_limit_bytes': 17179869184, 'disk_saved_tensor_limit_bytes': 0, 'max_seconds': None}, ...}
+E       assert 125 == 9
+
+tests/test_watch.py:276: AssertionError
+__________ test_real_cpu_argv_and_interpreter_semantics[command2-11] ___________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-337/test_real_cpu_argv_and_interpr2/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-337/test_real_cpu_argv_and_interpr2')
+command = ['python', '-I', '-c', 'raise SystemExit(11)'], code = 11
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': '322c5babb1a44766ac32e008368f23a5', 'search_mode': 'until_target', 'allocator_conf': None, 'numerical_ref...all_batch', 'cpu_saved_tensor_limit_bytes': 17179869184, 'disk_saved_tensor_limit_bytes': 0, 'max_seconds': None}, ...}
+E       assert 125 == 11
+
+tests/test_watch.py:276: AssertionError
+__________ test_real_cpu_argv_and_interpreter_semantics[command3-12] ___________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-337/test_real_cpu_argv_and_interpr3/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-337/test_real_cpu_argv_and_interpr3')
+command = ['python', '-S', '-c', 'raise SystemExit(12)'], code = 12
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': '5bcabe5a92224569adbbc7c8c84ab653', 'search_mode': 'until_target', 'allocator_conf': None, 'numerical_ref...all_batch', 'cpu_saved_tensor_limit_bytes': 17179869184, 'disk_saved_tensor_limit_bytes': 0, 'max_seconds': None}, ...}
+E       assert 125 == 12
+
+tests/test_watch.py:276: AssertionError
+__________ test_real_cpu_argv_and_interpreter_semantics[command4-13] ___________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-337/test_real_cpu_argv_and_interpr4/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-337/test_real_cpu_argv_and_interpr4')
+command = ['/bin/sh', '-c', "printf 'plain command\n'; exit 13"], code = 13
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': 'c8dde6685ff24be9b6c10804b8779f2b', 'search_mode': 'until_target', 'allocator_conf': None, 'numerical_ref...all_batch', 'cpu_saved_tensor_limit_bytes': 17179869184, 'disk_saved_tensor_limit_bytes': 0, 'max_seconds': None}, ...}
+E       assert 125 == 13
+
+tests/test_watch.py:276: AssertionError
+___________ test_real_cpu_argv_and_interpreter_semantics[command5-0] ___________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-337/test_real_cpu_argv_and_interpr5/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-337/test_real_cpu_argv_and_interpr5')
+command = ['/usr/bin/printf', '%s', 'literal;$(not-a-shell)'], code = 0
+
+    @pytest.mark.parametrize(
+        "command,code",
+        [
+            (["python", "-c", "print('inline')\nprint('second line')"], 0),
+            (["python", "-O", "-c", "assert False; raise SystemExit(9)"], 9),
+            (["python", "-I", "-c", "raise SystemExit(11)"], 11),
+            (["python", "-S", "-c", "raise SystemExit(12)"], 12),
+            (["/bin/sh", "-c", "printf 'plain command\n'; exit 13"], 13),
+            (["/usr/bin/printf", "%s", "literal;$(not-a-shell)"], 0),
+        ],
+    )
+    def test_real_cpu_argv_and_interpreter_semantics(source, tmp_path, command, code):
+        result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == code, result
+E       AssertionError: {'watch_id': '663508e7d4d74c6a89532538d7aa53bb', 'search_mode': 'until_target', 'allocator_conf': None, 'numerical_ref...all_batch', 'cpu_saved_tensor_limit_bytes': 17179869184, 'disk_saved_tensor_limit_bytes': 0, 'max_seconds': None}, ...}
+E       assert 125 == 0
+
+tests/test_watch.py:276: AssertionError
+_____________ test_real_cpu_module_keeps_package_imports_and_argv ______________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-337/test_real_cpu_module_keeps_pac0/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-337/test_real_cpu_module_keeps_pac0')
+
+    def test_real_cpu_module_keeps_package_imports_and_argv(source, tmp_path):
+        package = source / "package"
+        package.mkdir()
+        (package / "__init__.py").write_text("")
+        (package / "helper.py").write_text("VALUE = 17\n")
+        (package / "entry.py").write_text(
+            "from .helper import VALUE\nimport sys\nassert sys.argv[1:] == ['literal;arg']\n"
+            "assert __package__ == 'package'\nraise SystemExit(VALUE)\n"
+        )
+        result = watch_command(
+            ["python", "-m", "package.entry", "literal;arg"],
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+>       assert result["exit_code"] == 17 and result["lab"]["cleanup_verified"]
+E       assert (125 == 17)
+
+tests/test_watch.py:301: AssertionError
+__________ test_real_cpu_supported_flags_match_repair_lab_environment __________
+
+source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-337/test_real_cpu_supported_flags_0/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-337/test_real_cpu_supported_flags_0')
+
+    def test_real_cpu_supported_flags_match_repair_lab_environment(source, tmp_path):
+        from headroom.lab.runner import run_script
+    
+        (source / "train.py").write_text(
+            "import json, sys\n"
+            "print('FLAGS:' + json.dumps([sys.flags.dont_write_bytecode, "
+            "sys.flags.no_user_site, sys.stdout.write_through, sys.argv[1:]]))\n"
+        )
+        arguments = ["literal;$(not-a-shell)"]
+        watched = watch_command(
+            ["python", "-uBs", "train.py", *arguments],
+            source_root=source,
+            run_root=tmp_path / "runs",
+            device="cpu",
+            max_seconds=30,
+            fix_runner=fail_if_fix,
+        )
+        replay = run_script(
+            source / "train.py",
+            script_args=arguments,
+            source_root=source,
+            run_root=tmp_path / "replay",
+            device="cpu",
+            max_seconds=30,
+        )
+    
+        def flags(path):
+            return next(
+                line for line in Path(path).read_text().splitlines() if line.startswith("FLAGS:")
+            )
+    
+>       assert watched["exit_code"] == 0 and watched["repair_supported"]
+E       assert (125 == 0)
+
+tests/test_watch.py:336: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command0-0]
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command1-9]
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command2-11]
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command3-12]
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command4-13]
+FAILED tests/test_watch.py::test_real_cpu_argv_and_interpreter_semantics[command5-0]
+FAILED tests/test_watch.py::test_real_cpu_module_keeps_package_imports_and_argv
+FAILED tests/test_watch.py::test_real_cpu_supported_flags_match_repair_lab_environment
+8 failed, 96 passed, 4 deselected in 53.34s
+NETWORK_GUARD_ATTEMPTS 0
+SOURCE_UNCHANGED True
