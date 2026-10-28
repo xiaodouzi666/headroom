@@ -1,0 +1,85 @@
+{
+  "schema": "headroom.final48-allocation-offline-check.v1",
+  "checked_at": "2026-10-28T19:12:52.313129+00:00",
+  "status": "implemented_not_activated",
+  "fixture_only": true,
+  "checks": [
+    {
+      "command": "pytest -q tests/test_final48_allocation.py tests/test_final48_ablation.py",
+      "passed": 29,
+      "seconds": 43.3,
+      "stage": "initial_integrated"
+    },
+    {
+      "command": "pytest -q tests/test_final48_allocation.py",
+      "passed": 11,
+      "seconds": 8.44,
+      "stage": "after_cleanup_and_path_hardening"
+    },
+    {
+      "command": "pytest -q tests/test_final48_allocation.py",
+      "passed": 12,
+      "seconds": 9.44,
+      "stage": "claim-state and concurrent-once hardening"
+    },
+    {
+      "command": "pytest -q tests/test_final48_allocation.py::test_f1_revalidates_allocation_before_the_second_request",
+      "passed": 1,
+      "seconds": 2.3,
+      "stage": "pre-second-call receipt mutation refusal"
+    }
+  ],
+  "ruff": "passed",
+  "format": "passed",
+  "default_cli_plan": "all_amounts_null",
+  "new_production_allocation": false,
+  "new_production_profile": false,
+  "new_production_ledger": false,
+  "new_model_calls": 0,
+  "new_gpu_executions": 0,
+  "actual_allocation_directory_exists": false,
+  "actual_allocation_registry_exists": false,
+  "bound_entrypoints": [
+    "acceptance_run optional allocation branch",
+    "F1 live execution requires receipt"
+  ],
+  "not_yet_bound": [
+    "other CLI/R7 workflows",
+    "public services"
+  ],
+  "source_sha256": {
+    "headroom/acceptance/allocation.py": "f1494816d6b92be64b8323a2344ebee28f272069b969a2f54455c6b2ffa6459f",
+    "headroom/acceptance/common.py": "432acec85e3c01564234abeeb4baee710daf37aa8c7877c9b094bbdaaa48124c",
+    "headroom/acceptance/final48_ablation.py": "89ecdd980e4bae03a8f058c7b9b9c4fb3411d64ec89a270bbdd0d848cb6190d5",
+    "scripts/final48_allocation.py": "064a8e727f892141d3d4d7bb3fc431b3a0775b11b32f4eedbf260b5977cc2076",
+    "scripts/prepare_final48_ablation.py": "bcb06a2061d7aa92463e7eeacff70ca2bc2645e30ca77a8ea9bab9d3baf3b082",
+    "tests/test_final48_allocation.py": "db99fee91100ef17311d844ec3e51e603e645118ac04595374f41eb8449d1777",
+    "tests/test_final48_ablation.py": "2150931a7c170ed63d873caef616d80a8c90346e09f2807a5bb68b6abaeac34a"
+  },
+  "followup_checks": [
+    {
+      "command": "pytest -q tests/test_final48_allocation.py",
+      "passed": 12,
+      "seconds": 9.44
+    },
+    {
+      "command": "pytest -q tests/test_final48_allocation.py::test_f1_revalidates_allocation_before_the_second_request",
+      "passed": 1,
+      "seconds": 2.3
+    }
+  ],
+  "current_source_sha256": {
+    "headroom/acceptance/allocation.py": "f1494816d6b92be64b8323a2344ebee28f272069b969a2f54455c6b2ffa6459f",
+    "headroom/acceptance/common.py": "432acec85e3c01564234abeeb4baee710daf37aa8c7877c9b094bbdaaa48124c",
+    "headroom/acceptance/final48_ablation.py": "89ecdd980e4bae03a8f058c7b9b9c4fb3411d64ec89a270bbdd0d848cb6190d5",
+    "scripts/final48_allocation.py": "064a8e727f892141d3d4d7bb3fc431b3a0775b11b32f4eedbf260b5977cc2076",
+    "scripts/prepare_final48_ablation.py": "bcb06a2061d7aa92463e7eeacff70ca2bc2645e30ca77a8ea9bab9d3baf3b082",
+    "tests/test_final48_allocation.py": "db99fee91100ef17311d844ec3e51e603e645118ac04595374f41eb8449d1777",
+    "tests/test_final48_ablation.py": "2150931a7c170ed63d873caef616d80a8c90346e09f2807a5bb68b6abaeac34a"
+  },
+  "claim_active_check": true,
+  "concurrent_once_checked": true,
+  "request_before_revalidation_checked": true,
+  "final_preparation_receipt": "../final48-f1-preparation-20261029/final-preparation-check.json",
+  "root_source_hash_review": "all current source pins checked; no allocation created"
+}

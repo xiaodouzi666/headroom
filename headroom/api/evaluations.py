@@ -5,8 +5,9 @@ import math
 import re
 from decimal import Decimal, InvalidOperation
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
+from headroom.api.presentation import product_evaluation, wants_product
 from headroom.api.security import open_regular
 from headroom.budget import money
 from headroom.evaluation import (
@@ -295,10 +296,11 @@ def register_evaluations(app, data_root):
         return {"status": "published" if items else "pending", "evaluations": items}
 
     @router.get("/api/evaluations/{identifier}")
-    def evaluation(identifier: str):
+    def evaluation(identifier: str, request: Request):
         entry = next((entry for entry in registry() if entry["id"] == identifier), None)
         if entry is None:
             raise HTTPException(404, "Published evaluation not found")
-        return read(entry)
+        result = read(entry)
+        return product_evaluation(result) if wants_product(request) else result
 
     app.include_router(router)

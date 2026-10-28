@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getJSON } from "./api";
+import { getJSON, productMessage } from "./api";
 import {
   record,
   rows,
@@ -90,12 +90,21 @@ const campaignName = (item: Dict) =>
       "r5-20261027": "October 27, 2026 · Previous evaluation",
     }) as Record<string, string>
   )[String(item.id)] ?? text(item.title);
-const stopReason = (v: unknown) => {
-  const label = human(v);
-  return /budget|ledger|reservation|halt|gate|acceptance/i.test(label)
-    ? "Analysis paused"
-    : label;
-};
+const stopReason = (v: unknown) =>
+  (
+    ({
+      completed: "Completed",
+      done: "Completed",
+      failed: "Failed",
+      error: "Failed",
+      rejected: "Not run",
+      timeout: "Timed out",
+      cancelled: "Cancelled",
+      needs_human: "Needs attention",
+      budget_exceeded: "Stopped",
+      running: "Running",
+    }) as Record<string, string>
+  )[String(v)] ?? productMessage(v, "Unknown");
 const resultLabel = (row: Dict) =>
   row.target_met === true
     ? "Repaired"
@@ -277,7 +286,7 @@ export default function EvaluationView() {
   const measured = record(summary.measured_metrics),
     comparable = record(measured.numerical_equivalence);
   const outcomeCounts = record(summary.outcomes);
-  const acceptance = record(document.acceptance);
+  const suite_result = record(document.suite_result);
   const summaryCells: Record<string, string> = {
     scenario_id: "Summary (live only)",
     condition: "all",
@@ -394,19 +403,19 @@ export default function EvaluationView() {
             </Badge>{" "}
             <Badge>{human(document.status)}</Badge>
           </p>
-          {acceptance.basis === "independent_fixed_suite_review_v1" && (
+          {suite_result.basis === "independent_fixed_suite_review_v1" && (
             <Notice>
               <strong>
-                {value(acceptance.target_met_count)}/
-                {value(acceptance.fixed_denominator)} workloads repaired
+                {value(suite_result.target_met_count)}/
+                {value(suite_result.fixed_denominator)} workloads repaired
                 automatically.
               </strong>{" "}
               Each evaluation stands on its own; earlier successes are not added
               to this result.
-              {Number(acceptance.stopped_before_diagnosis_and_patch) > 0 && (
+              {Number(suite_result.stopped_before_diagnosis_and_patch) > 0 && (
                 <>
                   {" "}
-                  {value(acceptance.stopped_before_diagnosis_and_patch)}{" "}
+                  {value(suite_result.stopped_before_diagnosis_and_patch)}{" "}
                   workloads stopped before diagnosis or patch generation. Their
                   baseline and Nano annotation ran; these workloads remain among
                   the nine and are not counted as repairs.
@@ -524,7 +533,7 @@ export default function EvaluationView() {
                                 className="caption"
                                 title={
                                   "Comparison scope: " +
-                                  value(row.acceptance_scope)
+                                  value(row.comparison_scope)
                                 }
                               >
                                 {numericalBasis(row.numerical_basis)}

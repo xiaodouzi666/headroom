@@ -10,6 +10,11 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from headroom.verify.checkpoint import STRATEGY as CHECKPOINT_STRATEGY
 from headroom.verify.checkpoint import reference_proof as checkpoint_reference_proof
+from headroom.verify.numerical_requirement import (
+    NumericalRequirement,
+    requirement_evidence,
+    requirement_name,
+)
 from headroom.verify.offload import LEGACY_STRATEGY, STRATEGY, reference_proof
 from headroom.verify.precision import derive_precision
 
@@ -56,6 +61,8 @@ class VerifyReport(BaseModel):
     loss_tolerance: float = 1e-3
     observed_precision_change: bool | None = None
     precision_evidence: dict = Field(default_factory=dict)
+    numerical_requirement: NumericalRequirement = "legacy"
+    numerical_requirement_evidence: dict = Field(default_factory=dict)
 
 
 def _number(value, *, positive=False):
@@ -182,6 +189,9 @@ def compare_runs(
     if _number(reclaim_reduction_pct) is None or reclaim_reduction_pct > 100:
         raise ValueError("Reclaim reduction must be between 0 and 100 percent")
     policy = dict(policy or {})
+    numerical_requirement = requirement_name(policy)
+    if numerical_requirement != "legacy" and required_steps != 20:
+        raise ValueError("F3 numerical requirements need exactly 20 optimizer updates")
     pairing = dict(pairing or {})
     for key in ("allow_numerics_change", "allow_model_change", "allow_batch_grad_accum"):
         if key in policy and type(policy[key]) is not bool:
@@ -395,6 +405,28 @@ def compare_runs(
         )
     checks["loss_tolerance"] = numerics_ok
     checks["numerical_acceptance"] = numerics_ok or no_reference_exception
+    tier_evidence = requirement_evidence(
+        baseline,
+        candidate,
+        policy=policy,
+        pairing=checks,
+        numerics_changed=numerical_change,
+        required_steps=required_steps,
+        reference=reference,
+        reference_strategy=reference_strategy,
+    )
+    if tier_evidence:
+        checks["numerical_tier"] = tier_evidence["met"]
+        notes.append(tier_evidence["scope"])
+        if numerical_requirement == "exact-loss20-v1":
+            checks["numerical_acceptance"] = numerics_ok and tier_evidence["met"]
+        if not tier_evidence["met"]:
+            notes.append(
+                "Numerical tier unmet: "
+                + ", ".join(
+                    key for key, value in tier_evidence["checks"].items() if value is not True
+                )
+            )
     checks["parameter_policy"] = parameter_equal is True or (
         parameter_equal is False and policy.get("allow_model_change", False)
     )
@@ -439,6 +471,8 @@ def compare_runs(
     checks["memory_target"] = memory_target
     required = [checks[key] for key in REQUIRED_CHECKS]
     required.append(checks["memory_target"])
+    if tier_evidence:
+        required.append(checks["numerical_tier"])
     required.append(checks["loss_decreases"] if baseline_oom else checks["throughput_limit"])
     target_met = all(value is True for value in required)
     if baseline_oom:
@@ -447,6 +481,8 @@ def compare_runs(
         )
     return VerifyReport(
         completed=completed,
+        numerical_requirement=numerical_requirement,
+        numerical_requirement_evidence=tier_evidence,
         acceptance_scope=acceptance_scope,
         numerical_basis=numerical_basis,
         comparison_precision=precision,

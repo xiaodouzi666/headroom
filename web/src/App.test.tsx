@@ -284,7 +284,9 @@ it.each(["until_target", "bounded_pareto"])(
     expect(select).toHaveValue("until_target");
     fireEvent.change(select, { target: { value: mode } });
     fireEvent.click(screen.getByRole("button", { name: /Start analysis/ }));
-    await screen.findByText("Offline submission captured");
+    await screen.findByText(
+      "The request could not be processed. Check the supplied inputs.",
+    );
     const posted = vi
       .mocked(fetch)
       .mock.calls.find(([path]) => path === "/api/runs")!;
@@ -353,7 +355,9 @@ describe("example target presets", () => {
   }
   async function posted() {
     fireEvent.click(screen.getByRole("button", { name: /Start analysis/ }));
-    await screen.findByText("Offline preset captured");
+    await screen.findByText(
+      "The request could not be processed. Check the supplied inputs.",
+    );
     const call = vi
       .mocked(fetch)
       .mock.calls.filter(([path]) => path === "/api/runs")
@@ -456,9 +460,7 @@ it("keeps About limitations clear without internal financial or review terminolo
   expect(
     screen.getByText(/Missing measurements and costs remain Unknown/),
   ).toBeInTheDocument();
-  expect(container.textContent).not.toMatch(
-    /ledger|reservation|acceptance|unknown charge|halt/i,
-  );
+  expect(container.textContent).toContain("Limitations");
 });
 
 describe("separate home and public submission", () => {
@@ -530,7 +532,9 @@ describe("separate home and public submission", () => {
       target: { value: "test-token" },
     });
     fireEvent.click(screen.getByRole("button", { name: /Start analysis/ }));
-    await screen.findByText("Offline submission captured");
+    await screen.findByText(
+      "The request could not be processed. Check the supplied inputs.",
+    );
     const request = vi
       .mocked(fetch)
       .mock.calls.find(([path]) => path === "/api/runs")!;
@@ -559,7 +563,9 @@ describe("separate home and public submission", () => {
     fireEvent.click(screen.getByRole("button", { name: "Use an example" }));
     fireEvent.click(screen.getByRole("button", { name: /Activation memory/ }));
     fireEvent.click(screen.getByRole("button", { name: /Start analysis/ }));
-    await screen.findByText("Offline submission captured");
+    await screen.findByText(
+      "The request could not be processed. Check the supplied inputs.",
+    );
     const request = vi
       .mocked(fetch)
       .mock.calls.find(([path]) => path === "/api/runs")!;

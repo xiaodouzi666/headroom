@@ -662,9 +662,12 @@ class PatchEngine:
                 }
             )
         )
+        prompt_policy = asdict(policy)
+        if policy.numerical_requirement == "legacy":
+            prompt_policy.pop("numerical_requirement")
         requested = {
             "plan_step": step,
-            "policy": asdict(policy),
+            "policy": prompt_policy,
             "cli_override_contract": cli_override_contract(),
             "base_cli": visible_cli["values"],
             "base_cli_visibility": {

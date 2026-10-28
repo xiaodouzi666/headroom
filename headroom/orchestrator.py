@@ -14,7 +14,14 @@ from decimal import Decimal, localcontext
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 
 from headroom.annotate import annotate_stacks
 from headroom.budget import BudgetExceeded, BudgetLedger, RunBudgetReached, money
@@ -44,6 +51,11 @@ from headroom.search import (
 from headroom.solver_context import candidate_context, candidate_evidence, execution_context
 from headroom.store.db import Store, _bounded_cost
 from headroom.verify.compare import parse_target
+from headroom.verify.numerical_requirement import (
+    NumericalRequirement,
+    requirement_context,
+    requirement_name,
+)
 from headroom.verify.policy import nanogpt_cli, scan_source_forbidden
 from headroom.verify.reference_config import NumericalReference
 from headroom.verify.reference_context import numerical_reference_context
@@ -60,6 +72,24 @@ class Policy(BaseModel):
     allow_model_change: bool = False
     allow_batch_grad_accum: bool = True
     max_throughput_regression_pct: float = Field(default=25, ge=0, le=1000)
+    numerical_requirement: NumericalRequirement = "legacy"
+
+    @model_validator(mode="after")
+    def valid_numerical_requirement(self):
+        requirement_name(
+            {
+                "numerical_requirement": self.numerical_requirement,
+                "allow_numerics_change": self.allow_numerics_change,
+            }
+        )
+        return self
+
+    @model_serializer(mode="wrap")
+    def serialize_policy(self, handler):
+        result = handler(self)
+        if self.numerical_requirement == "legacy":
+            result.pop("numerical_requirement", None)
+        return result
 
 
 class FixRequest(BaseModel):
@@ -91,6 +121,12 @@ class FixRequest(BaseModel):
     @classmethod
     def supported_allocator(cls, value):
         return validate_allocator(value)
+
+    @model_validator(mode="after")
+    def valid_tier_steps(self):
+        if self.policy.numerical_requirement != "legacy" and self.max_steps != 20:
+            raise ValueError("F3 numerical tiers require exactly 20 optimizer updates")
+        return self
 
 
 @dataclass
@@ -604,6 +640,11 @@ def run_fix(
                 },
                 allow_nan=False,
             )
+            tier_context = requirement_context(policy)
+            if tier_context is not None:
+                prompt_evidence += "\n\nEXPLICIT NUMERICAL REQUIREMENT:\n" + json.dumps(
+                    tier_context, allow_nan=False
+                )
             diagnose_start = len(store.llm_calls(run_id))
             emit("diagnose.started", role="diagnose", round=number)
             diagnostic_evidence = {
@@ -815,6 +856,8 @@ def run_fix(
                     if topic in research_results
                 ],
             }
+            if tier_context is not None:
+                context["numerical_requirement"] = tier_context
             patch_start = len(store.llm_calls(run_id))
             emit("patch.started", fix_id=step.fix_id, role="patcher", round=number)
             patch = services.patch_factory(bundle.router).generate_and_apply(
@@ -928,6 +971,8 @@ def run_fix(
                 original_baseline=baseline,
                 policy=policy,
                 preserve_target=request.search_mode == "bounded_pareto" and data["target_met"],
+                reference=verified.get("reference"),
+                reference_strategy=request.numerical_reference.strategy,
             )
             active_round.update(asdict(decision))
             if decision.keep:

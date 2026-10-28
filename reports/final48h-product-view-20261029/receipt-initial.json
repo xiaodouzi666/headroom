@@ -1,0 +1,143 @@
+{
+  "checked_at_utc": "2026-10-28T18:58:17.268390+00:00",
+  "base_commit": "96994dd3afcdbe4689c4611643a31774562a33d0",
+  "scope": "offline product-view implementation; no deployment or live calls",
+  "negotiation": {
+    "json_header": "X-Headroom-View: product-v1",
+    "sse_query": "view=product-v1",
+    "default_api": "unchanged",
+    "raw_downloads": "unchanged"
+  },
+  "source_scan": {
+    "command": [
+      "grep",
+      "-rniE",
+      "ledger|unknown charge|halt|gate|reservation|withdrawn|acceptance",
+      "web/src"
+    ],
+    "exit_code": 1,
+    "matching_lines": 0
+  },
+  "python": {
+    "command": ".venv/bin/pytest -q tests/test_product_presentation.py tests/test_api.py tests/test_published_evaluations.py",
+    "passed": 80,
+    "failed": 0,
+    "summary": "80 passed in 15.57s"
+  },
+  "ui": {
+    "command": "npm test -- --reporter=json --outputFile=../.cache/f2b-product-vitest.json",
+    "passed": 135,
+    "failed": 0,
+    "files": 22
+  },
+  "lint": {
+    "ruff": "passed",
+    "git_diff_check": "passed"
+  },
+  "build": {
+    "command": "npm run build -- --outDir ../.cache/f2b-product-dist",
+    "passed": true,
+    "output_directory": ".cache/f2b-product-dist",
+    "files": [
+      {
+        "path": ".cache/f2b-product-dist/assets/DiffView-DBc-70Lo.js",
+        "sha256": "0e4cdbae0579a768b6e86204a82de6780140ebdbf2c69b049046582caaf9c22d"
+      },
+      {
+        "path": ".cache/f2b-product-dist/assets/MemoryChart-DIjjbMt7.js",
+        "sha256": "b624e50a0fc86cb9575eb987277883877852d157c869698000e8cc76ca7ef346"
+      },
+      {
+        "path": ".cache/f2b-product-dist/assets/index-CyK3cQLD.js",
+        "sha256": "d75e299d0c7073e3dbe546faa5898de6b916e56c56f635b6252db59ed3d2814f"
+      },
+      {
+        "path": ".cache/f2b-product-dist/assets/index-zlRQGVcz.css",
+        "sha256": "dca857d62f25194f7b65524d46922676c2d48b2d1068084f6961d863b11c44ec"
+      },
+      {
+        "path": ".cache/f2b-product-dist/favicon.svg",
+        "sha256": "1a5a5455c2e36b55a5da8b21f5b3e5d4b0772fb835f5da6475d36a4195984269"
+      },
+      {
+        "path": ".cache/f2b-product-dist/index.html",
+        "sha256": "e93c2ccd24fd75906c01e0d01dfedef17ea3fc65610d993be8613adaf61f77c6"
+      }
+    ]
+  },
+  "source_files": [
+    {
+      "path": "headroom/api/presentation.py",
+      "sha256": "ca8277e1ffa19db441f53c49218b4c56aec958191b7b2e1a95ac6d8d250b22ee"
+    },
+    {
+      "path": "headroom/api/app.py",
+      "sha256": "4e337a394be80476c1745e1842846eff2c1347237e4ea155eea2da0b622f588e"
+    },
+    {
+      "path": "headroom/api/evaluations.py",
+      "sha256": "ab7e33da3462873e02ea850a693fa0c608d50b3cdc43019555d767dc18784958"
+    },
+    {
+      "path": "tests/test_product_presentation.py",
+      "sha256": "b36edda0940d61627ac1125ea57fea960a56c8593f12099d72f0f48a90bd46d4"
+    },
+    {
+      "path": "web/src/api.test.ts",
+      "sha256": "32d42762fcf9bc01236196cd7ac52f189d9df3127f7495e4af52fe695008536d"
+    },
+    {
+      "path": "web/src/api.ts",
+      "sha256": "f2eafb75d8ccd6626386b0566279e4bd62b2eaf900317489f6b040c2b2d894c0"
+    },
+    {
+      "path": "web/src/App.tsx",
+      "sha256": "0695fcee296acc969302961198831ea07d3efb92ce15e61cec7b022c2a0fadee"
+    },
+    {
+      "path": "web/src/App.test.tsx",
+      "sha256": "7d97d179a04a27eb790499883d0c47e929d77d454e7cc02a9f24827c5efb107e"
+    },
+    {
+      "path": "web/src/EvaluationView.tsx",
+      "sha256": "11051238ce262e858f2e0e94db8d592e72629e86c571a4b694b65fd1cbc88027"
+    },
+    {
+      "path": "web/src/EvaluationView.test.tsx",
+      "sha256": "1074878930d42480d00aa98a14601c48c4d2eb92c39cf24f5abedfd1ec45af03"
+    },
+    {
+      "path": "web/src/RunPage.tsx",
+      "sha256": "cd58e7c0f6096c4275a91bd3eac308d37b4f5f8fba4f6d065dea134370c5ece6"
+    },
+    {
+      "path": "web/src/Run.test.tsx",
+      "sha256": "39644eec3c891d963ea8655b2537963873624fc6119fc853cda652cb1dae907b"
+    },
+    {
+      "path": "web/src/data.ts",
+      "sha256": "59d62ce35a32ab0d3f08bc61910f9f90a90b97e32c2493a5f83af3201ec8015b"
+    },
+    {
+      "path": "web/src/data.test.ts",
+      "sha256": "7a71930f7f89e47983a07e7d905caa9f78b9b26e9fb9a3b5c3226708535db163"
+    }
+  ],
+  "boundaries": {
+    "models_called": false,
+    "gpu_used": false,
+    "ledger_modified": false,
+    "production_service_changed": false,
+    "production_dist_changed": false,
+    "deployment_approved": false
+  },
+  "verification": [
+    "Raw report HTTP bytes equal the written JSON bytes; patch HTTP text is exact.",
+    "Default detail/SSE contracts and owner isolation remain unchanged.",
+    "Product SSE resumes with Last-Event-ID and includes stream.end.",
+    "Diagnosis and source-binding object, evidence, scientific loss notes, allocator explanation, and patch are preserved.",
+    "Precision/parameter counts and full numerical requirement evidence remain intact; within_tol can remain unaccepted.",
+    "Fixed suite retains denominator nine and threshold six with original source hashes.",
+    "Unknown actual cost remains null and cannot fall back to a nested zero."
+  ]
+}

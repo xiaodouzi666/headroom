@@ -12,6 +12,7 @@ from dataclasses import dataclass, fields
 from pathlib import Path, PurePosixPath
 
 from headroom.lab.envs import validate_allocator
+from headroom.verify.numerical_requirement import NumericalRequirement, requirement_name
 
 MODEL_KEYS = {
     "layers",
@@ -155,8 +156,15 @@ class PatchPolicy:
     allow_batch_change: bool | None = None
     allow_grad_accum: bool | None = None
     max_throughput_regression_pct: float = 25.0
+    numerical_requirement: NumericalRequirement = "legacy"
 
     def __post_init__(self):
+        requirement_name(
+            {
+                "numerical_requirement": self.numerical_requirement,
+                "allow_numerics_change": self.allow_numerics_change,
+            }
+        )
         for name in ("allow_numerics_change", "allow_model_change", "allow_batch_grad_accum"):
             if type(getattr(self, name)) is not bool:
                 raise ValueError(f"{name} must be boolean")

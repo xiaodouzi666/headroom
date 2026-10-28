@@ -1,0 +1,37 @@
+# F3 explicit numerical tiers — offline implementation
+
+This change prepares two independent s2 requests and evaluates their numerical requirements. It does not execute a campaign, allocate funds, call a model, run a GPU, or certify a new repair. The latest fixed-nine and historical campaign scores are unchanged.
+
+## Contract and compatibility
+
+Policy.numerical_requirement accepts legacy (default), exact-loss20-v1, or observed-bf16-v1. The default Policy.model_dump() and nested/JSON serialization still contain exactly the original four keys. Existing resolve_policies(default) and resolve_policies(strict) remain equal. Existing tolerances, parameter/memory/throughput gates and protocol-v2 acceptance thresholds remain unchanged. The independent F3 strict tier name is scoped to headroom.final48.s2-tiers.v1; it does not redefine the old evaluation policy alias.
+
+exact-loss20-v1 requires a candidate with exactly 20 updates and a completed 20-update comparison run: the original baseline, or, for an OOM baseline, an independently validated original-workload-bound offload/checkpoint reference. All 20 recorded finite backward loss scalars must be bitwise identical, observed precision unchanged and known, numerical changes absent, and inputs/effective batch/objective independently paired. The comparison and search both call the existing pairing/reference proof functions; report booleans alone cannot substitute for these checks. A legacy small-batch reference is not sufficient proof of the original workload. Comparison uses IEEE-754 binary64 representations after the existing Lab .item() capture, including signed zero. It does not compare every parameter or optimizer tensor bitwise. Unknown pairing or precision fails this explicit tier. The actual s2 source is still unsupported by the existing bounded pairing contract; a test confirms this has not been silently expanded. Therefore the current s2 strict tier cannot honestly be declared accepted merely because its scalars match.
+
+observed-bf16-v1 requires explicit numerical-change permission, candidate completion of 20 updates and actual BF16 precision observations to finish. The original baseline may be OOM. Existing reference discovery, numerical acceptance, precision-specific tolerance and all safety checks still apply; observing BF16 alone is not sufficient. A valid FP32 intermediate improvement may be kept while target_met remains false, so search continues toward the BF16 tier. Permission alone, a model assertion, or unknown precision cannot complete the tier.
+
+The verifier records numerical_requirement and numerical_requirement_evidence (per-check results, observed precision, pairing booleans/null, scope and limitations), with checks.numerical_tier for explicit modes. The search independently recomputes the requirement against the original baseline; it rejects nonexact strict candidates and unsupported BF16 target claims. Legacy reports are not accepted as proof for a new explicit tier.
+
+Only explicit F3 requests append the requirement and scope to diagnosis evidence and patch context. Global prompts and the previously frozen nine native-admission/profile files are unchanged. PatchPolicy accepts the new field; the default patch request removes its legacy value to preserve the old request shape.
+
+## Pure helpers
+
+headroom.acceptance.final48_tiers.prepare_s2_tiers(base: FixRequest) returns two separate validated requests (strict, allow_precision). It preserves source/arguments, runtime configuration, caps, seed and search settings, and requires fit:22GB, 20 updates, the fixed model and standalone mode. Source selection/pinning remains the caller's responsibility; this helper does not read or execute that source.
+
+summarize_s2_tier(tier, request, result, reference=None) accepts supplied run observations or the canonical report envelope with run and verification. Its optional explicit reference is passed to comparison together with request.numerical_reference.strategy; it never follows an arbitrary reference path to read host files. Missing or invalid reference evidence cannot be silently replaced. It recomputes numerical and ordinary memory checks, retains reported values separately when needed, and exposes tier_met, observations and selected artifact links without promoting memory-only success. Callers must execute requests independently and preserve their actual run IDs/patches. No live runner or allocation is added here.
+
+## Verification receipt
+
+Final focused run: **415 passed in 23.94 seconds**, with an outer DNS/socket deny guard (zero attempted network access). Scope: test_final48_tiers, test_compare, test_search, test_orchestrator, test_evaluation, test_patch, test_honesty, test_protocol_v2, test_verify_offload_reference, test_verify_checkpoint_reference, test_checkpoint_precision. Tests use synthetic observations, MockTransport and temporary local Git/source fixtures on azuki, never model/GPU outcomes. An end-to-end mock search continues through two nonexact strict candidates instead of stopping; the legacy path keeps its prior prompt-policy shape.
+
+All eight changed/new source/test files had identical before/after test hashes. Ruff and format checks passed; scoped gitleaks found zero leaks. The previous nine native-admission/profile files still match their frozen receipt. The earlier 287-test stage receipt and initial logs are retained as history, not the final implementation. The intermediate failure log is also retained: two added pipeline test fixtures initially contained a literal backslash-n instead of a newline; correcting those fixtures yielded the passing run. Do not add overlapping earlier test counts.
+
+Pending: independent review, eventual authorized integration/execution of the two F3 requests, and genuine source-bound pairing support/evidence if strict s2 acceptance is expected. No two-tier performance numbers, Pareto dominance, historical score changes, or parameter/optimizer bitwise claims are introduced.
+
+## OOM-reference correction
+
+The first implementation incorrectly required original-baseline completion for both tiers and the pure summary omitted the supplied reference during comparison. These are corrected without changing legacy rules. The evidence now records reference_chain (original/comparison identities, strategy, original-workload binding and proof checks), plus independently observed_pairing. The BF16 tier-specific checks are candidate_completed20 and observed_bf16. The exact tier additionally checks comparison_completed20, original_workload_bound, complete scalar bit identity, known unchanged precision and independently established pairing.
+
+Focused offline tests construct source-bound synthetic OOM/reference/candidate observations using the existing reference fixtures. They verify successful exact and BF16 comparisons, rejection for missing/mismatched references or broken binding, out-of-tolerance BF16 rejection, and a difference only at scalar 20 that the legacy five-scalar OOM observation alone would miss. These are offline tests of real control paths, not new hardware OOM runs. Direct-reference data is passed through compare, search and summary; it is not fetched from a path supplied by a report.
+
+Authoritative final files: oom-tests-final.log, oom-source-hashes.json, oom-ruff.log, oom-gitleaks.json/log and receipt.json. The earlier logs/receipt remain available. No execution pack was started while this correction was in progress.

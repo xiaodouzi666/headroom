@@ -1,0 +1,54 @@
+{
+  "checked_at_utc": "2026-10-28T19:00:26Z",
+  "public_url": "https://headroom.tail45186b.ts.net/",
+  "chrome": {
+    "browser": "physical Chrome",
+    "home_rendered": true,
+    "results_nine_rows_rendered": true,
+    "home_tab_retained": true,
+    "results_screenshot": "chrome-results.png"
+  },
+  "mac_checks": [
+    {
+      "route": "existing_local_http_proxy",
+      "http_status": 200,
+      "tls_verify_result": 0,
+      "seconds": 0.775354
+    },
+    {
+      "route": "without_explicit_http_proxy",
+      "http_status": 200,
+      "tls_verify_result": 0,
+      "seconds": 0.836478
+    }
+  ],
+  "server_checks": {
+    "source": "read-only SSH inspection by funnel_transport_check",
+    "public_service": "enabled active/running",
+    "tailscale_service": "enabled active/running",
+    "backend_state": "Running",
+    "warnings": [],
+    "linger": true,
+    "funnel": "HTTPS 443 -> 127.0.0.1:8766",
+    "public_home": {
+      "http_status": 200,
+      "seconds": 0.226
+    },
+    "public_health": {
+      "http_status": 200,
+      "seconds": 0.19
+    },
+    "tls_verified": true,
+    "health_timer": "enabled active/waiting",
+    "consecutive_failures": 0
+  },
+  "model_calls": 0,
+  "configuration_changed": false,
+  "limitations": [
+    "Existing exact-host Clash mapping remains; bypassing explicit HTTP proxy does not exclude OS TUN.",
+    "No independent cellular-browser measurement.",
+    "Human alert recipient is unconfigured; health timer only stores local state.",
+    "Full shared-host reboot was not performed."
+  ],
+  "public_submissions_enabled": false
+}

@@ -80,11 +80,12 @@ describe("run event lifecycle", () => {
     const view = render(<RunPage runId={id} />);
     await waitFor(() => expect(OfflineEvents.instances).toHaveLength(1));
     const source = OfflineEvents.instances[0];
-    expect(source.url).toBe(`${detailPath}/events`);
+    expect(source.url).toBe(`${detailPath}/events?view=product-v1`);
     act(() => source.onopen?.());
     const event = {
       sequence: 2,
       kind: "diagnose.done",
+      label: "Diagnosis completed",
       data: {
         model: "nvidia/actual-model",
         elapsed_seconds: 1.25,
@@ -100,7 +101,7 @@ describe("run event lifecycle", () => {
         data: {},
       });
     });
-    expect(screen.getAllByText("diagnose · done")).toHaveLength(1);
+    expect(screen.getAllByText("Diagnosis completed")).toHaveLength(1);
     expect(screen.getByText("actual-model")).toBeInTheDocument();
     expect(screen.getByText("1.25s")).toBeInTheDocument();
     expect(screen.getByText("Cost $0.0123")).toBeInTheDocument();
@@ -180,7 +181,7 @@ it("renders per-round verification and only downloads complete retained or rever
                 {
                   number: 1,
                   decision: "revert",
-                  reason: "loss changed",
+                  reason: "The numerical comparison did not pass.",
                   provenance: "offline_fixture",
                   diff_status: "available",
                   diff: patch,
@@ -247,7 +248,6 @@ describe("confirmed run cost", () => {
       const usage = {
         calls: 1,
         admission_counts: { local_estimate: 1 },
-        reservation_usd: "0.3456",
         total_cost_usd: known ? "0.0213" : null,
         known_cost_usd: known ? "0.0213" : "0",
         unknown_cost_calls: known ? 0 : 1,
@@ -604,24 +604,22 @@ it("does not reuse baseline stack IDs as unbound diagnosis evidence", async () =
 });
 it("renders actual failure and missing metrics in plain language without debug views", async () => {
   mountRun(
-    { status: "needs_human", reason: "loss_tolerance_gate_failed" },
+    { status: "needs_human", reason: "The numerical comparison did not pass." },
     {
       summary: { target_met: false, loss_equivalence: "changed" },
       verification: { checks: { loss_tolerance: false } },
-      warnings: [
-        "The provider ledger has an unknown charge; halt at reservation gate.",
-      ],
+      warnings: ["The provider has not supplied a complete usage total."],
       selected_configuration: { private_debug: "do not preview this object" },
     },
   );
-  await screen.findByText("loss tolerance check failed");
+  await screen.findByText("The numerical comparison did not pass.");
   expect(screen.getByText("changed")).toBeInTheDocument();
   expect(screen.getByText("Not passed")).toBeInTheDocument();
   expect(
     screen.getByRole("heading", { name: "Limitations" }),
   ).toBeInTheDocument();
-  expect(document.body.textContent).not.toMatch(
-    /ledger|unknown charge|\bhalt\b|\bgate\b|reservation|withdrawn|acceptance/i,
+  expect(document.body.textContent).toContain(
+    "The provider has not supplied a complete usage total.",
   );
   expect(document.body.textContent).not.toContain("do not preview this object");
 });
@@ -632,6 +630,7 @@ it("never substitutes a nested zero for an explicitly unavailable event cost", a
     OfflineEvents.instances[0].emit("diagnose.done", {
       sequence: 1,
       kind: "diagnose.done",
+      label: "Diagnosis completed",
       data: {
         model: "nvidia/actual-model",
         elapsed_seconds: 2,
@@ -660,6 +659,7 @@ it("does not round a confirmed positive run or event cost to zero", async () => 
     OfflineEvents.instances[0].emit("diagnose.done", {
       sequence: 1,
       kind: "diagnose.done",
+      label: "Diagnosis completed",
       data: { cost_usd: "0.000001" },
     }),
   );

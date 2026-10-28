@@ -94,6 +94,7 @@ class AcceptanceRun:
     bundle: object
     profile: object
     artifact_dir: Path
+    allocation: object | None = None
 
     @property
     def router(self):
@@ -124,6 +125,11 @@ def acceptance_run(
     env_file=None,
     max_http_retries=DEFAULT_HTTP_RETRIES,
     low_effort_probe_request_sha256=None,
+    allocation_receipt=None,
+    allocation_scope=None,
+    allocation_execution_key=None,
+    preparation_sha256=None,
+    scoring_policy_sha256=None,
 ):
     """One case, one normal runtime and the existing authoritative shared ledger.
 
@@ -154,9 +160,26 @@ def acceptance_run(
     )
     if limit <= 0 or daily <= 0:
         raise ValueError("Explicit positive run and daily admission limits are required")
+    allocation = None
+    if allocation_receipt is not None:
+        from headroom.acceptance.allocation import verify_and_claim_allocation
+
+        allocation = verify_and_claim_allocation(
+            allocation_receipt,
+            project_root=project_root,
+            task_scope=allocation_scope,
+            execution_key=allocation_execution_key,
+            profile_path=profile_path,
+            run_limit_usd=limit,
+            daily_limit_usd=daily,
+            preparation_sha256=preparation_sha256,
+            scoring_policy_sha256=scoring_policy_sha256,
+        )
+    elif allocation_scope is not None:
+        raise ValueError("Allocation scope requires its reviewed receipt")
     directory = Path(artifact_dir)
     directory.mkdir(parents=True, mode=0o700, exist_ok=False)
-    run_id = uuid4().hex
+    run_id = allocation.run_id if allocation is not None else uuid4().hex
     provenance = "offline_fixture" if transport is not None else "live"
     store = budget = bundle = session = None
     opened = False
@@ -176,6 +199,13 @@ def acceptance_run(
         "usage": None,
         "budget": None,
     }
+    if allocation is not None:
+        record["allocation"] = {
+            "id": allocation.receipt["allocation_id"],
+            "receipt_sha256": allocation.receipt["receipt_sha256"],
+            "scope": allocation_scope,
+            "claim_run_id": run_id,
+        }
     write_json(directory / "runtime.json", record)
     try:
         profile_hash = file_record(profile_path, 256 * 1024)["sha256"]
@@ -184,9 +214,15 @@ def acceptance_run(
             raise ValueError("Runtime profile changed during verification")
         record["profile_sha256"] = profile_hash
         record["run_budget_mode"] = profile.run_budget_mode
-        database = select_budget_database(
-            project_root, allowed_root=project_root if transport is not None else None
-        )
+        if allocation is not None:
+            allocation.revalidate()
+            if profile_hash != allocation.receipt["profile_sha256"]:
+                raise ValueError("Allocation profile differs from runtime profile")
+            database = allocation.database
+        else:
+            database = select_budget_database(
+                project_root, allowed_root=project_root if transport is not None else None
+            )
         budget = BudgetLedger(
             database.path,
             require_existing=database.require_existing,
@@ -218,7 +254,9 @@ def acceptance_run(
             max_http_retries=max_http_retries,
             low_effort_probe_request_sha256=low_effort_probe_request_sha256,
         )
-        session = AcceptanceRun(run_id, provenance, store, budget, bundle, profile, directory)
+        session = AcceptanceRun(
+            run_id, provenance, store, budget, bundle, profile, directory, allocation
+        )
         record["status"] = "running"
         write_json(directory / "runtime.json", record)
         yield session
@@ -252,6 +290,15 @@ def acceptance_run(
                     record["budget"] = budget.snapshot(run_id)
                 store.update_run(run_id, status=record["status"], accepted=False)
             except BaseException as error:  # noqa: BLE001 - finish accounting, then preserve interruption
+                failures.append(type(error).__name__)
+                if not isinstance(error, Exception):
+                    cleanup_interrupt = cleanup_interrupt or error
+        if allocation is not None:
+            try:
+                from headroom.acceptance.allocation import finish_claim
+
+                finish_claim(allocation, status="closed" if caught is None else "failed")
+            except BaseException as error:  # noqa: BLE001 - retain claim and finish cleanup
                 failures.append(type(error).__name__)
                 if not isinstance(error, Exception):
                     cleanup_interrupt = cleanup_interrupt or error

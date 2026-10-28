@@ -13,6 +13,8 @@ from pathlib import Path
 
 from headroom.lab.runner import copy_source
 from headroom.verify.compare import REQUIRED_CHECKS, parse_target
+from headroom.verify.numerical_requirement import requirement_evidence, requirement_name
+from headroom.verify.offload import LEGACY_STRATEGY
 from headroom.verify.policy import safe_relative_path, validate_env_changes
 
 HARD_CHECKS = REQUIRED_CHECKS
@@ -91,10 +93,43 @@ class KeepDecision:
 
 
 def decide_keep(
-    current, candidate, verification, *, original_baseline, policy, preserve_target=False
+    current,
+    candidate,
+    verification,
+    *,
+    original_baseline,
+    policy,
+    preserve_target=False,
+    reference=None,
+    reference_strategy=LEGACY_STRATEGY,
 ):
     """Require original-baseline scientific gates plus improvement over current kept state."""
     checks = verification.get("checks", {})
+    requirement = requirement_name(policy)
+    if requirement != "legacy":
+        if verification.get("numerical_requirement") != requirement or not isinstance(checks, dict):
+            return KeepDecision(False, "numerical_requirement_unverified")
+        observed = requirement_evidence(
+            original_baseline,
+            candidate,
+            policy=policy,
+            pairing=checks,
+            numerics_changed=verification.get("numerics_changed"),
+            reference=reference,
+            reference_strategy=reference_strategy,
+        )
+        if requirement == "exact-loss20-v1" and (
+            observed["met"] is not True
+            or verification.get("loss_equivalence") != "identical"
+            or checks.get("numerical_tier") is not True
+        ):
+            return KeepDecision(False, "exact_loss20_requirement_unmet")
+        if (
+            requirement == "observed-bf16-v1"
+            and verification.get("target_met") is True
+            and (observed["met"] is not True or checks.get("numerical_tier") is not True)
+        ):
+            return KeepDecision(False, "bf16_tier_target_unverified")
     if not isinstance(checks, dict) or any(checks.get(key) is not True for key in HARD_CHECKS):
         return KeepDecision(False, "verification_hard_constraints_unmet")
     if original_baseline.get("status") == "oom" and checks.get("loss_decreases") is not True:

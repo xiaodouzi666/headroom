@@ -28,7 +28,7 @@ describe("measurement and charge honesty", () => {
     expect(gb(0)).toBe("0.00 GB");
     expect(displayMetric({}, "peak_after")).toBe("Unknown");
   });
-  it("does not turn an unknown charge into a zero total", () => {
+  it("does not turn incomplete usage into a zero total", () => {
     expect(costTotal({ total_cost_usd: "0", unknown_cost_calls: 1 })).toBe(
       "Unknown",
     );
@@ -183,7 +183,7 @@ it("counts repository preparation and the active worker against capacity", () =>
   expect(
     queueAtCapacity({ capacity: 3, pending: 1, preparing: 0, running: id }),
   ).toBe(false);
-  expect(queueAtCapacity({ halted: true })).toBe(true);
+  expect(queueAtCapacity({ paused: true })).toBe(true);
 });
 
 describe("availability evidence", () => {
@@ -264,4 +264,25 @@ it("keeps certified cost bounds separate and never rounds them downward", () => 
   expect(costUpperBound(usage)).toBe("$0.00033378");
   expect(costUpperBound({ ...usage, billing_complete: false })).toBe("Unknown");
   expect(usdUpper("-0.1")).toBe("Unknown");
+});
+
+it("counts a public busy worker toward queue capacity", () => {
+  expect(
+    queueAtCapacity({
+      capacity: 3,
+      pending: 2,
+      preparing: 0,
+      running: true,
+      paused: false,
+    }),
+  ).toBe(true);
+  expect(
+    queueAtCapacity({
+      capacity: 3,
+      pending: 1,
+      preparing: 0,
+      running: true,
+      paused: false,
+    }),
+  ).toBe(false);
 });

@@ -17,8 +17,9 @@ The API can select a reviewed private profile with HEADROOM_RUNTIME_PROFILE.
 CLI repair and watch commands accept --runtime-profile explicitly. The profile
 must describe verified model capabilities, billing and an authorized total;
 do not enable it by copying a sample fragment or assuming a key implies credit.
-HEADROOM_RUN_BUDGET_USD and HEADROOM_DAILY_BUDGET_USD are optional downward caps,
-not new funding. HEADROOM_BUDGET_DB_PATH selects the accounting database; changing
+HEADROOM_RUN_BUDGET_USD and HEADROOM_DAILY_BUDGET_USD are optional API/service
+downward caps, not new funding. CLI repair/watch/evaluation use their explicit
+--budget and --daily-budget options. HEADROOM_BUDGET_DB_PATH selects the accounting database; changing
 its path must never silently erase the accounting of an existing allocation.
 
 For a public deployment, use the reviewed launcher and instructions in

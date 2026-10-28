@@ -1,0 +1,108 @@
+{
+  "checked_at_utc": "2026-10-28T18:53:37.720292+00:00",
+  "checkout": "/tmp/headroom-f5-20261029-krupo1aa/repo",
+  "source_commit": "96994dd3afcdbe4689c4611643a31774562a33d0",
+  "status": "integrated_free_preflight_passed",
+  "dependency_lock_unchanged": true,
+  "lock_sha256": "fd57ad059cfde399f9de957bfca8527d69d3da0f9a7577c32bce1530c023a183",
+  "dependencies_reinstalled": false,
+  "image_rebuilt_again": false,
+  "credentials_copied": false,
+  "provider_calls": 0,
+  "gpu_executed": false,
+  "real_s3_repair": "pending A; not executed",
+  "submission_tag_created": false,
+  "checks": [
+    {
+      "command": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "fetch",
+        "origin",
+        "main"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "From https://github.com/xiaodouzi666/headroom\n * branch            main       -> FETCH_HEAD\n + b2a9231...96994dd main       -> origin/main  (forced update)\n"
+    },
+    {
+      "command": [
+        "git",
+        "checkout",
+        "--detach",
+        "96994dd3afcdbe4689c4611643a31774562a33d0"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "Previous HEAD position was b14f8b3 Publish source-checked project documents and prepare demo assets\nHEAD is now at 96994dd Add opt-in measured-input admission and bounded diagnosis policy\n"
+    },
+    {
+      "command": [
+        "/tmp/headroom-f5-20261029-krupo1aa/repo/.venv/bin/headroom",
+        "version"
+      ],
+      "returncode": 0,
+      "stdout": "0.1.0\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/headroom-f5-20261029-krupo1aa/repo/.venv/bin/headroom",
+        "fix",
+        "--help"
+      ],
+      "returncode": 0,
+      "stdout": "                                                                                \n Usage: headroom fix [OPTIONS] [script]                                         \n                                                                                \n Run the complete repair pipeline; missing live prerequisites produce a partial \n report.                                                                        \n                                                                                \n\u256d\u2500 Arguments \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502   script      <path>                                                         \u2502\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n\u256d\u2500 Options \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 --target                                 <str>             [default:         \u2502\n\u2502                                                            fix-oom]          \u2502\n\u2502 --reclaim-reduct\u2026                        <float range>     [default: 30]     \u2502\n\u2502                                          [0<=x<=100]                         \u2502\n\u2502 --allow-numerics\u2026    --no-allow-nume\u2026                      [default:         \u2502\n\u2502                                                            no-allow-numeric\u2026 \u2502\n\u2502 --allow-batch-gr\u2026    --no-allow-batc\u2026                      [default:         \u2502\n\u2502                                                            allow-batch-grad\u2026 \u2502\n\u2502 --max-throughput\u2026                        <float range>     [default: 25]     \u2502\n\u2502                                          [0<=x<=1000]                        \u2502\n\u2502 --config                                 <path>            Project YAML; CLI \u2502\n\u2502                                                            settings take     \u2502\n\u2502                                                            precedence.       \u2502\n\u2502 --max-steps                              <int range>       [default: 20]     \u2502\n\u2502                                          [1<=x<=10000]                       \u2502\n\u2502 --max-seconds                            <int range>       [default: 120]    \u2502\n\u2502                                          [1<=x<=3600]                        \u2502\n\u2502 --budget                                 <str>             [default: 0.6]    \u2502\n\u2502 --daily-budget                           <str>             [default: 12]     \u2502\n\u2502 --device                                 <str>             [default: cuda]   \u2502\n\u2502 --seed                                   <int>             [default: 1337]   \u2502\n\u2502 --source-root                            <path>                              \u2502\n\u2502 --runtime-profile                        <path>                              \u2502\n\u2502 --repo                                   <str>                               \u2502\n\u2502 --ref                                    <str>                               \u2502\n\u2502 --cmd                                    <str>                               \u2502\n\u2502 --max-rounds                             <int range>       [default: 6]      \u2502\n\u2502                                          [1<=x<=6]                           \u2502\n\u2502 --search-mode                            <until_target|bo  [default:         \u2502\n\u2502                                          unded_pareto>     until_target]     \u2502\n\u2502 --research           --no-research                         [default:         \u2502\n\u2502                                                            research]         \u2502\n\u2502 --allocator-conf                         <str>             Allowlisted       \u2502\n\u2502                                                            allocator         \u2502\n\u2502                                                            options; an       \u2502\n\u2502                                                            explicit empty    \u2502\n\u2502                                                            string clears     \u2502\n\u2502                                                            project           \u2502\n\u2502                                                            configuration.    \u2502\n\u2502 --reference-stra\u2026                        <legacy_small_ba  [default:         \u2502\n\u2502                                          tch|original_sav  legacy_small_bat\u2026 \u2502\n\u2502                                          ed_tensor_offloa                    \u2502\n\u2502                                          d|original_workl                    \u2502\n\u2502                                          oad_checkpoint>                     \u2502\n\u2502 --reference-cpu-\u2026                        <int range>       [default:         \u2502\n\u2502                                          [1<=x<=171798691  17179869184]      \u2502\n\u2502                                          84]                                 \u2502\n\u2502 --reference-disk\u2026                        <int range>       [default: 0]      \u2502\n\u2502                                          [0<=x<=687194767                    \u2502\n\u2502                                          36]                                 \u2502\n\u2502 --reference-max-\u2026                        <int range>       Reference         \u2502\n\u2502                                          [0<=x<=480]       timeout; 0 uses   \u2502\n\u2502                                                            the normal Lab    \u2502\n\u2502                                                            timeout. The      \u2502\n\u2502                                                            outer run         \u2502\n\u2502                                                            deadline still    \u2502\n\u2502                                                            applies.          \u2502\n\u2502                                                            [default: 0]      \u2502\n\u2502 --help                                                     Show this message \u2502\n\u2502                                                            and exit.         \u2502\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/headroom-f5-20261029-krupo1aa/repo/.venv/bin/headroom",
+        "diagnose",
+        "--help"
+      ],
+      "returncode": 0,
+      "stdout": "                                                                                \n Usage: headroom diagnose [OPTIONS]                                             \n                                                                                \n Diagnose a saved CUDA snapshot and suggest an unverified patch; never run the  \n source.                                                                        \n                                                                                \n\u256d\u2500 Options \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 *  --snapshot               <file>  [required]                               \u2502\n\u2502    --traceback              <file>                                           \u2502\n\u2502    --source                 <file>                                           \u2502\n\u2502    --budget                 <str>   [default: 0.30]                          \u2502\n\u2502    --runtime-profile        <path>                                           \u2502\n\u2502    --run-root               <path>                                           \u2502\n\u2502    --help                           Show this message and exit.              \u2502\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/headroom-f5-20261029-krupo1aa/repo/.venv/bin/headroom",
+        "watch",
+        "--help"
+      ],
+      "returncode": 0,
+      "stdout": "                                                                                \n Usage: headroom watch [OPTIONS]                                                \n                                                                                \n Observe argv in Docker; confirmed CUDA OOM repairs mapped Python scripts.      \n                                                                                \n Shell wrappers retain their full argv. A single captured Python main supplies  \n the source mapping; ambiguous/multiple or source-free entries need human       \n input.                                                                         \n                                                                                \n\u256d\u2500 Options \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 --source-root                            <path>                              \u2502\n\u2502 --target                                 <str>             [default:         \u2502\n\u2502                                                            fix-oom]          \u2502\n\u2502 --max-steps                              <int range>       [default: 20]     \u2502\n\u2502                                          [1<=x<=10000]                       \u2502\n\u2502 --max-seconds                            <int range>       [default: 120]    \u2502\n\u2502                                          [1<=x<=3600]                        \u2502\n\u2502 --device                                 <str>             [default: cuda]   \u2502\n\u2502 --seed                                   <int>             [default: 1337]   \u2502\n\u2502 --budget                                 <str>             [default: 0.6]    \u2502\n\u2502 --daily-budget                           <str>             [default: 12]     \u2502\n\u2502 --runtime-profile                        <path>                              \u2502\n\u2502 --allocator-conf                         <str>             Allowlisted       \u2502\n\u2502                                                            options applied   \u2502\n\u2502                                                            to Watch baseline \u2502\n\u2502                                                            and repair; empty \u2502\n\u2502                                                            clears project    \u2502\n\u2502                                                            configuration.    \u2502\n\u2502 --allow-numerics\u2026    --no-allow-nume\u2026                      [default:         \u2502\n\u2502                                                            no-allow-numeric\u2026 \u2502\n\u2502 --search-mode                            <until_target|bo  [default:         \u2502\n\u2502                                          unded_pareto>     until_target]     \u2502\n\u2502 --config                                 <path>            Project YAML; CLI \u2502\n\u2502                                                            settings take     \u2502\n\u2502                                                            precedence.       \u2502\n\u2502 --help                                                     Show this message \u2502\n\u2502                                                            and exit.         \u2502\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/headroom-f5-20261029-krupo1aa/repo/.venv/bin/python",
+        "-c",
+        "import json;from dotenv import dotenv_values;d=dotenv_values('.env.example',interpolate=False);assert d['NEBIUS_API_KEY']==d['TAVILY_API_KEY']=='';assert all(d[k]=='false' for k in ['HEADROOM_RUN_SUBMISSIONS_ENABLED','HEADROOM_VERIFIED_RUNS_ENABLED','HEADROOM_SNAPSHOT_SUBMISSIONS_ENABLED','HEADROOM_TRUST_CLOUDFLARED','HEADROOM_TRUST_TAILSCALE_FUNNEL']);assert not d.get('HEADROOM_RUNTIME_PROFILE');assert not d.get('HEADROOM_BUDGET_DB_PATH');print(json.dumps({'example_keys_blank':True,'public_flags_false':True,'no_active_profile_or_db':True}))"
+      ],
+      "returncode": 0,
+      "stdout": "{\"example_keys_blank\": true, \"public_flags_false\": true, \"no_active_profile_or_db\": true}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

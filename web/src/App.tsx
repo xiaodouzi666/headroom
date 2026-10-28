@@ -9,7 +9,7 @@ import {
   Cpu,
   ShieldCheck,
 } from "lucide-react";
-import { getJSON, submitRun } from "./api";
+import { getJSON, submitRun, requestError } from "./api";
 import EvaluationView from "./EvaluationView";
 import { RunPage } from "./RunPage";
 import VerifiedPage from "./VerifiedPage";
@@ -358,8 +358,7 @@ function RunForm({ config }: { config: Dict }) {
           body: JSON.stringify(payload),
         });
         const body = record(await response.json());
-        if (!response.ok)
-          throw new Error(text(body.detail, "Could not start the run."));
+        if (!response.ok) throw new Error(requestError(response.status));
         if (
           typeof body.run_id !== "string" ||
           !/^[a-f0-9]{32}$/.test(body.run_id)
@@ -858,9 +857,9 @@ function About() {
           to an evidence trail.
         </h1>
         <p>
-          Headroom investigates GPU memory in single-GPU PyTorch workloads,
-          proposes a focused change, and checks what happened when the workload
-          runs again.
+          Headroom analyzes GPU memory in single-GPU PyTorch workloads, proposes
+          a focused change, and checks what happened when the workload runs
+          again.
         </p>
         <ProviderBadge />
       </div>

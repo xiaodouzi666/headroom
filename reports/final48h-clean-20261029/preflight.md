@@ -1,6 +1,6 @@
 # F5 clean-clone setup preflight
 
-Status: clean-clone setup, CLI checks and the rebuilt Lab image contract passed. Final environment-example/Runtime commit review remains pending. **This is a free setup preflight, not evidence that the F5 live repair passed.**
+Status: clean-clone setup, CLI checks and the rebuilt Lab image contract passed. Integrated commit 96994dd was fetched into the same clean checkout; CLI and environment-example checks passed without another install or image rebuild. **This is a free setup preflight, not evidence that the F5 live repair passed.**
 
 Started: 2026-10-29 01:59:48 Asia/Shanghai. The whole task is limited to 90 minutes.
 
@@ -32,8 +32,12 @@ The script builds only the Headroom tag from a six-file allowlist context. The c
 
 ## Remaining F5 acceptance
 
-- Recheck the separately prepared `.env.example`/Runtime documentation commit when published.
+- Integrated environment-example/Runtime checks passed at 96994dd; see [integrated-check.json](integrated-check.json).
 - A real s3 repair, its report, model/GPU execution, and the <= USD 0.30 acceptance remain unexecuted and require the outstanding run authorization. The CLI's explicit limit option is `--budget 0.30`; merely copying an example file does not authorize spending.
 - No new allocation, `v1.0-submission` tag, or push was performed.
 
 Exact commands, outcomes, package versions, hashes and the current build status are in [preflight.json](preflight.json).
+
+## Integrated source check
+
+The same independent checkout fetched commit 96994dd and passed version/fix/diagnose/watch CLI checks plus parsing of the blank-key, disabled-public-interface example configuration. Its dependency-lock hash was unchanged, so dependency installation and Lab image building were not repeated. The checkout stayed clean with no actual .env or runs directory. See [integrated-check.json](integrated-check.json). This completes the free setup checks; the required real s3 repair and submission tag remain pending.

@@ -1,0 +1,101 @@
+{
+  "schema": "headroom.final48-f1-preparation-check.v1",
+  "checked_at": "2026-10-28T18:28:45.467505+00:00",
+  "status": "prepared_not_executed",
+  "capture_provenance": "preserved_real_R6_baselines",
+  "preparation_semantic_sha256": "9f5f0ebafc41cfce58d58a3afdc632f7b8c42ef5ead52b67d1f2e8bd7f1b8e0e",
+  "preparation_file": {
+    "bytes": 63844,
+    "sha256": "31aef5c33c391d12330dae122dd4ce4cd6d061d59f40b14cbe381fac4c28262f"
+  },
+  "scoring_policy": {
+    "id": "first-category-agreement-v1",
+    "primary": "Strict JSON first root-cause category equals the authored manifest truth.",
+    "strict_json": "No duplicate keys, nonfinite values, text extraction, JSON repair, or retries.",
+    "category_contract": "The same RootCause.category enum in all three conditions.",
+    "categories": [
+      "params",
+      "grads",
+      "optimizer_state",
+      "activations",
+      "temporaries",
+      "retained_graph",
+      "cache",
+      "fragmentation_candidate",
+      "unknown"
+    ],
+    "secondary": "Full Diagnosis and reference validation recorded separately; not required for primary category agreement.",
+    "denominator_per_condition": 9,
+    "unknown_truths": [
+      "s5_fragmentation_varlen",
+      "nanogpt"
+    ],
+    "missing_or_invalid_first_category": null
+  },
+  "scoring_policy_sha256": "fca45c3be1332b0da3aa23d7bacea438a1cf34942d5853cda1b01da18df0cf7e",
+  "source_campaign": "runs/evaluation/live/20261027T022818939585Z-151818b1/campaign.json",
+  "source_campaign_sha256": "7a1b490b4cf545991ccfd3ff07cf442786dda740f55f346a94588448528ce221",
+  "scenario_manifest_sha256": "2b5d669700c68737abaa258a7e8eb26a683baaa4e39d378a9d98a88bda2f1c20",
+  "ready_requests": 27,
+  "planned_requests": 27,
+  "new_model_requests": 0,
+  "new_gpu_executions": 0,
+  "search_requests": 0,
+  "original_input_pins_verified": 102,
+  "request_policy": {
+    "id": "final48-diagnosis-only-2000-v1",
+    "max_completion_tokens": 2000,
+    "reasoning": false,
+    "max_supplements": 0,
+    "max_http_retries": 0,
+    "patch_calls": 0,
+    "research_calls": 0,
+    "gpu_executions": 0
+  },
+  "fixed_denominator": 9,
+  "truth_unknown_scenarios": [
+    "s5_fragmentation_varlen",
+    "nanogpt"
+  ],
+  "condition_input_estimates": [
+    {
+      "condition": "full_ultra",
+      "local_cl100k_approx_sum": 365641,
+      "provider_input_tokens": null,
+      "actual_cost_usd": null
+    },
+    {
+      "condition": "traceback_ultra",
+      "local_cl100k_approx_sum": 95424,
+      "provider_input_tokens": null,
+      "actual_cost_usd": null
+    },
+    {
+      "condition": "full_super",
+      "local_cl100k_approx_sum": 365641,
+      "provider_input_tokens": null,
+      "actual_cost_usd": null
+    }
+  ],
+  "checks": {
+    "focused_tests": {
+      "passed": 17,
+      "seconds": 36.06,
+      "scope": "tests/test_final48_ablation.py"
+    },
+    "implementation_pins_current_at_check": true,
+    "original_input_pins_current_at_check": true,
+    "request_artifacts_current_at_check": true,
+    "live_execution_authorized": false
+  },
+  "still_required": [
+    "Explicit live authorization and approved allocation binding.",
+    "Reviewed native-schema admission enablement; current runner is preparation only.",
+    "Rebuild and review preparation after final shared implementation changes."
+  ],
+  "limits": [
+    "Local token estimates are not provider usage or a cost bound.",
+    "Short-arm counts are below the historical Ultra provider-calibration range.",
+    "Prepared requests and offline fixture responses do not establish live performance."
+  ]
+}

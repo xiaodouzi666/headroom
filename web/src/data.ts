@@ -74,6 +74,7 @@ export function provenanceLabel(run: Dict): string | null {
 export interface RunEvent {
   sequence: number;
   kind: string;
+  label?: string;
   data: Dict;
   created_at?: string;
 }
@@ -90,6 +91,7 @@ export function parseEvent(value: unknown): RunEvent | null {
   return {
     sequence,
     kind: d.kind,
+    label: typeof d.label === "string" ? d.label : undefined,
     data: record(d.data),
     created_at: typeof d.created_at === "string" ? d.created_at : undefined,
   };
@@ -335,11 +337,14 @@ export function configurationLink(
 }
 
 export function queueAtCapacity(queue: Dict): boolean {
-  if (queue.halted === true || queue.closing === true) return true;
+  if (queue.paused === true || queue.closing === true) return true;
   const capacity = numeric(queue.capacity);
   if (capacity === null) return false;
   const running =
-    typeof queue.running === "string" && queue.running.length > 0 ? 1 : 0;
+    queue.running === true ||
+    (typeof queue.running === "string" && queue.running.length > 0)
+      ? 1
+      : 0;
   return (
     (numeric(queue.pending) ?? 0) + (numeric(queue.preparing) ?? 0) + running >=
     capacity

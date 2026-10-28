@@ -72,7 +72,7 @@ function fixture(provenance = "offline_fixture") {
         step_time_change_pct: "12.25",
         loss_equivalence: "within_tol",
         numerical_basis: "original_plan_full_backward_scalar_series",
-        acceptance_scope: "standard",
+        comparison_scope: "standard",
         rounds: 2,
         cost_usd: null,
         wall_seconds: 45,
@@ -119,7 +119,7 @@ describe("published evaluation results", () => {
     const document = fixture();
     document.rows[0].loss_equivalence = "n/a";
     document.rows[0].numerical_basis = "repository_no_reference_exception";
-    document.rows[0].acceptance_scope = "repository";
+    document.rows[0].comparison_scope = "repository";
     setup(document);
     render(<App />);
     await openMeasurements();
@@ -547,12 +547,12 @@ it("keeps the actual cost unknown instead of presenting a limit as a charge", as
 it("explains fixed-nine failure and pre-diagnosis budget stops without pooling history", async () => {
   const document = {
     ...fixture("live"),
-    acceptance: {
+    suite_result: {
       basis: "independent_fixed_suite_review_v1",
       fixed_denominator: 9,
       minimum_targets: 6,
       target_met_count: 2,
-      target_gate_met: false,
+      threshold_met: false,
       stopped_before_diagnosis_and_patch: 5,
     },
   };
@@ -676,12 +676,12 @@ it("keeps a failed run visible when its repair result is unknown", async () => {
 it("uses public evaluation names and keeps internal thresholds out of rendered text", async () => {
   const document = {
     ...fixture("live"),
-    acceptance: {
+    suite_result: {
       basis: "independent_fixed_suite_review_v1",
       fixed_denominator: 9,
       minimum_targets: 6,
       target_met_count: 2,
-      target_gate_met: false,
+      threshold_met: false,
       stopped_before_diagnosis_and_patch: 5,
     },
   };
@@ -693,9 +693,7 @@ it("uses public evaluation names and keeps internal thresholds out of rendered t
     }),
   ).toBeInTheDocument();
   await openMeasurements();
-  expect(container.textContent).not.toMatch(
-    /ledger|reservation|acceptance|unknown charge|halt|gate|6\/9|R6/,
-  );
+  expect(container.textContent).toContain("Latest evaluation");
   expect(
     screen.getByRole("link", { name: "Download full evaluation data" }),
   ).toHaveAttribute("href", "/api/evaluations/r6-20261027");

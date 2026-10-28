@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { ChevronRight, Download, SquareArrowOutUpRight } from "lucide-react";
-import { getJSON, getText } from "./api";
+import { getJSON, getText, productMessage } from "./api";
 import {
   analysisOf,
   artifactLink,
@@ -53,34 +53,9 @@ function confirmedRunCost(value: unknown): string {
     return "unavailable";
   return confirmedAmount(usage.total_cost_usd);
 }
-function publicText(value: unknown, fallback = "Unknown"): string {
-  let output = text(value, fallback);
-  if (/^[a-z][a-z0-9_]+$/.test(output)) output = human(output);
-  if (
-    /unknown[ _-]+(?:charge|cost)|unconfirmed (?:actual )?charge|unresolved (?:charge|cost)/i.test(
-      output,
-    )
-  )
-    return "The provider has not supplied a complete usage total.";
-  if (
-    /budget[ _-]+exceeded|insufficient.*budget|cannot reserve|budget.*reservation/i.test(
-      output,
-    )
-  )
-    return "The run reached its model-usage limit.";
-  if (/verified provider profile|runtime profile unavailable/i.test(output))
-    return "Model access is unavailable.";
-  output = output
-    .replace(/HTTP 529/gi, "model service unavailable")
-    .replace(/conservative upper/gi, "estimated maximum")
-    .replace(/\bledger\b/gi, "usage record")
-    .replace(/\breservation\b/gi, "estimate")
-    .replace(/\bwithdrawn\b/gi, "not selected")
-    .replace(/\bacceptance\b/gi, "verification")
-    .replace(/\bgate\b/gi, "check")
-    .replace(/\bhalt(?:ed)?\b/gi, "stopped")
-    .replace(/See report JSON/g, "See the downloaded report");
-  return output;
+function evidenceText(value: unknown, fallback = "Unknown"): string {
+  const output = text(value, fallback);
+  return /^[a-z][a-z0-9_]+$/.test(output) ? human(output) : output;
 }
 function RunStatus({ value }: { value: unknown }) {
   const state = text(value, "unknown");
@@ -323,7 +298,7 @@ export function RunPage({ runId }: { runId: string }) {
     }
     void refresh().then(() => {
       if (closed) return;
-      source = new EventSource(`/api/runs/${runId}/events`, {
+      source = new EventSource(`/api/runs/${runId}/events?view=product-v1`, {
         withCredentials: true,
       });
       source.onopen = () => setStream("Connected");
@@ -421,11 +396,11 @@ export function RunPage({ runId }: { runId: string }) {
           ))}
         </div>
       </div>
-      {error && <Notice tone="red">{publicText(error)}</Notice>}
+      {error && <Notice tone="red">{error}</Notice>}
       {run.status === "needs_human" && (
         <Notice>
           <strong>This run needs attention.</strong>{" "}
-          {publicText(
+          {productMessage(
             run.reason,
             "A required condition is unavailable. Inspect the report before continuing.",
           )}
@@ -501,7 +476,7 @@ export function RunPage({ runId }: { runId: string }) {
                       <span className="event-node" />
                       <div>
                         <div className="event-title">
-                          {publicText(human(event.kind))}
+                          {text(event.label, "Run update")}
                         </div>
                         <div className="event-meta">
                           <time>
@@ -521,7 +496,7 @@ export function RunPage({ runId }: { runId: string }) {
                           <Badge>{event.data.model.split("/").pop()}</Badge>
                         )}
                         {typeof event.data.reason === "string" && (
-                          <p>{publicText(event.data.reason)}</p>
+                          <p>{productMessage(event.data.reason)}</p>
                         )}
                         {numeric(event.data.elapsed_seconds) !== null && (
                           <small>
@@ -708,8 +683,8 @@ export function RunPage({ runId }: { runId: string }) {
                         },
                       }).map((row, i) => (
                         <tr key={i}>
-                          <td>{publicText(row.label)}</td>
-                          <td>{publicText(row.value)}</td>
+                          <td>{evidenceText(row.label)}</td>
+                          <td>{evidenceText(row.value)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -733,8 +708,8 @@ export function RunPage({ runId }: { runId: string }) {
                         <div className="diagnosis-index">
                           {String(index + 1).padStart(2, "0")}
                         </div>
-                        <h3>{publicText(cause.title)}</h3>
-                        <p>{publicText(human(cause.category))}</p>
+                        <h3>{evidenceText(cause.title)}</h3>
+                        <p>{evidenceText(human(cause.category))}</p>
                         <div className="diagnosis-stat">
                           <span>Estimated size</span>
                           <strong>
@@ -778,7 +753,7 @@ export function RunPage({ runId }: { runId: string }) {
                       {diagnosis.needs_more_info === true
                         ? Array.isArray(diagnosis.notes)
                           ? diagnosis.notes
-                              .map((note) => publicText(note))
+                              .map((note) => evidenceText(note))
                               .join(" ")
                           : "The model needs more information to identify the cause."
                         : "Root causes appear after the evidence is analyzed."}
@@ -790,9 +765,12 @@ export function RunPage({ runId }: { runId: string }) {
                 <Section title="Suggested fixes" kicker="Model estimates">
                   {rows(diagnosis.plan).map((item, index) => (
                     <article className="round-note" key={index}>
-                      <h3>{publicText(item.title)}</h3>
+                      <h3>{evidenceText(item.title)}</h3>
                       <p>
-                        {publicText(item.description, "No rationale recorded.")}
+                        {evidenceText(
+                          item.description,
+                          "No rationale recorded.",
+                        )}
                       </p>
                       <Badge>
                         Expected saving {text(item.display_expected_saving)}
@@ -813,7 +791,7 @@ export function RunPage({ runId }: { runId: string }) {
             <Section title="Limitations">
               {limitations.map((warning, index) => (
                 <p className="small-copy" key={index}>
-                  {publicText(warning)}
+                  {evidenceText(warning)}
                 </p>
               ))}
             </Section>
@@ -989,7 +967,7 @@ function RoundDetails({
         : "No"
       : typeof value === "number" && Number.isFinite(value)
         ? String(value)
-        : publicText(value);
+        : evidenceText(value);
   function download() {
     if (!completeDiff) return;
     const url = URL.createObjectURL(
@@ -1004,8 +982,8 @@ function RoundDetails({
   return (
     <article className="round-note">
       <Badge>Round {number}</Badge>{" "}
-      <strong>{publicText(human(row.decision ?? row.status))}</strong>
-      <p>{publicText(row.reason, "No decision reason recorded.")}</p>
+      <strong>{evidenceText(human(row.decision ?? row.status))}</strong>
+      <p>{productMessage(row.reason, "No decision reason recorded.")}</p>
       {provenanceLabel({ provenance: row.provenance ?? provenance }) && (
         <p className="caption">
           {provenanceLabel({ provenance: row.provenance ?? provenance })}
@@ -1055,7 +1033,7 @@ function RoundDetails({
             {Object.entries(record(verification.checks)).map(
               ([name, result]) => (
                 <tr key={name}>
-                  <th>{publicText(human(name))}</th>
+                  <th>{evidenceText(human(name))}</th>
                   <td>
                     {typeof result === "boolean"
                       ? result
@@ -1072,7 +1050,7 @@ function RoundDetails({
       {Array.isArray(verification.notes) &&
         verification.notes.map((note, i) => (
           <p className="caption" key={i}>
-            {publicText(note)}
+            {evidenceText(note)}
           </p>
         ))}
     </article>

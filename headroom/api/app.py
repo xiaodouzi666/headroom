@@ -19,7 +19,7 @@ from urllib.parse import urlsplit
 from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -28,6 +28,13 @@ from headroom.api.availability import AvailabilityMonitor
 from headroom.api.diagnosis_evidence import load_initial_diagnosis
 from headroom.api.evaluations import register_evaluations
 from headroom.api.example_presets import EXAMPLE_PRESETS, PRODUCT_EXAMPLES
+from headroom.api.presentation import (
+    product_event,
+    product_queue,
+    product_report,
+    product_run,
+    wants_product,
+)
 from headroom.api.public_access import client_address, protect_public_submission
 from headroom.api.queue import TERMINAL, AdmissionError, RunQueue
 from headroom.api.security import ARTIFACTS, RUN_ID, artifact_relative, job_directory, open_regular
@@ -378,6 +385,17 @@ def create_app(
             )
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Cache-Control"] = "no-store"
+        if request.url.path.startswith("/api/"):
+            response.headers["Vary"] = ", ".join(
+                dict.fromkeys(
+                    [
+                        part.strip()
+                        for part in response.headers.get("Vary", "").split(",")
+                        if part.strip()
+                    ]
+                    + ["X-Headroom-View"]
+                )
+            )
         return response
 
     def accessible(run_id, request):
@@ -590,7 +608,10 @@ def create_app(
             for r in store.list_runs(1000)
             if r.get("api_owner") == request.state.owner
         ]
-        return {"runs": rows, "queue": queue_status()}
+        return {
+            "runs": [product_run(row) for row in rows] if wants_product(request) else rows,
+            "queue": product_queue(queue_status()) if wants_product(request) else queue_status(),
+        }
 
     @app.get("/api/runs/{run_id}")
     def run(run_id: str, request: Request):
@@ -613,7 +634,7 @@ def create_app(
                     result["artifacts"][name] = f"/api/runs/{run_id}/{name}"
             except (OSError, ValueError):
                 continue
-        return result
+        return product_run(result) if wants_product(request) else result
 
     @app.get("/api/runs/{run_id}/events")
     async def events(run_id: str, request: Request):
@@ -635,6 +656,8 @@ def create_app(
                 for row in rows:
                     cursor = row["sequence"]
                     payload = {k: row[k] for k in ("sequence", "kind", "data", "created_at")}
+                    if wants_product(request):
+                        payload = product_event(payload)
                     yield f"id: {cursor}\nevent: {row['kind']}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
                 state = store.get_run(run_id)
                 if not state.get("api_report_pending", False) and (
@@ -647,6 +670,8 @@ def create_app(
                     for row in tail:
                         cursor = row["sequence"]
                         payload = {k: row[k] for k in ("sequence", "kind", "data", "created_at")}
+                        if wants_product(request):
+                            payload = product_event(payload)
                         yield f"id: {cursor}\nevent: {row['kind']}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
                     yield (
                         "event: stream.end\ndata: "
@@ -680,10 +705,20 @@ def create_app(
             handle = open_regular(job_directory(settings.run_root, run_id), relative)
         except (OSError, ValueError):
             raise HTTPException(404, "Artifact unavailable") from None
+        if artifact == "report.json" and wants_product(request):
+            try:
+                with handle:
+                    result = product_report(json.load(handle))
+                return JSONResponse(result, headers={"Vary": "X-Headroom-View"})
+            except (ValueError, TypeError, UnicodeError):
+                raise HTTPException(503, "Report unavailable") from None
         return StreamingResponse(
             _stream_file(handle),
             media_type=media,
-            headers={"Content-Disposition": f'attachment; filename="{artifact}"'},
+            headers={
+                "Content-Disposition": f'attachment; filename="{artifact}"',
+                "Vary": "X-Headroom-View",
+            },
         )
 
     @app.get("/api/runs/{run_id}/configurations/{tier}/{artifact}")
@@ -748,13 +783,13 @@ def create_app(
         }
 
     @app.get("/api/health")
-    def health():
+    def health(request: Request):
         store.list_runs(1)
         observed = observed_availability()
         return {
             "status": "ok",
             "db": "ok",
-            "queue": queue_status(),
+            "queue": product_queue(queue_status()) if wants_product(request) else queue_status(),
             "run_submissions": submission_config(),
             **observed,
             "deployment": "public_host_configured" if settings.public_host else "localhost",
