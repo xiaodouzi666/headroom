@@ -75,7 +75,16 @@ def _repository_invocation(case, root, input_dir):
 
 
 def _evaluation_entry(
-    request, store_path, run_root, run_id, condition, audit_dir, result_path, deadline, preparation
+    request,
+    store_path,
+    run_root,
+    run_id,
+    condition,
+    audit_dir,
+    result_path,
+    deadline,
+    preparation,
+    allocation_child_binding=None,
 ):
     # This process becomes the installed CLI, preserving its PID and outer deadline.
     from headroom.cli_execution import (
@@ -85,6 +94,7 @@ def _evaluation_entry(
         console_script,
         digest,
         launch,
+        verify_invocation_allocation,
     )
     from headroom.evaluation import Scenario, _inside, _prepare
     from headroom.orchestrator import FixRequest
@@ -94,6 +104,7 @@ def _evaluation_entry(
     try:
         if time.monotonic() >= deadline:
             return
+        verify_invocation_allocation(allocation_child_binding, queued_request, run_id)
         repository = None
         source_hash = None
         if preparation is not None:
@@ -143,6 +154,7 @@ def _evaluation_entry(
             console_sha256=console_hash,
             source_sha256=source_hash or digest(parsed.script),
             repository=repository,
+            allocation_child_binding=allocation_child_binding,
         )
         store.close()
         store = None
@@ -206,6 +218,7 @@ def supervise_evaluation_run(
     audit_dir,
     started,
     preparation=None,
+    allocation_child_binding=None,
     wall_limit_seconds=RUN_WALL_LIMIT_SECONDS,
     _entrypoint=_evaluation_entry,
     _grace_seconds=WORKER_GRACE_SECONDS,
@@ -219,6 +232,9 @@ def supervise_evaluation_run(
     """
     if not 0 < wall_limit_seconds <= RUN_WALL_LIMIT_SECONDS or not 0 <= _grace_seconds <= 5:
         raise ValueError("Evaluation supervision cannot extend its reviewed deadlines")
+    from headroom.cli_execution import verify_invocation_allocation
+
+    verify_invocation_allocation(allocation_child_binding, request, run_id)
     deadline = started + wall_limit_seconds
     run_root = Path(run_root)
     directory = job_directory(run_root, run_id)
@@ -238,7 +254,19 @@ def supervise_evaluation_run(
     diagnosis_cap(study_protocol)
     if study_protocol is not None:
         state["study_protocol"] = study_protocol
-    if store.get_run(run_id) is None:
+    if allocation_child_binding is not None:
+        state["allocation_child_binding"] = allocation_child_binding
+    existing = store.get_run(run_id)
+    if (
+        existing is not None
+        and allocation_child_binding is not None
+        and (
+            existing.get("allocation_child_binding") != allocation_child_binding
+            or existing.get("request") != request.model_dump()
+        )
+    ):
+        raise ValueError("Queued F3 allocation intent changed")
+    if existing is None:
         store.create_run(run_id, state)
     process = None
     worker_result = None
@@ -257,7 +285,8 @@ def supervise_evaluation_run(
                     str(result_path),
                     deadline,
                     preparation,
-                ),
+                )
+                + ((allocation_child_binding,) if allocation_child_binding is not None else ()),
                 daemon=True,
             )
             process.start()

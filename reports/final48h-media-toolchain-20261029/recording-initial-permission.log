@@ -1,0 +1,27 @@
+Traceback (most recent call last):
+  File "/work/toolchain_smoke.py", line 42, in <module>
+    asyncio.run(main())
+  File "/usr/lib/python3.12/asyncio/runners.py", line 194, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/base_events.py", line 687, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/work/toolchain_smoke.py", line 30, in main
+    await page.screenshot(path=str(OUT/"toolchain-smoke.png"))
+  File "/usr/local/lib/python3.12/dist-packages/playwright/async_api/_generated.py", line 20146, in screenshot
+    await self._impl_obj.screenshot(
+  File "/usr/local/lib/python3.12/dist-packages/playwright/_impl/_page.py", line 838, in screenshot
+    await async_writefile(path, decoded_binary)
+  File "/usr/local/lib/python3.12/dist-packages/playwright/_impl/_helper.py", line 547, in async_writefile
+    await loop.run_in_executor(None, inner)
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/playwright/_impl/_helper.py", line 543, in inner
+    with open(file, "w" if isinstance(data, str) else "wb") as fh:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: '/work/outputs/toolchain-smoke.png'

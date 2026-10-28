@@ -138,6 +138,7 @@ class Services:
     diagnose: Callable = diagnose_with_router
     evaluation_condition: str | None = None
     runtime_factory: Callable | None = None
+    budget_factory: Callable | None = None
     research_factory: Callable | None = None
     provenance: str = "live"
     evidence_token_budget: int = 150000
@@ -484,14 +485,17 @@ def run_fix(
                 if request.runtime_profile
                 else read_live_profile()
             )
-            database = select_budget_database(PROJECT_ROOT)
-            budget = BudgetLedger(
-                database.path,
-                require_existing=database.require_existing,
-                expected_identity=database.file_identity,
-                daily_limit=daily,
-                total_limit=profile.authorized_total_usd,
-            )
+            if services.budget_factory is None:
+                database = select_budget_database(PROJECT_ROOT)
+                budget = BudgetLedger(
+                    database.path,
+                    require_existing=database.require_existing,
+                    expected_identity=database.file_identity,
+                    daily_limit=daily,
+                    total_limit=profile.authorized_total_usd,
+                )
+            else:
+                budget = services.budget_factory(run_id, request, profile)
             budget.open_run(run_id, limit, budget_mode=profile.run_budget_mode)
             budget_open = True
             bundle = build_live_runtime(run_id, profile=profile, budget=budget, store=store)

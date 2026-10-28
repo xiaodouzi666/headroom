@@ -45,6 +45,7 @@ def activated(project):
         "daily_limit_usd": "3",
     }
     plan["task_run_caps_usd"] = {scope: "1.5" for scope in alloc.SCOPES}
+    plan["task_run_caps_usd"]["F3"] = None
     plan["balance_evidence_sha256"] = "1" * 64
     plan["task_pins"]["F1"] = {
         "preparation_sha256": prepared["preparation_sha256"],

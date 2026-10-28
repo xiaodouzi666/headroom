@@ -15,6 +15,7 @@ headroom fix ./train.py --target fix-oom \
 - `--search-mode until_target|bounded_pareto`: default `until_target`; explicit bounded exploration keeps the same maximum of six rounds and all existing budget, timeout and policy checks. It does not grant numerical-change permission.
 - `--reclaim-reduction-pct`: target reduction for `reclaim`, default 30; strictly greater than 0 and at most 100.
 - `--allow-numerics-change / --no-allow-numerics-change`: default false.
+- `--numerical-requirement legacy|exact-loss20-v1|observed-bf16-v1`: default `legacy`; the two explicit requirements need 20 updates and retain the ordinary policy and memory-target checks.
 - `--allow-batch-grad-accum / --no-allow-batch-grad-accum`: default true.
 - `--max-throughput-regression-pct`: default 25, accepted range 0–1000 percent.
 - Arguments after `--` are literal target-script argv. Nonempty CLI target argv
@@ -35,6 +36,32 @@ the earlier candidate's verification facts. A run crossing UTC midnight must be
 restarted as a new run before any further model request.
 See [runtime accounting](RUNTIME.md#explicit-actual-usage-run-stop-mode).
 No new profile, credential, or spending authorization is created by this option.
+
+## Explicit numerical requirements
+
+`legacy` retains the existing loss comparison. For an explicitly selected
+`exact-loss20-v1` run, all twenty recorded backward-loss scalars must match
+bit for bit as binary64 values, with known unchanged precision and a supported
+same-workload pairing or independently qualified original-workload reference.
+This compares the recorded losses, not every model parameter or optimizer byte.
+An unsupported pairing cannot pass this requirement.
+
+`observed-bf16-v1` additionally requires `--allow-numerics-change`. The candidate
+must complete twenty updates with observed BF16 execution and pass the existing
+numerical-reference and policy checks. The original baseline may have failed
+with OOM; a successful candidate alone is insufficient evidence of the numerical
+comparison. Selecting this requirement does not guarantee that the model will
+produce a BF16 patch.
+
+```sh
+headroom fix ./train.py --max-steps 20 --numerical-requirement exact-loss20-v1
+headroom fix ./train.py --max-steps 20 --allow-numerics-change \
+  --numerical-requirement observed-bf16-v1
+```
+
+The CLI option overrides the corresponding project policy setting. Omitting it
+preserves existing defaults and historical results. Both commands can invoke
+paid models when the selected runtime and existing authorization permit it.
 
 ## Local repository command
 
@@ -117,7 +144,7 @@ Supported fields:
 | `script_args` | list of at most 100 literal strings |
 | `target` | existing `fix-oom`, `fit:<size>GB`, `reclaim` targets |
 | `reclaim_reduction_pct` | numeric > 0 and <= 100; default 30; used with `reclaim` |
-| `policy` | the four existing policy fields shown above; booleans must be YAML booleans |
+| `policy` | the policy fields shown above plus optional `numerical_requirement`; booleans must be YAML booleans |
 | `allocator_conf` | allowlisted allocator configuration string, or null |
 | `numerical_reference` | explicit bounded reference settings described below |
 | `max_steps` | integer 1–10000 |

@@ -1,0 +1,180 @@
+{
+  "schema": "headroom.final48-repair-offline-receipt.v1",
+  "checked_at_utc": "2026-10-28T19:35:35.080319+00:00",
+  "status": "offline_preparation_and_driver_verified_live_execution_not_run",
+  "commands": {
+    "pure_prepare": ".venv/bin/python scripts/prepare_final48_repair.py",
+    "save_review_pack": ".venv/bin/python scripts/prepare_final48_repair.py --output runs/final48-repair-preparation-20261029/preparation.json",
+    "verify": ".venv/bin/python scripts/prepare_final48_repair.py --verify --prepared runs/final48-repair-preparation-20261029/preparation.json --expected-sha256 3a14d0ae813f7687329d91b2d3390fb2aacac6d323b1a2b5461b500e0355ef44",
+    "tests": ".venv/bin/pytest -q tests/test_final48_repair.py"
+  },
+  "pure_prepare": {
+    "schema": "headroom.final48-repair.v1",
+    "mode": "prepare",
+    "planned_cells": 12,
+    "executed_cells": 0,
+    "preparation_sha256": "3a14d0ae813f7687329d91b2d3390fb2aacac6d323b1a2b5461b500e0355ef44"
+  },
+  "verify_passed": true,
+  "private_review_pack": "runs/final48-repair-preparation-20261029/preparation.json",
+  "controls": {
+    "condition": "full_ultra",
+    "search_mode": "until_target",
+    "policy_name": "strict",
+    "fixed_denominator": 9,
+    "minimum_targets": 6,
+    "max_rounds": 6,
+    "max_steps": 20,
+    "max_seconds_per_lab": 120,
+    "wall_seconds_per_cell": 480,
+    "seed": 1337,
+    "per_run_budget_usd": "0.6",
+    "scope_cap_usd": "4",
+    "planned_cells": 12,
+    "new_s2_tiers_replace_primary": false,
+    "hf_in_primary": false,
+    "request_policy": "final48-diagnosis-only-2000-v1"
+  },
+  "cells": [
+    {
+      "cell_id": "fixed9-s1_batch_too_big",
+      "result_group": "fixed_nine",
+      "numerical_requirement": "legacy"
+    },
+    {
+      "cell_id": "fixed9-s2_capacity_v2",
+      "result_group": "fixed_nine",
+      "numerical_requirement": "legacy"
+    },
+    {
+      "cell_id": "fixed9-s3_eval_no_grad_missing",
+      "result_group": "fixed_nine",
+      "numerical_requirement": "legacy"
+    },
+    {
+      "cell_id": "fixed9-s4_loss_accumulation_graph",
+      "result_group": "fixed_nine",
+      "numerical_requirement": "legacy"
+    },
+    {
+      "cell_id": "fixed9-s5_fragmentation_varlen",
+      "result_group": "fixed_nine",
+      "numerical_requirement": "legacy"
+    },
+    {
+      "cell_id": "fixed9-s6_full_vocab_logits_fp32",
+      "result_group": "fixed_nine",
+      "numerical_requirement": "legacy"
+    },
+    {
+      "cell_id": "fixed9-s7_frozen_params_optimizer_state",
+      "result_group": "fixed_nine",
+      "numerical_requirement": "legacy"
+    },
+    {
+      "cell_id": "fixed9-s8_two_models_resident",
+      "result_group": "fixed_nine",
+      "numerical_requirement": "legacy"
+    },
+    {
+      "cell_id": "fixed9-nanogpt",
+      "result_group": "fixed_nine",
+      "numerical_requirement": "legacy"
+    },
+    {
+      "cell_id": "s2-strict",
+      "result_group": "s2_tiers",
+      "numerical_requirement": "exact-loss20-v1"
+    },
+    {
+      "cell_id": "s2-allow-precision",
+      "result_group": "s2_tiers",
+      "numerical_requirement": "observed-bf16-v1"
+    },
+    {
+      "cell_id": "hf-trainer",
+      "result_group": "hf_trainer",
+      "numerical_requirement": "legacy"
+    }
+  ],
+  "pins": {
+    "source_and_manifest_files": 30,
+    "implementation_files": 151,
+    "calibration": {
+      "receipt": "reports/s2-calibration-v2-20261025-c/audit.json",
+      "accepted": true,
+      "new_calibration_executed": false,
+      "source_sha256": "9565acfbcfc2f1eefd982c80be7ce943e09828578b9b44c3d70342bc82bf7f4c",
+      "historical_manifest_sha256": "7fca62007585a2618416e0532cd2f9f2802398544e112d0119cfd7c874b10d05"
+    }
+  },
+  "focused_tests": {
+    "passed": 14,
+    "seconds": 3.27,
+    "network_blocked": true,
+    "credential_reads_blocked": true,
+    "workload_source_not_executed": true,
+    "temporary_accounting_case": {
+      "provenance": "offline_fixture",
+      "pool_total_and_daily_limit_usd": "6.43",
+      "prior_F1_actual_usd": "1.5",
+      "F3_child_count": 12,
+      "F3_actual_usd": "3.6",
+      "new_pool_actual_usd": "5.1",
+      "F3_parent_total_ceiling_usd": "5.5"
+    }
+  },
+  "ruff": {
+    "check": "passed",
+    "format": "passed"
+  },
+  "gitleaks": {
+    "status": "passed",
+    "exit_code": 0,
+    "findings": 0,
+    "files_scanned": [
+      "headroom/acceptance/final48_repair.py",
+      "scripts/prepare_final48_repair.py",
+      "tests/test_final48_repair.py",
+      "reports/final48h-repair-20261029/README.md",
+      "reports/final48h-repair-20261029/receipt.json",
+      "reports/final48h-repair-20261029/focused-tests.txt"
+    ],
+    "redacted": true
+  },
+  "source_files": [
+    {
+      "path": "headroom/acceptance/final48_repair.py",
+      "sha256": "be4cd14fb2d671f0d94c9e6946991a67d1d0f30a4f3c714555ee542826387336",
+      "bytes": 28113
+    },
+    {
+      "path": "scripts/prepare_final48_repair.py",
+      "sha256": "4eaecdc0e03cbe6f752b20da659e67d693338c8c2b5a4aef27622488cf589194",
+      "bytes": 5684
+    },
+    {
+      "path": "tests/test_final48_repair.py",
+      "sha256": "65a23f45796b5eef705a787075e19d7940f2cf0478f59c82850f08cc06efdd09",
+      "bytes": 20078
+    }
+  ],
+  "live_actions": {
+    "model_calls": 0,
+    "tavily_calls": 0,
+    "GPU_runs": 0,
+    "actual_pool_created": false,
+    "production_services_changed": false,
+    "public_features_enabled": false,
+    "git_commit_created": false
+  },
+  "limitations": [
+    "A reviewed digest is code-specific and must be regenerated after any implementation or pinned source change.",
+    "The saved preparation authorizes no spending; real execution still requires an explicit authorized receipt and exact queued-request map.",
+    "The total 4 USD scope does not guarantee twelve completed repairs; insufficient balance preserves all remaining rows as not_run.",
+    "Unknown cost, incomplete cleanup, missing installed-CLI verification or changed source prevents further dispatch.",
+    "Offline fixture successes are excluded from the fixed-nine live score.",
+    "No new s2 pairing proof, GPU acceptance result, HF repaired candidate or successful live scope is established by this receipt.",
+    "No automatic resume/reset of a consumed once-only F3 claim is implemented."
+  ]
+}

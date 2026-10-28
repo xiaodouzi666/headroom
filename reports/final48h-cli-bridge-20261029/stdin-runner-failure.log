@@ -1,0 +1,346 @@
+.................................FF..FF.FFF.....F....................... [ 79%]
+...................                                                      [100%]
+=================================== FAILURES ===================================
+___ test_supervisor_accepts_legitimate_nonzero_cli_result_without_masking_it ___
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-313/test_supervisor_accepts_legiti0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f28c5023f80>
+
+    def test_supervisor_accepts_legitimate_nonzero_cli_result_without_masking_it(tmp_path, monkeypatch):
+        request, run_id, values = setup_case(tmp_path)
+        config = tmp_path / "fixture.json"
+        config.write_text(json.dumps({"base": str(tmp_path), "mode": "needs_human"}))
+        monkeypatch.setenv("LITERAL_CLI_FIXTURE", str(config))
+        monkeypatch.setenv("PYTHONPATH", child_environment(tmp_path)["PYTHONPATH"])
+        store = Store(values[1])
+        try:
+            result = worker.supervise_evaluation_run(
+                request,
+                store=store,
+                run_root=Path(values[2]),
+                run_id=run_id,
+                condition=values[4],
+                audit_dir=Path(values[5]),
+                started=time.monotonic(),
+                preparation=values[8],
+                wall_limit_seconds=15,
+            )
+>           assert result["status"] == "needs_human" and not result["target_met"]
+E           AssertionError: assert ('failed' == 'needs_human'
+E             
+E             - needs_human
+E             + failed)
+
+tests/test_cli_execution.py:618: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 285, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/<stdin>'
+________ test_deadline_kills_real_console_without_inventing_cli_return _________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-313/test_deadline_kills_real_conso0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f28c51c9010>
+
+    def test_deadline_kills_real_console_without_inventing_cli_return(tmp_path, monkeypatch):
+        request, run_id, values = setup_case(tmp_path)
+        config = tmp_path / "fixture.json"
+        config.write_text(json.dumps({"base": str(tmp_path), "mode": "wait"}))
+        monkeypatch.setenv("LITERAL_CLI_FIXTURE", str(config))
+        monkeypatch.setenv("PYTHONPATH", child_environment(tmp_path)["PYTHONPATH"])
+        store = Store(values[1])
+        try:
+            result = worker.supervise_evaluation_run(
+                request,
+                store=store,
+                run_root=Path(values[2]),
+                run_id=run_id,
+                condition=values[4],
+                audit_dir=Path(values[5]),
+                started=time.monotonic(),
+                preparation=values[8],
+                wall_limit_seconds=4,
+            )
+>           assert result["status"] == "timeout"
+E           AssertionError: assert 'failed' == 'timeout'
+E             
+E             - timeout
+E             + failed
+
+tests/test_cli_execution.py:646: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 285, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/<stdin>'
+_________ test_real_spawn_preserves_completed_result_and_no_container __________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-313/test_real_spawn_preserves_comp0')
+
+    def test_real_spawn_preserves_completed_result_and_no_container(tmp_path):
+        request, store, kwargs = setup_case(tmp_path)
+        try:
+            result = worker.supervise_evaluation_run(
+                request,
+                **kwargs,
+                wall_limit_seconds=10,
+                _entrypoint=success_entry,
+            )
+>           assert result["status"] == "completed" and result["target_met"]
+E           AssertionError: assert ('failed' == 'completed'
+E             
+E             - completed
+E             + failed)
+
+tests/test_evaluation_worker.py:144: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 285, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/<stdin>'
+______ test_real_production_child_missing_profile_stops_before_gpu_or_key ______
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-313/test_real_production_child_mis0')
+
+    def test_real_production_child_missing_profile_stops_before_gpu_or_key(tmp_path):
+        request, store, kwargs = setup_case(tmp_path)
+        try:
+            result = worker.supervise_evaluation_run(
+                request,
+                **kwargs,
+                wall_limit_seconds=10,
+                preparation={
+                    "case": {
+                        "id": "fixture",
+                        "group": "synthetic",
+                        "script": "source/train.py",
+                        "source_root": "source",
+                        "target": "fix-oom",
+                        "expected_baseline": "oom",
+                    },
+                    "project_root": str(tmp_path),
+                    "input_dir": str(tmp_path / "prepared"),
+                },
+            )
+>           assert result["evaluation_preparation"]["source_sha256"]
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: 'NoneType' object is not subscriptable
+
+tests/test_evaluation_worker.py:175: TypeError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 285, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/<stdin>'
+_________ test_swallowed_term_cannot_turn_timed_out_case_into_success __________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-313/test_swallowed_term_cannot_tur0')
+
+    def test_swallowed_term_cannot_turn_timed_out_case_into_success(tmp_path):
+        request, store, kwargs = setup_case(tmp_path)
+        try:
+            result = worker.supervise_evaluation_run(
+                request,
+                **kwargs,
+                wall_limit_seconds=3,
+                _entrypoint=swallow_term_entry,
+                _grace_seconds=2,
+            )
+>           assert result["status"] == "timeout" and result["target_met"] is False
+E           AssertionError: assert ('failed' == 'timeout'
+E             
+E             - timeout
+E             + failed)
+
+tests/test_evaluation_worker.py:215: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 285, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/<stdin>'
+____ test_ignore_term_hard_kill_retains_pending_billing_and_partial_report _____
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-313/test_ignore_term_hard_kill_ret0')
+
+    def test_ignore_term_hard_kill_retains_pending_billing_and_partial_report(tmp_path):
+        request, store, kwargs = setup_case(tmp_path)
+        try:
+            result = worker.supervise_evaluation_run(
+                request,
+                **kwargs,
+                wall_limit_seconds=3,
+                _entrypoint=pending_ignore_term_entry,
+                _grace_seconds=0.2,
+            )
+>           assert result["status"] == "timeout"
+E           AssertionError: assert 'failed' == 'timeout'
+E             
+E             - timeout
+E             + failed
+
+tests/test_evaluation_worker.py:235: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 285, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/<stdin>'
+________________ test_crashed_worker_has_failed_partial_report _________________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-313/test_crashed_worker_has_failed0')
+
+    def test_crashed_worker_has_failed_partial_report(tmp_path):
+        request, store, kwargs = setup_case(tmp_path)
+        try:
+            result = worker.supervise_evaluation_run(
+                request,
+                **kwargs,
+                wall_limit_seconds=10,
+                _entrypoint=crash_entry,
+            )
+            assert result["status"] == "failed" and result["target_met"] is False
+>           assert result["evaluation_timing"]["worker_exit_code"] == 23
+E           assert 1 == 23
+
+tests/test_evaluation_worker.py:260: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 285, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/<stdin>'
+___________ test_preparation_itself_is_inside_owned_deadline_process ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-313/test_preparation_itself_is_ins0')
+
+    def test_preparation_itself_is_inside_owned_deadline_process(tmp_path):
+        request, store, kwargs = setup_case(tmp_path)
+        try:
+            result = worker.supervise_evaluation_run(
+                request,
+                **kwargs,
+                wall_limit_seconds=3,
+                _entrypoint=slow_preparation_entry,
+                _grace_seconds=0.2,
+                preparation={
+                    "case": {
+                        "id": "fixture",
+                        "group": "synthetic",
+                        "script": "source/train.py",
+                        "source_root": "source",
+                        "target": "fix-oom",
+                        "expected_baseline": "oom",
+                    },
+                    "project_root": str(tmp_path),
+                    "input_dir": str(tmp_path / "prepared"),
+                },
+            )
+>           assert result["status"] == "timeout"
+E           AssertionError: assert 'failed' == 'timeout'
+E             
+E             - timeout
+E             + failed
+
+tests/test_evaluation_worker.py:373: AssertionError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 285, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xiaodouzi/workspace/headroom/<stdin>'
+=========================== short test summary info ============================
+FAILED tests/test_cli_execution.py::test_supervisor_accepts_legitimate_nonzero_cli_result_without_masking_it
+FAILED tests/test_cli_execution.py::test_deadline_kills_real_console_without_inventing_cli_return
+FAILED tests/test_evaluation_worker.py::test_real_spawn_preserves_completed_result_and_no_container
+FAILED tests/test_evaluation_worker.py::test_real_production_child_missing_profile_stops_before_gpu_or_key
+FAILED tests/test_evaluation_worker.py::test_swallowed_term_cannot_turn_timed_out_case_into_success
+FAILED tests/test_evaluation_worker.py::test_ignore_term_hard_kill_retains_pending_billing_and_partial_report
+FAILED tests/test_evaluation_worker.py::test_crashed_worker_has_failed_partial_report
+FAILED tests/test_evaluation_worker.py::test_preparation_itself_is_inside_owned_deadline_process
+8 failed, 83 passed in 36.16s
+NETWORK_GUARD_ATTEMPTS 0

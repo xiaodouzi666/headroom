@@ -1,0 +1,114 @@
+{
+  "schema": "headroom.final48.media-toolchain-smoke.v1",
+  "created_at_utc": "2026-10-28T19:36:59.165335+00:00",
+  "provenance": "toolchain-smoke",
+  "final_video_created": false,
+  "f6_ready": false,
+  "handoff_to_opus": false,
+  "base_image": "mcr.microsoft.com/playwright/python@sha256:330d401ae23c905896a0c26c66c36fc971b621519e7b11b435a8328d7bf6e031",
+  "prepared_image_id": "sha256:983d2a4e654e9d55ca0f73d7fbf25306fa94d7de34878e741957c4c1d7eac8ff",
+  "prepared_image_tag": "headroom-final48-video-tools:toolchain-smoke",
+  "versions": {
+    "playwright_python": "1.64.1",
+    "chromium": "156.0.8078.4",
+    "edge_tts": "7.3.1",
+    "ffmpeg": "ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+    "ffprobe": "ffprobe version 6.1.1-3ubuntu5 Copyright (c) 2007-2023 the FFmpeg developers"
+  },
+  "installation": {
+    "python_index": "https://pypi.org/simple",
+    "playwright_requested": "1.64.1",
+    "edge_tts_resolved": "7.3.1",
+    "system_packages": "ffmpeg from base image official Ubuntu repositories",
+    "host_project_dependency_files_modified": false,
+    "python_freeze": "python-packages.txt"
+  },
+  "checks": {
+    "browser_recording": "passed",
+    "viewport": {
+      "width": 1920,
+      "height": 1080,
+      "dpr": 1
+    },
+    "recording_dimensions": [
+      1920,
+      1080
+    ],
+    "tts_status": "generated",
+    "tts_voice": "en-US-AndrewNeural",
+    "tts_text": "This is an isolated toolchain smoke test. The sample contains no project demonstration.",
+    "composition": "passed",
+    "composite_dimensions": [
+      1920,
+      1080
+    ],
+    "composite_duration_seconds": 6.312,
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "subtitles_burned": true
+  },
+  "isolation": {
+    "browser_profile": "new ephemeral Playwright context inside owned Docker container",
+    "browser_network": "none; all page requests additionally aborted",
+    "composition_network": "none",
+    "tts_network": "default Docker bridge to edge-tts online service; synthetic text only",
+    "mounted_host_path": "/home/xiaodouzi/workspace/headroom/.cache/final48-video-tools",
+    "project_source_mounted": false,
+    "user_browser_accessed": false,
+    "credential_accessed": false,
+    "model_calls": 0,
+    "gpu_runs": 0,
+    "paid_api_calls": 0,
+    "runtime_user": "1000:1000",
+    "container_rootfs": "read-only; tmpfs /tmp; cap-drop ALL; no-new-privileges"
+  },
+  "initial_failure": {
+    "kind": "output PermissionError when container ran uid0 with all capabilities dropped",
+    "recording_log": "recording-initial-permission.log",
+    "tts_log": "tts-initial-permission.log",
+    "resolution": "run as existing output directory owner uid1000:gid1000; no privilege or mode escalation"
+  },
+  "input_sha256": {
+    ".cache/final48-video-tools/Dockerfile": "051f62d424f3cbf68fd99ebaf9cd36b5b706825e79fbc4f4ff75e7e0a316a552",
+    ".cache/final48-video-tools/toolchain_smoke.py": "cb4ef39bec2791bf5cdd0a5f3f1ff8dd8a04ed6b1a73f97cd26e5f303a8c628d",
+    ".cache/final48-video-tools/tts_smoke.py": "2fb052f6063588562bc313fd4e1c8e20f7df351ee58e51141662cf2965ccd0cd",
+    ".cache/final48-video-tools/compose_smoke.py": "c18eb5d9c95a6973d724c74116e5e9e269192bf31bd9b581534b3b2c288a4f48"
+  },
+  "artifacts": {
+    ".cache/final48-video-tools/outputs/toolchain-smoke.mp3": {
+      "bytes": 37872,
+      "sha256": "40fddf871d3c3c29fa56a96e81f1a1fb298631df59fde97043735acee6f12cca"
+    },
+    ".cache/final48-video-tools/outputs/toolchain-smoke.mp4": {
+      "bytes": 149429,
+      "sha256": "ca3a40fee4f629a9ee462fd5f9e497209da49a955695a6fdebc4d8fdf9a127a5"
+    },
+    ".cache/final48-video-tools/outputs/toolchain-smoke.png": {
+      "bytes": 47266,
+      "sha256": "20de095ba8ef35d6100fcb3a976f2a1e4451bd84a9f7cbf135b5f953606d1a6e"
+    },
+    ".cache/final48-video-tools/outputs/toolchain-smoke.srt": {
+      "bytes": 154,
+      "sha256": "2a3f2a7d010c11b47b0ce1adb1462f9a8ed8616765f62a1442813ce232332a98"
+    },
+    ".cache/final48-video-tools/outputs/toolchain-smoke.webm": {
+      "bytes": 233792,
+      "sha256": "0c7c5fd1ce86802b756faaa02c6099904e5f1b808099efc5837e270bea5380e5"
+    },
+    ".cache/final48-video-tools/outputs/toolchain-smoke-encoded.png": {
+      "bytes": 277344,
+      "sha256": "1229c86485d7901b3d7f731056124a23c800cac409df3a7bb5a6153c15626326"
+    }
+  },
+  "sources": [
+    "https://playwright.dev/python/docs/docker",
+    "https://playwright.dev/python/docs/videos",
+    "https://github.com/rany2/edge-tts",
+    "https://pypi.org/project/edge-tts/"
+  ],
+  "remaining": [
+    "gallery publication and real authorized s3 run are separate prerequisites",
+    "Opus owns final script, recording, narration and final video",
+    "smoke assets must not be presented as a project run or empirical repair"
+  ]
+}

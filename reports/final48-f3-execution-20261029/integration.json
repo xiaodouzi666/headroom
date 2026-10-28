@@ -1,0 +1,74 @@
+{
+  "checked_at": "2026-10-28T19:39:03.513258+00:00",
+  "base_commit": "170c7950b0255327e6bace8f672c8260251b0748",
+  "status": "engineering_verified_live_execution_pending",
+  "source_sha256": {
+    "headroom/acceptance/allocation.py": "2eebbb46267b52ff9ae6eb5dfb06fb9c9e2fcd4d3fb8fb6bf362b7a23e4c5bc4",
+    "headroom/acceptance/final48_repair.py": "be4cd14fb2d671f0d94c9e6946991a67d1d0f30a4f3c714555ee542826387336",
+    "headroom/acceptance/hf_configuration.py": "289e39e923e2000fcd3ba66bf1901d234c8338f9bf29f4d82bc8a35d5dead6fd",
+    "headroom/cli.py": "6c682f01175d0851d4e87429ed718af0dad15bbce280ea349550c28959094a83",
+    "headroom/cli_execution.py": "9a750ca5f521cd10118ccb20247bdee47c1d823ce24d39c68413e765024ede88",
+    "headroom/evaluation_worker.py": "90a3738f4e3dff4a83b7a2d4df418e5c76c1bed9f110f361363652b5a5a1ab09",
+    "headroom/orchestrator.py": "5a8c9b813fda7ef4837decb8aaa911d07e2039d85f52e3d51513927d6708c3bc",
+    "scripts/prepare_final48_repair.py": "4eaecdc0e03cbe6f752b20da659e67d693338c8c2b5a4aef27622488cf589194",
+    "tests/test_final48_allocation.py": "859aaa88aad3d8f33ae5a6ae6184aa079995487ae787cf217aa5e6e8a2846d2a",
+    "tests/test_final48_f3_allocation.py": "e44961ca85cb6a4ea377cc5c5bb4aee4daeda2b76c489e76eb295e79f1b316b0",
+    "tests/test_final48_cli_binding.py": "de211b2c0657eb97a362f5c5d904c3800cdc9a9754046b29856efc103665ce28",
+    "tests/test_final48_repair.py": "65a23f45796b5eef705a787075e19d7940f2cf0478f59c82850f08cc06efdd09",
+    "tests/test_hf_configuration.py": "afa082bcd369c40daff53630d1901894116ee1d9a220aed79f413b7c9aa38f5e"
+  },
+  "test_groups": [
+    {
+      "scope": "CLI, worker, orchestrator, request policy",
+      "passed": 91,
+      "seconds": 55.48,
+      "receipt": "reports/final48h-cli-bridge-20261029/receipt.json"
+    },
+    {
+      "scope": "allocation and F1 compatibility",
+      "passed": 29,
+      "seconds": 10.93,
+      "log": "allocation-tests.txt"
+    },
+    {
+      "scope": "F3 preparation and driver",
+      "passed": 14,
+      "seconds": 3.27,
+      "receipt": "reports/final48h-repair-20261029/receipt.json"
+    },
+    {
+      "scope": "HF configuration checker",
+      "passed": 16,
+      "seconds": 0.2,
+      "receipt": "hf-configuration-validation.json"
+    }
+  ],
+  "distinct_test_total": 150,
+  "full_regression_run": false,
+  "f1": {
+    "preparation_sha256": "70a6ff3b716bcef6d7239505242fc85ba5f1a09963e655fac758e845d89d2cae",
+    "ready_requests": 27,
+    "executed_requests": 0
+  },
+  "f3": {
+    "preparation_sha256": "3a14d0ae813f7687329d91b2d3390fb2aacac6d323b1a2b5461b500e0355ef44",
+    "planned_cells": 12,
+    "executed_cells": 0,
+    "primary_denominator": 9,
+    "minimum_targets": 6,
+    "scope_cap_usd": "4"
+  },
+  "safety_state": {
+    "actual_allocation_created": false,
+    "new_model_calls": 0,
+    "gpu_acceptance_runs": 0,
+    "public_feature_flags_changed": false,
+    "original_plans_unchanged": true
+  },
+  "followups": [
+    "User decision A and current prices/balance before new allocation activation.",
+    "Real F1/F3/snapshot/watch/example/clean-clone verification still outstanding.",
+    "Public historical gallery remains pending C.",
+    "Video toolchain smoke does not complete F6 or replace an actual live demo."
+  ]
+}

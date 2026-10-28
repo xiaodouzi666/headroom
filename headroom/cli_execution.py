@@ -16,7 +16,7 @@ import time
 from pathlib import Path
 from uuid import uuid4
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_serializer
 
 from headroom.diagnosis_protocol import StudyProtocol
 
@@ -92,6 +92,14 @@ class Invocation(BaseModel):
     console_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     repository: RepositoryInvocation | None = None
+    allocation_child_binding: dict | None = None
+
+    @model_serializer(mode="wrap")
+    def omit_unbound_allocation(self, handler):
+        value = handler(self)
+        if self.allocation_child_binding is None:
+            value.pop("allocation_child_binding", None)
+        return value
 
 
 def cli_arguments(request, repository=None):
@@ -139,6 +147,8 @@ def cli_arguments(request, repository=None):
         ("research", request.research_enabled),
     ):
         args.append("--" + ("" if value else "no-") + name)
+    if request.policy.numerical_requirement != "legacy":
+        args += ["--numerical-requirement", request.policy.numerical_requirement]
     if request.runtime_profile is not None:
         args += ["--runtime-profile", request.runtime_profile]
     if repository is None and not request.repository_mode:
@@ -146,13 +156,77 @@ def cli_arguments(request, repository=None):
     return args
 
 
+def verify_invocation_allocation(binding, queued_request, run_id, *, require_selected=False):
+    """Validate frozen intent without changing global state or opening a budget run."""
+    if binding is None:
+        return None
+    from headroom.acceptance.allocation import verify_child_binding
+    from headroom.ledger_path import BUDGET_DB_ENV
+    from headroom.orchestrator import FixRequest
+
+    verified = verify_child_binding(
+        binding, request=FixRequest.model_validate(queued_request), run_id=run_id
+    )
+    selected = os.environ.get(BUDGET_DB_ENV)
+    if (selected is not None or require_selected) and selected != str(verified.database.path):
+        raise ValueError("CLI allocation database selection differs from its receipt")
+    return verified
+
+
+def allocation_budget_factory(spec):
+    """Retain run_fix accounting while applying the independently bound F3 ceiling."""
+    from headroom.budget import BudgetLedger, money
+
+    class BoundLedger(BudgetLedger):
+        def reserve(self, *args, **kwargs):
+            # Recheck receipt/profile/database and aggregate scope immediately before
+            # the normal admission guard reserves an actual transport attempt.
+            verify_invocation_allocation(
+                spec.allocation_child_binding,
+                spec.queued_request,
+                spec.run_id,
+                require_selected=True,
+            )
+            return super().reserve(*args, **kwargs)
+
+    def factory(run_id, request, profile):
+        if run_id != spec.run_id:
+            raise ValueError("CLI allocation run identity changed")
+        verified = verify_invocation_allocation(
+            spec.allocation_child_binding, spec.queued_request, run_id, require_selected=True
+        )
+        if (
+            money(request.budget_usd) != money(verified.run_limit_usd)
+            or money(request.daily_budget_usd) != money(verified.daily_limit_usd)
+            or money(verified.total_limit_usd) > money(profile.authorized_total_usd)
+        ):
+            raise ValueError("CLI allocation budget limits differ from the approved intent")
+        database = verified.database
+        return BoundLedger(
+            database.path,
+            require_existing=True,
+            expected_identity=database.file_identity,
+            daily_limit=verified.daily_limit_usd,
+            total_limit=verified.total_limit_usd,
+        )
+
+    return factory
+
+
 def launch(invocation):
     """Replace this owned worker with the installed console script, never a second run."""
     invocation = Invocation.model_validate(invocation)
+    verified = verify_invocation_allocation(
+        invocation.allocation_child_binding, invocation.queued_request, invocation.run_id
+    )
     directory = Path(invocation.run_root).parent
     path = directory / ("cli-context-" + invocation.run_id + ".json")
     _write(path, invocation.model_dump())
     environment = dict(os.environ)
+    if verified is not None:
+        from headroom.ledger_path import BUDGET_DB_ENV
+
+        environment[BUDGET_DB_ENV] = str(verified.database.path)
     environment[ENVIRONMENT_KEY] = str(path)
     # The installed stub may live in a shared venv; bind its imports to this checkout.
     environment["PYTHONPATH"] = str(PACKAGE_ROOT) + os.pathsep + environment.get("PYTHONPATH", "")
@@ -187,6 +261,12 @@ class CLIExecution:
         from headroom.orchestrator import FixRequest
         from headroom.store.db import Store
 
+        verify_invocation_allocation(
+            invocation.allocation_child_binding,
+            invocation.queued_request,
+            invocation.run_id,
+            require_selected=True,
+        )
         self.spec = invocation
         self.expected = FixRequest.model_validate(invocation.request)
         self.directory = Path(invocation.run_root).parent
@@ -204,6 +284,7 @@ class CLIExecution:
                 != (Path(invocation.run_root) / invocation.run_id).resolve()
                 or _json(state.get("request")) != _json(invocation.queued_request)
                 or state.get("study_protocol") != invocation.study_protocol
+                or state.get("allocation_child_binding") != invocation.allocation_child_binding
             ):
                 raise ValueError("CLI invocation does not match its queued evaluation intent")
             _write(
@@ -315,6 +396,12 @@ class CLIExecution:
         from headroom.evaluation import condition_services
 
         self._deadline()
+        verify_invocation_allocation(
+            self.spec.allocation_child_binding,
+            self.spec.queued_request,
+            self.spec.run_id,
+            require_selected=True,
+        )
         if self.dispatched:
             raise ValueError("A CLI evaluation invocation may dispatch only once")
         if _json(request.model_dump()) != _json(self.expected.model_dump()):
@@ -332,6 +419,10 @@ class CLIExecution:
                 else {}
             ),
         )
+        if self.spec.allocation_child_binding is not None:
+            from dataclasses import replace
+
+            services = replace(services, budget_factory=allocation_budget_factory(self.spec))
         self.dispatched = True
         self.receipt["run_dispatched"] = True
         self.receipt["request_sha256"] = hashlib.sha256(

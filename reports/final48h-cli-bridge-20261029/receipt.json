@@ -1,0 +1,60 @@
+{
+  "schema": "headroom.offline-cli-bridge-receipt.v1",
+  "created_at": "2026-10-28T19:30:30.653468+00:00",
+  "base_commit": "170c7950b0255327e6bace8f672c8260251b0748",
+  "provenance": "offline_fixture",
+  "source_sha256": {
+    "headroom/cli.py": "6c682f01175d0851d4e87429ed718af0dad15bbce280ea349550c28959094a83",
+    "headroom/cli_execution.py": "9a750ca5f521cd10118ccb20247bdee47c1d823ce24d39c68413e765024ede88",
+    "headroom/evaluation_worker.py": "90a3738f4e3dff4a83b7a2d4df418e5c76c1bed9f110f361363652b5a5a1ab09",
+    "headroom/orchestrator.py": "5a8c9b813fda7ef4837decb8aaa911d07e2039d85f52e3d51513927d6708c3bc",
+    "tests/test_final48_cli_binding.py": "de211b2c0657eb97a362f5c5d904c3800cdc9a9754046b29856efc103665ce28"
+  },
+  "dependency_sha256": {
+    "headroom/acceptance/allocation.py": "2eebbb46267b52ff9ae6eb5dfb06fb9c9e2fcd4d3fb8fb6bf362b7a23e4c5bc4"
+  },
+  "tests": {
+    "passed": 91,
+    "seconds": 55.48,
+    "new_focused_cases_included": 17,
+    "network_guard_attempts": 0,
+    "modules": [
+      "tests/test_final48_cli_binding.py",
+      "tests/test_cli_execution.py",
+      "tests/test_evaluation_worker.py",
+      "tests/test_orchestrator.py",
+      "tests/test_profile_request_policy.py"
+    ],
+    "log": "focused-tests.log",
+    "log_sha256": "81ccf8bd6a9dac037f0a8eab80a179dd6b355a99a4695c141db2757c5b244f51"
+  },
+  "checks": {
+    "ruff": "passed",
+    "format": "passed",
+    "log": "ruff.log",
+    "log_sha256": "cd7f41cf1ad5ba8b6263217889865f18d2b85df5ad631a05d6d321f51fd1b7b2"
+  },
+  "failure_history": {
+    "path": "stdin-runner-failure.log",
+    "result": "8 failed,83 passed; all 8 spawn failures caused by unavailable <stdin> main path",
+    "resolution": "same source rerun using a real remote runner with __main__ guard",
+    "sha256": "762d6579c199bc1864a245e80746a95ad11c9ad7e6ab91f9edd20bab1f0490eb"
+  },
+  "scope": {
+    "real_allocation_created": false,
+    "real_profile_modified": false,
+    "production_ledger_accessed": false,
+    "provider_requests": 0,
+    "gpu_runs": 0,
+    "commit_created": false,
+    "live_acceptance": false
+  },
+  "observed": [
+    "legacy Policy serialization remains four keys; explicit CLI tier roundtrip",
+    "installed console invokes real run_fix and SDK MockTransport once, settles one fixture new-pool attempt, closes original accounting, leaves fixture historical ledger unchanged",
+    "run total ceiling uses bound F3 scope, not profile authorized_total",
+    "receipt/profile/binding/child-state mutation blocks next reserve",
+    "request or ambient DB conflict stops before preparation/dispatch",
+    "existing 480-second maximum and owned cleanup tests pass"
+  ]
+}

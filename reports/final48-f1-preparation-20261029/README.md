@@ -1,5 +1,20 @@
 # F1 diagnosis-only comparison: prepared, not executed
 
+## Current package: v7
+
+The source integration changed allocation and orchestration code, so the current
+private request pack is `runs/final48-f1/prepared-20261029-v7/preparation.json`.
+Its digest is `70a6ff3b716bcef6d7239505242fc85ba5f1a09963e655fac758e845d89d2cae`.
+All 27 request files, messages, schemas, 102 input pins and the scoring policy
+are unchanged from v6; only implementation bindings were refreshed. v6 and its
+receipts remain preserved. There are zero newly executed requests.
+
+The current final-preparation-check and implementation-pins receipts bind v7.
+The cost preview still totals USD 1.4487068 under the previously recorded
+hypothetical tariffs; it is not a charge or authorization. Provider prices must
+be refreshed before activation. No real allocation, registry or live profile
+has been created.
+
 On 2026-10-29, offline preparation produced all **27 requests: nine fixed scenarios × three conditions** from existing real baseline artifacts. There were **zero new model requests, zero GPU executions, and zero searches**. This is an implementation and preparation receipt, not a new diagnosis accuracy or repair result.
 
 Live execution is still pending separate authorization, a correctly bound approved allocation, and approval/enabling of the native-schema admission estimate. The runner being implemented does not establish that the current profile can admit this experiment. Changes to the request implementation or admission/runtime code require rebuilding and reviewing the frozen preparation before execution.

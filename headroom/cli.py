@@ -24,6 +24,12 @@ class SearchModeOption(str, Enum):
     bounded_pareto = "bounded_pareto"
 
 
+class NumericalRequirementOption(str, Enum):
+    legacy = "legacy"
+    exact_loss20 = "exact-loss20-v1"
+    observed_bf16 = "observed-bf16-v1"
+
+
 app = typer.Typer(help="Autoresearch for GPU memory.", no_args_is_help=True)
 
 
@@ -198,6 +204,7 @@ def fix(
     target: str = typer.Option("fix-oom"),
     reclaim_reduction_pct: float = typer.Option(30, min=0, max=100),
     allow_numerics_change: bool = False,
+    numerical_requirement: NumericalRequirementOption = NumericalRequirementOption.legacy,
     allow_batch_grad_accum: bool = True,
     max_throughput_regression_pct: float = typer.Option(25, min=0, max=1000),
     config: Annotated[
@@ -278,6 +285,7 @@ def fix(
         policy = project.policy.model_dump()
         for name, value in (
             ("allow_numerics_change", allow_numerics_change),
+            ("numerical_requirement", numerical_requirement.value),
             ("allow_batch_grad_accum", allow_batch_grad_accum),
             ("max_throughput_regression_pct", max_throughput_regression_pct),
         ):

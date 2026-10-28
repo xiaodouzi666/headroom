@@ -1,0 +1,160 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 395B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for mcr.microsoft.com/playwright/python@sha256:330d401ae23c905896a0c26c66c36fc971b621519e7b11b435a8328d7bf6e031
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/4] FROM mcr.microsoft.com/playwright/python@sha256:330d401ae23c905896a0c26c66c36fc971b621519e7b11b435a8328d7bf6e031
+#4 DONE 0.0s
+
+#5 [2/4] RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+#5 0.215 Get:1 http://azure.archive.ubuntu.com/ubuntu noble InRelease [256 kB]
+#5 0.379 Get:2 http://security.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+#5 0.858 Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+#5 1.115 Get:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+#5 1.146 Get:5 http://security.ubuntu.com/ubuntu noble-security/multiverse amd64 Packages [55.6 kB]
+#5 1.301 Get:6 http://security.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1550 kB]
+#5 1.501 Get:7 http://azure.archive.ubuntu.com/ubuntu noble/restricted amd64 Packages [117 kB]
+#5 1.906 Get:8 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 Packages [19.3 MB]
+#5 2.096 Get:9 http://security.ubuntu.com/ubuntu noble-security/main amd64 Packages [1412 kB]
+#5 2.863 Get:10 http://security.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [2122 kB]
+#5 40.23 Get:11 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 Packages [1808 kB]
+#5 44.12 Get:12 http://azure.archive.ubuntu.com/ubuntu noble/multiverse amd64 Packages [331 kB]
+#5 44.77 Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [2172 kB]
+#5 48.63 Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Packages [61.7 kB]
+#5 48.79 Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1739 kB]
+#5 52.03 Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [2235 kB]
+#5 56.37 Get:17 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Packages [49.0 kB]
+#5 56.45 Get:18 http://azure.archive.ubuntu.com/ubuntu noble-backports/multiverse amd64 Packages [669 B]
+#5 56.45 Get:19 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Packages [36.0 kB]
+#5 56.49 Fetched 33.6 MB in 56s (597 kB/s)
+#5 56.49 Reading package lists...
+#5 57.17 Reading package lists...
+#5 57.84 Building dependency tree...
+#5 57.99 Reading state information...
+#5 58.17 The following additional packages will be installed:
+#5 58.17   libavdevice60 libcdio-cdda2t64 libcdio-paranoia2t64 libcdio19t64
+#5 58.17   libxcb-shape0 libxv1
+#5 58.17 Suggested packages:
+#5 58.17   ffmpeg-doc
+#5 58.20 The following NEW packages will be installed:
+#5 58.20   ffmpeg libavdevice60 libcdio-cdda2t64 libcdio-paranoia2t64 libcdio19t64
+#5 58.20   libxcb-shape0 libxv1
+#5 58.36 0 upgraded, 7 newly installed, 0 to remove and 3 not upgraded.
+#5 58.36 Need to get 2073 kB of archives.
+#5 58.36 After this operation, 3171 kB of additional disk space will be used.
+#5 58.36 Get:1 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libcdio19t64 amd64 2.1.0-4.1ubuntu1.2 [62.4 kB]
+#5 58.45 Get:2 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libcdio-cdda2t64 amd64 10.2+2.0.1-1.1build2 [16.5 kB]
+#5 58.45 Get:3 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libcdio-paranoia2t64 amd64 10.2+2.0.1-1.1build2 [16.6 kB]
+#5 58.48 Get:4 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libxcb-shape0 amd64 1.15-1ubuntu2 [6100 B]
+#5 58.48 Get:5 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libxv1 amd64 2:1.0.11-1.1build1 [10.7 kB]
+#5 58.48 Get:6 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 libavdevice60 amd64 7:6.1.1-3ubuntu5 [82.3 kB]
+#5 58.58 Get:7 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 ffmpeg amd64 7:6.1.1-3ubuntu5 [1879 kB]
+#5 60.88 debconf: delaying package configuration, since apt-utils is not installed
+#5 60.91 Fetched 2073 kB in 3s (812 kB/s)
+#5 60.93 Selecting previously unselected package libcdio19t64:amd64.
+#5 60.93 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 28980 files and directories currently installed.)
+#5 60.94 Preparing to unpack .../0-libcdio19t64_2.1.0-4.1ubuntu1.2_amd64.deb ...
+#5 60.94 Unpacking libcdio19t64:amd64 (2.1.0-4.1ubuntu1.2) ...
+#5 60.95 Selecting previously unselected package libcdio-cdda2t64:amd64.
+#5 60.96 Preparing to unpack .../1-libcdio-cdda2t64_10.2+2.0.1-1.1build2_amd64.deb ...
+#5 60.96 Unpacking libcdio-cdda2t64:amd64 (10.2+2.0.1-1.1build2) ...
+#5 60.97 Selecting previously unselected package libcdio-paranoia2t64:amd64.
+#5 60.97 Preparing to unpack .../2-libcdio-paranoia2t64_10.2+2.0.1-1.1build2_amd64.deb ...
+#5 60.97 Unpacking libcdio-paranoia2t64:amd64 (10.2+2.0.1-1.1build2) ...
+#5 60.98 Selecting previously unselected package libxcb-shape0:amd64.
+#5 60.98 Preparing to unpack .../3-libxcb-shape0_1.15-1ubuntu2_amd64.deb ...
+#5 60.98 Unpacking libxcb-shape0:amd64 (1.15-1ubuntu2) ...
+#5 61.00 Selecting previously unselected package libxv1:amd64.
+#5 61.00 Preparing to unpack .../4-libxv1_2%3a1.0.11-1.1build1_amd64.deb ...
+#5 61.00 Unpacking libxv1:amd64 (2:1.0.11-1.1build1) ...
+#5 61.01 Selecting previously unselected package libavdevice60:amd64.
+#5 61.01 Preparing to unpack .../5-libavdevice60_7%3a6.1.1-3ubuntu5_amd64.deb ...
+#5 61.01 Unpacking libavdevice60:amd64 (7:6.1.1-3ubuntu5) ...
+#5 61.02 Selecting previously unselected package ffmpeg.
+#5 61.02 Preparing to unpack .../6-ffmpeg_7%3a6.1.1-3ubuntu5_amd64.deb ...
+#5 61.02 Unpacking ffmpeg (7:6.1.1-3ubuntu5) ...
+#5 61.05 Setting up libxcb-shape0:amd64 (1.15-1ubuntu2) ...
+#5 61.05 Setting up libcdio19t64:amd64 (2.1.0-4.1ubuntu1.2) ...
+#5 61.05 Setting up libcdio-cdda2t64:amd64 (10.2+2.0.1-1.1build2) ...
+#5 61.05 Setting up libcdio-paranoia2t64:amd64 (10.2+2.0.1-1.1build2) ...
+#5 61.06 Setting up libxv1:amd64 (2:1.0.11-1.1build1) ...
+#5 61.06 Setting up libavdevice60:amd64 (7:6.1.1-3ubuntu5) ...
+#5 61.06 Setting up ffmpeg (7:6.1.1-3ubuntu5) ...
+#5 61.06 Processing triggers for libc-bin (2.39-0ubuntu8.9) ...
+#5 DONE 61.1s
+
+#6 [3/4] RUN pip install --no-cache-dir --index-url https://pypi.org/simple playwright==1.64.1 edge-tts
+#6 0.736 Collecting playwright==1.64.1
+#6 0.896   Downloading playwright-1.64.1-py3-none-manylinux1_x86_64.whl.metadata (3.3 kB)
+#6 0.925 Collecting edge-tts
+#6 0.975   Downloading edge_tts-7.3.1-py3-none-any.whl.metadata (6.1 kB)
+#6 0.993 Collecting pyee<15,>=13 (from playwright==1.64.1)
+#6 1.011   Downloading pyee-14.0.0-py3-none-any.whl.metadata (1.8 kB)
+#6 1.394 Collecting greenlet<4.0.0,>=3.1.1 (from playwright==1.64.1)
+#6 1.411   Downloading greenlet-3.5.6-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (3.8 kB)
+#6 1.441 Collecting typing-extensions (from pyee<15,>=13->playwright==1.64.1)
+#6 1.480   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+#6 2.171 Collecting aiohttp<4.0.0,>=3.8.0 (from edge-tts)
+#6 2.204   Downloading aiohttp-3.14.5-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.3 kB)
+#6 2.234 Collecting certifi>=2023.11.17 (from edge-tts)
+#6 2.282   Downloading certifi-2026.10.23-py3-none-any.whl.metadata (2.5 kB)
+#6 2.308 Collecting tabulate<1.0.0,>=0.4.4 (from edge-tts)
+#6 2.321   Downloading tabulate-0.10.0-py3-none-any.whl.metadata (40 kB)
+#6 2.415 Collecting aiohappyeyeballs>=2.5.0 (from aiohttp<4.0.0,>=3.8.0->edge-tts)
+#6 2.431   Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl.metadata (5.9 kB)
+#6 2.501 Collecting aiosignal>=1.4.0 (from aiohttp<4.0.0,>=3.8.0->edge-tts)
+#6 2.527   Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+#6 2.551 Collecting attrs>=17.3.0 (from aiohttp<4.0.0,>=3.8.0->edge-tts)
+#6 2.576   Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+#6 2.650 Collecting frozenlist>=1.1.1 (from aiohttp<4.0.0,>=3.8.0->edge-tts)
+#6 2.688   Downloading frozenlist-1.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
+#6 3.021 Collecting multidict<8.0,>=4.5 (from aiohttp<4.0.0,>=3.8.0->edge-tts)
+#6 3.034   Downloading multidict-7.2.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (6.1 kB)
+#6 3.132 Collecting propcache>=0.2.0 (from aiohttp<4.0.0,>=3.8.0->edge-tts)
+#6 3.144   Downloading propcache-0.5.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (25 kB)
+#6 3.420 Collecting yarl<2.0,>=1.25.1 (from aiohttp<4.0.0,>=3.8.0->edge-tts)
+#6 3.445   Downloading yarl-1.25.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (111 kB)
+#6 3.521 Collecting idna>=2.0 (from yarl<2.0,>=1.25.1->aiohttp<4.0.0,>=3.8.0->edge-tts)
+#6 3.535   Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+#6 3.564 Downloading playwright-1.64.1-py3-none-manylinux1_x86_64.whl (48.5 MB)
+#6 46.10    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 48.5/48.5 MB 1.0 MB/s  0:00:42
+#6 46.11 Downloading greenlet-3.5.6-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (621 kB)
+#6 46.33    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 621.4/621.4 kB 2.4 MB/s  0:00:00
+#6 46.34 Downloading pyee-14.0.0-py3-none-any.whl (15 kB)
+#6 46.36 Downloading edge_tts-7.3.1-py3-none-any.whl (38 kB)
+#6 46.45 Downloading aiohttp-3.14.5-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.9 MB)
+#6 47.18    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.9/1.9 MB 2.7 MB/s  0:00:00
+#6 47.19 Downloading multidict-7.2.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (516 kB)
+#6 47.51 Downloading tabulate-0.10.0-py3-none-any.whl (39 kB)
+#6 47.55 Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+#6 47.59 Downloading yarl-1.25.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (117 kB)
+#6 47.69 Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl (15 kB)
+#6 47.77 Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+#6 47.78 Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+#6 47.86 Downloading certifi-2026.10.23-py3-none-any.whl (135 kB)
+#6 47.92 Downloading frozenlist-1.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (242 kB)
+#6 48.06 Downloading idna-3.20-py3-none-any.whl (69 kB)
+#6 48.09 Downloading propcache-0.5.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (250 kB)
+#6 48.39 Installing collected packages: typing-extensions, tabulate, propcache, multidict, idna, greenlet, frozenlist, certifi, attrs, aiohappyeyeballs, yarl, pyee, aiosignal, playwright, aiohttp, edge-tts
+#6 49.44 
+#6 49.44 Successfully installed aiohappyeyeballs-2.7.1 aiohttp-3.14.5 aiosignal-1.4.0 attrs-26.1.0 certifi-2026.10.23 edge-tts-7.3.1 frozenlist-1.8.0 greenlet-3.5.6 idna-3.20 multidict-7.2.1 playwright-1.64.1 propcache-0.5.4 pyee-14.0.0 tabulate-0.10.0 typing-extensions-4.16.0 yarl-1.25.1
+#6 49.44 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#6 DONE 49.6s
+
+#7 [4/4] WORKDIR /work
+#7 DONE 0.0s
+
+#8 exporting to image
+#8 exporting layers
+#8 exporting layers 0.5s done
+#8 writing image sha256:983d2a4e654e9d55ca0f73d7fbf25306fa94d7de34878e741957c4c1d7eac8ff done
+#8 naming to docker.io/library/headroom-final48-video-tools:toolchain-smoke done
+#8 DONE 0.5s

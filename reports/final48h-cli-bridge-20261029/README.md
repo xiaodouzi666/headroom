@@ -1,0 +1,13 @@
+# F3 CLI bridge — offline verification
+
+Implemented in the four runtime/CLI files recorded in receipt.json, plus one new focused test module. The normal live branch remains responsible for open_run, close_run, final billing checks and cleanup; the optional Services.budget_factory supplies only the receipt-bound ledger and caps. Default invocations omit the new private binding and preserve legacy policy serialization and arguments.
+
+The supervisor accepts allocation_child_binding=None by default. A bound call verifies the original queued FixRequest before spawning. The worker repeats verification before preparation, launch selects the bound database only in the owned child environment, and the installed CLI checks the queued request plus prepared request/source chain before dispatch. The budget factory validates run, daily and total limits; every reserve rechecks the receipt, profile, database identity and active child binding. It uses the campaign ceiling returned by verify_child_binding, not the larger profile authorization.
+
+CLI fix accepts --numerical-requirement legacy, exact-loss20-v1, or observed-bf16-v1. Legacy remains the default and is omitted from generated argv. Invalid policy combinations stop before dispatch. The exact tier covers captured 20-loss scalar equality with existing reference/pairing requirements, not parameter or optimizer-state bit identity. The BF16 tier requires explicit numerical permission and actual observed BF16. No thresholds or historical reports changed.
+
+Validation: 91 focused tests passed in 55.48 seconds, including 17 new bridge cases. Ruff and format checks passed. Tests used temporary fixture allocations, profiles and databases; a real installed console process traversed run_fix and SDK MockTransport, settled one fixture request in the bound database, closed the budget run, and left its separate historical fixture database unchanged. Parent DNS/socket guard attempts were zero; subprocess fixtures independently deny DNS/socket and GPU/container execution.
+
+The earlier stdin-based runner produced eight multiprocessing spawn failures because its main path was <stdin>. That complete failure log is retained as stdin-runner-failure.log. The same source passed after the runner was placed in a remote file with a main guard. The 17-case initial result is included in the final 91 and must not be added to it.
+
+The allocation owner independently reviewed the factory/reserve/run_fix adapter and found no new issue in that path. This receipt is software verification only. No real allocation/profile was created, no production ledger or credential was read, and no provider request, GPU execution, commit or live acceptance occurred. The 12-cell driver and authorized execution remain separate work.

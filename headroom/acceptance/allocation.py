@@ -68,7 +68,10 @@ def prepare_allocation_plan():
         "balance_evidence_sha256": None,
         "task_scopes": list(SCOPES),
         "task_run_caps_usd": {name: None for name in SCOPES},
-        "task_pins": {"F1": {"preparation_sha256": None, "scoring_policy_sha256": None}},
+        "task_pins": {
+            "F1": {"preparation_sha256": None, "scoring_policy_sha256": None},
+            "F3": {"preparation_sha256": None, "cell_requests_sha256": None},
+        },
         "gift_only": True,
         "no_topup": True,
         "run_budget_mode": "strict_reservation",
@@ -119,6 +122,12 @@ def registry(root, *, create=False):
                 task_scope TEXT NOT NULL, execution_key TEXT NOT NULL, run_id TEXT UNIQUE NOT NULL,
                 preparation_sha TEXT, scoring_sha TEXT, state TEXT NOT NULL,
                 PRIMARY KEY(task_scope,execution_key))""")
+            conn.execute("""CREATE TABLE IF NOT EXISTS f3_parents(
+                parent_id TEXT PRIMARY KEY, payload TEXT NOT NULL, state TEXT NOT NULL)""")
+            conn.execute("""CREATE TABLE IF NOT EXISTS f3_children(
+                run_id TEXT PRIMARY KEY, parent_id TEXT NOT NULL, cell_id TEXT NOT NULL,
+                payload TEXT NOT NULL, state TEXT NOT NULL, settlement TEXT,
+                UNIQUE(parent_id,cell_id))""")
         yield conn
         conn.commit()
     except BaseException:
@@ -218,6 +227,14 @@ def activate_allocation(plan, authorization, profile_document, *, project_root):
         hash64(pins.get("preparation_sha256")) and hash64(pins.get("scoring_policy_sha256")),
         "F1_REVIEWED_INPUT_REQUIRED",
     )
+    if caps["F3"] is not None:
+        f3_pins = plan.get("task_pins", {}).get("F3", {})
+        require(
+            money(caps["F3"]) <= Decimal(4)
+            and hash64(f3_pins.get("preparation_sha256"))
+            and hash64(f3_pins.get("cell_requests_sha256")),
+            "F3_REVIEWED_INPUT_REQUIRED",
+        )
     profile = LiveProfile.model_validate(profile_document)
     profile.runtime_config()
     require(
@@ -399,6 +416,7 @@ def verify_and_claim_allocation(
     preparation_sha256=None,
     scoring_policy_sha256=None,
 ):
+    require(task_scope != "F3", "F3_PARENT_CHILD_BINDING_REQUIRED")
     receipt = verify_receipt(receipt_path, project_root=project_root)
     require(
         task_scope in SCOPES and task_scope in receipt["task_scopes"], "TASK_SCOPE_NOT_AUTHORIZED"
@@ -444,3 +462,390 @@ def verify_and_claim_allocation(
 def finish_claim(binding, *, status):
     with registry(binding.project_root) as conn:
         conn.execute("UPDATE claims SET state=? WHERE run_id=?", (status, binding.run_id))
+
+
+# F3 uses one immutable parent ceiling and ordinary child run IDs in the same ledger.
+# This is an estimate-backed admission limit, not a guarantee about provider billing.
+def request_sha256(request):
+    return digest(_request_document(request))
+
+
+def _request_document(request):
+    # The queue historically persists mode="python"; validate both forms through the
+    # same schema before hashing, so 25 vs 25.0 cannot change a legitimate binding.
+    from headroom.orchestrator import FixRequest
+
+    document = request.model_dump(mode="json") if hasattr(request, "model_dump") else request
+    require(isinstance(document, dict), "F3_REQUEST_REQUIRED")
+    try:
+        return FixRequest.model_validate(document).model_dump(mode="json")
+    except ValueError:
+        raise AllocationRefused("F3_REQUEST_REQUIRED") from None
+
+
+def _signed(document):
+    return document | {"binding_sha256": digest(document)}
+
+
+def _checked_document(document, schema):
+    require(isinstance(document, dict) and document.get("schema") == schema, "F3_BINDING_INVALID")
+    require(
+        document.get("binding_sha256")
+        == digest({key: value for key, value in document.items() if key != "binding_sha256"}),
+        "F3_BINDING_CHANGED",
+    )
+
+
+def _budget_state(receipt):
+    """Read only the new pool; old historical unknown charges are deliberately excluded."""
+    path = Path(receipt["ledger_path"])
+    with sqlite3.connect(path.as_uri() + "?mode=ro", uri=True) as conn:
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA query_only=ON")
+        conn.execute("BEGIN")
+        runs = {row["id"]: dict(row) for row in conn.execute("SELECT * FROM budget_runs")}
+        attempts = [dict(row) for row in conn.execute("SELECT * FROM budget_attempts")]
+    known = all(row["settled"] and row["actual_usd"] is not None for row in attempts)
+    total = sum((money(row["charged_usd"]) for row in attempts), Decimal(0))
+    return {"runs": runs, "attempts": attempts, "known": known, "charged": total}
+
+
+def _quiet_pool(state, *, allowed_run=None):
+    require(state["known"], "F3_NEW_POOL_UNSETTLED")
+    require(
+        all(not row["halt_reason"] for row in state["runs"].values()),
+        "F3_NEW_POOL_HALTED",
+    )
+    require(
+        all(key == allowed_run or row["status"] == "closed" for key, row in state["runs"].items()),
+        "F3_NEW_POOL_RUN_ACTIVE",
+    )
+
+
+def _parent_record(parent, *, active=True, environ=None):
+    _checked_document(parent, "headroom.final48.f3-parent.v1")
+    receipt = verify_receipt(
+        parent["receipt_path"], project_root=parent["project_root"], environ=environ
+    )
+    require(receipt["receipt_sha256"] == parent["receipt_sha256"], "F3_RECEIPT_CHANGED")
+    with registry(parent["project_root"]) as conn:
+        row = conn.execute(
+            "SELECT * FROM f3_parents WHERE parent_id=?", (parent["parent_id"],)
+        ).fetchone()
+        claim = conn.execute(
+            "SELECT * FROM claims WHERE task_scope='F3' AND execution_key='once'"
+        ).fetchone()
+        require(
+            row is not None
+            and json.loads(row["payload"]) == parent
+            and claim is not None
+            and claim["run_id"] == parent["parent_id"],
+            "F3_PARENT_NOT_REGISTERED",
+        )
+        if active:
+            require(
+                row["state"] == "claimed" and claim["state"] == "claimed", "F3_PARENT_NOT_ACTIVE"
+            )
+    return receipt
+
+
+def claim_f3_parent(
+    receipt_path, *, project_root, preparation_sha256, cell_requests, scope_limit_usd="4"
+):
+    """Claim the fixed 12-cell campaign exactly once; no model calls or budget run created."""
+    receipt = verify_receipt(receipt_path, project_root=project_root)
+    cap = receipt["task_run_caps_usd"].get("F3")
+    pins = receipt.get("task_pins", {}).get("F3", {})
+    require(
+        cap is not None and 0 < money(scope_limit_usd) <= min(money(cap), Decimal(4)),
+        "F3_SCOPE_LIMIT_EXCEEDED",
+    )
+    require(
+        isinstance(cell_requests, dict)
+        and len(cell_requests) == 12
+        and all(
+            isinstance(key, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,128}", key) and hash64(value)
+            for key, value in cell_requests.items()
+        ),
+        "F3_TWELVE_CELL_INPUTS_REQUIRED",
+    )
+    require(
+        hash64(preparation_sha256)
+        and preparation_sha256 == pins.get("preparation_sha256")
+        and digest(cell_requests) == pins.get("cell_requests_sha256"),
+        "F3_INPUT_BINDING_CHANGED",
+    )
+    with registry(project_root) as conn:
+        state = _budget_state(receipt)
+        _quiet_pool(state)
+        ceiling = min(
+            money(receipt["amounts"]["approved_net_usd"]),
+            state["charged"] + money(scope_limit_usd),
+        )
+        require(ceiling > state["charged"], "F3_SCOPE_EXHAUSTED")
+        parent_id = uuid4().hex
+        parent = _signed(
+            {
+                "schema": "headroom.final48.f3-parent.v1",
+                "parent_id": parent_id,
+                "project_root": str(Path(project_root).resolve()),
+                "receipt_path": str(Path(receipt_path)),
+                "receipt_sha256": receipt["receipt_sha256"],
+                "allocation_id": receipt["allocation_id"],
+                "profile_path": receipt["profile_path"],
+                "daily_limit_usd": receipt["amounts"]["daily_limit_usd"],
+                "preparation_sha256": preparation_sha256,
+                "cell_requests": dict(cell_requests),
+                "cell_requests_sha256": digest(cell_requests),
+                "scope_limit_usd": str(money(scope_limit_usd)),
+                "prior_charged_usd": str(state["charged"]),
+                "total_limit_usd": str(ceiling),
+            }
+        )
+        try:
+            conn.execute(
+                "INSERT INTO claims VALUES('F3','once',?,?,NULL,'claimed')",
+                (parent_id, preparation_sha256),
+            )
+            conn.execute(
+                "INSERT INTO f3_parents VALUES(?,?,'claimed')",
+                (parent_id, json.dumps(parent, sort_keys=True)),
+            )
+        except sqlite3.IntegrityError:
+            raise AllocationRefused("ALLOCATION_EXECUTION_ALREADY_CLAIMED") from None
+    return parent
+
+
+def claim_f3_child(parent, *, cell_id, request, run_id):
+    """Serialize child admission. The queued request, including profile/path, is pinned."""
+    receipt = _parent_record(parent)
+    document = _request_document(request)
+    request_hash = request_sha256(request)
+    require(
+        parent["cell_requests"].get(cell_id) == request_hash,
+        "F3_CHILD_REQUEST_CHANGED",
+    )
+    require(
+        isinstance(run_id, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,128}", run_id),
+        "F3_CHILD_RUN_ID_INVALID",
+    )
+    require(
+        str(document.get("runtime_profile")) == receipt["profile_path"],
+        "F3_CHILD_PROFILE_CHANGED",
+    )
+    requested_cap = money(document.get("budget_usd"))
+    require(0 < requested_cap <= Decimal("0.60"), "F3_CHILD_CAP_EXCEEDED")
+    daily = money(document.get("daily_budget_usd"))
+    require(
+        0 < daily <= money(receipt["amounts"]["daily_limit_usd"]),
+        "F3_CHILD_DAILY_LIMIT_EXCEEDED",
+    )
+    with registry(parent["project_root"]) as conn:
+        current = conn.execute(
+            "SELECT state FROM f3_parents WHERE parent_id=?", (parent["parent_id"],)
+        ).fetchone()
+        require(current and current["state"] == "claimed", "F3_PARENT_NOT_ACTIVE")
+        require(
+            conn.execute(
+                "SELECT 1 FROM f3_children WHERE parent_id=? AND state!='settled'",
+                (parent["parent_id"],),
+            ).fetchone()
+            is None,
+            "F3_PREVIOUS_CHILD_UNSETTLED",
+        )
+        state = _budget_state(receipt)
+        _quiet_pool(state)
+        require(run_id not in state["runs"], "F3_CHILD_RUN_ALREADY_EXISTS")
+        remaining = money(parent["total_limit_usd"]) - state["charged"]
+        require(remaining >= requested_cap, "F3_SCOPE_EXHAUSTED")
+        binding = _signed(
+            {
+                "schema": "headroom.final48.f3-child.v1",
+                "parent_id": parent["parent_id"],
+                "parent_binding_sha256": parent["binding_sha256"],
+                "preparation_sha256": parent["preparation_sha256"],
+                "cell_id": cell_id,
+                "run_id": run_id,
+                "queued_request_sha256": request_hash,
+                "project_root": parent["project_root"],
+                "receipt_path": parent["receipt_path"],
+                "receipt_sha256": parent["receipt_sha256"],
+                "run_limit_usd": str(requested_cap),
+                "daily_limit_usd": str(daily),
+                "total_limit_usd": parent["total_limit_usd"],
+            }
+        )
+        try:
+            conn.execute(
+                "INSERT INTO f3_children VALUES(?,?,?,?,'claimed',NULL)",
+                (run_id, parent["parent_id"], cell_id, json.dumps(binding, sort_keys=True)),
+            )
+        except sqlite3.IntegrityError:
+            raise AllocationRefused("F3_CHILD_ALREADY_CLAIMED") from None
+    return binding
+
+
+@dataclass(frozen=True)
+class VerifiedChildBinding:
+    receipt: dict
+    run_id: str
+    run_limit_usd: str
+    daily_limit_usd: str
+    total_limit_usd: str
+
+    @property
+    def database(self):
+        return BudgetDatabase(
+            Path(self.receipt["ledger_path"]), True, tuple(self.receipt["ledger_identity"])
+        )
+
+
+def _child_record(binding, *, active=True, environ=None):
+    _checked_document(binding, "headroom.final48.f3-child.v1")
+    receipt = verify_receipt(
+        binding["receipt_path"], project_root=binding["project_root"], environ=environ
+    )
+    require(receipt["receipt_sha256"] == binding["receipt_sha256"], "F3_RECEIPT_CHANGED")
+    with registry(binding["project_root"]) as conn:
+        child = conn.execute(
+            "SELECT * FROM f3_children WHERE run_id=?", (binding["run_id"],)
+        ).fetchone()
+        parent = conn.execute(
+            "SELECT * FROM f3_parents WHERE parent_id=?", (binding["parent_id"],)
+        ).fetchone()
+        require(
+            child is not None and json.loads(child["payload"]) == binding and parent is not None,
+            "F3_CHILD_NOT_REGISTERED",
+        )
+        parent_document = json.loads(parent["payload"])
+        require(
+            parent_document["binding_sha256"] == binding["parent_binding_sha256"],
+            "F3_PARENT_BINDING_CHANGED",
+        )
+        if active:
+            require(
+                child["state"] == "claimed" and parent["state"] == "claimed", "F3_CHILD_NOT_ACTIVE"
+            )
+    return receipt, parent_document
+
+
+def verify_child_binding(binding, *, request, run_id, project_root=None, environ=None):
+    """Read-only verification for supervisor, worker and CLI using the original queued request."""
+    receipt, _ = _child_record(binding, environ=environ)
+    require(run_id == binding["run_id"], "F3_CHILD_RUN_CHANGED")
+    require(
+        project_root is None or str(Path(project_root).resolve()) == binding["project_root"],
+        "F3_CHILD_PROJECT_CHANGED",
+    )
+    require(request_sha256(request) == binding["queued_request_sha256"], "F3_CHILD_REQUEST_CHANGED")
+    state = _budget_state(receipt)
+    _quiet_pool(state, allowed_run=run_id)
+    run = state["runs"].get(run_id)
+    if run:
+        require(
+            run["status"] == "open"
+            and run["budget_mode"] == "strict_reservation"
+            and money(run["limit_usd"]) <= money(binding["run_limit_usd"]),
+            "F3_CHILD_LEDGER_LIMIT_CHANGED",
+        )
+    require(state["charged"] < money(binding["total_limit_usd"]), "F3_SCOPE_EXHAUSTED")
+    return VerifiedChildBinding(
+        receipt,
+        run_id,
+        binding["run_limit_usd"],
+        binding["daily_limit_usd"],
+        binding["total_limit_usd"],
+    )
+
+
+def f3_accounting(parent):
+    receipt = _parent_record(parent, active=False)
+    state = _budget_state(receipt)
+    with registry(parent["project_root"]) as conn:
+        children = [
+            dict(row)
+            for row in conn.execute(
+                "SELECT run_id,cell_id,state,settlement FROM f3_children WHERE parent_id=?",
+                (parent["parent_id"],),
+            )
+        ]
+    child_ids = {row["run_id"] for row in children}
+    own = [row for row in state["attempts"] if row["run_id"] in child_ids]
+    known = all(row["settled"] and row["actual_usd"] is not None for row in own)
+    actual = sum((money(row["actual_usd"]) for row in own), Decimal(0)) if known else None
+    blocked = (
+        not known
+        or not state["known"]
+        or any(row["halt_reason"] for row in state["runs"].values())
+        or any(row["state"] == "blocked" for row in children)
+        or state["charged"] > money(parent["total_limit_usd"])
+    )
+    return {
+        "status": "blocked"
+        if blocked
+        else "settled"
+        if len(children) == 12 and all(row["state"] == "settled" for row in children)
+        else "active",
+        "parent_id": parent["parent_id"],
+        "scope_spent_usd": str(actual) if actual is not None else None,
+        "scope_limit_usd": parent["scope_limit_usd"],
+        "total_limit_usd": parent["total_limit_usd"],
+        "new_pool_charged_usd": str(state["charged"]),
+        "all_costs_known": known and state["known"],
+        "children": children,
+    }
+
+
+def finish_f3_child(binding, *, execution_terminal, cleanup_verified):
+    """Unknown/retained charges and uncertain cleanup permanently stop sequential continuation."""
+    receipt, parent = _child_record(binding)
+    with registry(binding["project_root"]) as conn:
+        row = conn.execute(
+            "SELECT state FROM f3_children WHERE run_id=?", (binding["run_id"],)
+        ).fetchone()
+        require(row and row["state"] == "claimed", "F3_CHILD_NOT_ACTIVE")
+        state = _budget_state(receipt)
+        run = state["runs"].get(binding["run_id"])
+        own = [r for r in state["attempts"] if r["run_id"] == binding["run_id"]]
+        known = all(r["settled"] and r["actual_usd"] is not None for r in own)
+        actual = sum((money(r["actual_usd"]) for r in own), Decimal(0)) if known else None
+        settled = (
+            execution_terminal is True
+            and cleanup_verified is True
+            and known
+            and state["known"]
+            and all(
+                r["status"] == "closed" and not r["halt_reason"] for r in state["runs"].values()
+            )
+            and (run is not None or not own)
+            and actual is not None
+            and actual <= money(binding["run_limit_usd"])
+            and state["charged"] <= money(binding["total_limit_usd"])
+        )
+        result = {
+            "status": "settled" if settled else "blocked",
+            "actual_usd": str(actual) if actual is not None else None,
+        }
+        conn.execute(
+            "UPDATE f3_children SET state=?,settlement=? WHERE run_id=?",
+            (result["status"], json.dumps(result, sort_keys=True), binding["run_id"]),
+        )
+    return result | {"scope_spent_usd": f3_accounting(parent)["scope_spent_usd"]}
+
+
+def finish_f3_parent(parent, *, status):
+    _parent_record(parent)
+    require(status in {"completed", "failed", "blocked", "stopped"}, "F3_PARENT_STATUS_INVALID")
+    with registry(parent["project_root"]) as conn:
+        if status == "completed":
+            children = conn.execute(
+                "SELECT state FROM f3_children WHERE parent_id=?", (parent["parent_id"],)
+            ).fetchall()
+            require(
+                len(children) == 12 and all(r["state"] == "settled" for r in children),
+                "F3_NOT_COMPLETE",
+            )
+        conn.execute(
+            "UPDATE f3_parents SET state=? WHERE parent_id=?", (status, parent["parent_id"])
+        )
+        conn.execute("UPDATE claims SET state=? WHERE run_id=?", (status, parent["parent_id"]))
