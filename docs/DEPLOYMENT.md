@@ -1,6 +1,8 @@
 # Deployment preparation
 
-The original deployment preparation is retained below. A dedicated Tailscale Funnel deployment is now being configured; see [FUNNEL.md](FUNNEL.md) and reports/funnel-deployment-20261028 for its current verification status. The development preview remains separate and localhost-only. No notification destination has been configured.
+The current public deployment uses Tailscale Funnel at **https://headroom.tail45186b.ts.net/**. The dedicated application and Tailscale user services are enabled, user linger is enabled, and the public origin remains read-only. See [FUNNEL.md](FUNNEL.md) for the active configuration and [the current access check](../reports/funnel-closeout-20261029/README.md) for verification. A separate timer checks origin and public health every five minutes; no human notification destination is configured.
+
+The older deployment preparation below is retained as design history. Its Cloudflare prerequisites and local-development timer status do not describe the active Funnel service.
 
 `deploy/headroom-api.service` is a user-systemd template for this server. It restarts failures and terminates its process group on stop. Production admission creates one deadline (default/max 600 seconds) shared by source preparation, queue waiting, process startup and worker execution. Preparation runs in an owned spawn session, with remaining-time Git and publication-lock limits; timeout kills that group, including its Git descendants, before returning. Expired queued jobs never start a worker. The executing worker uses only the time remaining, then TERM cleanup grace and hard stop, followed by owned-container cleanup. HTTP upload/validation before admission and cleanup/report finalization afterwards are explicitly outside this execution bound. An unconfirmed cleanup freezes the queue. Linux parent-death notification also cleans the owned preparation group if its supervisor disappears. After a server restart, paid/GPU jobs are not silently resumed.
 
@@ -27,13 +29,13 @@ the allocation. Both launchers stay on loopback with `proxy_headers=False`.
 No service installation, preview restart, public bind or model call was performed
 while adding this startup routing.
 
-## Public tunnel prerequisites
+## Historical Cloudflare deployment prerequisites
 
 The owner must supply an approved hostname, an existing Cloudflare tunnel and its private credentials. Keep origin listening on 127.0.0.1:8000. Fill the Cloudflared template and set `HEADROOM_PUBLIC_HOST` to that exact bare hostname plus `HEADROOM_TRUST_CLOUDFLARED=true` on the API service. This enables Secure cookies and uses validated `CF-Connecting-IP` only from loopback requests. The trust assumption is that Cloudflared overwrites this header and is the only public path to the origin. Direct Internet binding or arbitrary reverse proxies do not satisfy it.
 
 Review the full queue, cookie, allowed-host, origin and rate-limit behavior before exposing the service. Do not put keys into Cloudflared configuration or URLs. Token Factory/Tavily keys stay in the server-private .env and never enter a target container.
 
-## Health and remaining acceptance
+## Historical local-development health and acceptance
 
 Cached GPU/provider observations and the separate local authorization budget are
 documented in docs/AVAILABILITY.md; they do not establish model access or account

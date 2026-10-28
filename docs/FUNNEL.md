@@ -177,3 +177,7 @@ The [official Funnel DNS incident](https://status.tailscale.com/incidents/01M5YV
 was under investigation at the follow-up. This hostname resolved correctly in
 the recorded Google/Cloudflare checks, so the incident is not established as the
 cause of its earlier proxy failures. Visitors do not need a Tailscale client.
+
+## Deployment closeout (2026-10-29)
+
+The [latest closeout receipt](../reports/funnel-closeout-20261029/README.md) separates completed service setup from outstanding acceptance evidence. The physical Chrome Home and Results pages loaded with the owner's existing proxy enabled; explicit-proxy and no-explicit-proxy HTTPS checks both succeeded. No additional visitor-side Tailscale installation is required. The exact-host proxy workaround is still temporary and unchanged.

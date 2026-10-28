@@ -1,0 +1,130 @@
+{
+  "checked_at_utc": "2026-10-28T18:31:49.337130+00:00",
+  "services": [
+    {
+      "Result": "success",
+      "NRestarts": "0",
+      "ExecMainStatus": "0",
+      "Id": "headroom-public.service",
+      "LoadState": "loaded",
+      "ActiveState": "active",
+      "SubState": "running",
+      "DropInPaths": "",
+      "UnitFileState": "enabled",
+      "ActiveEnterTimestamp": "Wed 2026-10-28 17:15:39 CET",
+      "installed_unit_matches_repository": true
+    },
+    {
+      "Result": "success",
+      "NRestarts": "0",
+      "ExecMainStatus": "0",
+      "Id": "headroom-tailscaled.service",
+      "LoadState": "loaded",
+      "ActiveState": "active",
+      "SubState": "running",
+      "DropInPaths": "",
+      "UnitFileState": "enabled",
+      "ActiveEnterTimestamp": "Wed 2026-10-28 17:37:21 CET",
+      "installed_unit_matches_repository": true
+    },
+    {
+      "NextElapseUSecMonotonic": "2w 6d 11h 10min 35.704669s",
+      "Result": "success",
+      "Id": "headroom-funnel-health.timer",
+      "LoadState": "loaded",
+      "ActiveState": "active",
+      "SubState": "waiting",
+      "DropInPaths": "",
+      "UnitFileState": "enabled",
+      "ActiveEnterTimestamp": "Wed 2026-10-28 17:43:42 CET",
+      "installed_unit_matches_repository": true
+    },
+    {
+      "Result": "success",
+      "NRestarts": "0",
+      "ExecMainStatus": "0",
+      "Id": "headroom-funnel-health.service",
+      "LoadState": "loaded",
+      "ActiveState": "inactive",
+      "SubState": "dead",
+      "DropInPaths": "",
+      "UnitFileState": "static",
+      "ActiveEnterTimestamp": "",
+      "installed_unit_matches_repository": true
+    }
+  ],
+  "linger": "yes",
+  "funnel": {
+    "TCP": {
+      "443": {
+        "HTTPS": true
+      }
+    },
+    "Web": {
+      "headroom.tail45186b.ts.net:443": {
+        "Handlers": {
+          "/": {
+            "Proxy": "http://127.0.0.1:8766"
+          }
+        }
+      }
+    },
+    "AllowFunnel": {
+      "headroom.tail45186b.ts.net:443": true
+    }
+  },
+  "tailscale": {
+    "BackendState": "Running",
+    "health_warning_count": 0,
+    "Online": true,
+    "KeyExpiry": "2027-04-26T14:51:43Z"
+  },
+  "latest_timer_state": {
+    "checked_at_utc": "2026-10-28T18:29:33.177147+00:00",
+    "checks": {
+      "origin": {
+        "consecutive_failures": 0,
+        "http_status": 200,
+        "last_success_at_utc": "2026-10-28T18:29:33.177147+00:00",
+        "latency_ms": 80.35,
+        "slow": false,
+        "status": "ok"
+      },
+      "public": {
+        "consecutive_failures": 0,
+        "http_status": 200,
+        "last_success_at_utc": "2026-10-28T18:29:33.177147+00:00",
+        "latency_ms": 3791.502,
+        "slow": true,
+        "status": "ok"
+      }
+    },
+    "consecutive_failures": 0,
+    "healthy": true,
+    "last_success_at_utc": "2026-10-28T18:29:33.177147+00:00",
+    "schema_version": 1
+  },
+  "public_health_once": {
+    "http_status": 200,
+    "seconds": 2.176,
+    "status": "ok",
+    "verified_tls": true
+  },
+  "origin_listen": [
+    "LISTEN 0      2048   127.0.0.1:8766 0.0.0.0:*"
+  ],
+  "no_model_calls": true,
+  "read_only_audit": true,
+  "interpretation": {
+    "configuration_gap_found": false,
+    "timer_oneshot_inactive_is_expected": true,
+    "latest_public_timer_observation": "HTTP 200; slow flag (>3s) is latency, not an outage",
+    "remaining": [
+      "Independent phone cellular-network loading not tested.",
+      "Whole shared-host reboot not performed.",
+      "Human notification destination and actual delivery not configured or tested.",
+      "Real Funnel-client IP admission/rate-limit acceptance remains pending while submissions are intentionally disabled."
+    ],
+    "scope": "One public health GET; systemd, Funnel/status, listener and existing timer-state reads only. No restart or network change."
+  }
+}
