@@ -116,3 +116,27 @@ phone-network access check remain separate acceptance items.
 - [Userspace networking](https://tailscale.com/docs/concepts/userspace-networking)
 - [Deny-all policy example](https://tailscale.com/docs/reference/examples/acls#deny-all)
 - [Static packages and checksums](https://pkgs.tailscale.com/stable/)
+
+
+## Prepared live-access controls
+
+The deployed launcher still disables submissions. The API implementation now
+limits public anonymous callers to the preset example catalogue. A custom script
+requires an operator-configured HEADROOM_JUDGE_TOKEN in the Authorization Bearer
+header; public repository cloning is not offered. The token is never included in
+public configuration or reports. No judge credential is created by these changes.
+
+Public admission allows one new attempt per IP per hour, persisted across server
+restarts, with one active job and at most two waiting/preparing jobs. A single
+480-second deadline covers source preparation, queue waiting and execution.
+The server caps a public request's model allowance at USD 0.30.
+
+The dedicated origin trusts Tailscale forwarding only from loopback. It requires
+the Funnel marker, HTTPS protocol, expected public host, and exactly one valid
+client IP. Tailscale 1.104.4 overwrites these values in its
+[proxy implementation](https://github.com/tailscale/tailscale/blob/v1.104.4/ipn/ipnlocal/serve.go#L1144).
+Caller-supplied forwarded-address chains and non-loopback origins are rejected.
+Do not bind this origin to a public interface or enable generic proxy-header trust.
+
+These controls have offline API coverage. They do not activate model calls or
+replace the pending running-pool decision and later end-to-end live test.

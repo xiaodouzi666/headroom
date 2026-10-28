@@ -6,8 +6,6 @@ import {
   text,
   decimal,
   gb,
-  usd,
-  usdUpper,
   human,
   searchModeLabel,
   type Dict,
@@ -38,7 +36,6 @@ const columns: [string, string][] = [
   ["loss_equivalence", "Numerics"],
   ["rounds", "Rounds"],
   ["cost_usd", "Actual cost USD"],
-  ["cost_upper_usd", "Cost upper bound USD"],
   ["wall_seconds", "Wall seconds"],
   ["run_id", "Source run"],
 ];
@@ -52,13 +49,87 @@ const value = (v: unknown) =>
       : String(v);
 const percent = (v: unknown) =>
   decimal(v) === null ? "Unknown" : (decimal(v)! * 100).toFixed(2) + "%";
+const number = (v: unknown, digits = 2) => {
+  const n = decimal(v);
+  return n === null
+    ? "Unknown"
+    : n.toLocaleString("en-US", { maximumFractionDigits: digits });
+};
+const cost = (v: unknown) => {
+  const n = decimal(v);
+  if (n === null || n < 0) return "Unknown";
+  if (n > 0 && n < 0.0001) return "<$0.0001";
+  return "$" + n.toFixed(n > 0 && n < 0.01 ? 4 : 2);
+};
+const scenarioName = (v: unknown) =>
+  (
+    ({
+      s1_batch_too_big: "Large training batch",
+      s2_capacity_v2: "Model and optimizer memory",
+      s3_eval_no_grad_missing: "Evaluation loop",
+      s4_loss_accumulation_graph: "Accumulated loss graph",
+      s5_fragmentation_varlen: "Variable-length batches",
+      s6_full_vocab_logits_fp32: "Full-vocabulary logits",
+      s7_frozen_params_optimizer_state: "Frozen parameters",
+      s8_two_models_resident: "Two resident models",
+      nanogpt: "nanoGPT",
+    }) as Record<string, string>
+  )[String(v)] ?? value(v);
+const conditionName = (v: unknown) =>
+  (
+    ({
+      full_ultra: "Full evidence + Ultra",
+      traceback_ultra: "Traceback + Ultra",
+      full_super: "Full evidence + Super",
+    }) as Record<string, string>
+  )[String(v)] ?? value(v);
+const campaignName = (item: Dict) =>
+  (
+    ({
+      "r6-20261027": "October 27, 2026 · Latest evaluation",
+      "r5-20261027": "October 27, 2026 · Previous evaluation",
+    }) as Record<string, string>
+  )[String(item.id)] ?? text(item.title);
+const stopReason = (v: unknown) => {
+  const label = human(v);
+  return /budget|ledger|reservation|halt|gate|acceptance/i.test(label)
+    ? "Analysis paused"
+    : label;
+};
+const resultLabel = (row: Dict) =>
+  row.target_met === true
+    ? "Repaired"
+    : row.status === "budget_exceeded" &&
+        row.diagnosis_attempt_recorded === false &&
+        row.patch_attempt_recorded === false
+      ? "Stopped before diagnosis"
+      : row.target_met === false
+        ? "Not solved"
+        : ["failed", "error", "rejected", "timeout"].includes(
+              String(row.status),
+            )
+          ? "Run failed · result unknown"
+          : row.status === "needs_human"
+            ? "Needs review · result unknown"
+            : row.status === "budget_exceeded"
+              ? "Analysis paused · result unknown"
+              : "Unknown";
+const numericalResult = (v: unknown) =>
+  (
+    ({
+      identical: "Identical",
+      within_tol: "Within tolerance",
+      changed: "Changed",
+      "n/a": "Not compared",
+    }) as Record<string, string>
+  )[String(v)] ?? "Unknown";
 const numericalBasis = (basis: unknown) =>
   (
     ({
       original_plan_first_five_backward_scalars:
-        "Observed first five backward losses (original plan)",
+        "First five recorded backward losses",
       original_plan_full_backward_scalar_series:
-        "Observed full backward-loss sequence (original plan)",
+        "Full recorded backward-loss sequence",
       original_workload_offload_first_five_backward_scalars:
         "Observed first five backward losses with original-workload offload reference",
       repository_no_reference_exception:
@@ -98,10 +169,18 @@ const metric = (key: string, v: unknown) =>
       : key.endsWith("_bytes")
         ? gb(v)
         : key === "cost_usd"
-          ? usd(v)
-          : key === "cost_upper_usd"
-            ? usdUpper(v)
-            : value(v);
+          ? cost(v)
+          : key.endsWith("_pct")
+            ? number(v)
+            : key === "wall_seconds" || key === "rounds"
+              ? number(v, 1)
+              : key === "scenario_id"
+                ? scenarioName(v)
+                : key === "condition"
+                  ? conditionName(v)
+                  : key === "status"
+                    ? stopReason(v)
+                    : value(v);
 
 function RoundOutcomes({ row }: { row: Dict }) {
   const outcomes = rows(row.round_outcomes);
@@ -221,16 +300,12 @@ export default function EvaluationView() {
         "peak_reduction_pct",
         "throughput_change_pct",
         "step_time_change_pct",
-      ].map((key) => [key, value(record(measured[key]).mean)]),
+      ].map((key) => [key, number(record(measured[key]).mean)]),
     ),
     loss_equivalence: `${value(comparable.equivalent)}/${value(comparable.comparable_count)} comparable`,
-    rounds: value(record(measured.rounds).mean),
-    cost_usd: usd(summary.total_cost_usd),
-    cost_upper_usd:
-      summary.total_cost_usd == null && summary.billing_complete === true
-        ? usdUpper(summary.conservative_total_usd)
-        : "—",
-    wall_seconds: value(record(measured.wall_seconds).mean),
+    rounds: number(record(measured.rounds).mean, 1),
+    cost_usd: cost(summary.total_cost_usd),
+    wall_seconds: number(record(measured.wall_seconds).mean, 1),
     run_id: "—",
   };
   const pairs = rows(ablation.pairs),
@@ -258,8 +333,17 @@ export default function EvaluationView() {
     ].map((key) => {
       const m = record(measured[key]);
       return [
-        human(key) + " mean",
-        value(m.mean),
+        (
+          {
+            peak_reduction_pct: "Average memory reduction (%)",
+            throughput_change_pct: "Average throughput change (%)",
+            step_time_change_pct: "Average step-time change (%)",
+            rounds: "Average repair attempts",
+            wall_seconds: "Average runtime (seconds)",
+            cost_usd: "Average Token Factory cost",
+          } as Record<string, string>
+        )[key],
+        metric(key, m.mean),
         m.measured_count,
         m.unknown_count,
       ];
@@ -274,7 +358,7 @@ export default function EvaluationView() {
   return (
     <Section
       title="Published evaluations"
-      kicker="Main campaign and paired ablation"
+      kicker="Repairs, measurements, and unfinished work"
     >
       {error && <Notice tone="red">{error}</Notice>}
       {catalog.length > 0 && (
@@ -286,7 +370,7 @@ export default function EvaluationView() {
           >
             {catalog.map((item) => (
               <option key={String(item.id)} value={String(item.id)}>
-                {text(item.title)}
+                {campaignName(item)}
               </option>
             ))}
           </select>
@@ -297,8 +381,7 @@ export default function EvaluationView() {
       ) : !catalog.length ? (
         error ? null : (
           <Empty title="Evaluation publication pending">
-            No campaign has been selected for public display. This does not
-            imply a completed repair benchmark.
+            The recorded evaluation results will appear here when available.
           </Empty>
         )
       ) : !Object.keys(document).length ? null : (
@@ -314,245 +397,298 @@ export default function EvaluationView() {
           {acceptance.basis === "independent_fixed_suite_review_v1" && (
             <Notice>
               <strong>
-                Fixed-suite result: {value(acceptance.target_met_count)}/
-                {value(acceptance.fixed_denominator)} automatic targets.
+                {value(acceptance.target_met_count)}/
+                {value(acceptance.fixed_denominator)} workloads repaired
+                automatically.
               </strong>{" "}
-              Required: {value(acceptance.minimum_targets)}/
-              {value(acceptance.fixed_denominator)}. The target gate is{" "}
-              {acceptance.target_gate_met === true ? "met" : "not met"}.
-              Campaigns are scored separately; historical successes are not
-              pooled. First-cause results follow the independent review.
+              Each evaluation stands on its own; earlier successes are not added
+              to this result.
               {Number(acceptance.stopped_before_diagnosis_and_patch) > 0 && (
                 <>
                   {" "}
                   {value(acceptance.stopped_before_diagnosis_and_patch)}{" "}
-                  scenarios stopped at the budget gate before any diagnosis or
-                  patch model attempt. Their baseline and Nano annotation ran;
-                  they remain in the fixed denominator and are not successful
-                  repairs.
+                  workloads stopped before diagnosis or patch generation. Their
+                  baseline and Nano annotation ran; these workloads remain among
+                  the nine and are not counted as repairs.
                 </>
               )}
             </Notice>
           )}
-          <p className="caption">
-            Search mode: {searchModeLabel(document.search_mode)}. Only
-            explicitly published evidence appears here. Unknown outcomes remain
-            unknown. Throughput is a separate measurement, not inferred from
-            step time. Any patch/config applied records a successful application
-            attempt, including one later reverted. Selected fields describe the
-            final retained configuration. Peak before is the baseline; peak
-            after, reductions and timing changes compare that baseline with the
-            final selected configuration.
-          </p>
-          <a
-            className="text-link"
-            href={"/api/evaluations/" + encodeURIComponent(selected)}
-            download
-          >
-            Download published evaluation JSON
-          </a>
           <div
             className="table-wrap"
             role="region"
-            aria-label="Scrollable evaluation results"
+            aria-label="Evaluation overview"
             tabIndex={0}
           >
-            <table
-              className="evaluation-main-table"
-              aria-label="Main evaluation results"
-            >
+            <table aria-label="Workload results">
               <thead>
                 <tr>
-                  {columns.map(([key, label]) => (
-                    <th key={key} className={"evaluation-column-" + key}>
-                      {label}
-                    </th>
+                  {[
+                    "Workload",
+                    "Result",
+                    "Root cause correct",
+                    "Peak before",
+                    "Peak after",
+                    "Memory reduction",
+                    "Numerics",
+                  ].map((label) => (
+                    <th key={label}>{label}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {rows(document.rows).map((row, index) => (
                   <tr key={index}>
-                    {columns.map(([key]) => (
-                      <td key={key} className={"evaluation-column-" + key}>
-                        {metric(key, row[key])}
-                        {key === "patch_applied" && <RoundOutcomes row={row} />}
-                        {key === "status" && (
-                          <small className="table-note">
-                            {searchModeLabel(row.search_mode)} · Stop:{" "}
-                            {human(row.search_stop_reason)}
-                          </small>
-                        )}
-                        {key === "loss_equivalence" && (
-                          <>
-                            <br />
-                            <small
-                              className="caption"
-                              title={
-                                "Acceptance scope: " +
-                                value(row.acceptance_scope)
-                              }
-                            >
-                              {numericalBasis(row.numerical_basis)}
-                            </small>
-                          </>
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-                <tr>
-                  {columns.map(([key]) =>
-                    key === "scenario_id" ? (
-                      <th
-                        key={key}
-                        scope="row"
-                        className={"evaluation-column-" + key}
-                      >
-                        {summaryCells[key]}
-                      </th>
-                    ) : (
-                      <td key={key} className={"evaluation-column-" + key}>
-                        {summaryCells[key] ?? "Unknown"}
-                      </td>
-                    ),
-                  )}
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p className="caption">
-            The summary row uses measured live rows only; reductions, timings
-            and rounds are means over available measurements. Applied and
-            completed counts are recorded facts, not additional acceptance
-            rates. Fixture rows excluded:{" "}
-            {value(summary.offline_fixture_rows_excluded)}. Known cost subtotal:{" "}
-            {usd(summary.known_cost_usd)}; actual total:{" "}
-            {usd(summary.total_cost_usd)}. Verified cost upper bound:{" "}
-            {summary.billing_complete === true
-              ? usdUpper(summary.conservative_total_usd)
-              : "Unknown"}
-            . Bounded runs: {value(summary.bounded_cost_runs)}; unresolved runs:{" "}
-            {value(summary.unresolved_cost_runs)}. An upper bound is not a
-            confirmed actual charge.
-          </p>
-          <div className="table-wrap">
-            <table aria-label="Evaluation summary">
-              <thead>
-                <tr>
-                  <th>Metric</th>
-                  <th>Value</th>
-                  <th>Measured / comparable</th>
-                  <th>Unknown / not comparable</th>
-                </tr>
-              </thead>
-              <tbody>
-                {summaryRows.map(([label, result, count, unknown]) => (
-                  <tr key={String(label)}>
-                    <th>{String(label)}</th>
-                    <td>{String(result)}</td>
-                    <td>{value(count)}</td>
-                    <td>{value(unknown)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <h3>Paired diagnosis ablation</h3>
-          <p className="caption">
-            {text(ablation.aggregation_scope)}. Only matching source hashes,
-            effective policies, authored truth and complete three-condition
-            groups are compared.
-          </p>
-          <div className="table-wrap">
-            <table aria-label="Paired ablation summary">
-              <thead>
-                <tr>
-                  <th>Condition</th>
-                  <th>Correct first causes</th>
-                  <th>Comparable pairs</th>
-                  <th>Accuracy</th>
-                </tr>
-              </thead>
-              <tbody>
-                {conditions.map((condition) => (
-                  <tr key={condition}>
-                    <th>{condition}</th>
+                    <th scope="row">{scenarioName(row.scenario_id)}</th>
+                    <td>{resultLabel(row)}</td>
+                    <td>{value(row.first_cause_matches)}</td>
+                    <td>{gb(row.peak_before_bytes)}</td>
+                    <td>{gb(row.peak_after_bytes)}</td>
                     <td>
-                      {
-                        pairs.filter(
-                          (pair) => record(pair.correct)[condition] === true,
-                        ).length
-                      }
+                      {decimal(row.peak_reduction_pct) === null
+                        ? "Unknown"
+                        : number(row.peak_reduction_pct) + "%"}
                     </td>
-                    <td>{value(ablation.paired_scored_count)}</td>
-                    <td>{percent(record(ablation.accuracy)[condition])}</td>
+                    <td>
+                      {numericalResult(row.loss_equivalence)}
+                      <small className="table-note">
+                        {numericalBasis(row.numerical_basis)}
+                      </small>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <div className="table-wrap">
-            <table aria-label="Paired ablation evidence">
-              <thead>
-                <tr>
-                  <th>Scenario</th>
-                  <th>Policy</th>
-                  {conditions.map((condition) => (
-                    <th key={condition}>{condition}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {pairs.length ? (
-                  pairs.map((pair, index) => (
-                    <tr key={index}>
-                      <th>{value(pair.scenario_id)}</th>
-                      <td>{value(pair.policy_name)}</td>
-                      {conditions.map((condition) => (
-                        <td key={condition}>
-                          {value(record(pair.correct)[condition])}
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5}>No comparable three-condition pairs.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          {excluded.length > 0 && (
-            <div className="table-wrap">
-              <table aria-label="Excluded ablation groups">
+          <p className="caption">
+            Token Factory cost of this evaluation:{" "}
+            {cost(summary.total_cost_usd)}.
+          </p>
+          <details className="evaluation-details">
+            <summary>Detailed measurements</summary>
+            <p className="caption">
+              Search mode: {searchModeLabel(document.search_mode)}. Only
+              explicitly published evidence appears here. Unknown outcomes
+              remain unknown. Throughput is a separate measurement, not inferred
+              from step time. Any patch/config applied records a successful
+              application attempt, including one later reverted. Selected fields
+              describe the final retained configuration. Peak before is the
+              baseline; peak after, reductions and timing changes compare that
+              baseline with the final selected configuration.
+            </p>
+            <a
+              className="text-link"
+              href={"/api/evaluations/" + encodeURIComponent(selected)}
+              download
+            >
+              Download full evaluation data
+            </a>
+            <div
+              className="table-wrap"
+              role="region"
+              aria-label="Scrollable evaluation results"
+              tabIndex={0}
+            >
+              <table
+                className="evaluation-main-table"
+                aria-label="Main evaluation results"
+              >
                 <thead>
                   <tr>
-                    <th>Scenario</th>
-                    <th>Policy</th>
-                    <th>Reason</th>
+                    {columns.map(([key, label]) => (
+                      <th key={key} className={"evaluation-column-" + key}>
+                        {label}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {excluded.map((row, index) => (
+                  {rows(document.rows).map((row, index) => (
                     <tr key={index}>
-                      <td>{value(row.scenario_id)}</td>
-                      <td>{value(row.policy_name)}</td>
-                      <td>{human(row.reason)}</td>
+                      {columns.map(([key]) => (
+                        <td key={key} className={"evaluation-column-" + key}>
+                          {metric(key, row[key])}
+                          {key === "patch_applied" && (
+                            <RoundOutcomes row={row} />
+                          )}
+                          {key === "status" && (
+                            <small className="table-note">
+                              {searchModeLabel(row.search_mode)} · Stop:{" "}
+                              {stopReason(row.search_stop_reason)}
+                            </small>
+                          )}
+                          {key === "loss_equivalence" && (
+                            <>
+                              <br />
+                              <small
+                                className="caption"
+                                title={
+                                  "Comparison scope: " +
+                                  value(row.acceptance_scope)
+                                }
+                              >
+                                {numericalBasis(row.numerical_basis)}
+                              </small>
+                            </>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                  <tr>
+                    {columns.map(([key]) =>
+                      key === "scenario_id" ? (
+                        <th
+                          key={key}
+                          scope="row"
+                          className={"evaluation-column-" + key}
+                        >
+                          {summaryCells[key]}
+                        </th>
+                      ) : (
+                        <td key={key} className={"evaluation-column-" + key}>
+                          {summaryCells[key] ?? "Unknown"}
+                        </td>
+                      ),
+                    )}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p className="caption">
+              Averages use the available GPU measurements. Runs that did not
+              finish and unknown measurements remain in the table. Offline
+              examples excluded from measured results:{" "}
+              {value(summary.offline_fixture_rows_excluded)}.
+            </p>
+            <div className="table-wrap">
+              <table aria-label="Evaluation summary">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                    <th>Measured / comparable</th>
+                    <th>Unknown / not comparable</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summaryRows.map(([label, result, count, unknown]) => (
+                    <tr key={String(label)}>
+                      <th>{String(label)}</th>
+                      <td>{String(result)}</td>
+                      <td>{value(count)}</td>
+                      <td>{value(unknown)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          )}
-          <h3>What this evidence supports</h3>
-          {Array.isArray(document.conclusions) &&
-            document.conclusions.map((line, index) => (
-              <p key={index} className="small-copy">
-                {String(line)}
-              </p>
-            ))}
+            <h3>Paired diagnosis ablation</h3>
+            <p className="caption">
+              {text(ablation.aggregation_scope)}. Only matching source hashes,
+              effective policies, authored truth and complete three-condition
+              groups are compared.
+            </p>
+            <div className="table-wrap">
+              <table aria-label="Paired ablation summary">
+                <thead>
+                  <tr>
+                    <th>Condition</th>
+                    <th>Correct first causes</th>
+                    <th>Comparable pairs</th>
+                    <th>Accuracy</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {conditions.map((condition) => (
+                    <tr key={condition}>
+                      <th>{conditionName(condition)}</th>
+                      <td>
+                        {
+                          pairs.filter(
+                            (pair) => record(pair.correct)[condition] === true,
+                          ).length
+                        }
+                      </td>
+                      <td>{value(ablation.paired_scored_count)}</td>
+                      <td>{percent(record(ablation.accuracy)[condition])}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="table-wrap">
+              <table aria-label="Paired ablation evidence">
+                <thead>
+                  <tr>
+                    <th>Scenario</th>
+                    <th>Policy</th>
+                    {conditions.map((condition) => (
+                      <th key={condition}>{conditionName(condition)}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {pairs.length ? (
+                    pairs.map((pair, index) => (
+                      <tr key={index}>
+                        <th>{value(pair.scenario_id)}</th>
+                        <td>{value(pair.policy_name)}</td>
+                        {conditions.map((condition) => (
+                          <td key={condition}>
+                            {value(record(pair.correct)[condition])}
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5}>No comparable three-condition pairs.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {excluded.length > 0 && (
+              <div className="table-wrap">
+                <table aria-label="Excluded ablation groups">
+                  <thead>
+                    <tr>
+                      <th>Scenario</th>
+                      <th>Policy</th>
+                      <th>Reason</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {excluded.map((row, index) => (
+                      <tr key={index}>
+                        <td>{value(row.scenario_id)}</td>
+                        <td>{value(row.policy_name)}</td>
+                        <td>{human(row.reason)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </details>
+          <h3>Limitations</h3>
+          <p className="small-copy">
+            A completed attempt can still leave the workload unsolved. Memory
+            and timing measurements describe the final selected configuration;
+            earlier attempts, including reverted changes, remain in the details.
+            Numerical comparisons cover the recorded loss samples shown for each
+            workload, not a full training run. Missing results and costs stay
+            Unknown.
+          </p>
+          <p className="small-copy">
+            {document.provenance === "offline_fixture"
+              ? "This is an offline example; it does not contribute to measured repair results."
+              : "The recorded evaluations use a single GPU. They do not establish performance on other hardware or distributed training."}{" "}
+            {pairs.length
+              ? "Diagnosis comparisons include only matched workloads with comparable evidence and a known cause."
+              : "A matched comparison of the three diagnosis methods is not available yet."}
+          </p>
         </>
       )}
     </Section>

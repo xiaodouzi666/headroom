@@ -2,7 +2,6 @@
 
 import asyncio
 import hashlib
-import ipaddress
 import json
 import mimetypes
 import os
@@ -11,6 +10,7 @@ import secrets
 import subprocess
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from decimal import Decimal, InvalidOperation, localcontext
 from functools import partial
 from pathlib import Path
@@ -25,10 +25,13 @@ from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from headroom.api.availability import AvailabilityMonitor
+from headroom.api.diagnosis_evidence import load_initial_diagnosis
 from headroom.api.evaluations import register_evaluations
 from headroom.api.example_presets import EXAMPLE_PRESETS, PRODUCT_EXAMPLES
+from headroom.api.public_access import client_address, protect_public_submission
 from headroom.api.queue import TERMINAL, AdmissionError, RunQueue
 from headroom.api.security import ARTIFACTS, RUN_ID, artifact_relative, job_directory, open_regular
+from headroom.api.verified_routes import register_verified
 from headroom.lab.envs import validate_allocator
 from headroom.lab.runner import PROJECT_ROOT
 from headroom.orchestrator import FixRequest, Policy
@@ -61,6 +64,10 @@ class ApiSettings:
     runtime_configured: bool = False
     public_host: str | None = None
     trust_cloudflared: bool = False
+    trust_tailscale_funnel: bool = False
+    judge_token: str | None = dataclass_field(default=None, repr=False)
+    public_run_budget: Decimal = Decimal("0.30")
+    verified_runs_enabled: bool | None = None
     run_submissions_enabled: bool | None = None
     run_submission_disabled_reason: str | None = None
     deadline_seconds: float = 600
@@ -77,6 +84,25 @@ class ApiSettings:
         self.trust_cloudflared = (
             self.trust_cloudflared or os.environ.get("HEADROOM_TRUST_CLOUDFLARED") == "true"
         )
+        self.trust_tailscale_funnel = (
+            self.trust_tailscale_funnel
+            or os.environ.get("HEADROOM_TRUST_TAILSCALE_FUNNEL") == "true"
+        )
+        self.judge_token = self.judge_token or os.environ.get("HEADROOM_JUDGE_TOKEN") or None
+        if self.judge_token and not re.fullmatch(r"[A-Za-z0-9_-]{32,256}", self.judge_token):
+            raise ValueError("Judge token must contain 32–256 URL-safe characters")
+        self.public_run_budget = Decimal(self.public_run_budget)
+        if not self.public_run_budget.is_finite() or not 0 < self.public_run_budget <= Decimal(
+            "0.30"
+        ):
+            raise ValueError("Public run allowance must be positive and at most 0.30 USD")
+        if self.trust_tailscale_funnel and (not self.public_host or self.trust_cloudflared):
+            raise ValueError("Funnel mode requires a public host and cannot trust another tunnel")
+        if self.verified_runs_enabled is None:
+            configured_gallery = os.environ.get("HEADROOM_VERIFIED_RUNS_ENABLED", "false")
+            if configured_gallery not in {"true", "false"}:
+                raise ValueError("HEADROOM_VERIFIED_RUNS_ENABLED must be true or false")
+            self.verified_runs_enabled = configured_gallery == "true"
         if self.run_submissions_enabled is None:
             configured = os.environ.get("HEADROOM_RUN_SUBMISSIONS_ENABLED", "true")
             if configured not in {"true", "false"}:
@@ -94,6 +120,7 @@ class ApiSettings:
             ):
                 raise ValueError("Public host must be a bare lowercase DNS hostname")
             self.allowed_hosts = (*self.allowed_hosts, self.public_host)
+            self.deadline_seconds = min(self.deadline_seconds, 480)
         if self.trust_cloudflared and not self.public_host:
             raise ValueError("Trusted tunnel mode requires an explicit public hostname")
         self.project_root = Path(self.project_root).resolve()
@@ -277,6 +304,7 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
         mode=mode,
         deadline=settings.deadline_seconds,
         grace=settings.shutdown_grace_seconds,
+        hourly_limit=1 if settings.public_host else 2,
     )
     catalog = _catalog(settings)
     availability = availability_monitor or AvailabilityMonitor(
@@ -306,6 +334,7 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
     app.state.store, app.state.queue, app.state.settings = store, queue, settings
     app.state.availability = availability
     register_evaluations(app, settings.data_root)
+    register_verified(app, settings)
 
     @app.middleware("http")
     async def local_session(request, call_next):
@@ -389,7 +418,17 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
 
     @app.get("/api/config")
     def config():
-        return {"run_submissions": submission_config()}
+        return {
+            "run_submissions": submission_config(),
+            "public_demo": bool(settings.public_host),
+            "verified_runs_enabled": settings.verified_runs_enabled,
+            "judge_scripts_available": bool(settings.public_host and settings.judge_token),
+            "limits": {
+                "runs_per_ip_per_hour": 1 if settings.public_host else 2,
+                "max_waiting_runs": 2,
+                "deadline_seconds": settings.deadline_seconds,
+            },
+        }
 
     @app.post("/api/runs", status_code=202)
     async def submit(request: Request):
@@ -412,6 +451,8 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
                 raise ValueError("Budget must be positive and at most 5 USD")
         except (ValidationError, ValueError, InvalidOperation):
             raise HTTPException(400, "Invalid run request or budget") from None
+        submission = protect_public_submission(settings, request, submission)
+        client_ip = client_address(settings, request)
         repository_input = any(
             value is not None for value in (submission.repo, submission.ref, submission.cmd)
         )
@@ -469,14 +510,6 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
 
         prepare = partial(_prepare_submission, settings, submission, source, run_id)
 
-        client_ip = request.client.host if request.client else "unknown"
-        if settings.trust_cloudflared and client_ip in {"127.0.0.1", "::1"}:
-            try:
-                client_ip = str(ipaddress.ip_address(request.headers.get("cf-connecting-ip", "")))
-            except ValueError:
-                raise HTTPException(
-                    400, "Trusted tunnel request lacks a valid client address"
-                ) from None
         try:
             position = await asyncio.to_thread(
                 queue.submit,
@@ -524,6 +557,14 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
         row = accessible(run_id, request)
         result = _public_run(row)
         result["usage"] = store.usage(run_id)
+        try:
+            result["diagnosis_evidence"] = load_initial_diagnosis(
+                job_directory(settings.run_root, run_id),
+                database=settings.db_path,
+                project_root=settings.project_root,
+            )
+        except (OSError, ValueError):
+            result["diagnosis_evidence"] = None
         result["artifacts"] = {}
         for name in ARTIFACTS:
             try:

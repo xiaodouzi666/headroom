@@ -414,24 +414,20 @@ def test_public_tunnel_cookie_and_client_ip_rate_limit(settings):
     settings.public_host = "demo.example"
     settings.trust_cloudflared = True
     settings.allowed_hosts = (*settings.allowed_hosts, "demo.example")
+    payload = {"example_id": "s3_eval_no_grad_missing"}
     with TestClient(
         create_app(settings, worker=completed_worker),
         base_url="https://demo.example",
         client=("127.0.0.1", 50000),
     ) as client:
         assert "Secure" in client.get("/api/health").headers["set-cookie"]
-        assert client.post("/api/runs", json={"script_text": "pass"}).status_code == 400
+        assert client.post("/api/runs", json=payload).status_code == 400
         for ip in ("203.0.113.1", "203.0.113.2"):
-            for _ in range(2):
-                r = client.post(
-                    "/api/runs", json={"script_text": "pass"}, headers={"CF-Connecting-IP": ip}
-                )
-                assert r.status_code == 202, r.text
-                wait_done(client, r.json()["run_id"])
+            r = client.post("/api/runs", json=payload, headers={"CF-Connecting-IP": ip})
+            assert r.status_code == 202, r.text
+            wait_done(client, r.json()["run_id"])
             assert (
-                client.post(
-                    "/api/runs", json={"script_text": "pass"}, headers={"CF-Connecting-IP": ip}
-                ).status_code
+                client.post("/api/runs", json=payload, headers={"CF-Connecting-IP": ip}).status_code
                 == 429
             )
 

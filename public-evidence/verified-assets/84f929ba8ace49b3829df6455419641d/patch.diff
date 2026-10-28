@@ -1,0 +1,20 @@
+diff --git a/train.py b/train.py
+--- a/train.py
++++ b/train.py
+@@ -67,11 +67,12 @@
+ 
+ 
+ def evaluate(model: nn.Module, inputs: torch.Tensor, targets: torch.Tensor) -> float:
++    # BUG: eval() changes module behavior but does not turn off autograd.
+     model.eval()
+-    # BUG: eval() changes module behavior but does not turn off autograd.
+-    predictions = model(inputs)
+-    validation_loss = (predictions - targets).square().mean()
+-    return validation_loss.item()
++    with torch.no_grad():
++        predictions = model(inputs)
++        validation_loss = (predictions - targets).square().mean()
++        return validation_loss.item()
+ 
+ 
+ def main() -> None:

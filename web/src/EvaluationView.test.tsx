@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import App from "./App";
 const response = (data: unknown, status = 200) =>
   Promise.resolve(new Response(JSON.stringify(data), { status }));
@@ -8,11 +14,21 @@ afterEach(() => {
   vi.unstubAllGlobals();
   window.history.replaceState({}, "", "/");
 });
-function setup(document: unknown = null, fail = false) {
+function setup(
+  document: unknown = null,
+  fail = false,
+  identifier = "reviewed",
+) {
   window.history.replaceState({}, "", "/results");
   vi.stubGlobal(
     "fetch",
     vi.fn((input: unknown) => {
+      if (input === "/api/config")
+        return response({
+          public_demo: true,
+          verified_runs_enabled: false,
+          run_submissions: { enabled: false },
+        });
       if (input === "/api/health") return response({});
       if (input === "/api/runs") return response({ runs: [] });
       if (input === "/api/usage") return response({});
@@ -24,13 +40,16 @@ function setup(document: unknown = null, fail = false) {
             )
           : response({
               evaluations: document
-                ? [{ id: "reviewed", title: "Reviewed campaign" }]
+                ? [{ id: identifier, title: "Reviewed campaign" }]
                 : [],
             });
-      if (input === "/api/evaluations/reviewed") return response(document);
+      if (input === "/api/evaluations/" + identifier) return response(document);
       return Promise.reject(new Error("Unexpected request"));
     }),
   );
+}
+async function openMeasurements() {
+  fireEvent.click(await screen.findByText("Detailed measurements"));
 }
 function fixture(provenance = "offline_fixture") {
   return {
@@ -103,6 +122,7 @@ describe("published evaluation results", () => {
     document.rows[0].acceptance_scope = "repository";
     setup(document);
     render(<App />);
+    await openMeasurements();
     const table = await screen.findByRole("table", {
       name: "Main evaluation results",
     });
@@ -111,7 +131,7 @@ describe("published evaluation results", () => {
       within(table).getByText(
         "Repository without reference; numerical equivalence unverified",
       ),
-    ).toHaveAttribute("title", "Acceptance scope: repository");
+    ).toHaveAttribute("title", "Comparison scope: repository");
   });
 
   it("keeps unpublished evaluation pending without claiming a benchmark", async () => {
@@ -127,6 +147,7 @@ describe("published evaluation results", () => {
   it("shows complete columns, unknown metrics and fixture exclusion", async () => {
     setup(fixture());
     render(<App />);
+    await openMeasurements();
     const table = await screen.findByRole("table", {
       name: "Main evaluation results",
     });
@@ -149,15 +170,15 @@ describe("published evaluation results", () => {
         within(table).getByRole("columnheader", { name: heading }),
       ).toBeInTheDocument();
     expect(within(table).getByText("10.00 GB")).toBeInTheDocument();
-    expect(within(table).getByText("20.125")).toBeInTheDocument();
+    expect(within(table).getByText("20.13")).toBeInTheDocument();
     expect(within(table).getByText("12.25")).toBeInTheDocument();
     expect(within(table).getByText("Summary (live only)")).toBeInTheDocument();
     expect(
       screen.getByText("Offline fixture · excluded from live scores"),
     ).toBeInTheDocument();
-    expect(screen.getByText(/No live evaluation scores/)).toBeInTheDocument();
+    expect(screen.getByText(/This is an offline example/)).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /Download published evaluation/ }),
+      screen.getByRole("link", { name: /Download full evaluation data/ }),
     ).toHaveAttribute("href", "/api/evaluations/reviewed");
     expect(
       screen.getByText("No comparable three-condition pairs."),
@@ -193,6 +214,7 @@ describe("published evaluation results", () => {
     ];
     setup(document);
     render(<App />);
+    await openMeasurements();
     const table = await screen.findByRole("table", {
       name: "Paired ablation summary",
     });
@@ -212,6 +234,7 @@ describe("published evaluation results", () => {
 it("keeps historical campaign search mode unrecorded", async () => {
   setup(fixture());
   render(<App />);
+  await openMeasurements();
   expect(
     await screen.findByText(/Search mode: Not recorded/),
   ).toBeInTheDocument();
@@ -259,6 +282,7 @@ describe("recorded patch and completion outcomes", () => {
       });
       setup(document);
       render(<App />);
+      await openMeasurements();
       const table = await screen.findByRole("table", {
         name: "Main evaluation results",
       });
@@ -302,6 +326,7 @@ describe("recorded patch and completion outcomes", () => {
     });
     setup(document);
     render(<App />);
+    await openMeasurements();
     const table = await screen.findByRole("table", {
       name: "Main evaluation results",
     });
@@ -325,6 +350,7 @@ describe("recorded patch and completion outcomes", () => {
     });
     setup(document);
     render(<App />);
+    await openMeasurements();
     const table = await screen.findByRole("table", {
       name: "Main evaluation results",
     });
@@ -353,6 +379,7 @@ describe("recorded patch and completion outcomes", () => {
       });
       setup(document);
       render(<App />);
+      await openMeasurements();
       const table = await screen.findByRole("table", {
         name: "Main evaluation results",
       });
@@ -390,6 +417,7 @@ describe("recorded patch and completion outcomes", () => {
     });
     setup(document);
     render(<App />);
+    await openMeasurements();
     const table = await screen.findByRole("table", {
       name: "Main evaluation results",
     });
@@ -429,12 +457,13 @@ describe("recorded patch and completion outcomes", () => {
     });
     setup(document);
     render(<App />);
+    await openMeasurements();
     const table = await screen.findByRole("table", {
       name: "Main evaluation results",
     });
     const allRows = within(table).getAllByRole("row");
     const columnCount = within(table).getAllByRole("columnheader").length;
-    expect(columnCount).toBe(25);
+    expect(columnCount).toBe(24);
     for (const row of allRows) expect(row.children).toHaveLength(columnCount);
     expect(outcomeCell(table, "Any patch/config applied", 2)).toHaveTextContent(
       "2 Yes / 1 No; 3 Unknown",
@@ -466,6 +495,7 @@ describe("recorded patch and completion outcomes", () => {
   it("keeps historical missing summary outcomes and round details unknown", async () => {
     setup(fixture("live"));
     render(<App />);
+    await openMeasurements();
     const table = await screen.findByRole("table", {
       name: "Main evaluation results",
     });
@@ -482,7 +512,7 @@ describe("recorded patch and completion outcomes", () => {
   });
 });
 
-it("shows certified upper bounds separately from unknown actual charges", async () => {
+it("keeps the actual cost unknown instead of presenting a limit as a charge", async () => {
   const document = fixture("live");
   Object.assign(document.rows[0], {
     cost_usd: null,
@@ -500,15 +530,17 @@ it("shows certified upper bounds separately from unknown actual charges", async 
   });
   setup(document);
   render(<App />);
+  await openMeasurements();
   const table = await screen.findByRole("table", {
     name: "Main evaluation results",
   });
   expect(outcomeCell(table, "Actual cost USD")).toHaveTextContent("Unknown");
-  expect(outcomeCell(table, "Cost upper bound USD")).toHaveTextContent(
-    "$0.00033378",
-  );
   expect(
-    screen.getByText(/An upper bound is not a confirmed actual charge/),
+    within(table).queryByRole("columnheader", { name: "Cost upper bound USD" }),
+  ).not.toBeInTheDocument();
+  expect(screen.queryByText("$0.00033378")).not.toBeInTheDocument();
+  expect(
+    screen.getByText("Token Factory cost of this evaluation: Unknown."),
   ).toBeInTheDocument();
 });
 
@@ -527,20 +559,22 @@ it("explains fixed-nine failure and pre-diagnosis budget stops without pooling h
   setup(document);
   render(<App />);
   expect(
-    await screen.findByText("Fixed-suite result: 2/9 automatic targets."),
+    await screen.findByText("2/9 workloads repaired automatically."),
   ).toBeInTheDocument();
-  expect(screen.getByText(/Required: 6\/9/)).toHaveTextContent(
-    "The target gate is not met",
+  expect(screen.queryByText(/Required: 6\/9/)).not.toBeInTheDocument();
+  expect(
+    screen.getByText(/Each evaluation stands on its own/),
+  ).toHaveTextContent(
+    "5 workloads stopped before diagnosis or patch generation",
   );
-  expect(screen.getByText(/Required: 6\/9/)).toHaveTextContent(
-    "5 scenarios stopped at the budget gate before any diagnosis or patch model attempt",
+  expect(
+    screen.getByText(/Each evaluation stands on its own/),
+  ).toHaveTextContent(
+    "these workloads remain among the nine and are not counted as repairs",
   );
-  expect(screen.getByText(/Required: 6\/9/)).toHaveTextContent(
-    "historical successes are not pooled",
-  );
-  expect(screen.getByText(/Required: 6\/9/)).toHaveTextContent(
-    "Nano annotation ran",
-  );
+  expect(
+    screen.getByText(/Each evaluation stands on its own/),
+  ).toHaveTextContent("Nano annotation ran");
 });
 
 it("labels the original-workload offload numerical reference precisely", async () => {
@@ -550,6 +584,7 @@ it("labels the original-workload offload numerical reference precisely", async (
   document.rows[0].loss_equivalence = "identical";
   setup(document);
   render(<App />);
+  await openMeasurements();
   const table = await screen.findByRole("table", {
     name: "Main evaluation results",
   });
@@ -562,4 +597,106 @@ it("labels the original-workload offload numerical reference precisely", async (
   expect(
     within(table).queryByText("Comparison basis not recorded"),
   ).not.toBeInTheDocument();
+});
+
+it("shows every workload and readable measurements before expanding technical details", async () => {
+  const document = fixture("live");
+  document.rows = Array.from({ length: 9 }, (_, index) => ({
+    ...document.rows[0],
+    scenario_id: `workload-${index + 1}`,
+    target_met: index < 2,
+    first_cause_matches: index < 4 ? index !== 2 : null,
+    status: index < 4 ? "completed" : "budget_exceeded",
+    diagnosis_attempt_recorded: index < 4,
+    patch_attempt_recorded: index < 4,
+    peak_reduction_pct: index < 2 ? "81.574030736549000831161228925" : null,
+    wall_seconds: 95.97053660351473,
+    cost_usd: null,
+  })) as typeof document.rows;
+  setup(document);
+  const { container } = render(<App />);
+  const overview = await screen.findByRole("table", {
+    name: "Workload results",
+  });
+  expect(within(overview).getAllByRole("row")).toHaveLength(10);
+  expect(within(overview).getAllByText("Repaired")).toHaveLength(2);
+  expect(within(overview).getAllByText("Not solved")).toHaveLength(2);
+  expect(
+    within(overview).getAllByText("Stopped before diagnosis"),
+  ).toHaveLength(5);
+  expect(within(overview).getAllByText("81.57%")).toHaveLength(2);
+  expect(
+    screen.getByText("Detailed measurements").closest("details"),
+  ).not.toHaveAttribute("open");
+  expect(container).not.toHaveTextContent("81.574030736549");
+  expect(
+    screen.queryByText(
+      /Session model cost|Known cost subtotal|Cost upper bound USD/,
+    ),
+  ).not.toBeInTheDocument();
+  await openMeasurements();
+  const detail = screen.getByRole("table", { name: "Main evaluation results" });
+  expect(outcomeCell(detail, "Wall seconds")).toHaveTextContent(/^96$/);
+  expect(outcomeCell(detail, "Actual cost USD")).toHaveTextContent(/^Unknown$/);
+  expect(
+    outcomeCell(detail, "Diagnosis attempt recorded", 5),
+  ).toHaveTextContent(/^No$/);
+  expect(outcomeCell(detail, "Patch attempt recorded", 5)).toHaveTextContent(
+    /^No$/,
+  );
+  expect(
+    vi.mocked(fetch).mock.calls.some(([path]) => path === "/api/usage"),
+  ).toBe(false);
+});
+
+it("does not round a confirmed small nonzero cost down to zero", async () => {
+  const document = fixture("live");
+  Object.assign(document.rows[0], { cost_usd: "0.0000002" });
+  setup(document);
+  render(<App />);
+  await openMeasurements();
+  const table = screen.getByRole("table", { name: "Main evaluation results" });
+  expect(outcomeCell(table, "Actual cost USD")).toHaveTextContent("<$0.0001");
+});
+
+it("keeps a failed run visible when its repair result is unknown", async () => {
+  const document = fixture("live");
+  Object.assign(document.rows[0], { status: "failed", target_met: null });
+  setup(document);
+  render(<App />);
+  const overview = await screen.findByRole("table", {
+    name: "Workload results",
+  });
+  expect(
+    within(overview).getByText("Run failed · result unknown"),
+  ).toBeInTheDocument();
+  expect(within(overview).queryByText("Repaired")).not.toBeInTheDocument();
+});
+
+it("uses public evaluation names and keeps internal thresholds out of rendered text", async () => {
+  const document = {
+    ...fixture("live"),
+    acceptance: {
+      basis: "independent_fixed_suite_review_v1",
+      fixed_denominator: 9,
+      minimum_targets: 6,
+      target_met_count: 2,
+      target_gate_met: false,
+      stopped_before_diagnosis_and_patch: 5,
+    },
+  };
+  setup(document, false, "r6-20261027");
+  const { container } = render(<App />);
+  expect(
+    await screen.findByRole("option", {
+      name: "October 27, 2026 · Latest evaluation",
+    }),
+  ).toBeInTheDocument();
+  await openMeasurements();
+  expect(container.textContent).not.toMatch(
+    /ledger|reservation|acceptance|unknown charge|halt|gate|6\/9|R6/,
+  );
+  expect(
+    screen.getByRole("link", { name: "Download full evaluation data" }),
+  ).toHaveAttribute("href", "/api/evaluations/r6-20261027");
 });

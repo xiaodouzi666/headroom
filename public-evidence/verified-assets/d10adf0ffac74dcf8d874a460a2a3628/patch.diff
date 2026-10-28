@@ -1,0 +1,12 @@
+diff --git a/train.py b/train.py
+--- a/train.py
++++ b/train.py
+@@ -95,7 +95,7 @@
+     )
+     student = Classifier(features, student_width, 3, classes, device)
+     # Defect: the disabled teacher is eagerly created on the GPU and remains resident.
+-    teacher = Classifier(features, teacher_width, teacher_depth, classes, device).eval()
++    teacher = Classifier(features, teacher_width, teacher_depth, classes, torch.device('cpu')).eval()
+     teacher.requires_grad_(False)
+     distillation_weight = 0.0
+     optimizer = torch.optim.AdamW(student.parameters(), lr=1e-4, foreach=False)

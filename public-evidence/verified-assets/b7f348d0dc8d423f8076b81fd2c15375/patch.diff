@@ -1,0 +1,12 @@
+diff --git a/train.py b/train.py
+--- a/train.py
++++ b/train.py
+@@ -101,7 +101,7 @@
+         loss = (predictions - targets).square().mean()
+         # BUG: this training loop needlessly retains saved forward tensors.
+         # Each graph is only traversed once, so retain_graph is unnecessary.
+-        loss.backward(retain_graph=True)
++        loss.backward()
+         optimizer.step()
+         # BUG: the epoch metric holds every retained graph instead of a float.
+         total_loss += loss

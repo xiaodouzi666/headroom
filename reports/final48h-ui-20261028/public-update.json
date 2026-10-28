@@ -1,0 +1,119 @@
+{
+  "at_utc": "2026-10-28T16:17:00.463284+00:00",
+  "scope": "Original public DNS hostname from azuki; no proxy or fixed-IP override; no live worker or model request",
+  "restart_seconds": 3.838,
+  "checks": [
+    {
+      "method": "GET",
+      "path": "/",
+      "curl_exit": 0,
+      "expected_status": 200,
+      "http_status": 200,
+      "tls_verification": 0,
+      "seconds": 16.879697,
+      "body_sha256": "dd8784a8156aca651c3f44a628f4c406f784c8b41d473bbca01762755ac4aabf"
+    },
+    {
+      "method": "GET",
+      "path": "/run",
+      "curl_exit": 28,
+      "expected_status": 200,
+      "http_status": 0,
+      "tls_verification": 1,
+      "seconds": 20.002733,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "method": "GET",
+      "path": "/results",
+      "curl_exit": 28,
+      "expected_status": 200,
+      "http_status": 0,
+      "tls_verification": 1,
+      "seconds": 20.002444,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "method": "GET",
+      "path": "/about",
+      "curl_exit": 28,
+      "expected_status": 200,
+      "http_status": 0,
+      "tls_verification": 1,
+      "seconds": 20.002375,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "curl_exit": 0,
+      "expected_status": 200,
+      "http_status": 200,
+      "tls_verification": 0,
+      "seconds": 2.049794,
+      "body_sha256": "f6f1156c036b093dfd1779f6ae2e8d5e0167b8aa1f43a28473e0dfc54cb098eb"
+    },
+    {
+      "method": "GET",
+      "path": "/api/config",
+      "curl_exit": 0,
+      "expected_status": 200,
+      "http_status": 200,
+      "tls_verification": 0,
+      "seconds": 0.581798,
+      "body_sha256": "4951a041b5fb48439d113604904c486c42c8a0427ce15ea09f461bce8ea3b046",
+      "flags": {
+        "run_submissions": {
+          "enabled": false,
+          "reason": "Live analysis is temporarily paused."
+        },
+        "public_demo": true,
+        "verified_runs_enabled": false,
+        "judge_scripts_available": false,
+        "limits": {
+          "runs_per_ip_per_hour": 1,
+          "max_waiting_runs": 2,
+          "deadline_seconds": 480
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/verified",
+      "curl_exit": 0,
+      "expected_status": 404,
+      "http_status": 404,
+      "tls_verification": 0,
+      "seconds": 0.455507,
+      "body_sha256": "4ec6fa15c7fc0f6c3d85b0f9e20dde122d6285707a0ba40d0d85431ea637e4e7"
+    },
+    {
+      "method": "POST",
+      "path": "/api/runs",
+      "curl_exit": 0,
+      "expected_status": 503,
+      "http_status": 503,
+      "tls_verification": 0,
+      "seconds": 0.220461,
+      "body_sha256": "d1775c7d62d60e2888d526bafb8c947b073c45e8a9944901062f7f370fde777e"
+    }
+  ],
+  "databases": [
+    {
+      "path": ".cache/budget.db",
+      "unchanged": true
+    },
+    {
+      "path": "runs/headroom.db",
+      "unchanged": true
+    },
+    {
+      "path": "runs/public-api/headroom.db",
+      "unchanged": true
+    }
+  ],
+  "public_jobs_unchanged": true,
+  "public_job_count": 0,
+  "index_sha256": "dd8784a8156aca651c3f44a628f4c406f784c8b41d473bbca01762755ac4aabf",
+  "passed": false
+}

@@ -1,11 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import App from "./App";
 import DiffView from "./DiffView";
 import { Status } from "./components";
@@ -17,10 +11,17 @@ const response = (body: unknown) =>
     }),
   );
 beforeEach(() => {
-  window.history.replaceState({}, "", "/");
+  window.history.replaceState({}, "", "/run");
   vi.stubGlobal(
     "fetch",
     vi.fn((input: unknown) => {
+      if (input === "/api/config")
+        return response({
+          public_demo: false,
+          verified_runs_enabled: false,
+          judge_scripts_available: false,
+          run_submissions: { enabled: true },
+        });
       if (input === "/api/health")
         return response({
           token_factory: { configured: false },
@@ -83,11 +84,11 @@ describe("workspace state", () => {
     );
     render(<App />);
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "API unavailable",
+      "Service availability could not be loaded",
     );
-    await waitFor(() =>
-      expect(screen.getByText("No examples available")).toBeInTheDocument(),
-    );
+    expect(
+      screen.queryByRole("button", { name: /Start analysis/ }),
+    ).not.toBeInTheDocument();
   });
   it("exposes script entry and the actual request policy controls", async () => {
     render(<App />);
@@ -106,6 +107,13 @@ describe("paused public workspace", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn((input: unknown) => {
+        if (input === "/api/config")
+          return response({
+            public_demo: true,
+            verified_runs_enabled: false,
+            judge_scripts_available: false,
+            run_submissions: { enabled: true },
+          });
         if (input === "/api/health")
           return response({
             run_submissions: {
@@ -118,10 +126,18 @@ describe("paused public workspace", () => {
       }),
     );
     const { container } = render(<App />);
-    expect(await screen.findByText("New runs are paused.")).toBeInTheDocument();
     expect(
-      screen.getByText(/Model budget is currently unavailable/),
+      await screen.findByText("Live analysis temporarily paused."),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Model budget is currently unavailable/),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Paste a script" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Run budget in USD"),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /browse published evaluation results/ }),
     ).toHaveAttribute("href", "/results");
@@ -130,7 +146,7 @@ describe("paused public workspace", () => {
     ).toBeDisabled();
     fireEvent.submit(container.querySelector("form")!);
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Model budget is currently unavailable.",
+      "Live analysis temporarily paused.",
     );
     expect(
       vi.mocked(fetch).mock.calls.some(([path]) => path === "/api/runs"),
@@ -164,7 +180,7 @@ describe("availability guidance", () => {
           status: "pending_charge",
         },
       },
-      "Waiting for the current model charge.",
+      "Live analysis temporarily paused.",
     ],
     [
       {
@@ -173,7 +189,7 @@ describe("availability guidance", () => {
           status: "exhausted",
         },
       },
-      "The local run budget is exhausted.",
+      "Live analysis temporarily paused.",
     ],
     [
       {
@@ -182,7 +198,7 @@ describe("availability guidance", () => {
           status: "billing_review_required",
         },
       },
-      "Model billing needs review.",
+      "Live analysis temporarily paused.",
     ],
   ])(
     "explains the blocker and prevents a blocked start",
@@ -190,6 +206,13 @@ describe("availability guidance", () => {
       vi.stubGlobal(
         "fetch",
         vi.fn((input: unknown) => {
+          if (input === "/api/config")
+            return response({
+              public_demo: false,
+              verified_runs_enabled: false,
+              judge_scripts_available: false,
+              run_submissions: { enabled: true },
+            });
           if (input === "/api/health")
             return response({
               ...observed,
@@ -217,6 +240,13 @@ describe("availability guidance", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn((input: unknown) => {
+        if (input === "/api/config")
+          return response({
+            public_demo: false,
+            verified_runs_enabled: false,
+            judge_scripts_available: false,
+            run_submissions: { enabled: true },
+          });
         if (input === "/api/health")
           return response({ gpu: { status: "busy", busy: true } });
         if (input === "/api/examples") return response({ examples: [] });
@@ -412,4 +442,156 @@ describe("example target presets", () => {
       );
     },
   );
+});
+
+it("keeps About limitations clear without internal financial or review terminology", async () => {
+  window.history.replaceState({}, "", "/about");
+  const { container } = render(<App />);
+  expect(
+    screen.getByRole("heading", { name: "Limitations" }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText(/Numerical comparisons cover the recorded loss samples/),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText(/Missing measurements and costs remain Unknown/),
+  ).toBeInTheDocument();
+  expect(container.textContent).not.toMatch(
+    /ledger|reservation|acceptance|unknown charge|halt/i,
+  );
+});
+
+describe("separate home and public submission", () => {
+  function publicAPI(judgeScripts = true, enabled = true) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((path: unknown) => {
+        if (path === "/api/config")
+          return response({
+            public_demo: true,
+            verified_runs_enabled: false,
+            judge_scripts_available: judgeScripts,
+            run_submissions: { enabled },
+          });
+        if (path === "/api/health")
+          return response({ token_factory: { configured: true }, queue: {} });
+        if (path === "/api/examples")
+          return response({
+            examples: [{ id: "s1_batch_too_big", title: "Activation memory" }],
+          });
+        if (path === "/api/runs")
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({ detail: "Offline submission captured" }),
+              { status: 400 },
+            ),
+          );
+        return Promise.reject(new Error("Unexpected request"));
+      }),
+    );
+  }
+  it("shows three home actions while the server-controlled gallery stays closed", async () => {
+    window.history.replaceState({}, "", "/");
+    publicAPI(false, false);
+    render(<App />);
+    expect(
+      await screen.findByText(/Live analysis temporarily paused/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Verified runs.*Coming soon/ }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("link", { name: "Run an example" }),
+    ).toHaveAttribute("href", "/run");
+    expect(screen.getAllByRole("link", { name: "Results" })).toHaveLength(2);
+    expect(
+      screen.queryByRole("button", { name: /Start analysis/ }),
+    ).not.toBeInTheDocument();
+    expect(vi.mocked(fetch).mock.calls.map(([path]) => path)).toEqual([
+      "/api/config",
+    ]);
+  });
+  it("requires an ephemeral judge token for public scripts and sends it only in Authorization", async () => {
+    publicAPI();
+    render(<App />);
+    await screen.findByRole("button", { name: /Activation memory/ });
+    fireEvent.click(screen.getByRole("button", { name: "Paste a script" }));
+    fireEvent.change(screen.getByLabelText("Python training script"), {
+      target: { value: "print(1)" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Start analysis/ }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Enter your judge access token",
+    );
+    expect(
+      vi.mocked(fetch).mock.calls.some(([path]) => path === "/api/runs"),
+    ).toBe(false);
+    fireEvent.change(screen.getByLabelText("Judge access token"), {
+      target: { value: "test-token" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Start analysis/ }));
+    await screen.findByText("Offline submission captured");
+    const request = vi
+      .mocked(fetch)
+      .mock.calls.find(([path]) => path === "/api/runs")!;
+    expect(recordHeaders(request[1]?.headers).Authorization).toBe(
+      "Bearer test-token",
+    );
+    expect(String(request[1]?.body)).not.toContain("test-token");
+    expect(JSON.parse(String(request[1]?.body)).budget).toBe("0.30");
+    expect(screen.getByLabelText("Judge access token")).toHaveValue("");
+    expect(window.localStorage.length).toBe(0);
+    expect(window.sessionStorage.length).toBe(0);
+    expect(window.location.href).not.toContain("test-token");
+    expect(document.cookie).not.toContain("test-token");
+    expect(
+      screen.queryByLabelText("Run budget in USD"),
+    ).not.toBeInTheDocument();
+  });
+  it("submits an example without sending a token previously typed for a script", async () => {
+    publicAPI();
+    render(<App />);
+    await screen.findByRole("button", { name: /Activation memory/ });
+    fireEvent.click(screen.getByRole("button", { name: "Paste a script" }));
+    fireEvent.change(screen.getByLabelText("Judge access token"), {
+      target: { value: "test-token" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Use an example" }));
+    fireEvent.click(screen.getByRole("button", { name: /Activation memory/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Start analysis/ }));
+    await screen.findByText("Offline submission captured");
+    const request = vi
+      .mocked(fetch)
+      .mock.calls.find(([path]) => path === "/api/runs")!;
+    expect(recordHeaders(request[1]?.headers).Authorization).toBeUndefined();
+  });
+  it("does not let a query string enable the script form", async () => {
+    window.history.replaceState({}, "", "/run?judge_scripts_available=true");
+    publicAPI(false);
+    render(<App />);
+    await screen.findByRole("button", { name: /Activation memory/ });
+    expect(
+      screen.queryByRole("button", { name: "Paste a script" }),
+    ).not.toBeInTheDocument();
+  });
+});
+function recordHeaders(value: HeadersInit | undefined): Record<string, string> {
+  return value as Record<string, string>;
+}
+
+it("never flashes public script or budget controls before configuration arrives", () => {
+  window.history.replaceState({}, "", "/run");
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => new Promise<Response>(() => {})),
+  );
+  render(<App />);
+  expect(
+    screen.getByText("Checking service availability…"),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "Paste a script" }),
+  ).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("Run budget in USD")).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("Judge access token")).not.toBeInTheDocument();
 });

@@ -39,8 +39,10 @@ def main():
         db_path=state / "headroom.db",
         run_root=state / "jobs",
         public_host=hostname,
+        trust_tailscale_funnel=True,
         run_submissions_enabled=False,
-        run_submission_disabled_reason="Model budget is currently unavailable.",
+        verified_runs_enabled=False,
+        run_submission_disabled_reason="Live analysis is temporarily paused.",
     )
     uvicorn.run(create_app(settings), host="127.0.0.1", port=8766, proxy_headers=False)
 

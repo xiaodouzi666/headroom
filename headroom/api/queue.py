@@ -227,10 +227,14 @@ class RunQueue:
         deadline=600,
         grace=5,
         clock=time.time,
+        hourly_limit=2,
     ):
         self.store, self.run_root = store, Path(run_root)
         self.worker, self.mode = worker, mode
         self.deadline, self.grace, self.clock = deadline, grace, clock
+        if type(hourly_limit) is not int or hourly_limit < 1:
+            raise ValueError("Hourly run limit must be a positive integer")
+        self.hourly_limit = hourly_limit
         self.pending = deque()
         self.preparing = set()
         self.running = None
@@ -417,8 +421,10 @@ class RunQueue:
                 count = connection.execute(
                     "SELECT COUNT(*) FROM admissions WHERE ip=? AND created>?", (ip, now - 3600)
                 ).fetchone()[0]
-                if count >= 2:
-                    raise AdmissionError("Two new run attempts per IP per hour are allowed")
+                if count >= self.hourly_limit:
+                    raise AdmissionError(
+                        f"At most {self.hourly_limit} new run attempt(s) per IP per hour"
+                    )
                 connection.execute("INSERT INTO admissions VALUES (?,?,?)", (run_id, ip, now))
             limit = self.deadline
             deadline = time.monotonic() + limit

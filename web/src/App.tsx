@@ -1,47 +1,31 @@
-import { lazy, Suspense, useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   ArrowRight,
   ArrowUpRight,
-  ChevronRight,
-  Download,
   Layers3,
   Terminal,
   FileCode2,
   Check,
   Cpu,
   ShieldCheck,
-  SquareArrowOutUpRight,
 } from "lucide-react";
-import { getJSON, getText, submitRun } from "./api";
+import { getJSON, submitRun } from "./api";
 import EvaluationView from "./EvaluationView";
+import { RunPage } from "./RunPage";
+import VerifiedPage from "./VerifiedPage";
 import {
-  analysisOf,
   availabilityBlocks,
   artifactLink,
-  costTotal,
-  costUpperBound,
-  configurationLink,
   displayMetric,
-  EVENT_KINDS,
-  externalLink,
-  gb,
   human,
-  measurement,
-  mergeEvents,
-  numeric,
-  parseEvent,
   provenanceLabel,
   queueAtCapacity,
   record,
   rows,
   text,
-  usd,
   validateSubmission,
-  searchModeLabel,
   type SearchMode,
-  verificationRows,
   type Dict,
-  type RunEvent,
   type Submission,
 } from "./data";
 import {
@@ -49,13 +33,10 @@ import {
   Empty,
   External,
   Loading,
-  Metric,
   Notice,
   Section,
   Status,
 } from "./components";
-const MemoryChart = lazy(() => import("./MemoryChart"));
-const DiffView = lazy(() => import("./DiffView"));
 const hrefRun = (id: unknown) => `/runs/${encodeURIComponent(text(id, ""))}`;
 function Brand() {
   return (
@@ -69,7 +50,7 @@ function Brand() {
     </a>
   );
 }
-function Navigation() {
+function Navigation({ config }: { config: Dict }) {
   const path = window.location.pathname;
   return (
     <header className="site-header">
@@ -77,7 +58,27 @@ function Navigation() {
         <Brand />
         <nav aria-label="Main navigation">
           <a href="/" aria-current={path === "/" ? "page" : undefined}>
-            Workspace
+            Home
+          </a>
+          {config.verified_runs_enabled === true ? (
+            <a
+              href="/verified"
+              aria-current={path === "/verified" ? "page" : undefined}
+            >
+              Verified runs
+            </a>
+          ) : (
+            <span aria-disabled="true" title="Not open yet">
+              Verified runs
+            </span>
+          )}
+          <a
+            href="/run"
+            aria-current={
+              path === "/run" || /^\/runs?\//.test(path) ? "page" : undefined
+            }
+          >
+            Run
           </a>
           <a
             href="/results"
@@ -114,14 +115,110 @@ function ProviderBadge() {
   return (
     <div className="provider-badge">
       <Cpu size={14} />
-      <span>Powered by NVIDIA Nemotron 3 on Nebius Token Factory</span>
+      <span>
+        Powered by NVIDIA Nemotron 3 Ultra · Super · Nano on Nebius Token
+        Factory
+      </span>
       <span className="provider-separator">/</span>
       <span>Research by Tavily</span>
     </div>
   );
 }
 
-function Home() {
+function Home({ config }: { config: Dict }) {
+  return (
+    <main className="page home-page">
+      <div className="hero">
+        <div>
+          <p className="eyebrow">
+            <span className="small-line" />A little room goes a long way
+          </p>
+          <h1>
+            From CUDA OOM
+            <br />
+            <span>to a verified patch.</span>
+          </h1>
+          <p className="hero-description">
+            Headroom turns a CUDA out-of-memory crash into a verified patch: it
+            diagnoses the memory problem, proposes a change, and tests it on the
+            GPU.
+          </p>
+          <ProviderBadge />
+        </div>
+        <div className="hero-visual" aria-hidden="true">
+          <div className="visual-top">
+            <span>MEMORY / UNDERSTOOD</span>
+            <Layers3 size={18} />
+          </div>
+          <div className="memory-blocks">
+            <div className="memory-block block-a">parameters</div>
+            <div className="memory-block block-b">optimizer</div>
+            <div className="memory-block block-c">activations</div>
+            <div className="memory-block block-d">
+              <span>headroom</span>
+              <ArrowUpRight size={24} />
+            </div>
+          </div>
+          <div className="visual-bottom">
+            CAPTURE <span>→</span> UNDERSTAND <span>→</span> VERIFY
+          </div>
+        </div>
+      </div>
+      <div
+        style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 28 }}
+      >
+        {config.verified_runs_enabled === true ? (
+          <a className="button button-primary" href="/verified">
+            Verified runs <ArrowRight size={16} />
+          </a>
+        ) : (
+          <button
+            className="button button-primary"
+            disabled
+            title="Not open yet"
+          >
+            Verified runs · Coming soon
+          </button>
+        )}
+        <a className="button button-secondary" href="/run">
+          Run an example
+        </a>
+        <a className="button button-secondary" href="/results">
+          Results
+        </a>
+      </div>
+      {record(config.run_submissions).enabled === false && (
+        <Notice>
+          Live analysis temporarily paused. Recorded evaluation results remain
+          available.
+        </Notice>
+      )}
+      <section className="how-strip">
+        <div>
+          <span>01</span>
+          <strong>Capture the evidence</strong>
+          <p>Reproduce the workload and record allocator history.</p>
+        </div>
+        <div>
+          <span>02</span>
+          <strong>Explain the memory</strong>
+          <p>Connect peak allocations to code and propose a focused change.</p>
+        </div>
+        <div>
+          <span>03</span>
+          <strong>Verify the tradeoff</strong>
+          <p>Compare memory, speed, and numerical behavior on hardware.</p>
+        </div>
+      </section>{" "}
+    </main>
+  );
+}
+
+function RunForm({ config }: { config: Dict }) {
+  const publicDemo = config.public_demo !== false;
+  const judgeScriptsAvailable = config.judge_scripts_available === true;
+  const canPasteScript = !publicDemo || judgeScriptsAvailable;
+  const [judgeToken, setJudgeToken] = useState("");
   const [examples, setExamples] = useState<Dict[]>([]),
     [health, setHealth] = useState<Dict>({}),
     [loading, setLoading] = useState(true),
@@ -132,7 +229,7 @@ function Home() {
     [target, setTarget] = useState("fix-oom"),
     [manualTarget, setManualTarget] = useState(false),
     [fit, setFit] = useState("22"),
-    [budget, setBudget] = useState("0.60"),
+    [budget, setBudget] = useState(publicDemo ? "0.30" : "0.60"),
     [searchMode, setSearchMode] = useState<SearchMode>("until_target"),
     [precision, setPrecision] = useState(false),
     [batch, setBatch] = useState(true),
@@ -173,11 +270,10 @@ function Home() {
   const queue = record(health.queue),
     provider = record(health.token_factory);
   const submissions = record(health.run_submissions);
-  const submissionsPaused = submissions.enabled === false;
-  const submissionPauseReason = text(
-    submissions.reason,
-    "New runs are temporarily paused.",
-  );
+  const submissionsPaused =
+    record(config.run_submissions).enabled !== true ||
+    submissions.enabled === false;
+  const submissionPauseReason = "Live analysis temporarily paused.";
   const queueFull = queueAtCapacity(queue);
   const availability = availabilityBlocks(health);
   const selectedExample =
@@ -233,57 +329,62 @@ function Home() {
       setError(invalid);
       return;
     }
+    if (
+      mode === "script" &&
+      publicDemo &&
+      (!judgeScriptsAvailable || !judgeToken.trim())
+    ) {
+      setError("Enter your judge access token to submit a script.");
+      return;
+    }
     setBusy(true);
     try {
-      const run = await submitRun(payload);
+      let run: Dict;
+      if (mode === "script" && publicDemo) {
+        const response = await fetch("/api/runs", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${judgeToken.trim()}`,
+          },
+          body: JSON.stringify(payload),
+        });
+        const body = record(await response.json());
+        if (!response.ok)
+          throw new Error(text(body.detail, "Could not start the run."));
+        if (
+          typeof body.run_id !== "string" ||
+          !/^[a-f0-9]{32}$/.test(body.run_id)
+        )
+          throw new Error("The server returned an invalid run identifier.");
+        run = body;
+      } else {
+        run = await submitRun(payload);
+      }
       window.location.assign(hrefRun(run.run_id));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not start the run.");
       setBusy(false);
+    } finally {
+      setJudgeToken("");
     }
   }
   return (
     <main className="page home-page">
-      <div className="hero">
-        <div>
-          <p className="eyebrow">
-            <span className="small-line" />A little room goes a long way
-          </p>
-          <h1>
-            Your model fits.
-            <br />
-            <span>Let’s find the space.</span>
-          </h1>
-          <p className="hero-description">
-            Turn a PyTorch memory problem into a clear diagnosis, a reviewable
-            patch, and a measured result.
-          </p>
-          <ProviderBadge />
-        </div>
-        <div className="hero-visual" aria-hidden="true">
-          <div className="visual-top">
-            <span>MEMORY / UNDERSTOOD</span>
-            <Layers3 size={18} />
-          </div>
-          <div className="memory-blocks">
-            <div className="memory-block block-a">parameters</div>
-            <div className="memory-block block-b">optimizer</div>
-            <div className="memory-block block-c">activations</div>
-            <div className="memory-block block-d">
-              <span>headroom</span>
-              <ArrowUpRight size={24} />
-            </div>
-          </div>
-          <div className="visual-bottom">
-            CAPTURE <span>→</span> UNDERSTAND <span>→</span> VERIFY
-          </div>
-        </div>
+      <div className="page-intro">
+        <p className="eyebrow">Run on the GPU</p>
+        <h1>Start an analysis.</h1>
+        <p>
+          Choose a prepared workload and define the memory target. Each run
+          records its diagnosis, changes, and measured result.
+        </p>
       </div>
       {error && <Notice tone="red">{error}</Notice>}
       {submissionsPaused && (
         <Notice>
-          <strong>New runs are paused.</strong> {submissionPauseReason} You can
-          still <a href="/results">browse published evaluation results</a>.
+          <strong>{submissionPauseReason}</strong> You can still{" "}
+          <a href="/results">browse published evaluation results</a>.
         </Notice>
       )}
       {!submissionsPaused && !loading && provider.configured === false && (
@@ -306,18 +407,8 @@ function Home() {
       )}
       {!submissionsPaused && availability.budgetBlocked && (
         <Notice>
-          <strong>
-            {availability.budgetReason === "exhausted"
-              ? "The local run budget is exhausted."
-              : availability.budgetReason === "pending_charge"
-                ? "Waiting for the current model charge."
-                : "Model billing needs review."}
-          </strong>{" "}
-          {availability.budgetReason === "exhausted"
-            ? "The application's authorized limit has been reached."
-            : availability.budgetReason === "pending_charge"
-              ? "Further calls pause until it settles. Availability refreshes automatically."
-              : "An earlier call has an unresolved charge or exceeded its budget reservation."}{" "}
+          <strong>Live analysis temporarily paused.</strong> You can still
+          browse the recorded results while new analysis is unavailable.
         </Notice>
       )}
       <form onSubmit={start} className="workspace-grid">
@@ -337,13 +428,15 @@ function Home() {
             >
               Use an example
             </button>
-            <button
-              type="button"
-              aria-pressed={mode === "script"}
-              onClick={() => selectMode("script")}
-            >
-              Paste a script
-            </button>
+            {!submissionsPaused && canPasteScript && (
+              <button
+                type="button"
+                aria-pressed={mode === "script"}
+                onClick={() => selectMode("script")}
+              >
+                Paste a script
+              </button>
+            )}
           </div>
           {mode === "example" ? (
             loading ? (
@@ -403,6 +496,21 @@ function Home() {
                 placeholder="Paste your PyTorch script here…"
                 aria-describedby="script-note"
               />
+              {publicDemo && judgeScriptsAvailable && (
+                <label className="field">
+                  Judge access token
+                  <input
+                    type="password"
+                    autoComplete="off"
+                    value={judgeToken}
+                    onChange={(event) => setJudgeToken(event.target.value)}
+                    aria-label="Judge access token"
+                  />
+                  <span className="caption">
+                    Used only for this submission and cleared afterwards.
+                  </span>
+                </label>
+              )}
               <p id="script-note" className="caption">
                 Single GPU · Python / PyTorch · maximum 1 MiB. Remove
                 credentials before sharing a script.
@@ -529,22 +637,21 @@ function Home() {
                 <span>%</span>
               </span>
             </label>
+          </div>
+          {!publicDemo && (
             <label className="field">
               Run budget
-              <span className="input-affix">
-                <span>$</span>
-                <input
-                  aria-label="Run budget in USD"
-                  type="number"
-                  min="0.01"
-                  max="5"
-                  step="0.01"
-                  value={budget}
-                  onChange={(e) => setBudget(e.target.value)}
-                />
-              </span>
+              <input
+                aria-label="Run budget in USD"
+                type="number"
+                min="0.01"
+                max="5"
+                step="0.01"
+                value={budget}
+                onChange={(event) => setBudget(event.target.value)}
+              />
             </label>
-          </div>
+          )}
           <label className="field">
             Search mode
             <select
@@ -560,12 +667,12 @@ function Home() {
           </label>
           <p id="search-mode-note" className="caption">
             Exploration can continue after a successful fix, up to six rounds
-            within the same time, budget and policy limits. Verified results are
-            kept if a later attempt stops.
+            within the same time and policy limits. Verified results are kept if
+            a later attempt stops.
           </p>
           <p className="caption">
-            Model structure stays unchanged. Costs and any unresolved charges
-            appear in the run report.
+            Model structure stays unchanged. Each result includes the measured
+            memory use and numerical comparison.
           </p>
           <button
             className="button button-primary start-button"
@@ -584,975 +691,13 @@ function Home() {
           </button>
         </aside>
       </form>
-      <section className="how-strip">
-        <div>
-          <span>01</span>
-          <strong>Capture the evidence</strong>
-          <p>Reproduce the workload and record allocator history.</p>
-        </div>
-        <div>
-          <span>02</span>
-          <strong>Explain the memory</strong>
-          <p>Connect peak allocations to code and propose a focused change.</p>
-        </div>
-        <div>
-          <span>03</span>
-          <strong>Verify the tradeoff</strong>
-          <p>Compare memory, speed, and numerical behavior on hardware.</p>
-        </div>
-      </section>
     </main>
-  );
-}
-
-function RunPage({ runId }: { runId: string }) {
-  const [run, setRun] = useState<Dict>({}),
-    [report, setReport] = useState<Dict>({}),
-    [evidence, setEvidence] = useState<Dict>({}),
-    [events, setEvents] = useState<RunEvent[]>([]),
-    [diff, setDiff] = useState<string | null>(null),
-    [error, setError] = useState(""),
-    [loading, setLoading] = useState(true),
-    [stream, setStream] = useState("Connecting");
-  useEffect(() => {
-    const controller = new AbortController();
-    let source: EventSource | undefined,
-      closed = false,
-      inflight = false,
-      ended = false,
-      refreshPending = false,
-      timer: ReturnType<typeof setTimeout> | undefined;
-    let evidenceLoaded = false;
-    async function refresh() {
-      if (closed) return;
-      if (inflight) {
-        refreshPending = true;
-        return;
-      }
-      inflight = true;
-      try {
-        const current = await getJSON(`/api/runs/${runId}`, controller.signal);
-        if (closed) return;
-        setRun(current);
-        const r = artifactLink(runId, "report.json", current.artifacts),
-          p = artifactLink(runId, "patch.diff", current.artifacts),
-          e = artifactLink(runId, "evidence.json", current.artifacts);
-        const jobs: Promise<void>[] = [];
-        if (r)
-          jobs.push(
-            getJSON(r, controller.signal).then((value) => {
-              if (!closed) setReport(value);
-            }),
-          );
-        if (p)
-          jobs.push(
-            getText(p, controller.signal).then((value) => {
-              if (!closed) setDiff(value);
-            }),
-          );
-        if (e && !evidenceLoaded)
-          jobs.push(
-            getJSON(e, controller.signal).then((value) => {
-              evidenceLoaded = true;
-              if (!closed) setEvidence(value);
-            }),
-          );
-        await Promise.all(jobs);
-        if (!closed) setError("");
-      } catch (e) {
-        if (!closed)
-          setError(e instanceof Error ? e.message : "Could not load this run.");
-      } finally {
-        inflight = false;
-        if (!closed) setLoading(false);
-        if (refreshPending && !closed) {
-          refreshPending = false;
-          void refresh();
-        }
-      }
-    }
-    function schedule() {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => void refresh(), 250);
-    }
-    void refresh().then(() => {
-      if (closed) return;
-      source = new EventSource(`/api/runs/${runId}/events`, {
-        withCredentials: true,
-      });
-      source.onopen = () => setStream("Connected");
-      source.onerror = () => {
-        if (!closed) setStream("Reconnecting");
-      };
-      for (const kind of EVENT_KINDS) {
-        source.addEventListener(kind, (message) => {
-          try {
-            const event = parseEvent(
-              JSON.parse((message as MessageEvent).data),
-            );
-            if (event && !closed)
-              setEvents((previous) => mergeEvents(previous, event));
-            schedule();
-          } catch {
-            if (!closed) setStream("Invalid event received");
-          }
-        });
-      }
-      source.addEventListener("stream.end", () => {
-        ended = true;
-        setStream("Complete");
-        source?.close();
-        schedule();
-      });
-    });
-    const poll = setInterval(() => {
-      if (!closed && !ended) void refresh();
-    }, 5000);
-    return () => {
-      closed = true;
-      controller.abort();
-      source?.close();
-      clearInterval(poll);
-      if (timer) clearTimeout(timer);
-    };
-  }, [runId]);
-  const label = provenanceLabel(run),
-    usage = record(run.usage),
-    before = analysisOf(report, "before", evidence),
-    after = analysisOf(report, "after"),
-    diagnosis = record(report.diagnosis),
-    causes = rows(diagnosis.root_causes),
-    allocator = record(report.allocator),
-    search = record(report.search),
-    summary = record(report.summary);
-  const downloads = [
-    "patch.diff",
-    "cli.json",
-    "configuration.json",
-    "report.md",
-    "report.json",
-    "env.sh",
-    "pareto.json",
-    "pareto.md",
-    "annotations.json",
-  ]
-    .map((name) => ({ name, url: artifactLink(runId, name, run.artifacts) }))
-    .filter((item) => item.url);
-  return (
-    <main className="page run-page">
-      <div className="run-title">
-        <div>
-          <a href="/" className="back-link">
-            Workspace <ChevronRight size={13} />
-          </a>
-          <p className="eyebrow">Run / {runId.slice(0, 8)}</p>
-          <h1>{human(run.target || "Memory analysis")}</h1>
-          <div className="run-badges">
-            <Status value={run.status} />
-            {label && <Badge tone="amber">{label}</Badge>}
-            <span className="caption">
-              {stream === "Complete" ? "Event history complete" : stream}
-            </span>
-          </div>
-        </div>
-        <div className="download-actions">
-          {downloads.map((item) => (
-            <a
-              className="button button-secondary"
-              key={item.name}
-              href={item.url!}
-              download
-            >
-              <Download size={14} />
-              {item.name}
-            </a>
-          ))}
-        </div>
-      </div>
-      {error && <Notice tone="red">{error}</Notice>}
-      {run.status === "needs_human" && (
-        <Notice>
-          <strong>This run needs attention.</strong>{" "}
-          {text(
-            run.reason,
-            "A required condition is unavailable. Inspect the report before continuing.",
-          )}
-        </Notice>
-      )}
-      {label && (
-        <Notice tone="neutral">
-          {label}. This view does not start a new GPU run or make a new model
-          request.
-        </Notice>
-      )}
-      {loading ? (
-        <Loading>Loading run evidence…</Loading>
-      ) : (
-        <>
-          <div className="metric-grid">
-            <Metric
-              label="Peak before"
-              value={displayMetric(
-                report,
-                "peak_before",
-                measurement(report, "before", "peak_allocated_bytes") ??
-                  record(before.header).peak_allocated_bytes,
-              )}
-              note={text(
-                record(record(report.measurements).before).peak_basis,
-                "Capture not yet verified",
-              )}
-            />
-            <Metric
-              label="Peak after"
-              value={displayMetric(
-                report,
-                "peak_after",
-                measurement(report, "after", "peak_allocated_bytes"),
-              )}
-              note={text(
-                record(record(report.measurements).after).peak_basis,
-                "No after measurement yet",
-              )}
-            />
-            <Metric
-              label="Peak reduction"
-              value={displayMetric(report, "peak_reduction")}
-              note="Derived from comparable exact captures"
-            />
-            <Metric
-              label="Model cost"
-              value={costTotal(usage)}
-              note={`${numeric(usage.calls) ?? "Unknown"} calls · known subtotal ${usd(usage.known_cost_usd)}`}
-            />
-          </div>
-          <Section title="Search outcome">
-            <dl className="search-details">
-              <div>
-                <dt>Mode</dt>
-                <dd>{searchModeLabel(search.mode ?? run.search_mode)}</dd>
-              </div>
-              <div>
-                <dt>Baseline already meets target</dt>
-                <dd>
-                  {search.baseline_target_met === true
-                    ? "Yes — before repair"
-                    : search.baseline_target_met === false
-                      ? "No"
-                      : "Unknown"}
-                </dd>
-              </div>
-              <div>
-                <dt>Exploration status</dt>
-                <dd>{search.mode ? human(run.status) : "Not recorded"}</dd>
-              </div>
-              <div>
-                <dt>Stopped because</dt>
-                <dd>{human(search.stop_reason)}</dd>
-              </div>
-              <div>
-                <dt>Rounds executed</dt>
-                <dd>{numeric(search.rounds_executed) ?? "Unknown"}</dd>
-              </div>
-              <div>
-                <dt>Selected configuration meets target</dt>
-                <dd>
-                  {run.provenance === "recorded_baseline"
-                    ? "N/A — baseline only"
-                    : summary.target_met === true
-                      ? "Yes"
-                      : summary.target_met === false
-                        ? "No"
-                        : "Unknown"}
-                </dd>
-              </div>
-              <div>
-                <dt>First verified target round</dt>
-                <dd>{numeric(search.first_target_met_round) ?? "Unknown"}</dd>
-              </div>
-            </dl>
-            <p className="caption">
-              Target success and exploration status are separate. A later stop
-              keeps the selected verified configuration and its downloads.
-              Historical runs without search metadata remain unknown.
-            </p>
-          </Section>
-          <div className="run-grid">
-            <aside className="panel timeline-panel">
-              <div className="section-heading">
-                <div>
-                  <p className="eyebrow">Execution log</p>
-                  <h2>Every step, visible</h2>
-                </div>
-              </div>
-              {events.length ? (
-                <ol className="event-list">
-                  {events.map((event, index) => (
-                    <li
-                      key={event.sequence}
-                      className={index === events.length - 1 ? "latest" : ""}
-                    >
-                      <span className="event-node" />
-                      <div>
-                        <div className="event-title">{human(event.kind)}</div>
-                        <div className="event-meta">
-                          <time>
-                            {event.created_at
-                              ? new Date(event.created_at).toLocaleTimeString(
-                                  [],
-                                  {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                    second: "2-digit",
-                                  },
-                                )
-                              : "Time unknown"}
-                          </time>
-                          <span>#{event.sequence}</span>
-                        </div>
-                        {typeof event.data.model === "string" && (
-                          <Badge>{event.data.model.split("/").pop()}</Badge>
-                        )}
-                        {typeof event.data.reason === "string" && (
-                          <p>{event.data.reason}</p>
-                        )}
-                        {numeric(event.data.elapsed_seconds) !== null && (
-                          <small>
-                            {Number(event.data.elapsed_seconds).toFixed(2)}s
-                          </small>
-                        )}
-                        {("cost_usd" in event.data || "cost" in event.data) && (
-                          <small>
-                            Cost{" "}
-                            {usd(
-                              event.data.cost_usd ??
-                                record(event.data.cost).usd,
-                            )}
-                          </small>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <Empty title="Waiting for events">
-                  Only recorded events appear here.
-                </Empty>
-              )}
-            </aside>
-            <div className="run-center">
-              <Section
-                title="Memory, over the run"
-                kicker="Runtime evidence"
-                action={<Badge>Allocator history</Badge>}
-              >
-                <Suspense fallback={<Loading />}>
-                  <MemoryChart
-                    before={before}
-                    after={after}
-                    baselineOnly={run.provenance === "recorded_baseline"}
-                  />
-                </Suspense>
-                <div className="image-links">
-                  {[
-                    ["timeline-before.png", "Before capture"],
-                    ["timeline-after.png", "After capture"],
-                  ].map(([name, title]) => {
-                    const url = artifactLink(runId, name, run.artifacts);
-                    return url ? (
-                      <details key={name}>
-                        <summary>
-                          {title} PNG <SquareArrowOutUpRight size={12} />
-                        </summary>
-                        <a href={url} target="_blank" rel="noopener noreferrer">
-                          <img
-                            src={url}
-                            alt={`${title} recorded memory timeline`}
-                            loading="lazy"
-                          />
-                        </a>
-                      </details>
-                    ) : null;
-                  })}
-                </div>
-              </Section>
-              <Section
-                title="Where the peak comes from"
-                kicker="Allocation composition"
-              >
-                <Composition report={report} analysis={before} />
-              </Section>
-              <Section
-                title="Proposed changes"
-                kicker="Reviewable patch"
-                action={
-                  <Badge>{rows(report.rounds).length} recorded rounds</Badge>
-                }
-              >
-                <Suspense fallback={<Loading />}>
-                  <DiffView diff={diff ?? ""} recorded={diff !== null} />
-                </Suspense>
-                {rows(report.rounds).map((row, index) => (
-                  <RoundDetails
-                    key={index}
-                    row={row}
-                    index={index}
-                    provenance={run.provenance}
-                  />
-                ))}
-              </Section>
-              <Section
-                title="Retained configurations"
-                kicker="Memory and speed tradeoffs"
-              >
-                {rows(record(report.pareto).frontier).length ? (
-                  <div className="table-wrap">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Round</th>
-                          <th>Peak</th>
-                          <th>Step time</th>
-                          <th>Numerics</th>
-                          <th>Files</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows(record(report.pareto).frontier).map(
-                          (point, index) => (
-                            <tr key={index}>
-                              <td>{String(point.round ?? index + 1)}</td>
-                              <td>{text(point.display_peak)}</td>
-                              <td>{text(point.display_step)}</td>
-                              <td>{text(point.numerics)}</td>
-                              <td>
-                                {Object.entries(record(point.artifacts)).map(
-                                  ([name, relative]) => {
-                                    const url = configurationLink(
-                                      runId,
-                                      relative,
-                                    );
-                                    return url ? (
-                                      <a
-                                        className="text-link"
-                                        key={name}
-                                        href={url}
-                                        download
-                                      >
-                                        {name}{" "}
-                                      </a>
-                                    ) : null;
-                                  },
-                                )}
-                              </td>
-                            </tr>
-                          ),
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p className="muted small-copy">
-                    No verified retained configuration yet.
-                  </p>
-                )}
-                <p className="caption">
-                  Only comparable, verified configurations establish a tradeoff.
-                  Unknown or shared timing does not establish a speed advantage.
-                </p>
-              </Section>
-              <Section
-                title="Reproduce the selected configuration"
-                kicker="Downloads and execution"
-              >
-                <p className="caption">
-                  The source diff does not include CLI arguments or environment
-                  changes. An empty diff can represent a CLI-only or
-                  environment-only repair. Apply the patch to the original
-                  source, apply env.sh changes, and use the effective target
-                  arguments from cli.json. configuration.json contains the
-                  selected manifest.
-                </p>
-                {Object.keys(record(report.selected_configuration)).length ? (
-                  <>
-                    <p className="caption">
-                      Argument arrays preserve token boundaries; they are
-                      recorded evidence, not shell commands. Null means not
-                      recorded or not applicable.
-                    </p>
-                    <pre className="code-block">
-                      {JSON.stringify(
-                        Object.fromEntries(
-                          Object.entries(
-                            record(report.selected_configuration),
-                          ).filter(([key]) => key !== "artifacts"),
-                        ),
-                        null,
-                        2,
-                      )}
-                    </pre>
-                    {record(report.selected_configuration).wrapper_replay !=
-                      null && (
-                      <p className="caption">
-                        Wrapper replay requires the manifest&apos;s
-                        execution_entrypoint and execution_argv, the mapped
-                        source tree, effective target arguments and recorded
-                        environment. Lab applies and verifies the targeted
-                        override. An ordinary shell does not apply it: update
-                        the launcher or configuration before running outside
-                        Lab.
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <p className="muted small-copy">
-                    No selected configuration recorded; no replay command is
-                    inferred.
-                  </p>
-                )}
-              </Section>
-              <Section title="Did the change hold up?" kicker="Verification">
-                <div className="table-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Check</th>
-                        <th>Recorded result</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {verificationRows(report).map((row, i) => (
-                        <tr key={i}>
-                          <td>{row.label}</td>
-                          <td>{row.value}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <p className="caption">
-                  A generated patch is a proposal. Verification and target
-                  completion are reported separately.
-                </p>
-              </Section>
-            </div>
-            <aside className="run-right">
-              <Section title="The diagnosis" kicker="NVIDIA Nemotron">
-                <div className="diagnosis-cards">
-                  {causes.length ? (
-                    causes.map((cause, index) => (
-                      <article key={index}>
-                        <div className="diagnosis-index">
-                          {String(index + 1).padStart(2, "0")}
-                        </div>
-                        <h3>{text(cause.title)}</h3>
-                        <p>{human(cause.category)}</p>
-                        <div className="diagnosis-stat">
-                          <span>Estimated size</span>
-                          <strong>
-                            {text(
-                              cause.display_estimate,
-                              typeof cause.bytes_gb === "number"
-                                ? `${cause.bytes_gb} GB`
-                                : "Unknown",
-                            )}
-                          </strong>
-                        </div>
-                        <p className="caption">
-                          Model hypothesis · confidence{" "}
-                          {text(
-                            cause.display_confidence,
-                            typeof cause.confidence === "number"
-                              ? `${(cause.confidence * 100).toFixed(0)}%`
-                              : "unknown",
-                          )}
-                        </p>
-                        <div className="stack-refs">
-                          {Array.isArray(cause.evidence_refs) &&
-                            cause.evidence_refs.map((ref, i) => (
-                              <code key={i}>{String(ref)}</code>
-                            ))}
-                        </div>
-                      </article>
-                    ))
-                  ) : (
-                    <Empty title="No diagnosis yet">
-                      Root causes appear after the evidence is analyzed.
-                    </Empty>
-                  )}
-                </div>
-              </Section>
-              {rows(diagnosis.plan).length > 0 && (
-                <Section title="Suggested fixes" kicker="Model estimates">
-                  {rows(diagnosis.plan).map((item, index) => (
-                    <article className="round-note" key={index}>
-                      <h3>{text(item.title)}</h3>
-                      <p>{text(item.description, "No rationale recorded.")}</p>
-                      <Badge>
-                        Expected saving {text(item.display_expected_saving)}
-                      </Badge>
-                      <p className="caption">
-                        Estimate only · requires measured verification
-                      </p>
-                    </article>
-                  ))}
-                </Section>
-              )}
-              <Section title="Allocator notes">
-                <p className="small-copy">
-                  {text(
-                    allocator.note,
-                    "Reserved memory alone does not establish fragmentation.",
-                  )}
-                </p>
-                <dl className="key-values">
-                  <div>
-                    <dt>Gap indicator</dt>
-                    <dd>{text(allocator.fragmentation_indicator)}</dd>
-                  </div>
-                  <div>
-                    <dt>Fragmentation confirmed</dt>
-                    <dd>
-                      {allocator.fragmentation_confirmed === true
-                        ? "Yes"
-                        : allocator.fragmentation_confirmed === false
-                          ? "No"
-                          : "Unknown"}
-                    </dd>
-                  </div>
-                </dl>
-              </Section>
-              <Section title="Sources" kicker="Research by Tavily">
-                <Sources sources={rows(report.sources)} />
-              </Section>
-              <Section title="Model usage">
-                <AdmissionNote usage={usage} />
-                <BoundedCostNote usage={usage} />
-                <div className="usage-total">
-                  <span>Total recorded cost</span>
-                  <strong>{costTotal(usage)}</strong>
-                </div>
-                {rows(usage.by_model).map((model, index) => (
-                  <div className="model-row" key={index}>
-                    <strong>{text(model.model).split("/").pop()}</strong>
-                    <span>
-                      {String(model.calls ?? "Unknown")} calls ·{" "}
-                      {costTotal(model)}
-                    </span>
-                    <small>
-                      Input {String(model.input_tokens ?? "unknown")} / output{" "}
-                      {String(model.output_tokens ?? "unknown")} tokens
-                    </small>
-                  </div>
-                ))}
-                {(numeric(usage.unknown_cost_calls) ?? 0) > 0 && (
-                  <p className="caption">
-                    {String(usage.unknown_cost_calls)} call(s) have an{" "}
-                    {(numeric(usage.bounded_cost_calls) ?? 0) > 0
-                      ? "unconfirmed actual charge"
-                      : "unresolved charge"}
-                    . The known subtotal is not the final total.
-                  </p>
-                )}
-              </Section>
-            </aside>
-          </div>
-          {Array.isArray(report.warnings) && report.warnings.length > 0 && (
-            <Section title="Evidence limitations">
-              {report.warnings.map((warning, index) => (
-                <p className="small-copy" key={index}>
-                  {String(warning)}
-                </p>
-              ))}
-            </Section>
-          )}
-        </>
-      )}
-    </main>
-  );
-}
-function BoundedCostNote({ usage }: { usage: Dict }) {
-  if ((numeric(usage.bounded_cost_calls) ?? 0) <= 0) return null;
-  return (
-    <p className="caption" role="note">
-      Actual cost is unconfirmed for {String(usage.bounded_cost_calls)} call(s).
-      Verified cost upper bound: {costUpperBound(usage)}. This bound is not a
-      confirmed actual charge.
-    </p>
-  );
-}
-function AdmissionNote({ usage }: { usage: Dict }) {
-  const estimated = numeric(record(usage.admission_counts).local_estimate);
-  if (estimated === null || !Number.isInteger(estimated) || estimated <= 0)
-    return null;
-  return (
-    <p className="caption" role="note">
-      Budget reservations for {estimated}{" "}
-      {estimated === 1 ? "call used" : "calls used"} local estimates. Actual
-      cost comes from reported usage; a call can exceed its estimate.
-    </p>
-  );
-}
-function Composition({ report, analysis }: { report: Dict; analysis: Dict }) {
-  const listed = rows(report.peak_composition);
-  const annotationResult = record(record(report.run).annotations);
-  // Historical reports lack source binding. New records use only their bound stack metadata.
-  const labels = new Map(
-    (annotationResult.evidence_fingerprint
-      ? []
-      : rows(annotationResult.annotations)
-    ).map((row) => [row.stack_id, text(row.label)]),
-  );
-  const categories = listed.length
-    ? listed
-    : Object.entries(record(analysis.category_bytes)).map(
-        ([category, bytes]) => ({
-          category,
-          bytes,
-          gb: gb(bytes),
-          percent_of_peak: "Unknown",
-        }),
-      );
-  if (!categories.length)
-    return (
-      <Empty title="Composition unavailable">
-        Allocation categories require a captured snapshot.
-      </Empty>
-    );
-  return (
-    <>
-      <p className="caption">
-        Heuristic allocation-origin categories. Expand a category to inspect its
-        retained stacks.
-      </p>
-      <div className="composition-list">
-        {categories.map((category, index) => (
-          <details key={index}>
-            <summary>
-              <span className={`category-dot dot-${index % 5}`} />
-              <strong>{human(category.category)}</strong>
-              <span>{text(category.gb, gb(category.bytes))}</span>
-              <small>{text(category.percent_of_peak)}</small>
-              <ChevronRight size={14} />
-            </summary>
-            <div className="stack-details">
-              {rows(analysis.peak_composition)
-                .filter((stack) => stack.category === category.category)
-                .map((stack, j) => (
-                  <div className="stack-block" key={j}>
-                    <div>
-                      <code>{text(stack.stack_id)}</code>
-                      <Badge>{gb(stack.bytes)}</Badge>
-                    </div>
-                    {record(stack.model_annotation).kind ===
-                      "model_interpretation" &&
-                    record(stack.model_annotation).is_measurement === false ? (
-                      <p>
-                        <Badge>Nano interpretation</Badge>{" "}
-                        {text(record(stack.model_annotation).label)}
-                        <small className="table-note">
-                          Model category:{" "}
-                          {human(record(stack.model_annotation).category)}.{" "}
-                          Separate from the heuristic category and measured
-                          bytes. Provenance:{" "}
-                          {human(record(stack.model_annotation).provenance)}.
-                        </small>
-                      </p>
-                    ) : labels.has(stack.stack_id) ? (
-                      <p>
-                        <Badge>Nano interpretation</Badge>{" "}
-                        {labels.get(stack.stack_id)}
-                        <small className="table-note">
-                          Historical label; source binding was not recorded.
-                        </small>
-                      </p>
-                    ) : null}
-                    <pre>
-                      {text(
-                        stack.representative_stack,
-                        rows(stack.frames)
-                          .slice(-8)
-                          .map(
-                            (f) =>
-                              `${text(f.filename)}:${String(f.line ?? "?")} in ${text(f.name)}`,
-                          )
-                          .join("\n") || "No frames retained.",
-                      )}
-                    </pre>
-                  </div>
-                ))}
-            </div>
-          </details>
-        ))}
-      </div>
-    </>
-  );
-}
-function Sources({ sources }: { sources: Dict[] }) {
-  if (!sources.length)
-    return (
-      <p className="muted small-copy">No runtime research sources recorded.</p>
-    );
-  return (
-    <ul className="sources-list">
-      {sources.map((source, index) => {
-        const url = externalLink(source.url);
-        return (
-          <li key={index}>
-            <span>{String(index + 1).padStart(2, "0")}</span>
-            <div>
-              {url ? (
-                <External href={url}>{text(source.title, url)}</External>
-              ) : (
-                <strong>{text(source.title, "Source unavailable")}</strong>
-              )}
-              {url && <small>{new URL(url).hostname}</small>}
-              {source.version_match === false && (
-                <small>Version applicability unverified</small>
-              )}
-            </div>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-function RoundDetails({
-  row,
-  index,
-  provenance,
-}: {
-  row: Dict;
-  index: number;
-  provenance: unknown;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const number =
-    typeof row.number === "number" && row.number >= 1 && row.number <= 6
-      ? row.number
-      : index + 1;
-  const verification = record(row.verification),
-    display = record(row.display_verification);
-  const completeDiff =
-    row.diff_status === "available" && typeof row.diff === "string";
-  const fields = [
-    ["Completed", "completed"],
-    ["Target met", "target_met"],
-    ["Peak before", "peak_before"],
-    ["Peak after", "peak_after"],
-    ["Peak reduction", "reduction_pct"],
-    ["Step time before", "step_ms_before"],
-    ["Step time after", "step_ms_after"],
-    ["Step-time change", "throughput_regression_pct"],
-    ["Numerical equivalence", "loss_equivalence"],
-    ["Comparison basis", "numerical_basis"],
-    ["Comparison precision", "comparison_precision"],
-    ["Loss tolerance", "loss_tolerance"],
-    ["Observed precision change", "observed_precision_change"],
-    ["Maximum loss difference", "max_loss_delta"],
-  ];
-  const show = (value: unknown) =>
-    typeof value === "boolean"
-      ? value
-        ? "Yes"
-        : "No"
-      : typeof value === "number" && Number.isFinite(value)
-        ? String(value)
-        : text(value);
-  function download() {
-    if (!completeDiff) return;
-    const url = URL.createObjectURL(
-      new Blob([String(row.diff)], { type: "text/plain;charset=utf-8" }),
-    );
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `round-${String(number).padStart(2, "0")}.patch.diff`;
-    anchor.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
-  return (
-    <article className="round-note">
-      <Badge>Round {number}</Badge>{" "}
-      <strong>{human(row.decision ?? row.status)}</strong>
-      <p>{text(row.reason, "No decision reason recorded.")}</p>
-      {provenanceLabel({ provenance: row.provenance ?? provenance }) && (
-        <p className="caption">
-          {provenanceLabel({ provenance: row.provenance ?? provenance })}
-        </p>
-      )}
-      <p className="small-copy">
-        {text(row.diff_summary, "Patch summary unavailable.")}
-      </p>
-      {completeDiff ? (
-        <>
-          <button
-            type="button"
-            className="button button-secondary"
-            onClick={download}
-          >
-            Download round {number} patch
-          </button>
-          <details onToggle={(event) => setExpanded(event.currentTarget.open)}>
-            <summary>Inspect round {number} patch</summary>
-            {expanded && (
-              <Suspense fallback={<Loading />}>
-                <DiffView diff={String(row.diff)} recorded />
-              </Suspense>
-            )}
-          </details>
-        </>
-      ) : (
-        <p className="caption">
-          Round patch unavailable: {text(row.diff_status)}
-        </p>
-      )}
-      <div className="table-wrap">
-        <table aria-label={`Round ${number} verification`}>
-          <thead>
-            <tr>
-              <th>Measurement</th>
-              <th>Recorded result</th>
-            </tr>
-          </thead>
-          <tbody>
-            {fields.map(([label, key]) => (
-              <tr key={key}>
-                <th>{label}</th>
-                <td>{show(display[key] ?? verification[key])}</td>
-              </tr>
-            ))}
-            {Object.entries(record(verification.checks)).map(
-              ([name, result]) => (
-                <tr key={name}>
-                  <th>{human(name)}</th>
-                  <td>
-                    {typeof result === "boolean"
-                      ? result
-                        ? "Passed"
-                        : "Not passed"
-                      : "Unknown"}
-                  </td>
-                </tr>
-              ),
-            )}
-          </tbody>
-        </table>
-      </div>
-      {Array.isArray(verification.notes) &&
-        verification.notes.map((note, i) => (
-          <p className="caption" key={i}>
-            {String(note)}
-          </p>
-        ))}
-    </article>
   );
 }
 
 function Results() {
   const [items, setItems] = useState<Dict[]>([]),
     [reports, setReports] = useState<Record<string, Dict>>({}),
-    [usage, setUsage] = useState<Dict>({}),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
   useEffect(() => {
@@ -1560,13 +705,9 @@ function Results() {
     (async () => {
       try {
         await getJSON("/api/health", controller.signal);
-        const [r, u] = await Promise.all([
-          getJSON("/api/runs", controller.signal),
-          getJSON("/api/usage", controller.signal),
-        ]);
+        const r = await getJSON("/api/runs", controller.signal);
         const list = rows(r.runs);
         setItems(list);
-        setUsage(u);
         for (let i = 0; i < Math.min(list.length, 50); i += 4) {
           await Promise.all(
             list.slice(i, i + 4).map(async (row) => {
@@ -1600,25 +741,12 @@ function Results() {
         <p className="eyebrow">The record, including the rough edges</p>
         <h1>Results you can inspect.</h1>
         <p>
-          Saved outcomes from this browser session. A target miss, unknown cost,
-          or incomplete run remains visible.
+          Explore real GPU measurements, the repairs that worked, and the
+          workloads that still need work.
         </p>
       </div>
       {error && <Notice tone="red">{error}</Notice>}
       <EvaluationView />
-      <div className="metric-grid three">
-        <Metric label="Saved session runs" value={String(items.length)} />
-        <Metric
-          label="Recorded model calls"
-          value={String(usage.calls ?? "Unknown")}
-        />
-        <Metric
-          label="Session model cost"
-          value={costTotal(usage)}
-          note={`Known subtotal ${usd(usage.known_cost_usd)}`}
-        />
-      </div>
-      <BoundedCostNote usage={usage} />
       <Section
         title="Your runs"
         action={
@@ -1660,7 +788,13 @@ function Results() {
                       </td>
                       <td>{human(row.target)}</td>
                       <td>
-                        <Status value={row.status} />
+                        <Status
+                          value={
+                            row.status === "budget_exceeded"
+                              ? "analysis_paused"
+                              : row.status
+                          }
+                        />
                       </td>
                       <td>{displayMetric(report, "peak_before")}</td>
                       <td>{displayMetric(report, "peak_after")}</td>
@@ -1696,8 +830,8 @@ function Results() {
           </Empty>
         )}
         <p className="caption">
-          Figures load from saved report JSON. A missing figure is unknown; this
-          table is not a completed benchmark claim.
+          Your browser session keeps its own run history. Missing measurements
+          are shown as Unknown.
         </p>
       </Section>
     </main>
@@ -1787,47 +921,43 @@ function About() {
               <Badge>Nemotron Nano</Badge>
               <h3>Allocation annotation</h3>
               <p>
-                Intended for compact stack labels when that feature is
-                available. Its use is recorded per run.
+                Adds compact labels to captured allocation stacks. Each report
+                records the models used.
               </p>
             </div>
             <div>
               <Badge>Tavily</Badge>
               <h3>Version-aware research</h3>
               <p>
-                Finds official documentation and known issues. Retrieved content
-                remains untrusted evidence.
+                Finds version-specific PyTorch documentation and known issues to
+                inform repair suggestions.
               </p>
             </div>
           </div>
         </Section>
-        <Section title="What a report can tell you" kicker="Boundaries matter">
+        <Section title="Limitations" kicker="Understanding the results">
           <ul className="plain-list">
             <li>
-              Static checks are guardrails, not a proof that arbitrary Python is
-              safe or equivalent.
+              Headroom currently supports single-GPU PyTorch workloads it can
+              run again. It does not yet support distributed training.
             </li>
             <li>
-              A memory snapshot explains observed allocations. A
-              reserved-minus-allocated gap alone does not prove harmful
-              fragmentation.
+              A suggested patch can fail or leave the memory problem unsolved.
+              Each result shows what ran, what changed, and whether the repair
+              worked.
             </li>
             <li>
-              A proposed change is not a verified repair. Numerical comparisons
-              may be unavailable, and precision changes must be explicit.
+              Numerical comparisons cover the recorded loss samples, not an
+              entire training run. The comparison basis is shown beside each
+              result, and precision changes require an explicit policy.
             </li>
             <li>
-              Missing usage data leaves cost unknown. A known subtotal is never
-              represented as the final total.
+              Missing measurements and costs remain Unknown. Offline examples
+              are labelled separately from real GPU results.
             </li>
             <li>
-              Offline fixtures are marked and do not establish a successful
-              model repair.
-            </li>
-            <li>
-              Current scope is single-GPU PyTorch. Long-context capacity, model
-              features, and deployment readiness require their own acceptance
-              evidence.
+              A snapshot describes recorded allocations. Unused reserved memory
+              alone does not establish harmful fragmentation.
             </li>
           </ul>
         </Section>
@@ -1858,16 +988,53 @@ function About() {
 
 export default function App() {
   const path = window.location.pathname;
-  const run = /^\/runs\/([a-f0-9]{32})\/?$/.exec(path);
+  const run = /^\/runs?\/([a-f0-9]{32})\/?$/.exec(path);
+  const [config, setConfig] = useState<Dict>({});
+  const [configLoading, setConfigLoading] = useState(true);
+  const [configError, setConfigError] = useState("");
+  useEffect(() => {
+    const controller = new AbortController();
+    getJSON("/api/config", controller.signal)
+      .then((value) => {
+        if (!controller.signal.aborted) setConfig(value);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted)
+          setConfigError(
+            "Service availability could not be loaded. Please try again.",
+          );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setConfigLoading(false);
+      });
+    return () => controller.abort();
+  }, []);
   return (
     <>
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
-      <Navigation />
+      <Navigation config={config} />
       <div id="main-content">
         {path === "/" ? (
-          <Home />
+          <Home config={config} />
+        ) : path === "/run" ? (
+          configLoading ? (
+            <main className="page">
+              <Loading>Checking service availability…</Loading>
+            </main>
+          ) : configError ? (
+            <main className="page">
+              <Notice tone="red">{configError}</Notice>
+            </main>
+          ) : (
+            <RunForm config={config} />
+          )
+        ) : path === "/verified" ? (
+          <VerifiedPage
+            enabled={config.verified_runs_enabled === true}
+            loading={configLoading}
+          />
         ) : path === "/results" ? (
           <Results />
         ) : path === "/about" ? (
@@ -1877,7 +1044,7 @@ export default function App() {
         ) : (
           <main className="page">
             <Empty title="Page not found">
-              <a href="/">Return to the workspace</a>
+              <a href="/">Return to the home page</a>
             </Empty>
           </main>
         )}

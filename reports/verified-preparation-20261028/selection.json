@@ -1,0 +1,62 @@
+{
+  "runs": [
+    {
+      "run_id": "84f929ba8ace49b3829df6455419641d",
+      "audit": "reports/acceptance-v2-r6-20261027/independent-audit-history-v4.json",
+      "title": "Evaluation without no_grad",
+      "description": "The evaluation forward pass built an unnecessary autograd graph.",
+      "expected_target_met": true,
+      "limitations": []
+    },
+    {
+      "run_id": "d10adf0ffac74dcf8d874a460a2a3628",
+      "audit": "reports/acceptance-v2-r4-20261027/independent-audit-history-v2-final.json",
+      "title": "An unused teacher model on the GPU",
+      "description": "The patch kept the unused teacher on the CPU while preserving the recorded parameter count.",
+      "expected_target_met": true,
+      "limitations": []
+    },
+    {
+      "run_id": "b7f348d0dc8d423f8076b81fd2c15375",
+      "audit": "reports/acceptance-v2-r6-20261027/independent-audit-history-v4.json",
+      "title": "Accumulated loss retains graphs",
+      "description": "A tensor accumulator kept computation graphs alive across training updates.",
+      "expected_target_met": true,
+      "limitations": [
+        "Numerical comparison covers five backward-loss scalars against an offloaded reference, not all 20 candidate updates."
+      ]
+    },
+    {
+      "run_id": "2942b1e3d8e34ead80baef0cdc468753",
+      "audit": "reports/acceptance-v2-r5-20261027/independent-audit-history-v3-final.json",
+      "title": "AdamW training above the memory target",
+      "description": "Disabling foreach optimizer updates and adding activation checkpointing reduced the recorded peak below 22 GB.",
+      "expected_target_met": true,
+      "limitations": [
+        "This is the historical fp32 result with tolerance-based comparison, not a bit-identical strict result or a bf16 trade-off run."
+      ]
+    },
+    {
+      "run_id": "810e0803757740dfaaa65fd4ecd2adf9",
+      "audit": "reports/acceptance-v2-r6-20261027/independent-audit-history-v4.json",
+      "title": "Large-batch activations: not solved",
+      "description": "A candidate reduced memory and completed, but it was rejected because the required numerical reference was unavailable.",
+      "expected_target_met": false,
+      "limitations": [
+        "The displayed candidate patch was reverted; its memory reduction is not a successful repair.",
+        "The root-cause card is the initial diagnosis; the run later requested more information."
+      ]
+    },
+    {
+      "run_id": "416ccae0aa6c42f08cf928f50e9973ea",
+      "audit": "reports/acceptance-v2-r5-20261027/independent-audit-history-v3-final.json",
+      "title": "nanoGPT: not solved",
+      "description": "The executed gradient-accumulation candidate still ran out of memory; no repair was selected.",
+      "expected_target_met": false,
+      "limitations": [
+        "The reverted candidate changed runtime configuration to batch_size=8 and gradient_accumulation_steps=4; it did not change source code.",
+        "The initial diagnosis is shown with its bound baseline evidence; later planning stopped without sufficient evidenced savings."
+      ]
+    }
+  ]
+}

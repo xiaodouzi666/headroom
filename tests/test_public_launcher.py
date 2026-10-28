@@ -28,6 +28,7 @@ def launcher(tmp_path, monkeypatch):
 def test_public_launcher_copies_only_curated_files_and_uses_isolated_state(launcher, monkeypatch):
     module, project = launcher
     monkeypatch.setenv("HEADROOM_PUBLIC_HOST", "headroom.example")
+    monkeypatch.setenv("HEADROOM_VERIFIED_RUNS_ENABLED", "true")
     expected = {
         "public-evaluations.json": '{"version":1,"campaigns":[]}',
         "published-evaluations/r6-20261027.json": '{"fixture":"r6"}',
@@ -59,8 +60,11 @@ def test_public_launcher_copies_only_curated_files_and_uses_isolated_state(launc
     assert settings.db_path == project / "runs/public-api/headroom.db"
     assert settings.run_root == project / "runs/public-api/jobs"
     assert settings.run_submissions_enabled is False
+    assert settings.verified_runs_enabled is False
     assert settings.public_host == "headroom.example"
     assert settings.trust_cloudflared is False
+    assert settings.trust_tailscale_funnel is True
+    assert settings.deadline_seconds == 480
     assert observed["application"] is app
     assert observed["run"] == {"host": "127.0.0.1", "port": 8766, "proxy_headers": False}
     actual = {
