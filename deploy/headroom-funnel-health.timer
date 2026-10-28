@@ -1,0 +1,11 @@
+[Unit]
+Description=Check Headroom origin and public Funnel every five minutes
+
+[Timer]
+OnBootSec=1min
+OnUnitInactiveSec=5min
+AccuracySec=1s
+Unit=headroom-funnel-health.service
+
+[Install]
+WantedBy=timers.target

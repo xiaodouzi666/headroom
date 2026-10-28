@@ -1,0 +1,14 @@
+[Unit]
+Description=Check Headroom origin and public Funnel health without notifications
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/xiaodouzi/workspace/headroom
+ExecStart=/home/xiaodouzi/workspace/headroom/.venv/bin/python scripts/check_funnel.py
+TimeoutStartSec=45s
+TimeoutStopSec=2s
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=true
+StandardOutput=journal
+StandardError=journal

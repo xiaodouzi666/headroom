@@ -98,7 +98,8 @@ systemctl --user status headroom-public headroom-tailscaled
 systemctl --user restart headroom-public
 journalctl --user -u headroom-public --since "10 minutes ago"
 "$TS" --socket="$SOCKET" funnel --https=443 off
-systemctl --user disable --now headroom-public headroom-tailscaled
+systemctl --user disable --now headroom-funnel-health.timer headroom-public headroom-tailscaled
+systemctl --user stop headroom-funnel-health.service
 ```
 
 Turning off the dedicated services leaves project code, reports and historical
@@ -140,3 +141,39 @@ Do not bind this origin to a public interface or enable generic proxy-header tru
 
 These controls have offline API coverage. They do not activate model calls or
 replace the pending running-pool decision and later end-to-end live test.
+
+## Health checks and access follow-up (2026-10-29)
+
+The deployed `headroom-funnel-health.timer` checks the actual origin on port 8766
+and the public Funnel HTTPS hostname every five minutes after completion. It is
+separate from the older local-development health template, which targets 8000.
+The fixed-target GET-only script does not accept an arbitrary target URL, follow
+redirects, send credentials, call a model, or send notifications. A successful
+response slower than three seconds is marked slow rather than unavailable.
+
+Each request has a 15-second total deadline and a 64 KiB response cap. TLS
+certificate validation stays enabled. The user service has a 45-second hard
+limit and cannot overlap itself. Private state is atomically written to
+`.cache/funnel-health.json` with mode 0600; it records safe health status,
+latency, the last successful check and consecutive failures. No raw health
+payload, private account data, or exception detail is retained. Human alerts
+still need a separately configured destination.
+
+```sh
+systemctl --user status headroom-funnel-health.timer
+systemctl --user start headroom-funnel-health.service
+journalctl --user -u headroom-funnel-health.service -n 5
+systemctl --user disable --now headroom-funnel-health.timer
+systemctl --user stop headroom-funnel-health.service
+```
+
+[Follow-up evidence](../reports/funnel-followup-20261029/README.md) records
+public/browser checks, independent DNS-over-HTTPS results, the dedicated
+Tailscale process restart and the initial live monitor run. The restart retained
+its forwarding rule and public access; it was not a shared-host reboot. Earlier
+slow requests remain recorded. A phone cellular-network test is still unverified.
+
+The [official Funnel DNS incident](https://status.tailscale.com/incidents/01M5YVH12FKFH765E1J7PGW4B5)
+was under investigation at the follow-up. This hostname resolved correctly in
+the recorded Google/Cloudflare checks, so the incident is not established as the
+cause of its earlier proxy failures. Visitors do not need a Tailscale client.

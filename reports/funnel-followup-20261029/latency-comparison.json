@@ -1,0 +1,129 @@
+{
+  "checked_at_utc": "2026-10-28T16:39:53Z",
+  "scope": "One six-request comparison from the azuki host; no additional curl probes.",
+  "public_url": "https://headroom.tail45186b.ts.net/",
+  "request_options": {
+    "proxy_bypassed": true,
+    "connect_timeout_seconds": 15,
+    "max_time_seconds": 25,
+    "max_redirects": 2,
+    "tls_verification": true,
+    "accept_encoding_sent": false,
+    "curl_compressed_option": false,
+    "cookies_reused": false
+  },
+  "timing_units": "seconds; dns/connect/tls/ttfb are cumulative from request start, total includes body transfer",
+  "measurements": [
+    {
+      "label": "origin_home",
+      "started_utc": "2026-10-28T16:39:53.570766+00:00",
+      "exit_code": 0,
+      "http_status": 200,
+      "dns": 1.6e-05,
+      "connect": 9.2e-05,
+      "tls": 0,
+      "ttfb": 0.001801,
+      "total": 0.002175,
+      "downloaded_bytes": 695,
+      "redirects": 0
+    },
+    {
+      "label": "public_home",
+      "started_utc": "2026-10-28T16:39:53.577564+00:00",
+      "exit_code": 0,
+      "http_status": 200,
+      "dns": 0.000552,
+      "connect": 0.019366,
+      "tls": 0.153045,
+      "ttfb": 0.205251,
+      "total": 0.206025,
+      "downloaded_bytes": 695,
+      "redirects": 0
+    },
+    {
+      "label": "origin_health",
+      "started_utc": "2026-10-28T16:39:53.788733+00:00",
+      "exit_code": 0,
+      "http_status": 200,
+      "dns": 1.4e-05,
+      "connect": 7.8e-05,
+      "tls": 0,
+      "ttfb": 0.008376,
+      "total": 0.008535,
+      "downloaded_bytes": 542,
+      "redirects": 0
+    },
+    {
+      "label": "public_health",
+      "started_utc": "2026-10-28T16:39:53.801477+00:00",
+      "exit_code": 0,
+      "http_status": 200,
+      "dns": 0.000618,
+      "connect": 0.017488,
+      "tls": 0.138891,
+      "ttfb": 0.203185,
+      "total": 0.203218,
+      "downloaded_bytes": 542,
+      "redirects": 0
+    },
+    {
+      "label": "origin_asset",
+      "started_utc": "2026-10-28T16:39:54.010167+00:00",
+      "exit_code": 0,
+      "http_status": 200,
+      "dns": 1.4e-05,
+      "connect": 8.2e-05,
+      "tls": 0,
+      "ttfb": 0.001504,
+      "total": 0.002549,
+      "downloaded_bytes": 304091,
+      "redirects": 0
+    },
+    {
+      "label": "public_asset",
+      "started_utc": "2026-10-28T16:39:54.017949+00:00",
+      "exit_code": 0,
+      "http_status": 200,
+      "dns": 0.000677,
+      "connect": 0.029891,
+      "tls": 0.907163,
+      "ttfb": 1.145624,
+      "total": 4.48117,
+      "downloaded_bytes": 304091,
+      "redirects": 0
+    }
+  ],
+  "asset_selection": "Existing /assets/*.js script URL read from the origin homepage; exactly the same asset requested on the public hostname.",
+  "netcheck": {
+    "checked_utc": "2026-10-28T16:40:45.725795+00:00",
+    "UDP": true,
+    "IPv4": true,
+    "IPv6": false,
+    "IPv6CanSend": false,
+    "MappingVariesByDestIP": false,
+    "UPnP": false,
+    "PMP": false,
+    "PCP": false,
+    "derp_latency": "Unavailable in the retained summary; the extraction did not return recognized NearestDERP/DERPLatency fields. This does not establish absence of a reachable relay."
+  },
+  "static_source_configuration": {
+    "file": "headroom/api/app.py",
+    "gzip_middleware": {
+      "minimum_size": 1024,
+      "compresslevel": 6
+    },
+    "cache_control": "All responses receive Cache-Control: no-store from local_session middleware, including static assets.",
+    "serving": "Existing frontend files are served through StreamingResponse, with no explicit static ETag, Last-Modified, immutable or max-age implementation in this route.",
+    "runtime_compression_verification": "Not measured: these six curl calls did not send Accept-Encoding and did not capture response headers.",
+    "browser_payload_limit": "304091 bytes is this curl sample's downloaded asset body, not evidence of a browser's compressed transfer size."
+  },
+  "conclusions": [
+    "All six requests returned HTTP 200. Origin total time was 2.2-8.5 ms; public homepage and health were about 203-206 ms during this sample.",
+    "The public asset request took 4.481 s: TLS completed at 0.907 s, first byte at 1.146 s, and the remaining body transfer took 3.336 s.",
+    "This sample does not support a persistent 6-8 s application-processing delay. Most observed asset delay was outside the local origin response.",
+    "A SPA can remain visually empty while its entry script arrives, but this curl test did not measure browser execution or prove the cause of the earlier Chrome blank DOM.",
+    "One remote-host sample does not establish every visitor route, the exact relay used, or the cause of intermittent TLS latency. The Mac proxy route is separate.",
+    "Gzip support already exists in source. No-store means repeat visits cannot rely on persistent HTTP caching for static assets under the current middleware."
+  ],
+  "modifications": "Only this public report was written; no app, network, process or browser settings changed."
+}
