@@ -8,7 +8,11 @@ All 27 request files, messages, schemas, 102 input pins and the scoring policy
 are unchanged from v7. The 29 implementation pins include the new feature-allocation
 dependency. v7 and its receipts are preserved. There are zero executed requests.
 
-The current final-preparation-check and implementation-pins receipts bind v8.
+The current [preparation check](final-preparation-check.json) and
+[implementation pins](final-implementation-pins.json) bind v8. The later
+[feature integration receipt](../final48h-feature-scope-20261029/integration.md)
+records the completed bridges at e97bc42 and the separate F3 v2 pack.
+The v5/v6 sections below preserve earlier stages and are not current execution inputs.
 The arithmetic preview remains USD 1.4487068 under previously recorded hypothetical
 tariffs; it is not a charge or authorization. Its counts hash and arithmetic were
 rechecked, but provider prices still require refresh before activation. No actual
@@ -66,18 +70,18 @@ The CLI defaults to preparation:
 
 Live mode additionally requires --execute, --live-authorized, a frozen --prepared file, an approved --profile, an explicit --daily-limit-usd, and the matching --allocation-receipt. These flags are operator confirmations; existing admission rules still apply. No live command was run for this receipt.
 
-The preserved pre-allocation package is runs/final48-f1/prepared-20261029-v5/preparation.json. Its implementation pins predate the allocation and native-policy integrations, so it must be rebuilt before execution. Its semantic hash, scoring hash, and source-verification summary are recorded in [preparation-check.json](preparation-check.json). Earlier incomplete or superseded packages remain private and are not execution inputs. If shared implementation files subsequently change, this package must be rebuilt before use.
+The preserved pre-allocation package is runs/final48-f1/prepared-20261029-v5/preparation.json. Its implementation pins predate the allocation and native-policy integrations; it is historical and must not be used for execution. Its semantic hash, scoring hash, and source-verification summary remain in [preparation-check.json](preparation-check.json). Use the current v8 package above. Any later pinned implementation change requires another reviewed rebuild.
 
-Focused validation: pytest -q tests/test_final48_ablation.py — **17 passed in 36.06s**. Tests use explicitly labeled offline captures and httpx.MockTransport, block DNS/INET and .env access, and exercise the real runtime/router/store/spending chain in temporary directories. They cover 27-request wire behavior, zero retries, strict budget-mode rejection, pre-dispatch admission refusal, unknown cost, tampered files, missing inputs, independent category/reference scoring, duplicate/non-JSON responses, and prepare-only CLI default. No full regression suite was run.
+Historical v5 focused validation: pytest -q tests/test_final48_ablation.py — **17 passed in 36.06s**. Tests use explicitly labeled offline captures and httpx.MockTransport, block DNS/INET and .env access, and exercise the real runtime/router/store/spending chain in temporary directories. They cover 27-request wire behavior, zero retries, strict budget-mode rejection, pre-dispatch admission refusal, unknown cost, tampered files, missing inputs, independent category/reference scoring, duplicate/non-JSON responses, and prepare-only CLI default. No full regression suite was run.
 
-## Final rebuilt package after integration
+## Historical v6 rebuild after allocation integration
 
-The executable preparation candidate is now runs/final48-f1/prepared-20261029-v6/preparation.json, with semantic SHA-256 **5e868343794e6e32d4d7fdbc682d1c15ae79b986b791714878e4dc4c3eaad965**. The [final check](final-preparation-check.json) verifies all 27 requests, 102 original input pins and [28 implementation pins](final-implementation-pins.json), including the allocation binding, native admission, request audit, Store and numerical-policy dependencies. The scoring hash remains **fca45c3be1332b0da3aa23d7bacea438a1cf34942d5853cda1b01da18df0cf7e**.
+At this earlier stage, the preparation candidate was runs/final48-f1/prepared-20261029-v6/preparation.json, with semantic SHA-256 **5e868343794e6e32d4d7fdbc682d1c15ae79b986b791714878e4dc4c3eaad965**. Its preserved [v6 check](final-preparation-check-v6.json) verified all 27 requests, 102 original input pins and [28 implementation pins](final-implementation-pins-v6.json), including the allocation binding, native admission, request audit, Store and numerical-policy dependencies. It has been superseded by v8 above. The scoring hash remains **fca45c3be1332b0da3aa23d7bacea438a1cf34942d5853cda1b01da18df0cf7e**.
 
 All 27 request files, ordered message serializations and schema serializations are unchanged from v5; v5 remains preserved. The real input review also confirms that README truth documents and historical annotations do not enter the nine full requests. The narrower capture source selector still includes original Python comments and paths, whose interpretation limits are described above.
 
-The [final offline cost preview](cost-preview-final.json) recomputes the same hypothetical net total, **$1.4487068**, from the current calibrated count artifact and the previously recorded candidate tariffs. It repairs the source binding in a new receipt because the older cost-preview document referenced a stale count-file digest. This is an estimate with a retained Super bound, not actual usage or a guaranteed Ultra billing ceiling; Super price evidence must still be refreshed before profile activation.
+The preserved [v6 offline cost preview](cost-preview-final-v6.json) recomputed the same hypothetical net total, **$1.4487068**, from the current calibrated count artifact and the previously recorded candidate tariffs. It repairs the source binding in a new receipt because the older cost-preview document referenced a stale count-file digest. This is an estimate with a retained Super bound, not actual usage or a guaranteed Ultra billing ceiling; Super price evidence must still be refreshed before profile activation.
 
 The allocation revalidation now also requires the run's claim to remain active. A concurrent-once check confirms only one of two simultaneous F1 claims succeeds. A separate fixture changes the approved profile after the first response and confirms the second request is stopped. The allocation focused suite passed 12 tests in 9.44s, followed by that additional per-request test passing in 2.30s. These overlap earlier validation and are not added to produce a cumulative test total.
 
-No amount authorization, actual allocation, production profile, new ledger or live model execution was created by this rebuild. Other CLI/R7 and public-service allocation integrations remain separate work.
+No amount authorization, actual allocation, production profile, new ledger or live model execution was created by this historical rebuild. CLI/R7 and feature integration subsequently completed as recorded in the current handoff above; live execution and public activation remain separate.

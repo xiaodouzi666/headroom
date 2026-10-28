@@ -1,3 +1,5 @@
+> **Historical storyboard — not the current production brief.** The text below is preserved for reference. Use [FINAL_48H.md, §4](FINAL_48H.md) and the current [final media index](media/final/README.md) for the video requirements, responsibilities, available evidence and readiness status. If this older storyboard differs from those documents, follow the current brief and media index.
+
 # Demo storyboard — recording pending
 
 Target duration: 2 minutes 50 seconds. Record only after a real Nebius-backed repair passes. Do not substitute offline fixtures for the live demo or fill missing metrics with estimates.

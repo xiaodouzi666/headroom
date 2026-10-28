@@ -1,8 +1,28 @@
 # FINAL_48H request policy and admission preparation — 2026-10-29
 
-## State
+## Current handoff
 
-Implemented only an opt-in diagnosis request policy and offline tests. FINAL_48H §0.4 estimated-cost admission is **not implemented or enabled** by this change. Frank's §1-A amount is still absent. No allocation, live profile, production ledger, credential, provider call, GPU run, or public-service setting was created or changed.
+This is the preserved request-policy-only stage report. Its statements about
+unimplemented estimation and proposed receipt binding describe that earlier
+stage, not the current code. The later
+[input-calibration and implementation report](../final48h-input-calibration-20261029/README.md)
+records the opt-in NativeSchemaEstimateAdmission and profile-carried 2000/False
+diagnosis policy, including the CLI route. Defaults remain unchanged, and the
+local estimate is not a guaranteed provider billing bound.
+
+The [feature integration receipt](../final48h-feature-scope-20261029/integration.md)
+records the completed allocation/CLI/Web/Watch bridges at e97bc42. Current
+prepared inputs are [F1 v8](../final48-f1-preparation-20261029/final-preparation-check.json)
+and [F3 v2](../final48h-feature-scope-20261029/f3-preparation-refresh.json),
+both with zero executed requests/cells. A's explicit amount, fresh price checks,
+the actual reviewed profile/allocation and real execution remain pending.
+No live profile or new pool was activated by these offline implementations.
+
+## Historical request-policy-only state
+
+At this earlier stage, only the opt-in diagnosis request policy and offline tests
+were implemented. FINAL_48H §0.4 estimated-cost admission was **not implemented
+or enabled by that stage**. Frank's §1-A amount is still absent. No allocation, live profile, production ledger, credential, provider call, GPU run, or public-service setting was created or changed.
 
 The new `FINAL48_DIAGNOSIS_ONLY` constant is frozen, with `id=final48-diagnosis-only-2000-v1`, `max_completion_tokens=2000`, and `reasoning=False`. It selects an actual request cap; it is not merely a 2,000-token cost estimate. This is an explicit new request configuration for the F1 runner, not a reinterpretation of the old pipeline.
 
@@ -10,7 +30,7 @@ The new `FINAL48_DIAGNOSIS_ONLY` constant is frozen, with `id=final48-diagnosis-
 
 Ordinary diagnosis remains 16384 output tokens with reasoning requested. The earlier `common-diagnosis-4000-v1` study remains 4000 with reasoning requested; it is eight synthetic cases and independent end-to-end repair, not F1's nine-case diagnosis-only experiment. F3's ordinary orchestrator still inherits the ordinary defaults unless explicitly changed later. Snapshot diagnosis separately already requests 2000/reasoning False; that does not configure F1 or F3.
 
-## Minimal implementation route after an authorized amount
+## Historical proposed implementation route
 
 **PROPOSED, not activated:** use a separate new SQLite budget database for the new FINAL_48H allocation, reusing `BudgetLedger` unchanged. Preserve the old database and its unresolved amounts. Do not weaken its global blockers, rewrite old records, or treat a fresh arbitrary database as funding authorization.
 
@@ -51,7 +71,7 @@ Checked the [Token Factory Chat Completions reference](https://docs.tokenfactory
 
 The root's review of the [official documentation index](https://docs.tokenfactory.nebius.com/llms.txt) found no tokenizer/count-token endpoint. That is a search result, not proof that no such endpoint exists. No token-count endpoint was invented or called.
 
-## Source paths and proposed ownership
+## Historical source paths and proposed ownership
 
 | File or call path | Present support / remaining change |
 | --- | --- |
@@ -68,7 +88,7 @@ The root's review of the [official documentation index](https://docs.tokenfactor
 
 Concrete F1 call path: authorized allocation selection → `BudgetLedger(new_db, total_limit=X, daily_limit=approved_daily)` → one `open_run` capped at 1.50 → `build_live_runtime(..., max_http_retries=0)` → policy-bound frozen messages/schema → direct budgeted `router.chat("diagnose" or "patcher", ..., max_tokens=2000, reasoning=False)` → local `validate_diagnosis` and actual per-request records → close run. The existing pre-dispatch model/capability/pricing guards remain in force.
 
-## Enablement checklist still pending
+## Historical enablement checklist (superseded by current handoff)
 
 1. Receive Frank's explicit X and balance confirmation under §1-A; no recharge and no inferred amount.
 2. Resolve and review the native-schema input estimate or explicitly select a documented alternative protocol. Preserve old estimator behavior.
@@ -77,7 +97,7 @@ Concrete F1 call path: authorized allocation selection → `BudgetLedger(new_db,
 5. Run offline positive/negative tests: unauthorized creation, wrong receipt/path/identity/profile, restart, concurrent reservations, old unknown retained, new unknown/overrun blocks, unsupported schema domain, missing pricing, request cap mismatch, one request per F1 cell, and the 27-request shared USD 1.50 limit.
 6. Only then explicitly execute within A's scope. Any needed provider calibration is paid work and must be counted inside the authorized pool; it cannot be silently added to F1's 27 experimental calls. Save any incomplete result as incomplete and do not relax denominators.
 
-## Verification of this change
+## Verification of the historical request-policy stage
 
 Focused tests: **87 passed in 2.52s**, including 21 new policy tests and 66 existing compatibility/recovery tests. Counts are disjoint within this single run, not added to previous executions. An outer process-level DNS/socket blocker recorded **0 attempts**; provider-shaped calls used MockTransport only. The new module also has its own autouse DNS/socket guard.
 
