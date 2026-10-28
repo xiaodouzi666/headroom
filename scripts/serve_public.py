@@ -41,6 +41,7 @@ def main():
         public_host=hostname,
         trust_tailscale_funnel=True,
         run_submissions_enabled=False,
+        snapshot_submissions_enabled=False,
         verified_runs_enabled=False,
         run_submission_disabled_reason="Live analysis is temporarily paused.",
     )

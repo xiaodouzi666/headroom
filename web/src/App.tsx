@@ -13,6 +13,7 @@ import { getJSON, submitRun } from "./api";
 import EvaluationView from "./EvaluationView";
 import { RunPage } from "./RunPage";
 import VerifiedPage from "./VerifiedPage";
+import SnapshotDiagnosisPanel from "./SnapshotDiagnosisPanel";
 import {
   availabilityBlocks,
   artifactLink,
@@ -193,6 +194,12 @@ function Home({ config }: { config: Dict }) {
           available.
         </Notice>
       )}
+      <details className="panel" style={{ padding: 24, marginBottom: 28 }}>
+        <summary>Diagnose my snapshot</summary>
+        <SnapshotDiagnosisPanel
+          enabled={record(config.snapshot_submissions).enabled === true}
+        />
+      </details>
       <section className="how-strip">
         <div>
           <span>01</span>

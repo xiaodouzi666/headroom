@@ -1,0 +1,76 @@
+...............................F                                         [100%]
+=================================== FAILURES ===================================
+_ test_path_redaction_preserves_interleaved_repair_constraints[Compare C:\\\\Users\\\\offline person\\\\model.py with C:\\\\Users\\\\offline person\\\\reference.py; keep weighting unchanged.-Compare [path]/model.py with [path]/reference.py; keep weighting unchanged.] _
+
+upload = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-268/test_path_redaction_preserves_2/upload.pickle')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-268/test_path_redaction_preserves_2')
+description = 'Compare C:\\\\Users\\\\offline person\\\\model.py with C:\\\\Users\\\\offline person\\\\reference.py; keep weighting unchanged.'
+expected = 'Compare [path]/model.py with [path]/reference.py; keep weighting unchanged.'
+
+    @pytest.mark.parametrize(
+        ("description", "expected"),
+        [
+            (
+                "Change /home/offline-person/model.py, keep the original loss normalization; "
+                "compare /home/offline-person/reference.py.",
+                "Change [path]/model.py, keep the original loss normalization; "
+                "compare [path]/reference.py.",
+            ),
+            (
+                "Change /Users/offline person/model.py and preserve the batch in "
+                "/Users/offline person/reference.py",
+                "Change [path]/model.py and preserve the batch in [path]/reference.py",
+            ),
+            (
+                r"Compare C:\\Users\\offline person\\model.py with "
+                r"C:\\Users\\offline person\\reference.py; keep weighting unchanged.",
+                "Compare [path]/model.py with [path]/reference.py; keep weighting unchanged.",
+            ),
+        ],
+    )
+    def test_path_redaction_preserves_interleaved_repair_constraints(
+        upload, tmp_path, description, expected
+    ):
+        def mutate(payload):
+            payload["plan"][0]["description"] = description
+            return payload
+    
+>       result = execute(upload, tmp_path, OfflineRuntimeFactory(mutate))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_snapshot_diagnosis.py:654: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_snapshot_diagnosis.py:206: in execute
+    projected = public_result(
+headroom/api/snapshot_routes.py:379: in public_result
+    _validate_text_tree(diagnosis)
+headroom/api/snapshot_routes.py:242: in _validate_text_tree
+    _validate_text_tree(item)
+headroom/api/snapshot_routes.py:238: in _validate_text_tree
+    _validate_text_tree(item)
+headroom/api/snapshot_routes.py:242: in _validate_text_tree
+    _validate_text_tree(item)
+headroom/api/snapshot_routes.py:233: in _validate_text_tree
+    _text(value)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = 'Compare C:\\\\Users\\\\offline person\\\\model.py with C:\\\\Users\\\\offline person\\\\reference.py; keep weighting unchanged.'
+maximum = 8000, allow_source_paths = False
+
+    def _text(value, maximum=8000, *, allow_source_paths=False):
+        if not isinstance(value, str) or len(value) > maximum:
+            raise ValueError("Invalid public text")
+        # Metadata must be redacted before binding; owner-only source diffs retain
+        # literal data paths so the downloadable draft is not silently rewritten.
+        secret = re.search(r"(?:sk-[A-Za-z0-9_-]{20,}|tvly-[A-Za-z0-9_-]{12,}|Bearer\s+\S+)", value)
+        private_path = not allow_source_paths and re.search(
+            r"/(?:home|Users|tmp|var|root|mnt|workspace|etc)/|[A-Za-z]:\\", value
+        )
+        if secret or private_path:
+>           raise ValueError("Private text is not publishable")
+E           ValueError: Private text is not publishable
+
+headroom/api/snapshot_routes.py:227: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_snapshot_diagnosis.py::test_path_redaction_preserves_interleaved_repair_constraints[Compare C:\\\\Users\\\\offline person\\\\model.py with C:\\\\Users\\\\offline person\\\\reference.py; keep weighting unchanged.-Compare [path]/model.py with [path]/reference.py; keep weighting unchanged.]
+1 failed, 31 passed in 3.06s

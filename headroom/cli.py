@@ -114,6 +114,60 @@ def evidence(run_id: str, budget: int = typer.Option(150000, min=1)) -> None:
     )
 
 
+@app.command()
+def diagnose(
+    snapshot: Annotated[Path, typer.Option("--snapshot", exists=True, dir_okay=False)],
+    traceback: Annotated[Path | None, typer.Option(exists=True, dir_okay=False)] = None,
+    source: Annotated[Path | None, typer.Option(exists=True, dir_okay=False)] = None,
+    budget: str = "0.30",
+    runtime_profile: Path | None = None,
+    run_root: Path | None = None,
+) -> None:
+    """Diagnose a saved CUDA snapshot and suggest an unverified patch; never run the source."""
+    from headroom.lab.runner import PROJECT_ROOT
+    from headroom.snapshot_diagnosis import SnapshotDiagnosisRequest, run_snapshot_diagnosis
+
+    output_root = run_root or PROJECT_ROOT / "runs/uploads"
+    try:
+        result = run_snapshot_diagnosis(
+            SnapshotDiagnosisRequest(
+                snapshot=snapshot,
+                traceback=traceback,
+                source=source,
+                budget_usd=budget,
+                runtime_profile=runtime_profile,
+            ),
+            run_root=output_root,
+        )
+    except (OSError, ValueError):
+        typer.echo(
+            "Snapshot diagnosis could not start. Check the input and runtime configuration.",
+            err=True,
+        )
+        raise typer.Exit(1) from None
+    directory = output_root.resolve() / result["run_id"]
+    typer.echo(
+        json.dumps(
+            {
+                "run_id": result["run_id"],
+                "status": result["status"],
+                "verification": result["verification"],
+                "provenance": result["provenance"],
+                "cost_usd": result["cost_usd"],
+                "error": result["error"],
+                "diagnosis_json": str(directory / "diagnosis.json"),
+                "diagnosis_markdown": str(directory / "diagnosis.md"),
+                "patch": str(directory / "patch.diff")
+                if result["patch"]["status"] == "unverified"
+                else None,
+            },
+            indent=2,
+        )
+    )
+    if result["status"] not in {"completed", "needs_human"}:
+        raise typer.Exit(1)
+
+
 def main() -> None:
     from headroom.cli_execution import load_context
 

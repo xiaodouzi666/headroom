@@ -69,6 +69,7 @@ class ApiSettings:
     public_run_budget: Decimal = Decimal("0.30")
     verified_runs_enabled: bool | None = None
     run_submissions_enabled: bool | None = None
+    snapshot_submissions_enabled: bool | None = None
     run_submission_disabled_reason: str | None = None
     deadline_seconds: float = 600
     shutdown_grace_seconds: float = 5
@@ -103,6 +104,11 @@ class ApiSettings:
             if configured_gallery not in {"true", "false"}:
                 raise ValueError("HEADROOM_VERIFIED_RUNS_ENABLED must be true or false")
             self.verified_runs_enabled = configured_gallery == "true"
+        if self.snapshot_submissions_enabled is None:
+            configured_snapshot = os.environ.get("HEADROOM_SNAPSHOT_SUBMISSIONS_ENABLED", "false")
+            if configured_snapshot not in {"true", "false"}:
+                raise ValueError("HEADROOM_SNAPSHOT_SUBMISSIONS_ENABLED must be true or false")
+            self.snapshot_submissions_enabled = configured_snapshot == "true"
         if self.run_submissions_enabled is None:
             configured = os.environ.get("HEADROOM_RUN_SUBMISSIONS_ENABLED", "true")
             if configured not in {"true", "false"}:
@@ -288,7 +294,14 @@ def _prepare_submission(settings, submission, source, run_id, *, deadline):
     )
 
 
-def create_app(settings=None, *, worker=None, worker_mode=None, availability_monitor=None):
+def create_app(
+    settings=None,
+    *,
+    worker=None,
+    worker_mode=None,
+    availability_monitor=None,
+    snapshot_worker=None,
+):
     settings = settings or ApiSettings()
     settings.data_root.mkdir(parents=True, exist_ok=True, mode=0o700)
     settings.run_root.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -314,11 +327,17 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
     @asynccontextmanager
     async def lifespan(_):
         queue.start()
+        snapshots.start(
+            process_jobs=bool(
+                settings.snapshot_submissions_enabled and settings.run_submissions_enabled
+            )
+        )
         availability.snapshot()
         try:
             yield
         finally:
             availability.close()
+            snapshots.close()
             queue.close()
             if (
                 not queue.thread.is_alive()
@@ -335,6 +354,10 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
     app.state.availability = availability
     register_evaluations(app, settings.data_root)
     register_verified(app, settings)
+    from headroom.api.snapshot_routes import register_snapshot_routes
+
+    snapshots = register_snapshot_routes(app, settings, worker=snapshot_worker)
+    app.state.snapshots = snapshots
 
     @app.middleware("http")
     async def local_session(request, call_next):
@@ -418,10 +441,27 @@ def create_app(settings=None, *, worker=None, worker_mode=None, availability_mon
 
     @app.get("/api/config")
     def config():
+        snapshot_requested = bool(
+            settings.snapshot_submissions_enabled and settings.run_submissions_enabled
+        )
+        snapshot_available = snapshot_requested and snapshots.submissions_available
         return {
             "run_submissions": submission_config(),
             "public_demo": bool(settings.public_host),
             "verified_runs_enabled": settings.verified_runs_enabled,
+            "snapshot_submissions": {
+                "enabled": snapshot_available,
+                "reason": (
+                    None
+                    if snapshot_available
+                    else "Snapshot analysis is temporarily unavailable."
+                    if snapshot_requested
+                    else "Snapshot analysis is temporarily paused."
+                ),
+                "max_bytes": 50 * 1024 * 1024,
+                "runs_per_ip_per_hour": 2,
+                "retention_hours": 24,
+            },
             "judge_scripts_available": bool(settings.public_host and settings.judge_token),
             "limits": {
                 "runs_per_ip_per_hour": 1 if settings.public_host else 2,

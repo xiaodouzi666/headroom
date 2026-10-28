@@ -9,7 +9,7 @@ The owner authorized further repair toward at least 6/9; [billing resolution and
 
 **Web research powered by Tavily.** Version-specific search/extraction and cache reuse have been exercised with the real service.
 
-Public demo: deployment is deferred until the owner's final confirmation. Local app: `headroom serve`.
+Public demo: [Headroom](https://headroom.tail45186b.ts.net/) — browse the current results. Live analysis is temporarily paused. Local app: `headroom serve`.
 Video: one verified repair is available; owner recording remains pending.
 [Current results](docs/RESULTS.md) · [CLI and project config](docs/CLI.md) · [Task status](PROGRESS.md) · [Original plan](docs/PLAN.md)
 
@@ -51,6 +51,29 @@ Each candidate keeps its original baseline, source snapshot, logs and patch. The
 | Token Factory / Nemotron Super | Bounded source-span patches, research tools and repair | Real patch/apply/compile/verification chains are retained. Source checks and valid output do not imply target success; see the latest audited campaign. Actual Tavily searches are preserved, while the specified document-extraction/Sources gates remain incomplete |
 | Token Factory / Nemotron Nano | Top-stack labels with a 0.02 USD sub-budget | Latest eight-scenario trial: 4 complete annotations, 3/40 heuristic matches within completed outputs; full coverage/agreement gate failed |
 | Tavily | Search plus exact versioned documentation extraction | Real PyTorch 2.5 checkpoint/allocator queries and zero-credit cache hits |
+
+## Diagnose your own OOM
+
+Capture a memory snapshot in the PyTorch process that encounters the problem:
+
+```python
+torch.cuda.memory._record_memory_history(max_entries=200_000)
+# Run your workload; in its OutOfMemoryError handler:
+torch.cuda.memory._dump_snapshot("snapshot.pickle")
+```
+
+Then diagnose the saved snapshot without running the training script:
+
+```bash
+uv run headroom diagnose --snapshot snapshot.pickle --traceback oom.txt --source train.py
+```
+
+The traceback and source are optional. Headroom links the diagnosis to allocation
+stacks and can produce a patch draft when source is supplied. The draft is marked
+**unverified: not run on hardware**; test it on your own GPU before relying on it.
+Snapshot files are limited to 50 MiB. The hosted upload entry is currently paused.
+See [CLI setup and outputs](docs/CLI.md) for the reviewed model configuration,
+request allowance and file-retention details.
 
 ## Quickstart
 

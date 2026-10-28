@@ -1,0 +1,80 @@
+{
+  "checked_at_utc": "2026-10-28T17:27:58.283399+00:00",
+  "scope": "Read-only service/Funnel/monitor verification with two unauthenticated health GETs; no model, GPU, budget, source, proxy or service changes.",
+  "services": {
+    "headroom-public.service": {
+      "enabled": true,
+      "active": true,
+      "substate": "running",
+      "result": "success"
+    },
+    "headroom-tailscaled.service": {
+      "enabled": true,
+      "active": true,
+      "substate": "running",
+      "result": "success"
+    }
+  },
+  "linger_enabled": true,
+  "funnel": {
+    "hostname": "headroom.tail45186b.ts.net",
+    "https_port": 443,
+    "enabled": true,
+    "origin": "http://127.0.0.1:8766",
+    "mapping_matches": true
+  },
+  "monitor": {
+    "timer_enabled": true,
+    "timer_active": true,
+    "timer_substate": "waiting",
+    "oneshot_last_result": "success",
+    "oneshot_last_exit_status": 0,
+    "checked_at_utc": "2026-10-28T17:23:50.175777+00:00",
+    "state_age_seconds": 248.131,
+    "healthy": true,
+    "consecutive_failures": 0,
+    "last_success_at_utc": "2026-10-28T17:23:50.175777+00:00",
+    "origin": {
+      "http_status": 200,
+      "status": "ok",
+      "latency_ms": 79.138,
+      "slow": false,
+      "consecutive_failures": 0
+    },
+    "public": {
+      "http_status": 200,
+      "status": "ok",
+      "latency_ms": 264.916,
+      "slow": false,
+      "consecutive_failures": 0
+    }
+  },
+  "fresh_health_checks": [
+    {
+      "label": "origin",
+      "http_status": 200,
+      "health_status": "ok",
+      "db": "ok",
+      "queue_halted": false,
+      "latency_seconds": 0.083,
+      "tls_verification": "not_applicable_loopback_http",
+      "passed": true
+    },
+    {
+      "label": "public",
+      "http_status": 200,
+      "health_status": "ok",
+      "db": "ok",
+      "queue_halted": false,
+      "latency_seconds": 1.087,
+      "tls_verification": "enabled",
+      "passed": true
+    }
+  ],
+  "limitations": [
+    "These observations are point-in-time, not a continuous-availability guarantee.",
+    "Independent phone cellular-network timing remains unverified.",
+    "Human alert delivery is not configured; the monitor records local safe state and journal output.",
+    "The Mac exact-host proxy compatibility mapping is a separate temporary client workaround."
+  ]
+}

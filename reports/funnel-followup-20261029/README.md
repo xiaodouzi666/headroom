@@ -41,3 +41,33 @@ Validation: 23 focused offline tests passed; Ruff, diff checks and systemd unit 
 ## Latency follow-up
 
 A later bounded [six-request comparison](latency-comparison.json) found origin responses in 2–9 ms and public Home/health around 0.20 seconds. The one public JavaScript request took 4.48 seconds without compression negotiation; the application already supports gzip, so its 304 KB transferred size is not a measurement of Chrome's compressed transfer. These observations support variable public-path latency, not a proven single root cause.
+
+## Final fresh check for the Tailscale follow-up
+
+At 2026-10-28 17:27:58 UTC, both dedicated services were active/running and
+enabled, user linger was enabled, and Funnel still forwarded public HTTPS 443
+to 127.0.0.1:8766. The health timer was enabled, active and waiting; its latest
+recorded sample had zero consecutive failures (origin 79 ms, public 265 ms).
+Fresh certificate-verified requests returned HTTP 200 from the origin in
+0.083 seconds and from the public hostname without an HTTP proxy in 1.087
+seconds. See [current server receipt](current-server-check.json).
+
+The owner's physical Chrome reloaded and rendered the normal public homepage
+with the existing system proxy enabled; see [current screenshot](chrome-home-current.png).
+The saved [Mac comparison](current-mac-check.json) returned HTTP 200 in 1.918
+seconds without an explicit HTTP proxy and 2.243 seconds through the system
+HTTP proxy. These routes are not claimed to be independent of OS-level TUN or
+the existing exact-host compatibility mapping. No further proxy setting was
+changed in this follow-up.
+
+The public interface remains read-only. No new model/GPU operation, recharge,
+new spending allocation, public upload or gallery activation was performed.
+The temporary private snapshot UI preview and its SSH forwarding session were
+stopped after inspection; the two public services remained active.
+
+No current server-side Tailscale configuration gap was found. The remaining
+unmeasured items are independent cellular page-load timing, a complete machine
+boot, and delivery to a human alert destination. The configured timer writes
+local health state only. An attempted fetch via the web research tool returned
+an internal access error; it is not treated as an independent successful
+external access check or as proof that the site failed.

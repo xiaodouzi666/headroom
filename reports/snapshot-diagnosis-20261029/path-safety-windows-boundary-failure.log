@@ -1,0 +1,58 @@
+...............................F                                         [100%]
+=================================== FAILURES ===================================
+_ test_path_redaction_preserves_interleaved_repair_constraints[Compare C:\\Users\\offline person\\model.py with C:\\Users\\offline person\\reference.py; keep weighting unchanged.-Compare [path]/model.py with [path]/reference.py; keep weighting unchanged.] _
+
+upload = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-269/test_path_redaction_preserves_2/upload.pickle')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-269/test_path_redaction_preserves_2')
+description = 'Compare C:\\Users\\offline person\\model.py with C:\\Users\\offline person\\reference.py; keep weighting unchanged.'
+expected = 'Compare [path]/model.py with [path]/reference.py; keep weighting unchanged.'
+
+    @pytest.mark.parametrize(
+        ("description", "expected"),
+        [
+            (
+                (
+                    "Change /home/offline-person/model.py, keep the original loss normalization; "
+                    "compare /home/offline-person/reference.py."
+                ),
+                (
+                    "Change [path]/model.py, keep the original loss normalization; "
+                    "compare [path]/reference.py."
+                ),
+            ),
+            (
+                (
+                    "Change /Users/offline person/model.py and preserve the batch in "
+                    "/Users/offline person/reference.py"
+                ),
+                "Change [path]/model.py and preserve the batch in [path]/reference.py",
+            ),
+            (
+                (
+                    r"Compare C:\Users\offline person\model.py with "
+                    r"C:\Users\offline person\reference.py; keep weighting unchanged."
+                ),
+                "Compare [path]/model.py with [path]/reference.py; keep weighting unchanged.",
+            ),
+        ],
+    )
+    def test_path_redaction_preserves_interleaved_repair_constraints(
+        upload, tmp_path, description, expected
+    ):
+        def mutate(payload):
+            payload["plan"][0]["description"] = description
+            return payload
+    
+        result = execute(upload, tmp_path, OfflineRuntimeFactory(mutate))
+        assert result["status"] == "completed"
+>       assert result["diagnosis"]["plan"][0]["description"] == expected
+E       AssertionError: assert 'Compare [pat...ng unchanged.' == 'Compare [pat...ng unchanged.'
+E         
+E         - Compare [path]/model.py with [path]/reference.py; keep weighting unchanged.
+E         ?        ---------------------
+E         + Compare [path]/reference.py; keep weighting unchanged.
+
+tests/test_snapshot_diagnosis.py:664: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_snapshot_diagnosis.py::test_path_redaction_preserves_interleaved_repair_constraints[Compare C:\\Users\\offline person\\model.py with C:\\Users\\offline person\\reference.py; keep weighting unchanged.-Compare [path]/model.py with [path]/reference.py; keep weighting unchanged.]
+1 failed, 31 passed in 3.06s

@@ -1,0 +1,102 @@
+{
+  "schema": "headroom.snapshot_evidence_check.v1",
+  "created_at": "2026-10-28T17:04:04.309601+00:00",
+  "scope": "offline evidence preparation only; no model or GPU execution",
+  "base_revision": "251e2a10dee141c63c9e9bb3e9d951ce0b163475",
+  "files": {
+    "headroom/snapshot_evidence.py": {
+      "sha256": "e38015dd9c68c9624e6eb1dc4a8c573d7b5cb7e036242d1be763491d2f50e2b6",
+      "bytes": 21903
+    },
+    "tests/test_snapshot_evidence.py": {
+      "sha256": "40f5b37b5f005e69edf2f0ae87acf6dacb6ce988e10ce4619e0bc2e1bbf22502",
+      "bytes": 18312
+    }
+  },
+  "contract": {
+    "function": "prepare_snapshot_evidence(snapshot, *, output_dir, traceback=None, source=None, token_budget=24000)",
+    "input_kind": "uploaded_snapshot",
+    "hardware_verification": "not_run",
+    "returned_fields": [
+      "evidence",
+      "markdown",
+      "public_evidence",
+      "evidence_json",
+      "evidence_md",
+      "source_root",
+      "source_files",
+      "policy",
+      "input_sha256",
+      "snapshot_sha256",
+      "token_count",
+      "token_budget",
+      "diagnosis_ready",
+      "diagnosis_unavailable_reason"
+    ],
+    "outputs": [
+      "evidence.json",
+      "evidence.md",
+      "source/train.py (only when source supplied)"
+    ],
+    "optional_text_limits_bytes": {
+      "traceback": 262144,
+      "source": 1048576
+    },
+    "output_limits_bytes": {
+      "evidence_json": 67108864,
+      "markdown": 1048576,
+      "public_evidence": 1048576
+    },
+    "tokenizer": "cl100k_base approximation, not model tokenizer",
+    "policy": "model/numerics/batch/accumulation changes disallowed; no hardware verification",
+    "source_behavior": "credential screening and byte-identical context copy; no import, compile or execution; no frame-path source lookup",
+    "public_projection": "same-input visible peak/hot stack IDs, measured byte fields, bounded frame excerpts, warnings; no raw source or traceback",
+    "schema_integration": "private analysis remains complete; caller filters diagnosis catalog to presentation.stack_ids before schema/validation",
+    "missing_history": "diagnosis_ready=false without an allocation stack catalog; no-allocation public peak is null",
+    "device_selection": "first nonempty trace index; selection is disclosed when not device zero or when multiple devices have traces"
+  },
+  "verification": {
+    "focused_test_command": "pytest -q tests/test_snapshot_evidence.py",
+    "passed": 39,
+    "seconds": 1.42,
+    "ruff_check": "passed",
+    "ruff_format": "passed",
+    "full_suite_run": false
+  },
+  "saved_snapshot_compatibility": [
+    {
+      "case": "nanoGPT",
+      "source_and_traceback_included": true,
+      "token_count": 17508,
+      "token_budget": 24000,
+      "visible_stacks": 9,
+      "private_catalog_stacks": 49,
+      "evidence_json_bytes": 1550927,
+      "markdown_bytes": 57332,
+      "public_json_bytes": 90462,
+      "schema_constructed": true,
+      "diagnosis_ready": true,
+      "hardware_verification": "not_run",
+      "peak_is_exact": false,
+      "all_three_original_inputs_unchanged": true
+    },
+    {
+      "case": "s2",
+      "source_and_traceback_included": true,
+      "token_count": 16981,
+      "token_budget": 24000,
+      "visible_stacks": 11,
+      "private_catalog_stacks": 31,
+      "evidence_json_bytes": 843469,
+      "markdown_bytes": 56153,
+      "public_json_bytes": 89181,
+      "schema_constructed": true,
+      "diagnosis_ready": true,
+      "hardware_verification": "not_run",
+      "peak_is_exact": false,
+      "all_three_original_inputs_unchanged": true
+    }
+  ],
+  "live_diagnosis_or_repair_acceptance": false,
+  "temporary_compatibility_outputs": "removed after checks; original captures untouched"
+}
