@@ -13,4 +13,4 @@
 
 仍待最终计划 §1-A 的新运行池具体金额；§1-C 的画廊公开确认也未收到。真实 profile、allocation 和 registry 未创建，公网功能开关未更改。库存里的 s2 快照完成过二十步，nanoGPT 的根因真值仍未知；软件通路验证不能冒充两例诊断、真实 GPU 修复或正式视频验收。
 
-代码提交后将刷新已有独立 checkout 并记录实际导入路径；该预检仍不替代 F5 的真实 s3 运行。正式视频、Devpost Submitted 和 F8 最终检查仍未完成。
+代码已提交并推送（e97bc42），已有独立 checkout 已同步到同一提交。其已安装 Python 导入自身 checkout，通过全部源码与 s3 文件集合检查，diagnose 帮助入口可运行。见 [干净 checkout 复核](post-push-clean-check.json)。没有重复安装依赖或重建镜像；该预检仍不替代 F5 的真实 s3 运行。正式视频、Devpost Submitted 和 F8 最终检查仍未完成。
