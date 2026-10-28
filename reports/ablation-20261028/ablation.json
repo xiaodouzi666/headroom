@@ -1,0 +1,1302 @@
+{
+  "schema": "headroom.f1-ablation-public.v1",
+  "generated_at_utc": "2026-10-28T23:03:18.356958+00:00",
+  "provenance": "live",
+  "run_id": "bc8659e89a214473b2f9fc24a86eccda",
+  "service_observation": {
+    "unit": "headroom-final48-f1-20261029-r1",
+    "ActiveState": "inactive",
+    "SubState": "dead",
+    "Result": "success",
+    "ExecMainStatus": 0
+  },
+  "protocol": {
+    "study_schema": "headroom.final48-diagnosis-only.v1",
+    "preparation_sha256": "ae7ae3e60f0deb7bb1ee13a5d1db45c6529ecb561946962912ab8f93355d26c1",
+    "request_policy": {
+      "id": "final48-diagnosis-only-2000-v1",
+      "max_completion_tokens": 2000,
+      "reasoning": false,
+      "max_supplements": 0,
+      "max_http_retries": 0,
+      "patch_calls": 0,
+      "research_calls": 0,
+      "gpu_executions": 0
+    },
+    "scoring_policy": {
+      "id": "first-category-agreement-v1",
+      "primary": "Strict JSON first root-cause category equals the authored manifest truth.",
+      "strict_json": "No duplicate keys, nonfinite values, text extraction, JSON repair, or retries.",
+      "category_contract": "The same RootCause.category enum in all three conditions.",
+      "categories": [
+        "params",
+        "grads",
+        "optimizer_state",
+        "activations",
+        "temporaries",
+        "retained_graph",
+        "cache",
+        "fragmentation_candidate",
+        "unknown"
+      ],
+      "secondary": "Full Diagnosis and reference validation recorded separately; not required for primary category agreement.",
+      "denominator_per_condition": 9,
+      "unknown_truths": [
+        "s5_fragmentation_varlen",
+        "nanogpt"
+      ],
+      "missing_or_invalid_first_category": null
+    },
+    "conditions": {
+      "full_ultra": {
+        "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "input": "Preserved baseline snapshot analysis and source context."
+      },
+      "traceback_ultra": {
+        "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "input": "Captured traceback and memory_summary only; no snapshot or source context."
+      },
+      "full_super": {
+        "model": "nvidia/nemotron-3-super-120b-a12b",
+        "input": "The same full evidence input as full_ultra."
+      }
+    },
+    "fixed_scenarios": [
+      "s1_batch_too_big",
+      "s2_capacity_v2",
+      "s3_eval_no_grad_missing",
+      "s4_loss_accumulation_graph",
+      "s5_fragmentation_varlen",
+      "s6_full_vocab_logits_fp32",
+      "s7_frozen_params_optimizer_state",
+      "s8_two_models_resident",
+      "nanogpt"
+    ],
+    "request_order": "For each fixed scenario: full_ultra, traceback_ultra, full_super.",
+    "independent_repetitions": 1,
+    "new_gpu_runs": 0,
+    "patch_calls": 0,
+    "research_calls": 0,
+    "source_campaign": {
+      "path": "runs/evaluation/live/20261027T022818939585Z-151818b1/campaign.json",
+      "sha256": "7a1b490b4cf545991ccfd3ff07cf442786dda740f55f346a94588448528ce221",
+      "bytes": 105622
+    }
+  },
+  "scoring_policy_sha256": "fca45c3be1332b0da3aa23d7bacea438a1cf34942d5853cda1b01da18df0cf7e",
+  "metric_definitions": {
+    "first_cause_matches": "Primary: first category parsed from strict JSON equals authored truth. Full diagnosis validity is not required for this count.",
+    "valid_correct_first_causes": "Secondary: authored category matches and full Diagnosis/reference/policy validation succeeds.",
+    "denominator": "Always nine per condition. s5 and nanoGPT have null unverified truth and are not scored as correct or incorrect; they remain in the denominator.",
+    "mean_provider_input_tokens": "Mean of all nine provider-reported prompt_tokens, including cached input; never a local tokenizer estimate.",
+    "mean_latency_seconds": "Mean of all nine recorded per-row elapsed times around router call and local validation; not TTFT, provider-only latency, or service wall time.",
+    "total_cost_usd": "Net model cost calculated from observed provider token usage and configured net rates, including observed cache discounts; tax excluded, not an invoice charge.",
+    "complete_condition_mean": "Published only with nine dispatched one-call rows and nine observed values."
+  },
+  "planned_requests": 27,
+  "executed_requests": 27,
+  "completed_all_requests": true,
+  "denominator_per_condition": 9,
+  "known_truths_per_condition": 7,
+  "unscored_truths": [
+    "s5_fragmentation_varlen",
+    "nanogpt"
+  ],
+  "within_budget": true,
+  "campaign_limit_usd": "1.50",
+  "total_cost_usd": "0.69374342",
+  "input_tokens": 936007,
+  "completion_tokens": 31209,
+  "cost_unknown_calls": 0,
+  "runtime_cleanup_errors": [],
+  "conditions": [
+    {
+      "condition": "full_ultra",
+      "denominator": 9,
+      "attempted": 9,
+      "first_cause_matches": 6,
+      "valid_correct_first_causes": 4,
+      "unscored_truths": 2,
+      "mean_provider_input_tokens": 46495.77777777778,
+      "input_tokens_observed": 9,
+      "mean_latency_seconds": 8.49788378383447,
+      "total_cost_usd": "0.464260",
+      "cost_unknown_calls": 0,
+      "known_truths": 7,
+      "responses_with_first_category": 7,
+      "missing_first_category_known_truth": 1,
+      "diagnosis_valid_count": 5,
+      "status_counts": {
+        "diagnosed": 5,
+        "invalid_response": 2,
+        "invalid_diagnosis": 2
+      },
+      "input_tokens": 418462,
+      "completion_tokens": 15266,
+      "cached_input_tokens": 0,
+      "reported_reasoning_tokens": 0,
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/conditions/0"
+      }
+    },
+    {
+      "condition": "traceback_ultra",
+      "denominator": 9,
+      "attempted": 9,
+      "first_cause_matches": 2,
+      "valid_correct_first_causes": 2,
+      "unscored_truths": 2,
+      "mean_provider_input_tokens": 11009.222222222223,
+      "input_tokens_observed": 9,
+      "mean_latency_seconds": 4.691468915488157,
+      "total_cost_usd": "0.09866092",
+      "cost_unknown_calls": 0,
+      "known_truths": 7,
+      "responses_with_first_category": 9,
+      "missing_first_category_known_truth": 0,
+      "diagnosis_valid_count": 6,
+      "status_counts": {
+        "diagnosed": 6,
+        "invalid_diagnosis": 3
+      },
+      "input_tokens": 99083,
+      "completion_tokens": 10072,
+      "cached_input_tokens": 34816,
+      "reported_reasoning_tokens": 0,
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/conditions/1"
+      }
+    },
+    {
+      "condition": "full_super",
+      "denominator": 9,
+      "attempted": 9,
+      "first_cause_matches": 6,
+      "valid_correct_first_causes": 4,
+      "unscored_truths": 2,
+      "mean_provider_input_tokens": 46495.77777777778,
+      "input_tokens_observed": 9,
+      "mean_latency_seconds": 5.681138085072032,
+      "total_cost_usd": "0.1308225",
+      "cost_unknown_calls": 0,
+      "known_truths": 7,
+      "responses_with_first_category": 9,
+      "missing_first_category_known_truth": 0,
+      "diagnosis_valid_count": 6,
+      "status_counts": {
+        "invalid_diagnosis": 3,
+        "diagnosed": 6
+      },
+      "input_tokens": 418462,
+      "completion_tokens": 5871,
+      "cached_input_tokens": 0,
+      "reported_reasoning_tokens": 0,
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/conditions/2"
+      }
+    }
+  ],
+  "rows": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "condition": "full_ultra",
+      "truth_category": "activations",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/0/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "diagnosed",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "activations",
+      "first_cause_match": true,
+      "valid_correct_first_cause": true,
+      "diagnosis_valid": true,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [],
+      "response_error": null,
+      "elapsed_seconds": 10.035793215036392,
+      "usage": {
+        "prompt_tokens": 37152,
+        "completion_tokens": 1399,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.041349",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/0",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/01-response.json",
+          "sha256": "7062146068fb3e54ac79cc4639f4ffa018fbe75be20175f141384e37a69321a1",
+          "bytes": 12513
+        }
+      }
+    },
+    {
+      "scenario_id": "s1_batch_too_big",
+      "condition": "traceback_ultra",
+      "truth_category": "activations",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/0/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "diagnosed",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "activations",
+      "first_cause_match": true,
+      "valid_correct_first_cause": true,
+      "diagnosis_valid": true,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [],
+      "response_error": null,
+      "elapsed_seconds": 4.321898184949532,
+      "usage": {
+        "prompt_tokens": 11735,
+        "completion_tokens": 929,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.014522",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/1",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/02-response.json",
+          "sha256": "92ad75ac305b508e59d199030adeaa3faa11fac8a4a25191d17cc979d0d94b8d",
+          "bytes": 8805
+        }
+      }
+    },
+    {
+      "scenario_id": "s1_batch_too_big",
+      "condition": "full_super",
+      "truth_category": "activations",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/0/ground_truth",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "status": "invalid_diagnosis",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "activations",
+      "first_cause_match": true,
+      "valid_correct_first_cause": false,
+      "diagnosis_valid": false,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [
+        "MODEL_CHANGE_FORBIDDEN"
+      ],
+      "response_error": null,
+      "elapsed_seconds": 5.7381602169480175,
+      "usage": {
+        "prompt_tokens": 37152,
+        "completion_tokens": 783,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.0118503",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/2",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/03-response.json",
+          "sha256": "4d5fff71a5adc1f6a5858a52f723975f6027a2144a95de68869eacea64748029",
+          "bytes": 5592
+        }
+      }
+    },
+    {
+      "scenario_id": "s2_capacity_v2",
+      "condition": "full_ultra",
+      "truth_category": "optimizer_state",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/1/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "invalid_response",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": null,
+      "first_cause_match": null,
+      "valid_correct_first_cause": false,
+      "diagnosis_valid": false,
+      "references_valid": null,
+      "first_category_extraction": "invalid_json",
+      "validation_issue_codes": [],
+      "response_error": "truncated",
+      "elapsed_seconds": 8.559882456902415,
+      "usage": {
+        "prompt_tokens": 48805,
+        "completion_tokens": 2000,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.054805",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/3",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/04-response.json",
+          "sha256": "af25fd496191d6525c32f26075f6a53e48c53eba8347977533f9735bdc8b7814",
+          "bytes": 8481
+        }
+      }
+    },
+    {
+      "scenario_id": "s2_capacity_v2",
+      "condition": "traceback_ultra",
+      "truth_category": "optimizer_state",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/1/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "diagnosed",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "activations",
+      "first_cause_match": false,
+      "valid_correct_first_cause": false,
+      "diagnosis_valid": true,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [],
+      "response_error": null,
+      "elapsed_seconds": 6.212521804030985,
+      "usage": {
+        "prompt_tokens": 10605,
+        "completion_tokens": 1827,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.01225624",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 4352
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/4",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/05-response.json",
+          "sha256": "9ca3ca5e2761d459fcee7c36ecbd42598d87f69406f05d6458059f6ebf0ebf41",
+          "bytes": 17482
+        }
+      }
+    },
+    {
+      "scenario_id": "s2_capacity_v2",
+      "condition": "full_super",
+      "truth_category": "optimizer_state",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/1/ground_truth",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "status": "diagnosed",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "optimizer_state",
+      "first_cause_match": true,
+      "valid_correct_first_cause": true,
+      "diagnosis_valid": true,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [],
+      "response_error": null,
+      "elapsed_seconds": 6.158240620978177,
+      "usage": {
+        "prompt_tokens": 48805,
+        "completion_tokens": 695,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.015267",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/5",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/06-response.json",
+          "sha256": "ded536d5dcfb5174b94079c8b082626174884af27e732daea1df009afc7ac1d6",
+          "bytes": 5640
+        }
+      }
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "condition": "full_ultra",
+      "truth_category": "activations",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/2/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "diagnosed",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "activations",
+      "first_cause_match": true,
+      "valid_correct_first_cause": true,
+      "diagnosis_valid": true,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [],
+      "response_error": null,
+      "elapsed_seconds": 7.740889346925542,
+      "usage": {
+        "prompt_tokens": 51601,
+        "completion_tokens": 1865,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.057196",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/6",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/07-response.json",
+          "sha256": "d383b62b24a01d6744ab5ddbfe111eaa9082a19c57e39d15e9b0f91114d9629f",
+          "bytes": 13753
+        }
+      }
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "condition": "traceback_ultra",
+      "truth_category": "activations",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/2/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "diagnosed",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "activations",
+      "first_cause_match": true,
+      "valid_correct_first_cause": true,
+      "diagnosis_valid": true,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [],
+      "response_error": null,
+      "elapsed_seconds": 5.521855343133211,
+      "usage": {
+        "prompt_tokens": 10640,
+        "completion_tokens": 1479,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.01124724",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 4352
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/7",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/08-response.json",
+          "sha256": "e8dff3cb0c9b3e5488c1e49317d36e7061fcac3d22118575be2a778cfa4c0f5b",
+          "bytes": 13516
+        }
+      }
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "condition": "full_super",
+      "truth_category": "activations",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/2/ground_truth",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "status": "invalid_diagnosis",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "activations",
+      "first_cause_match": true,
+      "valid_correct_first_cause": false,
+      "diagnosis_valid": false,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [
+        "MODEL_CHANGE_FORBIDDEN"
+      ],
+      "response_error": null,
+      "elapsed_seconds": 6.010916854022071,
+      "usage": {
+        "prompt_tokens": 51601,
+        "completion_tokens": 686,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.0160977",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/8",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/09-response.json",
+          "sha256": "44aaaa68c6bc2ade1e3bf3f38dad9eee77a03cbea02d80ce0cd9fdc7272106f2",
+          "bytes": 5308
+        }
+      }
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "condition": "full_ultra",
+      "truth_category": "retained_graph",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/3/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "diagnosed",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "retained_graph",
+      "first_cause_match": true,
+      "valid_correct_first_cause": true,
+      "diagnosis_valid": true,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [],
+      "response_error": null,
+      "elapsed_seconds": 8.269039022969082,
+      "usage": {
+        "prompt_tokens": 47674,
+        "completion_tokens": 1179,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.051211",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/9",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/10-response.json",
+          "sha256": "0baf3687a47eff705d08eabe506cbf6cb5e7605fd5093cd151d24c1da67970ee",
+          "bytes": 8846
+        }
+      }
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "condition": "traceback_ultra",
+      "truth_category": "retained_graph",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/3/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "invalid_diagnosis",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "activations",
+      "first_cause_match": false,
+      "valid_correct_first_cause": false,
+      "diagnosis_valid": false,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [
+        "INVALID_EVIDENCE_RANGE"
+      ],
+      "response_error": null,
+      "elapsed_seconds": 3.7674921911675483,
+      "usage": {
+        "prompt_tokens": 11733,
+        "completion_tokens": 777,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.01023424",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 4352
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/10",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/11-response.json",
+          "sha256": "439ee399e16714b480a990b9119ff27071e8956eee24697bb00a97ba797d79cb",
+          "bytes": 7351
+        }
+      }
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "condition": "full_super",
+      "truth_category": "retained_graph",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/3/ground_truth",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "status": "diagnosed",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "retained_graph",
+      "first_cause_match": true,
+      "valid_correct_first_cause": true,
+      "diagnosis_valid": true,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [],
+      "response_error": null,
+      "elapsed_seconds": 3.685158038046211,
+      "usage": {
+        "prompt_tokens": 47674,
+        "completion_tokens": 413,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.0146739",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/11",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/12-response.json",
+          "sha256": "11f5d7ebcaafbd938a3aafd16b15e78c6b45c3e342f3099762b498c056aa7a67",
+          "bytes": 3228
+        }
+      }
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "condition": "full_ultra",
+      "truth_category": null,
+      "truth_status": "unverified",
+      "truth_source_pointer": "/scenarios/4/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "diagnosed",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "activations",
+      "first_cause_match": null,
+      "valid_correct_first_cause": null,
+      "diagnosis_valid": true,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [],
+      "response_error": null,
+      "elapsed_seconds": 10.064570777816698,
+      "usage": {
+        "prompt_tokens": 42028,
+        "completion_tokens": 1975,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.047953",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/12",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/13-response.json",
+          "sha256": "497d90e8701035b0c4498d51d4f4efc35416a3f1b363c8dde0182f7f2cf6c0b3",
+          "bytes": 15326
+        }
+      }
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "condition": "traceback_ultra",
+      "truth_category": null,
+      "truth_status": "unverified",
+      "truth_source_pointer": "/scenarios/4/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "diagnosed",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "activations",
+      "first_cause_match": null,
+      "valid_correct_first_cause": null,
+      "diagnosis_valid": true,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [],
+      "response_error": null,
+      "elapsed_seconds": 5.1251064979005605,
+      "usage": {
+        "prompt_tokens": 10657,
+        "completion_tokens": 1075,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.01005224",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 4352
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/13",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/14-response.json",
+          "sha256": "fcfd3c2e182b2200cefa68ba932e5a99e839735fe72eb724aa98b6140ccc02e2",
+          "bytes": 10084
+        }
+      }
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "condition": "full_super",
+      "truth_category": null,
+      "truth_status": "unverified",
+      "truth_source_pointer": "/scenarios/4/ground_truth",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "status": "diagnosed",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "activations",
+      "first_cause_match": null,
+      "valid_correct_first_cause": null,
+      "diagnosis_valid": true,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [],
+      "response_error": null,
+      "elapsed_seconds": 6.300520516932011,
+      "usage": {
+        "prompt_tokens": 42028,
+        "completion_tokens": 481,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.0130413",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/14",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/15-response.json",
+          "sha256": "7742ef51e1135d9f298b4d16e02f8a079428f318cd417b945c2538c9cce46178",
+          "bytes": 3988
+        }
+      }
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "condition": "full_ultra",
+      "truth_category": "temporaries",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/5/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "invalid_diagnosis",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "temporaries",
+      "first_cause_match": true,
+      "valid_correct_first_cause": false,
+      "diagnosis_valid": false,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [
+        "INVALID_EVIDENCE_DEPENDENCY"
+      ],
+      "response_error": null,
+      "elapsed_seconds": 6.254368834896013,
+      "usage": {
+        "prompt_tokens": 34666,
+        "completion_tokens": 1370,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.038776",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/15",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/16-response.json",
+          "sha256": "c4ac31ef663a9602305f9621695633fcb4ac40ffe14b24cefadde5f564170941",
+          "bytes": 10897
+        }
+      }
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "condition": "traceback_ultra",
+      "truth_category": "temporaries",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/5/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "diagnosed",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "activations",
+      "first_cause_match": false,
+      "valid_correct_first_cause": false,
+      "diagnosis_valid": true,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [],
+      "response_error": null,
+      "elapsed_seconds": 4.147720696870238,
+      "usage": {
+        "prompt_tokens": 10882,
+        "completion_tokens": 925,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.00982724",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 4352
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/16",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/17-response.json",
+          "sha256": "b33f937bf3c327e0f24c984d443c9e2bc2e6962db5209faaedce64aac83a0699",
+          "bytes": 8699
+        }
+      }
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "condition": "full_super",
+      "truth_category": "temporaries",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/5/ground_truth",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "status": "invalid_diagnosis",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "unknown",
+      "first_cause_match": false,
+      "valid_correct_first_cause": false,
+      "diagnosis_valid": false,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [
+        "NUMERICS_CHANGE_FORBIDDEN",
+        "MODEL_CHANGE_FORBIDDEN"
+      ],
+      "response_error": null,
+      "elapsed_seconds": 3.9352702309843153,
+      "usage": {
+        "prompt_tokens": 34666,
+        "completion_tokens": 476,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.0108282",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/17",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/18-response.json",
+          "sha256": "07d69395bc0b0cd07313de86db1a9105a4539185fd97ca5640341f4a575071ea",
+          "bytes": 3564
+        }
+      }
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "condition": "full_ultra",
+      "truth_category": "optimizer_state",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/6/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "invalid_diagnosis",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "optimizer_state",
+      "first_cause_match": true,
+      "valid_correct_first_cause": false,
+      "diagnosis_valid": false,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [
+        "INVALID_EVIDENCE_RANGE"
+      ],
+      "response_error": null,
+      "elapsed_seconds": 7.271423411788419,
+      "usage": {
+        "prompt_tokens": 42831,
+        "completion_tokens": 1618,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.047685",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/18",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/19-response.json",
+          "sha256": "fdd279053ce486af92b12a0b83b467ee7e9d788540d83e622696781f7d31db27",
+          "bytes": 12737
+        }
+      }
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "condition": "traceback_ultra",
+      "truth_category": "optimizer_state",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/6/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "diagnosed",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "params",
+      "first_cause_match": false,
+      "valid_correct_first_cause": false,
+      "diagnosis_valid": true,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [],
+      "response_error": null,
+      "elapsed_seconds": 4.465730503201485,
+      "usage": {
+        "prompt_tokens": 10666,
+        "completion_tokens": 914,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.00957824",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 4352
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/19",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/20-response.json",
+          "sha256": "d544219dadd02f3a92ac92da27f6b9a812041bdef455802f14998d2b6864a4ca",
+          "bytes": 8698
+        }
+      }
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "condition": "full_super",
+      "truth_category": "optimizer_state",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/6/ground_truth",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "status": "diagnosed",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "optimizer_state",
+      "first_cause_match": true,
+      "valid_correct_first_cause": true,
+      "diagnosis_valid": true,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [],
+      "response_error": null,
+      "elapsed_seconds": 5.71399717987515,
+      "usage": {
+        "prompt_tokens": 42831,
+        "completion_tokens": 587,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.0133776",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/20",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/21-response.json",
+          "sha256": "d34b184d3d2ab852b75315db2f10596e71953bcc0dd1882143b289c5a82864a9",
+          "bytes": 5038
+        }
+      }
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "condition": "full_ultra",
+      "truth_category": "params",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/7/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "diagnosed",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "params",
+      "first_cause_match": true,
+      "valid_correct_first_cause": true,
+      "diagnosis_valid": true,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [],
+      "response_error": null,
+      "elapsed_seconds": 8.218601307133213,
+      "usage": {
+        "prompt_tokens": 48480,
+        "completion_tokens": 1860,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.05406",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/21",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/22-response.json",
+          "sha256": "b02dce9c11b2aeab9011ff84688c6bf5d1a0b204da8c494e00d630e6883487b6",
+          "bytes": 14007
+        }
+      }
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "condition": "traceback_ultra",
+      "truth_category": "params",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/7/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "invalid_diagnosis",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "temporaries",
+      "first_cause_match": false,
+      "valid_correct_first_cause": false,
+      "diagnosis_valid": false,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [
+        "INVALID_EVIDENCE_DEPENDENCY"
+      ],
+      "response_error": null,
+      "elapsed_seconds": 4.428513958118856,
+      "usage": {
+        "prompt_tokens": 10621,
+        "completion_tokens": 1229,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.01047824",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 4352
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/22",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/23-response.json",
+          "sha256": "f0eea72011d8b2ad60f8ce63ed131f317e68008bc37006e60b3b854830b1a728",
+          "bytes": 11399
+        }
+      }
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "condition": "full_super",
+      "truth_category": "params",
+      "truth_status": "authored",
+      "truth_source_pointer": "/scenarios/7/ground_truth",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "status": "diagnosed",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "params",
+      "first_cause_match": true,
+      "valid_correct_first_cause": true,
+      "diagnosis_valid": true,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [],
+      "response_error": null,
+      "elapsed_seconds": 7.303723434917629,
+      "usage": {
+        "prompt_tokens": 48480,
+        "completion_tokens": 801,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.0152649",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/23",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/24-response.json",
+          "sha256": "9ae2c2b8a16cf2ae2329baa4f72bef405f2bfdc62fb93bf33774896cf0fa8ca7",
+          "bytes": 5666
+        }
+      }
+    },
+    {
+      "scenario_id": "nanogpt",
+      "condition": "full_ultra",
+      "truth_category": null,
+      "truth_status": "unverified",
+      "truth_source_pointer": "/scenarios/8/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "invalid_response",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": null,
+      "first_cause_match": null,
+      "valid_correct_first_cause": null,
+      "diagnosis_valid": false,
+      "references_valid": null,
+      "first_category_extraction": "invalid_json",
+      "validation_issue_codes": [],
+      "response_error": "truncated",
+      "elapsed_seconds": 10.066385681042448,
+      "usage": {
+        "prompt_tokens": 65225,
+        "completion_tokens": 2000,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.071225",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/24",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/25-response.json",
+          "sha256": "c78bf5869aa20310175ce177fc2502675d26555f51ee81ebfc117bd9cb410ee2",
+          "bytes": 7346
+        }
+      }
+    },
+    {
+      "scenario_id": "nanogpt",
+      "condition": "traceback_ultra",
+      "truth_category": null,
+      "truth_status": "unverified",
+      "truth_source_pointer": "/scenarios/8/ground_truth",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "status": "invalid_diagnosis",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "activations",
+      "first_cause_match": null,
+      "valid_correct_first_cause": null,
+      "diagnosis_valid": false,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [
+        "INVALID_EVIDENCE_RANGE"
+      ],
+      "response_error": null,
+      "elapsed_seconds": 4.232381060020998,
+      "usage": {
+        "prompt_tokens": 11544,
+        "completion_tokens": 917,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.01046524",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 4352
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/25",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/26-response.json",
+          "sha256": "c677a2515f3b61b57aed10e9646ae4c5868d09ba9d53e661e5a28eb3a2b0fa9c",
+          "bytes": 8444
+        }
+      }
+    },
+    {
+      "scenario_id": "nanogpt",
+      "condition": "full_super",
+      "truth_category": null,
+      "truth_status": "unverified",
+      "truth_source_pointer": "/scenarios/8/ground_truth",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "status": "diagnosed",
+      "dispatched": true,
+      "call_count": 1,
+      "first_cause": "activations",
+      "first_cause_match": null,
+      "valid_correct_first_cause": null,
+      "diagnosis_valid": true,
+      "references_valid": true,
+      "first_category_extraction": "strict_json_category",
+      "validation_issue_codes": [],
+      "response_error": null,
+      "elapsed_seconds": 6.28425567294471,
+      "usage": {
+        "prompt_tokens": 65225,
+        "completion_tokens": 949,
+        "reasoning_tokens": 0,
+        "cost_usd": "0.0204216",
+        "http_status": 200,
+        "settled": true,
+        "cached_tokens": 0
+      },
+      "source": {
+        "artifact": "execution",
+        "json_pointer": "/rows/26",
+        "response_artifact": {
+          "path": "runs/final48-f1/prepared-20261029-v8/execution/27-response.json",
+          "sha256": "c7b28d3c4dd55e87a0ccf56ba299a1a9f8fecda0cd02ff3aa827ff76b04a883c",
+          "bytes": 6536
+        }
+      }
+    }
+  ],
+  "summary": [
+    "In this single 27-request pass, the two full-evidence conditions each matched the authored first-cause category on 6 of the fixed nine workloads; traceback and memory-summary evidence matched 2 of nine.",
+    "Requiring the complete diagnosis to pass reference and policy validation reduces the correct counts to 4, 2 and 4, respectively; all 27 requests cost USD 0.69374342 before tax.",
+    "These are descriptive results for this protocol, with two unknown truths and no repeated trials; they do not establish model superiority or successful repairs."
+  ],
+  "limitations": [
+    "One sequential fixed-order pass; no randomization, repeats, confidence intervals or statistical significance claim.",
+    "Synthetic scenario comments and preserved paths can suggest the mechanism; this is not a blinded benchmark.",
+    "s5 and nanoGPT truth is unverified and retained as null. No denominator reduction to seven.",
+    "Full Ultra s2 and nanoGPT responses reached the 2000-token output limit and were truncated; no repair, retry or supplement was used.",
+    "All responses reported zero reasoning tokens; reasoning was requested off, which is not a general guarantee about provider behavior.",
+    "Traceback Ultra had 34816 cached input tokens. Costs and latency are observations under this order/cache state, not a controlled price or speed advantage.",
+    "This diagnosis-only experiment does not change historical repair success counts or demonstrate hardware repair."
+  ],
+  "excluded_preflight": {
+    "artifact": {
+      "path": "runs/final48-f1/prepared-20261029-v8/execution-preflight-failed-e36cda753e94466da0928ddfb06970b6/ablation.json",
+      "sha256": "d1551a2b33bbb5ff06d2edbf679932f338cd2233d0d5d3ccb1fbcf368ef23dec",
+      "bytes": 19005
+    },
+    "executed_calls": 0,
+    "included_in_study": false
+  },
+  "sources": {
+    "execution": {
+      "path": "runs/final48-f1/prepared-20261029-v8/execution/ablation.json",
+      "sha256": "72af6e63444d721156adfc33ce64dd74ec45c75ddbabd633744170e0c65bfc8f",
+      "bytes": 3586387
+    },
+    "runtime": {
+      "path": "runs/final48-f1/prepared-20261029-v8/execution/runtime/runtime.json",
+      "sha256": "449d5434190958d25eabeb6c7f7f6fd23a2c446b4d1665d3450b5a34b00b8709",
+      "bytes": 3552954
+    },
+    "preparation": {
+      "path": "runs/final48-f1/prepared-20261029-v8/preparation.json",
+      "sha256": "0fd07f892f83bd38a4cc59a28934f4a645264d18d99bfb2eb03505a692af74fa",
+      "bytes": 65486
+    },
+    "runner": {
+      "path": "headroom/acceptance/final48_ablation.py",
+      "sha256": "c66ccec9325542a6d104286ea8c20c98f8ac11283068cb541d76c9c336bd81ed",
+      "bytes": 36753
+    },
+    "truth_manifest": {
+      "path": "eval/mvp_phase1_v2.yaml",
+      "sha256": "2b5d669700c68737abaa258a7e8eb26a683baaa4e39d378a9d98a88bda2f1c20",
+      "bytes": 7417
+    },
+    "evidence_restriction": {
+      "path": "headroom/evaluation.py",
+      "sha256": "4a5ddd06ec86012d7769cfda9da6e76aff98090f27b8f6bdba04fbf3a6bca6ed",
+      "bytes": 83779
+    }
+  }
+}

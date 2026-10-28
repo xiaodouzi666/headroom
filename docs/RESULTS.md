@@ -48,6 +48,22 @@ Source commit: 4f4e67dca3d031dcf64983fe0e5f467a765c5c80. All nine scenarios rema
 | s8: unused teacher model | Unknown | Stopped before diagnosis/patch | a7e2bff86ce849eea3c0798d2097c642 |
 | pinned nanoGPT | Unknown | Stopped before diagnosis/patch | 9445bf3c9fa040738f23a78ee582b724 |
 
+### Does the snapshot matter?
+
+Same nine saved workloads, diagnosis only, one request per condition:
+
+| Diagnosis input / model | First-cause matches | Valid and correct | Mean input tokens | Model cost (USD) | Mean elapsed |
+|---|---:|---:|---:|---:|---:|
+| Full evidence + Ultra | 6/9 | 4/9 | 46,496 | $0.464260 | 8.498 s | <!-- numbers: ablation.full_ultra -->
+| Traceback + memory summary + Ultra | 2/9 | 2/9 | 11,009 | $0.09866092 | 4.691 s | <!-- numbers: ablation.traceback_ultra -->
+| Full evidence + Super | 6/9 | 4/9 | 46,496 | $0.1308225 | 5.681 s | <!-- numbers: ablation.full_super -->
+
+First-cause matches compare the first category in strict JSON with the reference cause. Valid and correct also requires the full diagnosis, evidence references and policy checks to pass. Full evidence produced more category matches in this pass; these are diagnosis results and do not add automatic repair successes.
+
+This was one fixed-order pass without repeated trials. The two workloads with unconfirmed reference causes remain in the denominator. Elapsed time includes the router call and local validation; it is not time to first token. Costs use observed usage and include cache discounts, before tax.
+
+All 27 requests completed. Total model cost was $0.69374342 before tax. [Experiment details and measured data](../reports/ablation-20261028/README.md).
+
 ### Cost and time
 
 The following table lists the API usage supported by complete records and the sum of recorded end-to-end run times.
@@ -78,7 +94,7 @@ The variable-length workload's fragmentation cause remains unverified: a large g
 
 Some model calls have incomplete usage information, so each evaluation's full API cost remains unknown. The subtotal above also excludes earlier prototype evaluations, capability probes and other project work. Recorded wall time includes model calls and orchestration and is not GPU compute time.
 
-The matched three-condition diagnosis comparison, HF Trainer automatic repair and s2 strict-versus-bf16 comparison have not run. Existing HF baseline captures do not demonstrate a repair. The measured s2 fp32 result supplies only one configuration; a memory-versus-speed comparison between the two precision settings remains pending.
+The matched three-condition diagnosis comparison is reported above. HF Trainer automatic repair and the s2 strict-versus-bf16 comparison have not run. Existing HF baseline captures do not demonstrate a repair. The measured s2 fp32 result supplies only one configuration; a memory-versus-speed comparison between the two precision settings remains pending.
 
 ### Run details
 

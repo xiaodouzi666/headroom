@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { getJSON, submitRun, requestError } from "./api";
 import EvaluationView from "./EvaluationView";
+import AblationView from "./AblationView";
 import { RunPage } from "./RunPage";
 import VerifiedPage from "./VerifiedPage";
 import SnapshotDiagnosisPanel from "./SnapshotDiagnosisPanel";
@@ -753,6 +754,7 @@ function Results() {
       </div>
       {error && <Notice tone="red">{error}</Notice>}
       <EvaluationView />
+      <AblationView />
       <Section
         title="Your runs"
         action={

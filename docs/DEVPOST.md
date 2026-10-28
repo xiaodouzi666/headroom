@@ -16,6 +16,8 @@ Across seven recorded campaigns, **5 of 9** distinct scenarios have reached thei
 - **s8 idle teacher:** peak memory fell **96.1%**, with identical observed scalar losses; full workload pairing was not established. <!-- numbers: best.s8_two_models_resident -->
 - **s4 retained graph:** peak memory fell **89.8%** from its observed OOM peak; the candidate completed 20 updates and its first five compared losses matched the documented reference. <!-- numbers: best.s4_loss_accumulation_graph -->
 
+In a diagnosis-only comparison on the same saved workloads, full evidence gave more first-category matches than traceback and memory-summary evidence. The full diagnosis and evidence-reference checks are reported separately in [the experiment results](RESULTS.md#does-the-snapshot-matter).
+
 The saved-snapshot CLI can diagnose a capture without running the supplied training script and can suggest an unverified patch draft. The complete result history and comparison details are in [RESULTS](RESULTS.md).
 
 ## How we built it
@@ -24,7 +26,7 @@ The saved-snapshot CLI can diagnose a capture without running the supplied train
 - **Models on Nebius Token Factory:** Nemotron 3 Ultra for diagnosis and planning, Nemotron 3 Super for structured line-edit patches and the Tavily tool loop, and Nemotron 3 Nano for optional stack labelling.
 - **Measured input handling:** Ultra accepted **268,920 input tokens** in an authentic evidence request and **500,029 input tokens** in a retrieval probe. <!-- numbers: long_context -->
 - **Verification and search:** keep-or-revert rounds with per-round verification feedback sent back to the planner.
-- **App:** FastAPI + SSE backend and React front end with a live timeline, memory charts, diagnosis cards with clickable evidence stacks, diff and validation views, and prepared historical-case pages.
+- **App:** FastAPI + SSE backend and React front end with a live timeline, memory charts, diagnosis cards with clickable evidence stacks, diff and validation views, and a public gallery of historical cases.
 
 ## Challenges we ran into
 Getting patches to apply was harder than producing a plausible diagnosis: malformed or truncated unified diffs led us to exact line edits bound to the original file hash, with structured error feedback. Verification needs care — a patch can appear to save memory by shrinking the model, skipping steps or changing the objective. Headroom checks parameter counts, update counts and loss series, and records when workload pairing is incomplete. Measuring and limiting long-input model use within a small credit allowance was another engineering task.
@@ -36,13 +38,13 @@ Real repairs produced end to end by open models and tested on hardware; diagnose
 Large context is useful when the evidence format is explicit and the model must cite recorded stack IDs. A valid JSON response is only the first step: diagnosis references, patch application and numerical comparisons need separate checks. Exact line edits made patch failures easier to explain and repair. The hardest part of an automatic optimization loop is deciding what the measurements actually support.
 
 ## What's next
-Run the new micro-batch and chunked-loss strategies across the fixed suite; measure the planned evidence ablation and precision-policy comparisons; extend diagnosis to FSDP/DeepSpeed workloads; and evaluate longer training runs.
+Run the new micro-batch and chunked-loss strategies across the fixed suite; measure the planned precision-policy comparisons; extend diagnosis to FSDP/DeepSpeed workloads; and evaluate longer training runs.
 
 ## Limitations
-Historical memory-target successes come from separate runs and do not establish identical full-training behaviour. Numerical coverage varies by case, as detailed above and in RESULTS. The new ablation and HF Trainer repair have not run. Saved-snapshot diagnosis has passed offline engineering checks and awaits live model validation. The public site currently provides recorded results; live examples, uploads and the Verified runs gallery are paused.
+Historical memory-target successes come from separate runs and do not establish identical full-training behaviour. Numerical coverage varies by case, as detailed above and in RESULTS. The diagnosis comparison is one fixed-order pass without repeats, with two unconfirmed reference causes retained in the full denominator. HF Trainer repair has not run. Saved-snapshot diagnosis has passed offline engineering checks and awaits live model validation. The public site provides recorded results and Verified runs; live examples and uploads are currently paused.
 
 ## Built with
 Nebius Token Factory · NVIDIA Nemotron 3 Ultra · NVIDIA Nemotron 3 Super · NVIDIA Nemotron 3 Nano · Tavily · PyTorch · CUDA · Docker · FastAPI · React
 
 ## Try it
-Demo: https://headroom.tail45186b.ts.net/ — open Results to inspect the recorded evaluations without logging in. Repo: https://github.com/xiaodouzi666/headroom . Video: {{VIDEO_URL}}
+Demo: https://headroom.tail45186b.ts.net/ — open Verified runs to inspect actual repairs and download their patches, or Results for the evaluations and diagnosis comparison, without logging in. Repo: https://github.com/xiaodouzi666/headroom . Video: {{VIDEO_URL}}

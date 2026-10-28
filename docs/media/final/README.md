@@ -120,3 +120,30 @@ F6(a) is complete; F6(b) remains pending. Do not mark “F6 materials ready, han
 ### Homepage refresh — 2026-10-29
 
 `home.png` now shows the actual published read-only homepage from physical Chrome after the ab8b4f3 product build. The gallery and live analysis are visibly unavailable pending the separate confirmations. This image is a website screenshot, not evidence of a new live run, and does not complete F6. Source and browser checks: reports/final48h-product-view-20261029/deployment.json and reports/final48h-product-browser-20261029/layout.json.
+
+## First raw clip delivery — 2026-10-29
+
+Six unedited feature clips are stored under the ignored directory
+`clips/20261028T224943Z/`. The MP4 copies are all 1920×1080 at 25 fps and have
+no audio, so Opus can edit and narrate them locally. Their combined raw duration
+is 284.20 seconds; this is source footage, not the final ≤170-second edit.
+
+| Clip | Duration | Evidence |
+| --- | ---: | --- |
+| Home overview | 35.60 s | Actual read-only page at capture time |
+| Six historical cards | 56.04 s | Four successes and two failures |
+| Historical s3 details | 56.80 s | Cited stack, patch, verification and real download |
+| Historical s8 details | 60.60 s | Cited stack, patch, verification and real download |
+| Historical s2 Sources | 35.96 s | Actual retained Tavily sources |
+| Historical result table | 39.20 s | Earlier campaign; replace with the final updated Results footage |
+
+The folder includes per-action timestamps, screenshots, the original WebM files
+and ffprobe results. This capture made only GET/HEAD requests, with no model or
+GPU invocation. A separate new s3 run is being captured; historical clips are
+not its proof.
+
+Transfer bundle: `clips/headroom-demo-clips-part1-20261029.zip`,
+11,683,840 bytes, SHA256
+`f0d6b83e59df01666c9eba83e54a21aac7ebf5d5078337ab1f02f165a0ca3b68`.
+The bundle contains six MP4s, safe metadata, editing notes and public patch
+downloads. It excludes browser owner sessions and judge credentials.

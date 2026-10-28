@@ -4,7 +4,7 @@
 
 **Built with NVIDIA Nemotron 3 (Ultra / Super / Nano) on Nebius Token Factory.** Web research powered by Tavily.
 
-- **Live demo:** [Headroom](https://headroom.tail45186b.ts.net/) — browse the project and recorded results.
+- **Live demo:** [Headroom](https://headroom.tail45186b.ts.net/) — open Verified runs to inspect real repairs, diagnoses, cited stacks and downloadable patches.
 - **Video (3 min):** {{VIDEO_URL}}
 - **License:** [Apache-2.0](LICENSE)
 - GPU measurements below use a single RTX 3090 Ti. [Results and source runs](docs/RESULTS.md) record the workload and comparison behind each outcome.
@@ -52,6 +52,20 @@ The recorded suite contains eight synthetic PyTorch training cases and pinned na
 
 Across seven recorded campaigns, **5 of 9** distinct scenarios have a run that met its configured memory target. The best single campaign reached **3 of 9**. The latest campaign reached **2 of 9**, with **3 of 9** valid correct first-cause diagnoses. <!-- numbers: summary -->
 
+### Does the snapshot matter?
+
+Same nine saved workloads, diagnosis only, one request per condition:
+
+| Diagnosis input / model | First-cause matches | Valid and correct | Mean input tokens | Model cost (USD) | Mean elapsed |
+|---|---:|---:|---:|---:|---:|
+| Full evidence + Ultra | 6/9 | 4/9 | 46,496 | $0.464260 | 8.498 s | <!-- numbers: ablation.full_ultra -->
+| Traceback + memory summary + Ultra | 2/9 | 2/9 | 11,009 | $0.09866092 | 4.691 s | <!-- numbers: ablation.traceback_ultra -->
+| Full evidence + Super | 6/9 | 4/9 | 46,496 | $0.1308225 | 5.681 s | <!-- numbers: ablation.full_super -->
+
+First-cause matches compare the first category in strict JSON with the reference cause. Valid and correct also requires the full diagnosis, evidence references and policy checks to pass. Full evidence produced more category matches in this pass; these are diagnosis results and do not add automatic repair successes.
+
+[Experiment details](docs/RESULTS.md#does-the-snapshot-matter).
+
 ### Long inputs on Token Factory
 
 Nemotron 3 Ultra accepted **268,920 input tokens** in an authentic evidence request and **500,029 input tokens** in a separate retrieval probe through Token Factory. <!-- numbers: long_context -->
@@ -87,7 +101,7 @@ All model calls use Token Factory's OpenAI-compatible API (`us-central1`). Headr
 
 The historical table combines separate runs and workload versions. s3 has a paired, identical full loss series; s1 and s4 compare the first five backward-loss values against documented references. s2 uses a tolerance-based comparison, and s2/s8 lack complete input, effective-batch and objective pairing. An OOM baseline only shows the peak reached before failure; s1's candidate peak is reconstructed. Verification covers short training runs, not full training quality. Distributed training and compiled extensions are outside the current repair workflow.
 
-Four scenarios have no recorded target success in this history. The latest campaign stopped five scenarios before diagnosis when its configured model allowance could not admit another request. The new ablation, strict-versus-bf16 comparison and HF Trainer repair are still to be measured. Long-input probes establish request handling, not diagnosis quality or the maximum context size. Uploaded-snapshot diagnosis and patch drafts still await their live checks; public uploads, live examples and the Verified runs gallery are currently paused. The public site provides recorded results.
+Four scenarios have no recorded target success in this history. The latest campaign stopped five scenarios before diagnosis when its configured model allowance could not admit another request. The diagnosis comparison is one fixed-order pass without repeats; s5 and nanoGPT have unconfirmed reference causes and remain in its denominator. Two full-evidence Ultra replies were truncated. The strict-versus-bf16 comparison and HF Trainer repair are still to be measured. Long-input probes establish request handling, not diagnosis quality or the maximum context size. Uploaded-snapshot diagnosis and patch drafts still await their live checks; public uploads and live examples are currently paused. The Verified runs gallery is publicly available.
 
 ## Related work
 

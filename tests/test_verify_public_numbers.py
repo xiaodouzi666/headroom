@@ -299,6 +299,7 @@ def public_checkout(tmp_path):
     repository = Path(__file__).parents[1]
     for relative in (
         checker.MANIFEST,
+        checker.ABLATION_PATH,
         "README.md",
         "docs/DEVPOST.md",
         "reports/t1.3-acceptance-20261025.json",
@@ -333,11 +334,11 @@ def test_real_public_checkout_cli_labels_portable_evidence(public_checkout):
     assert completed.returncode == 0, completed.stdout + completed.stderr
     assert result["passed"] is True
     assert result["evidence_level"] == "mixed_raw_and_reviewed_excerpts"
-    assert result["verified_source_files"] == 1
+    assert result["verified_source_files"] == 2
     assert result["excerpt_only_source_files"] == 78
     assert result["automatic_documents"] == ["README.md", "docs/DEVPOST.md"]
     assert result["related_documents_not_scanned"] == ["docs/RESULTS.md", "docs/FEEDBACK.md"]
-    assert [d["checked_numeric_values"] for d in result["documents"]] == [21, 9]
+    assert [d["checked_numeric_values"] for d in result["documents"]] == [39, 9]
 
 
 @pytest.mark.parametrize(
@@ -369,3 +370,29 @@ def test_real_source_file_tampering_fails_cli_even_with_excerpt_fallback(public_
     assert completed.returncode == 1
     assert result["passed"] is False
     assert "Source SHA-256 mismatch" in result["errors"][0]["error"]
+
+
+def test_ablation_row_binds_both_scores_cost_tokens_and_latency(recorded):
+    root, _ = recorded
+    source = Path(__file__).parents[1] / checker.ABLATION_PATH
+    target = root / checker.ABLATION_PATH
+    target.parent.mkdir(parents=True)
+    shutil.copyfile(source, target)
+    row = (
+        "| Full evidence + Ultra | 6/9 | 4/9 | 46,496 | $0.464260 | 8.498 s | "
+        "<!-- numbers: ablation.full_ultra -->"
+    )
+    assert len(checker.verify_line(evidence(recorded), row)) == 6
+    for invalid in (
+        row.replace("6/9 | 4/9", "4/9 | 6/9"),
+        row.replace("$0.464260", "$0.01"),
+        row.replace("46,496", "11,009"),
+        row.replace("8.498 s", "0.100 s"),
+        row.replace("Full evidence + Ultra", "Full evidence + Super"),
+        row.replace("ablation.full_ultra", "ablation.unseen"),
+    ):
+        with pytest.raises(checker.VerificationError):
+            checker.verify_line(evidence(recorded), invalid)
+    target.write_bytes(source.read_bytes() + b" ")
+    with pytest.raises(checker.VerificationError, match="source changed"):
+        checker.verify_line(evidence(recorded), row)

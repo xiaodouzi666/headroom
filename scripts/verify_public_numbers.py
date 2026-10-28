@@ -375,9 +375,57 @@ def rounded_match(observed, expected):
     return abs(decimal(raw)) == rounded
 
 
+ABLATION_PATH = "reports/ablation-20261028/ablation.json"
+ABLATION_SHA256 = "609b4077ed7c008a650daec2f0f02271352b59a89ccfaf7320427df92fc0880a"
+
+
+def verify_ablation_line(evidence, line, scope):
+    raw = contained(evidence.root, ABLATION_PATH).read_bytes()
+    require(digest(raw) == ABLATION_SHA256, "Ablation source changed")
+    study = parse_json(raw)
+    evidence.levels[ABLATION_PATH] = "raw_sha256_and_json_pointer"
+    require(study["completed_all_requests"] is True, "Ablation is incomplete")
+    condition = scope.removeprefix("ablation.")
+    rows = [row for row in study["conditions"] if row["condition"] == condition]
+    require(len(rows) == 1, "Unknown ablation condition")
+    row = rows[0]
+    require(row["denominator"] == 9 and row["attempted"] == 9, "Ablation denominator changed")
+    labels = {
+        "full_ultra": "Full evidence + Ultra",
+        "traceback_ultra": "Traceback + memory summary + Ultra",
+        "full_super": "Full evidence + Super",
+    }
+    expected = (
+        f"| {labels[condition]} | {row['first_cause_matches']}/9 | "
+        f"{row['valid_correct_first_causes']}/9 | "
+        f"{row['mean_provider_input_tokens']:,.0f} | {chr(36)}{row['total_cost_usd']} | "
+        f"{row['mean_latency_seconds']:.3f} s |"
+    )
+    require(SCOPE.sub("", line).strip() == expected, "Ablation row differs from measured data")
+    return [
+        {
+            "claim": f"ablation.{condition}.{field}",
+            "value": row[field],
+            "source": ABLATION_PATH,
+            "source_sha256": ABLATION_SHA256,
+            "json_pointer": f"/conditions/{study['conditions'].index(row)}/{field}",
+        }
+        for field in (
+            "denominator",
+            "first_cause_matches",
+            "valid_correct_first_causes",
+            "mean_provider_input_tokens",
+            "total_cost_usd",
+            "mean_latency_seconds",
+        )
+    ]
+
+
 def verify_line(evidence, line):
     scopes = SCOPE.findall(line)
     require(len(scopes) <= 1, "Multiple number scopes on one line")
+    if scopes and scopes[0].startswith("ablation."):
+        return verify_ablation_line(evidence, line, scopes[0])
     text = rendered_line(line)
     metrics, fractions = list(METRIC.finditer(text)), list(FRACTION.finditer(text))
     if not metrics and not fractions:
@@ -574,7 +622,7 @@ def verify(root, manifest_path, docs, *, expected_sha256, allow_excerpts=False):
         "sources": evidence.levels,
         "documents": checked,
         "errors": errors,
-        "scope": "Scoped prose GB/GiB, percentages, input tokens and outcome fractions.",
+        "scope": "Scoped prose GB/GiB, percentages, input tokens, outcome fractions, and complete ablation rows including cost and elapsed time.",
         "automatic_documents": list(docs),
         "related_documents_not_scanned": [
             name for name in ("docs/RESULTS.md", "docs/FEEDBACK.md") if name not in docs
