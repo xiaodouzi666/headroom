@@ -1,0 +1,332 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-10-28T18:14:57.409937+00:00",
+  "scope": "Free clean-clone setup preflight; not a live fix acceptance",
+  "temporary_root": "/tmp/headroom-f5-20261029-krupo1aa",
+  "clone_directory": "/tmp/headroom-f5-20261029-krupo1aa/repo",
+  "clone_command": [
+    "git",
+    "-c",
+    "credential.helper=",
+    "clone",
+    "--depth",
+    "1",
+    "https://github.com/xiaodouzi666/headroom.git",
+    "/tmp/headroom-f5-20261029-krupo1aa/repo"
+  ],
+  "clone_source": "public HTTPS URL, not a copy of the working tree",
+  "status": "base_preflight_passed_awaiting_integrated_commit",
+  "current_pushed_readme_only": true,
+  "live_fix_executed": false,
+  "model_or_gpu_used": false,
+  "credentials_copied": false,
+  "new_allocation_created": false,
+  "submission_tag_created": false,
+  "pushed": false,
+  "instructions_checked_before_clone": {
+    "paths": [
+      "/AGENTS.md",
+      "/tmp/AGENTS.md",
+      "/home/AGENTS.md",
+      "/home/xiaodouzi/AGENTS.md",
+      "/home/xiaodouzi/workspace/AGENTS.md",
+      "/home/xiaodouzi/workspace/headroom/AGENTS.md",
+      "/home/xiaodouzi/workspace/headroom/reports/AGENTS.md"
+    ],
+    "found": []
+  },
+  "clone_result": {
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "Cloning into '/tmp/headroom-f5-20261029-krupo1aa/repo'...\n"
+  },
+  "initial_commit": "b2a923133f22b2a03a412780c213c76290f1f96c",
+  "tracked_agents": [],
+  "started_at": "2026-10-28T17:59:48.790503+00:00",
+  "dependency_sync_attempts": [
+    {
+      "command": [
+        "/home/xiaodouzi/workspace/headroom/.tools/bin/uv",
+        "sync",
+        "--locked",
+        "--python",
+        "3.12"
+      ],
+      "outcome": "timeout",
+      "timeout_seconds": 600,
+      "cache": "/home/xiaodouzi/.cache/uv",
+      "process_ended_verified": true,
+      "partial_output_available": false
+    },
+    {
+      "command": [
+        "/home/xiaodouzi/workspace/headroom/.tools/bin/uv",
+        "sync",
+        "--locked",
+        "--python",
+        "3.12",
+        "--offline"
+      ],
+      "outcome": "failed",
+      "returncode": 1,
+      "elapsed_seconds": 0.548,
+      "cache": "/home/xiaodouzi/workspace/headroom/.cache/uv",
+      "stdout": "",
+      "stderr": "Resolved 107 packages in 1ms\n   Building headroom @ file:///tmp/headroom-f5-20261029-krupo1aa/repo\nerror: Failed to download `python-multipart==0.0.32`\n  cause: Network connectivity is disabled, but the requested data wasn't found in the cache: https://files.pythonhosted.org/packages/e1/04/e8135ebd1ad02c56ec633277529b2602ff99ff634be76cdba5744cf554fd/python_multipart-0.0.32-py3-none-any.whl\n\nhint: `python-multipart` (v0.0.32) was included because `headroom` (v0.1.0) depends on `python-multipart`\n"
+    },
+    {
+      "command": [
+        "/home/xiaodouzi/workspace/headroom/.tools/bin/uv",
+        "sync",
+        "--locked",
+        "--python",
+        "3.12"
+      ],
+      "outcome": "passed",
+      "returncode": 0,
+      "elapsed_seconds": 35.395,
+      "cache": "/home/xiaodouzi/workspace/headroom/.cache/uv",
+      "stdout": "",
+      "stderr": "Resolved 107 packages in 1ms\n   Building headroom @ file:///tmp/headroom-f5-20261029-krupo1aa/repo\n      Built headroom @ file:///tmp/headroom-f5-20261029-krupo1aa/repo\nPrepared 2 packages in 1.34s\nwarning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.\n         If the cache and target directories are on different filesystems, hardlinking may not be supported.\n         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.\nInstalled 104 packages in 34.03s\n + accelerate==1.1.1\n + annotated-doc==0.0.5\n + annotated-types==0.8.0\n + anyio==4.15.1\n + attrs==26.1.0\n + certifi==2026.10.19\n + cfgv==3.5.0\n + charset-normalizer==3.5.2\n + click==8.5.0\n + contourpy==1.4.0\n + cycler==0.12.1\n + distlib==0.4.4\n + fastapi==0.162.0\n + filelock==4.2.4\n + fonttools==4.67.0\n + fsspec==2026.9.0\n + gitdb==4.0.12\n + gitpython==3.2.1\n + h11==0.16.0\n + headroom==0.1.0 (from file:///tmp/headroom-f5-20261029-krupo1aa/repo)\n + hf-xet==1.7.0\n + httpcore==1.0.9\n + httpcore2==2.16.0\n + httpx==0.28.1\n + httpx2==2.16.0\n + huggingface-hub==0.36.2\n + identify==2.6.20\n + idna==3.20\n + iniconfig==2.3.1\n + jinja2==3.1.6\n + jiter==0.17.0\n + jsonschema==4.26.0\n + jsonschema-specifications==2025.9.1\n + kiwisolver==1.5.1\n + markdown-it-py==4.2.0\n + markupsafe==3.0.4\n + matplotlib==3.11.2\n + mdurl==0.1.2\n + mpmath==1.3.0\n + networkx==3.7\n + nodeenv==1.11.0\n + numpy==2.5.4\n + nvidia-cublas-cu12==12.4.5.8\n + nvidia-cuda-cupti-cu12==12.4.127\n + nvidia-cuda-nvrtc-cu12==12.4.127\n + nvidia-cuda-runtime-cu12==12.4.127\n + nvidia-cudnn-cu12==9.1.0.70\n + nvidia-cufft-cu12==11.2.1.3\n + nvidia-curand-cu12==10.3.5.147\n + nvidia-cusolver-cu12==11.6.1.9\n + nvidia-cusparse-cu12==12.3.1.170\n + nvidia-nccl-cu12==2.21.5\n + nvidia-nvjitlink-cu12==12.4.127\n + nvidia-nvtx-cu12==12.4.127\n + openai==3.37.0\n + opentelemetry-api==1.45.1\n + packaging==26.3\n + pillow==13.0.0\n + platformdirs==4.13.5\n + pluggy==1.7.0\n + pre-commit==4.7.0\n + psutil==7.2.2\n + pydantic==2.14.1\n + pydantic-core==2.50.1\n + pygments==2.21.0\n + pyparsing==3.3.3\n + pytest==9.1.1\n + python-dateutil==3.0.0\n + python-discovery==1.6.4\n + python-dotenv==1.2.4\n + python-multipart==0.0.32\n + pyyaml==6.0.3\n + referencing==0.37.0\n + regex==2026.9.29\n + requests==2.34.2\n + rich==15.0.0\n + rpds-py==2026.9.1\n + ruff==0.17.2\n + safetensors==0.8.0\n + setuptools==84.2.1\n + shellingham==1.5.4\n + six==1.17.0\n + smmap==5.0.3\n + sniffio==1.3.1\n + sqlalchemy==2.1.6\n + sqlmodel==0.0.48\n + starlette==1.9.0\n + sympy==1.13.1\n + tavily-python==0.8.5\n + tiktoken==0.14.0\n + tokenizers==0.20.3\n + torch==2.5.1+cu124\n + tqdm==4.70.1\n + transformers==4.46.3\n + triton==3.1.0\n + truststore==0.10.5\n + typer==0.27.3\n + typing-extensions==4.16.0\n + typing-inspection==0.4.4\n + tzdata==2026.5\n + unidiff==1.0.1\n + urllib3==2.8.0\n + uvicorn==0.54.0\n + virtualenv==21.14.13\n"
+    }
+  ],
+  "current_commit": "b14f8b30526ecbf41795cc736e1e4038abaa3724",
+  "lab_image_build": {
+    "command": [
+      "bash",
+      "scripts/build_lab_image.sh"
+    ],
+    "cwd": "/tmp/headroom-f5-20261029-krupo1aa/repo",
+    "started_at": "2026-10-28T18:14:13.365553+00:00",
+    "log_path": "/tmp/headroom-f5-20261029-krupo1aa/repo/.cache/f5-lab-build.log",
+    "max_seconds_remaining": 4445,
+    "reviewed_files": [
+      "scripts/build_lab_image.sh",
+      "scripts/build_lab_image.py",
+      "lab-image/Dockerfile",
+      "lab-image/verify_runtime.py"
+    ],
+    "scope": "only headroom-lab:py312-cu124-runtime-v1; allowlisted context; CPU-only verification; no GPU, model, credentials or source mount",
+    "context_manifest": {
+      "image": "headroom-lab:py312-cu124-runtime-v1",
+      "uv_lock_sha256": "fd57ad059cfde399f9de957bfca8527d69d3da0f9a7577c32bce1530c023a183",
+      "locked_package_lines": 95,
+      "files": {
+        "verify_runtime.py": "ba2d7429dddfa42aa18a490a5c44edd5dd05ad3d1d3290600d04494d102650a7",
+        "Dockerfile": "400fc504bc940a5b3c784c2522a1018404ad0d5d924a6996e1860669518a395a",
+        "requirements.txt": "40620487fd4266cea734e2f1e32c9cf1b242cce79115280b927136ef42599b45",
+        "lock.sha256": "6adb7475092b2f7eae54381ab17d94b9bd2336ccbb627a969692665199e11b77",
+        ".dockerignore": "fdb34accf5cfbaf888b578fa42db4be4828576afbbdf6291b918cfa9768e92af"
+      },
+      "source_context": "explicit allowlist; no project source, .env, runs, caches or host venv"
+    },
+    "context_manifest_path": "/tmp/headroom-f5-20261029-krupo1aa/repo/.cache/lab-build/20261028T181413Z-cb50c9ca/context.json",
+    "owned_process_group_observation": [
+      {
+        "pid": 1553266,
+        "pgid": 1553266
+      }
+    ],
+    "returncode": 0,
+    "timed_out": false,
+    "elapsed_seconds": 1301.531,
+    "finished_at": "2026-10-28T18:35:54.896613+00:00",
+    "log_bytes": 52812,
+    "log_tail": " 1.3 MB/s eta 0:00:00\n#9 834.7 Collecting torch==2.5.1+cu124 (from -r /opt/headroom-lab/requirements.txt (line 1455))\n#9 835.0   Downloading https://download-r2.pytorch.org/whl/cu124/torch-2.5.1%2Bcu124-cp312-cp312-linux_x86_64.whl (908.2 MB)\n#9 1117.3      \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 908.2/908.2 MB 4.3 MB/s eta 0:00:00\n#9 1119.4 Collecting tqdm==4.70.1 (from -r /opt/headroom-lab/requirements.txt (line 1459))\n#9 1119.4   Downloading tqdm-4.70.1-py3-none-any.whl (80 kB)\n#9 1119.5      \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 80.2/80.2 kB 2.7 MB/s eta 0:00:00\n#9 1119.7 Collecting transformers==4.46.3 (from -r /opt/headroom-lab/requirements.txt (line 1462))\n#9 1119.7   Downloading transformers-4.46.3-py3-none-any.whl (10.0 MB)\n#9 1136.7      \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 10.0/10.0 MB 589.4 kB/s eta 0:00:00\n#9 1136.9 Collecting triton==3.1.0 (from -r /opt/headroom-lab/requirements.txt (line 1465))\n#9 1137.0   Downloading https://download-r2.pytorch.org/whl/triton-3.1.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (209.6 MB)\n#9 1194.4      \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 209.6/209.6 MB 2.9 MB/s eta 0:00:00\n#9 1195.2 Collecting truststore==0.10.5 (from -r /opt/headroom-lab/requirements.txt (line 1467))\n#9 1195.2   Downloading truststore-0.10.5-py3-none-any.whl (19 kB)\n#9 1195.8 Collecting typer==0.27.3 (from -r /opt/headroom-lab/requirements.txt (line 1470))\n#9 1195.8   Downloading typer-0.27.3-py3-none-any.whl (123 kB)\n#9 1196.2      \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 123.3/123.3 kB 342.6 kB/s eta 0:00:00\n#9 1196.3 Collecting typing-extensions==4.16.0 (from -r /opt/headroom-lab/requirements.txt (line 1473))\n#9 1196.3   Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)\n#9 1196.4      \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 45.6/45.6 kB 644.2 kB/s eta 0:00:00\n#9 1196.7 Collecting typing-inspection==0.4.4 (from -r /opt/headroom-lab/requirements.txt (line 1476))\n#9 1196.7   Downloading typing_inspection-0.4.4-py3-none-any.whl (14 kB)\n#9 1197.0 Collecting tzdata==2026.5 (from -r /opt/headroom-lab/requirements.txt (line 1479))\n#9 1197.0   Downloading tzdata-2026.5-py2.py3-none-any.whl (347 kB)\n#9 1197.9      \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 348.0/348.0 kB 390.8 kB/s eta 0:00:00\n#9 1198.2 Collecting unidiff==1.0.1 (from -r /opt/headroom-lab/requirements.txt (line 1482))\n#9 1198.2   Downloading unidiff-1.0.1-py3-none-any.whl (18 kB)\n#9 1198.3 Collecting urllib3==2.8.0 (from -r /opt/headroom-lab/requirements.txt (line 1485))\n#9 1198.4   Downloading urllib3-2.8.0-py3-none-any.whl (135 kB)\n#9 1198.6      \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 135.7/135.7 kB 637.7 kB/s eta 0:00:00\n#9 1198.8 Collecting uvicorn==0.54.0 (from -r /opt/headroom-lab/requirements.txt (line 1488))\n#9 1198.8   Downloading uvicorn-0.54.0-py3-none-any.whl (87 kB)\n#9 1199.0      \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 87.4/87.4 kB 440.8 kB/s eta 0:00:00\n#9 1201.0 Installing collected packages: mpmath, urllib3, unidiff, tzdata, typing-extensions, truststore, tqdm, sympy, sniffio, smmap, six, shellingham, setuptools, safetensors, ruff, rpds-py, regex, pyyaml, python-multipart, python-dotenv, pyparsing, pygments, psutil, pillow, packaging, nvidia-nvtx-cu12, nvidia-nvjitlink-cu12, nvidia-nccl-cu12, nvidia-curand-cu12, nvidia-cufft-cu12, nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-cupti-cu12, nvidia-cublas-cu12, numpy, networkx, mdurl, markupsafe, kiwisolver, jiter, idna, hf-xet, h11, fsspec, fonttools, filelock, cycler, click, charset-normalizer, certifi, attrs, annotated-types, annotated-doc, uvicorn, typing-inspection, triton, sqlalchemy, requests, referencing, python-dateutil, pydantic-core, opentelemetry-api, nvidia-cusparse-cu12, nvidia-cudnn-cu12, markdown-it-py, jinja2, httpcore2, httpcore, gitdb, contourpy, anyio, tiktoken, starlette, rich, pydantic, nvidia-cusolver-cu12, matplotlib, jsonschema-specifications, huggingface-hub, httpx2, httpx, gitpython, typer, torch, tokenizers, tavily-python, sqlmodel, openai, jsonschema, fastapi, transformers, accelerate\n#9 1227.1 Successfully installed accelerate-1.1.1 annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.15.1 attrs-26.1.0 certifi-2026.10.19 charset-normalizer-3.5.2 click-8.5.0 contourpy-1.4.0 cycler-0.12.1 fastapi-0.162.0 filelock-4.2.4 fonttools-4.67.0 fsspec-2026.9.0 gitdb-4.0.12 gitpython-3.2.1 h11-0.16.0 hf-xet-1.7.0 httpcore-1.0.9 httpcore2-2.16.0 httpx-0.28.1 httpx2-2.16.0 huggingface-hub-0.36.2 idna-3.20 jinja2-3.1.6 jiter-0.17.0 jsonschema-4.26.0 jsonschema-specifications-2025.9.1 kiwisolver-1.5.1 markdown-it-py-4.2.0 markupsafe-3.0.4 matplotlib-3.11.2 mdurl-0.1.2 mpmath-1.3.0 networkx-3.7 numpy-2.5.4 nvidia-cublas-cu12-12.4.5.8 nvidia-cuda-cupti-cu12-12.4.127 nvidia-cuda-nvrtc-cu12-12.4.127 nvidia-cuda-runtime-cu12-12.4.127 nvidia-cudnn-cu12-9.1.0.70 nvidia-cufft-cu12-11.2.1.3 nvidia-curand-cu12-10.3.5.147 nvidia-cusolver-cu12-11.6.1.9 nvidia-cusparse-cu12-12.3.1.170 nvidia-nccl-cu12-2.21.5 nvidia-nvjitlink-cu12-12.4.127 nvidia-nvtx-cu12-12.4.127 openai-3.37.0 opentelemetry-api-1.45.1 packaging-26.3 pillow-13.0.0 psutil-7.2.2 pydantic-2.14.1 pydantic-core-2.50.1 pygments-2.21.0 pyparsing-3.3.3 python-dateutil-3.0.0 python-dotenv-1.2.4 python-multipart-0.0.32 pyyaml-6.0.3 referencing-0.37.0 regex-2026.9.29 requests-2.34.2 rich-15.0.0 rpds-py-2026.9.1 ruff-0.17.2 safetensors-0.8.0 setuptools-84.2.1 shellingham-1.5.4 six-1.17.0 smmap-5.0.3 sniffio-1.3.1 sqlalchemy-2.1.6 sqlmodel-0.0.48 starlette-1.9.0 sympy-1.13.1 tavily-python-0.8.5 tiktoken-0.14.0 tokenizers-0.20.3 torch-2.5.1+cu124 tqdm-4.70.1 transformers-4.46.3 triton-3.1.0 truststore-0.10.5 typer-0.27.3 typing-extensions-4.16.0 typing-inspection-0.4.4 tzdata-2026.5 unidiff-1.0.1 urllib3-2.8.0 uvicorn-0.54.0\n#9 1229.5 No broken requirements found.\n#9 1231.7 {\"runtime_contract\": \"python312-self-contained-v1\", \"python\": \"3.12.3\", \"executable\": \"/opt/lab-venv/bin/python\", \"prefix\": \"/opt/lab-venv\", \"uv_lock_sha256\": \"fd57ad059cfde399f9de957bfca8527d69d3da0f9a7577c32bce1530c023a183\", \"torch\": \"2.5.1+cu124\", \"cuda_build\": \"12.4\", \"transformers\": \"4.46.3\", \"accelerate\": \"1.1.1\", \"cpu_tensor_check\": true, \"gpu_executed\": false}\n#9 DONE 1233.1s\n\n#10 [6/6] WORKDIR /run\n#10 DONE 0.0s\n\n#11 exporting to image\n#11 exporting layers\n#11 exporting layers 16.4s done\n#11 writing image sha256:5703e9edc41be02a69ba7bdf4eb9e5126a5f8915e1dd235ab9fe94b9a412afe5 done\n#11 naming to docker.io/library/headroom-lab:py312-cu124-runtime-v1 done\n#11 DONE 16.4s\n",
+    "log_sha256": "81ed5fbc1e702653c949952216fdf6b6ba95a371819721538c3c6def6ae70f49"
+  },
+  "cli_checks": [
+    {
+      "command": [
+        "/home/xiaodouzi/workspace/headroom/.tools/bin/uv",
+        "run",
+        "--no-env-file",
+        "--offline",
+        "--no-sync",
+        "headroom",
+        "version"
+      ],
+      "returncode": 0,
+      "stdout_bytes": 6,
+      "stdout_sha256": "e9dd8507f4bf0c6f42458e41aea833ad0bd3f6127272335eee9bf4d58541ed67",
+      "stderr": "",
+      "excerpt": "0.1.0\n",
+      "has_budget_option": null
+    },
+    {
+      "command": [
+        "/home/xiaodouzi/workspace/headroom/.tools/bin/uv",
+        "run",
+        "--no-env-file",
+        "--offline",
+        "--no-sync",
+        "headroom",
+        "--help"
+      ],
+      "returncode": 0,
+      "stdout_bytes": 3202,
+      "stdout_sha256": "8afd4afdb3d97eb94a8af4d7b00b0e79db8879004d0dde469ba9ab434b242b3a",
+      "stderr": "",
+      "excerpt": "                                                                                \n Usage: headroom [OPTIONS] COMMAND [ARGS]...                                    \n                                                                                \n Autoresearch for GPU memory.                                                   \n                                                                                \n\u256d\u2500 Options \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 --install-co",
+      "has_budget_option": null
+    },
+    {
+      "command": [
+        "/home/xiaodouzi/workspace/headroom/.tools/bin/uv",
+        "run",
+        "--no-env-file",
+        "--offline",
+        "--no-sync",
+        "headroom",
+        "fix",
+        "--help"
+      ],
+      "returncode": 0,
+      "stdout_bytes": 6622,
+      "stdout_sha256": "c8209f2002757b2fcf941673ec44ae6d1c75c55649fd808732d3586701798d2f",
+      "stderr": "",
+      "excerpt": "                                                                                \n Usage: headroom fix [OPTIONS] [script]                                         \n                                                                                \n Run the complete repair pipeline; missing live prerequisites produce a partial \n report.                                                                        \n                                                                                \n\u256d\u2500 Arguments \u2500",
+      "has_budget_option": true
+    },
+    {
+      "command": [
+        "/home/xiaodouzi/workspace/headroom/.tools/bin/uv",
+        "run",
+        "--no-env-file",
+        "--offline",
+        "--no-sync",
+        "headroom",
+        "diagnose",
+        "--help"
+      ],
+      "returncode": 0,
+      "stdout_bytes": 1546,
+      "stdout_sha256": "fbb12d7b767f79a4266d498faf12ccb5d5884dc4688ba836fce8892959435fc9",
+      "stderr": "",
+      "excerpt": "                                                                                \n Usage: headroom diagnose [OPTIONS]                                             \n                                                                                \n Diagnose a saved CUDA snapshot and suggest an unverified patch; never run the  \n source.                                                                        \n                                                                                \n\u256d\u2500 Options \u2500\u2500\u2500",
+      "has_budget_option": null
+    },
+    {
+      "command": [
+        "/home/xiaodouzi/workspace/headroom/.tools/bin/uv",
+        "run",
+        "--no-env-file",
+        "--offline",
+        "--no-sync",
+        "headroom",
+        "watch",
+        "--help"
+      ],
+      "returncode": 0,
+      "stdout_bytes": 3495,
+      "stdout_sha256": "2b5cc7a06fbb5e616aee248da2e97dae66e161c8d3eb778d11cd24a60200ccd5",
+      "stderr": "",
+      "excerpt": "                                                                                \n Usage: headroom watch [OPTIONS]                                                \n                                                                                \n Observe argv in Docker; confirmed CUDA OOM repairs mapped Python scripts.      \n                                                                                \n Shell wrappers retain their full argv. A single captured Python main supplies  \n the source ma",
+      "has_budget_option": null
+    }
+  ],
+  "installed_metadata": {
+    "python": "3.12.3",
+    "prefix": "/tmp/headroom-f5-20261029-krupo1aa/repo/.venv",
+    "headroom": "0.1.0",
+    "python_multipart": "0.0.32",
+    "torch_package_metadata": "2.5.1+cu124"
+  },
+  "repository_checks": {
+    "current_commit": "b14f8b30526ecbf41795cc736e1e4038abaa3724",
+    "remote_url": "https://github.com/xiaodouzi666/headroom.git",
+    "tracked_agents": [],
+    "tracked_runs": [],
+    "tracked_dotenv": [],
+    "git_status": [],
+    "ignored_probe_paths": [
+      "runs/__f5_preflight_probe__",
+      ".env"
+    ],
+    "dotenv_exists": false,
+    "runs_directory_exists": false,
+    "scenario_from_new_quickstart_exists": true,
+    "uv_lock_sha256": "fd57ad059cfde399f9de957bfca8527d69d3da0f9a7577c32bce1530c023a183"
+  },
+  "env_example_check": {
+    "example_variables": [
+      "HEADROOM_HEALTH_WEBHOOK_IDEMPOTENT",
+      "HEADROOM_HEALTH_WEBHOOK_TOKEN",
+      "HEADROOM_HEALTH_WEBHOOK_URL",
+      "HEADROOM_JUDGE_TOKEN",
+      "HEADROOM_SNAPSHOT_SUBMISSIONS_ENABLED",
+      "HF_TOKEN",
+      "NEBIUS_API_KEY",
+      "NEBIUS_BASE_URL",
+      "TAVILY_API_KEY"
+    ],
+    "required_provider_placeholders_present": true,
+    "provider_placeholders_empty": true,
+    "missing_user_optional_configuration": [
+      "HEADROOM_DAILY_BUDGET_USD",
+      "HEADROOM_PUBLIC_HOST",
+      "HEADROOM_RUNTIME_PROFILE",
+      "HEADROOM_RUN_BUDGET_USD",
+      "HEADROOM_RUN_SUBMISSIONS_ENABLED",
+      "HEADROOM_RUN_SUBMISSION_DISABLED_REASON",
+      "HEADROOM_TRUST_CLOUDFLARED",
+      "HEADROOM_TRUST_TAILSCALE_FUNNEL",
+      "HEADROOM_VERIFIED_RUNS_ENABLED"
+    ],
+    "excluded_internal_container_variables": [
+      "HEADROOM_CAPTURE",
+      "HEADROOM_CONTROL_DIR",
+      "HEADROOM_DEVICE",
+      "HEADROOM_MAX_SECONDS",
+      "HEADROOM_MAX_STEPS",
+      "HEADROOM_OUTPUT_DIR",
+      "HEADROOM_SEED",
+      "HEADROOM_TARGET_ARGV_OVERRIDE"
+    ],
+    "scope": "Only user-facing runtime, budget-cap and server settings; not all environment strings or test-only controls"
+  },
+  "pre_build_runtime_contract": {
+    "compatible": false,
+    "image": "headroom-lab:py312-cu124-runtime-v1",
+    "image_id": "sha256:89fc0bd6ed5d7e95ed73d6e377e6e6e740ba3002cefeacabbdeeff9ad9c331db",
+    "image_lock_sha256": "dc2f10eafb7e21a611928dc3699df974231344509b77b3dc533b468589ff4efb",
+    "expected_lock_sha256": "fd57ad059cfde399f9de957bfca8527d69d3da0f9a7577c32bce1530c023a183",
+    "check": "headroom.lab.runtime_image.require_runtime_image",
+    "reason": "Lab image dependencies differ from uv.lock; rebuild with bash scripts/build_lab_image.sh"
+  },
+  "deadline_at": "2026-10-28T19:29:48.790503+00:00",
+  "runtime_contract_after_build": {
+    "passed": true,
+    "details": {
+      "image": "headroom-lab:py312-cu124-runtime-v1",
+      "image_id": "sha256:5703e9edc41be02a69ba7bdf4eb9e5126a5f8915e1dd235ab9fe94b9a412afe5",
+      "runtime_contract": "python312-self-contained-v1",
+      "uv_lock_sha256": "fd57ad059cfde399f9de957bfca8527d69d3da0f9a7577c32bce1530c023a183"
+    },
+    "image_size_bytes": 5706570536,
+    "architecture": "amd64",
+    "os": "linux",
+    "cpu_build_verification": {
+      "runtime_contract": "python312-self-contained-v1",
+      "python": "3.12.3",
+      "executable": "/opt/lab-venv/bin/python",
+      "prefix": "/opt/lab-venv",
+      "uv_lock_sha256": "fd57ad059cfde399f9de957bfca8527d69d3da0f9a7577c32bce1530c023a183",
+      "torch": "2.5.1+cu124",
+      "cuda_build": "12.4",
+      "transformers": "4.46.3",
+      "accelerate": "1.1.1",
+      "cpu_tensor_check": true,
+      "gpu_executed": false
+    },
+    "previous_image_retained": true,
+    "check": "headroom.lab.runtime_image.require_runtime_image; Docker image inspect only"
+  },
+  "current_elapsed_seconds": 2215.764,
+  "cli_checked_commit": "b14f8b30526ecbf41795cc736e1e4038abaa3724",
+  "pending": [
+    "Final integrated environment-example/Runtime commit review",
+    "Authorized real s3 model/GPU repair and <=0.30 USD acceptance",
+    "v1.0-submission tag and push after complete acceptance"
+  ]
+}

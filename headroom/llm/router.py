@@ -11,6 +11,7 @@ from typing import Any
 from jsonschema import Draft202012Validator
 from pydantic import BaseModel, ValidationError
 
+from headroom.diagnosis_protocol import DiagnosisRequestPolicy, resolve_diagnosis_request_policy
 from headroom.llm.client import ClientResponse, LLMError, TokenFactoryClient
 from headroom.llm.cost import Usage
 
@@ -129,8 +130,16 @@ class ChatResult(ClientResponse):
 
 
 class LLMRouter:
-    def __init__(self, client: TokenFactoryClient):
+    def __init__(
+        self,
+        client: TokenFactoryClient,
+        *,
+        diagnosis_request_policy: DiagnosisRequestPolicy | None = None,
+    ):
         self.client = client
+        self.diagnosis_request_policy = resolve_diagnosis_request_policy(
+            explicit=diagnosis_request_policy
+        )
 
     def chat(
         self,

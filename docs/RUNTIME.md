@@ -1,5 +1,62 @@
 # Runtime and spending gates
 
+## Fresh-checkout configuration
+
+After the README dependency and lab-image steps, copy .env.example to a private
+.env with mode 0600 and add your own provider keys. The example keeps browser run
+submissions, saved-snapshot uploads and the historical gallery disabled; these
+UI settings do not grant model spending permission.
+
+Provider credentials are read from the private .env. The runtime-profile path,
+budget caps and public-interface switches are read from the process environment;
+copying .env.example does not export them. Supply reviewed settings through the
+launcher or the documented user-service environment configuration. The dedicated
+public launcher still enforces its disabled submission switches.
+
+The API can select a reviewed private profile with HEADROOM_RUNTIME_PROFILE.
+CLI repair and watch commands accept --runtime-profile explicitly. The profile
+must describe verified model capabilities, billing and an authorized total;
+do not enable it by copying a sample fragment or assuming a key implies credit.
+HEADROOM_RUN_BUDGET_USD and HEADROOM_DAILY_BUDGET_USD are optional downward caps,
+not new funding. HEADROOM_BUDGET_DB_PATH selects the accounting database; changing
+its path must never silently erase the accounting of an existing allocation.
+
+For a public deployment, use the reviewed launcher and instructions in
+[FUNNEL.md](FUNNEL.md). Set the bare public hostname only there, and enable trust
+for forwarded headers only with the corresponding loopback proxy configuration.
+Leaving both forwarding-trust flags false is the normal local setting.
+
+Rebuild the Lab image whenever uv.lock changes. The runner compares the image's
+dependency-lock label against the checkout and refuses an older image. Use
+bash scripts/build_lab_image.sh; never bypass this identity check just because
+an older image with the same tag exists.
+
+
+## Explicit FINAL48 diagnosis mode
+
+A reviewed profile may explicitly select
+diagnosis_request_policy = final48-diagnosis-only-2000-v1. This carries a typed
+request policy through the repair/CLI diagnosis path: the prompt, saved request
+metadata, initial call and any existing supplement all use a 2,000-token output
+cap with reasoning disabled. It does not add calls or change Super/Nano. Profiles
+without the field retain their prior behavior; conflicting study policies fail
+before dispatch.
+
+Ultra native JSON-schema input estimation is a separate opt-in billing mode:
+local_estimate with estimate_protocol = ultra_native_schema_v1. It counts the
+pinned NVIDIA chat template plus the entire serialized response_format, then
+applies the explicitly configured multiplier and token allowance. Only the
+verified model/request shape and configured token/byte domain are accepted.
+This remains an estimate, not a provider billing bound. Usage is settled after
+each request, and newly unknown charges or an exceeded estimate stop further
+calls.
+
+Neither option creates an allocation or rewrites historical charges. A new
+FINAL48 pool still requires the owner's amount authorization and a separately
+bound profile/database. The calibration and guarded offline CLI request checks
+are recorded in [the input-estimation report](../reports/final48h-input-calibration-20261029/README.md).
+No actual account profile was enabled by this implementation.
+
 The application starts without any API key. It saves a partial report with `needs_human` before GPU or research work when a reviewed Nebius profile is missing. Offline tests inject an HTTP MockTransport and never establish live model capability or pricing.
 
 Live work requires all of the following:

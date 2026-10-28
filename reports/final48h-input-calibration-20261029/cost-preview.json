@@ -1,0 +1,206 @@
+{
+  "scope": "Offline arithmetic preview only; not a profile, allocation, authorization or measured charge",
+  "checked_at_utc": "2026-10-28T18:48:49.734641+00:00",
+  "source_counts_sha256": "109038932762aadb0639435a8c1bdbfe3a23f3eb81593340b51ebd62e5ce7a16",
+  "counts_prepared_version": "v5; re-evaluate if messages or schemas change",
+  "candidate_estimate_settings": {
+    "token_multiplier": "1.10",
+    "additive_tokens": 1024,
+    "counts_entire_response_format": true,
+    "reasoning": false,
+    "output_cap": 2000
+  },
+  "tariffs": {
+    "ultra": {
+      "input_net_usd_per_million": "1",
+      "output_net_usd_per_million": "3",
+      "public_primary_source": "https://github.com/nebius/token-factory-cookbook/blob/main/models/nemotron/nemotron3-ultra-550b-a55b.md",
+      "source_verified_this_turn": true
+    },
+    "super": {
+      "input_net_usd_per_million": "0.3",
+      "output_net_usd_per_million": "0.9",
+      "source": "existing reviewed private runtime; refresh before activating a new profile",
+      "source_verified_this_turn": false
+    }
+  },
+  "rows": [
+    {
+      "scenario": "s1_batch_too_big",
+      "condition": "full_ultra",
+      "template_tokens": 37152,
+      "response_format_local_tokens": 1458,
+      "estimated_input_tokens_with_margin": 43495,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.049495"
+    },
+    {
+      "scenario": "s1_batch_too_big",
+      "condition": "traceback_ultra",
+      "template_tokens": 11735,
+      "response_format_local_tokens": 1260,
+      "estimated_input_tokens_with_margin": 15319,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.021319"
+    },
+    {
+      "scenario": "s2_capacity_v2",
+      "condition": "full_ultra",
+      "template_tokens": 48805,
+      "response_format_local_tokens": 1696,
+      "estimated_input_tokens_with_margin": 56576,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.062576"
+    },
+    {
+      "scenario": "s2_capacity_v2",
+      "condition": "traceback_ultra",
+      "template_tokens": 10605,
+      "response_format_local_tokens": 1260,
+      "estimated_input_tokens_with_margin": 14076,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.020076"
+    },
+    {
+      "scenario": "s3_eval_no_grad_missing",
+      "condition": "full_ultra",
+      "template_tokens": 51601,
+      "response_format_local_tokens": 1744,
+      "estimated_input_tokens_with_margin": 59704,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.065704"
+    },
+    {
+      "scenario": "s3_eval_no_grad_missing",
+      "condition": "traceback_ultra",
+      "template_tokens": 10640,
+      "response_format_local_tokens": 1260,
+      "estimated_input_tokens_with_margin": 14114,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.020114"
+    },
+    {
+      "scenario": "s4_loss_accumulation_graph",
+      "condition": "full_ultra",
+      "template_tokens": 47674,
+      "response_format_local_tokens": 1722,
+      "estimated_input_tokens_with_margin": 55360,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.06136"
+    },
+    {
+      "scenario": "s4_loss_accumulation_graph",
+      "condition": "traceback_ultra",
+      "template_tokens": 11733,
+      "response_format_local_tokens": 1260,
+      "estimated_input_tokens_with_margin": 15317,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.021317"
+    },
+    {
+      "scenario": "s5_fragmentation_varlen",
+      "condition": "full_ultra",
+      "template_tokens": 42028,
+      "response_format_local_tokens": 1647,
+      "estimated_input_tokens_with_margin": 49067,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.055067"
+    },
+    {
+      "scenario": "s5_fragmentation_varlen",
+      "condition": "traceback_ultra",
+      "template_tokens": 10657,
+      "response_format_local_tokens": 1260,
+      "estimated_input_tokens_with_margin": 14133,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.020133"
+    },
+    {
+      "scenario": "s6_full_vocab_logits_fp32",
+      "condition": "full_ultra",
+      "template_tokens": 34666,
+      "response_format_local_tokens": 1573,
+      "estimated_input_tokens_with_margin": 40887,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.046887"
+    },
+    {
+      "scenario": "s6_full_vocab_logits_fp32",
+      "condition": "traceback_ultra",
+      "template_tokens": 10882,
+      "response_format_local_tokens": 1260,
+      "estimated_input_tokens_with_margin": 14381,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.020381"
+    },
+    {
+      "scenario": "s7_frozen_params_optimizer_state",
+      "condition": "full_ultra",
+      "template_tokens": 42831,
+      "response_format_local_tokens": 1683,
+      "estimated_input_tokens_with_margin": 49990,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.05599"
+    },
+    {
+      "scenario": "s7_frozen_params_optimizer_state",
+      "condition": "traceback_ultra",
+      "template_tokens": 10666,
+      "response_format_local_tokens": 1260,
+      "estimated_input_tokens_with_margin": 14143,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.020143"
+    },
+    {
+      "scenario": "s8_two_models_resident",
+      "condition": "full_ultra",
+      "template_tokens": 48480,
+      "response_format_local_tokens": 1647,
+      "estimated_input_tokens_with_margin": 56164,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.062164"
+    },
+    {
+      "scenario": "s8_two_models_resident",
+      "condition": "traceback_ultra",
+      "template_tokens": 10621,
+      "response_format_local_tokens": 1260,
+      "estimated_input_tokens_with_margin": 14094,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.020094"
+    },
+    {
+      "scenario": "nanogpt",
+      "condition": "full_ultra",
+      "template_tokens": 65225,
+      "response_format_local_tokens": 1834,
+      "estimated_input_tokens_with_margin": 74789,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.080789"
+    },
+    {
+      "scenario": "nanogpt",
+      "condition": "traceback_ultra",
+      "template_tokens": 11544,
+      "response_format_local_tokens": 1260,
+      "estimated_input_tokens_with_margin": 15109,
+      "requested_output_cap": 2000,
+      "estimated_reservation_net_usd": "0.021109"
+    }
+  ],
+  "ultra_estimated_reserved_total_net_usd": "0.724718",
+  "super_retained_provider_bound_per_call_net_usd": "0.0804432",
+  "super_nine_calls_bound_net_usd": "0.7239888",
+  "combined_preview_net_usd": "1.4487068",
+  "f1_task_cap_net_usd": "1.50",
+  "fits_preview": true,
+  "new_provider_calls": 0,
+  "profile_modified": false,
+  "allocation_created": false,
+  "limitations": [
+    "Ultra estimates are not provider billing bounds.",
+    "Super uses its existing reviewed provider prompt ceiling, not the Ultra tokenizer.",
+    "The hypothetical total is not an actual charge; no cache discount is assumed.",
+    "The final frozen request package and current provider prices must be checked before dispatch."
+  ]
+}

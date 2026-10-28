@@ -4,6 +4,7 @@ This is request configuration, never a billing clamp or funding authorization.
 The named study is the original independent end-to-end three-arm comparison.
 """
 
+from dataclasses import dataclass
 from typing import Literal
 
 StudyProtocol = Literal["common-diagnosis-4000-v1"]
@@ -41,7 +42,36 @@ STUDY_CONTROL_FIELDS = frozenset(
 )
 
 
-def diagnosis_cap(study_protocol=None):
+@dataclass(frozen=True)
+class DiagnosisRequestPolicy:
+    """One explicit request configuration, not funding or a call-count allowance."""
+
+    id: str = "final48-diagnosis-only-2000-v1"
+    max_completion_tokens: int = 2000
+    reasoning: bool = False
+
+    def __post_init__(self):
+        if (
+            self.id != "final48-diagnosis-only-2000-v1"
+            or type(self.max_completion_tokens) is not int
+            or self.max_completion_tokens != 2000
+            or self.reasoning is not False
+        ):
+            raise ValueError("Unknown explicit diagnosis request policy")
+
+
+FINAL48_DIAGNOSIS_ONLY = DiagnosisRequestPolicy()
+
+
+def diagnosis_cap(study_protocol=None, *, request_policy=None):
+    if request_policy is not None:
+        if (
+            study_protocol is not None
+            or type(request_policy) is not DiagnosisRequestPolicy
+            or request_policy != FINAL48_DIAGNOSIS_ONLY
+        ):
+            raise ValueError("Request policy must be explicit and cannot mix with a study protocol")
+        return request_policy.max_completion_tokens
     if study_protocol is None:
         return DEFAULT_DIAGNOSIS_CAP
     if type(study_protocol) is str and study_protocol == COMMON_4000:
@@ -49,8 +79,39 @@ def diagnosis_cap(study_protocol=None):
     raise ValueError("Unknown explicit diagnosis study protocol")
 
 
-def diagnosis_prompt(template, study_protocol=None):
-    cap = diagnosis_cap(study_protocol)
+def named_diagnosis_request_policy(name):
+    """Resolve only the explicit profile identifier; missing selection stays disabled."""
+    if name is None:
+        return None
+    if type(name) is str and name == FINAL48_DIAGNOSIS_ONLY.id:
+        return FINAL48_DIAGNOSIS_ONLY
+    raise ValueError("Unknown explicit diagnosis request policy")
+
+
+def carried_diagnosis_request_policy(router):
+    """Read a real instance attribute, never a dynamic proxy/MagicMock fallback."""
+    try:
+        value = vars(router).get("diagnosis_request_policy")
+    except TypeError:
+        value = None
+    if value is not None:
+        diagnosis_cap(request_policy=value)
+    return value
+
+
+def resolve_diagnosis_request_policy(*, carried=None, explicit=None, study_protocol=None):
+    for value in (carried, explicit):
+        if value is not None:
+            diagnosis_cap(request_policy=value)
+    if carried is not None and explicit is not None and carried != explicit:
+        raise ValueError("Explicit diagnosis policy conflicts with the runtime profile")
+    selected = carried if explicit is None else explicit
+    diagnosis_cap(study_protocol, request_policy=selected)
+    return selected
+
+
+def diagnosis_prompt(template, study_protocol=None, *, request_policy=None):
+    cap = diagnosis_cap(study_protocol, request_policy=request_policy)
     if template.count(PROMPT_CAP_MARKER) != 1:
         raise ValueError("Diagnosis prompt requires exactly one completion-cap marker")
     return template.replace(PROMPT_CAP_MARKER, str(cap))

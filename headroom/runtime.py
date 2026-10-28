@@ -15,7 +15,13 @@ from pydantic import BaseModel, ConfigDict, Field
 from headroom.api.security import open_regular
 from headroom.budget import BudgetExceeded, RunBudgetReached, money
 from headroom.config import ROLE_MODELS, ModelSpec, RuntimeConfig, VerifiedCapabilities
-from headroom.llm.admission import LocalEstimateAdmission, RuntimeNotReady, output_limit
+from headroom.diagnosis_protocol import named_diagnosis_request_policy
+from headroom.llm.admission import (
+    LocalEstimateAdmission,
+    NativeSchemaEstimateAdmission,
+    RuntimeNotReady,
+    output_limit,
+)
 from headroom.llm.client import DEFAULT_HTTP_RETRIES, TokenFactoryClient
 from headroom.llm.cost import Pricing
 from headroom.llm.preflight import MODEL_ID
@@ -72,7 +78,7 @@ class ProfileModel(BaseModel):
     output_usd_per_million: str
     cached_input_usd_per_million: str | None = None
     capabilities: dict = Field(default_factory=dict)
-    billing: BillingBound | LocalEstimateAdmission
+    billing: BillingBound | NativeSchemaEstimateAdmission | LocalEstimateAdmission
     evidence: str = Field(min_length=1)
 
 
@@ -87,6 +93,7 @@ class LiveProfile(BaseModel):
     base_url: str
     evidence_token_budget: int = Field(gt=0, le=150000)
     run_budget_mode: Literal["strict_reservation", "actual_usage"] = "strict_reservation"
+    diagnosis_request_policy: Literal["final48-diagnosis-only-2000-v1"] | None = None
     models: dict[str, ProfileModel]
 
     def runtime_config(self):
@@ -444,4 +451,13 @@ def build_live_runtime(
         max_http_retries=max_http_retries,
         low_effort_probe_request_sha256=low_effort_probe_request_sha256,
     )
-    return RuntimeBundle(LLMRouter(client), client, profile.evidence_token_budget)
+    return RuntimeBundle(
+        LLMRouter(
+            client,
+            diagnosis_request_policy=named_diagnosis_request_policy(
+                profile.diagnosis_request_policy
+            ),
+        ),
+        client,
+        profile.evidence_token_budget,
+    )

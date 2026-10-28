@@ -1914,6 +1914,10 @@ class _SuperDiagnosisRouter:
 def condition_services(condition, audit_dir, *, study_protocol=None):
     """Internal Services hooks; no public API request can select these ablations."""
     from headroom.diagnose import build_diagnosis_messages, diagnose_with_router
+    from headroom.diagnosis_protocol import (
+        carried_diagnosis_request_policy,
+        resolve_diagnosis_request_policy,
+    )
     from headroom.evidence import build_evidence
     from headroom.evidence_blockers import build_evidence_availability_catalog
     from headroom.orchestrator import Services
@@ -1948,8 +1952,17 @@ def condition_services(condition, audit_dir, *, study_protocol=None):
         visible = evidence
         if condition == "traceback_ultra":
             markdown, visible = restricted_evidence(evidence)
+        request_policy = resolve_diagnosis_request_policy(
+            carried=carried_diagnosis_request_policy(router),
+            explicit=kwargs.get("request_policy"),
+            study_protocol=study_protocol,
+        )
         if condition == "full_super":
+            if request_policy is not None:
+                raise ValueError("Ultra profile request policy cannot change the Super study arm")
             router = _SuperDiagnosisRouter(router)
+        if request_policy is not None:
+            kwargs["request_policy"] = request_policy
         counter += 1
         prompt_path = audit_dir / (str(counter).zfill(2) + "-diagnosis-input.txt")
         prompt_path.write_text(markdown)
@@ -1964,6 +1977,7 @@ def condition_services(condition, audit_dir, *, study_protocol=None):
             numerical_reference_context=visible.get("numerical_reference_context"),
             evidence_availability_catalog=build_evidence_availability_catalog(visible, markdown),
             study_protocol=study_protocol,
+            request_policy=request_policy,
         )
         serialized_messages = json.dumps(messages, ensure_ascii=False, allow_nan=False)
         messages_path = audit_dir / (str(counter).zfill(2) + "-initial-messages.json")
@@ -1973,7 +1987,14 @@ def condition_services(condition, audit_dir, *, study_protocol=None):
             {
                 "condition": condition,
                 **study_metadata(study_protocol),
-                "diagnosis_max_completion_tokens": diagnosis_cap(study_protocol),
+                "diagnosis_max_completion_tokens": diagnosis_cap(
+                    study_protocol, request_policy=request_policy
+                ),
+                **(
+                    {"diagnosis_request_policy": request_policy.id}
+                    if request_policy is not None
+                    else {}
+                ),
                 "evidence_markdown_sha256": hashlib.sha256(markdown.encode()).hexdigest(),
                 "evidence_markdown_file": prompt_path.name,
                 "initial_messages_before_router_sha256": hashlib.sha256(

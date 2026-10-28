@@ -71,7 +71,7 @@ cp .env.example .env && chmod 600 .env   # add NEBIUS_API_KEY, TAVILY_API_KEY
 uv run headroom fix scenarios/s3_eval_no_grad_missing/train.py
 ```
 
-`headroom fix` prints a live timeline and writes `report.md` and the evidence pack under `runs/<id>/`, plus `patch.diff` when a candidate is kept. `headroom snapshot <script>` captures without calling a model; `headroom watch -- <command>` captures CUDA OOM evidence and attempts repair for supported Python entrypoints. `headroom serve` starts the web app on port 8000. See [CLI](docs/CLI.md) and [Runtime setup](docs/RUNTIME.md).
+`headroom fix` prints a live timeline and writes `report.md` and the evidence pack under `runs/jobs/<id>/` by default, plus `patch.diff` when a candidate is kept. `headroom snapshot <script>` captures without calling a model; `headroom watch -- <command>` captures CUDA OOM evidence and attempts repair for supported Python entrypoints. `headroom serve` starts the web app on port 8000. See [CLI](docs/CLI.md) and [Runtime setup](docs/RUNTIME.md).
 
 ## How we use Nebius Token Factory and NVIDIA Nemotron
 

@@ -35,6 +35,32 @@ The image supplies browsers and system dependencies; its documentation says the 
 
 No host repository or workload mount, GPU access, model call, judge token, browser profile, production service change, or paid API is part of this preparation.
 
+## Narration checks before recording
+
+The original storyboard is a production outline, not evidence for numbers that
+have not been measured. Read the current RESULTS summary and each chosen run
+before recording narration.
+
+- Segment 1 may animate the preserved OOM text, but identify its historical
+  capture in the asset index. It is not a newly executed terminal session.
+- Segment 3 must show the actual newly triggered live run and its resulting
+  measurements. Do not pre-write its patch, percentage, update count or numerical
+  result from an older s3 success. Preserve the new run ID even if repair fails.
+- For historical examples, s3 has twenty identical compared losses with matched
+  pairing; s4 compares the first five reference losses; s2 is tolerance-based;
+  s8 has incomplete workload pairing. Candidate update count is not the count of
+  compared baseline/reference samples.
+- There are currently five distinct historical target-success scenarios across
+  separate campaigns. The best single campaign has three, the latest has two.
+  These are different measurements and must not be merged into a new success rate.
+- Strict/bf16 tiers, the new ablation and HF Trainer repair are not yet measured.
+  Do not display their planned placeholder tables as results.
+- The evidence requests with 268,920 and 500,029 provider-counted input tokens
+  establish observed request handling, not a measured one-million-token maximum.
+- Campaign invoice totals are incomplete. Omit the storyboard's fixed
+  two-dollar-per-campaign claim and GPU-time claim unless new evidence supports
+  the exact recorded statement.
+
 ## Remaining before video handoff
 
 1. Obtain C and publish the reviewed gallery; confirm the four repair cards and two failures render publicly.

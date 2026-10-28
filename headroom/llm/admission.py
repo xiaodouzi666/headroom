@@ -5,10 +5,16 @@ from decimal import ROUND_CEILING, Decimal, localcontext
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from headroom.budget import money
-from headroom.llm.preflight import ASSET_HASHES, MODEL_ID, PreflightRefused, PromptAuditor
+from headroom.llm.preflight import (
+    ASSET_HASHES,
+    MODEL_ID,
+    PreflightRefused,
+    PromptAuditor,
+    validate_request,
+)
 
 
 class RuntimeNotReady(RuntimeError):
@@ -141,4 +147,119 @@ class LocalEstimateAdmission(BaseModel):
                 name: value["sha256"] for name, value in audit["tokenizer"]["assets"].items()
             },
             "note": "Local estimate with risk margin; actual charges may exceed this reservation.",
+        }
+
+
+class NativeSchemaEstimateAdmission(LocalEstimateAdmission):
+    """Opt-in Ultra estimate; the complete native-format domain is counted explicitly."""
+
+    estimate_protocol: Literal["ultra_native_schema_v1"]
+    min_local_template_tokens: int = Field(gt=0, le=262144)
+    max_local_template_tokens: int = Field(gt=0, le=262144)
+    max_response_format_utf8_bytes: int = Field(gt=0, le=65536)
+    max_completion_tokens: int = Field(gt=0, le=2000)
+    calibration_evidence: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def ordered_domain(self):
+        if self.min_local_template_tokens > self.max_local_template_tokens:
+            raise ValueError("Native-schema estimate token domain is empty")
+        return self
+
+    def decide(self, spec, body, auditor):
+        cap = self.output_limit(spec, body)
+        if spec.model_id != MODEL_ID:
+            raise RuntimeNotReady("Native-schema estimate only supports the pinned Ultra model")
+        try:
+            normalized = validate_request(body)
+            allowed = {
+                "model",
+                "messages",
+                self.output_cap_field,
+                "timeout",
+                "response_format",
+                "chat_template_kwargs",
+            }
+            form = normalized.get("response_format", {})
+            native = form.get("json_schema", {})
+            if (
+                set(normalized) - allowed
+                or normalized.get("model") != MODEL_ID
+                or set(form) != {"type", "json_schema"}
+                or form.get("type") != "json_schema"
+                or set(native) != {"name", "schema"}
+                or native.get("name") != "headroom_response"
+                or normalized.get("chat_template_kwargs") != {"enable_thinking": False}
+                or any(
+                    set(message) != {"role", "content"}
+                    or message["role"] not in {"system", "user", "assistant"}
+                    for message in normalized["messages"]
+                )
+            ):
+                raise RuntimeNotReady(
+                    "Request is outside the explicit native-schema estimate domain"
+                )
+            audit = auditor.audit(body)
+        except PreflightRefused:
+            raise RuntimeNotReady(
+                "Request is outside the supported native-schema estimate domain"
+            ) from None
+        local = audit["local_template"]
+        native_stats = audit["request_fields"]["response_format"]
+        if (
+            audit["request"]["compact_json_utf8_bytes"] > self.max_prompt_utf8_bytes
+            or audit["provider_only_unmodeled_fields"] != ["response_format"]
+            or audit["historical_tool_id_fields_ignored_by_local_template"]
+            or local["exceeds_template_config_max_length"]
+            or not self.min_local_template_tokens
+            <= local["tokens"]
+            <= self.max_local_template_tokens
+            or native_stats["compact_json_utf8_bytes"] > self.max_response_format_utf8_bytes
+        ):
+            raise RuntimeNotReady("Request exceeds its explicit native-schema estimate bounds")
+        price = spec.pricing
+        if price is None or not price.verified:
+            raise RuntimeNotReady("Live pricing is not verified")
+        native_tokens = native_stats["serialized_json_local_tokens_estimate"]
+        with localcontext() as context:
+            context.prec = 256
+            estimated_tokens = (
+                int(
+                    (
+                        Decimal(local["tokens"] + native_tokens) * money(self.token_multiplier)
+                    ).to_integral_value(rounding=ROUND_CEILING)
+                )
+                + self.additive_tokens
+            )
+            reservation = (
+                estimated_tokens
+                * max(price.input_per_million, price.cached_input_per_million or Decimal(0))
+                + cap * price.output_per_million
+            ) / Decimal(1_000_000)
+        return reservation, {
+            "admission_kind": "local_estimate",
+            "estimate_protocol": self.estimate_protocol,
+            "provider_cost_upper_usd": None,
+            "provider_prompt_token_ceiling": None,
+            "local_template_tokens": local["tokens"],
+            "native_response_format_local_tokens": native_tokens,
+            "native_response_format_utf8_bytes": native_stats["compact_json_utf8_bytes"],
+            "native_response_format_sha256": native_stats["compact_json_sha256"],
+            "estimated_prompt_tokens_with_margin": estimated_tokens,
+            "token_multiplier": self.token_multiplier,
+            "additive_tokens": self.additive_tokens,
+            "calibration_evidence": self.calibration_evidence,
+            "request_input_form": audit["input_form"],
+            "request_sha256": audit["request"]["compact_json_sha256"],
+            "request_utf8_bytes": audit["request"]["compact_json_utf8_bytes"],
+            "template_sha256": local["sha256"],
+            "tokenizer_revision": audit["tokenizer"]["revision"],
+            "tokenizer_asset_hashes": {
+                name: value["sha256"] for name, value in audit["tokenizer"]["assets"].items()
+            },
+            "note": (
+                "Local estimate explicitly counts the entire native response-format JSON domain "
+                "in addition to the template, with margin; domains may overlap. "
+                "This is not a provider billing bound and actual charges may exceed it."
+            ),
         }

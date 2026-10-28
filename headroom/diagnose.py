@@ -12,7 +12,14 @@ from typing import Any
 from jsonschema import Draft202012Validator
 from pydantic import ValidationError
 
-from headroom.diagnosis_protocol import DEFAULT_DIAGNOSIS_CAP, diagnosis_cap, diagnosis_prompt
+from headroom.diagnosis_protocol import (
+    DEFAULT_DIAGNOSIS_CAP,
+    DiagnosisRequestPolicy,
+    carried_diagnosis_request_policy,
+    diagnosis_cap,
+    diagnosis_prompt,
+    resolve_diagnosis_request_policy,
+)
 from headroom.diagnosis_schema import build_diagnosis_schema
 from headroom.evidence_blockers import (
     build_evidence_availability_catalog,
@@ -578,6 +585,7 @@ def build_diagnosis_messages(
     numerical_reference_context: Mapping[str, Any] | None = None,
     evidence_availability_catalog: Mapping[str, Any] | None = None,
     study_protocol: str | None = None,
+    request_policy: DiagnosisRequestPolicy | None = None,
 ) -> list[dict[str, str]]:
     """No network access; generated request is for the Token Factory router only."""
     _check_required_saving(required_saving_gb)
@@ -609,7 +617,12 @@ def build_diagnosis_messages(
     # Put actual invocation facts before long source/evidence snippets.
     request["evidence_markdown"] = evidence_markdown
     return [
-        {"role": "system", "content": diagnosis_prompt(PROMPT_PATH.read_text(), study_protocol)},
+        {
+            "role": "system",
+            "content": diagnosis_prompt(
+                PROMPT_PATH.read_text(), study_protocol, request_policy=request_policy
+            ),
+        },
         {"role": "user", "content": json.dumps(request, ensure_ascii=False, allow_nan=False)},
     ]
 
@@ -910,6 +923,7 @@ def diagnose_with_router(
     max_supplements: int = 1,
     study_protocol: str | None = None,
     verification_feedback: list[Mapping[str, Any]] | None = None,
+    request_policy: DiagnosisRequestPolicy | None = None,
 ) -> DiagnosisValidation:
     """Call Ultra through the supplied budgeted router; keep invalid evidence invalid.
 
@@ -917,7 +931,12 @@ def diagnose_with_router(
     bounded supplement allowance. Genuine missing evidence is not
     overridden. Credentials, pricing and budget authorization belong to the caller.
     """
-    completion_cap = diagnosis_cap(study_protocol)
+    request_policy = resolve_diagnosis_request_policy(
+        carried=carried_diagnosis_request_policy(router),
+        explicit=request_policy,
+        study_protocol=study_protocol,
+    )
+    completion_cap = diagnosis_cap(study_protocol, request_policy=request_policy)
     if type(max_supplements) is not int or not 0 <= max_supplements <= 3:
         raise ValueError("max_supplements must be between 0 and 3")
     # Derive availability from the exact outgoing evidence, not model prose or
@@ -937,12 +956,13 @@ def diagnose_with_router(
         numerical_reference_context=evidence.get("numerical_reference_context"),
         evidence_availability_catalog=evidence["evidence_availability_catalog"],
         study_protocol=study_protocol,
+        request_policy=request_policy,
     )
     schema = build_diagnosis_schema(evidence=evidence, policy=policy)
     initial_messages = copy.deepcopy(messages)
     response_failures = []
     request_modes = []
-    requested_reasoning = True
+    requested_reasoning = True if request_policy is None else request_policy.reasoning
     for attempt in range(max_supplements + 1):
         schema_errors = []
         request_modes.append(
@@ -987,14 +1007,15 @@ def diagnose_with_router(
                 # Ultra thinking switch. No new call, token cap, profile or
                 # semantic-policy exemption is created. Other protocols retain
                 # their original mode and budget.
-                requested_reasoning = not (
-                    attempt == 0
-                    and max_supplements == 1
-                    and completion_cap == DEFAULT_DIAGNOSIS_CAP
-                    and error.reason == "truncated"
-                    and getattr(error.response, "finish_reason", None) == "length"
-                    and _verified_ultra_template_toggle(router)
-                )
+                if request_policy is None:
+                    requested_reasoning = not (
+                        attempt == 0
+                        and max_supplements == 1
+                        and completion_cap == DEFAULT_DIAGNOSIS_CAP
+                        and error.reason == "truncated"
+                        and getattr(error.response, "finish_reason", None) == "length"
+                        and _verified_ultra_template_toggle(router)
+                    )
                 # Start from the full original evidence/schema, not partial JSON
                 # or hidden reasoning. Same model, evidence, schema and output cap;
                 # the normal runtime must admit and account for this new call.
