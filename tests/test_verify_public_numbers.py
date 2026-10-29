@@ -307,6 +307,19 @@ def public_checkout(tmp_path):
         destination = tmp_path / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(repository / relative, destination)
+    # Keep the legacy-manifest API testable after the published headline advances.
+    legacy = (
+        "Across seven recorded campaigns, **5 of 9** distinct scenarios met targets. "
+        "The best single campaign reached **3 of 9**. The latest campaign reached **2 of 9**, "
+        "with **3 of 9** valid correct first-cause diagnoses. <!-- numbers: summary -->"
+    )
+    for name in ("README.md", "docs/DEVPOST.md"):
+        path = tmp_path / name
+        lines = [
+            legacy if "<!-- numbers: summary -->" in line else line
+            for line in path.read_text().splitlines()
+        ]
+        path.write_text("\n".join(lines) + "\n")
     return tmp_path
 
 
