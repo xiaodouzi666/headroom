@@ -10,15 +10,15 @@ Every PyTorch engineer has met `torch.OutOfMemoryError` at 3 a.m. PyTorch can re
 ## What it does
 Headroom runs your script on a real GPU with allocator history on, captures the memory snapshot at the point of failure, and sends a token-budgeted evidence pack — peak composition by call stack, hot allocation paths, fragmentation indicators, timeline and source — to Nemotron 3 Ultra for root-cause diagnosis. Nemotron 3 Super writes the patch as exact line edits; Headroom applies it, re-runs the script under the same seed, and keeps a result that meets the selected memory and numerical policy without shrinking the model or shortening training. It searches keep-or-revert for up to six rounds toward your memory target and records the PyTorch documentation consulted through Tavily.
 
-Across seven recorded campaigns, **5 of 9** distinct scenarios have reached their configured memory targets; the best single campaign reached **3 of 9**. The latest campaign reached **2 of 9**, with **3 of 9** valid correct first-cause diagnoses. <!-- numbers: summary -->
+Across eight recorded campaigns, **5 of 9** distinct scenarios have a run that met its configured memory target. The best single campaign reached **3 of 9**. The latest campaign reached **1 of 9**, with **5 of 9** valid correct first-cause diagnoses; raw first-category matches were **7 of 9**. <!-- numbers: summary -->
 
 - **s3 eval loop:** peak memory fell **73.4%**, with all 20 compared losses identical and matched inputs, effective batch, objective and seed. <!-- numbers: best.s3_eval_no_grad_missing -->
 - **s8 idle teacher:** peak memory fell **96.1%**, with identical observed scalar losses; full workload pairing was not established. <!-- numbers: best.s8_two_models_resident -->
 - **s4 retained graph:** peak memory fell **89.8%** from its observed OOM peak; the candidate completed 20 updates and its first five compared losses matched the documented reference. <!-- numbers: best.s4_loss_accumulation_graph -->
 
-In a diagnosis-only comparison on the same saved workloads, full evidence gave more first-category matches than traceback and memory-summary evidence. The full diagnosis and evidence-reference checks are reported separately in [the experiment results](RESULTS.md#does-the-snapshot-matter).
+In a diagnosis-only comparison on the same saved workloads, full evidence gave more first-category matches than traceback and memory-summary evidence. The full diagnosis and evidence-reference checks are reported separately in [the experiment results](https://github.com/xiaodouzi666/headroom/blob/main/docs/RESULTS.md#does-the-snapshot-matter).
 
-The saved-snapshot CLI can diagnose a capture without running the supplied training script and can suggest an unverified patch draft. The complete result history and comparison details are in [RESULTS](RESULTS.md).
+The saved-snapshot CLI processes a capture without running the supplied training script and is designed to suggest an unverified patch draft. Its first two live checks returned no usable diagnosis; validation is still in progress. The complete result history and comparison details are in [RESULTS](https://github.com/xiaodouzi666/headroom/blob/main/docs/RESULTS.md).
 
 ## How we built it
 - **Lab:** Docker-isolated runner (no network, read-only source), `torch.cuda.memory._record_memory_history`, optimizer-step hooks for step counting and loss capture, same-seed re-runs, parameter-count and training-length checks.
@@ -38,10 +38,10 @@ Real repairs produced end to end by open models and tested on hardware; diagnose
 Large context is useful when the evidence format is explicit and the model must cite recorded stack IDs. A valid JSON response is only the first step: diagnosis references, patch application and numerical comparisons need separate checks. Exact line edits made patch failures easier to explain and repair. The hardest part of an automatic optimization loop is deciding what the measurements actually support.
 
 ## What's next
-Run the new micro-batch and chunked-loss strategies across the fixed suite; measure the planned precision-policy comparisons; extend diagnosis to FSDP/DeepSpeed workloads; and evaluate longer training runs.
+Improve strategy selection, evidence requests and malformed responses exposed by the latest suite; obtain successful precision-policy comparisons; extend diagnosis to FSDP/DeepSpeed workloads; and evaluate longer training runs.
 
 ## Limitations
-Historical memory-target successes come from separate runs and do not establish identical full-training behaviour. Numerical coverage varies by case, as detailed above and in RESULTS. The diagnosis comparison is one fixed-order pass without repeats, with two unconfirmed reference causes retained in the full denominator. HF Trainer repair has not run. Saved-snapshot diagnosis has passed offline engineering checks and awaits live model validation. The public site provides recorded results and Verified runs; live examples and uploads are currently paused.
+Historical memory-target successes come from separate runs and do not establish identical full-training behaviour. Numerical coverage varies by case, as detailed above and in RESULTS. The latest repair campaign met only one memory target; its raw first-category matches and valid correct diagnoses are reported separately. The diagnosis-only comparison is one fixed-order pass without repeats, with two unconfirmed reference causes retained in the full denominator. Both new s2 precision-policy tests and the HF Trainer repair failed to meet their requirements; a statically accepted HF configuration edit did not establish a successful repair. Saved-snapshot diagnosis remains under validation after two live checks produced no usable diagnosis or patch. The public site provides recorded results, Verified runs and preset live examples. Snapshot uploads remain paused.
 
 ## Built with
 Nebius Token Factory · NVIDIA Nemotron 3 Ultra · NVIDIA Nemotron 3 Super · NVIDIA Nemotron 3 Nano · Tavily · PyTorch · CUDA · Docker · FastAPI · React

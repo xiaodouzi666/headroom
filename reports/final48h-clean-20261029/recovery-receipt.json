@@ -1,0 +1,351 @@
+{
+  "schema": "headroom.final48.f5-recovery-live-audit.v1",
+  "generated_at": "2026-10-29T00:27:41.149518+00:00",
+  "run_id": "bd5bc2173ef1452aaabebcd5fd76bfb3",
+  "original_run_id": "01b872b7d4e24bd9a1109827777e4529",
+  "source_revision": "254b92eee53458894d50db1c924b1d2797810a35",
+  "status": "needs_human",
+  "target_met": false,
+  "reason": "Diagnosis requests additional information; inspect diagnosis.json notes before restarting with new evidence",
+  "search": {
+    "baseline_target_met": true,
+    "first_target_met_round": null,
+    "mode": "until_target",
+    "rounds_executed": 1,
+    "stop_reason": "diagnosis_needs_more_info"
+  },
+  "original_preserved": {
+    "registry_rows_equal_proposal": true,
+    "registry_rows_sha256": "1ca28c2fc33d6ccf135db201ce60ded897ac8e8b123f2866d0a5c4b131e10d01",
+    "budget_attempts": 0,
+    "run_closed_without_halt": true,
+    "all_original_report_artifact_hashes_unchanged": true
+  },
+  "input_binding": {
+    "same_queued_request_and_controls": true,
+    "same_workload_hashes": true,
+    "same_absolute_profile": true,
+    "source_pin_count": 127,
+    "source_pin_mismatches": 0,
+    "clean_git_status": true
+  },
+  "cli": {
+    "invocation_kind": "installed_console_script",
+    "console_path": "/tmp/headroom-f5-20261029-krupo1aa/repo/.venv/bin/headroom",
+    "package_root": "/tmp/headroom-f5-20261029-krupo1aa/repo",
+    "verified": true,
+    "invoked": true,
+    "observed_exit_code": 78,
+    "console_sha256": "111ed619ebfbe4ca7ed8034f6c8fff0e3fe7d5bcec897cf7e520debdccd2f40c",
+    "cli_sha256": "9e3e96e02a241ae42e128a1e97f38b5bae22ee2b42632144e24d6a6b29cf5b54",
+    "bridge_sha256": "9cfff6c9efd8c4ff38d3e70a3bd868ac7284e2310f36a08ca60e9f4700e2f0a6",
+    "request_sha256": "b4fdb29f3fb79fe940c35f7fdb7d45f996c0909688d8a8fe57dc11653dbf9ecd"
+  },
+  "execution": {
+    "wall_seconds": 44.3630433769431,
+    "limit_seconds": 480,
+    "cleanup_verified": true,
+    "deadline_exceeded": false,
+    "execution_terminal": true,
+    "baseline": {
+      "capture_run_id": "4f4fe414bfc946bf92b4c6fac914fd51",
+      "status": "completed",
+      "device": "cuda",
+      "completed_updates": 20,
+      "peak_allocated_bytes": 2435717632,
+      "capture_complete": true,
+      "cleanup_verified": true
+    },
+    "model_calls": 3,
+    "patch_model_calls": 0,
+    "after_capture_present": false,
+    "kept_candidate_present": false
+  },
+  "diagnosis": {
+    "valid": true,
+    "ready_for_patch": false,
+    "needs_more_info": true,
+    "primary_category": "activations",
+    "issues": [],
+    "missing_or_ambiguous_fields": [
+      {
+        "field": "execution_context.runtime_input_observations.tensors.optimizer_input_name",
+        "reason": "missing",
+        "blocking_scope": "current_plan"
+      },
+      {
+        "field": "execution_context.runtime_input_observations.tensors.effective_batch_per_optimizer_update",
+        "reason": "missing",
+        "blocking_scope": "current_plan"
+      },
+      {
+        "field": "source_files[0].content lines 18-30",
+        "reason": "ambiguous",
+        "blocking_scope": "current_plan"
+      }
+    ],
+    "response_validation_failures": [
+      {
+        "request_index": 1,
+        "finish_reason": "length"
+      }
+    ],
+    "request_modes": [
+      {
+        "request_index": 1,
+        "requested_reasoning": false,
+        "max_completion_tokens": 2000,
+        "scope": "host_requested_mode_only"
+      },
+      {
+        "request_index": 2,
+        "requested_reasoning": false,
+        "max_completion_tokens": 2000,
+        "scope": "host_requested_mode_only"
+      }
+    ]
+  },
+  "calls": [
+    {
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "role": "annotate",
+      "http_status": 200,
+      "response_model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "usage": {
+        "prompt_tokens": 60409,
+        "completion_tokens": 227,
+        "total_tokens": 60636,
+        "cached_tokens": 59136,
+        "reasoning_tokens": null
+      },
+      "cost": {
+        "usd": "0.000840492",
+        "status": "known",
+        "reason": null
+      },
+      "elapsed_seconds": 4.579484162153676,
+      "settled": true,
+      "outcome": "response",
+      "private_record_sha256": "6dfe73a62078f917382280b16fbe806fbaddc15242fb686325eb9fc50c18a108"
+    },
+    {
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "role": "diagnose",
+      "http_status": 200,
+      "response_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "usage": {
+        "prompt_tokens": 54759,
+        "completion_tokens": 2000,
+        "total_tokens": 56759,
+        "cached_tokens": 4352,
+        "reasoning_tokens": 0
+      },
+      "cost": {
+        "usd": "0.05692924",
+        "status": "known",
+        "reason": null
+      },
+      "elapsed_seconds": 8.364771160064265,
+      "settled": true,
+      "outcome": "response",
+      "private_record_sha256": "2947d2276e8c9ae4c5835b5ce873109f3f9122a2030e9bc538926828e9f5bd6f"
+    },
+    {
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "role": "diagnose",
+      "http_status": 200,
+      "response_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "usage": {
+        "prompt_tokens": 54831,
+        "completion_tokens": 1675,
+        "total_tokens": 56506,
+        "cached_tokens": 47872,
+        "reasoning_tokens": 0
+      },
+      "cost": {
+        "usd": "0.01772864",
+        "status": "known",
+        "reason": null
+      },
+      "elapsed_seconds": 7.21667375206016,
+      "settled": true,
+      "outcome": "response",
+      "private_record_sha256": "cc0626c8e5433b5b6fa15f65d1ab6b5d4237db836f376ec5583d5818958ba2a3"
+    }
+  ],
+  "usage": {
+    "admission_counts": {
+      "local_estimate": 2,
+      "unknown": 0,
+      "verified_provider_bound": 1
+    },
+    "billing_complete": true,
+    "bounded_cost_calls": 0,
+    "by_model": [
+      {
+        "admission_counts": {
+          "local_estimate": 0,
+          "unknown": 0,
+          "verified_provider_bound": 1
+        },
+        "billing_complete": true,
+        "bounded_cost_calls": 0,
+        "calls": 1,
+        "complete": true,
+        "conservative_total_usd": "0.000840492",
+        "input_tokens": 60409,
+        "known_cost_usd": "0.000840492",
+        "known_input_tokens": 60409,
+        "known_output_tokens": 227,
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "output_tokens": 227,
+        "total_cost_usd": "0.000840492",
+        "unknown_cost_calls": 0,
+        "unresolved_cost_calls": 0
+      },
+      {
+        "admission_counts": {
+          "local_estimate": 2,
+          "unknown": 0,
+          "verified_provider_bound": 0
+        },
+        "billing_complete": true,
+        "bounded_cost_calls": 0,
+        "calls": 2,
+        "complete": true,
+        "conservative_total_usd": "0.07465788",
+        "input_tokens": 109590,
+        "known_cost_usd": "0.07465788",
+        "known_input_tokens": 109590,
+        "known_output_tokens": 3675,
+        "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "output_tokens": 3675,
+        "total_cost_usd": "0.07465788",
+        "unknown_cost_calls": 0,
+        "unresolved_cost_calls": 0
+      }
+    ],
+    "calls": 3,
+    "complete": true,
+    "conservative_total_usd": "0.075498372",
+    "input_tokens": 169999,
+    "known_cost_usd": "0.075498372",
+    "known_input_tokens": 169999,
+    "known_output_tokens": 3902,
+    "output_tokens": 3902,
+    "total_cost_usd": "0.075498372",
+    "unknown_cost_calls": 0,
+    "unresolved_cost_calls": 0
+  },
+  "settlement": {
+    "actual_usd": "0.075498372",
+    "charged_usd": "0.075498372",
+    "cleanup_verified": true,
+    "combined_f5_charged_usd": "0.075498372",
+    "cost_resolved": true,
+    "execution_terminal": true,
+    "original_run_id": "01b872b7d4e24bd9a1109827777e4529",
+    "recovery_run_id": "bd5bc2173ef1452aaabebcd5fd76bfb3",
+    "status": "settled"
+  },
+  "budget": {
+    "original_actual_usd": "0",
+    "recovery_actual_usd": "0.075498372",
+    "combined_f5_actual_usd": "0.075498372",
+    "combined_f5_charged_usd": "0.075498372",
+    "combined_f5_limit_usd": "0.30",
+    "shared_pool_and_profile_preserved": true,
+    "daily_limit_usd": "6.43",
+    "global_ceiling_at_claim_usd": "2.29223830"
+  },
+  "acceptance": {
+    "environment_prerequisite_fixed": true,
+    "clean_checkout_cli_gpu_and_model_chain_executed": true,
+    "report_produced": true,
+    "successful_repair": false,
+    "new_target_success": false,
+    "reason": "Baseline already satisfied fix-oom. Final diagnosis requested more information; no patch or after-run was produced."
+  },
+  "boundaries": [
+    "New-version recovery is separate from the original 6c prerequisite failure.",
+    "First Ultra structured response was truncated (retained finish_reason=length); the existing diagnosis flow made one supplementary request and returned a valid needs-more-info diagnosis.",
+    "The auditor did not execute, retry, copy credentials or modify runtime/controller/proposal/checkout."
+  ],
+  "artifacts": [
+    {
+      "path": ".cache/final48-feature-execution-20261029/clean-s3-env-recovery/controller-result.json",
+      "sha256": "4ef16c147291624a1add0993de5531c93f9793c6bd957e4145112e29a2c6a919",
+      "bytes": 625
+    },
+    {
+      "path": ".cache/final48-feature-execution-20261029/clean-s3-env-recovery/outcome.json",
+      "sha256": "af526746b1bc749086671569b66b076dc62934d102d945e51ce8679582fd5c1e",
+      "bytes": 1383443
+    },
+    {
+      "path": ".cache/final48-feature-execution-20261029/clean-s3-env-recovery/settlement.json",
+      "sha256": "721196fe2bd52684c0b9dea2f0499e1ef9f25390477493b23ccda7423be4d4b2",
+      "bytes": 330
+    },
+    {
+      "path": ".cache/final48-feature-execution-20261029/clean-s3-env-recovery/observer-status.json",
+      "sha256": "1cc1368d5dbfd14f626989ea57835d3ad55ecc9485ca3e1fa8d9628a94aea949",
+      "bytes": 113
+    },
+    {
+      "path": ".cache/final48-feature-execution-20261029/clean-s3-env-recovery/stdout.log",
+      "sha256": "a7564db2b3c3d1e70f702f2144f06c07f320e732bb4af3e5611ea3bcfe2b5b9e",
+      "bytes": 1866
+    },
+    {
+      "path": ".cache/final48-feature-execution-20261029/clean-s3-env-recovery/stderr.log",
+      "sha256": "b0e7cbadcfa609136712108824240e90b1675d22e58b9d0d0865c1d6aca0cf0f",
+      "bytes": 250
+    },
+    {
+      "path": ".cache/final48-feature-execution-20261029/clean-s3-env-recovery/terminal-events.jsonl",
+      "sha256": "d518a1595cab8bf954a74fe6d8943be28b1a097716a9317060461044508f332c",
+      "bytes": 4393
+    },
+    {
+      "path": ".cache/final48-feature-execution-20261029/clean-s3-env-recovery/once.json",
+      "sha256": "ab1ee92429224e02839c95570cd381138a90dcced7c07ead82fa5778590d5fa5",
+      "bytes": 391
+    },
+    {
+      "path": ".cache/final48-feature-execution-20261029/f5-env-recovery-proposal.json",
+      "sha256": "1f535833d16268150bb6289407f690332b85ea5d401e5f8f0bbb3bb1718cbd4e",
+      "bytes": 19972
+    },
+    {
+      "path": "/home/xiaodouzi/workspace/headroom/runs/final48-f5-env-recovery-20261029/jobs/bd5bc2173ef1452aaabebcd5fd76bfb3/report.json",
+      "sha256": "46b39f0c1d49d4e07b8af3a2b73ede8d20a527d631ab3c4f3b238c9a9af45040",
+      "bytes": 876532
+    },
+    {
+      "path": "/home/xiaodouzi/workspace/headroom/runs/final48-f5-env-recovery-20261029/jobs/bd5bc2173ef1452aaabebcd5fd76bfb3/report.md",
+      "sha256": "70b6a2ab91e8c4e9b74968300acf6e3f9bee6e319708a49a5dd3440a7cf11f6d",
+      "bytes": 7910
+    },
+    {
+      "path": "/home/xiaodouzi/workspace/headroom/runs/final48-f5-env-recovery-20261029/jobs/bd5bc2173ef1452aaabebcd5fd76bfb3/rounds/01/diagnosis.json",
+      "sha256": "c2d119dd06bc22ba574e2c3e3f4fc3265a5ec2450d4a82115564065c12aa61d1",
+      "bytes": 8069
+    },
+    {
+      "path": "/home/xiaodouzi/workspace/headroom/runs/final48-f5-env-recovery-20261029/jobs/bd5bc2173ef1452aaabebcd5fd76bfb3/lab/4f4fe414bfc946bf92b4c6fac914fd51/result.json",
+      "sha256": "f242db825e3e78e61881b8e5a861341d8a99ed878c95dc703d1a32ce500059f3",
+      "bytes": 62316
+    },
+    {
+      "path": "reports/final48h-clean-20261029/live-receipt.json",
+      "sha256": "e12851efce8e67eb55de20402c6d58da887bb9f23a15ff3cd8248d93abffa504",
+      "bytes": 3971
+    },
+    {
+      "path": ".cache/final48-feature-execution-20261029/f5_env_recovery_controller.py",
+      "sha256": "d8810ca9dc0f835f26bb75ff17732d25c137a1239d485ce8450065f73d00b572",
+      "bytes": 11498
+    }
+  ]
+}

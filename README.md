@@ -32,7 +32,7 @@ torch.cuda.memory._dump_snapshot("snapshot.pickle")
 uv run headroom diagnose --snapshot snapshot.pickle --traceback oom.txt --source train.py
 ```
 
-The traceback and source are optional. Headroom produces a diagnosis with cited stacks and, when source is supplied, can suggest a patch draft. This command does not run the supplied script. The draft is marked **unverified: not run on hardware**. See [CLI setup, outputs and retention](docs/CLI.md#diagnose-a-saved-cuda-snapshot).
+The traceback and source are optional. Headroom analyzes the saved evidence and attempts to produce a diagnosis with cited stacks and, when source is supplied, a patch draft. This command does not run the supplied script. The draft is marked **unverified: not run on hardware**. The first two live snapshot checks did not return usable diagnoses; this feature is still being validated. See [CLI setup, outputs and retention](docs/CLI.md#diagnose-a-saved-cuda-snapshot).
 
 ## Results
 
@@ -50,7 +50,7 @@ The recorded suite contains eight synthetic PyTorch training cases and pinned na
 | [s5 variable-length allocations](docs/RESULTS.md) | Not met | — | No qualifying historical target result |
 | [nanoGPT pinned workload](docs/RESULTS.md) | Not met | — | No qualifying historical target result |
 
-Across seven recorded campaigns, **5 of 9** distinct scenarios have a run that met its configured memory target. The best single campaign reached **3 of 9**. The latest campaign reached **2 of 9**, with **3 of 9** valid correct first-cause diagnoses. <!-- numbers: summary -->
+Across eight recorded campaigns, **5 of 9** distinct scenarios have a run that met its configured memory target. The best single campaign reached **3 of 9**. The latest campaign reached **1 of 9**, with **5 of 9** valid correct first-cause diagnoses; raw first-category matches were **7 of 9**. <!-- numbers: summary -->
 
 ### Does the snapshot matter?
 
@@ -101,7 +101,9 @@ All model calls use Token Factory's OpenAI-compatible API (`us-central1`). Headr
 
 The historical table combines separate runs and workload versions. s3 has a paired, identical full loss series; s1 and s4 compare the first five backward-loss values against documented references. s2 uses a tolerance-based comparison, and s2/s8 lack complete input, effective-batch and objective pairing. An OOM baseline only shows the peak reached before failure; s1's candidate peak is reconstructed. Verification covers short training runs, not full training quality. Distributed training and compiled extensions are outside the current repair workflow.
 
-Four scenarios have no recorded target success in this history. The latest campaign stopped five scenarios before diagnosis when its configured model allowance could not admit another request. The diagnosis comparison is one fixed-order pass without repeats; s5 and nanoGPT have unconfirmed reference causes and remain in its denominator. Two full-evidence Ultra replies were truncated. The strict-versus-bf16 comparison and HF Trainer repair are still to be measured. Long-input probes establish request handling, not diagnosis quality or the maximum context size. Uploaded-snapshot diagnosis and patch drafts still await their live checks; public uploads and live examples are currently paused. The Verified runs gallery is publicly available.
+Four scenarios have no recorded target success in this history. In the latest campaign, only the retained-loss-graph repair met its target; matching a cause was often insufficient to produce a usable patch. The first-cause counts use the first saved diagnosis round, which can include correction requests within that round; raw category matches and validated diagnoses are separate measures. The two additional s2 precision-policy tests did not pass, and HF Trainer repair failed after a configuration edit passed its static check. They produced no successful memory-versus-speed comparison or new successful gallery cases.
+
+The diagnosis comparison is one fixed-order pass without repeats; s5 and nanoGPT have unconfirmed reference causes and remain in its denominator. Two full-evidence Ultra replies were truncated. Long-input probes establish request handling, not diagnosis quality or the maximum context size. The two live saved-snapshot checks returned no usable diagnosis or patch, so that feature remains under validation. Public snapshot uploads are paused. Preset live examples and the historical Verified runs gallery are available.
 
 ## Related work
 
@@ -109,7 +111,7 @@ Headroom builds on existing memory-analysis and optimization tools. PyTorch's [m
 
 ## Repository
 
-`headroom/` (Lab, evidence, LLM routing, verify, search, API) · `scenarios/` (synthetic cases) · `repos/` (pinned repository fixtures) · `web/` (React app) · `docs/` (architecture, CLI, evaluation, feedback) · `reports/` (campaign records). [Verification notes and document evidence](reports/final48h-docs-20261029/README.md).
+`headroom/` (Lab, evidence, LLM routing, verify, search, API) · `scenarios/` (synthetic cases) · `repos/` (pinned repository fixtures) · `web/` (React app) · `docs/` (architecture, CLI, evaluation, feedback) · `reports/` (campaign records). [Current document evidence](reports/final48h-docs-20261029/r7-update-notes-v1.md) and [earlier verification notes](reports/final48h-docs-20261029/README.md).
 
 Development checks: `uv run pytest -q`, `uv run ruff check .`, `gitleaks detect`.
 

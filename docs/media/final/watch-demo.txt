@@ -1,0 +1,79 @@
+Actual stdout from the completed Watch command:
+{"event": "scenario_start", "scenario": "s1_batch_too_big", "batch": 32, "steps": 20, "width": 256, "depth": 192, "sequence_length": 2048, "parameter_count": 101007360, "parameter_dtype": "float32", "tiny": false, "measured_gpu_acceptance": false, "allocated_bytes": 471171072, "reserved_bytes": 471859200, "peak_allocated_bytes": 471171072, "peak_reserved_bytes": 471859200}
+{"event": "summary", "status": "oom", "allocated_bytes": 24750424064, "reserved_bytes": 24750587904, "peak_allocated_bytes": 24750424064, "peak_reserved_bytes": 24752685056}
+{
+  "status": "failed",
+  "search_mode": "until_target",
+  "triggered": true,
+  "capture_status": "complete",
+  "cuda_oom_confirmed": true,
+  "repair_supported": true,
+  "repair_unavailable_reason": null,
+  "reason": null,
+  "exit_code": 1,
+  "original_exit_code": 1,
+  "report_path": "/home/xiaodouzi/workspace/headroom/runs/watch/a5c98d7d4be845288b4b4d40cd1e6435/fix/a5c98d7d4be845288b4b4d40cd1e6435/report.md",
+  "watch_report_path": "/home/xiaodouzi/workspace/headroom/runs/watch/a5c98d7d4be845288b4b4d40cd1e6435/watch.md",
+  "stdout_path": "/home/xiaodouzi/workspace/headroom/runs/watch/a5c98d7d4be845288b4b4d40cd1e6435/lab/3104cd64b52c4a0badc847ea3d33c285/stdout.log",
+  "stderr_path": "/home/xiaodouzi/workspace/headroom/runs/watch/a5c98d7d4be845288b4b4d40cd1e6435/lab/3104cd64b52c4a0badc847ea3d33c285/stderr.log"
+}
+
+Actual stderr from the same command:
+Traceback (most recent call last):
+  File "/source/train.py", line 117, in <module>
+    main()
+  File "/source/train.py", line 99, in main
+    predictions = model(inputs)
+                  ^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1844, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/source/train.py", line 29, in forward
+    hidden = block(hidden)
+             ^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1844, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/source/train.py", line 18, in forward
+    return inputs + self.ff(self.norm(inputs))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1844, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/container.py", line 250, in forward
+    input = module(input)
+            ^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1844, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/linear.py", line 125, in forward
+    return F.linear(input, self.weight, self.bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/runtime/headroom/lab/precision.py", line 532, in __torch_function__
+    result = func(*args, **(kwargs or {}))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 256.00 MiB. GPU 0 has a total capacity of 23.55 GiB of which 103.19 MiB is free. Including non-PyTorch memory, this process has 23.38 GiB memory in use. Of the allocated memory 23.05 GiB is allocated by PyTorch, and 160.00 KiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)

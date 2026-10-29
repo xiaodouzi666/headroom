@@ -1,0 +1,260 @@
+{
+  "schema": "headroom.final48.watch-live-audit.v1",
+  "generated_at": "2026-10-29T00:17:39.549263+00:00",
+  "source_revision": "6c7cde25b7b17ef2aaf236aa2c6543abb57f8499",
+  "run_id": "a5c98d7d4be845288b4b4d40cd1e6435",
+  "original_command": [
+    "python",
+    "train.py"
+  ],
+  "status": "failed",
+  "triggered": true,
+  "cuda_oom_confirmed": true,
+  "capture": {
+    "run_id": "3104cd64b52c4a0badc847ea3d33c285",
+    "status": "oom",
+    "steps": 0,
+    "cleanup_verified": true,
+    "started_at": "2026-10-29T00:02:22.106401+00:00",
+    "finished_at": "2026-10-29T00:02:29.620229+00:00"
+  },
+  "repair": {
+    "run_id": "a5c98d7d4be845288b4b4d40cd1e6435",
+    "status": "failed",
+    "reason": "Pipeline failed: ResponseValidationError",
+    "target_met": false,
+    "search": {
+      "mode": "until_target",
+      "baseline_target_met": false,
+      "first_target_met_round": null,
+      "stop_reason": "pipeline_error",
+      "rounds_executed": 2
+    },
+    "rounds": [
+      {
+        "number": 1,
+        "decision": "revert",
+        "reason": "verification_hard_constraints_unmet",
+        "failure": null,
+        "keep": false,
+        "patch_recorded": true,
+        "candidate_completed": true,
+        "target_met": false,
+        "loss_equivalence": "changed",
+        "numerical_basis": "original_plan_first_five_backward_scalars",
+        "max_loss_delta": 2.5490983724594116,
+        "peak_before_gb": 24.750424064,
+        "peak_after_gb": 17.112406528,
+        "reduction_pct": 30.86014815846995
+      },
+      {
+        "number": 2,
+        "decision": "revert",
+        "reason": "failed",
+        "failure": "Pipeline failed: ResponseValidationError",
+        "keep": null,
+        "patch_recorded": false,
+        "candidate_completed": null,
+        "target_met": null,
+        "loss_equivalence": null,
+        "numerical_basis": null,
+        "max_loss_delta": null,
+        "peak_before_gb": null,
+        "peak_after_gb": null,
+        "reduction_pct": null
+      }
+    ],
+    "kept_candidate_present": false
+  },
+  "execution": {
+    "exit_code": 1,
+    "timed_out": false,
+    "execution_terminal": true,
+    "trusted_cleanup_verified": true,
+    "cleanup_evidence": "Successful original finish_feature_child settlement requires execution_terminal and cleanup_verified; capture cleanup also independently recorded."
+  },
+  "usage": {
+    "calls": 7,
+    "known_cost_usd": "0.12101216",
+    "total_cost_usd": null,
+    "unknown_cost_calls": 1,
+    "complete": false,
+    "billing_complete": true,
+    "bounded_cost_calls": 1,
+    "unresolved_cost_calls": 0,
+    "conservative_total_usd": "0.12329942",
+    "admission_counts": {
+      "verified_provider_bound": 4,
+      "local_estimate": 3,
+      "unknown": 0
+    },
+    "input_tokens": 194877,
+    "known_input_tokens": 194877,
+    "output_tokens": 11677,
+    "known_output_tokens": 11677,
+    "by_model": [
+      {
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "calls": 1,
+        "known_cost_usd": "0",
+        "total_cost_usd": null,
+        "unknown_cost_calls": 1,
+        "complete": false,
+        "billing_complete": true,
+        "bounded_cost_calls": 1,
+        "unresolved_cost_calls": 0,
+        "conservative_total_usd": "0.00228726",
+        "admission_counts": {
+          "verified_provider_bound": 1,
+          "local_estimate": 0,
+          "unknown": 0
+        },
+        "input_tokens": 37553,
+        "known_input_tokens": 37553,
+        "output_tokens": 142,
+        "known_output_tokens": 142
+      },
+      {
+        "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "calls": 3,
+        "known_cost_usd": "0.10539116",
+        "total_cost_usd": "0.10539116",
+        "unknown_cost_calls": 0,
+        "complete": true,
+        "billing_complete": true,
+        "bounded_cost_calls": 0,
+        "unresolved_cost_calls": 0,
+        "conservative_total_usd": "0.10539116",
+        "admission_counts": {
+          "verified_provider_bound": 0,
+          "local_estimate": 3,
+          "unknown": 0
+        },
+        "input_tokens": 122780,
+        "known_input_tokens": 122780,
+        "output_tokens": 5693,
+        "known_output_tokens": 5693
+      },
+      {
+        "model": "nvidia/nemotron-3-super-120b-a12b",
+        "calls": 3,
+        "known_cost_usd": "0.0156210",
+        "total_cost_usd": "0.0156210",
+        "unknown_cost_calls": 0,
+        "complete": true,
+        "billing_complete": true,
+        "bounded_cost_calls": 0,
+        "unresolved_cost_calls": 0,
+        "conservative_total_usd": "0.0156210",
+        "admission_counts": {
+          "verified_provider_bound": 3,
+          "local_estimate": 0,
+          "unknown": 0
+        },
+        "input_tokens": 34544,
+        "known_input_tokens": 34544,
+        "output_tokens": 5842,
+        "known_output_tokens": 5842
+      }
+    ]
+  },
+  "settlement": {
+    "status": "settled",
+    "actual_usd": null,
+    "charged_usd": "0.12329942",
+    "cost_resolved": true,
+    "cost_basis": "conservative_bound",
+    "scope_spent_usd": null
+  },
+  "acceptance": {
+    "oom_to_diagnosis_trigger": true,
+    "real_triggered_run_exists": true,
+    "repair_success": false,
+    "public_result_visibility": "not_yet_independently_verified",
+    "full_watch_acceptance": null,
+    "rule": "The plan permits repair failure, but also requires the triggered run to be visible in Verified runs or Results."
+  },
+  "f3b_total": {
+    "snapshot_actual_usd": "0.09407844",
+    "watch_actual_usd": null,
+    "watch_known_actual_subtotal_usd": "0.12101216",
+    "all_actual_usd": null,
+    "all_known_actual_subtotal_usd": "0.21509060",
+    "all_charged_usd": "0.21737786",
+    "all_costs_resolved": true,
+    "all_costs_known": false,
+    "scope_limit_usd": "1.00",
+    "financial_status": "settled",
+    "parent_financial_status": "completed",
+    "functional_snapshot_criteria_met": false
+  },
+  "boundaries": [
+    "No retry or new dispatch by this audit.",
+    "The seven Watch model calls include one bounded call with unknown actual cost; it is not zero.",
+    "Round-one peak reduction was rejected for changed loss; it is not a successful repair.",
+    "The numerical basis is first-five backward scalars, not all 20 losses or parameter-wise identity.",
+    "The previous receipt.json remains unchanged and covers only the three snapshot attempts."
+  ],
+  "artifacts": [
+    {
+      "path": ".cache/final48-feature-execution-20261029/watch-s1/outcome.json",
+      "sha256": "03c95a39bc58fc35d013f338cc4eaab5a5e59d57021c8754673169b6fb49676f",
+      "bytes": 1751127
+    },
+    {
+      "path": ".cache/final48-feature-execution-20261029/watch-s1/settlement.json",
+      "sha256": "1f24229f33f52b2b0baafd808959c849788f684e48833b460533f48768eafe0c",
+      "bytes": 169
+    },
+    {
+      "path": ".cache/final48-feature-execution-20261029/watch-s1/stdout.log",
+      "sha256": "2f55aeb66ca152bcb0dbd72a310ff7495821844b7a5671ac39160f29d52c4e0f",
+      "bytes": 1373
+    },
+    {
+      "path": ".cache/final48-feature-execution-20261029/watch-s1/stderr.log",
+      "sha256": "745cd244a0c564b92cc48d078f01aba4b07b36f7a57b1e467863c7f4009280a9",
+      "bytes": 3603
+    },
+    {
+      "path": ".cache/final48-feature-execution-20261029/watch-s1/terminal-events.jsonl",
+      "sha256": "4c0d070a6dabce00ecf24f08256ad7b4f761464778aaed40a3eec6aca442202d",
+      "bytes": 5523
+    },
+    {
+      "path": ".cache/final48-feature-execution-20261029/watch-s1/accounting-after.json",
+      "sha256": "894c41f2d1ada6fe5a8d2b1aba64ab57c2a15ffbed59edc8048ed2c80b978c1e",
+      "bytes": 1521
+    },
+    {
+      "path": ".cache/final48-feature-execution-20261029/F3b-final-accounting.json",
+      "sha256": "a16b90627078850d1eb3683d9f8673696f52a1c0a468f6959092c66132f22b89",
+      "bytes": 1523
+    },
+    {
+      "path": "/home/xiaodouzi/workspace/headroom/runs/watch/a5c98d7d4be845288b4b4d40cd1e6435/watch.md",
+      "sha256": "6d57b10101f837671810b14f771bc0d351f792c37b4542d97afacb14316d8dec",
+      "bytes": 334
+    },
+    {
+      "path": "/home/xiaodouzi/workspace/headroom/runs/watch/a5c98d7d4be845288b4b4d40cd1e6435/watch.json",
+      "sha256": "0d80ec4a9025e6143cbbba33566dc946aa9a88a54d29208f32d8c76e5549100c",
+      "bytes": 1660627
+    },
+    {
+      "path": "/home/xiaodouzi/workspace/headroom/runs/watch/a5c98d7d4be845288b4b4d40cd1e6435/fix/a5c98d7d4be845288b4b4d40cd1e6435/report.json",
+      "sha256": "cb1999a0af915891c66a74295705ea8e7638ab047b937e167a148ef211c43cff",
+      "bytes": 1459797
+    },
+    {
+      "path": "/home/xiaodouzi/workspace/headroom/runs/watch/a5c98d7d4be845288b4b4d40cd1e6435/fix/a5c98d7d4be845288b4b4d40cd1e6435/report.md",
+      "sha256": "96aee0f0c8f6d03e29ce73f65cd22144d16e45112325d7e5b2a6def065474ddb",
+      "bytes": 14444
+    },
+    {
+      "path": "reports/final48h-feature-live-20261029/receipt.json",
+      "sha256": "939fc3865067e5b68d0f34d5858272e3f834d5f43cead8b23bb03a96f82ad0ef",
+      "bytes": 24379
+    }
+  ]
+}

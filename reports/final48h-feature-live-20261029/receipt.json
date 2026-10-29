@@ -1,0 +1,606 @@
+{
+  "schema": "headroom.final48.feature-live-audit.v1",
+  "generated_at": "2026-10-28T23:55:42.891487+00:00",
+  "revision": "6c7cde25b7b17ef2aaf236aa2c6543abb57f8499",
+  "status": "partial_awaiting_watch",
+  "scope": "Independent read-only inspection of real F3b artifacts; no retries, dispatch, source edits, ledger changes or GPU execution by this audit.",
+  "acceptance": {
+    "snapshot_cli": {
+      "required_truth_matching_diagnoses": 1,
+      "denominator": 2,
+      "delivered_valid_diagnoses": 0,
+      "valid_truth_matching_diagnoses": 0,
+      "met": false,
+      "raw_primary_matches_known_truth": 1,
+      "raw_primary_scope": "Only s2 has a retained parsed response; invalid output is not a delivered diagnosis.",
+      "unknown_truth_cases": [
+        "snapshot-nanogpt"
+      ]
+    },
+    "snapshot_web": {
+      "status": "completed_attempt_failed_acceptance",
+      "upload_accepted": true,
+      "diagnosis_card_displayed": false,
+      "met": false,
+      "same_input_as": "snapshot-nanogpt",
+      "adds_truth_denominator": false
+    },
+    "watch": {
+      "status": "awaiting_evidence",
+      "oom_triggered_repair_run": null,
+      "public_result_visible": null,
+      "met": null
+    },
+    "malicious_pickle": {
+      "scope": "Previously completed offline safety checks, not rerun during this audit",
+      "reference": "reports/snapshot-diagnosis-20261029/README.md",
+      "live_observation": false
+    }
+  },
+  "cost": {
+    "currency": "USD",
+    "tax_basis": "model_net",
+    "exact_total_usd": "0.09407844",
+    "charged_total_usd": "0.09407844",
+    "all_costs_known": true,
+    "all_costs_resolved": true,
+    "all_children_settled": true,
+    "per_call_plan_cap_usd": "0.30",
+    "actual_child_cap_usd": "0.25",
+    "within_per_child_caps": true,
+    "scope": "Three completed snapshot children only; excludes Watch/F5 and the whole pool."
+  },
+  "engineering_findings": [
+    {
+      "id": "snapshot_prompt_wire_cap_mismatch",
+      "confirmed": true,
+      "prompt_cap": 16384,
+      "wire_cap": 2000,
+      "source": "headroom/snapshot_diagnosis.py:310-323",
+      "finding": "Direct build_diagnosis_messages omits the selected request policy, while router.chat hard-codes 2000 and reasoning=False.",
+      "causal_scope": "Confirmed request inconsistency in both real requests; not proof of the exact nanoGPT failure cause.",
+      "proposed_fix": "Resolve the typed profile request policy and pass it to message construction; use the same policy cap and reasoning in router.chat. Preserve default behavior elsewhere.",
+      "focused_tests": [
+        "Real build_live_runtime with MockTransport: emitted prompt states 2000 and body has only max_completion_tokens=2000, enable_thinking=False.",
+        "Conflicting carried/explicit policy rejected before dispatch; legacy paths retain their existing defaults."
+      ]
+    },
+    {
+      "id": "snapshot_llm_failure_evidence_lost",
+      "confirmed": true,
+      "source": "headroom/snapshot_diagnosis.py:379-380",
+      "finding": "LLMError is reduced to diagnosis_unavailable without saving validation reason or attached response; precise nanoGPT failure cannot be recovered from retained artifacts.",
+      "proposed_fix": "Persist bounded private response-validation reason, finish_reason, response hash and available usage; keep raw response private and public error sanitized. Do not add retries.",
+      "focused_tests": [
+        "Truncated, malformed JSON, schema mismatch and filtering are separately retained as private reason codes.",
+        "Public projection excludes raw response/prompts, credentials and private paths; failed output remains invalid."
+      ]
+    }
+  ],
+  "version_boundary": "The parent keeps all frozen F3b/F5 runs on the same source revision; proposed fixes will be separate and offline validation will not be counted as new live acceptance.",
+  "source_artifacts": [
+    {
+      "path": "docs/FINAL_48H.md",
+      "sha256": "5398047221defbc8bc61283a5409e1155f7d5ad389306855f68c35949520ba4a",
+      "bytes": 36718
+    },
+    {
+      "path": "headroom/snapshot_diagnosis.py",
+      "sha256": "cd455f3f491819e45fb0604fc6cda84225428ca617fb002a07086412645a0bd0",
+      "bytes": 17442
+    },
+    {
+      "path": "headroom/llm/router.py",
+      "sha256": "ef38d76d92f612927d253e9c8f3fc74e30b0c0aae88ba7f9c9d789e792e044b6",
+      "bytes": 8553
+    },
+    {
+      "path": "headroom/diagnosis_protocol.py",
+      "sha256": "6cad21052ecd97fa8886ad20791a801e151ef7a98644f0cc5e5eb0a2b4d2068b",
+      "bytes": 5545
+    },
+    {
+      "path": "headroom/evidence_blockers.py",
+      "sha256": "fafe677f73c01450bf20896a200a2ae2e29727301ecb44c3221ddecc56bed01c",
+      "bytes": 14628
+    },
+    {
+      "path": "scenarios/s2_fp32_adamw_1b/README.md",
+      "sha256": "50b2414af268694f1792f32198c1e3c1ab5a4d684ade3df893e37b66d0f28e43",
+      "bytes": 4739
+    }
+  ],
+  "runs": [
+    {
+      "slot_id": "snapshot-s2",
+      "transport": "cli",
+      "run_id": "81149070970843cf912a127b671e00e9",
+      "status": "needs_human",
+      "error": "diagnosis_unavailable",
+      "outcome": {
+        "exit_code": 0,
+        "timed_out": false,
+        "execution_terminal": true
+      },
+      "settlement": {
+        "status": "settled",
+        "actual_usd": "0.040679",
+        "charged_usd": "0.040679",
+        "cost_resolved": true,
+        "cost_basis": "exact",
+        "scope_spent_usd": "0.040679"
+      },
+      "snapshot_sha256": "f2dfd579f8f922933011a5f685f91b4d332cda0e6d166f97dc86404de528c92d",
+      "input_sha256": {
+        "snapshot": "f2dfd579f8f922933011a5f685f91b4d332cda0e6d166f97dc86404de528c92d",
+        "traceback": "70055c88e2a3e3d5e7043740e50fec1fa07c48e123ea626f5bd8e87a5087c68c",
+        "source": "9565acfbcfc2f1eefd982c80be7ce943e09828578b9b44c3d70342bc82bf7f4c"
+      },
+      "diagnosis_ready": true,
+      "source_capture": {
+        "status": "completed",
+        "completed_optimizer_updates": 20,
+        "scope": "Original saved capture; not a new execution of the uploaded source",
+        "truth_category": "optimizer_state",
+        "truth_status": "defined"
+      },
+      "snapshot_analysis": {
+        "peak_allocated_bytes": 22919430656,
+        "peak_is_exact": false,
+        "category_bytes": {
+          "params": 4565352448,
+          "grads": 0,
+          "optimizer_state": 9130704896,
+          "activations": 33751040,
+          "temporaries": 9164259328,
+          "cache": 0,
+          "unknown": 25362944
+        }
+      },
+      "diagnosis_returned": false,
+      "raw_parsed_primary_category": "optimizer_state",
+      "raw_primary_category_matches_truth": true,
+      "validation_issues": [
+        {
+          "code": "INVALID_EVIDENCE_DEPENDENCY",
+          "path": "/evidence_requests/0"
+        }
+      ],
+      "patch_status": "unavailable",
+      "patch_diff_present": false,
+      "hardware_verification": {
+        "status": "not_run",
+        "message": "Not run — bring the patch to your GPU"
+      },
+      "functional_acceptance": false,
+      "calls": [
+        {
+          "role": "diagnose",
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "response_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "http_status": 200,
+          "settled": true,
+          "usage": {
+            "prompt_tokens": 34682,
+            "completion_tokens": 1999,
+            "total_tokens": 36681,
+            "cached_tokens": 0,
+            "reasoning_tokens": 0
+          },
+          "cost": {
+            "usd": "0.040679",
+            "status": "known",
+            "reason": null
+          },
+          "elapsed_seconds": 7.567815569927916,
+          "output_cap_tokens": 2000,
+          "prompt_stated_completion_cap_tokens": 16384,
+          "reasoning_requested": false,
+          "finish_reason_retained": false,
+          "raw_response_retained": false,
+          "request_wire_sha256": "55009d32de687fa1aec7f0428492bad68d2fde2fccf0319005819d308dc3a6fa",
+          "request_payload_sha256": "dfc5a38b78f5129035c479af742ff089a3acfa8354d080f490d49a03059d33ec",
+          "private_call_record_canonical_sha256": "d030676fc5b1a1514a2e95afb5f4742b2578b99efd6f4bf0be8ae13e617725df"
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "runs/uploads/81149070970843cf912a127b671e00e9/public-report.json",
+          "sha256": "ac7dcfc803e81fe8d3513ec8a3dd1e7d6c6a1596562970e7a68330abb9ee3864",
+          "bytes": 170543
+        },
+        {
+          "path": "runs/uploads/81149070970843cf912a127b671e00e9/diagnosis.json",
+          "sha256": "ac7dcfc803e81fe8d3513ec8a3dd1e7d6c6a1596562970e7a68330abb9ee3864",
+          "bytes": 170543
+        },
+        {
+          "path": "runs/uploads/81149070970843cf912a127b671e00e9/diagnosis.md",
+          "sha256": "23bd967dfa1da46ecf1d7344f2e978a30f5a9644ca6c4819c5e046e212c4d4c6",
+          "bytes": 328
+        },
+        {
+          "path": "runs/uploads/81149070970843cf912a127b671e00e9/evidence.json",
+          "sha256": "31a8ed49460a751ffb4eed2be81bfd1f1ef990a32cdae3597c3e8bd338b4435b",
+          "bytes": 838461
+        },
+        {
+          "path": "runs/uploads/81149070970843cf912a127b671e00e9/evidence.md",
+          "sha256": "44e48c183dad2fbfcb06332b7e2f12229722901371a113e7e78667c436f7f773",
+          "bytes": 61320
+        },
+        {
+          "path": "runs/uploads/81149070970843cf912a127b671e00e9/private/cleanup.json",
+          "sha256": "22560a4c47cddb06c6e9e94fb07705a00e4485b5269f523ddd3c9af2da84179c",
+          "bytes": 123
+        },
+        {
+          "path": "runs/uploads/81149070970843cf912a127b671e00e9/private/diagnosis-validation.json",
+          "sha256": "05bcd2cc7534046ba750527bdfa00a5e5cb1f6f355e0629783e1d4cf1adf8788",
+          "bytes": 7510
+        },
+        {
+          "path": ".cache/final48-feature-execution-20261029/snapshot-s2/outcome.json",
+          "sha256": "78303843fc428561ceb1df801cf5b212472499ba5d3b58ccd7faf08487c83adb",
+          "bytes": 73
+        },
+        {
+          "path": ".cache/final48-feature-execution-20261029/snapshot-s2/settlement.json",
+          "sha256": "0960fe850a1fd9d76b8ffef3900b5f5d72fcb25e58c1fbba3688c32a59eeffa9",
+          "bytes": 166
+        },
+        {
+          "path": ".cache/final48-feature-execution-20261029/snapshot-s2/stdout.log",
+          "sha256": "6b4c14d20170abc59caf71a36e6de482e9dd17bea5f2fd6eed28e963403f7918",
+          "bytes": 535
+        },
+        {
+          "path": ".cache/final48-feature-execution-20261029/snapshot-s2/stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": ".cache/final48-feature-execution-20261029/snapshot-s2/terminal-events.jsonl",
+          "sha256": "29e5b1bf8dd4eb894f663ec953bb34b4ae0701db34aa5f4a4e6468d5cd3849fc",
+          "bytes": 700
+        }
+      ],
+      "failure_analysis": {
+        "stage": "semantic_diagnosis_validation",
+        "classification": "model_evidence_dependency_contract_violation",
+        "known_issue": {
+          "code": "INVALID_EVIDENCE_DEPENDENCY",
+          "path": "/evidence_requests/0",
+          "blocking_scope": "overall_feasibility",
+          "blocked_plan_ids": [
+            "p1",
+            "p2",
+            "p3"
+          ],
+          "rule": "overall_feasibility must not name blocked current-plan IDs"
+        },
+        "incomplete_information_claims": [
+          "required_saving_gb",
+          "optimizer_step_boundaries",
+          "model_device_placement"
+        ],
+        "missing_information_alone_explains_rejection": false,
+        "parsed_response_complete_enough_for_schema_validation": true,
+        "manual_content_problem": {
+          "stack_id": "stk_ea1a74c4b22529ae",
+          "model_claimed_peak_gb": 16.62,
+          "actual_peak_live_bytes": 557056,
+          "actual_lifetime_allocated_bytes": 16620584960,
+          "finding": "Model described cumulative allocated bytes as a temporary peak."
+        }
+      }
+    },
+    {
+      "slot_id": "snapshot-nanogpt",
+      "transport": "cli",
+      "run_id": "5177f870aa7240b48ec2ea4e94789086",
+      "status": "failed",
+      "error": "diagnosis_unavailable",
+      "outcome": {
+        "exit_code": 1,
+        "timed_out": false,
+        "execution_terminal": true
+      },
+      "settlement": {
+        "status": "settled",
+        "actual_usd": "0.039002",
+        "charged_usd": "0.039002",
+        "cost_resolved": true,
+        "cost_basis": "exact",
+        "scope_spent_usd": "0.079681"
+      },
+      "snapshot_sha256": "7731ac65c4c6635715e680e549daca2c187056ee4d36eaed7d41c3a7ee9d47b7",
+      "input_sha256": {
+        "snapshot": "7731ac65c4c6635715e680e549daca2c187056ee4d36eaed7d41c3a7ee9d47b7",
+        "traceback": "ec19d8b9edd9e2629614429b9efa439ddba496f78c70e6485915bb6dfbb1d1fe",
+        "source": "413bd97b40bb400a2a0d01230e2946f056c263ebac1b7281c2367d964a123085"
+      },
+      "diagnosis_ready": true,
+      "source_capture": {
+        "status": "oom",
+        "completed_optimizer_updates": 0,
+        "scope": "Original saved capture; not a new execution of the uploaded source",
+        "truth_category": null,
+        "truth_status": "unknown"
+      },
+      "snapshot_analysis": {
+        "peak_allocated_bytes": 24705183744,
+        "peak_is_exact": false,
+        "category_bytes": {
+          "params": 1418399744,
+          "grads": 0,
+          "optimizer_state": 0,
+          "activations": 23286259712,
+          "temporaries": 0,
+          "cache": 0,
+          "unknown": 524288
+        }
+      },
+      "diagnosis_returned": false,
+      "raw_parsed_primary_category": null,
+      "raw_primary_category_matches_truth": null,
+      "validation_issues": null,
+      "patch_status": "unavailable",
+      "patch_diff_present": false,
+      "hardware_verification": {
+        "status": "not_run",
+        "message": "Not run — bring the patch to your GPU"
+      },
+      "functional_acceptance": false,
+      "calls": [
+        {
+          "role": "diagnose",
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "response_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "http_status": 200,
+          "settled": true,
+          "usage": {
+            "prompt_tokens": 33002,
+            "completion_tokens": 2000,
+            "total_tokens": 35002,
+            "cached_tokens": 0,
+            "reasoning_tokens": 0
+          },
+          "cost": {
+            "usd": "0.039002",
+            "status": "known",
+            "reason": null
+          },
+          "elapsed_seconds": 7.810530327958986,
+          "output_cap_tokens": 2000,
+          "prompt_stated_completion_cap_tokens": 16384,
+          "reasoning_requested": false,
+          "finish_reason_retained": false,
+          "raw_response_retained": false,
+          "request_wire_sha256": "49a5d896ef46c9824c425956ad467d3ddfde8f8586895dcf4fd821f94be57331",
+          "request_payload_sha256": "aadb8662b7bd8b1dce5bdfa260781254b339a6437a480b05a3d66ea55bd85656",
+          "private_call_record_canonical_sha256": "c1f960187681e895ae1f8d3df8de65b5424ed1f2edbfc9e2e277638e849e0b14"
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "runs/uploads/5177f870aa7240b48ec2ea4e94789086/public-report.json",
+          "sha256": "a79ca885cffe2d61f6c560a6ebe1993cb4fa4ad5523dd394af47102360730e92",
+          "bytes": 126587
+        },
+        {
+          "path": "runs/uploads/5177f870aa7240b48ec2ea4e94789086/diagnosis.json",
+          "sha256": "a79ca885cffe2d61f6c560a6ebe1993cb4fa4ad5523dd394af47102360730e92",
+          "bytes": 126587
+        },
+        {
+          "path": "runs/uploads/5177f870aa7240b48ec2ea4e94789086/diagnosis.md",
+          "sha256": "c7ecd453e2be74b73b6c6d1de1538413d65ac89704225697428ac9605aeca2bf",
+          "bytes": 323
+        },
+        {
+          "path": "runs/uploads/5177f870aa7240b48ec2ea4e94789086/evidence.json",
+          "sha256": "daf222b3a3d13cf6546c94811f727289691018ba909bc7bfd239b6c1355b28d6",
+          "bytes": 1513724
+        },
+        {
+          "path": "runs/uploads/5177f870aa7240b48ec2ea4e94789086/evidence.md",
+          "sha256": "95b06b355a8dfb4ed8e287d66413fe3fb6d4322bedb203bcf8ddb18edda8c3de",
+          "bytes": 57547
+        },
+        {
+          "path": "runs/uploads/5177f870aa7240b48ec2ea4e94789086/private/cleanup.json",
+          "sha256": "e4e6a7d8202f90f46ceb7770fad53dff97e40883d1c910a328f051619c3d0a48",
+          "bytes": 123
+        },
+        {
+          "path": ".cache/final48-feature-execution-20261029/snapshot-nanogpt/outcome.json",
+          "sha256": "4e45ac5e1f9a1d0d904d2669503618426ebf2d5a432a906b5a508600b0583881",
+          "bytes": 73
+        },
+        {
+          "path": ".cache/final48-feature-execution-20261029/snapshot-nanogpt/settlement.json",
+          "sha256": "32d69c1d862b5a8c491081ea7afce51aaca2ceaaa00c4c5d8dc96a6773f05e00",
+          "bytes": 166
+        },
+        {
+          "path": ".cache/final48-feature-execution-20261029/snapshot-nanogpt/stdout.log",
+          "sha256": "de10dbb2337e04336c4bab54637d9b50a4d6b459aad04f286e913ac526e16ed5",
+          "bytes": 530
+        },
+        {
+          "path": ".cache/final48-feature-execution-20261029/snapshot-nanogpt/stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": ".cache/final48-feature-execution-20261029/snapshot-nanogpt/terminal-events.jsonl",
+          "sha256": "d2fd7795eec4479d5df2a76c4481685bc8bac041857f23317b23fe2a4af0604f",
+          "bytes": 695
+        }
+      ],
+      "failure_analysis": {
+        "stage": "llm_response_or_router_validation",
+        "classification": "reason_unavailable",
+        "known": "One billed HTTP 200 response was recorded, no diagnosis-validation artifact was written, and the LLMError handler produced diagnosis_unavailable.",
+        "possible_causes": [
+          "output truncation",
+          "invalid JSON or schema",
+          "content filtering",
+          "other LLMError"
+        ],
+        "truncation_confirmed": false,
+        "completion_at_cap": true,
+        "limitation": "The handler did not persist the exception reason, raw response or finish_reason; 2000 completion tokens alone do not prove truncation."
+      }
+    },
+    {
+      "slot_id": "snapshot-web",
+      "transport": "web",
+      "run_id": "8fcd4570a96145ceb0244c0190d95635",
+      "status": "needs_human",
+      "error": "diagnosis_unavailable",
+      "settlement": {
+        "status": "settled",
+        "actual_usd": "0.01439744",
+        "charged_usd": "0.01439744",
+        "cost_resolved": true,
+        "cost_basis": "exact",
+        "evidence": "Root web-service-restored receipt plus exact per-call cost"
+      },
+      "snapshot_sha256": "7731ac65c4c6635715e680e549daca2c187056ee4d36eaed7d41c3a7ee9d47b7",
+      "input_sha256": {
+        "snapshot": "7731ac65c4c6635715e680e549daca2c187056ee4d36eaed7d41c3a7ee9d47b7",
+        "traceback": "ec19d8b9edd9e2629614429b9efa439ddba496f78c70e6485915bb6dfbb1d1fe",
+        "source": "413bd97b40bb400a2a0d01230e2946f056c263ebac1b7281c2367d964a123085"
+      },
+      "same_input_as": "snapshot-nanogpt",
+      "adds_truth_denominator": false,
+      "source_capture": {
+        "status": "oom",
+        "completed_optimizer_updates": 0,
+        "truth_category": null,
+        "truth_status": "unknown"
+      },
+      "diagnosis_ready": true,
+      "diagnosis_returned": false,
+      "raw_parsed_primary_category": "activations",
+      "raw_primary_category_matches_truth": null,
+      "validation_issues": [
+        {
+          "code": "EVIDENCE_AVAILABILITY_CONTRADICTED",
+          "path": "/evidence_requests/2"
+        },
+        {
+          "code": "NUMERICS_CHANGE_FORBIDDEN",
+          "path": "/plan/0"
+        },
+        {
+          "code": "BATCH_CHANGE_FORBIDDEN",
+          "path": "/plan/1"
+        }
+      ],
+      "patch_status": "unavailable",
+      "patch_diff_present": false,
+      "hardware_verification": {
+        "status": "not_run",
+        "message": "Not run — bring the patch to your GPU"
+      },
+      "upload_accepted": true,
+      "submission_http_status": 202,
+      "forwarded_post_count": 1,
+      "diagnosis_card_displayed": false,
+      "functional_acceptance": false,
+      "failure_analysis": {
+        "stage": "semantic_diagnosis_validation",
+        "classification": "evidence_and_policy_contract_violations",
+        "parsed_response_complete_enough_for_schema_validation": true,
+        "truncation_confirmed": false,
+        "reason": "The diagnosis contradicts cited evidence availability and includes numerics/batch changes prohibited by the request policy."
+      },
+      "calls": [
+        {
+          "role": "diagnose",
+          "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "response_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+          "http_status": 200,
+          "settled": true,
+          "usage": {
+            "prompt_tokens": 33002,
+            "completion_tokens": 1458,
+            "total_tokens": 34460,
+            "cached_tokens": 26112,
+            "reasoning_tokens": 0
+          },
+          "cost": {
+            "usd": "0.01439744",
+            "status": "known",
+            "reason": null
+          },
+          "elapsed_seconds": 6.313701344188303,
+          "output_cap_tokens": 2000,
+          "prompt_stated_completion_cap_tokens": 16384,
+          "reasoning_requested": false,
+          "finish_reason_retained": false,
+          "raw_response_retained": false,
+          "request_wire_sha256": "49a5d896ef46c9824c425956ad467d3ddfde8f8586895dcf4fd821f94be57331",
+          "request_payload_sha256": "aadb8662b7bd8b1dce5bdfa260781254b339a6437a480b05a3d66ea55bd85656",
+          "private_call_record_canonical_sha256": "7a98f217695cbb7d95560fc2d3909b05073ace92e26164a66810473958065b1c"
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "runs/uploads/8fcd4570a96145ceb0244c0190d95635/public-report.json",
+          "sha256": "a5e8562de52653c3174276081a1dd7d5908b890920167f29acb33e6327aa406e",
+          "bytes": 126594
+        },
+        {
+          "path": "runs/uploads/8fcd4570a96145ceb0244c0190d95635/diagnosis.json",
+          "sha256": "a5e8562de52653c3174276081a1dd7d5908b890920167f29acb33e6327aa406e",
+          "bytes": 126594
+        },
+        {
+          "path": "runs/uploads/8fcd4570a96145ceb0244c0190d95635/diagnosis.md",
+          "sha256": "f3d525ea458e055819718032e7d5d9f14dcbd499ad30682257ef55bd514bd8a4",
+          "bytes": 328
+        },
+        {
+          "path": "runs/uploads/8fcd4570a96145ceb0244c0190d95635/evidence.json",
+          "sha256": "daf222b3a3d13cf6546c94811f727289691018ba909bc7bfd239b6c1355b28d6",
+          "bytes": 1513724
+        },
+        {
+          "path": "runs/uploads/8fcd4570a96145ceb0244c0190d95635/evidence.md",
+          "sha256": "95b06b355a8dfb4ed8e287d66413fe3fb6d4322bedb203bcf8ddb18edda8c3de",
+          "bytes": 57547
+        },
+        {
+          "path": "runs/uploads/8fcd4570a96145ceb0244c0190d95635/private/cleanup.json",
+          "sha256": "2c1ef5aa011fcea0acd37a5b1ec3382b2bf7a5ebdb28814d61be051674fac757",
+          "bytes": 123
+        },
+        {
+          "path": "runs/uploads/8fcd4570a96145ceb0244c0190d95635/private/diagnosis-validation.json",
+          "sha256": "6d466f2eddd3b47b483b1d2d9689fd01ade838444e33ea3c44e4f22f45903db7",
+          "bytes": 6588
+        },
+        {
+          "path": "docs/media/final/clips/snapshot-web/20261028T235324Z-execute/snapshot-web-receipt.json",
+          "sha256": "40cafbe5135d48421fb9797338af4a78c1d6166a27d39bbacc3585b91d47ee43",
+          "bytes": 5048
+        },
+        {
+          "path": ".cache/final48-feature-execution-20261029/web-service-restored.json",
+          "sha256": "f54a082b9439229201b45898380cc9e87514e5f544b71b70edea169f084dfacc",
+          "bytes": 268
+        }
+      ]
+    }
+  ],
+  "transport_preflight": {
+    "observation": "An earlier recorder attempt was stopped by its local multipart guard with zero forwarded submissions; a FilePayload-compatible recorder adapter was then checked before the single actual Web submission.",
+    "model_attempts_added_by_preflight": 0,
+    "counts_as_successful_snapshot_diagnosis": false,
+    "evidence_scope": "Parent/recorder report; original preflight artifacts retained separately."
+  }
+}
