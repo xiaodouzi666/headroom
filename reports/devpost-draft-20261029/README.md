@@ -48,9 +48,11 @@ credits; no event attendance is inferred from obtaining a grant. See the
 [official resources](https://nebiusglobalaihackathon.devpost.com/resources). The final Terms/Rules checkbox has not been selected, and Submit
 project has not been clicked.
 
-The official Testing requirement still needs an adequate judging-period access
-arrangement. The current judge credential shares the public request/spending
-limits. Preparing the attachment does not establish unrestricted access.
+A separate judging allowance was subsequently authorized by the owner's
+delegation and deployed; the credential now selects that allowance while
+retaining the common request/IP/queue limits. The official Testing requirement's
+unrestricted-access wording remains unresolved with the retained limits;
+preparing the attachment is not an organizer confirmation.
 
 ## Fresh read-only checks
 
@@ -80,3 +82,16 @@ October 30 closing check.
 - [Earlier unsubmitted draft](submission-still-draft.jpg)
 - [Private Additional info header](private-additional-info-header.jpg)
 - [Current public Home in local Chrome](public-home-chrome.jpg)
+
+## Private attachment update after judging allocation deployment
+
+The same existing credential and recipients were retained when replacing the
+attachment with judge-testing-instructions-20261029-v2.txt. Save and return to
+Additional info confirmed this filename under the judges/organizers-only notice.
+The updated instructions distinguish anonymous examples, optional token-backed
+examples, required token for scripts, and token possession from verified identity.
+See the [deployment/browser closeout](../judge-access-20261029/README.md) and
+[saved attachment screenshot](../judge-access-20261029/devpost-draft-v2-saved.png).
+
+The draft remains 3/5, the video URL is still pending, and neither final Terms
+acceptance nor Submit project was performed. Earlier draft receipts remain intact.

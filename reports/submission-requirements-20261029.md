@@ -1,38 +1,28 @@
-# Submission requirements and remaining access gap — 2026-10-29
+# Submission requirements and deployed judge access — 2026-10-29
 
-This supplements FINAL_48H without editing its frozen text. Official sources were checked today.
+This supplements FINAL_48H without editing its frozen text. The previously checked official sources remain the rules reference; this update incorporates the judge-access deployment receipt without repeating the rules review.
 
 - Submission closes on October 30 at 10:00 PDT, or October 31 at 01:00 Beijing time. Judging ends on December 15 at 12:00 PST, or December 16 at 04:00 Beijing time. Keep the intended review service available through that endpoint. [Official dates](https://nebiusglobalaihackathon.devpost.com/details/dates).
 - The track is Coding and Agentic Engineering Track. A public open-source repository, English submission materials, a working demo/test-build URL, and tool feedback in the submission form are required. The video must be public on YouTube and shorter than three minutes; the planned 170-second edit fits. [Official rules, section 4](https://nebiusglobalaihackathon.devpost.com/rules).
 - Testing requires free access for organizers and judges through the end of judging. Private access credentials must be supplied in testing instructions. The current one-run-per-IP-per-hour restriction and finite demo scope do not establish that the entire judging-period requirement is met. Read-only historical evidence does not, by itself, prove full test access. [Official Testing provision](https://nebiusglobalaihackathon.devpost.com/rules).
-- The current public configuration has preset runs and judge scripts enabled, snapshot uploads disabled. GPU and budget readiness were available, with no running/preparing/queued work, when checked this turn. The UI separately handles loading, queue, GPU and budget readiness.
-- The sole approved allocation remains $6.43 net. The plan's $0.30 limit is per run; its earlier implementation as a cumulative demo cap was corrected and deployed at ed73197. The last deployment receipt records $4.362263328 remaining in the original shared pool, with all historical charges preserved and no new allocation or provider request. See [the correction](final48h-demo-budget-correction-20261029/README.md). This fixes runtime admission; it does not establish a separate judging-period allowance or an unrestricted-access agreement.
+- Deployment 612b2bd preserves preset examples and script entry for valid token holders, with snapshot uploads disabled. Anonymous and token-holder readiness checks returned 200; invalid and explicitly empty Authorization returned 401. The UI checks readiness using the supplied credential and distinguishes loading, queue, GPU and allowance state. The [deployment receipt](judge-access-20261029/deployment.json) records zero new model calls, GPU jobs, claims, runs and attempts.
+- The original FINAL_48H allocation remains $6.43 net / $7.79 gross, with its history unchanged. The earlier per-run correction recorded $4.362263328 remaining; this is that receipt’s value, not a new balance observation. Frank then delegated the judge-budget decision: a separate gift-only **$8 gross / $6.61 net total and daily / $0.30 per run** allowance is now activated and deployed, expiring **2026-12-15T20:00:00Z**. No recharge was made. Admission uses the existing reviewed estimate plus margin, not a provider-bill hard upper bound. See [original correction](final48h-demo-budget-correction-20261029/README.md) and [judge deployment](judge-access-20261029/deployment.json).
 - Update after browser access was restored: the actual Devpost entry is still DRAFT / 3 of 5 steps. Its project story, links, tags and technical feedback have been saved; the final video remains absent. Additional info is labelled for judges and organizers except noted fields; there is no dedicated Testing instructions field, so the private attachment is the available handoff location. Frank explicitly approved delivery; the existing judge token and instructions were uploaded there and the saved filename was verified. The public Home thumbnail/gallery image is also saved. A fresh provider balance observation passed the $8 reserve check; the separate Builder gift was then redeemed without card payment or new spending authorization. Details stay private. See [draft evidence](devpost-draft-20261029/README.md).
 - The README now uses reclaim mode for the s3 example because that workload already completes. This is a documentation correction. The actual F5 command used fix-oom, returned needs_human, and remains unchanged; it is not rescored or rerun.
 
-The remaining concrete decisions are: establish the funded judge-access period within the user's no-recharge limit, and obtain the final public video and Submitted receipt. No fabricated success or unlimited-access claim is substituted for them.
+The budget decision and deployment are complete. The revised private instructions were saved and read back as judge-testing-instructions-20261029-v2.txt. Remaining delivery steps are the final public video and actual Submitted receipt. Organizer interpretation of the retained limits is still unresolved; no unlimited-access or compliance-confirmation claim substitutes for it.
 
-## Judge-access proposal, not deployed
+## Judge access deployed; rules interpretation unresolved
 
-The official wording does not expressly grant an exception for per-hour quotas
-or a depleted allowance. We cannot confirm compliance from the present settings,
-and this observation is not a disqualification decision. Private credentials
-are expressly supported by the rules; the approved private attachment has now
-provided the existing app credential.
+Frank delegated the allowance decision and retained **one attempt per IP per hour**. Valid possession of the existing Bearer token selects the judge pool for a preset example or a script; it does not verify the person’s identity. Anonymous examples continue using the original pool. Both pools share the same IP admission records, queue capacity (at most two waiting runs), 480-second execution deadline, $0.30 per-run limit and cleanup rules. Changing channels cannot bypass the IP quota. An unavailable configured judge pool rejects work without falling back to the anonymous pool.
 
-A public [discussion about metered-API judging access](https://nebiusglobalaihackathon.devpost.com/forum_topics/45534-clarifying-free-judging-access-for-apps-with-metered-apis) was read on October 29. Its question asks about separate judge access and reserved capacity; the two visible comments are other participants asking similar questions. No organizer response was visible, so that thread is not approval of a quota or minimum capacity. This was read-only research; no message was posted.
+The separate allowance is configured through the private judging receipt, with expiry at **2026-12-15T20:00:00Z**; this is not a guarantee of unlimited capacity or uninterrupted service. Activation/deployment preserved the original allocation, receipt/profile, provider credentials and all historical accounting tables. This rollout made **0 model calls / 0 GPU jobs**. See [deployment evidence](judge-access-20261029/deployment.json) and [isolated routing verification](judge-routing-20261029/README.md).
 
-The smallest proposed change is to retain anonymous visitor limits, but route
-an authenticated judge through a separate allowance and rate policy. This would
-keep sandbox isolation, source restrictions, cost accounting and safe queue /
-cleanup controls. The existing token currently permits script entry only; it
-does not exempt a judge from the public IP or spending limits.
+The official free-access wording does not expressly grant an exception for per-hour quotas or a depleted allowance. Its no-restriction interpretation and the retained limits have not been explained or approved by the organizers. We do not claim compliance confirmation or a disqualification decision. Private credentials are supported by the rules; the existing token was previously delivered in the approved private attachment, and the revised v2 instructions are now saved and verified in Additional info.
 
-Before implementing that change, Frank must choose the judging-period gift-only
-allowance and service commitment. An additional gift is not an increased
-spending authorization. Any retained limits should be described accurately; if
-their acceptability needs clarification, Frank can choose to ask the organizers.
-No such communication, permission expansion or allocation was performed here.
+A public [discussion about metered-API judging access](https://nebiusglobalaihackathon.devpost.com/forum_topics/45534-clarifying-free-judging-access-for-apps-with-metered-apis) was read on October 29. The two visible comments were other participants asking similar questions; no organizer response was visible. That observation is not approval of a quota or minimum capacity. No message was posted by this documentation task.
+
+The new production Home HTML hash is bc3fd6ab052b6c7fed72631df146eebe579860bd0746286631f8c65dbd90a03b. The recorded Lighthouse 100/100/100/100 belongs to the previous readability build, not this deployment; no new Lighthouse measurement is claimed.
 
 Current credential delivery, public screenshot delivery and the personal
 eligibility fields need no repeat approval. Moderate learning has been saved and the IRL city left blank after Frank

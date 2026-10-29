@@ -1,10 +1,40 @@
 # Tailscale Funnel deployment
 
-This deployment uses a dedicated rootless Tailscale daemon and a separate,
-read-only Headroom API process on the existing server. No DNS purchase, paid
+This deployment uses a dedicated rootless Tailscale daemon and a separate
+Headroom API process on the existing server. It started in read-only mode;
+the current bounded live-access configuration is described below. No DNS purchase, paid
 hosting plan, credit-card payment, firewall change, or other project's tunnel is
 needed. Tailscale Personal pricing and Funnel availability must be checked
 against the vendor's current terms.
+
+## Current access state (2026-10-29)
+
+The production service allows anonymous preset examples and token-backed
+examples/custom scripts. It retains one attempt per IP per hour across both
+routes, one active job, at most two waiting/preparing jobs and a 480-second
+deadline. Snapshot uploads remain paused. Public pages and Verified runs need
+no token.
+
+A separately activated judging allocation uses existing gifts only:
+$8.00 gross, $6.61 net total/day and $0.30 net per run. The original public
+allocation and history are unchanged. Admission uses the existing local input
+estimate with margins; it is not a supplier billing hard cap. The judging
+receipt expires for new dispatch on 2026-12-15 at 20:00 UTC.
+
+The active private runtime environment is .cache/final48-public.env. It sets
+HEADROOM_JUDGE_ALLOCATION_RECEIPT to
+/home/xiaodouzi/workspace/headroom/.cache/judge-access/receipt.json.
+Do not recreate the allocation or reset its database. The launcher rejects an
+explicitly configured invalid receipt; an unavailable configured pool never
+falls back to the anonymous allowance. An unconfigured judge allocation retains
+legacy routing. Never switch the global accounting environment to the judge
+database.
+
+The bearer credential proves possession, not actual judge identity. Its same
+existing value is delivered through the approved private Devpost Additional
+info attachment. Anyone receiving a forwarded copy has the same access.
+See the [judging access closeout](../reports/judge-access-20261029/README.md)
+for configuration, focused checks, actual deployment and draft-state evidence.
 
 ## Public URL and access
 
@@ -32,12 +62,12 @@ The original script is backed up beside the local script. See
 - `headroom-public.service` runs `scripts.serve_public` on `127.0.0.1:8766`.
   It has its own API database, submission and job directories under
   `runs/public-api`, separate from the existing development preview.
-- The public launcher enforces disabled submissions before any uploaded body,
-  source preparation, GPU job or paid model dispatch. It does not offer a replay.
-  Pages and explicitly published evaluation evidence remain readable.
+- The launcher supports a read-only mode that rejects submissions before
+  source preparation or dispatch. The current deployment explicitly enables
+  bounded live access and has no replay. Snapshot uploads stay disabled.
 - Public health/usage responses omit global financial totals and private
-  diagnostic details. The existing budget ledger/profile remain configured;
-  this deployment does not grant a new spending allocation.
+  diagnostic details. The original anonymous ledger/profile remain configured;
+  the separately authorized judging receipt selects its own ledger per request.
 - Tailscale does not set system DNS, accept routes, advertise routes, act as an
   exit node or enable Tailscale SSH. Cloudflare header trust remains disabled.
 - `Linger=yes` and enabled user units allow the services to survive SSH logout
@@ -85,9 +115,11 @@ The actual bare ts.net hostname belongs in the mode-0600
 `.cache/funnel-public.env` as `HEADROOM_PUBLIC_HOST=...`.
 Never put node keys, login links, auth keys, or Tailscale state in Git.
 
-Verify public DNS, a trusted HTTPS certificate, the page and Results views, and
-503 rejection of POST /api/runs. Confirm no GPU/model dispatch and no financial
-ledger change. Service status alone is not public access evidence. Funnel has
+Verify public DNS, a trusted HTTPS certificate, the page and Results views,
+and current config/health readiness. In read-only mode, verify 503 rejection of
+POST /api/runs; the active live mode instead requires a separately bounded smoke
+test when one is planned. Read-only checks must cause no GPU/model dispatch or
+financial ledger change. Service status alone is not public access evidence. Funnel has
 bandwidth limits and is a beta service; it is suitable for a lightweight demo,
 not an availability guarantee.
 
@@ -106,8 +138,9 @@ Turning off the dedicated services leaves project code, reports and historical
 runs in place. Remove the node from the Tailscale admin console if it is no
 longer needed. Do not delete unrelated services, tunnels or account resources.
 
-No notification destination is configured. Human alert delivery and a
-phone-network access check remain separate acceptance items.
+No notification destination is configured. Human alert delivery remains a
+separate acceptance item. The owner later confirmed the public Home opened
+within three seconds on a phone using cellular data.
 
 ## Official references
 
@@ -119,10 +152,9 @@ phone-network access check remain separate acceptance items.
 - [Static packages and checksums](https://pkgs.tailscale.com/stable/)
 
 
-## Prepared live-access controls
+## Live-access controls
 
-The deployed launcher still disables submissions. The API implementation now
-limits public anonymous callers to the preset example catalogue. A custom script
+The API implementation limits public anonymous callers to the preset example catalogue. A custom script
 requires an operator-configured HEADROOM_JUDGE_TOKEN in the Authorization Bearer
 header; public repository cloning is not offered. The token is never included in
 public configuration or reports. No judge credential is created by these changes.
@@ -139,8 +171,10 @@ client IP. Tailscale 1.104.4 overwrites these values in its
 Caller-supplied forwarded-address chains and non-loopback origins are rejected.
 Do not bind this origin to a public interface or enable generic proxy-header trust.
 
-These controls have offline API coverage. They do not activate model calls or
-replace the pending running-pool decision and later end-to-end live test.
+These controls have focused API coverage. The original public allocation and
+later independent judging allocation were activated separately; configuring
+access does not itself dispatch a model. See the judging closeout for current
+production evidence and the preserved historical live-run reports.
 
 ## Health checks and access follow-up (2026-10-29)
 
@@ -171,7 +205,8 @@ systemctl --user stop headroom-funnel-health.service
 public/browser checks, independent DNS-over-HTTPS results, the dedicated
 Tailscale process restart and the initial live monitor run. The restart retained
 its forwarding rule and public access; it was not a shared-host reboot. Earlier
-slow requests remain recorded. A phone cellular-network test is still unverified.
+slow requests remain recorded. At that follow-up, a phone cellular-network test was unverified; the owner
+subsequently confirmed it loaded within three seconds.
 
 The [official Funnel DNS incident](https://status.tailscale.com/incidents/01M5YVH12FKFH765E1J7PGW4B5)
 was under investigation at the follow-up. This hostname resolved correctly in
