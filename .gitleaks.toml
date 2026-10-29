@@ -503,3 +503,63 @@ regexes = [
     '''^644863fa88bd1c842dec3f47464f041c9da9b3021553d9b56f04c521fd78bf8f$''',
     '''^d53791ee0283b12f3641181d6fbf7f917664d945eb021929e98c9e84b1bab635$''',
 ]
+
+# Exact nonsecret source inventory values from the public-safety review.
+
+[[rules.allowlists]]
+description = "Exact public source-inventory digest; see public-security-20261030 review"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/judge\-hourly\-policy\-20261030/prepare\-storage\-final\.json$''']
+regexes = [
+    '''^51f78ee8d26bfc444cdc8c640d1e5331b748e88a86fbf83fe3fbe683d28632bb$''',
+]
+
+[[rules.allowlists]]
+description = "Exact public source-inventory digest; see public-security-20261030 review"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/judge\-hourly\-policy\-20261030/source\-before\.json$''']
+regexes = [
+    '''^2fc1dad3b85f9e6464132b53cc05313097ec371897cec77f0964264b31bb4f9f$''',
+    '''^32e05889a8e0fb6ce5ebd4a8da0df32b4d170d1fe9f5c27e5fa0b02e8f250df0$''',
+]
+
+[[rules.allowlists]]
+description = "Exact public source-inventory digest; see public-security-20261030 review"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/judge\-hourly\-policy\-20261030/source\-tested\.json$''']
+regexes = [
+    '''^2fc1dad3b85f9e6464132b53cc05313097ec371897cec77f0964264b31bb4f9f$''',
+    '''^e83ccb7d78c23a2b4e42df09bd5f09dd4f41b38d99c9cd5a29ef88e4935815ae$''',
+]
+
+[[rules.allowlists]]
+description = "Exact public source-inventory digest; see public-security-20261030 review"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/judge\-hourly\-policy\-20261030/storage\-pre\-admission\.json$''']
+regexes = [
+    '''^3a2cbbe21bfe7748c1b48092e69ae08d83107013e250c0c3f82cfef631473404$''',
+]
+
+[[rules.allowlists]]
+description = "Exact public source-inventory digest; see public-security-20261030 review"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/public\-dependency\-audit\-20261030/source\-review\.json$''']
+regexes = [
+    '''^644863fa88bd1c842dec3f47464f041c9da9b3021553d9b56f04c521fd78bf8f$''',
+]
+
+[[rules.allowlists]]
+description = "Exact public source-inventory digest; see public-security-20261030 review"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/public\-security\-20261030/root\-source\-review\.json$''']
+regexes = [
+    '''^2fc1dad3b85f9e6464132b53cc05313097ec371897cec77f0964264b31bb4f9f$''',
+    '''^3a2cbbe21bfe7748c1b48092e69ae08d83107013e250c0c3f82cfef631473404$''',
+    '''^51f78ee8d26bfc444cdc8c640d1e5331b748e88a86fbf83fe3fbe683d28632bb$''',
+]

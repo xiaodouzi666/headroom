@@ -82,7 +82,7 @@ def test_control_mount_rejects_ambiguous_paths(tmp_path, monkeypatch, name):
         (tmp_path / directory).mkdir()
     with pytest.raises(ValueError, match="Deadline control mount path is invalid"):
         docker.create_arguments(
-            name="headroom-control-test",
+            name="headroom-lab-" + "a" * 32,
             project_root=tmp_path,
             source=tmp_path / "source",
             output=tmp_path / "artifacts",
@@ -100,7 +100,7 @@ def test_real_cpu_soft_timeout_retains_complete_capture_and_readonly_clock(tmp_p
     script.write_text(
         "import json, time\nfrom pathlib import Path\n"
         "try:\n    Path('/control/deadline.json').write_text('{}')\n"
-        "except OSError:\n    Path('/out/control-readonly.txt').write_text('yes')\n"
+        "except OSError:\n    print('CONTROL_READONLY_VERIFIED')\n"
         "else:\n    raise AssertionError('control must be read-only')\n"
         "while True:\n    time.sleep(0.02)\n"
     )
@@ -118,7 +118,7 @@ def test_real_cpu_soft_timeout_retains_complete_capture_and_readonly_clock(tmp_p
     manifest = json.loads((artifacts.parent / "manifest.json").read_text())
     assert manifest["image_id"] == result["image_id"] == result["execution"]["image_id"]
     assert manifest["image_id"].startswith("sha256:")
-    assert (artifacts / "control-readonly.txt").read_text() == "yes"
+    assert "CONTROL_READONLY_VERIFIED" in (artifacts.parent / "stdout.log").read_text()
     for name in ("result.json", "snapshot.json", "snapshot.pickle", "memory_stats.json"):
         assert (artifacts / name).is_file()
 
@@ -141,7 +141,7 @@ def test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline(tmp_path, beh
     script.write_text(
         "import os, signal, time\nfrom pathlib import Path\n"
         + setup
-        + "\nPath('/out/main-started').write_text('yes')\n"
+        + "\nprint('MAIN_STARTED_VERIFIED', flush=True)\n"
         + blocked_work
     )
     started = time.monotonic()
@@ -149,7 +149,7 @@ def test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline(tmp_path, beh
     elapsed = time.monotonic() - started
     assert result["status"] == "timeout" and result["execution"]["timed_out"], result
     assert result["cleanup_verified"]
-    assert (Path(result["artifact_dir"]) / "main-started").is_file()
+    assert "MAIN_STARTED_VERIFIED" in (Path(result["run_dir"]) / "stdout.log").read_text()
     control = result["execution"]["deadline_control"]
     assert control["hard_deadline_monotonic_ns"] - control["started_monotonic_ns"] == 5_000_000_000
     assert 5 <= elapsed < 20  # existing bounded Docker teardown may follow the hard cutoff

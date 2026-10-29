@@ -623,7 +623,7 @@ it("never flashes public script or budget controls before configuration arrives"
 });
 
 describe("judge access with an exhausted anonymous allowance", () => {
-  function dualPoolFetch() {
+  function dualPoolFetch({ gpuBusy = false, queueFull = false } = {}) {
     vi.stubGlobal(
       "fetch",
       vi.fn((input: unknown, init?: RequestInit) => {
@@ -642,8 +642,22 @@ describe("judge access with an exhausted anonymous allowance", () => {
             run_submissions: { enabled },
             local_budget: { status: enabled ? "available" : "unavailable" },
             token_factory: { configured: true },
-            gpu: { available: true, busy: false },
-            queue: { pending: 0, capacity: 3 },
+            gpu: {
+              status: gpuBusy ? "busy" : "available",
+              available: !gpuBusy,
+              busy: gpuBusy,
+            },
+            queue: {
+              running: queueFull,
+              pending: queueFull ? 2 : 0,
+              capacity: 3,
+            },
+            limits: {
+              hourly_limit_applies: !enabled,
+              runs_per_ip_per_hour: enabled ? null : 1,
+              max_waiting_runs: 2,
+              deadline_seconds: 480,
+            },
           });
         }
         if (input === "/api/examples")
@@ -680,6 +694,12 @@ describe("judge access with an exhausted anonymous allowance", () => {
         screen.getByRole("button", { name: /Start analysis/ }),
       ).toBeEnabled(),
     );
+    expect(
+      screen.getByText(/No hourly run-count limit for this token/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/per-run spending limits still apply/),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Start analysis/ }));
     await waitFor(() =>
       expect(
@@ -716,5 +736,41 @@ describe("judge access with an exhausted anonymous allowance", () => {
       vi.mocked(fetch).mock.calls.some(([path]) => path === "/api/runs"),
     ).toBe(false);
     expect(token).toHaveValue("wrong-token");
+    expect(
+      screen.queryByText(/No hourly run-count limit/),
+    ).not.toBeInTheDocument();
   });
+
+  it.each([
+    ["busy GPU", { gpuBusy: true }],
+    ["full queue", { queueFull: true }],
+  ] as const)(
+    "keeps %s protection with an unlimited hourly token",
+    async (_label, state) => {
+      dualPoolFetch(state);
+      render(<App />);
+      const token = await screen.findByLabelText("Judge access token");
+      fireEvent.change(token, { target: { value: "offline-judge-token" } });
+      fireEvent.click(
+        await screen.findByRole("button", { name: /Activation memory/ }),
+      );
+      expect(
+        await screen.findByText(/No hourly run-count limit for this token/),
+      ).toBeInTheDocument();
+      if ("gpuBusy" in state) {
+        expect(screen.getByText("The GPU is busy.")).toBeInTheDocument();
+      } else {
+        expect(
+          screen.getByText(/The run queue is currently unavailable/),
+        ).toBeInTheDocument();
+      }
+      expect(
+        screen.getByRole("button", { name: /Start analysis/ }),
+      ).toBeDisabled();
+      fireEvent.click(screen.getByRole("button", { name: /Start analysis/ }));
+      expect(
+        vi.mocked(fetch).mock.calls.some(([path]) => path === "/api/runs"),
+      ).toBe(false);
+    },
+  );
 });

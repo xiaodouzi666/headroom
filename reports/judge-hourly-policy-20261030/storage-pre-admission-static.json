@@ -1,0 +1,29 @@
+[
+  {
+    "command": [
+      ".venv/bin/ruff",
+      "check",
+      "headroom/api/app.py",
+      "tests/test_judge_api.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      ".venv/bin/ruff",
+      "format",
+      "--check",
+      "headroom/api/app.py",
+      "tests/test_judge_api.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exit_code": 0
+  }
+]

@@ -1,0 +1,95 @@
+{
+  "scope": "small CPU Docker only; no GPU, model, production request or secrets",
+  "runtime": {
+    "image": "headroom-lab:py312-cu124-runtime-v1",
+    "image_id": "sha256:5703e9edc41be02a69ba7bdf4eb9e5126a5f8915e1dd235ab9fe94b9a412afe5",
+    "runtime_contract": "python312-self-contained-v1",
+    "uv_lock_sha256": "fd57ad059cfde399f9de957bfca8527d69d3da0f9a7577c32bce1530c023a183"
+  },
+  "cases": [
+    {
+      "case": "regular",
+      "cpu_only": true,
+      "quota_bytes": 2097152,
+      "quota_inodes": 32,
+      "target_returncode": 0,
+      "target_cleanup": true,
+      "export": {
+        "files": 1,
+        "bytes": 37,
+        "export_verified": true
+      },
+      "output": {
+        "case": "regular",
+        "cpu_only": true
+      },
+      "pass": true,
+      "final_target_cleanup": true,
+      "store_cleanup": {
+        "cleanup_verified": true
+      }
+    },
+    {
+      "case": "byte_limit",
+      "cpu_only": true,
+      "quota_bytes": 2097152,
+      "quota_inodes": 32,
+      "target_returncode": 0,
+      "target_cleanup": true,
+      "export": {
+        "files": 1,
+        "bytes": 86,
+        "export_verified": true
+      },
+      "output": {
+        "case": "byte_limit",
+        "bytes_before_failure": 2097152,
+        "errno": 28,
+        "cpu_only": true
+      },
+      "pass": true,
+      "final_target_cleanup": true,
+      "store_cleanup": {
+        "cleanup_verified": true
+      }
+    },
+    {
+      "case": "inode_limit",
+      "cpu_only": true,
+      "quota_bytes": 2097152,
+      "quota_inodes": 32,
+      "target_returncode": 0,
+      "target_cleanup": true,
+      "export": {
+        "files": 1,
+        "bytes": 82,
+        "export_verified": true
+      },
+      "output": {
+        "case": "inode_limit",
+        "files_before_failure": 31,
+        "errno": 28,
+        "cpu_only": true
+      },
+      "pass": true,
+      "final_target_cleanup": true,
+      "store_cleanup": {
+        "cleanup_verified": true
+      }
+    },
+    {
+      "case": "symlink",
+      "cpu_only": true,
+      "quota_bytes": 2097152,
+      "quota_inodes": 32,
+      "target_returncode": 0,
+      "target_cleanup": true,
+      "export_rejected": "ARTIFACT_ARCHIVE_MEMBER_FORBIDDEN",
+      "pass": true,
+      "final_target_cleanup": true,
+      "store_cleanup": {
+        "cleanup_verified": true
+      }
+    }
+  ]
+}

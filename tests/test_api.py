@@ -247,6 +247,7 @@ def test_spawn_worker_deadline_kills_ignoring_process_and_preserves_partial_repo
 
 
 def test_cleanup_requires_owned_manifest_and_exact_container_mounts(tmp_path, monkeypatch):
+    monkeypatch.setattr(docker.artifact_volume, "discover_store", lambda *a, **k: None)
     run_id, lab_id = uuid4().hex, uuid4().hex
     directory = tmp_path / run_id / "lab" / lab_id
     directory.mkdir(parents=True)

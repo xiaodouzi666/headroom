@@ -284,6 +284,7 @@ function RunForm({ config }: { config: Dict }) {
           setHealth((previous) => ({
             ...previous,
             run_submissions: { enabled: false },
+            limits: {},
             gpu: { status: "unknown", available: null, busy: null },
             local_budget: { status: "unknown", remaining_usd: null },
           }));
@@ -297,6 +298,7 @@ function RunForm({ config }: { config: Dict }) {
   const queue = record(health.queue),
     provider = record(health.token_factory);
   const submissions = record(health.run_submissions);
+  const requestLimits = record(health.limits);
   const submissionsPaused =
     (typeof submissions.enabled === "boolean"
       ? submissions.enabled
@@ -467,6 +469,20 @@ function RunForm({ config }: { config: Dict }) {
               </span>
             </label>
           )}
+          {publicDemo && requestLimits.hourly_limit_applies === false && (
+            <p className="caption" role="status">
+              No hourly run-count limit for this token. Queue capacity, runtime
+              and per-run spending limits still apply.
+            </p>
+          )}
+          {publicDemo &&
+            requestLimits.hourly_limit_applies === true &&
+            typeof requestLimits.runs_per_ip_per_hour === "number" && (
+              <p className="caption" role="status">
+                Anonymous access: {requestLimits.runs_per_ip_per_hour} run
+                attempt per IP per hour.
+              </p>
+            )}
           <div className="segmented" role="group" aria-label="Source type">
             <button
               type="button"

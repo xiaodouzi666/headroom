@@ -82,7 +82,15 @@ def main():
         if demo is not None
         else create_app(settings)
     )
-    uvicorn.run(application, host="127.0.0.1", port=8766, proxy_headers=False)
+    uvicorn.run(
+        application,
+        host="127.0.0.1",
+        port=8766,
+        proxy_headers=False,
+        limit_concurrency=64,
+        backlog=64,
+        timeout_keep_alive=5,
+    )
 
 
 if __name__ == "__main__":

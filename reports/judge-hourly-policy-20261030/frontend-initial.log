@@ -1,0 +1,522 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.5 [39m[90m/home/xiaodouzi/workspace/headroom/web[39m
+
+ [31m❯[39m src/App.test.tsx [2m([22m[2m30 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 1480[2mms[22m[39m
+   [32m✓[39m workspace state [2m(4)[22m
+     [32m✓[39m shows real API examples and the missing-model-access state[32m 167[2mms[22m[39m
+     [32m✓[39m validates source selection before submitting[32m 61[2mms[22m[39m
+     [32m✓[39m keeps server failure visible without inventing an empty success state[32m 10[2mms[22m[39m
+     [32m✓[39m exposes script entry and the actual request policy controls[32m 48[2mms[22m[39m
+   [32m✓[39m paused public workspace [2m(1)[22m
+     [32m✓[39m explains the pause, links to evaluations, and rejects form submission[32m 45[2mms[22m[39m
+   [32m✓[39m safe evidence rendering [2m(2)[22m
+     [32m✓[39m renders patch HTML as text rather than executable markup[32m 3[2mms[22m[39m
+     [32m✓[39m renders needs_human as a visible state[32m 1[2mms[22m[39m
+   [32m✓[39m availability guidance [2m(5)[22m
+     [32m✓[39m explains the blocker and prevents a blocked start[32m 34[2mms[22m[39m
+     [32m✓[39m explains the blocker and prevents a blocked start[32m 32[2mms[22m[39m
+     [32m✓[39m explains the blocker and prevents a blocked start[32m 33[2mms[22m[39m
+     [32m✓[39m explains the blocker and prevents a blocked start[32m 32[2mms[22m[39m
+     [32m✓[39m keeps automatic availability guidance without a replay endpoint[32m 23[2mms[22m[39m
+   [32m✓[39m submits explicit search mode until_target without expanding precision policy[32m 53[2mms[22m[39m
+   [32m✓[39m submits explicit search mode bounded_pareto without expanding precision policy[32m 61[2mms[22m[39m
+   [32m✓[39m distinguishes an explicitly empty patch from missing patch evidence[32m 3[2mms[22m[39m
+   [32m✓[39m example target presets [2m(5)[22m
+     [32m✓[39m uses old reclaim and new fit22 recommendations and sends the capacity environment[32m 92[2mms[22m[39m
+     [32m✓[39m preserves a manually edited fit limit across cards and supports an explicit reset[32m 90[2mms[22m[39m
+     [32m✓[39m preserves an explicitly chosen fix-oom target even when it matches the initial default[32m 96[2mms[22m[39m
+     [32m✓[39m does not leak the capacity environment into pasted source (manual=false)[32m 74[2mms[22m[39m
+     [32m✓[39m does not leak the capacity environment into pasted source (manual=true)[32m 76[2mms[22m[39m
+   [32m✓[39m keeps About limitations clear without internal financial or review terminology[32m 27[2mms[22m[39m
+   [32m✓[39m separate home and public submission [2m(4)[22m
+     [32m✓[39m shows three home actions while the server-controlled gallery stays closed[32m 28[2mms[22m[39m
+     [32m✓[39m requires an ephemeral judge token for public scripts and sends it only in Authorization[32m 84[2mms[22m[39m
+     [32m✓[39m uses the entered judge token when switching from a script to an example[32m 81[2mms[22m[39m
+     [32m✓[39m does not let a query string enable the script form[32m 22[2mms[22m[39m
+   [32m✓[39m never flashes public script or budget controls before configuration arrives[32m 3[2mms[22m[39m
+   [31m❯[39m judge access with an exhausted anonymous allowance [2m(4)[22m
+     [32m✓[39m checks the entered token server-side and sends it for an example[32m 64[2mms[22m[39m
+     [32m✓[39m keeps invalid tokens blocked without falling back to anonymous submission[32m 33[2mms[22m[39m
+[31m     [31m×[31m keeps busy GPU protection with an unlimited hourly token[39m[32m 48[2mms[22m[39m
+     [32m✓[39m keeps full queue protection with an unlimited hourly token[32m 51[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/App.test.tsx[2m > [22mjudge access with an exhausted anonymous allowance[2m > [22mkeeps busy GPU protection with an unlimited hourly token
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find an element with the text: The GPU is busy.. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<a[39m
+      [33mclass[39m=[32m"skip-link"[39m
+      [33mhref[39m=[32m"#main-content"[39m
+    [36m>[39m
+      [0mSkip to content[0m
+    [36m</a>[39m
+    [36m<header[39m
+      [33mclass[39m=[32m"site-header"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"nav-shell"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"Headroom home"[39m
+          [33mclass[39m=[32m"brand"[39m
+          [33mhref[39m=[32m"/"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"brand-mark"[39m
+          [36m>[39m
+            [36m<i />[39m
+            [36m<i />[39m
+            [36m<i />[39m
+          [36m</span>[39m
+          [0mheadroom[0m
+          [36m<span[39m
+            [33mclass[39m=[32m"brand-beta"[39m
+          [36m>[39m
+            [0mLAB[0m
+          [36m</span>[39m
+        [36m</a>[39m
+        [36m<nav[39m
+          [33maria-label[39m=[32m"Main navigation"[39m
+        [36m>[39m
+          [36m<a[39m
+            [33mhref[39m=[32m"/"[39m
+          [36m>[39m
+            [0mHome[0m
+          [36m</a>[39m
+          [36m<span[39m
+            [33maria-disabled[39m=[32m"true"[39m
+            [33mtitle[39m=[32m"Not open yet"[39m
+          [36m>[39m
+            [0mVerified runs[0m
+          [36m</span>[39m
+          [36m<a[39m
+            [33maria-current[39m=[32m"page"[39m
+            [33mhref[39m=[32m"/run"[39m
+          [36m>[39m
+            [0mRun[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mhref[39m=[32m"/results"[39m
+          [36m>[39m
+            [0mResults[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mhref[39m=[32m"/about"[39m
+          [36m>[39m
+            [0mAbout[0m
+          [36m</a>[39m
+        [36m</nav>[39m
+      [36m</div>[39m
+    [36m</header>[39m
+    [36m<div[39m
+      [33mid[39m=[32m"main-content"[39m
+    [36m>[39m
+      [36m<main[39m
+        [33mclass[39m=[32m"page home-page"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"page-intro"[39m
+        [36m>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"eyebrow"[39m
+          [36m>[39m
+            [0mRun on the GPU[0m
+          [36m</p>[39m
+          [36m<h1>[39m
+            [0mStart an analysis.[0m
+          [36m</h1>[39m
+          [36m<p>[39m
+            [0mChoose a prepared workload and define the memory target. Each run records its diagnosis, changes, and measured result.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+        [36m<form[39m
+          [33mclass[39m=[32m"workspace-grid"[39m
+        [36m>[39m
+          [36m<section[39m
+            [33mclass[39m=[32m"panel source-panel"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"section-heading"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"eyebrow"[39m
+                [36m>[39m
+                  [0m01 / Start with your workload[0m
+                [36m</p>[39m
+                [36m<h2>[39m
+                  [0mWhat needs more room?[0m
+                [36m</h2>[39m
+              [36m</div>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-file-code-corner lucide-file-code-2 muted"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"22"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"22"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M4 12.15V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2h-3.35"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M14 2v5a1 1 0 0 0 1 1h5"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"m5 16-3 3 3 3"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"m9 22 3-3-3-3"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</div>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"field"[39m
+            [36m>[39m
+              [0mJudge access token (optional for examples)[0m
+              [36m<input[39m
+                [33maria-label[39m=[32m"Judge access token"[39m
+                [33mautocomplete[39m=[32m"off"[39m
+                [33mtype[39m=[32m"password"[39m
+                [33mvalue[39m=[32m"offline-judge-token"[39m
+              [36m/>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"caption"[39m
+              [36m>[39m
+                [0mUse a token for an example or your own script. It stays only on this page and is cleared after submission.[0m
+              [36m</span>[39m
+            [36m</label>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"caption"[39m
+              [33mrole[39m=[32m"status"[39m
+            [36m>[39m
+              [0mNo hourly run-count limit for this token. Queue capacity, runtime and per-run spending limits still apply.[0m
+            [36m</p>[39m
+            [36m<div[39m
+              [33maria-label[39m=[32m"Source type"[39m
+              [33mclass[39m=[32m"segmented"[39m
+              [33mrole[39m=[32m"group"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-pressed[39m=[32m"true"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [0mUse an example[0m
+              [36m</button>[39m
+              [36m<button[39m
+                [33maria-pressed[39m=[32m"false"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [0mPaste a script[0m
+              [36m</button>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"example-grid"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-pressed[39m=[32m"true"[39m
+                [33mclass[39m=[32m"example-card selected"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"example-top"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"example-number"[39m
+                  [36m>[39m
+                    [0m01[0m
+                  [36m</span>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"lucide lucide-check"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"17"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"17"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M20 6 9 17l-5-5"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                [36m</div>[39m
+                [36m<strong>[39m
+                  [0mActivation memory[0m
+                [36m</strong>[39m
+                [36m<p>[39m
+                  [0mInspect the runtime memory capture for this workload.[0m
+                [36m</p>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"example-meta"[39m
+                [36m>[39m
+                  [0moom[0m
+                  [0m ·[0m
+                  [0m [0m
+                  [0mbaseline recorded[0m
+                [36m</span>[39m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</section>[39m
+          [36m<aside[39m
+            [33mclass[39m=[32m"panel configure-panel"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"section-heading"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"eyebrow"[39m
+                [36m>[39m
+                  [0m02 / Define the goal[0m
+                [36m</p>[39m
+                [36m<h2>[39m
+                  [0mFind your headroom[0m
+                [36m</h2>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<fieldset[39m
+              [33mclass[39m=[32m"goal-options"[39m
+            [36m>[39m
+              [36m<legend[39m
+                [33mclass[39m=[32m"sr-only"[39m
+              [36m>[39m
+                [0mMemory target[0m
+              [36m</legend>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"goal active"[39m
+              [36m>[39m
+                [36m<input[39m
+                  [33mchecked[39m=[32m""[39m
+                  [33mname[39m=[32m"target"[39m
+                  [33mtype[39m=[32m"radio"[39m
+                  [33mvalue[39m=[32m"fix-oom"[39m
+                [36m/>[39m
+                [36m<span>[39m
+                  [36m<strong>[39m
+                    [0mFix out of memory[0m
+                  [36m</strong>[39m
+                  [36m<small>[39m
+                    [0mComplete the workload successfully.[0m
+                  [36m</small>[39m
+                [36m</span>[39m
+              [36m</label>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"goal "[39m
+              [36m>[39m
+                [36m<input[39m
+                  [33mname[39m=[32m"target"[39m
+                  [33mtype[39m=[32m"radio"[39m
+                  [33mvalue[39m=[32m"fit"[39m
+                [36m/>[39m
+                [36m<span>[39m
+                  [36m<strong>[39m
+                    [0mFit a memory budget[0m
+                  [36m</strong>[39m
+                  [36m<small>[39m
+                    [0mStay within a target peak.[0m
+                  [36m</small>[39m
+                [36m</span>[39m
+              [36m</label>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"goal "[39m
+              [36m>[39m
+                [36m<input[39m
+                  [33mname[39m=[32m"target"[39m
+                  [33mtype[39m=[32m"radio"[39m
+                  [33mvalue[39m=[32m"reclaim"[39m
+                [36m/>[39m
+                [36m<span>[39m
+                  [36m<strong>[39m
+                    [0mReclaim headroom[0m
+                  [36m</strong>[39m
+                  [36m<small>[39m
+                    [0mReduce peak usage while preserving behavior.[0m
+                  [36m</small>[39m
+                [36m</span>[39m
+              [36m</label>[39m
+            [36m</fieldset>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"rule"[39m
+            [36m/>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"field-heading"[39m
+            [36m>[39m
+              [0mPreserve what matters[0m
+            [36m</p>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"toggle-row"[39m
+            [36m>[39m
+              [36m<span>[39m
+                [0mAllow precision changes[0m
+                [36m<small>[39m
+                  [0mAlways reported in the result.[0m
+                [36m</small>[39m
+              [36m</span>[39m
+              [36m<input[39m
+                [33mtype[39m=[32m"checkbox"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"toggle-row"[39m
+            [36m>[39m
+              [36m<span>[39m
+                [0mAllow batch / accumulation changes[0m
+                [36m<small>[39m
+                  [0mKeep samples per update comparable.[0m
+                [36m</small>[39m
+              [36m</span>[39m
+              [36m<input[39m
+                [33mchecked[39m=[32m""[39m
+                [33mtype[39m=[32m"checkbox"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"field-row"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"field"[39m
+              [36m>[39m
+                [0mMax. step slowdown[0m
+                [36m<span[39m
+                  [33mclass[39m=[32m"input-affix"[39m
+                [36m>[39m
+                  [36m<input[39m
+                    [33mmax[39m=[32m"1000"[39m
+                    [33mmin[39m=[32m"0"[39m
+                    [33mtype[39m=[32m"number"[39m
+                    [33mvalue[39m=[32m"25"[39m
+                  [36m/>[39m
+                  [36m<span>[39m
+                    [0m%[0m
+                  [36m</span>[39m
+                [36m</span>[39m
+              [36m</label>[39m
+            [36m</div>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"field"[39m
+            [36m>[39m
+              [0mSearch mode[0m
+              [36m<select[39m
+                [33maria-describedby[39m=[32m"search-mode-note"[39m
+              [36m>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"until_target"[39m
+                [36m>[39m
+                  [0mStop when target is met[0m
+                [36m</option>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"bounded_pareto"[39m
+                [36m>[39m
+                  [0mExplore more configurations[0m
+                [36m</option>[39m
+              [36m</select>[39m
+            [36m</label>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"caption"[39m
+              [33mid[39m=[32m"search-mode-note"[39m
+            [36m>[39m
+              [0mExploration can continue after a successful fix, up to six rounds within the same time and policy limits. Verified results are kept if a later attempt stops.[0m
+            [36m</p>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"caption"[39m
+            [36m>[39m
+              [0mModel structure stays unchanged. Each result includes the measured memory use and numerical comparison.[0m
+            [36m</p>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"button button-primary start-button"[39m
+              [33mtype[39m=[32m"submit"[39m
+            [36m>[39m
+              [0mStart analysis[0m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-arrow-right"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"18"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"18"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"m12 5 7 7-7 7"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</button>[39m
+          [36m</aside>[39m
+        [36m</form>[39m
+      [36m</main>[39m
+    [36m</div>[39m
+    [36m<footer[39m
+      [33mclass[39m=[32m"site-footer"[39m
+    [36m>[39m
+      [36m<span>[39m
+        [0mHeadroom · GPU memory, made visible.[0m
+      [36m</span>[39m
+      [36m<a[39m
+        [33mhref[39m=[32m"/about"[39m
+      [36m>[39m
+        [0mHow it works [0m
+        [36m<svg[39m
+          [33maria-hidden[39m=[32m"true"[39m
+          [33mclass[39m=[32m"lucide lucide-arrow-up-right"[39m
+          [33mfill[39m=[32m"none"[39m
+          [33mheight[39m=[32m"13"[39m
+          [33mstroke[39m=[32m"currentColor"[39m
+          [33mstroke-linecap[39m=[32m"round"[39m
+          [33mstroke-linejoin[39m=[32m"round"[39m
+          [33mstroke-width[39m=[32m"2"[39m
+          [33mviewBox[39m=[32m"0 0 24 24"[39m
+          [33mwidth[39m=[32m"13"[39m
+          [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+        [36m>[39m
+          [36m<path[39m
+            [33md[39m=[32m"M7 7h10v10"[39m
+          [36m/>[39m
+          [36m<path[39m
+            [33md[39m=[32m"M7 17 17 7"[39m
+          [36m/>[39m
+        [36m</svg>[39m
+      [36m</a>[39m
+    [36m</footer>[39m
+  [36m</div>[39m
+[36m</body>[39m
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m76:38[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m52:17[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m src/App.test.tsx:[2m757:23[22m[39m
+    [90m755|[39m       ).toBeInTheDocument();
+    [90m756|[39m       if ("gpuBusy" in state) {
+    [90m757|[39m         expect(screen.getByText("The GPU is busy.")).toBeInTheDocument…
+    [90m   |[39m                       [31m^[39m
+    [90m758|[39m       } else {
+    [90m759|[39m         expect(
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m29 passed[39m[22m[90m (30)[39m
+[2m   Start at [22m 21:01:12
+[2m   Duration [22m 2.33s[2m (tests 66%, environment 21%, import 6%, transform 4%, setup 2%)[22m
+

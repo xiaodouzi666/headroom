@@ -1,0 +1,71 @@
+{
+  "schema": "headroom.public-safety.integration.v1",
+  "recorded_at": "2026-10-29T20:15:59.843199+00:00",
+  "scope": "Artifact sandbox write quota, bounded host export, owned resource cleanup and public storage admission",
+  "source_sha256": {
+    "headroom/lab/docker.py": "44f3ffdcf38bf488dbca141b10560fdebf6520d8f00fb67661f3a23e53523314",
+    "headroom/lab/runner.py": "745186c1bb33da2e340f8288f6151f1818275551eb0347c403620aecf512344c",
+    "headroom/lab/storage_budget.py": "68dcb1615239950f705fe8e40d0fe74b3d6e868a141889fe1b79209e54fa4fe9",
+    "headroom/lab/artifact_volume.py": "c762a9a65c4bf71486581dfd47275211875dbacc5af6d63850dbb3bb7580f10b",
+    "headroom/api/queue.py": "eb8d9af44a7e216457a08e09c6cf767f70491c1f360ba045ffae4211255b27f1",
+    "tests/test_lab_docker.py": "8839ebd03ba3fd7c2866faf10f033fda5eb5b3e8b29a200bcb347adf04f27521",
+    "tests/test_lab_deadline.py": "c3e33e20d4dfe7aea5d039bde30da9715460b45f5ab96f273ef333d85f3c8e67",
+    "tests/test_hf_cache.py": "32e1bec93ee82c144cb6e650a9ee3725c99b9abc88ea3223835e03814eb44272",
+    "tests/test_artifact_cleanup.py": "f4e0a6ecbbc015b8f2c6a95a183406ebc8797a8edd20c95eb330c3807f97fa69",
+    "tests/test_storage_budget.py": "b30d6821c4e6b0dfa01f38c8c45b5b8c03ead86f6a8c2b0e0dffe7f88e8fa4b0",
+    "tests/test_artifact_volume.py": "68a4d32812eb93d9fbb7c02af7730cf5d5a072049bdf2d11e291f788cf1e6fe3"
+  },
+  "checks": [
+    {
+      "report": "lab-focused.log",
+      "status": "initial_failed",
+      "passed": 63,
+      "failed": 2,
+      "explanation": "New output allowlist rejected two test-only marker files. Tests now observe those markers through bounded stdout; failure evidence retained."
+    },
+    {
+      "report": "lab-focused-final.json",
+      "status": "passed",
+      "tests": 65,
+      "revision_boundary": "Includes keeper GPU-disable environment; precedes final immutable-target-ownership cleanup tightening."
+    },
+    {
+      "report": "owned-cleanup-final.junit.xml",
+      "status": "passed",
+      "tests": 35,
+      "revision_boundary": "Final immutable-target cleanup source; includes nine new ownership negatives/positive and one actual CPU Lab."
+    },
+    {
+      "report": "artifact-cleanup.junit.xml",
+      "status": "passed",
+      "tests": 6,
+      "revision_boundary": "Final supervisor recovery for owned quota store and changed target identity."
+    },
+    {
+      "report": "small-cpu-volume.json",
+      "status": "passed",
+      "cases": 4,
+      "revision_boundary": "Original helper implementation; later explicit keeper GPU-disable environment separately exercised by final CPU Lab and GPU smoke."
+    },
+    {
+      "report": "gpu-smoke.json",
+      "status": "passed",
+      "scope": "One authorized idle-GPU, two-step CUDA Lab; no model/Tavily requests, not an automatic repair score."
+    }
+  ],
+  "limits": {
+    "lab_tmpfs_bytes": 536870912,
+    "lab_tmpfs_inodes": 4096,
+    "public_host_storage_admission_bytes": 17179869184,
+    "minimum_disk_free_bytes": 8589934592,
+    "bounded_host_write_reserve_bytes": 1073741824
+  },
+  "boundaries": [
+    "The tmpfs byte/inode limits are per-Lab hard write boundaries. Public cumulative storage is application admission across trusted source-copy/export windows; other host programs can still consume disk independently.",
+    "Public API preparation and pre-admission guard are reviewed/tested separately by the API owner; source hash above does not claim their HTTP tests.",
+    "No production HTTP submissions, credential reads, provider/model calls, GPU stress or unrelated process termination were performed.",
+    "GPU contention is rejected at each Lab preflight if compute processes are observed. External projects starting after that check can still contend.",
+    "No deployment, competition submission, acceptance-score improvement or new full-suite green result is established by this receipt.",
+    "Arbitrary output names and partial temporary capture files now fail export closed; large snapshots exceeding 512 MiB can fail safely."
+  ]
+}

@@ -95,7 +95,7 @@ def test_docker_arguments_mount_only_required_directories(tmp_path, monkeypatch)
     for name in ("headroom", "source", "artifacts"):
         (tmp_path / name).mkdir()
     command = docker.create_arguments(
-        name="headroom-test",
+        name="headroom-lab-" + "a" * 32,
         project_root=tmp_path,
         source=tmp_path / "source",
         output=tmp_path / "artifacts",
@@ -194,3 +194,91 @@ def test_cleanup_inspect_accepts_actual_docker29_absence_output(
         "stdout": stdout,
         "stderr": stderr,
     }
+
+
+def test_execute_rejected_existing_target_is_never_removed(tmp_path, monkeypatch):
+    name = "headroom-lab-" + "f" * 32
+    image = "sha256:" + "a" * 64
+    (tmp_path / "artifacts").mkdir()
+    monkeypatch.setattr(docker, "docker_binary", lambda: "docker")
+    monkeypatch.setattr(docker, "require_runtime_image", lambda *a, **k: {"image_id": image})
+
+    def reject(*args, **kwargs):
+        raise docker.artifact_volume.ArtifactStoreError("ARTIFACT_STORE_ALREADY_EXISTS")
+
+    monkeypatch.setattr(docker.artifact_volume, "create_store", reject)
+    monkeypatch.setattr(docker.artifact_volume, "_inspect", lambda *a: {"Id": "b" * 64})
+    monkeypatch.setattr(docker.artifact_volume, "discover_store", lambda *a, **k: None)
+    removed = []
+    monkeypatch.setattr(docker, "cleanup_container", lambda name: removed.append(name))
+    result = docker.execute(
+        create_args=["docker", "create", image], name=name, run_dir=tmp_path, max_seconds=1
+    )
+    assert removed == []
+    assert result["cleanup_verified"] is False
+
+
+@pytest.mark.parametrize(
+    "damage", ["id", "name", "image", "source", "source_rw", "volume", "out_rw"]
+)
+def test_target_cleanup_requires_created_identity_and_exact_mounts(monkeypatch, damage):
+    name, ident, image = "headroom-lab-" + "a" * 32, "b" * 64, "sha256:" + "c" * 64
+    store = {"image_id": image, "volume": "owned-output"}
+    details = {
+        "Id": ident,
+        "Name": "/" + name,
+        "Image": image,
+        "Mounts": [
+            {"Destination": "/source", "Source": "/owned/source", "RW": False},
+            {"Destination": "/out", "Type": "volume", "Name": "owned-output", "RW": True},
+        ],
+    }
+    if damage == "id":
+        details["Id"] = "d" * 64
+    elif damage == "name":
+        details["Name"] = "/foreign"
+    elif damage == "image":
+        details["Image"] = "sha256:" + "e" * 64
+    elif damage == "source":
+        details["Mounts"][0]["Source"] = "/foreign/source"
+    elif damage == "source_rw":
+        details["Mounts"][0]["RW"] = True
+    elif damage == "volume":
+        details["Mounts"][1]["Name"] = "foreign-output"
+    elif damage == "out_rw":
+        details["Mounts"][1]["RW"] = False
+    monkeypatch.setattr(docker.artifact_volume, "_inspect", lambda *a: details)
+    with pytest.raises(ValueError, match="ownership changed"):
+        docker._owned_target(
+            name,
+            ident,
+            store,
+            ["--mount", "type=bind,source=/owned/source,destination=/source,readonly"],
+        )
+
+
+def test_verified_target_identity_can_be_cleaned_by_immutable_id(monkeypatch):
+    name, ident, image = "headroom-lab-" + "a" * 32, "b" * 64, "sha256:" + "c" * 64
+    details = {
+        "Id": ident,
+        "Name": "/" + name,
+        "Image": image,
+        "Mounts": [
+            {"Destination": "/source", "Source": "/owned/source", "RW": False},
+            {"Destination": "/out", "Type": "volume", "Name": "owned-output", "RW": True},
+        ],
+    }
+    requested = []
+    monkeypatch.setattr(
+        docker.artifact_volume, "_inspect", lambda kind, target: requested.append(target) or details
+    )
+    assert (
+        docker._owned_target(
+            name,
+            ident,
+            {"image_id": image, "volume": "owned-output"},
+            ["--mount", "type=bind,source=/owned/source,destination=/source,readonly"],
+        )
+        == details
+    )
+    assert requested == [ident]

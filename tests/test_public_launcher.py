@@ -93,7 +93,14 @@ def test_public_launcher_copies_only_curated_files_and_uses_isolated_state(
     assert settings.trust_tailscale_funnel is True
     assert settings.deadline_seconds == 480
     assert observed["application"] is app
-    assert observed["run"] == {"host": "127.0.0.1", "port": 8766, "proxy_headers": False}
+    assert observed["run"] == {
+        "host": "127.0.0.1",
+        "port": 8766,
+        "proxy_headers": False,
+        "limit_concurrency": 64,
+        "backlog": 64,
+        "timeout_keep_alive": 5,
+    }
     actual = {
         str(path.relative_to(settings.data_root)): path.read_text()
         for path in settings.data_root.rglob("*")

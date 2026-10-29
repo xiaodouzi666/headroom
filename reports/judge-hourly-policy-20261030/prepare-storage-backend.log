@@ -1,0 +1,116 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+............................................F........F.......F.......... [ 87%]
+..........                                                               [100%]
+=================================== FAILURES ===================================
+_______ test_cleanup_requires_owned_manifest_and_exact_container_mounts ________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-407/test_cleanup_requires_owned_ma0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x726e19af07a0>
+
+    def test_cleanup_requires_owned_manifest_and_exact_container_mounts(tmp_path, monkeypatch):
+        run_id, lab_id = uuid4().hex, uuid4().hex
+        directory = tmp_path / run_id / "lab" / lab_id
+        directory.mkdir(parents=True)
+        (directory / "manifest.json").write_text(
+            json.dumps({"image": docker.IMAGE, "command": ["python"]})
+        )
+        name = "headroom-lab-" + lab_id
+        cleaned = []
+        details = {
+            "Name": "/" + name,
+            "Id": "c" * 64,
+            "Mounts": [
+                {"Destination": "/source", "Source": str(directory / "source")},
+                {"Destination": "/out", "Source": str(directory / "artifacts")},
+            ],
+        }
+        monkeypatch.setattr(docker, "docker_binary", lambda: "docker")
+        monkeypatch.setattr(
+            subprocess,
+            "run",
+            lambda *a, **k: subprocess.CompletedProcess(a[0], 0, json.dumps([details]), ""),
+        )
+        monkeypatch.setattr(
+            docker, "cleanup_container", lambda n: cleaned.append(n) or {"cleanup_verified": True}
+        )
+>       assert cleanup_owned_lab(tmp_path, run_id) is True
+E       AssertionError: assert False is True
+E        +  where False = cleanup_owned_lab(PosixPath('/tmp/pytest-of-xiaodouzi/pytest-407/test_cleanup_requires_owned_ma0'), '43e614b506d941d79f03b5308e53dbea')
+
+tests/test_api.py:275: AssertionError
+__________ test_slow_repository_preparation_does_not_hold_queue_lock ___________
+
+settings = ApiSettings(project_root=PosixPath('/tmp/pytest-of-xiaodouzi/pytest-407/test_slow_repository_preparati0/project'), dat..., event_poll_seconds=0.01, upload_deadline_seconds=30, allowed_hosts=('localhost', '127.0.0.1', '[::1]', 'testserver'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x726e1ab11070>
+
+    def test_slow_repository_preparation_does_not_hold_queue_lock(settings, monkeypatch):
+        from concurrent.futures import ThreadPoolExecutor
+    
+        from headroom.api import app as api
+        from headroom.repository import PreparedRepository
+    
+        entered, release = threading.Event(), threading.Event()
+    
+        def slow_prepare(repo, ref, command, *, destination, deadline):
+            entered.set()
+            assert release.wait(3)
+            destination.mkdir(parents=True)
+            script = destination / "train.py"
+            script.write_text("pass")
+            return PreparedRepository(destination, script, (), None, {})
+    
+        monkeypatch.setattr(api, "prepare_repository", slow_prepare)
+        app = create_app(settings, worker=completed_worker)
+        with TestClient(app) as client, ThreadPoolExecutor(max_workers=2) as pool:
+            submitted = pool.submit(
+                client.post,
+                "/api/runs",
+                json={
+                    "repo": "https://github.com/example/repository",
+                    "ref": "a" * 40,
+                    "cmd": "python train.py",
+                },
+            )
+            assert entered.wait(2)
+            try:
+                status = pool.submit(client.get, "/api/health").result(timeout=1)
+                assert status.status_code == 200 and status.json()["queue"]["preparing"] == 1
+                immediate = client.post("/api/runs", json={"script_text": "pass"})
+>               assert immediate.status_code == 202
+E               assert 400 == 202
+E                +  where 400 = <Response [400 Bad Request]>.status_code
+
+tests/test_api.py:468: AssertionError
+__ test_selected_after_downloads_follow_real_orchestration_and_retained_round __
+
+settings = ApiSettings(project_root=PosixPath('/tmp/pytest-of-xiaodouzi/pytest-407/test_selected_after_downloads_0/project'), dat..., event_poll_seconds=0.01, upload_deadline_seconds=30, allowed_hosts=('localhost', '127.0.0.1', '[::1]', 'testserver'))
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-407/test_selected_after_downloads_0')
+
+    def test_selected_after_downloads_follow_real_orchestration_and_retained_round(settings, tmp_path):
+        from test_orchestrator import search_run
+    
+        (tmp_path / "pipeline").mkdir()
+        result, source_store, _, _, _ = search_run(
+            tmp_path / "pipeline",
+            [
+                {"before": "VALUE = 1\n", "after": "VALUE = 2\n", "peak": 20, "target": True},
+                {"before": "VALUE = 2\n", "after": "VALUE = 3\n", "peak": 21, "target": True},
+            ],
+            max_rounds=2,
+            search_mode="bounded_pareto",
+        )
+        try:
+            real_row = source_store.get_run(result["run_id"])
+            settings.run_root = Path(result["run_dir"]).parent
+            app = create_app(settings, worker=completed_worker)
+            with TestClient(app) as client:
+>               bootstrap = client.post("/api/runs", json={"script_text": "pass"}).json()["run_id"]
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               KeyError: 'run_id'
+
+tests/test_api.py:691: KeyError
+=========================== short test summary info ============================
+FAILED tests/test_api.py::test_cleanup_requires_owned_manifest_and_exact_container_mounts
+FAILED tests/test_api.py::test_slow_repository_preparation_does_not_hold_queue_lock
+FAILED tests/test_api.py::test_selected_after_downloads_follow_real_orchestration_and_retained_round
+3 failed, 79 passed in 25.07s

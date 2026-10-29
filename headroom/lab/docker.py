@@ -2,12 +2,14 @@
 
 import json
 import os
+import re
 import selectors
 import shutil
 import subprocess
 import time
 from pathlib import Path
 
+from headroom.lab import artifact_volume
 from headroom.lab.cache import validated_hf_cache
 from headroom.lab.deadline import NANOSECONDS, publish_deadline
 from headroom.lab.envs import HOST_ENV
@@ -15,6 +17,7 @@ from headroom.lab.runtime_image import (
     IMAGE,  # noqa: F401 - compatibility export for callers
     require_runtime_image,
 )
+from headroom.lab.storage_budget import storage_admission
 
 LOG_LIMIT = 8 * 1024 * 1024
 
@@ -72,7 +75,6 @@ def create_arguments(
     for host, destination, readonly in (
         (project_root / "headroom", "/runtime/headroom", True),
         (source, "/source", True),
-        (output, "/out", False),
     ):
         if not host.is_dir():
             raise ValueError(f"required mount does not exist: {host}")
@@ -82,6 +84,10 @@ def create_arguments(
         if "," in str(host) or "\n" in str(host):
             raise ValueError("mount paths cannot contain commas or newlines")
         args.extend(["--mount", mount])
+    if output.is_symlink() or not output.is_dir():
+        raise ValueError("Artifact output must be a regular directory")
+    volume = artifact_volume.names(name)["volume"]
+    args.extend(["--mount", f"type=volume,source={volume},destination=/out"])
     if control is not None:
         if control.is_symlink() or not control.is_dir():
             raise ValueError("Deadline control must be a regular directory")
@@ -170,6 +176,35 @@ def cleanup_container(name: str) -> dict:
     return {"cleanup_verified": absent, "cleanup_attempts": attempts, "cleanup_inspect": inspection}
 
 
+def _owned_target(name, target_id, store, create_args):
+    """Read immutable identity and mounts before removing a target we created."""
+    details = artifact_volume._inspect("container", target_id)
+    if details is None:
+        return None
+    source = None
+    for index, argument in enumerate(create_args[:-1]):
+        if argument == "--mount":
+            fields = dict(
+                part.split("=", 1) for part in create_args[index + 1].split(",") if "=" in part
+            )
+            if fields.get("destination") == "/source":
+                source = fields.get("source")
+    mounts = {entry.get("Destination"): entry for entry in details.get("Mounts", [])}
+    if not (
+        source is not None
+        and details.get("Id") == target_id
+        and details.get("Name") == "/" + name
+        and details.get("Image") == store["image_id"]
+        and mounts.get("/source", {}).get("Source") == source
+        and mounts.get("/source", {}).get("RW") is False
+        and mounts.get("/out", {}).get("Type") == "volume"
+        and mounts.get("/out", {}).get("Name") == store["volume"]
+        and mounts.get("/out", {}).get("RW") is True
+    ):
+        raise ValueError("Target ownership changed; automatic cleanup refused")
+    return details
+
+
 def execute(
     *,
     create_args: list[str],
@@ -181,7 +216,28 @@ def execute(
     """Bound execution and log size, then remove the entire container process tree."""
     result = {"timed_out": False, "returncode": None}
     process = None
+    store = None
+    target_id = None
+    output = run_dir / "artifacts"
     try:
+        runtime = require_runtime_image(
+            Path(__file__).resolve().parents[2], executable=docker_binary(), environment=HOST_ENV
+        )
+        if runtime["image_id"] not in create_args:
+            raise ValueError("Target arguments do not use the verified runtime image")
+        try:
+            store = artifact_volume.create_store(name, runtime["image_id"], output_path=output)
+        except artifact_volume.ArtifactStoreError as error:
+            store = error.metadata
+            raise
+        manifest_path = run_dir / "manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest["owned_artifact_store"] = store
+        temporary = run_dir / "manifest.artifact-store.tmp"
+        temporary.write_text(json.dumps(manifest, allow_nan=False) + "\n")
+        temporary.replace(manifest_path)
+        result["artifact_quota_bytes"] = store["max_bytes"]
+        result["artifact_quota_inodes"] = store["max_inodes"]
         created = subprocess.run(
             create_args, env=HOST_ENV, capture_output=True, text=True, timeout=30, check=False
         )
@@ -189,6 +245,14 @@ def execute(
         if created.returncode != 0:
             result.update(error="CONTAINER_CREATE_FAILED", returncode=created.returncode)
             return result
+        created_id = created.stdout.strip()
+        if re.fullmatch(r"[0-9a-f]{64}", created_id) is None:
+            raise ValueError("Created target identity is unavailable")
+        target_id = created_id
+        _owned_target(name, target_id, store, create_args)
+        manifest["owned_target_id"] = target_id
+        temporary.write_text(json.dumps(manifest, allow_nan=False) + "\n")
+        temporary.replace(manifest_path)
         if control_dir is not None:
             control = publish_deadline(control_dir, max_seconds)
             result["deadline_control"] = control
@@ -196,7 +260,7 @@ def execute(
         else:
             deadline_ns = time.monotonic_ns() + int(max_seconds * NANOSECONDS)
         process = subprocess.Popen(
-            [docker_binary(), "start", "--attach", name],
+            [docker_binary(), "start", "--attach", target_id],
             env=HOST_ENV,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -228,8 +292,8 @@ def execute(
                     saved[key.data] += min(len(data), remaining)
             result["returncode"] = process.wait(timeout=5)
             result["log_limit_bytes_per_stream"] = LOG_LIMIT
-    except (OSError, ValueError, subprocess.SubprocessError) as error:
-        result["error"] = f"CONTAINER_EXECUTION_FAILED: {error}"
+    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+        result["error"] = f"CONTAINER_EXECUTION_FAILED: {type(error).__name__}"
     finally:
         if process is not None:
             if process.poll() is None:
@@ -241,6 +305,54 @@ def execute(
             for stream in (process.stdout, process.stderr):
                 if stream is not None:
                     stream.close()
-        result.update(inspect_container(name))
-        result.update(cleanup_container(name))
+        try:
+            if target_id is not None:
+                details = _owned_target(name, target_id, store, create_args)
+                if details is not None:
+                    result.update(state=details.get("State", {}), image_id=details.get("Image"))
+                    target_cleanup = cleanup_container(target_id)
+                else:
+                    target_cleanup = {"cleanup_verified": True}
+            else:
+                # A rejected pre-existing target was never ours to stop/remove.
+                target_cleanup = {
+                    "cleanup_verified": artifact_volume._inspect("container", name) is None
+                }
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError):
+            target_cleanup = {"cleanup_verified": False, "reason": "target_ownership_unverified"}
+        result.update(target_cleanup)
+        if store is not None:
+            if target_cleanup.get("cleanup_verified"):
+                try:
+                    with storage_admission(run_dir.parent):
+                        result["artifact_export"] = artifact_volume.export_store(store, output)
+                except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+                    result["artifact_export"] = {
+                        "export_verified": False,
+                        "error": type(error).__name__,
+                    }
+                    result["error"] = "ARTIFACT_EXPORT_FAILED"
+            else:
+                result["artifact_export"] = {
+                    "export_verified": False,
+                    "reason": "target_cleanup_unverified",
+                }
+            artifact_cleanup = artifact_volume.cleanup_store(store)
+            result["artifact_cleanup"] = artifact_cleanup
+            result["cleanup_verified"] = bool(
+                target_cleanup.get("cleanup_verified") and artifact_cleanup.get("cleanup_verified")
+            )
+        elif "error" in result:
+            # Creation may have been interrupted before its metadata was returned.
+            # Recovery must check the deterministic, labelled store before declaring cleanup.
+            try:
+                recovered = artifact_volume.discover_store(name, output_path=output)
+                if recovered is not None:
+                    result["artifact_cleanup"] = artifact_volume.cleanup_store(recovered)
+                    result["cleanup_verified"] = bool(
+                        target_cleanup.get("cleanup_verified")
+                        and result["artifact_cleanup"].get("cleanup_verified")
+                    )
+            except (OSError, ValueError, RuntimeError, subprocess.SubprocessError):
+                result["cleanup_verified"] = False
     return result

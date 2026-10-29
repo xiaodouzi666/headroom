@@ -187,7 +187,7 @@ def _stop_preparation(process, identity, ready):
 
 
 def cleanup_owned_lab(run_root, run_id):
-    """Only manifests beneath this job can identify containers eligible for cleanup."""
+    """Remove only this job's verified target and labelled artifact store."""
     try:
         directory = job_directory(run_root, run_id)
         lab = directory / "lab"
@@ -199,8 +199,7 @@ def cleanup_owned_lab(run_root, run_id):
             if not RUN_ID.fullmatch(item.name) or item.is_symlink() or not item.is_dir():
                 return False
             if not (item / "manifest.json").exists():
-                # Lab writes manifest before docker create; source-copy-only directories
-                # cannot have launched a container through the supported Lab runner.
+                # Store creation follows the host manifest, never target source copying.
                 continue
             with open_regular(item, "manifest.json", 2 * 1024 * 1024) as handle:
                 manifest = json.load(handle)
@@ -209,6 +208,15 @@ def cleanup_owned_lab(run_root, run_id):
             ):
                 return False
             name = "headroom-lab-" + item.name
+            store = manifest.get("owned_artifact_store")
+            if store is None:
+                store = docker.artifact_volume.discover_store(name, output_path=item / "artifacts")
+            if store is not None and (
+                store.get("target") != name
+                or store.get("output_path") != str(item / "artifacts")
+                or store.get("volume") != docker.artifact_volume.names(name)["volume"]
+            ):
+                return False
             inspected = subprocess.run(
                 [docker.docker_binary(), "inspect", "--type", "container", name],
                 env=HOST_ENV,
@@ -219,23 +227,42 @@ def cleanup_owned_lab(run_root, run_id):
             )
             if inspected.returncode:
                 message = inspected.stderr.lower()
-                if "no such object" in message or "no such container" in message:
-                    continue
-                return False
-            details = json.loads(inspected.stdout)[0]
-            mounts = {m.get("Destination"): m.get("Source") for m in details.get("Mounts", [])}
-            if (
-                details.get("Name") != "/" + name
-                or mounts.get("/source") != str(item / "source")
-                or mounts.get("/out") != str(item / "artifacts")
+                if not (
+                    ("no such object" in message or "no such container" in message)
+                    and name in message
+                ):
+                    return False
+            else:
+                details = json.loads(inspected.stdout)[0]
+                mounts = {m.get("Destination"): m for m in details.get("Mounts", [])}
+                output_mount = mounts.get("/out", {})
+                if details.get("Name") != "/" + name or mounts.get("/source", {}).get(
+                    "Source"
+                ) != str(item / "source"):
+                    return False
+                if store is None:
+                    if output_mount.get("Source") != str(item / "artifacts"):
+                        return False
+                elif (
+                    output_mount.get("Type") != "volume"
+                    or output_mount.get("Name") != store["volume"]
+                    or details.get("Image") != store["image_id"]
+                    or output_mount.get("RW") is not True
+                    or mounts.get("/source", {}).get("RW") is not False
+                    or (
+                        manifest.get("owned_target_id") is not None
+                        and details.get("Id") != manifest["owned_target_id"]
+                    )
+                ):
+                    return False
+                container_id = details.get("Id", "")
+                if not re.fullmatch(r"[0-9a-f]{64}", container_id):
+                    return False
+                if not docker.cleanup_container(container_id).get("cleanup_verified"):
+                    return False
+            if store is not None and not docker.artifact_volume.cleanup_store(store).get(
+                "cleanup_verified"
             ):
-                return False
-            container_id = details.get("Id", "")
-            if not re.fullmatch(r"[0-9a-f]{64}", container_id):
-                return False
-            # Remove the inspected immutable ID, never a replacement that races
-            # to reuse the manifest-derived name after the ownership check.
-            if not docker.cleanup_container(container_id).get("cleanup_verified"):
                 return False
         return True
     except (OSError, ValueError, KeyError, IndexError, RuntimeError, subprocess.SubprocessError):
@@ -277,6 +304,11 @@ class RunQueue:
         with sqlite3.connect(self.admission_path) as connection:
             connection.execute(
                 "CREATE TABLE IF NOT EXISTS admissions (run_id TEXT PRIMARY KEY, ip TEXT, created REAL)"
+            )
+            # Preserve every legacy admission and its original conservative quota
+            # treatment. Only new, server-selected judge runs get an exemption.
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS hourly_exempt_admissions (run_id TEXT PRIMARY KEY)"
             )
         self.thread = threading.Thread(target=self._loop, name="headroom-api-queue", daemon=True)
         self.expiry_thread = threading.Thread(
@@ -450,6 +482,8 @@ class RunQueue:
             funding_kind != "default" and allocations[funding_kind] is None
         ):
             raise AdmissionError("Selected execution allowance is unavailable", 503)
+        if funding_kind == "judge" and not self.judge_allocation.available:
+            raise AdmissionError("Selected execution allowance is unavailable", 503)
         # Admission starts one deadline shared by preparation, waiting and execution.
         # Upload/validation before admission and cleanup afterwards are separate.
         with self.condition:
@@ -461,14 +495,20 @@ class RunQueue:
             now = self.clock()
             with sqlite3.connect(self.admission_path, timeout=30) as connection:
                 connection.execute("BEGIN IMMEDIATE")
-                count = connection.execute(
-                    "SELECT COUNT(*) FROM admissions WHERE ip=? AND created>?", (ip, now - 3600)
-                ).fetchone()[0]
-                if count >= self.hourly_limit:
-                    raise AdmissionError(
-                        f"At most {self.hourly_limit} new run attempt(s) per IP per hour"
-                    )
+                if funding_kind != "judge":
+                    count = connection.execute(
+                        "SELECT COUNT(*) FROM admissions AS a WHERE a.ip=? AND a.created>? "
+                        "AND NOT EXISTS (SELECT 1 FROM hourly_exempt_admissions AS e "
+                        "WHERE e.run_id=a.run_id)",
+                        (ip, now - 3600),
+                    ).fetchone()[0]
+                    if count >= self.hourly_limit:
+                        raise AdmissionError(
+                            f"At most {self.hourly_limit} new run attempt(s) per IP per hour"
+                        )
                 connection.execute("INSERT INTO admissions VALUES (?,?,?)", (run_id, ip, now))
+                if funding_kind == "judge":
+                    connection.execute("INSERT INTO hourly_exempt_admissions VALUES (?)", (run_id,))
             limit = self.deadline
             deadline = time.monotonic() + limit
             admitted_at = self.clock()

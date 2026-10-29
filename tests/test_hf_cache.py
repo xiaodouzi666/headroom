@@ -91,9 +91,13 @@ def test_real_docker_reads_local_hf_config_and_cannot_modify_cache(tmp_path):
     (project / "uv.lock").write_bytes((PROJECT_ROOT / "uv.lock").read_bytes())
     assert not (project / ".venv").exists()
     make_cache(project)
-    source, output, run_dir = (tmp_path / name for name in ("source", "output", "run"))
-    for directory in (source, output, run_dir):
+    source, run_dir = (tmp_path / name for name in ("source", "run"))
+    output = run_dir / "artifacts"
+    for directory in (source, run_dir, output):
         directory.mkdir()
+    (run_dir / "manifest.json").write_text(
+        json.dumps({"image": docker.IMAGE, "command": ["python"]})
+    )
     (source / "check.py").write_text("""import json, os
 from pathlib import Path
 from transformers import GPT2Config
@@ -118,9 +122,9 @@ except OSError:
 else:
     offline_miss = False
 assert offline_miss
-Path("/out/cache-check.json").write_text(json.dumps({"readonly": readonly, "offline_miss": offline_miss}))
+Path("/out/result.json").write_text(json.dumps({"readonly": readonly, "offline_miss": offline_miss}))
 """)
-    name = "headroom-cache-test-" + uuid.uuid4().hex
+    name = "headroom-lab-" + uuid.uuid4().hex
     args = docker.create_arguments(
         name=name,
         project_root=project,
@@ -133,7 +137,7 @@ Path("/out/cache-check.json").write_text(json.dumps({"readonly": readonly, "offl
     assert any("destination=/hf-cache,readonly" in arg for arg in args)
     result = docker.execute(create_args=args, name=name, run_dir=run_dir, max_seconds=30)
     assert result["cleanup_verified"] and result["state"]["ExitCode"] == 0, result
-    assert json.loads((output / "cache-check.json").read_text()) == {
+    assert json.loads((output / "result.json").read_text()) == {
         "readonly": True,
         "offline_miss": True,
     }
@@ -153,7 +157,7 @@ def test_mutable_host_hub_cache_is_never_selected_or_mounted(tmp_path, monkeypat
     for name in ("headroom", "source", "output"):
         (tmp_path / name).mkdir()
     args = docker.create_arguments(
-        name="headroom-offline-cache-selection",
+        name="headroom-lab-" + "a" * 32,
         project_root=tmp_path,
         source=tmp_path / "source",
         output=tmp_path / "output",

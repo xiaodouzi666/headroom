@@ -17,6 +17,7 @@ from pathlib import Path
 from headroom.execution import PYTHON_COMMANDS
 from headroom.lab import docker
 from headroom.lab.envs import HOST_ENV, container_environment, validate_options
+from headroom.lab.storage_budget import storage_admission
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 EXCLUDED_DIRS = {
@@ -556,7 +557,10 @@ def _run(
     result = {"status": "error", "reason": "PREPARATION_FAILED", **metadata}
     captured_shared = None
     try:
-        source = copy_source(source_root, directory / "source", (root, directory))
+        with storage_admission(root) as admission:
+            source = copy_source(source_root, directory / "source", (root, directory))
+        metadata["storage_admission"] = admission
+        result["storage_admission"] = admission
         if script_relative is not None and str(script_relative) not in source["files"]:
             raise ValueError("selected script was excluded from the source copy")
         _write_json(

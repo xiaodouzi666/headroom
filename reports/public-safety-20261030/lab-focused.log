@@ -1,0 +1,82 @@
+.....................................FF..........................        [100%]
+=================================== FAILURES ===================================
+___ test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline[ignored] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-409/test_real_cpu_uncapturable_tar0')
+behavior = 'ignored'
+
+    @pytest.mark.parametrize("behavior", ["ignored", "blocked"])
+    def test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline(tmp_path, behavior):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "forever.py"
+        setup = (
+            "signal.signal(signal.SIGALRM, signal.SIG_IGN)"
+            if behavior == "ignored"
+            else "signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGALRM})"
+        )
+        blocked_work = (
+            "read_fd, write_fd = os.pipe()\nos.read(read_fd, 1)\n"
+            if behavior == "blocked"
+            else "while True:\n    time.sleep(0.02)\n"
+        )
+        script.write_text(
+            "import os, signal, time\nfrom pathlib import Path\n"
+            + setup
+            + "\nPath('/out/main-started').write_text('yes')\n"
+            + blocked_work
+        )
+        started = time.monotonic()
+        result = run_script(script, device="cpu", max_seconds=5, run_root=tmp_path / "runs")
+        elapsed = time.monotonic() - started
+        assert result["status"] == "timeout" and result["execution"]["timed_out"], result
+        assert result["cleanup_verified"]
+>       assert (Path(result["artifact_dir"]) / "main-started").is_file()
+E       AssertionError: assert False
+E        +  where False = is_file()
+E        +    where is_file = (PosixPath('/tmp/pytest-of-xiaodouzi/pytest-409/test_real_cpu_uncapturable_tar0/runs/d8a883b6d5764255b68f3c5584e84edb/artifacts') / 'main-started').is_file
+E        +      where PosixPath('/tmp/pytest-of-xiaodouzi/pytest-409/test_real_cpu_uncapturable_tar0/runs/d8a883b6d5764255b68f3c5584e84edb/artifacts') = Path('/tmp/pytest-of-xiaodouzi/pytest-409/test_real_cpu_uncapturable_tar0/runs/d8a883b6d5764255b68f3c5584e84edb/artifacts')
+
+tests/test_lab_deadline.py:152: AssertionError
+___ test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline[blocked] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-409/test_real_cpu_uncapturable_tar1')
+behavior = 'blocked'
+
+    @pytest.mark.parametrize("behavior", ["ignored", "blocked"])
+    def test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline(tmp_path, behavior):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "forever.py"
+        setup = (
+            "signal.signal(signal.SIGALRM, signal.SIG_IGN)"
+            if behavior == "ignored"
+            else "signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGALRM})"
+        )
+        blocked_work = (
+            "read_fd, write_fd = os.pipe()\nos.read(read_fd, 1)\n"
+            if behavior == "blocked"
+            else "while True:\n    time.sleep(0.02)\n"
+        )
+        script.write_text(
+            "import os, signal, time\nfrom pathlib import Path\n"
+            + setup
+            + "\nPath('/out/main-started').write_text('yes')\n"
+            + blocked_work
+        )
+        started = time.monotonic()
+        result = run_script(script, device="cpu", max_seconds=5, run_root=tmp_path / "runs")
+        elapsed = time.monotonic() - started
+        assert result["status"] == "timeout" and result["execution"]["timed_out"], result
+        assert result["cleanup_verified"]
+>       assert (Path(result["artifact_dir"]) / "main-started").is_file()
+E       AssertionError: assert False
+E        +  where False = is_file()
+E        +    where is_file = (PosixPath('/tmp/pytest-of-xiaodouzi/pytest-409/test_real_cpu_uncapturable_tar1/runs/8f48f88badfa4d76b225ce9d6e3f2d26/artifacts') / 'main-started').is_file
+E        +      where PosixPath('/tmp/pytest-of-xiaodouzi/pytest-409/test_real_cpu_uncapturable_tar1/runs/8f48f88badfa4d76b225ce9d6e3f2d26/artifacts') = Path('/tmp/pytest-of-xiaodouzi/pytest-409/test_real_cpu_uncapturable_tar1/runs/8f48f88badfa4d76b225ce9d6e3f2d26/artifacts')
+
+tests/test_lab_deadline.py:152: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_lab_deadline.py::test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline[ignored]
+FAILED tests/test_lab_deadline.py::test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline[blocked]
+2 failed, 63 passed in 69.92s (0:01:09)

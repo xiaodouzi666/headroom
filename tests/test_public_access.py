@@ -52,6 +52,7 @@ def test_public_example_has_fixed_allowance_deadline_and_persistent_ip_limit(set
         assert app.state.queue.deadline == 480
         assert client.get("/api/config").json()["limits"] == {
             "runs_per_ip_per_hour": 1,
+            "hourly_limit_applies": True,
             "max_waiting_runs": 2,
             "deadline_seconds": 480,
         }

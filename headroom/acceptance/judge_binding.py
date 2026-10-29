@@ -29,6 +29,7 @@ from headroom.acceptance.allocation import (
     safe,
 )
 from headroom.acceptance.demo_binding import _source_record
+from headroom.acceptance.judge_credit import read_judge_credit
 from headroom.api.security import open_regular
 from headroom.budget import BudgetLedger, money
 from headroom.ledger_path import existing_file_identity, require_initialized_ledger
@@ -36,6 +37,8 @@ from headroom.orchestrator import Services, run_fix
 from headroom.runtime import LiveProfile, read_live_profile
 
 SCHEMA = "headroom.judge-access.run.v1"
+CREDIT_SCHEMA = "headroom.judge-access.run.v2"
+SCHEMAS = frozenset({SCHEMA, CREDIT_SCHEMA})
 PLAN_SCHEMA = "headroom.judge-access.plan.v1"
 RECEIPT_SCHEMA = "headroom.judge-access.receipt.v1"
 EXPIRES_AT = "2026-12-15T20:00:00Z"
@@ -279,6 +282,21 @@ def _ledger(receipt, binding, cls=BudgetLedger):
     )
 
 
+def _funding_limits(receipt, *, connection=None):
+    extension = read_judge_credit(receipt, connection=connection)
+    if extension is None:
+        return {
+            "total_limit_usd": AMOUNTS["approved_net_usd"],
+            "daily_limit_usd": AMOUNTS["daily_limit_usd"],
+            "run_limit_usd": AMOUNTS["run_limit_usd"],
+            "credit_extension_sha256": None,
+        }
+    return {
+        key: extension["amounts"][key]
+        for key in ("total_limit_usd", "daily_limit_usd", "run_limit_usd")
+    } | {"credit_extension_sha256": extension["extension_sha256"]}
+
+
 class JudgeAllocation:
     def __init__(self, receipt_path, *, project_root):
         self.root = Path(project_root).resolve()
@@ -292,38 +310,49 @@ class JudgeAllocation:
         return receipt
 
     @property
+    def funding_limits(self):
+        """Explicit effective funding; the original receipt is never rewritten."""
+        return _funding_limits(self._receipt(active=False))
+
+    @property
+    def effective_daily_limit_usd(self):
+        return self.funding_limits["daily_limit_usd"]
+
+    @property
     def available(self):
         try:
             receipt = self._receipt()
-            state = _budget_state(receipt)
-            _quiet_pool(state)
             with _claims(receipt) as connection:
                 _clear_claims(connection)
-            return state["charged"] < money(AMOUNTS["approved_net_usd"])
+                limits = _funding_limits(receipt, connection=connection)
+                state = _budget_state(receipt)
+                _quiet_pool(state)
+                return state["charged"] < money(limits["total_limit_usd"])
         except (OSError, ValueError, sqlite3.Error, ArithmeticError, KeyError):
             return False
 
     def begin(self, run_id, request, *, source_sha256):
         require(re.fullmatch(r"[a-f0-9]{32}", run_id) is not None, "JUDGE_RUN_INVALID")
         receipt = self._receipt()
-        require(
-            request.runtime_profile == receipt["profile_path"]
-            and money(request.daily_budget_usd) == money(AMOUNTS["daily_limit_usd"])
-            and 0 < money(request.budget_usd) <= money(AMOUNTS["run_limit_usd"]),
-            "JUDGE_REQUEST_CONFIG_CHANGED",
-        )
         source = _source_record(request)
         require(source["sha256"] == source_sha256, "JUDGE_SOURCE_CHANGED")
         with _claims(receipt) as connection:
             _clear_claims(connection)
+            limits = _funding_limits(receipt, connection=connection)
+            require(
+                request.runtime_profile == receipt["profile_path"]
+                and money(request.daily_budget_usd) == money(limits["daily_limit_usd"])
+                and 0 < money(request.budget_usd) <= money(limits["run_limit_usd"]),
+                "JUDGE_REQUEST_CONFIG_CHANGED",
+            )
             state = _budget_state(receipt)
             _quiet_pool(state)
-            remaining = money(AMOUNTS["approved_net_usd"]) - state["charged"]
+            remaining = money(limits["total_limit_usd"]) - state["charged"]
             limit = min(money(request.budget_usd), remaining)
             require(limit > 0, "JUDGE_EXHAUSTED")
             request = request.model_copy(update={"budget_usd": str(limit)})
             binding = {
-                "schema": SCHEMA,
+                "schema": CREDIT_SCHEMA if limits["credit_extension_sha256"] else SCHEMA,
                 "project_root": str(self.root),
                 "receipt_path": str(self.receipt_path),
                 "receipt_sha256": receipt["receipt_sha256"],
@@ -331,10 +360,12 @@ class JudgeAllocation:
                 "request_sha256": request_sha256(request),
                 "source": source,
                 "run_limit_usd": str(limit),
-                "daily_limit_usd": AMOUNTS["daily_limit_usd"],
-                "total_limit_usd": AMOUNTS["approved_net_usd"],
+                "daily_limit_usd": limits["daily_limit_usd"],
+                "total_limit_usd": limits["total_limit_usd"],
                 "expires_at": EXPIRES_AT,
             }
+            if limits["credit_extension_sha256"]:
+                binding["credit_extension_sha256"] = limits["credit_extension_sha256"]
             binding["binding_sha256"] = digest(binding)
             try:
                 connection.execute(
@@ -392,19 +423,32 @@ class JudgeAllocation:
 
 def _validate_binding(binding, receipt, run_id):
     require(
-        binding.get("schema") == SCHEMA
+        binding.get("schema") in SCHEMAS
         and binding.get("run_id") == run_id
         and binding.get("binding_sha256")
         == digest({k: v for k, v in binding.items() if k != "binding_sha256"}),
         "JUDGE_BINDING_CHANGED",
     )
+    if binding["schema"] == CREDIT_SCHEMA:
+        limits = _funding_limits(receipt)
+        require(
+            limits["credit_extension_sha256"] is not None
+            and binding.get("credit_extension_sha256") == limits["credit_extension_sha256"],
+            "JUDGE_CREDIT_BINDING_CHANGED",
+        )
+    else:
+        require("credit_extension_sha256" not in binding, "JUDGE_CREDIT_BINDING_CHANGED")
+        limits = {
+            "daily_limit_usd": AMOUNTS["daily_limit_usd"],
+            "total_limit_usd": AMOUNTS["approved_net_usd"],
+        }
     require(
         binding["receipt_sha256"] == receipt["receipt_sha256"]
         and binding["expires_at"] == EXPIRES_AT
         and binding["project_root"] == receipt["project_root"]
         and 0 < money(binding["run_limit_usd"]) <= money(AMOUNTS["run_limit_usd"])
-        and money(binding["daily_limit_usd"]) == money(AMOUNTS["daily_limit_usd"])
-        and money(binding["total_limit_usd"]) == money(AMOUNTS["approved_net_usd"]),
+        and money(binding["daily_limit_usd"]) == money(limits["daily_limit_usd"])
+        and money(binding["total_limit_usd"]) == money(limits["total_limit_usd"]),
         "JUDGE_BINDING_LIMIT_CHANGED",
     )
 

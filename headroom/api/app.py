@@ -8,6 +8,7 @@ import os
 import re
 import secrets
 import subprocess
+import threading
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, replace
 from dataclasses import field as dataclass_field
@@ -23,6 +24,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
+from starlette.requests import ClientDisconnect
 
 from headroom.api.availability import AvailabilityMonitor
 from headroom.api.diagnosis_evidence import load_initial_diagnosis
@@ -82,6 +84,7 @@ class ApiSettings:
     deadline_seconds: float = 600
     shutdown_grace_seconds: float = 5
     event_poll_seconds: float = 0.1
+    upload_deadline_seconds: float = 30
     allowed_hosts: tuple[str, ...] = ("localhost", "127.0.0.1", "[::1]", "testserver")
 
     def __post_init__(self):
@@ -144,6 +147,8 @@ class ApiSettings:
         self.web_dist = Path(self.web_dist or self.project_root / "web/dist").resolve()
         if not 0 < self.deadline_seconds <= 600 or not 0 < self.shutdown_grace_seconds <= 10:
             raise ValueError("Deadline must be at most 600 seconds and cleanup grace at most 10")
+        if not 0 < self.upload_deadline_seconds <= 30:
+            raise ValueError("Upload deadline must be positive and at most 30 seconds")
         if not 0 < self.event_poll_seconds <= 5:
             raise ValueError("Event polling interval must be positive and at most five seconds")
 
@@ -262,7 +267,32 @@ def _stream_file(handle):
         handle.close()
 
 
+def _check_submission_storage(settings):
+    from headroom.lab.storage_budget import storage_admission, storage_scope
+
+    if not settings.data_root.resolve().is_relative_to(storage_scope(settings.run_root)):
+        raise ValueError("Submission storage must share the bounded artifact scope")
+    with storage_admission(settings.run_root, aggregate=True):
+        pass
+
+
 def _prepare_submission(settings, submission, source, run_id, *, deadline):
+    from headroom.lab.storage_budget import storage_admission, storage_scope
+
+    preparation_remaining(deadline)
+    if not settings.public_host:
+        return _prepare_submission_under_storage(
+            settings, submission, source, run_id, deadline=deadline
+        )
+    if not settings.data_root.resolve().is_relative_to(storage_scope(settings.run_root)):
+        raise ValueError("Submission storage must share the bounded artifact scope")
+    with storage_admission(settings.run_root, aggregate=True):
+        return _prepare_submission_under_storage(
+            settings, submission, source, run_id, deadline=deadline
+        )
+
+
+def _prepare_submission_under_storage(settings, submission, source, run_id, *, deadline):
     preparation_remaining(deadline)
     repository_input = submission.repo is not None
     folder = settings.data_root / "uploads" / run_id
@@ -347,6 +377,7 @@ def create_app(
         demo_allocation=demo_allocation,
         judge_allocation=judge_allocation,
     )
+    upload_slots = threading.BoundedSemaphore(3)
     catalog = _catalog(settings)
     availability = availability_monitor or AvailabilityMonitor(
         settings, enabled=worker is None, profile_loader=read_live_profile
@@ -494,6 +525,18 @@ def create_app(
             state["running"] = bool(state["running"])
         return state
 
+    def request_limits(request):
+        kind, _ = funding(request)
+        hourly_limited = kind != "judge"
+        return {
+            "runs_per_ip_per_hour": (
+                (1 if settings.public_host else 2) if hourly_limited else None
+            ),
+            "hourly_limit_applies": hourly_limited,
+            "max_waiting_runs": 2,
+            "deadline_seconds": settings.deadline_seconds,
+        }
+
     @app.get("/api/config")
     def config(request: Request):
         snapshot_requested = bool(
@@ -523,11 +566,7 @@ def create_app(
                 and settings.run_submissions_enabled
                 and (judge_allocation is not None or submission_config(request)["enabled"])
             ),
-            "limits": {
-                "runs_per_ip_per_hour": 1 if settings.public_host else 2,
-                "max_waiting_runs": 2,
-                "deadline_seconds": settings.deadline_seconds,
-            },
+            "limits": request_limits(request),
         }
 
     @app.post("/api/runs", status_code=202)
@@ -539,11 +578,23 @@ def create_app(
         origin = request.headers.get("origin")
         if origin and urlsplit(origin).netloc != request.url.netloc:
             raise HTTPException(403, "Cross-origin submissions are not allowed")
+        # Bound memory and slow connections before parsing or consuming an
+        # admission. The execution queue's independent deadline starts later.
+        if not upload_slots.acquire(blocking=False):
+            raise HTTPException(429, "Upload capacity is full", headers={"Retry-After": "30"})
         data = bytearray()
-        async for chunk in request.stream():
-            data.extend(chunk)
-            if len(data) > MAX_BODY_BYTES:
-                raise HTTPException(413, "Request exceeds upload limit")
+        try:
+            async with asyncio.timeout(settings.upload_deadline_seconds):
+                async for chunk in request.stream():
+                    if len(data) + len(chunk) > MAX_BODY_BYTES:
+                        raise HTTPException(413, "Request exceeds upload limit")
+                    data.extend(chunk)
+        except TimeoutError:
+            raise HTTPException(408, "Run upload deadline exceeded") from None
+        except ClientDisconnect:
+            raise HTTPException(400, "Run upload disconnected") from None
+        finally:
+            upload_slots.release()
         try:
             submission = Submission.model_validate_json(bytes(data))
             parse_target(submission.target)
@@ -609,16 +660,36 @@ def create_app(
                 )
         run_id = uuid4().hex
 
-        preparation_settings = (
-            replace(
-                settings,
-                runtime_profile=selected_allocation.receipt["profile_path"],
-                daily_budget_usd=selected_allocation.receipt["amounts"]["daily_limit_usd"],
+        try:
+            preparation_settings = (
+                replace(
+                    settings,
+                    runtime_profile=selected_allocation.receipt["profile_path"],
+                    daily_budget_usd=(
+                        selected_allocation.effective_daily_limit_usd
+                        if funding_kind == "judge"
+                        else selected_allocation.receipt["amounts"]["daily_limit_usd"]
+                    ),
+                )
+                if selected_allocation is not None
+                else settings
             )
-            if selected_allocation is not None
-            else settings
-        )
+        except (OSError, ValueError):
+            raise HTTPException(503, "Selected execution allowance is unavailable") from None
         prepare = partial(_prepare_submission, preparation_settings, submission, source, run_id)
+
+        if settings.public_host:
+            try:
+                # Refuse full/busy storage before persistent admission metadata.
+                # The bounded census runs off the event loop; prepare/export
+                # repeat admission while holding the lock around their writes.
+                await asyncio.to_thread(_check_submission_storage, preparation_settings)
+            except (OSError, ValueError):
+                raise HTTPException(
+                    503,
+                    "Submission storage is temporarily unavailable",
+                    headers={"Retry-After": "60"},
+                ) from None
 
         try:
             position = await asyncio.to_thread(
@@ -847,6 +918,7 @@ def create_app(
             "db": "ok",
             "queue": product_queue(queue_status()) if wants_product(request) else queue_status(),
             "run_submissions": submission_config(request),
+            "limits": request_limits(request),
             **observed,
             "deployment": "public_host_configured" if settings.public_host else "localhost",
             "authentication": "local_session_only",
