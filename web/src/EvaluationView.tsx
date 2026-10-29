@@ -86,8 +86,9 @@ const conditionName = (v: unknown) =>
 const campaignName = (item: Dict) =>
   (
     ({
-      "r6-20261027": "October 27, 2026 · Latest evaluation",
-      "r5-20261027": "October 27, 2026 · Previous evaluation",
+      "r7-20261029": "October 29, 2026 · Latest evaluation",
+      "r6-20261027": "October 27, 2026 · Previous evaluation",
+      "r5-20261027": "October 27, 2026 · Earlier evaluation",
     }) as Record<string, string>
   )[String(item.id)] ?? text(item.title);
 const stopReason = (v: unknown) =>
@@ -403,6 +404,16 @@ export default function EvaluationView() {
             </Badge>{" "}
             <Badge>{human(document.status)}</Badge>
           </p>
+          {selected === "r7-20261029" && (
+            <Notice>
+              For this evaluation, “Root cause correct” and “First-cause
+              accuracy” show raw category matching, before full diagnosis
+              validation. Raw category matches: 7/9; valid correct diagnoses:
+              5/9. Two workloads lack authored ground truth and remain in the
+              fixed nine; the detailed accuracy percentage uses the seven scored
+              workloads.
+            </Notice>
+          )}
           {suite_result.basis === "independent_fixed_suite_review_v1" && (
             <Notice>
               <strong>

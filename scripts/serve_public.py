@@ -1,12 +1,13 @@
 """Public origin; live work requires an explicit, verified FINAL48 demo allowance."""
 
 import os
-import shutil
 from pathlib import Path
 
 import uvicorn
 
 from headroom.api.app import ApiSettings, create_app
+from headroom.api.evaluations import _campaign, _registry
+from headroom.api.security import open_regular
 
 
 def main():
@@ -35,17 +36,23 @@ def main():
         os.environ["HEADROOM_DAILY_BUDGET_USD"] = demo.receipt["amounts"]["daily_limit_usd"]
     state = root / "runs/public-api"
     data = state / "submissions"
-    for relative in (
-        "public-evaluations.json",
-        "published-evaluations/r6-20261027.json",
-        "published-evaluations/r5-20261027.json",
-    ):
-        source = root / "public-evidence" / relative
+    source_root = root / "public-evidence"
+    entries = _registry(source_root)
+    # Validate every curated result before changing any published file.
+    payloads = {}
+    for entry in entries:
+        _campaign(source_root, entry)
+        relative = "published-evaluations/" + entry["id"] + ".json"
+        with open_regular(source_root, relative, 2 * 1024 * 1024) as handle:
+            payloads[relative] = handle.read()
+    with open_regular(source_root, "public-evaluations.json", 65536) as handle:
+        payloads["public-evaluations.json"] = handle.read()
+    # Results first, manifest last: a restart must not publish dangling entries.
+    for relative, content in payloads.items():
         destination = data / relative
         destination.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-        # Only curated, versioned evidence is copied; never private API state.
         temporary = destination.with_suffix(destination.suffix + ".tmp")
-        shutil.copyfile(source, temporary)
+        temporary.write_bytes(content)
         temporary.chmod(0o600)
         temporary.replace(destination)
     settings = ApiSettings(

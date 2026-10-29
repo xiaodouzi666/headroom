@@ -1,6 +1,7 @@
 """Public-origin startup contract, with no listener, GPU, provider or production state."""
 
 import importlib.util
+import json
 from pathlib import Path
 
 import pytest
@@ -37,10 +38,26 @@ def test_public_launcher_copies_only_curated_files_and_uses_isolated_state(
     if configured_gallery is not None:
         monkeypatch.setenv("HEADROOM_VERIFIED_RUNS_ENABLED", configured_gallery)
     monkeypatch.setenv("HEADROOM_SNAPSHOT_SUBMISSIONS_ENABLED", "true")
+    identifiers = ["r7-20261029", "r6-20261027", "r5-20261027"]
     expected = {
-        "public-evaluations.json": '{"version":1,"campaigns":[]}',
-        "published-evaluations/r6-20261027.json": '{"fixture":"r6"}',
-        "published-evaluations/r5-20261027.json": '{"fixture":"r5"}',
+        "public-evaluations.json": json.dumps(
+            {
+                "version": 1,
+                "campaigns": [
+                    {"id": identifier, "title": identifier} for identifier in identifiers
+                ],
+            }
+        ),
+        **{
+            f"published-evaluations/{identifier}.json": json.dumps(
+                {
+                    "mode": "campaign",
+                    "provenance": "live",
+                    "rows": [],
+                }
+            )
+            for identifier in identifiers
+        },
     }
     for relative, text in {**expected, "unpublished.json": "private evidence"}.items():
         path = project / "public-evidence" / relative
@@ -119,3 +136,34 @@ def test_public_launcher_fails_closed_before_copy_or_listener(
     with pytest.raises(SystemExit, match=message):
         module.main()
     assert not project.exists()
+
+
+@pytest.mark.parametrize("failure", ["missing", "malformed", "path_escape"])
+def test_invalid_curated_result_never_replaces_published_manifest(launcher, monkeypatch, failure):
+    module, project = launcher
+    monkeypatch.setenv("HEADROOM_PUBLIC_HOST", "headroom.example")
+    source = project / "public-evidence"
+    source.mkdir(parents=True)
+    identifier = "../private" if failure == "path_escape" else "new-result"
+    (source / "public-evaluations.json").write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "campaigns": [{"id": identifier, "title": "New result"}],
+            }
+        )
+    )
+    if failure == "malformed":
+        result = source / "published-evaluations/new-result.json"
+        result.parent.mkdir()
+        result.write_text('{"mode":"unreviewed","provenance":"live","rows":[]}')
+    data = project / "runs/public-api/submissions"
+    data.mkdir(parents=True)
+    existing = data / "public-evaluations.json"
+    existing.write_bytes(b"preserved prior publication")
+    monkeypatch.setattr(module, "create_app", lambda *_: pytest.fail("must not construct app"))
+    monkeypatch.setattr(module.uvicorn, "run", lambda *_, **__: pytest.fail("must not listen"))
+    with pytest.raises((ValueError, OSError)):
+        module.main()
+    assert existing.read_bytes() == b"preserved prior publication"
+    assert not (data / "published-evaluations").exists()

@@ -689,12 +689,22 @@ it("uses public evaluation names and keeps internal thresholds out of rendered t
   const { container } = render(<App />);
   expect(
     await screen.findByRole("option", {
-      name: "October 27, 2026 · Latest evaluation",
+      name: "October 27, 2026 · Previous evaluation",
     }),
   ).toBeInTheDocument();
   await openMeasurements();
-  expect(container.textContent).toContain("Latest evaluation");
+  expect(container.textContent).toContain("Previous evaluation");
   expect(
     screen.getByRole("link", { name: "Download full evaluation data" }),
   ).toHaveAttribute("href", "/api/evaluations/r6-20261027");
+});
+
+it("distinguishes raw category matches from valid diagnoses in the latest evaluation", async () => {
+  setup(fixture("live"), false, "r7-20261029");
+  render(<App />);
+  expect(
+    await screen.findByText(
+      /“Root cause correct” and “First-cause accuracy” show raw category matching, before full diagnosis validation\. Raw category matches: 7\/9; valid correct diagnoses: 5\/9\./,
+    ),
+  ).toBeInTheDocument();
 });
