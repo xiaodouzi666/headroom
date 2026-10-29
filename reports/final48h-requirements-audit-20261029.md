@@ -36,7 +36,7 @@ The [fixture report](deadline-fixture-isolation-20261029/README.md), [receipt](d
 
 The second request now has a real run.queued event, reaches queue_deadline_exceeded and never starts a worker. The first task completes cleanup about 4.113 seconds after admission while the second report is blocked; both final cleanup flags are true. This supplies the originally missing test-branch evidence, not a new production timing benchmark.
 
-The earlier 4,182 / 185 / 18 full-suite failure and 9 passed / 1 failed focused receipt remain unchanged. These new focused passes cannot be merged into a replacement full result. **23 CPU nodes and two guarded historical/shell cases remain incompletely revalidated.**
+The earlier 4,182 / 185 / 18 full-suite failure and 9 passed / 1 failed focused receipt remain unchanged. These new focused passes cannot be merged into a replacement full result. The earlier gaps in 23 CPU nodes and two historical/shell cases were subsequently covered by the separate focused checks recorded below.
 
 ### Demo-budget interpretation — correction deployed
 
@@ -53,3 +53,9 @@ The latest FINAL_48H progress block now records the one already-completed failed
 The final local video, actual Devpost submission, and a funded judging-period access arrangement require the user's remaining actions or decision. Current anonymous limits and the finite demo scope do not establish unrestricted judge access; nor is this audit a disqualification determination. The approved allocation and task caps remain unchanged despite the later gift grant.
 
 The failed s2 tiers/HF, fixed-nine 1/9 result and saved-snapshot 0/2 result remain failed or unmet. No extra report, successful historical example, source tag or offline check substitutes for a new successful measurement. This audit recommends no new paid campaign and performs no external communication.
+
+## Remaining focused checks — completed follow-up
+
+The exact 23 CPU nodes previously listed as not rechecked passed under the original v4 guard in 213.78 seconds, with 436 source hashes unchanged. The two previously guarded historical/shell tests passed in 0.28 seconds without skips using isolated copies and a single verified wrapper-command exception. Original test bodies and assertions were executed; no new product change, model call or GPU run occurred. Evidence: [CPU receipt](final48h-remaining-cpu-checks-20261029/final-receipt.json), [CPU JUnit](final48h-remaining-cpu-checks-20261029/focused.junit.xml), and [isolated-test receipt](final48h-remaining-isolated-checks-20261029/receipt.json). These follow-ups do not replace the original failed full regression.
+
+The independent [exact-node coverage map](final48h-followup-coverage-20261029.json) accounts for all 203 original unsuccessful nodes (185 failure / 18 error) using completed later passing observations, with uncovered and evidence-insufficient sets empty. Different source/fixture/guard states are recorded per group. This closes that specific follow-up inventory; it does not establish a new full-suite pass or change empirical repair/snapshot results.

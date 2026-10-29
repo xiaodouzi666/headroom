@@ -6,9 +6,11 @@
 - 已核实 Additional info 默认仅评委/主办方可见，国家字段例外公开；实际表单没有独立 Testing instructions 栏，可用私有附件交付。Frank 已明确批准并完成私有评委令牌说明上传，保存后读回文件名；首页截图也已保存为项目封面和图库。个人资格和职业反馈已按用户回答保存，学习等级 Moderate 已保存，Frank 确认未参加线下活动，城市留空；视频链接待补充。
 - Nebius 余额已实时核对，满足保留至少 $8；第二笔 Builder 赠款已从邮件找到并兑换成功，详细金融记录留在私有目录，没有扣卡充值或增加费用授权。当前共享限流/费用上限未变，评审期访问要求仍需落实。
 - 详见 [草稿报告](reports/devpost-draft-20261029/README.md)。源码 e6cf7a2 的唯一一次最终离线全量结果仍为 4182 passed、185 failed、18 errors（653.25 秒）；原失败完整保留；两处过时fixture修正的5项相关检查也单独留证。后续136通过/22失败、隔离配置16项、retention 3项、CPU代表13项，以及末组9通过/1失败都是独立focused记录，不能拼为新的全量通过。
-- 短deadline用例随后只修正测试阶段隔离：首任务保留真实spawn，第二次可信准备沿用传入deadline，4s/1.2s/5.2s及安全断言不变；该用例与两个未改的真实准备/剩余时限检查 **3/3通过（13.60秒）**，实际覆盖run.queued→queue_deadline_exceeded和慢报告期间watchdog清理。仍有 **23个CPU节点及2项受守卫限制的历史/脚本检查未完整复验**。详见 [独立修复报告](reports/deadline-fixture-isolation-20261029/README.md)。
+- 短deadline用例随后只修正测试阶段隔离：首任务保留真实spawn，第二次可信准备沿用传入deadline，4s/1.2s/5.2s及安全断言不变；该用例与两个未改的真实准备/剩余时限检查 **3/3通过（13.60秒）**，实际覆盖run.queued→queue_deadline_exceeded和慢报告期间watchdog清理。剩余 **23个CPU节点现已23/23通过（213.78秒）**，另2项历史/脚本检查通过（0.28秒，无skip）；均使用隔离输入，未改产品代码和原测试断言。见 [CPU补验](reports/final48h-remaining-cpu-checks-20261029/final-receipt.json) 与 [历史/脚本补验](reports/final48h-remaining-isolated-checks-20261029/receipt.json)。详见 [独立修复报告](reports/deadline-fixture-isolation-20261029/README.md)。
+- 原全量中185个failure和18个error对应的 **203个唯一nodeID均已有后续完成且通过的证据**；按编号去重，无遗漏或证据不足。各组使用不同修复阶段/守卫，不能合成为新全量通过；原4182/185/18结果保留。见 [逐项覆盖映射](reports/final48h-followup-coverage-20261029.json)。
 - 当前公网18px首页新做一次Lighthouse导航，Performance / Accessibility / Best practices / SEO均为 **100/100/100/100**；旧97属于历史build。该结果来自azuki经Funnel的移动端模拟/模拟节流，不是实体手机或所有网络保证，没有模型/GPU调用。详见 [当前build证据](reports/final48h-readability-lighthouse-20261029/README.md)。
 - 演示预算已修正并部署：计划中的 **每次 $0.30** 不再被误当成所有演示的累计上限；新任务共享原 $6.43 净额 / $7.79 含税额度。48项聚焦测试与独立审查通过，原服务重启1.771秒恢复，公网health/config均200。receipt/profile、环境配置、所有历史绑定与账目逐表逻辑哈希相同，费用仍计入$2.067736672，共享池剩余$4.362263328；没有新claim、模型调用或充值。每小时限流、8分钟时限和snapshot暂停保持。详见 [实现及部署证据](reports/final48h-demo-budget-correction-20261029/README.md)。
+- 现行Opus brief与本机Part6交接文本已统一使用Part6大字页面、Part4真实执行，并准确描述s3的with torch.no_grad()补丁；原始FINAL_48H模板和ZIP/录屏字节保留。明日F8定时说明已同步单次$0.30/共享池策略，时间与总授权不变。
 - Part6 新字号四段录屏已交付，120.08秒、哈希一致；Part4仍为实际启动录像。F6最终视频仍待Frank本地完成，F7仍为草稿3/5，10/30北京16:00的一次性F8检查已安排但尚未执行。
 
 ## 2026-10-29 前端可读性改进与公网功能复查

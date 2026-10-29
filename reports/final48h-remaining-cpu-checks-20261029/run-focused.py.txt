@@ -1,0 +1,71 @@
+from pathlib import Path
+import hashlib,json,os,signal,subprocess,tempfile,time,traceback
+from datetime import datetime,timezone
+ROOT=Path('/home/xiaodouzi/workspace/headroom')
+OUT=ROOT/'reports/final48h-remaining-cpu-checks-20261029'
+GUARD=ROOT/'reports/final48h-closing-regression-20261029/closing_guarded_v4.py'
+def now():
+ return datetime.now(timezone.utc).isoformat()
+def save(name,data):
+ (OUT/name).write_text(json.dumps(data,indent=2,sort_keys=True)+'\n')
+def source_hashes():
+ names=subprocess.check_output(['git','ls-files','-z','--cached','--others','--exclude-standard'],cwd=ROOT).decode().split('\0')
+ result={}
+ for name in sorted(set(names)):
+  if not name or (name.lower().endswith('.md') and not name.startswith(('headroom/prompts/','scenarios/','tests/'))) or name.startswith(('docs/','reports/','runs/','.cache/','.env')):
+   continue
+  path=ROOT/name
+  if path.is_symlink(): result[name]='symlink:'+os.readlink(path)
+  elif path.is_file(): result[name]=hashlib.sha256(path.read_bytes()).hexdigest()
+ return result
+def containers():
+ result=subprocess.run(['docker','ps','-a','--format','{{.Names}}'],capture_output=True,text=True,timeout=15)
+ return {'exit_code':result.returncode,'names':sorted(result.stdout.splitlines()),'stderr':result.stderr}
+os.chdir(ROOT)
+targets=json.loads((OUT/'targets.json').read_text())
+assert len(targets)==len(set(targets))==23
+assert json.loads((OUT/'preflight.json').read_text())['exit_code']==0
+head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+assert head=='ed731973a97a5d933321f9f3809e18d9f12fc78d'
+before=source_hashes()
+save('sources-before.json',before)
+save('containers-before.json',containers())
+temp=Path(tempfile.mkdtemp(prefix='headroom-remaining-cpu-20261029-'))
+env=dict(os.environ)
+for key in tuple(env):
+ if key.startswith(('NEBIUS_','TAVILY_','OPENAI_','ANTHROPIC_','HEADROOM_')) or key.endswith(('_API_KEY','_API_TOKEN')) or key in {'HF_TOKEN','HUGGING_FACE_HUB_TOKEN'}:
+  env.pop(key,None)
+env.update(CUDA_VISIBLE_DEVICES='',NVIDIA_VISIBLE_DEVICES='void',HF_HUB_OFFLINE='1',TRANSFORMERS_OFFLINE='1',PYTHONDONTWRITEBYTECODE='1',PYTEST_DISABLE_PLUGIN_AUTOLOAD='1',PYTEST_ADDOPTS='-p no:cacheprovider')
+env.pop('CLOSING_GUARD_PROBE_ONLY',None)
+command=[str(ROOT/'.venv/bin/python'),str(GUARD),*targets,'--basetemp',str(temp/'pytest'),'--junitxml',str(OUT/'focused.junit.xml')]
+started=now(); monotonic=time.monotonic()
+receipt={'status':'running','head':head,'started_at':started,'command':command,'target_count':23,'timeout_seconds':600,'temporary_root':str(temp),'guard_sha256':hashlib.sha256(GUARD.read_bytes()).hexdigest(),'runner_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'runner_pid':os.getpid(),'test_pid':None,'exit_code':None,'timeout':False}
+save('execution.json',receipt)
+process=None
+try:
+ with (OUT/'focused.log').open('x') as log:
+  process=subprocess.Popen(command,cwd=ROOT,env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+  receipt['test_pid']=process.pid
+  save('execution.json',receipt)
+  try:
+   receipt['exit_code']=process.wait(timeout=600)
+  except subprocess.TimeoutExpired:
+   receipt['timeout']=True
+   os.killpg(process.pid,signal.SIGINT)
+   try: receipt['exit_code']=process.wait(timeout=30)
+   except subprocess.TimeoutExpired:
+    os.killpg(process.pid,signal.SIGTERM)
+    try: receipt['exit_code']=process.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+     os.killpg(process.pid,signal.SIGKILL); receipt['exit_code']=process.wait(timeout=5)
+except BaseException as error:
+ receipt['driver_error']=type(error).__name__+': '+str(error)
+ (OUT/'driver-error.log').write_text(traceback.format_exc())
+finally:
+ receipt.update(status='finished',finished_at=now(),elapsed_seconds=round(time.monotonic()-monotonic,3))
+ after=source_hashes(); save('sources-after.json',after)
+ receipt['source_entry_count']=len(before)
+ receipt['source_changes']=[name for name in sorted(before.keys()|after.keys()) if before.get(name)!=after.get(name)]
+ save('containers-after.json',containers())
+ save('receipt.json',receipt)
+ save('execution.json',receipt)

@@ -4,6 +4,8 @@ Status: **Parts 1–6 delivered for local editing** on 2026-10-29. Part 6 suppli
 
 ## Current recording handoff
 
+For the local editor, use the [current Local Opus editing brief](#local-opus-editing-brief) below. It replaces the example narration in the preserved FINAL_48H section 4; the original plan stays unchanged.
+
 The current Home still image and Part 6 clips include the 2026-10-29 readability update. Use Part 6 for the latest Home, Verified runs, Results and completed s3 detail shots. Parts 1–5 retain their original typography and measured results; keep Part 4 for evidence of the actual live submission and execution. None of these raw clips is the final edited video.
 
 Frank's latest direction: Codex records each implemented user-facing feature as
@@ -301,13 +303,15 @@ A compact sequence is:
 
 1. 0:00–0:12: a real OOM excerpt. Label historical traceback displays or use
    Watch's recorded OOM; do not imply that the display itself re-executes training.
-2. 0:12–0:28: Part 5 Home and the capture → diagnose → patch → verify workflow.
+2. 0:12–0:28: Part 6 Home and the capture → diagnose → patch → verify workflow.
 3. 0:28–1:40: Part 4's new s3 run. Cut or clearly accelerate waiting, then keep
    the actual peak, stack, patch and verification readable at normal speed.
-   Preserve run ID `d9926ee7bb624e7fb22540bbc4c92cdc`.
+   Preserve run ID `d9926ee7bb624e7fb22540bbc4c92cdc`. Its actual patch wraps
+   the evaluation in `with torch.no_grad():`; do not call it a decorator. Use
+   Part 6 for the enlarged, existing-result detail shots after the live footage.
 4. 1:40–2:00: historical gallery and the snapshot/Watch limitations. These
    failed attempts demonstrate honest failure reporting, not repair coverage.
-5. 2:00–2:35: Part 5's actual current Results page: the fixed-nine 1/9 banner,
+5. 2:00–2:35: Part 6's current Results page: the fixed-nine 1/9 banner,
    valid correct first causes 5/9, raw category matches 7/9, and the separate
    diagnosis comparison. Keep the independent browser s3 demonstration separate
    from R7; use [R7's report](../../../reports/r7-20261029/README.md) for narration.

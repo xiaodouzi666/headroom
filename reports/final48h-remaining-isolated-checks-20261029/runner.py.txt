@@ -1,0 +1,103 @@
+"""Two original tests, isolated paths; no product/test/previous guard edits."""
+from pathlib import Path
+import builtins, hashlib, json, os, socket, sqlite3, stat, sys, tempfile, time
+from datetime import UTC, datetime
+ROOT=Path('/home/xiaodouzi/workspace/headroom')
+OUT=ROOT/'reports/final48h-remaining-isolated-checks-20261029'
+GUARD=ROOT/'reports/final48h-closing-regression-20261029/closing_guarded_v4.py'
+NODES=['tests/test_runtime_image.py::test_build_wrapper_uses_synced_project_python_without_dotenv_or_system_python','tests/test_verify_runner.py::test_existing_saved_lab_result_cannot_supply_missing_parameter_evidence']
+def digest(p): return hashlib.sha256(p.read_bytes()).hexdigest()
+def source_hashes():
+ return {str(p.relative_to(ROOT)):digest(p) for folder in ('headroom','scripts','tests') for p in (ROOT/folder).rglob('*') if p.is_file() and '__pycache__' not in p.parts and p.suffix in {'.py','.sh'}}
+started=time.monotonic();before=source_hashes();guard_sha=digest(GUARD)
+fixture=Path(tempfile.mkdtemp(prefix='headroom-two-isolated-'))
+history=fixture/'history';wrapper_root=fixture/'wrapper'
+manifest=ROOT/'reports/t1.1-acceptance.json';records=json.loads(manifest.read_text())['runs']
+paths=['reports/t1.1-acceptance.json']+[e['run_dir']+'/result.json' for e in records.values()]
+expected={'runs/lab-acceptance/20261023T022523Z/48877b189d1040aba0cf39147f594f7f/result.json':'612af02da93afdc97abfa1a2f07dbae42345b3d9275b842955b8d68808de0994','runs/lab-acceptance/20261023T022523Z/584cc1c4c2c04ba79954eaa22d471a0b/result.json':'a0d03233456c38d2563f8a7510ab8e4a2deff362020650bb0d9a208937d04d08','runs/lab-acceptance/20261023T022523Z/e9b2840fda8044329e1a1104ca68aa02/result.json':'c79bdaf8b9fe74fd084454ef0674972101d8e65cb57665be3ad990b8a994b624'}
+copies=[]
+for rel in paths:
+ src=ROOT/rel;assert not src.is_symlink() and src.is_file()
+ raw=src.read_bytes();sha=hashlib.sha256(raw).hexdigest()
+ if rel in expected: assert sha==expected[rel]
+ dst=history/rel;dst.parent.mkdir(parents=True,exist_ok=True);dst.write_bytes(raw);dst.chmod(0o444)
+ assert digest(dst)==sha
+ copies.append({'source':rel,'sha256':sha,'size_bytes':len(raw),'copy':str(dst)})
+wrapper=wrapper_root/'scripts/build_lab_image.sh';wrapper.parent.mkdir(parents=True)
+wrapper.write_bytes((ROOT/'scripts/build_lab_image.sh').read_bytes());wrapper.chmod(0o444)
+WRAPPER_SHA='240c44464b1ad16bf0198b404ab4c04ab316025bca1ba07aaff5810860c14a51'
+assert digest(wrapper)==WRAPPER_SHA
+for tree in (history,wrapper_root):
+ for directory in sorted((p for p in tree.rglob('*') if p.is_dir()),key=lambda p:len(p.parts),reverse=True):directory.chmod(0o555)
+ tree.chmod(0o555)
+UV=b'#!/bin/sh\nprintf \'%s\\n\' "$@"\n';PYTHON=b'#!/bin/sh\nexit 99\n'
+approved=[]
+def approved_wrapper(args):
+ if len(args)!=4:return False
+ executable,argv,cwd,env=args
+ if str(executable)!='/bin/bash' or list(argv)!=['/bin/bash',str(wrapper),'--prepare-only'] or cwd is not None:return False
+ if not isinstance(env,dict) or set(env)!={'PATH'}:return False
+ parts=env['PATH'].split(':')
+ if len(parts)!=3 or parts[1:]!=['/usr/bin','/bin']:return False
+ bindir=Path(parts[0])
+ if not bindir.is_absolute() or not bindir.resolve().is_relative_to(Path('/tmp')):return False
+ for name,raw in [('uv',UV),('python3',PYTHON)]:
+  p=bindir/name
+  if p.is_symlink() or not p.is_file() or p.stat().st_uid!=os.getuid() or p.read_bytes()!=raw or stat.S_IMODE(p.stat().st_mode)!=0o755:return False
+ if wrapper.is_symlink() or digest(wrapper)!=WRAPPER_SHA:return False
+ approved.append({'argv':list(argv),'environment_keys':['PATH'],'fake_uv_sha256':hashlib.sha256(UV).hexdigest(),'fake_python3_sha256':hashlib.sha256(PYTHON).hexdigest()})
+ return True
+source=GUARD.read_text()
+needle='if executable in {"sh", "bash", "zsh", "curl", "wget", "ssh", "scp", "nvidia-smi", "systemctl", "service", "tailscale"}:'
+assert source.count(needle)==1
+source=source.replace(needle,needle[:-1]+' and not approved_wrapper(args):')
+namespace={'__name__':'isolated_guard','__file__':str(GUARD),'approved_wrapper':approved_wrapper}
+exec(compile(source,str(GUARD),'exec'),namespace)
+# Fixture content is immutable to the test, including opens through C APIs.
+def fixture_audit(event,args):
+ if event=='open' and isinstance(args[0],(str,bytes,os.PathLike)):
+  path=Path(os.fsdecode(args[0])).resolve()
+  if path.is_relative_to(history) or path.is_relative_to(wrapper_root):
+   flags=args[2] if len(args)>2 else 0
+   if flags & (os.O_WRONLY|os.O_RDWR|os.O_CREAT|os.O_TRUNC|os.O_APPEND):raise PermissionError('isolated fixture immutable')
+sys.addaudithook(fixture_audit)
+negative={}
+def denied(name,call):
+ try:call()
+ except PermissionError:negative[name]='denied'
+ else:raise AssertionError('guard missing: '+name)
+for name,argv in [('other_shell',['/bin/bash','-c','true']),('other_script',['/bin/bash','/tmp/other.sh','--prepare-only']),('gpu',['docker','run','--gpus','all']),('network_container',['docker','run','fixture']),('docker_build',['docker','build','.'])]:
+ denied(name,lambda argv=argv:(namespace['audit']('subprocess.Popen',(argv[0],argv,None,{})),namespace['closing_audit']('subprocess.Popen',(argv[0],argv,None,{}))))
+denied('secret',lambda:(ROOT/'.env').read_bytes())
+denied('production_database',lambda:sqlite3.connect('file:'+str(ROOT/'runs/headroom.db')+'?mode=ro',uri=True))
+denied('dns',lambda:socket.getaddrinfo('example.invalid',443))
+def inet():
+ with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as sock:sock.connect(('192.0.2.1',443))
+denied('inet',inet)
+denied('fixture_write',lambda:open(history/paths[0],'wb'))
+# Bad environments cannot qualify for the sole shell exception.
+assert not approved_wrapper(('/bin/bash',['/bin/bash',str(wrapper),'--prepare-only'],None,{'PATH':'/usr/bin:/bin','BASH_ENV':'/tmp/anything'}))
+negative['extra_environment']='denied'
+sys.path.insert(0,str(ROOT));import pytest
+outcomes=[]
+class Plugin:
+ @pytest.hookimpl(hookwrapper=True)
+ def pytest_runtest_call(self,item):
+  if item.nodeid==NODES[0]:
+   old=item.module.ROOT;item.module.ROOT=wrapper_root
+   try:yield
+   finally:item.module.ROOT=old
+  elif item.nodeid==NODES[1]:
+   old=item.module.__file__;item.module.__file__=str(history/'tests/test_verify_runner.py')
+   try:yield
+   finally:item.module.__file__=old
+  else:raise AssertionError('unexpected test')
+ def pytest_runtest_logreport(self,report):
+  if report.when=='call' or report.skipped or report.failed:outcomes.append({'nodeid':report.nodeid,'when':report.when,'outcome':report.outcome})
+code=pytest.main(['-q','-p','no:cacheprovider',*NODES],plugins=[Plugin()])
+after=source_hashes();changed=[k for k in set(before)|set(after) if before.get(k)!=after.get(k)]
+receipt={'schema':'headroom.remaining-isolated-checks.v1','finished_at_utc':datetime.now(UTC).isoformat(),'source_commit':'ed73197','pytest_exit_code':code,'elapsed_seconds':time.monotonic()-started,'nodeids':NODES,'outcomes':outcomes,'negative_probes':negative,'approved_wrapper_dispatches':approved,'historical_copies':copies,'original_guard_sha256':guard_sha,'original_guard_unchanged':digest(GUARD)==guard_sha,'source_entries':len(before),'changed_sources':changed,'runner_sha256':digest(Path(__file__)),'scope':'Two original test functions and assertions; temporary path rebinding only. No production database/credential reads, no network/provider/GPU dispatch.'}
+receipt['passed']=code==0 and len(outcomes)==2 and all(x['outcome']=='passed' and x['when']=='call' for x in outcomes) and len(approved)==1 and not changed and receipt['original_guard_unchanged']
+(OUT/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+print(json.dumps({'passed':receipt['passed'],'outcomes':outcomes,'negative_probes':negative,'source_entries':len(before),'changed_sources':changed,'elapsed_seconds':receipt['elapsed_seconds']}),flush=True)
+raise SystemExit(0 if receipt['passed'] else 1)
