@@ -56,6 +56,20 @@ The supplementary Part 6 has also been delivered with matching SHA256: four
 Home/Verified/Results/s3 details. This is read-only footage, not a new live run;
 Part 4 remains the actual submission recording. See [delivery receipt](final48h-readability-clips-20261029/delivery.json). The current Local Opus brief and existing local Part 6 text handoff now explicitly select the larger Part 6 Home/Results shots and describe the actual s3 `with torch.no_grad()` patch. The preserved original plan and recorded-media bytes were not rewritten.
 
+## Independent-installation setup follow-up
+
+The public [runtime instructions](../docs/RUNTIME.md#build-your-own-disabled-profile)
+now include a complete disabled profile, field-by-field preparation, offline
+structure/value checks, explicit manual activation after evidence review, and
+optional pinned-tokenizer download/hash steps. An independent installation
+creates its own accounting database; it does not need our private acceptance
+configuration or historical records. The disabled template and synthetic filled
+values passed guarded offline checks; invalid prices/capabilities were rejected
+without disclosing input values, and all four Python snippets compiled. A
+separate source review passed. No real profile, provider account, model, GPU or
+tokenizer download was used for this documentation check. It does not change the
+original F5 result or establish a successful new-user live installation.
+
 ## Funding
 
 The sole FINAL_48H allocation remains $6.43 net / $7.79 gross, gift credit only, no recharge. After the clean-checkout recovery, the conservative charged total is $2.067736672. Some complete actual costs remain unknown; bounds are not relabelled as actual provider bills. The two browser demonstrations together account for $0.06952418. The plan's $0.30 is a per-run limit, not a user-approved aggregate allowance. The corrected default v2 binding is deployed; the previously calculated $0.23047582 is not an authorized remaining aggregate budget. Remaining shared net allowance is $4.362263328. Deployment created no allocation, claim or model attempt; before/after logical hashes match for every registry and old/new accounting table, and receipt/profile/environment bytes are unchanged. Historical records and previous unknown costs remain intact.

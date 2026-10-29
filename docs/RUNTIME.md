@@ -33,6 +33,135 @@ bash scripts/build_lab_image.sh; never bypass this identity check just because
 an older image with the same tag exists.
 
 
+### Build your own disabled profile
+
+The complete [disabled strict-mode template](examples/runtime-profile.disabled.json)
+uses the actual `LiveProfile` / `ProfileModel` / `BillingBound` structure in
+[headroom/runtime.py](../headroom/runtime.py). Start with this mode; it needs no
+local tokenizer and does not require the project's private acceptance receipts,
+allocation registry, historical runs or budget database.
+
+Copy it into **your own checkout**, without replacing an existing profile:
+
+```bash
+mkdir -p .cache
+(umask 077; set -C; cat docs/examples/runtime-profile.disabled.json > .cache/tokenfactory-runtime.json)
+```
+
+Keep `live_enabled=false` and `credit_confirmed=false` while filling it in.
+`REVIEW_*` strings are deliberately invalid monetary/date placeholders, not
+prices or credit. The three numeric billing fields set to `1` are schema-only
+placeholders, **not proven bounds**; replace them before marking billing verified.
+The model IDs are the public candidates in `headroom/config.py`, not proof of
+availability in your account. No credentials belong in this JSON.
+
+| Fields | What to supply and verify |
+| --- | --- |
+| `base_url` | One of `OFFICIAL_BASE_URLS` in `headroom/config.py`, matching the endpoint whose catalogue, identity and prices you reviewed. `.env`'s `NEBIUS_BASE_URL` does not override this profile. |
+| `available_credit_usd`, `authorized_total_usd` | Your confirmed usable **net model credit** and the amount you explicitly permit this installation to spend, as decimal strings; `0 < authorized <= available`. Allow separately for taxes, fees and other account spending. Do not copy this project's amounts. |
+| `verified_at`, top-level `evidence` | Your review timestamp and reference to the account/credit/spending decision. These strings record the review; the schema does not authenticate it or validate a timestamp format. |
+| `live_enabled`, `credit_confirmed` | Keep false until the configuration and external evidence have been reviewed. A schema check or API key is not that review. |
+| `evidence_token_budget` | Positive evidence-rendering limit, at most 150000. The template's 24000 is an application setting, not a billable input-token ceiling. |
+| `run_budget_mode`, `diagnosis_request_policy` | Keep `strict_reservation` and `null` for the ordinary workflow. The explicit FINAL48 policy below is optional; changing it changes the diagnosis request, not your authorization. |
+| `models` | Exactly `ultra`, `super`, `nano`, with distinct exact catalogue/response IDs. All three are required even if an individual invocation only uses some roles. |
+| Per-model `timeout_seconds`, `evidence` | A timeout in `(0, 600]` seconds and references supporting the exact model identity and current account prices. `docs/MODELS.md` describes the probe format and its limitations. |
+| `input_usd_per_million`, `output_usd_per_million`, `cached_input_usd_per_million` | Current USD prices per million tokens, as nonnegative decimal strings. `null` cached price means unknown, **not free**; do not invent a discount. Replace every `REVIEW_*` price. |
+| `capabilities` | Set only methods backed by your saved evidence. `VerifiedCapabilities` in `headroom/config.py` validates the method names. The template's text fallback and null reasoning method are unverified defaults; ordinary diagnosis requests reasoning, so review its supported selector rather than assuming the placeholder enables it. Nondefault methods need `capabilities.evidence`; `reasoning_effort` additionally requires tested `reasoning_on` / `reasoning_off` values. Optional low-effort mode requires its separate matching receipt; leave it absent for initial setup. |
+| `billing.mode` | Keep `verified_provider_bound`. This is separate from the run's `strict_reservation` accounting mode. |
+| `billing.prompt_token_ceiling`, `billing.max_prompt_utf8_bytes` | A proven server-billable input-token ceiling for **every accepted request** within the chosen byte domain, including schema/tools/template overhead. A single observed usage count or approximate tokenizer count is insufficient. The byte measurement is implemented by `BillingBound.upper_usd`. |
+| `billing.max_completion_tokens`, `billing.output_cap_field` | The maximum output count your reviewed policy permits and the verified wire field (`max_tokens` or `max_completion_tokens`). The count must accommodate the selected workflow's actual requests; smaller caps cause pre-dispatch refusal. Both top-level cap fields cannot be sent together. |
+| `billing.output_cap_includes_reasoning`, `billing.verified`, `billing.evidence` | Evidence that the selected output cap includes billed reasoning and that the entire billing domain is justified. Leave both flags false until verified. If you cannot establish an input bound, strict mode is not ready; consider the explicitly acknowledged estimate mode below instead of inventing one. |
+
+The following **offline template check** imports schemas only. It does not read
+`.env`, create a ledger, load a live runtime, download assets or call a provider.
+`LiveProfile.model_validate_json` accepts string-shaped placeholders, so this
+also checks capability dictionaries and demonstrates that the prices remain
+unusable. Success means **disabled template structure checked**, not live-ready:
+
+```bash
+.venv/bin/python - <<'PYCODE'
+from decimal import InvalidOperation
+from pathlib import Path
+from headroom.config import VerifiedCapabilities, normalize_base_url
+from headroom.llm.cost import Pricing
+from headroom.runtime import BillingBound, LiveProfile
+p = LiveProfile.model_validate_json(Path('docs/examples/runtime-profile.disabled.json').read_text())
+assert p.live_enabled is False and p.credit_confirmed is False
+assert p.run_budget_mode == 'strict_reservation'
+assert set(p.models) == {'ultra', 'super', 'nano'}
+assert len({m.model_id for m in p.models.values()}) == 3
+normalize_base_url(p.base_url)
+for m in p.models.values():
+    VerifiedCapabilities(**m.capabilities)
+    assert isinstance(m.billing, BillingBound)
+    assert m.billing.verified is False and m.billing.output_cap_includes_reasoning is False
+    try:
+        Pricing(m.input_usd_per_million, m.output_usd_per_million,
+                m.cached_input_usd_per_million, verified=False)
+    except InvalidOperation:
+        pass
+    else:
+        raise AssertionError('Template must retain unreviewed price placeholders')
+print('Disabled template structure checked; prices and evidence remain unreviewed.')
+PYCODE
+```
+
+After filling your private copy, this separate **offline value check** still
+requires it to be disabled. It validates decimal values and model/capability
+syntax without claiming that external evidence, account access or billing
+bounds are true. No secrets or profile contents are printed:
+
+```bash
+.venv/bin/python - <<'PYCODE'
+from pathlib import Path
+from headroom.budget import money
+from headroom.config import ModelSpec, VerifiedCapabilities, normalize_base_url
+from headroom.llm.cost import Pricing
+from headroom.runtime import BillingBound, LiveProfile
+try:
+    p = LiveProfile.model_validate_json(Path('.cache/tokenfactory-runtime.json').read_text())
+    assert p.live_enabled is False and p.credit_confirmed is False
+    assert p.run_budget_mode == 'strict_reservation'
+    assert set(p.models) == {'ultra', 'super', 'nano'}
+    assert len({m.model_id for m in p.models.values()}) == 3
+    assert 0 < money(p.authorized_total_usd) <= money(p.available_credit_usd)
+    normalize_base_url(p.base_url)
+    for m in p.models.values():
+        assert isinstance(m.billing, BillingBound)
+        price = Pricing(m.input_usd_per_million, m.output_usd_per_million,
+                        m.cached_input_usd_per_million, verified=False)
+        ModelSpec(m.model_id, m.timeout_seconds,
+                  capabilities=VerifiedCapabilities(**m.capabilities), pricing=price,
+                  output_cap_field=m.billing.output_cap_field, evidence=m.evidence)
+    print('Local values checked; still disabled. External evidence needs operator review.')
+except Exception:
+    raise SystemExit('Local validation failed; review the configuration privately.') from None
+PYCODE
+```
+
+The live loader `read_live_profile` intentionally rejects disabled profiles; it
+is not the template checker. Do not enable the profile merely to make validation
+pass. Only after completing your own evidence review, confirming available credit
+and authorizing the amount, manually set `live_enabled=true` and
+`credit_confirmed=true` in your private copy. Each strict model's completed
+billing review must also justify `billing.verified=true` and
+`billing.output_cap_includes_reasoning=true`, with the placeholder bounds replaced
+as described in the table. These flags record facts you have verified; changing
+them does not verify those facts. Then explicitly select your own profile with
+`--runtime-profile .cache/tokenfactory-runtime.json` and your own `--budget` /
+`--daily-budget` values when choosing to make model-backed requests. This page's
+checks do not perform that activation or launch a trial request.
+
+For an independent installation, leave `HEADROOM_BUDGET_DB_PATH` unset. The
+ordinary CLI initializes its own `.cache/budget.db` when it starts a valid live
+run; no download or copy of our ledger is needed. It applies the profile's total
+limit and the CLI daily/run limits. Preserve that ledger across runs; changing
+paths does not restore credit. An explicit external database path is for an
+already initialized shared ledger and is validated rather than silently created.
+The FINAL48 acceptance/allocation scripts are not prerequisites for normal CLI
+use. F5 used a pre-reviewed shared profile and pool; its clean-checkout result
+was not a test of creating a new user's account/profile from these instructions.
+
 ## Explicit FINAL48 diagnosis mode
 
 A reviewed profile may explicitly select
@@ -313,6 +442,74 @@ assets or unavailable dependencies stop admission before dispatch. The loader
 does not use `AutoTokenizer`, model weights, remote code, credentials or network.
 The first successful load is reused in memory for that runtime; later file edits
 do not alter the already verified tokenizer instance.
+
+### Optional tokenizer preparation and offline hash check
+
+Only local-estimate admission needs these assets. Their source is NVIDIA's
+[official tokenizer repository at the pinned revision](https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/tree/02462641f13d3af838b904f48195b9bb8a1e4ebc).
+The exact repository, revision and three SHA-256 values come from
+`TOKENIZER_REPO`, `TOKENIZER_REVISION` and `ASSET_HASHES` in
+[headroom/llm/preflight.py](../headroom/llm/preflight.py); do not use `main` or
+substitute hashes when a download fails. The revision is
+`02462641f13d3af838b904f48195b9bb8a1e4ebc`.
+
+This optional preparation command makes public HTTPS downloads, not model API
+calls. It sends no API key, downloads no weights, does not execute remote code,
+verifies bytes before writing, and refuses an existing mismatched file. Run it
+only when choosing to prepare estimate-mode assets. It was not executed as part
+of the documentation check:
+
+```bash
+.venv/bin/python - <<'PYCODE'
+import hashlib
+from pathlib import Path
+from urllib.request import urlopen
+from headroom.llm.preflight import ASSET_HASHES, TOKENIZER_REPO, TOKENIZER_REVISION
+root = Path('.cache/tokenizers/nemotron-3-ultra') / TOKENIZER_REVISION
+root.mkdir(parents=True, exist_ok=True)
+assert not root.is_symlink()
+for name, expected in ASSET_HASHES.items():
+    path = root / name
+    assert not path.is_symlink()
+    if path.exists():
+        assert path.is_file() and path.stat().st_size <= 64 * 1024 * 1024
+        raw = path.read_bytes()
+    else:
+        url = f'https://huggingface.co/{TOKENIZER_REPO}/resolve/{TOKENIZER_REVISION}/{name}'
+        with urlopen(url, timeout=60) as response:
+            raw = response.read(64 * 1024 * 1024 + 1)
+    assert 0 < len(raw) <= 64 * 1024 * 1024
+    assert hashlib.sha256(raw).hexdigest() == expected, f'Hash mismatch: {name}'
+    if not path.exists():
+        with path.open('xb') as output:
+            output.write(raw)
+print(root.resolve())
+PYCODE
+```
+
+The independent hash check below is **offline**. Use the printed absolute path
+as `billing.tokenizer_assets_dir` only after separately reviewing the estimate
+policy, domain, margins and risk acknowledgement. Matching these assets does
+not prove provider token counts, establish a billing bound or enable live use.
+For native JSON-schema responses, select the separately documented
+`ultra_native_schema_v1` protocol; the original local-estimate mode rejects that
+request shape.
+
+```bash
+.venv/bin/python - <<'PYCODE'
+import hashlib
+from pathlib import Path
+from headroom.llm.preflight import ASSET_HASHES, TOKENIZER_REVISION
+root = Path('.cache/tokenizers/nemotron-3-ultra') / TOKENIZER_REVISION
+assert root.is_dir() and not root.is_symlink()
+for name, expected in ASSET_HASHES.items():
+    path = root / name
+    assert path.is_file() and not path.is_symlink()
+    assert 0 < path.stat().st_size <= 64 * 1024 * 1024
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == expected, f'Hash mismatch: {name}'
+print('Three pinned tokenizer hashes match; no provider verification performed.')
+PYCODE
+```
 
 ### Durable unknown-charge rule and dispatch boundary
 

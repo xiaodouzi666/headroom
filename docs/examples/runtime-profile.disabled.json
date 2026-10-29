@@ -1,0 +1,89 @@
+{
+  "live_enabled": false,
+  "credit_confirmed": false,
+  "available_credit_usd": "REVIEW_AVAILABLE_NET_CREDIT_USD",
+  "authorized_total_usd": "REVIEW_AUTHORIZED_NET_TOTAL_USD",
+  "verified_at": "REVIEW_VERIFICATION_TIMESTAMP",
+  "evidence": "REVIEW_ACCOUNT_AND_SPENDING_AUTHORIZATION_EVIDENCE",
+  "base_url": "https://api.tokenfactory.us-central1.nebius.com/v1/",
+  "evidence_token_budget": 24000,
+  "run_budget_mode": "strict_reservation",
+  "diagnosis_request_policy": null,
+  "models": {
+    "ultra": {
+      "model_id": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "timeout_seconds": 600,
+      "input_usd_per_million": "REVIEW_INPUT_USD_PER_MILLION",
+      "output_usd_per_million": "REVIEW_OUTPUT_USD_PER_MILLION",
+      "cached_input_usd_per_million": null,
+      "capabilities": {
+        "json_method": "text",
+        "reasoning_method": null,
+        "token_budget_method": null,
+        "tools": false,
+        "evidence": null
+      },
+      "billing": {
+        "mode": "verified_provider_bound",
+        "prompt_token_ceiling": 1,
+        "max_prompt_utf8_bytes": 1,
+        "max_completion_tokens": 1,
+        "output_cap_field": "max_completion_tokens",
+        "output_cap_includes_reasoning": false,
+        "verified": false,
+        "evidence": "REVIEW_BILLING_DOMAIN_AND_OUTPUT_CAP_EVIDENCE"
+      },
+      "evidence": "REVIEW_MODEL_ID_AND_CURRENT_PRICES_EVIDENCE"
+    },
+    "super": {
+      "model_id": "nvidia/nemotron-3-super-120b-a12b",
+      "timeout_seconds": 120,
+      "input_usd_per_million": "REVIEW_INPUT_USD_PER_MILLION",
+      "output_usd_per_million": "REVIEW_OUTPUT_USD_PER_MILLION",
+      "cached_input_usd_per_million": null,
+      "capabilities": {
+        "json_method": "text",
+        "reasoning_method": null,
+        "token_budget_method": null,
+        "tools": false,
+        "evidence": null
+      },
+      "billing": {
+        "mode": "verified_provider_bound",
+        "prompt_token_ceiling": 1,
+        "max_prompt_utf8_bytes": 1,
+        "max_completion_tokens": 1,
+        "output_cap_field": "max_completion_tokens",
+        "output_cap_includes_reasoning": false,
+        "verified": false,
+        "evidence": "REVIEW_BILLING_DOMAIN_AND_OUTPUT_CAP_EVIDENCE"
+      },
+      "evidence": "REVIEW_MODEL_ID_AND_CURRENT_PRICES_EVIDENCE"
+    },
+    "nano": {
+      "model_id": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "timeout_seconds": 120,
+      "input_usd_per_million": "REVIEW_INPUT_USD_PER_MILLION",
+      "output_usd_per_million": "REVIEW_OUTPUT_USD_PER_MILLION",
+      "cached_input_usd_per_million": null,
+      "capabilities": {
+        "json_method": "text",
+        "reasoning_method": null,
+        "token_budget_method": null,
+        "tools": false,
+        "evidence": null
+      },
+      "billing": {
+        "mode": "verified_provider_bound",
+        "prompt_token_ceiling": 1,
+        "max_prompt_utf8_bytes": 1,
+        "max_completion_tokens": 1,
+        "output_cap_field": "max_completion_tokens",
+        "output_cap_includes_reasoning": false,
+        "verified": false,
+        "evidence": "REVIEW_BILLING_DOMAIN_AND_OUTPUT_CAP_EVIDENCE"
+      },
+      "evidence": "REVIEW_MODEL_ID_AND_CURRENT_PRICES_EVIDENCE"
+    }
+  }
+}
