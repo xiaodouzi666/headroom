@@ -372,7 +372,7 @@ export default function EvaluationView() {
     >
       {error && <Notice tone="red">{error}</Notice>}
       {catalog.length > 0 && (
-        <label>
+        <label className="evaluation-campaign-picker">
           Evaluation campaign{" "}
           <select
             value={selected}
@@ -406,12 +406,12 @@ export default function EvaluationView() {
           </p>
           {selected === "r7-20261029" && (
             <Notice>
-              For this evaluation, “Root cause correct” and “First-cause
-              accuracy” show raw category matching, before full diagnosis
-              validation. Raw category matches: 7/9; valid correct diagnoses:
-              5/9. Two workloads lack authored ground truth and remain in the
-              fixed nine; the detailed accuracy percentage uses the seven scored
-              workloads.
+              <strong>1 of 9 workloads met the memory target.</strong> For this
+              evaluation, “Root cause correct” and “First-cause accuracy” show
+              raw category matching, before full diagnosis validation. Raw
+              category matches: 7/9; valid correct diagnoses: 5/9. Two workloads
+              lack authored ground truth and remain in the fixed nine; the
+              detailed accuracy percentage uses the seven scored workloads.
             </Notice>
           )}
           {suite_result.basis === "independent_fixed_suite_review_v1" && (

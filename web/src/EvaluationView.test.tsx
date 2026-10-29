@@ -707,4 +707,7 @@ it("distinguishes raw category matches from valid diagnoses in the latest evalua
       /“Root cause correct” and “First-cause accuracy” show raw category matching, before full diagnosis validation\. Raw category matches: 7\/9; valid correct diagnoses: 5\/9\./,
     ),
   ).toBeInTheDocument();
+  expect(
+    screen.getByText("1 of 9 workloads met the memory target."),
+  ).toBeInTheDocument();
 });
