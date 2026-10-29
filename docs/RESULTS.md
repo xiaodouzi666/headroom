@@ -103,7 +103,7 @@ The known partial subtotals in this table sum to **$8.34721172**. The three addi
 
 ### Limitations
 
-Historical coverage combines successes from different evaluations; it is not a single-run success rate. The successful s4 peak ties its earlier best, so the selection rule chooses the latest run. The publicly available gallery still contains its four original successful examples and two failures; the latest tests added no successful precision-policy or HF cards.
+Historical coverage combines successes from different evaluations; it is not a single-run success rate. The successful s4 peak ties its earlier best, so the selection rule chooses the latest run. The public gallery contains four successful cases and two failures. Its s3 card now uses the separate browser demonstration, and its s4 card uses the latest campaign run; this does not change the campaign-only historical table. The latest tests added no successful precision-policy or HF cards.
 
 Only the selected s3 result has 20 identical compared loss scalars with every recorded input, effective-batch, objective and seed check matched. These are empirical comparisons. The s2 result is fp32 and tolerance-based, with a maximum recorded loss difference of 4.76837158203125e-7; its input, effective-batch and objective pairing is unknown. The same pairing information is incomplete for s8 despite its identical recorded scalars.
 

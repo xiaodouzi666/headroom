@@ -34,14 +34,14 @@ The number check verified 1,927 claims against present raw sources, with zero er
 
 - Public URL: https://headroom.tail45186b.ts.net/
 - Source: https://github.com/xiaodouzi666/headroom — independently confirmed public, with GitHub reporting Apache-2.0.
-- The public gallery retains four historical successes and two failures, with original download evidence.
+- The public gallery contains four successes and two failures. Its s3/s4 cards use the latest successful browser-demo/campaign records; the old catalog and previously published download URLs remain available. See [gallery refresh](verified-refresh-20261029/README.md).
 - Results now contains the latest nine-scenario campaign and separate Watch/browser-demo observations.
 - Frank confirmed the homepage opens within three seconds on phone mobile data. This is user-reported, not an instrumented latency measurement.
-- The new release recovered local health HTTP 200 in 1.437 seconds after service restart. Read-only public checks and responsive browser inspection are recorded separately.
-- Five public pages passed the final real-browser 390px check with no page, console, or API errors. The initial 411px Results overflow and its corrected follow-up evidence are preserved.
+- The latest gallery release recovered local health HTTP 200 in 1.359 seconds after service restart. Read-only public checks and responsive browser inspection are recorded separately.
+- Five public pages passed the real-browser 390px check with no page, console, or API errors. The gallery refresh additionally verified all 23 current and retained downloads, 12 cited stacks, and both new patches, with 390px layout preserved. The initial 411px Results overflow and its corrected follow-up evidence are preserved.
 - Preset live examples have been re-enabled within the original remaining demo allowance; snapshot uploads remain disabled. Enabling the entry created no model call.
 - Rootless Funnel and the user service remain the deployment path; visitors need no Tailscale client.
-- Original clips Part1–5 have been delivered to the user's local Downloads folder. They are source material, not the final narrated video. Part5 includes the final Results page, enabled Home entry and the failed clean-checkout recovery. Its ZIP SHA256 is 56a6cbd380320d3b7b3c4ec7c04f6ece4f46a95baf36483f520961e1f898a0ec.
+- Original clips Part1–5 have been delivered to the user's local Downloads folder. They are source material, not the final narrated video. Part5 includes the final Results page, enabled Home entry and the failed clean-checkout recovery. Its ZIP SHA256 is 56a6cbd380320d3b7b3c4ec7c04f6ece4f46a95baf36483f520961e1f898a0ec. A supplemental 42.84-second gallery clip now shows the refreshed s3/s4 cards; headroom-gallery-refresh-20261029.zip was delivered with matching local/server SHA256 febc63add2414f0f55b1b0b7e6d5e39c021101fcf6aaf22b43d0d92cfa03f0f6.
 
 ## Funding
 

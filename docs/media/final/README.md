@@ -259,6 +259,37 @@ directories. The packaged final takes are complete. This recording verifies
 desktop footage only; it does not claim a mobile acceptance result. Raw source
 footage still requires Opus's local edit, narration and captions.
 
+## Latest gallery refresh — 2026-10-29
+
+Delivered separately as `clips/headroom-gallery-refresh-20261029.zip`:
+16,170,066 bytes, 14 files, SHA256
+`febc63add2414f0f55b1b0b7e6d5e39c021101fcf6aaf22b43d0d92cfa03f0f6`.
+Identical verified bytes are on Frank's Mac at
+`/Users/liujunjun/Downloads/Headroom-demo-materials/headroom-gallery-refresh-20261029.zip`.
+This **42.84-second**, silent 1920×1080 / 25 fps MP4/WebM shows the refreshed
+public gallery. It includes the capture receipt, hash manifest and nine screenshots.
+
+- The s3 Browser demo card now uses `d9926ee7bb624e7fb22540bbc4c92cdc`.
+  The actual UI shows **73.38%** peak reduction, **20 compared loss samples**
+  and **20 completed optimizer updates**.
+- The retained-graph s4 card now uses R7 run `e8213706570e478f9845e49e24c2b54b`.
+  It shows **89.77%** peak reduction, **five compared backward-loss scalars**
+  against an original-workload offload reference, and **20 completed updates**.
+  Five comparisons must not be described as twenty.
+- Both cards show actual expanded, bound initial-diagnosis stacks and selected
+  diffs. The recorder checked the two patch response hashes against the published
+  catalog. The gallery remains four recorded repairs and two failures.
+
+Source take: `clips/gallery-refresh/20261029T004321Z/`. All eight requests were
+successful GETs. No new job, model request, GPU workload or DOM-content change
+was introduced. The package metadata secret scan found no leaks.
+
+Use this addition for current gallery shots. **Part 1's gallery is historical
+footage of the earlier card sources** and remains unchanged, as do all old clips
+and archives. The actual live s3 execution is still Part 4; browsing its published
+card is not another execution. R7 remains 1/9. This is raw local-editing material,
+not a newly generated final submission video.
+
 ### Local Opus editing brief
 
 Make a **1920×1080 final video of at most 170 seconds (2:50), safely below

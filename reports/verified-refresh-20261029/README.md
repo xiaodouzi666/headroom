@@ -18,4 +18,6 @@ Selection and source hashes are recorded in [preparation.json](preparation.json)
 
     PYTHONDONTWRITEBYTECODE=1 .venv/bin/python scripts/publish_verified.py --selection reports/verified-refresh-20261029/selection.json --check
 
-The preparation keeps current and old data separate. Deployment should install new assets and the fixed historical catalog before switching the current catalog, and restart only the read-only public service after the route change is installed. Live and snapshot submissions remain disabled. No replay animation is introduced.
+The preparation keeps current and old data separate. Deployment should install new assets and the fixed historical catalog before switching the current catalog, and restart the public service while its queue is idle after the route change is installed. Preparation does not change submission flags; deployment preserves the configured live-example and snapshot settings. No replay animation is introduced.
+
+The prepared update was subsequently deployed. See [deployment.json](deployment.json) for the exact revision, unchanged feature flags and health result.

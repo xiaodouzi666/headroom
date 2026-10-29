@@ -36,7 +36,7 @@ The traceback and source are optional. Headroom analyzes the saved evidence and 
 
 ## Results
 
-The recorded suite contains eight synthetic PyTorch training cases and pinned nanoGPT. The table selects the lowest recorded candidate peak among successful runs of each scenario, choosing the latest run on ties; [RESULTS](docs/RESULTS.md) gives its run, source revision and complete history. Memory uses decimal GB, calculated from the recorded byte counts.
+The recorded suite contains eight synthetic PyTorch training cases and pinned nanoGPT. Within the recorded repair campaigns, the table selects the lowest successful candidate peak for each scenario, choosing the latest campaign run on ties; [RESULTS](docs/RESULTS.md) gives its run, source revision and complete history. Memory uses decimal GB, calculated from the recorded byte counts.
 
 | Scenario | Historical memory target | Peak before → after | Numerical comparison |
 |---|---|---|---|
