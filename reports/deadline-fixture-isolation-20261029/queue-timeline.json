@@ -1,0 +1,72 @@
+{
+  "temporary_fixture_database": "/tmp/pytest-of-xiaodouzi/pytest-386/test_waiting_job_expires_witho0/store.db",
+  "rows": [
+    {
+      "run_id": "b9744b0f0f5740b68e38a33b5401ff9f",
+      "status": "timeout",
+      "created_at": "2026-10-29T05:09:17.576256+00:00",
+      "updated_at": "2026-10-29T05:09:20.395890+00:00",
+      "api_admitted_at": 1793250556.2829053,
+      "api_deadline_at": 1793250560.2829053,
+      "api_execution_limit_seconds": 4,
+      "api_cleanup_grace_seconds": 0.1,
+      "reason": "Run exceeded its admission-to-execution deadline; cleanup is separate",
+      "api_worker_finished": true,
+      "api_cleanup_verified": true
+    },
+    {
+      "run_id": "41a06464643c4168ad3096f6ecfd6372",
+      "status": "timeout",
+      "created_at": "2026-10-29T05:09:18.694984+00:00",
+      "updated_at": "2026-10-29T05:09:20.417608+00:00",
+      "api_admitted_at": 1793250558.6948023,
+      "api_deadline_at": 1793250559.8948023,
+      "api_execution_limit_seconds": 1.2,
+      "api_cleanup_grace_seconds": 0.1,
+      "reason": "queue_deadline_exceeded",
+      "api_report_pending": false,
+      "api_report_ready": true,
+      "api_worker_finished": true,
+      "api_cleanup_verified": true
+    }
+  ],
+  "events": [
+    {
+      "run_id": "b9744b0f0f5740b68e38a33b5401ff9f",
+      "kind": "run.queued",
+      "created_at": "2026-10-29T05:09:17.583135+00:00",
+      "data": {
+        "position": 1
+      }
+    },
+    {
+      "run_id": "41a06464643c4168ad3096f6ecfd6372",
+      "kind": "run.queued",
+      "created_at": "2026-10-29T05:09:18.697502+00:00",
+      "data": {
+        "position": 1
+      }
+    },
+    {
+      "run_id": "41a06464643c4168ad3096f6ecfd6372",
+      "kind": "run.failed",
+      "created_at": "2026-10-29T05:09:19.897994+00:00",
+      "data": {
+        "reason": "queue_deadline_exceeded",
+        "cleanup_verified": true
+      }
+    },
+    {
+      "run_id": "b9744b0f0f5740b68e38a33b5401ff9f",
+      "kind": "run.failed",
+      "created_at": "2026-10-29T05:09:20.390087+00:00",
+      "data": {
+        "reason": "deadline_exceeded",
+        "cleanup_verified": true
+      }
+    }
+  ],
+  "started_markers": [
+    "jobs/b9744b0f0f5740b68e38a33b5401ff9f/started"
+  ]
+}

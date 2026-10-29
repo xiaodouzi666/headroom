@@ -1,0 +1,75 @@
+{
+  "schema": "headroom.demo-per-run-budget-correction.v1",
+  "generated_at_utc": "2026-10-29T05:20:07.063194+00:00",
+  "source_base": "e8d4a1a4f203ab6d6830bae2a325717c1a1f4bac",
+  "source_frozen": true,
+  "production_code_files": [
+    "headroom/acceptance/demo_binding.py"
+  ],
+  "test_files_changed": [
+    "tests/test_demo_allocation.py",
+    "tests/test_resolved_allocation.py"
+  ],
+  "tests_executed": [
+    "tests/test_demo_allocation.py",
+    "tests/test_demo_api.py",
+    "tests/test_resolved_allocation.py"
+  ],
+  "source_sha256": {
+    "headroom/acceptance/demo_binding.py": "6d6d83add9b4a238c5ff0368b3a0db597550ae0704c45f3ca5015b63d4b2b318",
+    "tests/test_demo_allocation.py": "c7583ef02ee2ac79d309b1d94fce7c54910acc75cf1d34a09578abaa0cc98dec",
+    "tests/test_resolved_allocation.py": "13799511cf2ab2f859a0d5aab01ca3c8ee3b4cce57d09943dbf03e4da5ff4088"
+  },
+  "initial_tests": {
+    "passed": 27,
+    "seconds": 7.06,
+    "log": "focused-initial.log"
+  },
+  "final_tests": {
+    "passed": 48,
+    "seconds": 8.0,
+    "log": "final-revised.log",
+    "overlaps_prior": true
+  },
+  "ruff_check": "passed",
+  "ruff_format": "passed",
+  "git_diff_check": "passed",
+  "gitleaks_findings": 0,
+  "new_model_requests": 0,
+  "gpu_jobs": 0,
+  "production_db_mutations": 0,
+  "new_allocations": 0,
+  "production_service_restarted": false,
+  "public_flags_changed": false,
+  "legacy_payload_migration": false,
+  "default_new_binding_schema": "headroom.final48.demo-run.v2",
+  "explicit_legacy_schema": "headroom.final48.demo-run.v1",
+  "constraints": {
+    "per_run_max_usd": "0.30",
+    "total_and_daily": "unchanged original receipt",
+    "hourly_limit": "unchanged one per IP per hour",
+    "deadline": "unchanged 480 seconds"
+  },
+  "log_sha256": {
+    "focused-initial.log": "529b4e8bdf8418ed180f3574efc9c021396399d3e29df70636bf4fa2d1378380",
+    "focused-tests.log": "89c01e63d3eeb5014884fbce475d566076fc61f0954e25995670ec28408f6a52",
+    "gitleaks.log": "92dacf5e8d3fea36252b15c2814d48bddc6be46fb7da77b088e0c11ab4e7eb10",
+    "gitleaks.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "final-revised.log": "ab239c0539e036dfbcb5f2ea6a26b3ccda07a7a40a7639f72de420f1a802818f",
+    "gitleaks-revised.log": "11f1ec203f3414c0148576f3cd57e287c60ae99cf36147f800f5649ca12f5cac",
+    "gitleaks-revised.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "prior_final_tests": {
+    "passed": 47,
+    "seconds": 7.95,
+    "log": "focused-tests.log",
+    "overlaps_initial": true
+  },
+  "prior_source_sha256": {
+    "headroom/acceptance/demo_binding.py": "996532a5fe9551999315b7e9aa17db3257e5af1bac17bae6994903cdb3dfe267",
+    "tests/test_demo_allocation.py": "4abe8dc7e857ec7d9648abe55c57c6b92804457a14fb3a3e338a9ae8fe4d0a4c",
+    "tests/test_resolved_allocation.py": "13799511cf2ab2f859a0d5aab01ca3c8ee3b4cce57d09943dbf03e4da5ff4088"
+  },
+  "review_fix": "Revalidate persisted strict_reservation budget_mode before every reserve; reject actual_usage mutation.",
+  "revised_at_utc": "2026-10-29T05:21:24.265219+00:00"
+}

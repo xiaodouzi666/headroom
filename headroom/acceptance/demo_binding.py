@@ -26,6 +26,8 @@ from headroom.budget import BudgetLedger, money
 from headroom.orchestrator import Services, run_fix
 
 CAP = Decimal("0.30")
+LEGACY_SCHEMA = "headroom.final48.demo-run.v1"
+SCHEMA = "headroom.final48.demo-run.v2"
 
 
 def _source_record(request):
@@ -45,12 +47,21 @@ def _source_record(request):
 
 
 class DemoAllocation:
-    """Server-owned aggregate allowance, durable across service restarts."""
+    """Server-owned per-run allowance inside the original shared allocation.
 
-    def __init__(self, receipt_path, *, project_root, scope_limit_usd="0.30"):
+    An explicit scope_limit_usd retains the old v1 aggregate mode. Default v2
+    claims leave legacy scope rows and all existing run payloads untouched.
+    """
+
+    def __init__(self, receipt_path, *, project_root, run_limit_usd="0.30", scope_limit_usd=None):
         self.root = Path(project_root).resolve()
         self.receipt_path = Path(receipt_path)
-        self.cap = money(scope_limit_usd)
+        self.legacy_scope = scope_limit_usd is not None
+        require(
+            not self.legacy_scope or money(run_limit_usd) == CAP,
+            "DEMO_LIMIT_MODE_CONFLICT",
+        )
+        self.cap = money(scope_limit_usd if self.legacy_scope else run_limit_usd)
         require(0 < self.cap <= CAP, "DEMO_SCOPE_LIMIT_INVALID")
         self.receipt = self._receipt()
         with registry(self.root) as conn:
@@ -63,18 +74,19 @@ class DemoAllocation:
                 "run_id TEXT PRIMARY KEY, allocation_id TEXT NOT NULL, payload TEXT NOT NULL,"
                 "state TEXT NOT NULL, settlement TEXT)"
             )
-            conn.execute(
-                "INSERT OR IGNORE INTO f2_demo_scope VALUES(?,?,?)",
-                (self.receipt["allocation_id"], self.receipt["receipt_sha256"], str(self.cap)),
-            )
-            row = conn.execute(
-                "SELECT receipt_sha,cap FROM f2_demo_scope WHERE allocation_id=?",
-                (self.receipt["allocation_id"],),
-            ).fetchone()
-            require(
-                tuple(row) == (self.receipt["receipt_sha256"], str(self.cap)),
-                "DEMO_SCOPE_CHANGED",
-            )
+            if self.legacy_scope:
+                conn.execute(
+                    "INSERT OR IGNORE INTO f2_demo_scope VALUES(?,?,?)",
+                    (self.receipt["allocation_id"], self.receipt["receipt_sha256"], str(self.cap)),
+                )
+                row = conn.execute(
+                    "SELECT receipt_sha,cap FROM f2_demo_scope WHERE allocation_id=?",
+                    (self.receipt["allocation_id"],),
+                ).fetchone()
+                require(
+                    tuple(row) == (self.receipt["receipt_sha256"], str(self.cap)),
+                    "DEMO_SCOPE_CHANGED",
+                )
 
     def _receipt(self):
         receipt = verify_receipt(self.receipt_path, project_root=self.root)
@@ -108,12 +120,12 @@ class DemoAllocation:
         own = [a for a in state["attempts"] if a["run_id"] in ids]
         cost = _cost_summary(state, own)
         require(cost["resolved"], "DEMO_COST_UNKNOWN")
-        spent = cost["charged"]
-        require(spent <= self.cap, "DEMO_SCOPE_EXCEEDED")
-        return min(
-            self.cap - spent,
-            money(receipt["amounts"]["approved_net_usd"]) - state["charged"],
-        )
+        remaining = money(receipt["amounts"]["approved_net_usd"]) - state["charged"]
+        if self.legacy_scope:
+            spent = cost["charged"]
+            require(spent <= self.cap, "DEMO_SCOPE_EXCEEDED")
+            return min(self.cap - spent, remaining)
+        return remaining
 
     @property
     def available(self):
@@ -127,7 +139,7 @@ class DemoAllocation:
             return False
 
     def begin(self, run_id, request, *, source_sha256):
-        """Bind the prepared source, then claim only the remaining aggregate allowance."""
+        """Bind a new run within its per-run cap and the remaining shared pool."""
         require(re.fullmatch(r"[a-f0-9]{32}", run_id) is not None, "DEMO_RUN_INVALID")
         receipt = self._receipt()
         require(
@@ -142,16 +154,16 @@ class DemoAllocation:
             state = _budget_state(receipt)
             _quiet_pool(state)
             remaining = self._remaining(conn, receipt, state)
-            limit = min(remaining, money(request.budget_usd))
+            limit = min(remaining, self.cap, money(request.budget_usd))
             require(limit > 0, "DEMO_SCOPE_EXHAUSTED")
             request = request.model_copy(update={"budget_usd": str(limit)})
             binding = {
-                "schema": "headroom.final48.demo-run.v1",
+                "schema": LEGACY_SCHEMA if self.legacy_scope else SCHEMA,
                 "project_root": str(self.root),
                 "receipt_path": str(self.receipt_path),
                 "receipt_sha256": receipt["receipt_sha256"],
                 "run_id": run_id,
-                "scope_limit_usd": str(self.cap),
+                ("scope_limit_usd" if self.legacy_scope else "run_cap_usd"): str(self.cap),
                 "run_limit_usd": str(limit),
                 "daily_limit_usd": receipt["amounts"]["daily_limit_usd"],
                 "total_limit_usd": receipt["amounts"]["approved_net_usd"],
@@ -173,6 +185,7 @@ class DemoAllocation:
 
     def finish(self, binding, *, execution_terminal, cleanup_verified):
         receipt = self._receipt()
+        _validate_binding_limits(binding, receipt)
         with registry(self.root) as conn:
             row = conn.execute(
                 "SELECT payload,state FROM f2_demo_runs WHERE run_id=?", (binding["run_id"],)
@@ -236,11 +249,37 @@ def _ledger(receipt, binding, cls=BudgetLedger):
     )
 
 
+def _validate_binding_limits(binding, receipt, request=None):
+    schema = binding.get("schema")
+    require(schema in (LEGACY_SCHEMA, SCHEMA), "DEMO_BINDING_INVALID")
+    cap_field = "scope_limit_usd" if schema == LEGACY_SCHEMA else "run_cap_usd"
+    require(cap_field in binding, "DEMO_BINDING_INVALID")
+    cap = money(binding[cap_field])
+    authorized_cap = receipt["task_run_caps_usd"].get("F2_demo")
+    require(
+        authorized_cap is not None
+        and "F2_demo" in receipt["task_scopes"]
+        and 0 < money(binding["run_limit_usd"]) <= cap <= min(CAP, money(authorized_cap))
+        and money(binding["daily_limit_usd"]) == money(receipt["amounts"]["daily_limit_usd"])
+        and money(binding["total_limit_usd"]) == money(receipt["amounts"]["approved_net_usd"])
+        and binding["receipt_sha256"] == receipt["receipt_sha256"],
+        "DEMO_BINDING_LIMIT_CHANGED",
+    )
+    if request is not None:
+        require(
+            money(request.budget_usd) == money(binding["run_limit_usd"])
+            and money(request.daily_budget_usd) == money(binding["daily_limit_usd"])
+            and request.runtime_profile == receipt["profile_path"],
+            "DEMO_REQUEST_CONFIGURATION_CHANGED",
+        )
+
+
 def verify_demo_binding(binding, request, run_id):
-    require(binding.get("schema") == "headroom.final48.demo-run.v1", "DEMO_BINDING_INVALID")
+    require(binding.get("schema") in (LEGACY_SCHEMA, SCHEMA), "DEMO_BINDING_INVALID")
     require(binding["run_id"] == run_id, "DEMO_RUN_CHANGED")
     receipt = verify_receipt(binding["receipt_path"], project_root=binding["project_root"])
     require(receipt["receipt_sha256"] == binding["receipt_sha256"], "DEMO_RECEIPT_CHANGED")
+    _validate_binding_limits(binding, receipt, request)
     require(
         request_sha256(request) == binding["request_sha256"]
         and _source_record(request) == binding["source"],
@@ -259,24 +298,45 @@ def verify_demo_binding(binding, request, run_id):
             and claim["state"] == "claimed",
             "DEMO_CLAIM_NOT_ACTIVE",
         )
-        scope = conn.execute(
-            "SELECT cap,receipt_sha FROM f2_demo_scope WHERE allocation_id=?",
-            (receipt["allocation_id"],),
-        ).fetchone()
-        require(
-            scope and tuple(scope) == (binding["scope_limit_usd"], binding["receipt_sha256"]),
-            "DEMO_SCOPE_CHANGED",
-        )
+        if binding["schema"] == LEGACY_SCHEMA:
+            scope = conn.execute(
+                "SELECT cap,receipt_sha FROM f2_demo_scope WHERE allocation_id=?",
+                (receipt["allocation_id"],),
+            ).fetchone()
+            require(
+                scope and tuple(scope) == (binding["scope_limit_usd"], binding["receipt_sha256"]),
+                "DEMO_SCOPE_CHANGED",
+            )
     state = _budget_state(receipt)
     _quiet_pool(state, allowed_run=run_id)
+    run = state["runs"].get(run_id)
+    require(
+        run is None
+        or (
+            money(run["limit_usd"]) == money(binding["run_limit_usd"])
+            and run["budget_mode"] == "strict_reservation"
+        ),
+        "DEMO_RUN_LIMIT_CHANGED",
+    )
     return receipt
 
 
 def demo_budget_factory(binding, original_request):
     class BoundLedger(BudgetLedger):
-        def reserve(self, *args, **kwargs):
-            verify_demo_binding(binding, original_request, binding["run_id"])
-            return super().reserve(*args, **kwargs)
+        def open_run(self, run_id, run_limit, *, budget_mode="strict_reservation"):
+            require(
+                run_id == binding["run_id"]
+                and money(run_limit) == money(binding["run_limit_usd"])
+                and budget_mode == "strict_reservation",
+                "DEMO_RUN_LIMIT_CHANGED",
+            )
+            verify_demo_binding(binding, original_request, run_id)
+            return super().open_run(run_id, run_limit, budget_mode=budget_mode)
+
+        def reserve(self, run_id, *args, **kwargs):
+            require(run_id == binding["run_id"], "DEMO_RUN_CHANGED")
+            verify_demo_binding(binding, original_request, run_id)
+            return super().reserve(run_id, *args, **kwargs)
 
     def factory(run_id, request, profile):
         receipt = verify_demo_binding(binding, request, run_id)

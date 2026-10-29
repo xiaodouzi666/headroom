@@ -1,0 +1,102 @@
+"""Exact bounded focused runner preserved as text; no full suite."""
+from datetime import UTC, datetime
+from pathlib import Path
+import hashlib
+import importlib.util
+import json
+import os
+import signal
+import subprocess
+import time
+
+ROOT = Path("/home/xiaodouzi/workspace/headroom")
+OUT = ROOT / "reports/deadline-fixture-isolation-20261029"
+GUARD = ROOT / "reports/final48h-closing-regression-20261029/closing_guarded_v4.py"
+TARGETS = [
+    "tests/test_api_deadline.py::test_waiting_job_expires_without_starting_and_slow_report_does_not_delay_watchdog",
+    "tests/test_api_deadline.py::test_preparation_deadline_kills_owned_group_and_never_dispatches_worker",
+    "tests/test_api_deadline.py::test_worker_receives_only_time_left_after_preparation",
+]
+metadata = json.loads((OUT / "change.json").read_text())
+deadline = datetime.fromisoformat(metadata["started_at_utc"]).timestamp() + 300
+spec = importlib.util.spec_from_file_location(
+    "closing_inventory",
+    ROOT / "reports/final48h-closing-regression-20261029/full_regression_driver.py",
+)
+inventory = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(inventory)
+before = inventory.source_hashes()
+(OUT / "sources-before.json").write_text(json.dumps(before, indent=2) + "\n")
+environment = {
+    key: value
+    for key, value in os.environ.items()
+    if not key.startswith(("NEBIUS_", "TAVILY_", "OPENAI_", "ANTHROPIC_", "HEADROOM_"))
+    and not key.endswith(("_API_KEY", "_API_TOKEN"))
+    and key not in {"HF_TOKEN", "HUGGING_FACE_HUB_TOKEN", "PYTEST_ADDOPTS", "CLOSING_GUARD_PROBE_ONLY"}
+}
+environment.update(
+    PYTHONDONTWRITEBYTECODE="1",
+    PYTEST_DISABLE_PLUGIN_AUTOLOAD="1",
+    PYTEST_ADDOPTS="-p no:cacheprovider",
+    CUDA_VISIBLE_DEVICES="",
+    NVIDIA_VISIBLE_DEVICES="void",
+)
+command = [str(ROOT / ".venv/bin/python"), str(GUARD), *TARGETS]
+record = {
+    "schema": "headroom.deadline-fixture-isolation.focused.v1",
+    "started_at_utc": datetime.now(UTC).isoformat(),
+    "deadline_at_utc": datetime.fromtimestamp(deadline, UTC).isoformat(),
+    "command": command,
+    "source_head": metadata["source_head"],
+    "guard_sha256": hashlib.sha256(GUARD.read_bytes()).hexdigest(),
+    "test_sha256": hashlib.sha256((ROOT / "tests/test_api_deadline.py").read_bytes()).hexdigest(),
+    "selected": 3,
+    "full_suite": False,
+}
+(OUT / "launch.json").write_text(json.dumps(record, indent=2) + "\n")
+started = time.monotonic()
+try:
+    remaining = deadline - time.time()
+    if remaining <= 0:
+        raise RuntimeError("Five minute timebox expired before launch")
+    with (OUT / "focused.log").open("x") as output:
+        child = subprocess.Popen(
+            command,
+            cwd=ROOT,
+            env=environment,
+            stdout=output,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
+        record["pid"] = child.pid
+        (OUT / "active.json").write_text(json.dumps(record, indent=2) + "\n")
+        try:
+            code = child.wait(timeout=remaining)
+            record["status"] = "completed"
+        except subprocess.TimeoutExpired:
+            record["status"] = "timebox_interrupted"
+            os.killpg(child.pid, signal.SIGINT)
+            try:
+                code = child.wait(timeout=30)
+            except subprocess.TimeoutExpired:
+                os.killpg(child.pid, signal.SIGTERM)
+                code = child.wait(timeout=20)
+    record["exit_code"] = code
+except BaseException as error:
+    record["runner_error"] = {"type": type(error).__name__, "message": str(error)}
+    raise
+finally:
+    after = inventory.source_hashes()
+    (OUT / "sources-after.json").write_text(json.dumps(after, indent=2) + "\n")
+    record.update(
+        finished_at_utc=datetime.now(UTC).isoformat(),
+        elapsed_seconds=time.monotonic() - started,
+        changed_sources=sorted(
+            key for key in set(before) | set(after) if before.get(key) != after.get(key)
+        ),
+    )
+    log = OUT / "focused.log"
+    if log.exists():
+        record["log_sha256"] = hashlib.sha256(log.read_bytes()).hexdigest()
+        record["tail"] = log.read_text(errors="replace").splitlines()[-3:]
+    (OUT / "receipt.json").write_text(json.dumps(record, indent=2) + "\n")

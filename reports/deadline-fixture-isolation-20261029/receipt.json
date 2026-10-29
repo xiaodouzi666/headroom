@@ -1,0 +1,77 @@
+{
+  "schema": "headroom.deadline-fixture-isolation.focused.v1",
+  "started_at_utc": "2026-10-29T05:09:14.974172+00:00",
+  "deadline_at_utc": "2026-10-29T05:13:24.925702+00:00",
+  "command": [
+    "/home/xiaodouzi/workspace/headroom/.venv/bin/python",
+    "/home/xiaodouzi/workspace/headroom/reports/final48h-closing-regression-20261029/closing_guarded_v4.py",
+    "tests/test_api_deadline.py::test_waiting_job_expires_without_starting_and_slow_report_does_not_delay_watchdog",
+    "tests/test_api_deadline.py::test_preparation_deadline_kills_owned_group_and_never_dispatches_worker",
+    "tests/test_api_deadline.py::test_worker_receives_only_time_left_after_preparation"
+  ],
+  "source_head": "e8d4a1a4f203ab6d6830bae2a325717c1a1f4bac",
+  "guard_sha256": "eb54c81fac699d94f3b48d5f6802404220e41fc7b24a9a0da58a4be4733464cb",
+  "test_sha256": "16999987d5e1025e03c6942efb71a731ccb51cf20dc1662c1baecab19c77bafc",
+  "selected": 3,
+  "full_suite": false,
+  "pid": 1892474,
+  "status": "completed",
+  "exit_code": 0,
+  "finished_at_utc": "2026-10-29T05:09:29.052418+00:00",
+  "elapsed_seconds": 14.07807140192017,
+  "changed_sources": [],
+  "log_sha256": "30b2214648e3e8ca9079f4ba6f57193a11dfd5d73f7b1cdda8cfebe14f84f6df",
+  "tail": [
+    "{\"guard_parent\": {\"real_env\": \"denied\", \"real_profile\": \"denied\", \"real_db\": \"denied\", \"dns\": \"denied\", \"api_key_env_absent\": true, \"final48_profile\": \"denied\", \"final48_registry\": \"denied\", \"public_api_database\": \"denied\", \"private_environment_variant\": \"denied\", \"gpu_subprocess\": \"denied\", \"networked_container\": \"denied\", \"service_command\": \"denied\", \"temporary_dir_fd_paths\": \"allowed\", \"production_env_via_dir_fd\": \"denied\", \"production_runs_via_dir_fd\": \"denied\", \"production_cache_via_dir_fd\": \"denied\", \"unresolved_dir_fd\": \"denied\", \"cpu_workload_device_argument\": \"allowed\", \"host_device_runtime_network_options\": \"denied\", \"historical_json_read_redirect\": \"isolated_copy_only\", \"historical_json_write\": \"denied\", \"secure_retention_capability\": \"preserved\"}, \"guard_spawn\": {\"real_env\": \"denied\", \"real_profile\": \"denied\", \"real_db\": \"denied\", \"dns\": \"denied\", \"api_key_env_absent\": true, \"final48_profile\": \"denied\", \"final48_registry\": \"denied\", \"public_api_database\": \"denied\", \"private_environment_variant\": \"denied\", \"gpu_subprocess\": \"denied\", \"networked_container\": \"denied\", \"service_command\": \"denied\", \"temporary_dir_fd_paths\": \"allowed\", \"production_env_via_dir_fd\": \"denied\", \"production_runs_via_dir_fd\": \"denied\", \"production_cache_via_dir_fd\": \"denied\", \"unresolved_dir_fd\": \"denied\", \"cpu_workload_device_argument\": \"allowed\", \"host_device_runtime_network_options\": \"denied\", \"historical_json_read_redirect\": \"isolated_copy_only\", \"historical_json_write\": \"denied\", \"secure_retention_capability\": \"preserved\"}}",
+    "...                                                                      [100%]",
+    "3 passed in 13.60s"
+  ],
+  "passed": 3,
+  "failed": 0,
+  "pytest_seconds": 13.6,
+  "runner_text_sha256": "26e69718d450f955c4b77f80546b405b7043695220c21ed7b9572e177a7b0ed5",
+  "lint_checks": [
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "tests/test_api_deadline.py"
+      ],
+      "exit_code": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "tests/test_api_deadline.py"
+      ],
+      "exit_code": 0,
+      "stdout": "1 file already formatted\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "queue_timeline": "queue-timeline.json",
+  "production_changes": false,
+  "real_model_calls": 0,
+  "gpu_jobs": 0,
+  "source_entries": 436,
+  "diff_files": [
+    "PROGRESS.md",
+    "docs/SUBMISSION_FIELDS.md",
+    "tests/test_api_deadline.py"
+  ],
+  "readme_sha256": "9a7ecfe39ad44b1455fa76f08cb36b0415e4bbc5c0ed76bba614147bf7c31227"
+}

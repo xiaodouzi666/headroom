@@ -1,0 +1,46 @@
+diff --git a/tests/test_api_deadline.py b/tests/test_api_deadline.py
+index 273a6fc..c8e026e 100644
+--- a/tests/test_api_deadline.py
++++ b/tests/test_api_deadline.py
+@@ -136,21 +136,39 @@ def test_waiting_job_expires_without_starting_and_slow_report_does_not_delay_wat
+     jobs, script = queue
+     first = submit(jobs, script)
+     wait_until(lambda: (jobs.run_root / first / "started").exists())
++
++    def trusted_preparation(prepare, deadline):
++        # This case isolates waiting expiry; the tests above exercise real
++        # preparation spawn, cleanup and its share of the original deadline.
++        assert time.monotonic() < deadline
++        prepared = prepare(deadline=deadline)
++        assert time.monotonic() < deadline
++        return prepared, True
++
++    monkeypatch.setattr(jobs, "_prepare", trusted_preparation)
+     jobs.deadline = 1.2
+     render = module.generate_report
+     report_started = __import__("threading").Event()
+     report_release = __import__("threading").Event()
+ 
+     def slow_report(directory, *args, **kwargs):
+-        if Path(directory).name != first:
++        run_id = Path(directory).name
++        if (
++            run_id != first
++            and jobs.store.get_run(run_id).get("reason") == "queue_deadline_exceeded"
++        ):
+             report_started.set()
+             report_release.wait(8)
+         return render(directory, *args, **kwargs)
+ 
+     monkeypatch.setattr(module, "generate_report", slow_report)
+     admitted = jobs.store.get_run(first)["api_admitted_at"]
+-    second = submit(jobs, script)
+     try:
++        second = submit(jobs, script)
++        row = jobs.store.get_run(second)
++        assert row["api_execution_limit_seconds"] == 1.2
++        assert row["api_deadline_at"] == row["api_admitted_at"] + 1.2
++        assert any(event["kind"] == "run.queued" for event in jobs.store.events(second))
+         assert report_started.wait(3)
+         row = jobs.store.get_run(second)
+         assert row["status"] == "timeout" and not row["api_worker_finished"]

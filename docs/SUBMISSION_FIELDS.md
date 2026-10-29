@@ -19,6 +19,10 @@ Preparation checklist for [FINAL_48H, F7](FINAL_48H.md). This file does not reco
 
 Video production instructions are in [FINAL_48H, §4](FINAL_48H.md). The current [media index](media/final/README.md) records available assets and missing prerequisites. A toolchain smoke clip is not the submission video.
 
+## Version source for judges
+
+The existing `v1.0-submission` tag points to [2969195](https://github.com/xiaodouzi666/headroom/tree/2969195a0924e713a8b10339d61fe21575ded39d), an earlier submission snapshot retained after the clean-checkout work. The current [main branch](https://github.com/xiaodouzi666/headroom/tree/main) contains the subsequent frontend and gallery fixes; the judges' repository link should use main. The existing tag is not moved or replaced. Each measured run keeps its recorded source revision, so this version note does not change historical results.
+
 ## Testing instructions — current public site
 
 > Open https://headroom.tail45186b.ts.net/ without signing in. Read the homepage, then open Results from the navigation to inspect the nine-scenario evaluation table and its recorded outcomes. Open Verified runs to inspect four historical repairs and two unsuccessful cases, including cited allocation stacks, patches and verification details. Results also includes the measured diagnosis comparison. To start a new GPU repair, choose Run an example, select the s3 evaluation-loop example, and click Start analysis. One live run per IP per hour is allowed; new runs can succeed or fail. Snapshot uploads remain paused. A successful recorded browser run is also available as Browser demonstration in Results. The source, setup instructions and result documentation are available at https://github.com/xiaodouzi666/headroom.

@@ -32,8 +32,10 @@ def bounded(ledger, run_id, *, amount=".00378462", cap=".01644864", open_run=Fal
     ledger.close_run(run_id)
 
 
-def test_bound_allows_next_demo_without_claiming_actual_or_resetting_cap(demo_pool):
-    owner, _, binding, ledger = begin(demo_pool, 1)
+@pytest.mark.parametrize("legacy", [False, True])
+def test_bound_allows_next_demo_without_claiming_actual_or_resetting_cap(demo_pool, legacy):
+    kwargs = {"scope_limit_usd": ".30"} if legacy else {}
+    owner, _, binding, ledger = begin(demo_pool, 1, controller(demo_pool, **kwargs))
     bounded(ledger, binding["run_id"])
     result = owner.finish(binding, execution_terminal=True, cleanup_verified=True)
     assert result["status"] == "settled"
@@ -43,8 +45,8 @@ def test_bound_allows_next_demo_without_claiming_actual_or_resetting_cap(demo_po
     assert state["resolved"] and not state["known"]
     assert state["attempts"][0]["actual_usd"] is None
     assert controller(demo_pool).available
-    _, request, _, _ = begin(demo_pool, 2)
-    assert Decimal(request.budget_usd) == Decimal(".29621538")
+    _, request, _, _ = begin(demo_pool, 2, controller(demo_pool, **kwargs))
+    assert Decimal(request.budget_usd) == Decimal(".29621538" if legacy else ".30")
     assert alloc.historical_snapshot(demo_pool["root"]) == demo_pool["history"]
 
 
@@ -110,7 +112,8 @@ def test_reviewed_retention_requires_matching_persisted_review(demo_pool):
 
 
 def old_bridge_failure(pool):
-    _, _, binding, ledger = begin(pool, 1)
+    # The recovery fixture models an actual historical v1 payload.
+    _, _, binding, ledger = begin(pool, 1, controller(pool, scope_limit_usd=".30"))
     bounded(ledger, binding["run_id"])
     ledger.halt(binding["run_id"], "local_accounting_incomplete")
     with alloc.registry(pool["root"]) as conn:
@@ -165,7 +168,7 @@ def test_exact_recovery_preserves_original_blocked_state_and_unknown_charge(demo
     assert audit["expected_ledger"]["runs"][0]["halt_reason"] == "local_accounting_incomplete"
     assert audit["original_registry"]["demo"]["state"] == "blocked"
     assert audit["receipt_sha256"] == demo_pool["receipt"]["receipt_sha256"]
-    _, request, _, _ = begin(demo_pool, 2)
+    _, request, _, _ = begin(demo_pool, 2, controller(demo_pool, scope_limit_usd=".30"))
     assert Decimal(request.budget_usd) == Decimal(".29621538")
 
 
