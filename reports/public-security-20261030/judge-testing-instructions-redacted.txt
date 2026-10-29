@@ -1,0 +1,56 @@
+HEADROOM — PRIVATE TESTING INSTRUCTIONS FOR JUDGES AND ORGANIZERS
+Updated 2026-10-30. Keep this attachment and its credential private.
+
+Working demo: https://headroom.tail45186b.ts.net/
+Source and setup: https://github.com/xiaodouzi666/headroom
+
+1. Open the demo without signing in. Verified runs and Results show real
+historical successes, unsuccessful cases, diagnoses, cited allocation stacks,
+patches and validation. Viewing these pages does not call a model.
+
+2. To run a preset, open Run and choose "S3 Eval No Grad Missing". Confirm
+"Reclaim headroom" is selected automatically. Enter the credential below in
+"Judge access token" before clicking Start analysis once to use the reserved
+testing allowance. The token is optional for public examples; without it,
+examples use the separate public allowance. A new run can succeed or fail;
+its timeline and downloads show the actual outcome.
+
+3. To test your own Python training script, choose "Paste a script", enter the
+script and the same credential, choose your memory target, then Start analysis.
+The credential is required for your own script. Never include it in a URL,
+source file, public description or GitHub issue. It stays in the current page
+and is cleared after submission; it is not saved to browser storage.
+
+Judge access token: [PRIVATE TOKEN INSERTED ONLY IN THE PRIVATE ATTACHMENT]
+
+This is an app access credential, not a personal identity check. Anyone holding
+it has the same access, so do not forward it. It grants no Nebius/Tavily API-key
+or shell access and does not allow access to other visitors' private runs.
+
+Requests using the valid judge token have no hourly run-count limit. Anonymous
+public examples remain limited to one new run per IP per hour. Both access
+paths share one active job, at most two waiting/preparing jobs, and an eight-
+minute deadline. Queue, GPU availability, sandbox and resource protections remain.
+A separate finite sponsored allowance funds token-backed model requests, with
+no payment required from judges. This is not unlimited funding: input estimates
+with margins guard admission; unknown or unexpectedly high billing stops further
+calls. No recharge is authorized. Snapshot uploads remain paused after
+unsuccessful diagnosis validation.
+
+New jobs run real training code on our server's GPU in isolated containers,
+then call hosted NVIDIA Nemotron through Nebius Token Factory for diagnosis
+and patch generation as needed. Candidate repairs are rerun on our GPU.
+The service does not stop other GPU jobs. It refuses admission when existing
+GPU compute jobs are detected, although the GPU is not exclusively reserved.
+Source code is sent to Nebius as diagnostic context. Use a small single-file
+Python script compatible with the installed environment, without secrets or
+private data; network access and dependency installation are unavailable inside
+the task. Saved historical pages do not execute code or call the model.
+
+The separate recorded successful s3 demo has 20 exactly matching losses and a
+73.378694% peak reduction. This is not added to the latest fixed-nine campaign,
+which reached one of nine memory targets. See Results for the complete evidence.
+
+Testing access is intended through December 15, 2026 at 20:00 UTC
+(December 16 at 04:00 Beijing time). Saved evidence remains accessible without
+a token. The service is not an identity-verification service.

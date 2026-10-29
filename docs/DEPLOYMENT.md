@@ -1,12 +1,20 @@
 # Deployment preparation
 
-The current public deployment uses Tailscale Funnel at **https://headroom.tail45186b.ts.net/**. The dedicated application and Tailscale user services are enabled, user linger is enabled, and the public origin remains read-only. See [FUNNEL.md](FUNNEL.md) for the active configuration and [the current access check](../reports/funnel-closeout-20261029/README.md) for verification. A separate timer checks origin and public health every five minutes; no human notification destination is configured.
+The current public deployment uses Tailscale Funnel at **https://headroom.tail45186b.ts.net/**. Commit 3d8112f is deployed with new preset and token-backed script submissions enabled; snapshot uploads remain paused. The dedicated application and Tailscale user services and user linger are enabled. See [FUNNEL.md](FUNNEL.md) and the [2026-10-30 deployment receipt](../reports/public-security-20261030/deployment.json). A separate timer checks origin and public health every five minutes; no human notification destination is configured.
 
-The older deployment preparation below is retained as design history. Its Cloudflare prerequisites and local-development timer status do not describe the active Funnel service.
+Anonymous callers retain one attempt/IP/hour. A valid bearer token selects the available judge route with no hourly run-count quota; invalid credentials are rejected without fallback. Both routes share one active job plus at most two waiting/preparing jobs, a 480-second admission-to-execution deadline and a $0.30 net per-run allowance. The judging extension provides an effective $20.92 net total/day ceiling from existing gifts, without recharge and preserving the $8 gross reserve. The original $6.61 net judging receipt, anonymous pool and accounting history remain unchanged. See [activation](../reports/public-security-20261030/credit-activation.json); local estimate-plus-margin admission is not a hard provider-billing guarantee.
 
-`deploy/headroom-api.service` is a user-systemd template for this server. It restarts failures and terminates its process group on stop. Production admission creates one deadline (default/max 600 seconds) shared by source preparation, queue waiting, process startup and worker execution. Preparation runs in an owned spawn session, with remaining-time Git and publication-lock limits; timeout kills that group, including its Git descendants, before returning. Expired queued jobs never start a worker. The executing worker uses only the time remaining, then TERM cleanup grace and hard stop, followed by owned-container cleanup. HTTP upload/validation before admission and cleanup/report finalization afterwards are explicitly outside this execution bound. An unconfirmed cleanup freezes the queue. Linux parent-death notification also cleans the owned preparation group if its supervisor disappears. After a server restart, paid/GPU jobs are not silently resumed.
+Run body uploads use three slots and a 30-second total deadline. The public Uvicorn launcher alone uses concurrency 64, backlog 64 and idle keep-alive 5 seconds. Target /out is a tmpfs volume with a 512 MiB byte and 4,096-inode limit; only bounded regular artifacts are exported after the target is gone, followed by verified keeper/volume cleanup.
 
-The API admits at most three total preparing/running/queued jobs and two new runs per client IP per hour. Session cookies separate private uploads. Repository preparation happens after admission checks. Uploaded code still runs only in the read-only, no-network Lab.
+Storage admission covers runs/public-api, including uploads, job artifacts and metadata. Retained logical bytes plus a 1 GiB reservation must fit below 16 GiB, with at least 8 GiB filesystem free after that reservation. A public preflight refuses before persistent admission; preparation and export check again around their writes. This is an application-scope policy, not a whole-machine hard quota or complete DDoS protection. Deployment GET checks establish access/readiness, not a newly successful judge repair; no judge task was submitted by this deployment.
+
+## Historical local deployment preparation
+
+The older preparation below is retained as design history and local-development behavior. Its two-attempt/hour and 600-second defaults, Cloudflare prerequisites and local timer status do not describe the active public Funnel policy above.
+
+`deploy/headroom-api.service` is a user-systemd template for this server. It restarts failures and terminates its process group on stop. Local/default admission creates one deadline (default/max 600 seconds) shared by source preparation, queue waiting, process startup and worker execution. Preparation runs in an owned spawn session, with remaining-time Git and publication-lock limits; timeout kills that group, including its Git descendants, before returning. Expired queued jobs never start a worker. The executing worker uses only the time remaining, then TERM cleanup grace and hard stop, followed by owned-container cleanup. HTTP upload/validation before admission and cleanup/report finalization afterwards are explicitly outside this execution bound. An unconfirmed cleanup freezes the queue. Linux parent-death notification also cleans the owned preparation group if its supervisor disappears. After a server restart, paid/GPU jobs are not silently resumed.
+
+The local API admits at most three total preparing/running/queued jobs and two new runs per client IP per hour. Session cookies separate private uploads. Repository preparation happens after admission checks. Uploaded code still runs only in the read-only, no-network Lab.
 
 ## Explicit reviewed runtime profile
 
@@ -59,8 +67,9 @@ shutdown, expired startup, Git remaining-time limits and cache-lock timeout.
 No model calls or GPU workload are needed for these checks. Preparation process
 reaping/group verification may take up to two seconds after its immediate stop;
 worker TERM grace defaults to five seconds (maximum ten). Neither grants a fresh
-execution budget. Original public deployment, phone-network, restart and alert
-acceptance remain pending.
+execution budget. Those original offline checks did not establish public deployment, phone-network,
+restart or alert acceptance. Later Funnel/deployment receipts record the completed
+access and restart checks; human alert delivery remains unconfigured.
 
 ## Opt-in health webhook
 

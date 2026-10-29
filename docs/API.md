@@ -1,19 +1,74 @@
 # Local API and supervised queue
 
-Status: owner-scoped API implementation with historical offline TestClient and
-worker-process evidence. Replay-removal, shared-ledger and study integration
-passed a fresh 3121-test guarded backend suite; 73 frontend tests and the build
-also passed. The localhost preview was refreshed with the unchanged halted
-ledger; no new paid run was started.
-Public HTTPS/authentication and actual delivery/monitoring acceptance remain
-separate, with deployment deferred until the owner's final confirmation.
+## Current public deployment (2026-10-30)
 
-The Replay product (former T3.3) was removed at the owner's request. Historical
-records are retained, but there is no public Replay listing or authorization
-exception. Current campaign status: R3 target 3/9, valid correct first cause 4/9
-with two unknown truths, and a partial/unknown-cost halt. See the
-[R3 summary](../reports/acceptance-v2-r3-20261025/independent-audit-summary.md) and
+[Commit 3d8112f is deployed](../reports/public-security-20261030/deployment.json)
+with anonymous preset examples and token-backed examples/scripts enabled.
+Snapshot submissions remain disabled. The public launcher uses the isolated
+runs/public-api state and loopback origin described in [FUNNEL.md](FUNNEL.md).
+
+| Route | Hourly admission policy | Shared execution limits |
+| --- | --- | --- |
+| Local/default API | Two attempts per IP per rolling hour | One active worker; at most three total preparing/running/queued jobs; default/max 600 seconds |
+| Anonymous public example | One attempt per IP per rolling hour | One active worker plus at most two waiting/preparing jobs; 480 seconds |
+| Available public judge route with valid Bearer token | No hourly run-count quota | Same public queue, deadline, GPU/sandbox and $0.30 net per-run spending controls |
+
+Public config and health expose the request's policy as
+hourly_limit_applies=true/false and runs_per_ip_per_hour=1/null. Null means the
+judge hourly quota does not apply; it does not mean submissions are disabled or
+funding is unlimited. The server validates the credential and selects the pool;
+HTTP bodies cannot choose funding_kind, paths, profiles, bindings or worker
+execution. Empty, invalid or duplicate Authorization headers return 401 without
+anonymous fallback. An unavailable configured judge pool fails closed.
+Credentials prove token possession, not a person's identity, and are omitted
+from responses. The browser holds the token only in page state and clears it
+after submission or refresh.
+
+The [judge extension](../reports/public-security-20261030/credit-activation.json)
+sets the effective gift-only total/day ceiling to $20.92 net, retaining $0.30 net
+per run, no recharge and the $8 gross account reserve. The base $6.61 net receipt,
+original anonymous pool and historical accounting remain unchanged. This uses
+reviewed estimates with margins, not a mathematical provider-billing guarantee.
+Public responses expose route availability, not account totals or private paths.
+
+Run uploads have three nonwaiting slots and a total 30-second body-read deadline:
+full upload capacity returns 429, timeout 408, oversize 413 and disconnected input
+400. Cancellation/error releases the slot without consuming admission. The
+public launcher also uses Uvicorn concurrency 64, backlog 64 and idle keep-alive
+5 seconds; the local launcher is unchanged. These controls are not complete
+DDoS protection or a guarantee against all slow-connection effects.
+
+Before public persistent admission, a bounded storage census runs off the event
+loop under a nonblocking lock. Full, busy or unsafe storage returns 503 with
+Retry-After: 60 without new admission/job/upload records. Preparation and export
+repeat their checks while holding the lock around bounded writes. The scope is
+runs/public-api, covering submissions/uploads, jobs and metadata: logical bytes
+plus a 1 GiB reservation must fit within 16 GiB, and filesystem free space after
+that reservation must remain at least 8 GiB. This is application-scope admission,
+not a whole-machine filesystem quota. Local preparation retains its existing
+concurrent repository behavior; its history is not subjected to the new public
+aggregate threshold.
+
+Each Lab target writes /out to a tmpfs volume limited to 512 MiB and 4,096 inodes.
+It has no writable host output mount. Only bounded allowlisted regular artifacts
+are exported after target removal, with verified keeper/volume cleanup. No new
+judge task or model call was made by the deployment GET checks; access and
+configuration readiness are distinct from repair success.
+
+## Historical implementation evidence
+
+The earlier replay-removal/shared-ledger integration passed its recorded
+3,121-test guarded backend suite, 73 frontend tests and build. That was a local
+preview check with the unchanged halted ledger, not current full-suite or live
+repair evidence. The Replay product remains removed: historical records are
+retained without a public Replay listing or authorization exception.
+
+The historical R3 campaign reached target 3/9 and valid correct first cause 4/9,
+with two unknown truths and a partial/unknown-cost halt; see its
+[summary](../reports/acceptance-v2-r3-20261025/independent-audit-summary.md) and
 [public audit](../reports/acceptance-v2-r3-20261025/independent-audit-public.json).
+These records are preserved; current measured outcomes belong to
+[RESULTS.md](RESULTS.md), not this API contract.
 
 ## Configuration and source input
 
@@ -21,8 +76,9 @@ An optional HEADROOM_BUDGET_DB_PATH selects the same existing initialized
 canonical ledger for execution, API budget display and standalone acceptance.
 Invalid explicit paths fail closed; they do not create or fall back to a fresh
 pool. Original limits, historical charges and unknown-cost holds are unchanged.
-Path selection alone does not prove the intended financial history. New source
-qualification is pending; deployment must retain the reviewed profile and limits.
+Path selection alone does not prove the intended financial history. Deployment
+must retain reviewed profiles and limits; the public judge route explicitly
+binds its own verified ledger without replacing the global anonymous selection.
 
 
 Factory: headroom.api.app.create_app(ApiSettings()). Importing the module binds
@@ -31,8 +87,9 @@ runs each job in a supervised multiprocessing spawn process with its own Store.
 
 ApiSettings accepts project_root, data_root, db_path, run_root, web_dist,
 runtime_profile, runtime_configured, deadline_seconds (default/max 600),
-shutdown_grace_seconds (default 5, max 10), event_poll_seconds, allowed_hosts,
-public_host and trust_cloudflared.
+shutdown_grace_seconds (default 5, max 10), event_poll_seconds,
+upload_deadline_seconds (default/max 30), allowed_hosts, public_host,
+trust_cloudflared, trust_tailscale_funnel and judge_token.
 Defaults use runs/headroom.db, runs/jobs and runs/api inside the project.
 
 Startup profile selection is explicit and ordered: `headroom serve
@@ -60,10 +117,10 @@ The explicit local launch command is:
 python -m headroom.api.app
 ```
 It binds only 127.0.0.1:8000 and disables proxy-header rewriting. This command has
-not been run for these offline tests. Public deployment awaits the owner's final
-confirmation and separate HTTPS/authentication/delivery verification.
+not been run for the historical offline tests below. The separate public
+deployment and its current GET checks are recorded at the top of this document.
 
-POST /api/runs accepts exactly one source form: script_text, example_id, or all
+The local POST /api/runs accepts exactly one source form: script_text, example_id, or all
 three of repo/ref/cmd. It also accepts target, canonical policy, search_mode and budget. Budget is a decimal string, default "0.6", positive
 and at most 5 USD; the separate reviewed runtime/budget guard must still authorize
 any spending. Targets: fix-oom, reclaim, fit:22GB, or explicit fit:22GiB.
@@ -72,6 +129,10 @@ unknown strings and non-string values are HTTP 400 before admission. Bounded
 mode may continue after target achievement under the existing six-round,
 budget, timeout and policy limits; it does not enable precision changes or live
 model access. Each queued/failed/completed run records the actual requested mode.
+
+The public route allows anonymous example_id or a token-backed example/script;
+public repository inputs are rejected. Public model spending is capped at
+$0.30 net per run regardless of a higher client budget field.
 
 Policy keys are allow_numerics_change, allow_model_change,
 allow_batch_grad_accum and max_throughput_regression_pct.
@@ -110,7 +171,8 @@ The worker may start before the next status request.
 | GET /api/runs/{id}/events | Historical and live SSE |
 | GET /api/examples | {examples:[{id,title,expected_mode,root_cause,baseline_verified}]} |
 | GET /api/usage | Current-session calls/costs and separate read-only local authorization budget |
-| GET /api/health | DB/queue, cached GPU activity, anonymous provider reachability and local budget |
+| GET /api/health | DB/queue, cached GPU/provider observation, route readiness and request-specific limits; no inference call |
+| GET /api/config | Submission availability and request-specific hourly policy; no credential or private allowance/path values |
 
 Summaries include status, target, search_mode (when recorded), policy, target_met, timestamps, reason,
 provenance, elapsed_seconds, api_worker_finished and api_cleanup_verified.
@@ -177,11 +239,16 @@ CF-Connecting-IP only when the actual peer is loopback. Otherwise the peer IP is
 used and forwarded headers are ignored. The deployment assumption is that
 Cloudflare overwrites CF-Connecting-IP and Cloudflared is the only public path to
 the loopback origin. This is not safe for an arbitrary reverse proxy or direct
-Internet binding. No real tunnel/header behavior was established by the tests.
+Internet binding. Those historical unit tests did not establish real tunnel/header behavior.
+The active Tailscale deployment has a separate loopback-only forwarding contract
+and deployment evidence in FUNNEL.md; it does not enable Cloudflare trust.
 
-The third admitted new-run attempt per IP within a rolling hour receives 429.
-Admissions are persisted in local SQLite, so changing cookies or restarting does
-not reset them. **A repository preparation failure still consumes its admission**:
+In local/default mode, the third admitted new-run attempt per IP within a
+rolling hour receives 429. Anonymous public mode allows only one; verified
+judge-route requests have no hourly quota. Admissions are persisted in SQLite,
+so changing cookies or restarting does not reset counted attempts. A separate
+table marks only newly admitted judge exemptions; original historical rows are
+preserved with their previous conservative counting semantics. **A repository preparation failure still consumes its admission**:
 otherwise repeated bad repositories could bypass the limit on expensive fetches.
 Validation failures before admission do not consume a slot. Running, pending and
 preparing requests together are capped at three; queue snapshots expose
@@ -216,8 +283,11 @@ Unverified preparation or worker cleanup freezes admission and subsequent work.
 
 Container recovery considers only Lab manifest directories under this job's
 lab/{UUID}. It inspects the manifest-derived name, verifies /source and /out
-mounts exactly match that Lab directory, then removes the inspected immutable
-container ID. It never kills arbitrary host PIDs or broad container-name matches.
+mounts identify that Lab's read-only source and named artifact volume, and
+checks the image and recorded immutable target ID before removal. Recovery also
+validates the labelled keeper/volume identities and verifies their cleanup.
+Historical host-output manifests retain their exact-directory ownership checks.
+It never kills arbitrary host PIDs or broad container-name matches.
 Cleanup must be verified; otherwise the run becomes needs_human and the queue
 halts before starting another job.
 
@@ -225,8 +295,8 @@ Shutdown cancels the supervised worker and preserves pending jobs as needs_human
 On restart, queued jobs are not automatically rerun. Any prior API job lacking
 verified supervisor completion halts admission for operator review—even if its
 computation had already written a terminal status. That terminal status alone
-does not prove GPU cleanup. Public restart/recovery/alert acceptance is still
-pending.
+does not prove GPU cleanup. Historical restart/recovery tests and later public
+receipts remain separate; no human alert destination has been configured.
 
 ## Offline test evidence
 

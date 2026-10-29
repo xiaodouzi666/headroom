@@ -7,19 +7,29 @@ hosting plan, credit-card payment, firewall change, or other project's tunnel is
 needed. Tailscale Personal pricing and Funnel availability must be checked
 against the vendor's current terms.
 
-## Current access state (2026-10-29)
+## Current access state (2026-10-30)
 
-The production service allows anonymous preset examples and token-backed
-examples/custom scripts. It retains one attempt per IP per hour across both
-routes, one active job, at most two waiting/preparing jobs and a 480-second
-deadline. Snapshot uploads remain paused. Public pages and Verified runs need
-no token.
+Commit 3d8112f is deployed with anonymous preset examples and token-backed
+examples/custom scripts enabled. Anonymous access retains one attempt per IP
+per hour; the verified token route has no hourly run-count quota. Both routes
+share one active job, at most two waiting/preparing jobs and a 480-second
+admission-to-execution deadline. Snapshot uploads remain paused. Public pages
+and Verified runs need no token.
 
-A separately activated judging allocation uses existing gifts only:
-$8.00 gross, $6.61 net total/day and $0.30 net per run. The original public
-allocation and history are unchanged. Admission uses the existing local input
-estimate with margins; it is not a supplier billing hard cap. The judging
-receipt expires for new dispatch on 2026-12-15 at 20:00 UTC.
+The judging allocation now has an effective $20.92 net total/day ceiling and
+$0.30 net per run, using existing gifts only, without recharge and retaining the
+$8 gross account reserve. The original $8.00 gross / $6.61 net judging receipt
+is preserved; a separate extension supplies the effective limit. The original
+anonymous allocation and all historical accounting are unchanged. Admission
+uses the existing local input estimate with margins; it is not a supplier
+billing hard cap. New judging dispatch expires on 2026-12-15 at 20:00 UTC.
+
+The [deployment receipt](../reports/public-security-20261030/deployment.json)
+records public and origin GET checks for anonymous/valid-token access and 401
+for an invalid token. [Credit activation](../reports/public-security-20261030/credit-activation.json)
+records the extension. Activation and deployment made no model calls or new
+judge task; the separate GPU Lab smoke is identified in the deployment receipt.
+Readiness is not evidence that a new judge repair has succeeded.
 
 The active private runtime environment is .cache/final48-public.env. It sets
 HEADROOM_JUDGE_ALLOCATION_RECEIPT to
@@ -33,8 +43,9 @@ database.
 The bearer credential proves possession, not actual judge identity. Its same
 existing value is delivered through the approved private Devpost Additional
 info attachment. Anyone receiving a forwarded copy has the same access.
-See the [judging access closeout](../reports/judge-access-20261029/README.md)
-for configuration, focused checks, actual deployment and draft-state evidence.
+The [original judging access closeout](../reports/judge-access-20261029/README.md)
+preserves the earlier configuration, checks and draft-state evidence; the
+2026-10-30 receipts above describe the current access policy.
 
 ## Public URL and access
 
@@ -65,6 +76,20 @@ The original script is backed up beside the local script. See
 - The launcher supports a read-only mode that rejects submissions before
   source preparation or dispatch. The current deployment explicitly enables
   bounded live access and has no replay. Snapshot uploads stay disabled.
+- Run uploads have three nonwaiting slots and a 30-second total body-read
+  deadline. Full slots return 429; slow uploads return 408. Uvicorn additionally
+  uses concurrency 64, backlog 64 and a five-second idle keep-alive timeout.
+  These are resource controls, not complete DDoS protection.
+- Each target's /out is a tmpfs volume limited to 512 MiB and 4,096 inodes,
+  with no writable host output mount. After verified target removal, only
+  bounded allowlisted regular artifacts are exported; keeper/volume cleanup
+  is verified.
+- Public storage admission covers runs/public-api, including submissions and
+  jobs. It checks retained logical bytes plus a 1 GiB reservation against
+  16 GiB, and requires at least 8 GiB free after that reservation. Checks run
+  before persistent admission and again around preparation/export writes.
+  This is an application-scope admission policy, not a whole-machine filesystem
+  quota or a guarantee against unrelated processes using disk.
 - Public health/usage responses omit global financial totals and private
   diagnostic details. The original anonymous ledger/profile remain configured;
   the separately authorized judging receipt selects its own ledger per request.
@@ -159,10 +184,14 @@ requires an operator-configured HEADROOM_JUDGE_TOKEN in the Authorization Bearer
 header; public repository cloning is not offered. The token is never included in
 public configuration or reports. No judge credential is created by these changes.
 
-Public admission allows one new attempt per IP per hour, persisted across server
-restarts, with one active job and at most two waiting/preparing jobs. A single
-480-second deadline covers source preparation, queue waiting and execution.
-The server caps a public request's model allowance at USD 0.30.
+Anonymous public admission allows one new attempt per IP per hour, persisted
+across server restarts. A server-validated token selects the ready judge route
+and exempts that request from the hourly count; invalid, empty or duplicate
+credentials are rejected without anonymous fallback. Historical admission rows
+are retained. Both routes share one active job and at most two waiting/preparing
+jobs. A single 480-second deadline covers source preparation, queue waiting and
+execution. The server caps each public request's model allowance at USD 0.30;
+no hourly count does not mean unlimited funding or compute.
 
 The dedicated origin trusts Tailscale forwarding only from loopback. It requires
 the Funnel marker, HTTPS protocol, expected public host, and exactly one valid

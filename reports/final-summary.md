@@ -1,6 +1,15 @@
-# Headroom delivery status — 2026-10-29
+# Headroom delivery status — updated 2026-10-30
 
-This is the submission preparation report. It does not record a completed Devpost submission, a final video, or the October 30 closing check.
+This is the submission preparation report. It does not record a completed Devpost submission, a final public video URL, or the October 30 closing check.
+
+
+## Current public access update — October 30
+
+At 04:21 Beijing time on October 30, code **3d8112f** was deployed and new public submissions restored. Valid judge-token requests no longer have an hourly run-count limit; anonymous examples remain one per IP per hour. The queue, eight-minute deadline, GPU availability, sandbox/resource guards and per-run budget remain. The effective gift-funded judge allowance is now **$20.92 net**, with **$0.30 per run**, using a separately recorded extension while preserving the original profile, claims and ledger history. The balance calculation reserves at least $8 plus other authorized pools and billing-lag protection; this is conservative application admission, not a provider billing hard cap.
+
+The release fixes unbounded writable Lab output and slow/concurrent upload exposure. Per-Lab output uses a hard 512 MiB / 4096-inode tmpfs and bounded allowlisted export; the public storage scope has a 16 GiB admission policy and an 8 GiB free-space floor. Focused API, frontend and Docker checks passed. A separate real two-step GPU capture passed; **zero new model calls** were made for this work, and no repair score was changed. The public HTTPS configuration matched the origin, with valid credentials accepted and invalid credentials rejected. See [security report](public-security-20261030/README.md), [deployment](public-security-20261030/deployment.json), [credit activation](public-security-20261030/credit-activation.json), and the [Chinese testing guide](public-security-20261030/从零测试与核心思路.md).
+
+The unchanged judge credential and v3 private testing instructions were saved and reopened in Devpost Additional info (still Draft 3/5). The user supplied a local final video, with factual revision notes already delivered; its public video URL and formal Devpost submission remain pending. Snapshot upload remains paused. Shared-kernel/GPU isolation and known Torch 2.5.1 advisories remain explicit limitations. The dated October 29 access limits and funding figures below are preserved historical observations and are superseded by this section. The fixed-nine **1/9 against 6/9** result is unchanged.
 
 ## Current measured outcome
 
