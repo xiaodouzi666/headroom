@@ -60,13 +60,16 @@
         "peak_is_exact": true,
         "status": "completed"
       },
-      "created_at": "2026-10-27T02:34:39.373854+00:00",
-      "description": "The evaluation forward pass built an unnecessary autograd graph.",
+      "created_at": "2026-10-29T00:08:44.055778+00:00",
+      "description": "The latest successful browser demonstration avoided the unnecessary evaluation autograd graph.",
       "diagnosis": {
         "needs_more_info": false,
         "notes": [
-          "The training batch size is 1 (hardcoded), while evaluation uses batch=16. The peak memory (2.43 GB allocated) occurs during evaluation forward pass with autograd enabled. Fixing the evaluation to use torch.no_grad() eliminates the autograd graph for validation, reducing peak allocated memory from ~2.4 GB to ~0.4 GB (training peak), saving ~2 GB which exceeds the required 0.487 GB. The model parameters (0.15 GB) and optimizer state (SGD, no persistent state) are unaffected.",
-          "The save estimate is conservative; actual saving may be closer to 2 GB. Training loss and update semantics are unchanged. No policy permissions required."
+          "The peak occurs during evaluation (event index 609 aligns with first evaluate() call at step 1). Training batch is 1, so training peak is small.",
+          "Reserved - allocated ≈ 0.07 GB at peak; the fragmentation_indicator is high but not confirmed. The dominant cause is the avoidable evaluation activation working set.",
+          "Overlap: removing evaluation activations also removes their dependent temporaries (LayerNorm/GeLU buffers). The sum 2.257 GB is the combined peak contribution of both categories during evaluation.",
+          "Policy allows numerics_change=false and model_change=false; this fix is a pure autograd lifetime change.",
+          "No optimizer state or gradient buffers appear at peak (grads=0, optimizer_state=0), consistent with evaluation path."
         ],
         "root_causes": [
           {
@@ -75,53 +78,82 @@
             "evidence_refs": [
               "stk_6ff9d57e39fcf43c",
               "stk_97e616277db9dfa2",
-              "stk_bf2d0c6808d65262",
-              "stk_18181e481f3cb644"
+              "stk_18181e481f3cb644",
+              "stk_bf2d0c6808d65262"
             ],
-            "title": "Unnecessary autograd graph during evaluation with large batch size"
+            "title": "Evaluation runs full batch 16 with autograd enabled, creating large activation working set"
+          },
+          {
+            "category": "temporaries",
+            "confidence": 0.85,
+            "evidence_refs": [
+              "stk_18181e481f3cb644",
+              "stk_97e616277db9dfa2",
+              "stk_bf2d0c6808d65262"
+            ],
+            "title": "Evaluation forward creates large temporary buffers for LayerNorm and GELU over full batch"
+          },
+          {
+            "category": "params",
+            "confidence": 0.95,
+            "evidence_refs": [
+              "stk_40bd0ecf4836add8",
+              "stk_cbb85eb06fac7ffa"
+            ],
+            "title": "Model parameters resident on GPU"
+          },
+          {
+            "category": "unknown",
+            "confidence": 0.4,
+            "evidence_refs": [
+              "stk_4be26840045a5f02",
+              "stk_a4f5ffbceedae472"
+            ],
+            "title": "Unclassified allocation from model initialization / weight copy"
           }
         ]
       },
       "diagnosis_binding": {
-        "diagnosis_sha256": "c6e96ac06e20c3fd1abbfff0e68ab20d9619b05c36171dd3d233588555252a40",
-        "evidence_json_sha256": "584f98a4b8942e7598a56b985a8fa30b7bc1eaabc9a5d191d70840a9de822fc1",
-        "evidence_markdown_sha256": "6156e2d93b1d39764e1f13dbd8cf073fd6f1791f74058f0368fa1e591d18dc2b",
-        "request_payload_sha256": "af7cf719a088b638aa1745e09fbb7896adbcd2bddfa1b92b466ebc39644f44ad",
-        "request_wire_sha256": "bab56e0cf909f0453b298ef37d4fc012862fd3b60ddd9389bc49f7b58715f240",
+        "diagnosis_sha256": "ec69a2871591981312f47f197b04759b7c985eb2d013b3a594ca331b3794b855",
+        "evidence_json_sha256": "c0f4361e2ff737416489bd9c95538f0fd7310791871b1c1fe44de06ccc505ea8",
+        "evidence_markdown_sha256": "710ddb17a6415df45624a4c4da51b5ed482dde4fc14fb69a64dceccecb358bb9",
+        "request_payload_sha256": "5bea7e5130b5ea952251e43f927e53ee84c7891ed26f90c204ca6b1d27635f99",
+        "request_wire_sha256": "ab98490955cef6ded68cca3620fb93b63f90d6ee07d932dc1624db736c36fe67",
         "round": 1,
         "stage": "baseline"
       },
       "downloads": {
         "patch": {
-          "bytes": 668,
-          "path": "verified-assets/84f929ba8ace49b3829df6455419641d/patch.diff",
-          "sha256": "771854f975a673be349a9dc9389f99d4633a7430bb9ea6f42675538189615238"
+          "bytes": 527,
+          "path": "verified-assets/d9926ee7bb624e7fb22540bbc4c92cdc/patch.diff",
+          "sha256": "e70cafac43dc810b8f4e69982764eb5e454b89ccb2c6043e09d5e3a8df3bffb1"
         },
         "report_json": {
-          "bytes": 71936,
-          "path": "verified-assets/84f929ba8ace49b3829df6455419641d/report.json",
-          "sha256": "b267a55c4f8b674d315664a951041e13f9c8138b7ca4a993a04a2e6bc5b34a97"
+          "bytes": 130636,
+          "path": "verified-assets/d9926ee7bb624e7fb22540bbc4c92cdc/report.json",
+          "sha256": "7a9370397c1e286266d28e5c7c538e678ab241bd134aeeb0d4d8e5b97b9f40a8"
         },
         "report_markdown": {
-          "bytes": 451,
-          "path": "verified-assets/84f929ba8ace49b3829df6455419641d/report.md",
-          "sha256": "448acf9235ca16d5d2f2836385a20e541bdf16d74a615736c7c7c0bc3563d2ba"
+          "bytes": 618,
+          "path": "verified-assets/d9926ee7bb624e7fb22540bbc4c92cdc/report.md",
+          "sha256": "63ae89368e4cde4dce759ec99b3df914f7738787e732b8c7c17f87f37cfb98b1"
         }
       },
       "last_attempt": null,
       "limitations": [
+        "Independent browser demonstration; it is not part of a fixed-nine campaign and is not added to campaign repair scores.",
         "No Tavily source links were recorded for this run."
       ],
       "outcome": "target_met",
       "peak_reduction_pct": "73.37869416876643934398385962",
       "provenance": "live",
-      "run_id": "84f929ba8ace49b3829df6455419641d",
+      "run_id": "d9926ee7bb624e7fb22540bbc4c92cdc",
       "scenario_id": "s3_eval_no_grad_missing",
       "selected_round": 1,
       "source_sha256": {
-        "curation_fingerprint": "7bdb94c61cd972bf3e311112a60972765f65c2dbc3d851fc2c16c39ac7ec363f",
-        "independent_audit": "01cb2ecef964b30ac4b325296126396536a90c28e33744890c15942ed5774b51",
-        "report": "6b87c5841066b07ea5331e18ca0f7267e786866ade5278b94ba304bf6a828322"
+        "curation_fingerprint": "cda0764fe32b1a10bcd0ca165530795e5a3da26c167f402d3be37dfa442810ab",
+        "independent_audit": "eefa0a07cf5b820360e41b9dd351d27d008e5b7fc7d6075751e344caa6b3750c",
+        "report": "97032bfefa0054a6fd100b8af7f3ed43f08ec2d3c9aa76a0277364a8895f374f"
       },
       "sources": [],
       "stacks": [
@@ -666,6 +698,590 @@
           "id": "stk_18181e481f3cb644",
           "lifetime_allocated_bytes": 15300820992,
           "peak_live_bytes": 805306368
+        },
+        {
+          "frames": [
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "torch::unwind::unwind()"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "torch::CapturedTraceback::gather(bool, bool, bool)"
+            },
+            {
+              "filename": "memory_snapshot.cpp",
+              "line": 0,
+              "name": "torch::cuda::(anonymous namespace)::gather_with_cpp()"
+            },
+            {
+              "filename": "CUDACachingAllocator.cpp",
+              "line": 0,
+              "name": "c10::cuda::CUDACachingAllocator::Native::DeviceCachingAllocator::malloc(signed char, unsigned long, CUstream_st*)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "c10::cuda::CUDACachingAllocator::Native::NativeCachingAllocator::malloc(void**, signed char, unsigned long, CUstream_st*)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "c10::cuda::CUDACachingAllocator::Native::NativeCachingAllocator::allocate(unsigned long)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "at::TensorBase at::detail::_empty_strided_generic<c10::ArrayRef<long> >(c10::ArrayRef<long>, c10::ArrayRef<long>, c10::Allocator*, c10::DispatchKeySet, c10::ScalarType)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::detail::empty_strided_generic(c10::ArrayRef<long>, c10::ArrayRef<long>, c10::Allocator*, c10::DispatchKeySet, c10::ScalarType)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::detail::empty_strided_cuda(c10::ArrayRef<long>, c10::ArrayRef<long>, c10::ScalarType, std::optional<c10::Device>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::detail::empty_strided_cuda(c10::ArrayRef<long>, c10::ArrayRef<long>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::native::empty_strided_cuda(c10::ArrayRef<long>, c10::ArrayRef<long>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "RegisterCUDA.cpp",
+              "line": 0,
+              "name": "at::(anonymous namespace)::(anonymous namespace)::wrapper_CUDA__empty_strided(c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "RegisterCUDA.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>), &at::(anonymous namespace)::(anonymous namespace)::wrapper_CUDA__empty_strided>, at::Tensor, c10::guts::typelist::typelist<c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool> > >, at::Tensor (c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::empty_strided::redispatch(c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "RegisterBackendSelect.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>), &at::(anonymous namespace)::empty_strided>, at::Tensor, c10::guts::typelist::typelist<c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool> > >, at::Tensor (c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::empty_strided::call(c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "at::empty_strided(c10::ArrayRef<long>, c10::ArrayRef<long>, c10::TensorOptions)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::native::_to_copy(at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "RegisterCompositeExplicitAutograd.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>), &at::(anonymous namespace)::(anonymous namespace)::wrapper_CompositeExplicitAutograd___to_copy>, at::Tensor, c10::guts::typelist::typelist<at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat> > >, at::Tensor (at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::_to_copy::redispatch(c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "RegisterBackendSelect.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>), &at::(anonymous namespace)::_to_copy>, at::Tensor, c10::guts::typelist::typelist<at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat> > >, at::Tensor (at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::_to_copy::redispatch(c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "VariableType_0.cpp",
+              "line": 0,
+              "name": "torch::autograd::VariableType::(anonymous namespace)::_to_copy(c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "VariableType_0.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>), &torch::autograd::VariableType::(anonymous namespace)::_to_copy>, at::Tensor, c10::guts::typelist::typelist<c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat> > >, at::Tensor (c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::_to_copy::call(at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::native::to(at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "RegisterCompositeImplicitAutograd.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, bool, std::optional<c10::MemoryFormat>), &at::(anonymous namespace)::(anonymous namespace)::wrapper_CompositeImplicitAutograd_dtype_layout_to>, at::Tensor, c10::guts::typelist::typelist<at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, bool, std::optional<c10::MemoryFormat> > >, at::Tensor (at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, bool, std::optional<c10::MemoryFormat>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::to_dtype_layout::call(at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "python_variable_methods.cpp",
+              "line": 0,
+              "name": "torch::autograd::dispatch_to(at::Tensor const&, c10::Device, bool, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "python_variable_methods.cpp",
+              "line": 0,
+              "name": "torch::autograd::THPVariable_to(_object*, _object*, _object*)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyDescr_IsData"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyObject_Vectorcall"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 1326,
+              "name": "convert"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyEval_EvalCode"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyWeakref_ClearRef"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 927,
+              "name": "_apply"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyEval_EvalCode"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyWeakref_ClearRef"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyCMethod_New"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyObject_Vectorcall"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 900,
+              "name": "_apply"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "Py_RunMain"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "Py_RunMain"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "Py_BytesMain"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "__libc_init_first"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "__libc_start_main"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_start"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 900,
+              "name": "_apply"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 900,
+              "name": "_apply"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 900,
+              "name": "_apply"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 1340,
+              "name": "to"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 82,
+              "name": "main"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 131,
+              "name": "<module>"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 88,
+              "name": "_run_code"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 98,
+              "name": "_run_module_code"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 286,
+              "name": "run_path"
+            },
+            {
+              "filename": "/runtime/headroom/lab/run_target.py",
+              "line": 63,
+              "name": "main"
+            },
+            {
+              "filename": "/runtime/headroom/lab/run_target.py",
+              "line": 93,
+              "name": "<module>"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 88,
+              "name": "_run_code"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 198,
+              "name": "_run_module_as_main"
+            }
+          ],
+          "id": "stk_40bd0ecf4836add8",
+          "lifetime_allocated_bytes": 151117824,
+          "peak_live_bytes": 151117824
+        },
+        {
+          "frames": [
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "torch::unwind::unwind()"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "torch::CapturedTraceback::gather(bool, bool, bool)"
+            },
+            {
+              "filename": "memory_snapshot.cpp",
+              "line": 0,
+              "name": "torch::cuda::(anonymous namespace)::gather_with_cpp()"
+            },
+            {
+              "filename": "CUDACachingAllocator.cpp",
+              "line": 0,
+              "name": "c10::cuda::CUDACachingAllocator::Native::DeviceCachingAllocator::malloc(signed char, unsigned long, CUstream_st*)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "c10::cuda::CUDACachingAllocator::Native::NativeCachingAllocator::malloc(void**, signed char, unsigned long, CUstream_st*)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "c10::cuda::CUDACachingAllocator::Native::NativeCachingAllocator::allocate(unsigned long)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "at::TensorBase at::detail::_empty_generic<long>(c10::ArrayRef<long>, c10::Allocator*, c10::DispatchKeySet, c10::ScalarType, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::detail::empty_generic(c10::ArrayRef<long>, c10::Allocator*, c10::DispatchKeySet, c10::ScalarType, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::detail::empty_cuda(c10::ArrayRef<long>, c10::ScalarType, std::optional<c10::Device>, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::detail::empty_cuda(c10::ArrayRef<long>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::native::empty_cuda(c10::ArrayRef<long>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "RegisterCUDA.cpp",
+              "line": 0,
+              "name": "at::(anonymous namespace)::(anonymous namespace)::wrapper_CUDA_memory_format_empty(c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "RegisterCUDA.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>), &at::(anonymous namespace)::(anonymous namespace)::wrapper_CUDA_memory_format_empty>, at::Tensor, c10::guts::typelist::typelist<c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat> > >, at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::empty_memory_format::redispatch(c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "RegisterBackendSelect.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>), &at::(anonymous namespace)::empty_memory_format>, at::Tensor, c10::guts::typelist::typelist<c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat> > >, at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::empty_memory_format::call(c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "at::empty(c10::ArrayRef<long>, c10::TensorOptions, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::native::randn(c10::ArrayRef<long>, std::optional<at::Generator>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::native::randn(c10::ArrayRef<long>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "RegisterCompositeExplicitAutograd.cpp",
+              "line": 0,
+              "name": "at::(anonymous namespace)::(anonymous namespace)::wrapper_CompositeExplicitAutograd__randn(c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "RegisterCompositeExplicitAutograd.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>), &at::(anonymous namespace)::(anonymous namespace)::wrapper_CompositeExplicitAutograd__randn>, at::Tensor, c10::guts::typelist::typelist<c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool> > >, at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::randn::redispatch(c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "RegisterBackendSelect.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>), &at::(anonymous namespace)::randn>, at::Tensor, c10::guts::typelist::typelist<c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool> > >, at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::randn::call(c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "python_torch_functions_2.cpp",
+              "line": 0,
+              "name": "torch::autograd::THPVariable_randn(_object*, _object*, _object*)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyCMethod_New"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyObject_MakeTpCall"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 86,
+              "name": "main"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyEval_EvalCode"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyWeakref_ClearRef"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 131,
+              "name": "<module>"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyEval_EvalCode"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyWeakref_ClearRef"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyCMethod_New"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyObject_Vectorcall"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 88,
+              "name": "_run_code"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "Py_RunMain"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "Py_RunMain"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "Py_BytesMain"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "__libc_init_first"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "__libc_start_main"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_start"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 98,
+              "name": "_run_module_code"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 286,
+              "name": "run_path"
+            },
+            {
+              "filename": "/runtime/headroom/lab/run_target.py",
+              "line": 63,
+              "name": "main"
+            },
+            {
+              "filename": "/runtime/headroom/lab/run_target.py",
+              "line": 93,
+              "name": "<module>"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 88,
+              "name": "_run_code"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 198,
+              "name": "_run_module_as_main"
+            }
+          ],
+          "id": "stk_4be26840045a5f02",
+          "lifetime_allocated_bytes": 25165824,
+          "peak_live_bytes": 25165824
         },
         {
           "frames": [
@@ -1736,6 +2352,268 @@
             {
               "filename": "",
               "line": 0,
+              "name": "at::empty(c10::ArrayRef<long>, c10::TensorOptions, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::native::randn(c10::ArrayRef<long>, std::optional<at::Generator>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::native::randn(c10::ArrayRef<long>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "RegisterCompositeExplicitAutograd.cpp",
+              "line": 0,
+              "name": "at::(anonymous namespace)::(anonymous namespace)::wrapper_CompositeExplicitAutograd__randn(c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "RegisterCompositeExplicitAutograd.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>), &at::(anonymous namespace)::(anonymous namespace)::wrapper_CompositeExplicitAutograd__randn>, at::Tensor, c10::guts::typelist::typelist<c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool> > >, at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::randn::redispatch(c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "RegisterBackendSelect.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>), &at::(anonymous namespace)::randn>, at::Tensor, c10::guts::typelist::typelist<c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool> > >, at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::randn::call(c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "python_torch_functions_2.cpp",
+              "line": 0,
+              "name": "torch::autograd::THPVariable_randn(_object*, _object*, _object*)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyCMethod_New"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyObject_MakeTpCall"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 84,
+              "name": "main"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyEval_EvalCode"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyWeakref_ClearRef"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 131,
+              "name": "<module>"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyEval_EvalCode"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyWeakref_ClearRef"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyCMethod_New"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyObject_Vectorcall"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 88,
+              "name": "_run_code"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "Py_RunMain"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "Py_RunMain"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "Py_BytesMain"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "__libc_init_first"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "__libc_start_main"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_start"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 98,
+              "name": "_run_module_code"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 286,
+              "name": "run_path"
+            },
+            {
+              "filename": "/runtime/headroom/lab/run_target.py",
+              "line": 63,
+              "name": "main"
+            },
+            {
+              "filename": "/runtime/headroom/lab/run_target.py",
+              "line": 93,
+              "name": "<module>"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 88,
+              "name": "_run_code"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 198,
+              "name": "_run_module_as_main"
+            }
+          ],
+          "id": "stk_a4f5ffbceedae472",
+          "lifetime_allocated_bytes": null,
+          "peak_live_bytes": 2097152
+        },
+        {
+          "frames": [
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "torch::unwind::unwind()"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "torch::CapturedTraceback::gather(bool, bool, bool)"
+            },
+            {
+              "filename": "memory_snapshot.cpp",
+              "line": 0,
+              "name": "torch::cuda::(anonymous namespace)::gather_with_cpp()"
+            },
+            {
+              "filename": "CUDACachingAllocator.cpp",
+              "line": 0,
+              "name": "c10::cuda::CUDACachingAllocator::Native::DeviceCachingAllocator::malloc(signed char, unsigned long, CUstream_st*)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "c10::cuda::CUDACachingAllocator::Native::NativeCachingAllocator::malloc(void**, signed char, unsigned long, CUstream_st*)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "c10::cuda::CUDACachingAllocator::Native::NativeCachingAllocator::allocate(unsigned long)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "at::TensorBase at::detail::_empty_generic<long>(c10::ArrayRef<long>, c10::Allocator*, c10::DispatchKeySet, c10::ScalarType, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::detail::empty_generic(c10::ArrayRef<long>, c10::Allocator*, c10::DispatchKeySet, c10::ScalarType, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::detail::empty_cuda(c10::ArrayRef<long>, c10::ScalarType, std::optional<c10::Device>, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::detail::empty_cuda(c10::ArrayRef<long>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::native::empty_cuda(c10::ArrayRef<long>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "RegisterCUDA.cpp",
+              "line": 0,
+              "name": "at::(anonymous namespace)::(anonymous namespace)::wrapper_CUDA_memory_format_empty(c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "RegisterCUDA.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>), &at::(anonymous namespace)::(anonymous namespace)::wrapper_CUDA_memory_format_empty>, at::Tensor, c10::guts::typelist::typelist<c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat> > >, at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::empty_memory_format::redispatch(c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "RegisterBackendSelect.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>), &at::(anonymous namespace)::empty_memory_format>, at::Tensor, c10::guts::typelist::typelist<c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat> > >, at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::empty_memory_format::call(c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "",
+              "line": 0,
               "name": "at::empty_symint(c10::ArrayRef<c10::SymInt>, c10::TensorOptions, std::optional<c10::MemoryFormat>)"
             },
             {
@@ -2137,10 +3015,327 @@
           "id": "stk_bf2d0c6808d65262",
           "lifetime_allocated_bytes": 3825205248,
           "peak_live_bytes": 201326592
+        },
+        {
+          "frames": [
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "torch::unwind::unwind()"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "torch::CapturedTraceback::gather(bool, bool, bool)"
+            },
+            {
+              "filename": "memory_snapshot.cpp",
+              "line": 0,
+              "name": "torch::cuda::(anonymous namespace)::gather_with_cpp()"
+            },
+            {
+              "filename": "CUDACachingAllocator.cpp",
+              "line": 0,
+              "name": "c10::cuda::CUDACachingAllocator::Native::DeviceCachingAllocator::malloc(signed char, unsigned long, CUstream_st*)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "c10::cuda::CUDACachingAllocator::Native::NativeCachingAllocator::malloc(void**, signed char, unsigned long, CUstream_st*)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "c10::cuda::CUDACachingAllocator::Native::NativeCachingAllocator::allocate(unsigned long)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "at::TensorBase at::detail::_empty_strided_generic<c10::ArrayRef<long> >(c10::ArrayRef<long>, c10::ArrayRef<long>, c10::Allocator*, c10::DispatchKeySet, c10::ScalarType)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::detail::empty_strided_generic(c10::ArrayRef<long>, c10::ArrayRef<long>, c10::Allocator*, c10::DispatchKeySet, c10::ScalarType)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::detail::empty_strided_cuda(c10::ArrayRef<long>, c10::ArrayRef<long>, c10::ScalarType, std::optional<c10::Device>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::detail::empty_strided_cuda(c10::ArrayRef<long>, c10::ArrayRef<long>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::native::empty_strided_cuda(c10::ArrayRef<long>, c10::ArrayRef<long>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "RegisterCUDA.cpp",
+              "line": 0,
+              "name": "at::(anonymous namespace)::(anonymous namespace)::wrapper_CUDA__empty_strided(c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "RegisterCUDA.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>), &at::(anonymous namespace)::(anonymous namespace)::wrapper_CUDA__empty_strided>, at::Tensor, c10::guts::typelist::typelist<c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool> > >, at::Tensor (c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::empty_strided::redispatch(c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "RegisterBackendSelect.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>), &at::(anonymous namespace)::empty_strided>, at::Tensor, c10::guts::typelist::typelist<c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool> > >, at::Tensor (c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::empty_strided::call(c10::ArrayRef<c10::SymInt>, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "at::empty_strided(c10::ArrayRef<long>, c10::ArrayRef<long>, c10::TensorOptions)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::native::_to_copy(at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "RegisterCompositeExplicitAutograd.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>), &at::(anonymous namespace)::(anonymous namespace)::wrapper_CompositeExplicitAutograd___to_copy>, at::Tensor, c10::guts::typelist::typelist<at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat> > >, at::Tensor (at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::_to_copy::redispatch(c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "RegisterBackendSelect.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>), &at::(anonymous namespace)::_to_copy>, at::Tensor, c10::guts::typelist::typelist<at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat> > >, at::Tensor (at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::_to_copy::redispatch(c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "VariableType_0.cpp",
+              "line": 0,
+              "name": "torch::autograd::VariableType::(anonymous namespace)::_to_copy(c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "VariableType_0.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>), &torch::autograd::VariableType::(anonymous namespace)::_to_copy>, at::Tensor, c10::guts::typelist::typelist<c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat> > >, at::Tensor (c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::_to_copy::call(at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::native::to(at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "RegisterCompositeImplicitAutograd.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, bool, std::optional<c10::MemoryFormat>), &at::(anonymous namespace)::(anonymous namespace)::wrapper_CompositeImplicitAutograd_dtype_layout_to>, at::Tensor, c10::guts::typelist::typelist<at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, bool, std::optional<c10::MemoryFormat> > >, at::Tensor (at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, bool, std::optional<c10::MemoryFormat>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::to_dtype_layout::call(at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, bool, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "python_variable_methods.cpp",
+              "line": 0,
+              "name": "torch::autograd::dispatch_to(at::Tensor const&, c10::Device, bool, bool, std::optional<c10::MemoryFormat>)"
+            },
+            {
+              "filename": "python_variable_methods.cpp",
+              "line": 0,
+              "name": "torch::autograd::THPVariable_to(_object*, _object*, _object*)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyDescr_IsData"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyObject_Vectorcall"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 1326,
+              "name": "convert"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyEval_EvalCode"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyWeakref_ClearRef"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 927,
+              "name": "_apply"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyEval_EvalCode"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyWeakref_ClearRef"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyCMethod_New"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyObject_Vectorcall"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 900,
+              "name": "_apply"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "Py_RunMain"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "Py_RunMain"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "Py_BytesMain"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "__libc_init_first"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "__libc_start_main"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_start"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 900,
+              "name": "_apply"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 900,
+              "name": "_apply"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 1340,
+              "name": "to"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 82,
+              "name": "main"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 131,
+              "name": "<module>"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 88,
+              "name": "_run_code"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 98,
+              "name": "_run_module_code"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 286,
+              "name": "run_path"
+            },
+            {
+              "filename": "/runtime/headroom/lab/run_target.py",
+              "line": 63,
+              "name": "main"
+            },
+            {
+              "filename": "/runtime/headroom/lab/run_target.py",
+              "line": 93,
+              "name": "<module>"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 88,
+              "name": "_run_code"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 198,
+              "name": "_run_module_as_main"
+            }
+          ],
+          "id": "stk_cbb85eb06fac7ffa",
+          "lifetime_allocated_bytes": null,
+          "peak_live_bytes": 49152
         }
       ],
       "target": "reclaim",
-      "title": "Evaluation without no_grad",
+      "title": "Evaluation without no_grad · Browser demo",
       "verification": {
         "checks": {
           "baseline_capture": true,
@@ -6033,54 +7228,54 @@
         "peak_is_exact": true,
         "status": "oom"
       },
-      "created_at": "2026-10-27T02:35:52.285467+00:00",
-      "description": "A tensor accumulator kept computation graphs alive across training updates.",
+      "created_at": "2026-10-28T23:33:24.124825+00:00",
+      "description": "The latest fixed-nine evaluation removed a tensor accumulator that retained computation graphs across updates.",
       "diagnosis": {
         "needs_more_info": false,
         "notes": [
-          "The retain_graph=True bug is explicitly documented in the source code comments. Removing it preserves all training mathematics (loss, gradients, optimizer steps, weight decay, scheduler) and requires no policy permission.",
-          "Peak memory after fix will be the forward/backward working set for a single step (batch=8, seq=1024, width=1024, 6 layers with 4x FFN expansion). Estimated forward peak ~3-5 GB, well within GPU capacity.",
-          "Optimizer state (0 GB at current peak) and gradients (0 GB) are not the bottleneck; the 24.5 GB activations peak is entirely due to graph retention across steps.",
-          "No batch size or gradient accumulation changes needed; the bug fix alone addresses the OOM."
+          "The peak composition attributes 24.5 GB to activations (stk_a32cb4c92a6e3dc9: 9.9 GB, stk_38353768b4bb64b0: 2.1 GB, stk_9fa778dfdbf6bd9b: 4.9 GB, stk_cc4dcef7e11ff2ee: 0.03 GB). These stacks correspond to gelu, add_Tensor, layer_norm, and linear activations saved for backward. With retain_graph=True, they accumulate across 20 steps.",
+          "Params (201 MB) and temporaries (33 MB) are small and persistent; optimizer_state and grads are zero at peak because the peak occurs before the first optimizer step boundary (peak event index 4860, optimizer alignment starts later).",
+          "Removing retain_graph=True should collapse the activation peak to a single-step working set (~1.5-2 GB), well within the 24 GB GPU memory (RTX 3090 Ti 24 GB).",
+          "No policy permissions needed; the change preserves mathematics, effective batch, precision, and optimizer cadence."
         ],
         "root_causes": [
           {
             "category": "retained_graph",
-            "confidence": 0.95,
+            "confidence": 0.92,
             "evidence_refs": [
-              "stk_6ead23113dd3a594",
               "stk_a32cb4c92a6e3dc9",
               "stk_38353768b4bb64b0",
-              "stk_9fa778dfdbf6bd9b"
+              "stk_9fa778dfdbf6bd9b",
+              "stk_cc4dcef7e11ff2ee"
             ],
-            "title": "Unnecessary retain_graph=True retains full autograd graph across training steps"
+            "title": "Retained autograd graph across training steps due to retain_graph=True"
           }
         ]
       },
       "diagnosis_binding": {
-        "diagnosis_sha256": "bfb6b66af9459ca41ed1db27359e9c6c9ee2a2e8d512f90a48a38daa311589f5",
-        "evidence_json_sha256": "5f94cc211f19ef6e2d5a00540944e9202922af87352f240f50c29f68c0dc0d7f",
-        "evidence_markdown_sha256": "598362aa1e9ac7bc6ad5eeb9e24925a7dbbb0130285c8020ac2649f18e93005d",
-        "request_payload_sha256": "93b24b7981377a117615821e891257e74a9f9dc5411bb0c0318c499c04c57775",
-        "request_wire_sha256": "3e14d9bd4a5b938c216c0dabc2e486c60d3e13899c6775d3b123def47bf6c7a7",
+        "diagnosis_sha256": "1f93523e8f66dd800795e24b26da6e6806a4e1ea61b520ec54ee29963fbab9fc",
+        "evidence_json_sha256": "1db323acb914127c43482b23e94a5632ba2c4470e8053c102948a2ea4035393e",
+        "evidence_markdown_sha256": "71f934a8d9b356ef27bd983ce3040146a3f3743392f8e0742b8f329ec96b5c46",
+        "request_payload_sha256": "2f91c22bc6fe376956896a5af98b798a14d1993b06ba14b5118f65b93ae8c0c2",
+        "request_wire_sha256": "3897c394522a17e1eefb79b6effe3c1166c14b0fc13bcca0b2aa230c8ea943bf",
         "round": 1,
         "stage": "baseline"
       },
       "downloads": {
         "patch": {
           "bytes": 495,
-          "path": "verified-assets/b7f348d0dc8d423f8076b81fd2c15375/patch.diff",
+          "path": "verified-assets/e8213706570e478f9845e49e24c2b54b/patch.diff",
           "sha256": "337664d47f036f555c80840caeaec91bc3d519bb4fab5245c0b6ad706b1c3266"
         },
         "report_json": {
-          "bytes": 74526,
-          "path": "verified-assets/b7f348d0dc8d423f8076b81fd2c15375/report.json",
-          "sha256": "8dc7a7a0d13a5fca325d18686c7dc8596a35b5053aa319e56bab5de85d6191bd"
+          "bytes": 72180,
+          "path": "verified-assets/e8213706570e478f9845e49e24c2b54b/report.json",
+          "sha256": "9041c1307e7eaa795ce9f3baeb32662e3b53f55b77ef03ca9920fa106ab397a3"
         },
         "report_markdown": {
-          "bytes": 680,
-          "path": "verified-assets/b7f348d0dc8d423f8076b81fd2c15375/report.md",
-          "sha256": "e4b224bb459d350aa0d26c90042ce158d4c94395d974f64a8e13b557b1cf0a74"
+          "bytes": 715,
+          "path": "verified-assets/e8213706570e478f9845e49e24c2b54b/report.md",
+          "sha256": "92961071e28f7d4aaaec681b75940e9b8b5de96debdcc4fa6bfd77c9a1d01553"
         }
       },
       "last_attempt": null,
@@ -6091,14 +7286,14 @@
       "outcome": "target_met",
       "peak_reduction_pct": "89.76936730433156231833859823",
       "provenance": "live",
-      "run_id": "b7f348d0dc8d423f8076b81fd2c15375",
+      "run_id": "e8213706570e478f9845e49e24c2b54b",
       "scenario_id": "s4_loss_accumulation_graph",
       "selected_round": 1,
       "source_sha256": {
-        "curation_fingerprint": "be574818b0b619fc682608b4c77ea77acdcc28b99d0fb27ca3e90ff2748896dc",
-        "independent_audit": "01cb2ecef964b30ac4b325296126396536a90c28e33744890c15942ed5774b51",
-        "numerical_reference_capture": "1bca07b7f321a74f63081fd88db26862553b746874a668e3a8eb0a13c62f554a",
-        "report": "910cd9d16b78c317e8bb7f4aebb5004f2b68813b77fca5d07eaab98ca2dc5a7b"
+        "curation_fingerprint": "a8dd172b8e9cc8b3e1418690a21879d47382866952f428d2a64e8d08f9e8e084",
+        "independent_audit": "0b4ffd4efc115ddbe3a6e3873ce9ec7caf90002ab2da6570868a488e297fb47e",
+        "numerical_reference_capture": "e3d764249fd46f74a8ec827fc4d96e9d6c979208bdbf71381db29a2412ae5e9f",
+        "report": "9b97be85d4e8116cda811b2b0e3b3587509d06f52db7700be92fe16fbf443cd6"
       },
       "sources": [],
       "stacks": [
@@ -6528,488 +7723,6 @@
           "id": "stk_38353768b4bb64b0",
           "lifetime_allocated_bytes": 2483027968,
           "peak_live_bytes": 2080374784
-        },
-        {
-          "frames": [
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "torch::unwind::unwind()"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "torch::CapturedTraceback::gather(bool, bool, bool)"
-            },
-            {
-              "filename": "memory_snapshot.cpp",
-              "line": 0,
-              "name": "torch::cuda::(anonymous namespace)::gather_with_cpp()"
-            },
-            {
-              "filename": "CUDACachingAllocator.cpp",
-              "line": 0,
-              "name": "c10::cuda::CUDACachingAllocator::Native::DeviceCachingAllocator::malloc(signed char, unsigned long, CUstream_st*)"
-            },
-            {
-              "filename": "",
-              "line": 0,
-              "name": "c10::cuda::CUDACachingAllocator::Native::NativeCachingAllocator::malloc(void**, signed char, unsigned long, CUstream_st*)"
-            },
-            {
-              "filename": "",
-              "line": 0,
-              "name": "c10::cuda::CUDACachingAllocator::Native::NativeCachingAllocator::allocate(unsigned long)"
-            },
-            {
-              "filename": "",
-              "line": 0,
-              "name": "at::TensorBase at::detail::_empty_generic<long>(c10::ArrayRef<long>, c10::Allocator*, c10::DispatchKeySet, c10::ScalarType, std::optional<c10::MemoryFormat>)"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "at::detail::empty_generic(c10::ArrayRef<long>, c10::Allocator*, c10::DispatchKeySet, c10::ScalarType, std::optional<c10::MemoryFormat>)"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "at::detail::empty_cuda(c10::ArrayRef<long>, c10::ScalarType, std::optional<c10::Device>, std::optional<c10::MemoryFormat>)"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "at::detail::empty_cuda(c10::ArrayRef<long>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "at::native::empty_cuda(c10::ArrayRef<long>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
-            },
-            {
-              "filename": "RegisterCUDA.cpp",
-              "line": 0,
-              "name": "at::(anonymous namespace)::(anonymous namespace)::wrapper_CUDA_memory_format_empty(c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
-            },
-            {
-              "filename": "RegisterCUDA.cpp",
-              "line": 0,
-              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>), &at::(anonymous namespace)::(anonymous namespace)::wrapper_CUDA_memory_format_empty>, at::Tensor, c10::guts::typelist::typelist<c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat> > >, at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "at::_ops::empty_memory_format::redispatch(c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
-            },
-            {
-              "filename": "RegisterBackendSelect.cpp",
-              "line": 0,
-              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>), &at::(anonymous namespace)::empty_memory_format>, at::Tensor, c10::guts::typelist::typelist<c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat> > >, at::Tensor (c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)>::call(c10::OperatorKernel*, c10::DispatchKeySet, c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "at::_ops::empty_memory_format::call(c10::ArrayRef<c10::SymInt>, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
-            },
-            {
-              "filename": "",
-              "line": 0,
-              "name": "at::empty_symint(c10::ArrayRef<c10::SymInt>, c10::TensorOptions, std::optional<c10::MemoryFormat>)"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "at::native::empty_like(at::Tensor const&, std::optional<c10::ScalarType>, std::optional<c10::Layout>, std::optional<c10::Device>, std::optional<bool>, std::optional<c10::MemoryFormat>)"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "at::native::layer_norm_cuda(at::Tensor const&, c10::ArrayRef<long>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double)"
-            },
-            {
-              "filename": "RegisterCUDA.cpp",
-              "line": 0,
-              "name": "at::(anonymous namespace)::(anonymous namespace)::wrapper_CUDA__native_layer_norm(at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double)"
-            },
-            {
-              "filename": "RegisterCUDA.cpp",
-              "line": 0,
-              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<std::tuple<at::Tensor, at::Tensor, at::Tensor> (at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double), &at::(anonymous namespace)::(anonymous namespace)::wrapper_CUDA__native_layer_norm>, std::tuple<at::Tensor, at::Tensor, at::Tensor>, c10::guts::typelist::typelist<at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double> >, std::tuple<at::Tensor, at::Tensor, at::Tensor> (at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double)>::call(c10::OperatorKernel*, c10::DispatchKeySet, at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double)"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "at::_ops::native_layer_norm::redispatch(c10::DispatchKeySet, at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double)"
-            },
-            {
-              "filename": "VariableType_1.cpp",
-              "line": 0,
-              "name": "torch::autograd::VariableType::(anonymous namespace)::native_layer_norm(c10::DispatchKeySet, at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double)"
-            },
-            {
-              "filename": "VariableType_1.cpp",
-              "line": 0,
-              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<std::tuple<at::Tensor, at::Tensor, at::Tensor> (c10::DispatchKeySet, at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double), &torch::autograd::VariableType::(anonymous namespace)::native_layer_norm>, std::tuple<at::Tensor, at::Tensor, at::Tensor>, c10::guts::typelist::typelist<c10::DispatchKeySet, at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double> >, std::tuple<at::Tensor, at::Tensor, at::Tensor> (c10::DispatchKeySet, at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double)>::call(c10::OperatorKernel*, c10::DispatchKeySet, at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double)"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "at::_ops::native_layer_norm::call(at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double)"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "at::native::layer_norm_symint(at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double, bool)"
-            },
-            {
-              "filename": "RegisterCompositeImplicitAutograd.cpp",
-              "line": 0,
-              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double, bool), &at::(anonymous namespace)::(anonymous namespace)::wrapper_CompositeImplicitAutograd__layer_norm>, at::Tensor, c10::guts::typelist::typelist<at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double, bool> >, at::Tensor (at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double, bool)>::call(c10::OperatorKernel*, c10::DispatchKeySet, at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double, bool)"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "at::_ops::layer_norm::call(at::Tensor const&, c10::ArrayRef<c10::SymInt>, std::optional<at::Tensor> const&, std::optional<at::Tensor> const&, double, bool)"
-            },
-            {
-              "filename": "python_torch_functions_2.cpp",
-              "line": 0,
-              "name": "torch::autograd::THPVariable_layer_norm(_object*, _object*, _object*)"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "PyCMethod_New"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyObject_MakeTpCall"
-            },
-            {
-              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/functional.py",
-              "line": 2900,
-              "name": "layer_norm"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyEval_EvalFrameDefault"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "PyMethod_New"
-            },
-            {
-              "filename": "/runtime/headroom/lab/precision.py",
-              "line": 532,
-              "name": "__torch_function__"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyEval_EvalFrameDefault"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "PyMethod_New"
-            },
-            {
-              "filename": "/opt/venv/lib/python3.12/site-packages/torch/overrides.py",
-              "line": 1717,
-              "name": "handle_torch_function"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyEval_EvalFrameDefault"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyObject_Call_Prepend"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "PyType_GetModule"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyObject_MakeTpCall"
-            },
-            {
-              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/functional.py",
-              "line": 2891,
-              "name": "layer_norm"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyEval_EvalFrameDefault"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "PyMethod_New"
-            },
-            {
-              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/normalization.py",
-              "line": 217,
-              "name": "forward"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyEval_EvalFrameDefault"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "PyMethod_New"
-            },
-            {
-              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
-              "line": 1790,
-              "name": "inner"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyEval_EvalFrameDefault"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyObject_Call_Prepend"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "PyType_GetModule"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyObject_MakeTpCall"
-            },
-            {
-              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
-              "line": 1844,
-              "name": "_call_impl"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyEval_EvalFrameDefault"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "PyMethod_New"
-            },
-            {
-              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
-              "line": 1736,
-              "name": "_wrapped_call_impl"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyEval_EvalFrameDefault"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "PyMethod_New"
-            },
-            {
-              "filename": "/source/train.py",
-              "line": 18,
-              "name": "forward"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyEval_EvalFrameDefault"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyObject_Call_Prepend"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "PyType_GetModule"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyObject_MakeTpCall"
-            },
-            {
-              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
-              "line": 1790,
-              "name": "inner"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyEval_EvalFrameDefault"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "PyEval_EvalCode"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyWeakref_ClearRef"
-            },
-            {
-              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
-              "line": 1844,
-              "name": "_call_impl"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyEval_EvalFrameDefault"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "PyEval_EvalCode"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyWeakref_ClearRef"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "PyCMethod_New"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "PyObject_Vectorcall"
-            },
-            {
-              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
-              "line": 1736,
-              "name": "_wrapped_call_impl"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_PyEval_EvalFrameDefault"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "Py_RunMain"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "Py_RunMain"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "Py_BytesMain"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "__libc_init_first"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "__libc_start_main"
-            },
-            {
-              "filename": "??",
-              "line": 0,
-              "name": "_start"
-            },
-            {
-              "filename": "/source/train.py",
-              "line": 29,
-              "name": "forward"
-            },
-            {
-              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
-              "line": 1790,
-              "name": "inner"
-            },
-            {
-              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
-              "line": 1844,
-              "name": "_call_impl"
-            },
-            {
-              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
-              "line": 1736,
-              "name": "_wrapped_call_impl"
-            },
-            {
-              "filename": "/source/train.py",
-              "line": 100,
-              "name": "main"
-            },
-            {
-              "filename": "/source/train.py",
-              "line": 123,
-              "name": "<module>"
-            },
-            {
-              "filename": "<frozen runpy>",
-              "line": 88,
-              "name": "_run_code"
-            },
-            {
-              "filename": "<frozen runpy>",
-              "line": 98,
-              "name": "_run_module_code"
-            },
-            {
-              "filename": "<frozen runpy>",
-              "line": 286,
-              "name": "run_path"
-            },
-            {
-              "filename": "/runtime/headroom/lab/run_target.py",
-              "line": 63,
-              "name": "main"
-            },
-            {
-              "filename": "/runtime/headroom/lab/run_target.py",
-              "line": 93,
-              "name": "<module>"
-            },
-            {
-              "filename": "<frozen runpy>",
-              "line": 88,
-              "name": "_run_code"
-            },
-            {
-              "filename": "<frozen runpy>",
-              "line": 198,
-              "name": "_run_module_as_main"
-            }
-          ],
-          "id": "stk_6ead23113dd3a594",
-          "lifetime_allocated_bytes": 2516582400,
-          "peak_live_bytes": 2516582400
         },
         {
           "frames": [
@@ -8029,6 +8742,538 @@
           "id": "stk_a32cb4c92a6e3dc9",
           "lifetime_allocated_bytes": 12415139840,
           "peak_live_bytes": 9932111872
+        },
+        {
+          "frames": [
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "torch::unwind::unwind()"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "torch::CapturedTraceback::gather(bool, bool, bool)"
+            },
+            {
+              "filename": "memory_snapshot.cpp",
+              "line": 0,
+              "name": "torch::cuda::(anonymous namespace)::gather_with_cpp()"
+            },
+            {
+              "filename": "CUDACachingAllocator.cpp",
+              "line": 0,
+              "name": "c10::cuda::CUDACachingAllocator::Native::DeviceCachingAllocator::malloc(signed char, unsigned long, CUstream_st*)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "c10::cuda::CUDACachingAllocator::Native::NativeCachingAllocator::malloc(void**, signed char, unsigned long, CUstream_st*)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "c10::cuda::CUDACachingAllocator::Native::NativeCachingAllocator::allocate(unsigned long)"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "at::cuda::getNewWorkspace()"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::cuda::getCurrentCUDABlasHandle()"
+            },
+            {
+              "filename": "",
+              "line": 0,
+              "name": "void at::cuda::blas::gemm_and_bias<float>(bool, bool, long, long, long, at::OpMathType<float>::type, float const*, long, float const*, long, float const*, float*, long, at::cuda::blas::GEMMAndBiasActivationEpilogue)"
+            },
+            {
+              "filename": "Blas.cpp",
+              "line": 0,
+              "name": "at::native::(anonymous namespace)::addmm_out_cuda_impl(at::Tensor&, at::Tensor const&, at::Tensor const&, at::Tensor const&, c10::Scalar const&, c10::Scalar const&, at::native::(anonymous namespace)::Activation)::{lambda()#1}::operator()() const"
+            },
+            {
+              "filename": "Blas.cpp",
+              "line": 0,
+              "name": "at::native::(anonymous namespace)::addmm_out_cuda_impl(at::Tensor&, at::Tensor const&, at::Tensor const&, at::Tensor const&, c10::Scalar const&, c10::Scalar const&, at::native::(anonymous namespace)::Activation)"
+            },
+            {
+              "filename": "RegisterCUDA.cpp",
+              "line": 0,
+              "name": "at::(anonymous namespace)::wrapper_CUDA_addmm(at::Tensor const&, at::Tensor const&, at::Tensor const&, c10::Scalar const&, c10::Scalar const&)"
+            },
+            {
+              "filename": "RegisterCUDA.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (at::Tensor const&, at::Tensor const&, at::Tensor const&, c10::Scalar const&, c10::Scalar const&), &at::(anonymous namespace)::wrapper_CUDA_addmm>, at::Tensor, c10::guts::typelist::typelist<at::Tensor const&, at::Tensor const&, at::Tensor const&, c10::Scalar const&, c10::Scalar const&> >, at::Tensor (at::Tensor const&, at::Tensor const&, at::Tensor const&, c10::Scalar const&, c10::Scalar const&)>::call(c10::OperatorKernel*, c10::DispatchKeySet, at::Tensor const&, at::Tensor const&, at::Tensor const&, c10::Scalar const&, c10::Scalar const&)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::addmm::redispatch(c10::DispatchKeySet, at::Tensor const&, at::Tensor const&, at::Tensor const&, c10::Scalar const&, c10::Scalar const&)"
+            },
+            {
+              "filename": "VariableType_0.cpp",
+              "line": 0,
+              "name": "torch::autograd::VariableType::(anonymous namespace)::addmm(c10::DispatchKeySet, at::Tensor const&, at::Tensor const&, at::Tensor const&, c10::Scalar const&, c10::Scalar const&)"
+            },
+            {
+              "filename": "VariableType_0.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (c10::DispatchKeySet, at::Tensor const&, at::Tensor const&, at::Tensor const&, c10::Scalar const&, c10::Scalar const&), &torch::autograd::VariableType::(anonymous namespace)::addmm>, at::Tensor, c10::guts::typelist::typelist<c10::DispatchKeySet, at::Tensor const&, at::Tensor const&, at::Tensor const&, c10::Scalar const&, c10::Scalar const&> >, at::Tensor (c10::DispatchKeySet, at::Tensor const&, at::Tensor const&, at::Tensor const&, c10::Scalar const&, c10::Scalar const&)>::call(c10::OperatorKernel*, c10::DispatchKeySet, at::Tensor const&, at::Tensor const&, at::Tensor const&, c10::Scalar const&, c10::Scalar const&)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::addmm::call(at::Tensor const&, at::Tensor const&, at::Tensor const&, c10::Scalar const&, c10::Scalar const&)"
+            },
+            {
+              "filename": "Linear.cpp",
+              "line": 0,
+              "name": "at::native::_flatten_nd_linear(at::Tensor const&, at::Tensor const&, at::Tensor const&)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::native::linear(at::Tensor const&, at::Tensor const&, std::optional<at::Tensor> const&)"
+            },
+            {
+              "filename": "RegisterCompositeImplicitAutograd.cpp",
+              "line": 0,
+              "name": "c10::impl::wrap_kernel_functor_unboxed_<c10::impl::detail::WrapFunctionIntoFunctor_<c10::CompileTimeFunctionPointer<at::Tensor (at::Tensor const&, at::Tensor const&, std::optional<at::Tensor> const&), &at::(anonymous namespace)::(anonymous namespace)::wrapper_CompositeImplicitAutograd__linear>, at::Tensor, c10::guts::typelist::typelist<at::Tensor const&, at::Tensor const&, std::optional<at::Tensor> const&> >, at::Tensor (at::Tensor const&, at::Tensor const&, std::optional<at::Tensor> const&)>::call(c10::OperatorKernel*, c10::DispatchKeySet, at::Tensor const&, at::Tensor const&, std::optional<at::Tensor> const&)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "at::_ops::linear::call(at::Tensor const&, at::Tensor const&, std::optional<at::Tensor> const&)"
+            },
+            {
+              "filename": "python_nn_functions.cpp",
+              "line": 0,
+              "name": "torch::autograd::THPVariable_linear(_object*, _object*, _object*)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyCMethod_New"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyObject_Call"
+            },
+            {
+              "filename": "/runtime/headroom/lab/precision.py",
+              "line": 532,
+              "name": "__torch_function__"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyMethod_New"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyObject_CallMethod"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "torch::handle_torch_function_no_python_arg_parser(c10::ArrayRef<_object*>, _object*, _object*, char const*, _object*, char const*, torch::TorchFunctionName)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "torch::handle_torch_function(torch::PythonArgs&, _object*, _object*, _object*, _object*, char const*, char const*)"
+            },
+            {
+              "filename": "python_nn_functions.cpp",
+              "line": 0,
+              "name": "torch::autograd::THPVariable_linear(_object*, _object*, _object*)"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyCMethod_New"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyObject_MakeTpCall"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/linear.py",
+              "line": 125,
+              "name": "forward"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyMethod_New"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 1790,
+              "name": "inner"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyMethod_New"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 1844,
+              "name": "_call_impl"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyObject_Call_Prepend"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyType_GetModule"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyObject_MakeTpCall"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 1736,
+              "name": "_wrapped_call_impl"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyMethod_New"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/container.py",
+              "line": 250,
+              "name": "forward"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyMethod_New"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 1790,
+              "name": "inner"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyObject_Call_Prepend"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyType_GetModule"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyObject_MakeTpCall"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 1844,
+              "name": "_call_impl"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyMethod_New"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 1736,
+              "name": "_wrapped_call_impl"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyMethod_New"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 18,
+              "name": "forward"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyObject_Call_Prepend"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyType_GetModule"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyObject_MakeTpCall"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 1790,
+              "name": "inner"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyMethod_New"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 1844,
+              "name": "_call_impl"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyMethod_New"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 1736,
+              "name": "_wrapped_call_impl"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyObject_Call_Prepend"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyType_GetModule"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyObject_MakeTpCall"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 29,
+              "name": "forward"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyEval_EvalCode"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyWeakref_ClearRef"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 1790,
+              "name": "inner"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyEval_EvalCode"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyWeakref_ClearRef"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyCMethod_New"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "PyObject_Vectorcall"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 1844,
+              "name": "_call_impl"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_PyEval_EvalFrameDefault"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "Py_RunMain"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "Py_RunMain"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "Py_BytesMain"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "__libc_init_first"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "__libc_start_main"
+            },
+            {
+              "filename": "??",
+              "line": 0,
+              "name": "_start"
+            },
+            {
+              "filename": "/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py",
+              "line": 1736,
+              "name": "_wrapped_call_impl"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 100,
+              "name": "main"
+            },
+            {
+              "filename": "/source/train.py",
+              "line": 123,
+              "name": "<module>"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 88,
+              "name": "_run_code"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 98,
+              "name": "_run_module_code"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 286,
+              "name": "run_path"
+            },
+            {
+              "filename": "/runtime/headroom/lab/run_target.py",
+              "line": 63,
+              "name": "main"
+            },
+            {
+              "filename": "/runtime/headroom/lab/run_target.py",
+              "line": 93,
+              "name": "<module>"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 88,
+              "name": "_run_code"
+            },
+            {
+              "filename": "<frozen runpy>",
+              "line": 198,
+              "name": "_run_module_as_main"
+            }
+          ],
+          "id": "stk_cc4dcef7e11ff2ee",
+          "lifetime_allocated_bytes": 33554432,
+          "peak_live_bytes": 33554432
         }
       ],
       "target": "fix-oom",
@@ -18803,5 +20048,5 @@
     }
   ],
   "schema_version": 1,
-  "selection_policy": "Latest preserved live target-met run per requested success scenario; latest terminated failure with an executed candidate for s1 and nanoGPT."
+  "selection_policy": "Latest preserved live target-met run per requested success scenario, including explicitly labeled independent browser demonstrations; preserved executed failures for s1 and nanoGPT."
 }

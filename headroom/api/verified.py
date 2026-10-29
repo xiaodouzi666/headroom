@@ -232,9 +232,10 @@ class VerifiedCatalog(Record):
         return self
 
 
-def load_verified(root: Path) -> VerifiedCatalog:
+def load_verified(root: Path, *, historical: bool = False) -> VerifiedCatalog:
     """Read only explicit curated files; deliberately does not register an HTTP route."""
-    with open_regular(root, "verified-runs.json", max_bytes=8 * 1024 * 1024) as handle:
+    filename = "verified-runs-history-v1.json" if historical else "verified-runs.json"
+    with open_regular(root, filename, max_bytes=8 * 1024 * 1024) as handle:
         document = json.load(handle)
     catalog = VerifiedCatalog.model_validate(document)
     for run in catalog.runs:

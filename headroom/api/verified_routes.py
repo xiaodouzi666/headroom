@@ -43,6 +43,17 @@ def register_verified(app, settings):
         if not RUN_ID.fullmatch(run_id) or kind not in DOWNLOAD_TYPES:
             raise HTTPException(404, "Published artifact not found")
         run = next((row for row in document.runs if row.run_id == run_id), None)
+        if run is None:
+            # Only the fixed, previously published catalog is eligible. Never
+            # discover private historical runs or serve loose files by run ID.
+            try:
+                history = load_verified(root, historical=True)
+            except FileNotFoundError:
+                history = None
+            except (OSError, ValueError, ValidationError):
+                raise HTTPException(503, "Published artifact is temporarily unavailable") from None
+            if history is not None:
+                run = next((row for row in history.runs if row.run_id == run_id), None)
         if run is None or kind not in run.downloads:
             raise HTTPException(404, "Published artifact not found")
         asset = run.downloads[kind]

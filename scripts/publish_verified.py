@@ -9,6 +9,7 @@ import json
 import math
 import re
 import sqlite3
+from contextlib import closing
 from decimal import Decimal
 from pathlib import Path
 
@@ -120,6 +121,35 @@ def verification(root, value, before, after, requested):
     }, reference_sha
 
 
+def reviewed_row(audit, selection, report_raw, report_path):
+    """Read the three existing review formats without changing their scores."""
+    run_id = selection["run_id"]
+    kind = selection.get("audit_format", "legacy")
+    if kind == "legacy":
+        matches = [r for r in audit["rows"] if r.get("run_id") == run_id]
+    elif kind == "final48_summary":
+        matches = [r for r in audit["fixed_nine"]["rows"] if r.get("run_id") == run_id]
+    elif kind == "browser_demo":
+        matches = [audit] if audit.get("run_id") == run_id else []
+    else:
+        raise ValueError("Unsupported reviewed evidence format")
+    require(len(matches) == 1, "Run missing or duplicated in independent audit")
+    value = matches[0]
+    if kind == "legacy":
+        return value
+    source = value["source_report"]
+    require(
+        source["sha256"] == sha(report_raw) and source["path"] == report_path,
+        "Reviewed source report differs",
+    )
+    scenario = value.get("scenario_id") if kind == "final48_summary" else selection["scenario_id"]
+    require(
+        isinstance(scenario, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,100}", scenario),
+        "Invalid reviewed scenario",
+    )
+    return {"run_id": run_id, "scenario_id": scenario, "target": value["target_met"]}
+
+
 def card_from_run(db, root, selection):
     run_id = selection["run_id"]
     row, _, assets, inspected = _inspection(db, root / "runs", run_id)
@@ -128,9 +158,12 @@ def card_from_run(db, root, selection):
     require(audit_path.startswith("reports/"), "Audit must be a project report")
     audit_raw = read(root, audit_path)
     audit = json.loads(audit_raw)
-    matches = [r for r in audit["rows"] if r.get("run_id") == run_id]
-    require(len(matches) == 1, "Run missing or duplicated in independent audit")
-    reviewed = matches[0]
+    reviewed = reviewed_row(
+        audit,
+        selection,
+        assets["report.json"],
+        (Path(row["run_dir"]).relative_to(root) / "report.json").as_posix(),
+    )
     target_met = row.get("target_met") is True
     require(reviewed.get("target") is target_met, "Independent target result differs")
     require(target_met is selection["expected_target_met"], "Selection outcome differs")
@@ -143,9 +176,8 @@ def card_from_run(db, root, selection):
             selected["round"] in inspected["verified_attempt_rounds"],
             "Selected candidate was not independently checked",
         )
-    bound = load_initial_diagnosis(
-        row["run_dir"], database=root / "runs/headroom.db", project_root=root
-    )
+    database = Path(db.execute("PRAGMA database_list").fetchone()[2])
+    bound = load_initial_diagnosis(row["run_dir"], database=database, project_root=root)
     require(bound is not None, "Initial diagnosis lacks exact evidence binding")
     diagnosis, binding, stacks = (bound[k] for k in ("diagnosis", "diagnosis_binding", "stacks"))
     requested = row["request"]["max_steps"]
@@ -317,23 +349,31 @@ def card_from_run(db, root, selection):
 
 def prepare(root, selection_path):
     root = Path(root).resolve()
-    selections = json.loads(read(root, selection_path))["runs"]
+    selection_document = json.loads(read(root, selection_path))
+    selections = selection_document["runs"]
     require(1 <= len(selections) <= 30, "Invalid selection count")
-    database = root / "runs/headroom.db"
     outputs, cards, provenance = {}, [], []
-    with sqlite3.connect(database.as_uri() + "?mode=ro", uri=True) as db:
-        db.row_factory = sqlite3.Row
-        for selection in selections:
+    for selection in selections:
+        database_name = selection.get("database", "runs/headroom.db")
+        require(
+            database_name in {"runs/headroom.db", "runs/public-api/headroom.db"},
+            "Unsupported recorded Store",
+        )
+        database = root / database_name
+        require(database.is_file() and not database.is_symlink(), "Recorded Store is unavailable")
+        with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as db:
+            db.row_factory = sqlite3.Row
             card, files, source = card_from_run(db, root, selection)
-            cards.append(card)
-            outputs.update(files)
-            provenance.append(source)
+        cards.append(card)
+        outputs.update(files)
+        provenance.append(source)
     document = {
         "schema_version": 1,
         "publication_status": "prepared_not_enabled",
-        "selection_policy": (
+        "selection_policy": selection_document.get(
+            "selection_policy",
             "Latest preserved live target-met run per requested success scenario; "
-            "latest terminated failure with an executed candidate for s1 and nanoGPT."
+            "latest terminated failure with an executed candidate for s1 and nanoGPT.",
         ),
         "runs": cards,
     }

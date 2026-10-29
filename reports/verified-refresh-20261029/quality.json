@@ -1,0 +1,31 @@
+{
+  "schema": "headroom.verified-refresh-quality.v1",
+  "prepared_only": true,
+  "focused_pytest": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=/tmp/headroom-final48-gallery-refresh-20261029 /home/xiaodouzi/workspace/headroom/.venv/bin/python -m pytest -q tests/test_verified_routes.py tests/test_verified_publication.py tests/test_verified_refresh.py",
+    "passed": 41,
+    "seconds": 3.35
+  },
+  "ruff": "passed",
+  "format": "passed",
+  "git_diff_check": "passed",
+  "gitleaks": "0 leaks; 1.94MB scoped scan",
+  "new_model_calls": 0,
+  "new_gpu_runs": 0,
+  "source_sha256": {
+    "headroom/api/verified.py": "a1cbe94b5bbda800b8b902641ca14f63e1b719e7d76c3e8c2aed6fd374e283e7",
+    "headroom/api/verified_routes.py": "d49f01320ca0991e515c9d58a6f610d71006b6dd93021def986330b4633fb99a",
+    "scripts/publish_verified.py": "043b8b2a37047aa0ba3666cb6e30a0f69a1c0c4740d49365fff40f9e0d161cca",
+    "tests/test_verified_routes.py": "93ad3d811012f81084479d6fe5fc8d7565abb090e6df551ff48d8dddd806e5d6",
+    "tests/test_verified_refresh.py": "31c6f2980ec8bd1919da8b88e039dbe8febbf85f34161aa163d154c7c9eb77c3"
+  },
+  "source_checkout_head_at_review": "2969195a0924e713a8b10339d61fe21575ded39d",
+  "evidence": "Both new runs passed existing _inspection and load_initial_diagnosis; all current/historical download hashes validated. Tests cover all six old s3/s4 download URLs, unknown/unpublished IDs, altered/symlink historical files, and exact reviewed source-report hashes.",
+  "reproducibility": {
+    "matched_outputs": 18,
+    "method": "Full prepare against read-only source artifacts; only the new selection document was supplied from the isolated worktree.",
+    "new_model_calls": 0,
+    "new_gpu_runs": 0,
+    "legacy_prepare_matched_outputs": 18
+  }
+}

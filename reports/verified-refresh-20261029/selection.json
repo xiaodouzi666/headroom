@@ -1,0 +1,69 @@
+{
+  "runs": [
+    {
+      "audit": "reports/final48h-live-demo-20261029/receipt.json",
+      "audit_format": "browser_demo",
+      "database": "runs/public-api/headroom.db",
+      "description": "The latest successful browser demonstration avoided the unnecessary evaluation autograd graph.",
+      "expected_target_met": true,
+      "limitations": [
+        "Independent browser demonstration; it is not part of a fixed-nine campaign and is not added to campaign repair scores."
+      ],
+      "run_id": "d9926ee7bb624e7fb22540bbc4c92cdc",
+      "scenario_id": "s3_eval_no_grad_missing",
+      "title": "Evaluation without no_grad · Browser demo"
+    },
+    {
+      "audit": "reports/acceptance-v2-r4-20261027/independent-audit-history-v2-final.json",
+      "description": "The patch kept the unused teacher on the CPU while preserving the recorded parameter count.",
+      "expected_target_met": true,
+      "limitations": [],
+      "run_id": "d10adf0ffac74dcf8d874a460a2a3628",
+      "title": "An unused teacher model on the GPU"
+    },
+    {
+      "audit": "reports/r7-20261029/r7-summary.json",
+      "audit_format": "final48_summary",
+      "description": "The latest fixed-nine evaluation removed a tensor accumulator that retained computation graphs across updates.",
+      "expected_target_met": true,
+      "limitations": [
+        "Numerical comparison covers five backward-loss scalars against an offloaded reference, not all 20 candidate updates."
+      ],
+      "run_id": "e8213706570e478f9845e49e24c2b54b",
+      "title": "Accumulated loss retains graphs"
+    },
+    {
+      "audit": "reports/acceptance-v2-r5-20261027/independent-audit-history-v3-final.json",
+      "description": "Disabling foreach optimizer updates and adding activation checkpointing reduced the recorded peak below 22 GB.",
+      "expected_target_met": true,
+      "limitations": [
+        "This is the historical fp32 result with tolerance-based comparison, not a bit-identical strict result or a bf16 trade-off run."
+      ],
+      "run_id": "2942b1e3d8e34ead80baef0cdc468753",
+      "title": "AdamW training above the memory target"
+    },
+    {
+      "audit": "reports/acceptance-v2-r6-20261027/independent-audit-history-v4.json",
+      "description": "A candidate reduced memory and completed, but it was rejected because the required numerical reference was unavailable.",
+      "expected_target_met": false,
+      "limitations": [
+        "The displayed candidate patch was reverted; its memory reduction is not a successful repair.",
+        "The root-cause card is the initial diagnosis; the run later requested more information."
+      ],
+      "run_id": "810e0803757740dfaaa65fd4ecd2adf9",
+      "title": "Large-batch activations: not solved"
+    },
+    {
+      "audit": "reports/acceptance-v2-r5-20261027/independent-audit-history-v3-final.json",
+      "description": "The executed gradient-accumulation candidate still ran out of memory; no repair was selected.",
+      "expected_target_met": false,
+      "limitations": [
+        "The reverted candidate changed runtime configuration to batch_size=8 and gradient_accumulation_steps=4; it did not change source code.",
+        "The initial diagnosis is shown with its bound baseline evidence; later planning stopped without sufficient evidenced savings."
+      ],
+      "run_id": "416ccae0aa6c42f08cf928f50e9973ea",
+      "title": "nanoGPT: not solved"
+    }
+  ],
+  "selection_policy": "Latest preserved live target-met run per requested success scenario, including explicitly labeled independent browser demonstrations; preserved executed failures for s1 and nanoGPT."
+}
