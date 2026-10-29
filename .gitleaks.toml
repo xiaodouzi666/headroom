@@ -493,3 +493,13 @@ regexes = [
     '''^ef71935e14d900a91191efa58c2f06175344ccf52a27654e4f282cb43b9030c6$''',
     '''^f2eafb75d8ccd6626386b0566279e4bd62b2eaf900317489f6b040c2b2d894c0$''',
 ]
+
+[[rules.allowlists]]
+description = "Verified public source hashes in judge routing evidence"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/judge-routing-20261029/source-hashes\.json$''']
+regexes = [
+    '''^644863fa88bd1c842dec3f47464f041c9da9b3021553d9b56f04c521fd78bf8f$''',
+    '''^d53791ee0283b12f3641181d6fbf7f917664d945eb021929e98c9e84b1bab635$''',
+]

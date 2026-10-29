@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import App from "./App";
 import DiffView from "./DiffView";
 import { Status } from "./components";
@@ -531,6 +537,11 @@ describe("separate home and public submission", () => {
     fireEvent.change(screen.getByLabelText("Judge access token"), {
       target: { value: "test-token" },
     });
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: /Start analysis/ }),
+      ).toBeEnabled(),
+    );
     fireEvent.click(screen.getByRole("button", { name: /Start analysis/ }));
     await screen.findByText(
       "The request could not be processed. Check the supplied inputs.",
@@ -552,7 +563,7 @@ describe("separate home and public submission", () => {
       screen.queryByLabelText("Run budget in USD"),
     ).not.toBeInTheDocument();
   });
-  it("submits an example without sending a token previously typed for a script", async () => {
+  it("uses the entered judge token when switching from a script to an example", async () => {
     publicAPI();
     render(<App />);
     await screen.findByRole("button", { name: /Activation memory/ });
@@ -561,7 +572,14 @@ describe("separate home and public submission", () => {
       target: { value: "test-token" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Use an example" }));
-    fireEvent.click(screen.getByRole("button", { name: /Activation memory/ }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: /Activation memory/ }),
+    );
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: /Start analysis/ }),
+      ).toBeEnabled(),
+    );
     fireEvent.click(screen.getByRole("button", { name: /Start analysis/ }));
     await screen.findByText(
       "The request could not be processed. Check the supplied inputs.",
@@ -569,7 +587,9 @@ describe("separate home and public submission", () => {
     const request = vi
       .mocked(fetch)
       .mock.calls.find(([path]) => path === "/api/runs")!;
-    expect(recordHeaders(request[1]?.headers).Authorization).toBeUndefined();
+    expect(recordHeaders(request[1]?.headers).Authorization).toBe(
+      "Bearer test-token",
+    );
   });
   it("does not let a query string enable the script form", async () => {
     window.history.replaceState({}, "", "/run?judge_scripts_available=true");
@@ -600,4 +620,101 @@ it("never flashes public script or budget controls before configuration arrives"
   ).not.toBeInTheDocument();
   expect(screen.queryByLabelText("Run budget in USD")).not.toBeInTheDocument();
   expect(screen.queryByLabelText("Judge access token")).not.toBeInTheDocument();
+});
+
+describe("judge access with an exhausted anonymous allowance", () => {
+  function dualPoolFetch() {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: unknown, init?: RequestInit) => {
+        const auth = new Headers(init?.headers).get("Authorization");
+        if (input === "/api/config")
+          return response({
+            public_demo: true,
+            judge_scripts_available: true,
+            run_submissions: { enabled: false },
+          });
+        if (input === "/api/health") {
+          if (auth && auth !== "Bearer offline-judge-token")
+            return Promise.resolve(new Response("{}", { status: 401 }));
+          const enabled = auth === "Bearer offline-judge-token";
+          return response({
+            run_submissions: { enabled },
+            local_budget: { status: enabled ? "available" : "unavailable" },
+            token_factory: { configured: true },
+            gpu: { available: true, busy: false },
+            queue: { pending: 0, capacity: 3 },
+          });
+        }
+        if (input === "/api/examples")
+          return response({
+            examples: [
+              {
+                id: "s1_batch_too_big",
+                title: "Activation memory",
+                expected_mode: "oom",
+                baseline_verified: true,
+              },
+            ],
+          });
+        if (input === "/api/runs")
+          return Promise.resolve(new Response("{}", { status: 400 }));
+        return Promise.reject(new Error("Unexpected offline UI request"));
+      }),
+    );
+  }
+
+  it("checks the entered token server-side and sends it for an example", async () => {
+    dualPoolFetch();
+    render(<App />);
+    const token = await screen.findByLabelText("Judge access token");
+    expect(
+      screen.getByRole("button", { name: /Start analysis/ }),
+    ).toBeDisabled();
+    fireEvent.change(token, { target: { value: "offline-judge-token" } });
+    fireEvent.click(
+      await screen.findByRole("button", { name: /Activation memory/ }),
+    );
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: /Start analysis/ }),
+      ).toBeEnabled(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Start analysis/ }));
+    await waitFor(() =>
+      expect(
+        vi.mocked(fetch).mock.calls.some(([path]) => path === "/api/runs"),
+      ).toBe(true),
+    );
+    const post = vi
+      .mocked(fetch)
+      .mock.calls.find(([path]) => path === "/api/runs")!;
+    expect(new Headers(post[1]?.headers).get("Authorization")).toBe(
+      "Bearer offline-judge-token",
+    );
+    expect(JSON.parse(String(post[1]?.body)).example_id).toBe(
+      "s1_batch_too_big",
+    );
+    await waitFor(() => expect(token).toHaveValue(""));
+    expect(localStorage.length).toBe(0);
+    expect(sessionStorage.length).toBe(0);
+    expect(window.location.search).toBe("");
+  });
+
+  it("keeps invalid tokens blocked without falling back to anonymous submission", async () => {
+    dualPoolFetch();
+    render(<App />);
+    const token = await screen.findByLabelText("Judge access token");
+    fireEvent.change(token, { target: { value: "wrong-token" } });
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The judge access token was not accepted.",
+    );
+    expect(
+      screen.getByRole("button", { name: /Start analysis/ }),
+    ).toBeDisabled();
+    expect(
+      vi.mocked(fetch).mock.calls.some(([path]) => path === "/api/runs"),
+    ).toBe(false);
+    expect(token).toHaveValue("wrong-token");
+  });
 });

@@ -41,7 +41,21 @@ def _finish_result(store, run_id, result):
         store.add_event(run_id, "run.done" if status == "completed" else "needs_human", {})
 
 
-def _process_entry(worker, request, store_path, run_root, run_id, deadline, demo_binding=None):
+def _bound_worker(funding_kind):
+    if funding_kind == "judge":
+        from headroom.acceptance.judge_binding import run_bound_judge
+
+        return run_bound_judge
+    if funding_kind == "demo":
+        from headroom.acceptance.demo_binding import run_bound_demo
+
+        return run_bound_demo
+    raise ValueError("Unknown trusted funding kind")
+
+
+def _process_entry(
+    worker, request, store_path, run_root, run_id, deadline, demo_binding=None, funding_kind="demo"
+):
     store = Store(store_path)
     try:
         if time.monotonic() >= deadline:
@@ -50,11 +64,11 @@ def _process_entry(worker, request, store_path, run_root, run_id, deadline, demo
             )
             store.add_event(run_id, "run.failed", {"reason": "queue_deadline_exceeded"})
             return
+        if funding_kind == "judge" and demo_binding is None:
+            raise ValueError("Judge execution requires its trusted allocation binding")
         parsed = FixRequest.model_validate(request)
         if demo_binding is not None:
-            from headroom.acceptance.demo_binding import run_bound_demo
-
-            result = run_bound_demo(
+            result = _bound_worker(funding_kind)(
                 parsed,
                 store=store,
                 run_root=Path(run_root),
@@ -242,10 +256,12 @@ class RunQueue:
         clock=time.time,
         hourly_limit=2,
         demo_allocation=None,
+        judge_allocation=None,
     ):
         self.store, self.run_root = store, Path(run_root)
         self.worker, self.mode = worker, mode
         self.demo_allocation = demo_allocation
+        self.judge_allocation = judge_allocation
         self.deadline, self.grace, self.clock = deadline, grace, clock
         if type(hourly_limit) is not int or hourly_limit < 1:
             raise ValueError("Hourly run limit must be a positive integer")
@@ -421,7 +437,19 @@ class RunQueue:
                 )
                 self.condition.wait(timeout=wait)
 
-    def submit(self, run_id, request, owner, client_ip, prepare):
+    def submit(self, run_id, request, owner, client_ip, prepare, *, funding_kind=None):
+        # Only the API's authenticated server-side branch supplies this value.
+        if funding_kind is None:
+            funding_kind = "demo" if self.demo_allocation is not None else "default"
+        allocations = {
+            "default": None,
+            "demo": self.demo_allocation,
+            "judge": self.judge_allocation,
+        }
+        if funding_kind not in allocations or (
+            funding_kind != "default" and allocations[funding_kind] is None
+        ):
+            raise AdmissionError("Selected execution allowance is unavailable", 503)
         # Admission starts one deadline shared by preparation, waiting and execution.
         # Upload/validation before admission and cleanup afterwards are separate.
         with self.condition:
@@ -451,6 +479,7 @@ class RunQueue:
                 run_id,
                 status="queued",
                 api_owner=owner,
+                api_funding_kind=funding_kind,
                 api_worker_finished=False,
                 api_source=request,
                 target=request.get("target"),
@@ -512,7 +541,7 @@ class RunQueue:
                 self.preparing.discard(run_id)
                 self.condition.notify_all()
 
-    def _supervised(self, run_id, request, deadline, demo_binding=None):
+    def _supervised(self, run_id, request, deadline, demo_binding=None, funding_kind="demo"):
         if time.monotonic() >= deadline:
             self._finish_unstarted(run_id, reason="queue_deadline_exceeded")
             return True
@@ -526,6 +555,7 @@ class RunQueue:
                 run_id,
                 deadline,
                 demo_binding,
+                funding_kind,
             ),
             daemon=True,
         )
@@ -611,29 +641,47 @@ class RunQueue:
                 self.running = run_id
             cleaned = False
             demo_binding = None
+            allocation = None
+            funding_kind = self.store.get_run(run_id).get(
+                "api_funding_kind", "demo" if self.demo_allocation is not None else "default"
+            )
             self.store.update_run(run_id, status="running")
             try:
-                if self.demo_allocation is not None:
+                allocations = {
+                    "default": None,
+                    "demo": self.demo_allocation,
+                    "judge": self.judge_allocation,
+                }
+                if funding_kind not in allocations or (
+                    funding_kind != "default" and allocations[funding_kind] is None
+                ):
+                    cleaned = True
+                    raise ValueError("Selected execution allowance is unavailable")
+                allocation = allocations[funding_kind]
+                if allocation is not None:
                     source_sha = (
                         self.store.get_run(run_id).get("api_source", {}).get("source_sha256")
                     )
                     # No model or GPU work precedes this durable allocation check.
                     cleaned = True
-                    request, demo_binding = self.demo_allocation.begin(
+                    request, demo_binding = allocation.begin(
                         run_id, request, source_sha256=source_sha
                     )
                     cleaned = False
-                    self.store.update_run(run_id, api_demo_binding=demo_binding)
+                    binding_field = (
+                        "api_judge_binding" if funding_kind == "judge" else "api_demo_binding"
+                    )
+                    self.store.update_run(run_id, **{binding_field: demo_binding})
                 if self.mode == "process":
-                    cleaned = self._supervised(run_id, request, deadline, demo_binding)
+                    cleaned = self._supervised(
+                        run_id, request, deadline, demo_binding, funding_kind
+                    )
                 elif time.monotonic() >= deadline:
                     self._finish_unstarted(run_id, reason="queue_deadline_exceeded")
                     cleaned = True
                 else:
                     if demo_binding is not None:
-                        from headroom.acceptance.demo_binding import run_bound_demo
-
-                        result = run_bound_demo(
+                        result = _bound_worker(funding_kind)(
                             request,
                             store=self.store,
                             run_root=self.run_root,
@@ -656,7 +704,7 @@ class RunQueue:
                 accounting_ok = True
                 if demo_binding is not None:
                     try:
-                        accounting = self.demo_allocation.finish(
+                        accounting = allocation.finish(
                             demo_binding,
                             execution_terminal=self.store.get_run(run_id).get("status") in TERMINAL,
                             cleanup_verified=cleaned,

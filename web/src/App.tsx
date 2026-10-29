@@ -241,26 +241,49 @@ function RunForm({ config }: { config: Dict }) {
     [busy, setBusy] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
+    setLoading(true);
+    async function loadHealth() {
+      const response = await fetch("/api/health", {
+        credentials: "same-origin",
+        signal: controller.signal,
+        headers: {
+          "X-Headroom-View": "product-v1",
+          ...(judgeToken.trim()
+            ? { Authorization: "Bearer " + judgeToken.trim() }
+            : {}),
+        },
+      });
+      if (!response.ok)
+        throw new Error(
+          response.status === 401
+            ? "The judge access token was not accepted."
+            : requestError(response.status),
+        );
+      return record(await response.json());
+    }
     (async () => {
       try {
-        const h = await getJSON("/api/health", controller.signal);
+        const h = await loadHealth();
         setHealth(h);
         const e = await getJSON("/api/examples", controller.signal);
         setExamples(rows(e.examples));
       } catch (e) {
-        if (!controller.signal.aborted)
+        if (!controller.signal.aborted) {
+          setHealth({ run_submissions: { enabled: false } });
           setError(e instanceof Error ? e.message : "Could not reach the API.");
+        }
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
     })();
     const refresh = window.setInterval(async () => {
       try {
-        setHealth(await getJSON("/api/health", controller.signal));
+        setHealth(await loadHealth());
       } catch {
         if (!controller.signal.aborted)
           setHealth((previous) => ({
             ...previous,
+            run_submissions: { enabled: false },
             gpu: { status: "unknown", available: null, busy: null },
             local_budget: { status: "unknown", remaining_usd: null },
           }));
@@ -270,13 +293,14 @@ function RunForm({ config }: { config: Dict }) {
       controller.abort();
       window.clearInterval(refresh);
     };
-  }, []);
+  }, [judgeToken]);
   const queue = record(health.queue),
     provider = record(health.token_factory);
   const submissions = record(health.run_submissions);
   const submissionsPaused =
-    record(config.run_submissions).enabled !== true ||
-    submissions.enabled === false;
+    (typeof submissions.enabled === "boolean"
+      ? submissions.enabled
+      : record(config.run_submissions).enabled) !== true;
   const submissionPauseReason = "Live analysis temporarily paused.";
   const queueFull = queueAtCapacity(queue);
   const availability = availabilityBlocks(health);
@@ -344,7 +368,7 @@ function RunForm({ config }: { config: Dict }) {
     setBusy(true);
     try {
       let run: Dict;
-      if (mode === "script" && publicDemo) {
+      if (publicDemo && judgeToken.trim()) {
         const response = await fetch("/api/runs", {
           method: "POST",
           credentials: "same-origin",
@@ -423,6 +447,26 @@ function RunForm({ config }: { config: Dict }) {
             </div>
             <FileCode2 size={22} className="muted" />
           </div>
+          {publicDemo && judgeScriptsAvailable && (
+            <label className="field">
+              Judge access token (optional for examples)
+              <input
+                type="password"
+                autoComplete="off"
+                value={judgeToken}
+                onChange={(event) => {
+                  setError("");
+                  setHealth({ run_submissions: { enabled: false } });
+                  setJudgeToken(event.target.value);
+                }}
+                aria-label="Judge access token"
+              />
+              <span className="caption">
+                Use a token for an example or your own script. It stays only on
+                this page and is cleared after submission.
+              </span>
+            </label>
+          )}
           <div className="segmented" role="group" aria-label="Source type">
             <button
               type="button"
@@ -499,21 +543,6 @@ function RunForm({ config }: { config: Dict }) {
                 placeholder="Paste your PyTorch script here…"
                 aria-describedby="script-note"
               />
-              {publicDemo && judgeScriptsAvailable && (
-                <label className="field">
-                  Judge access token
-                  <input
-                    type="password"
-                    autoComplete="off"
-                    value={judgeToken}
-                    onChange={(event) => setJudgeToken(event.target.value)}
-                    aria-label="Judge access token"
-                  />
-                  <span className="caption">
-                    Used only for this submission and cleared afterwards.
-                  </span>
-                </label>
-              )}
               <p id="script-note" className="caption">
                 Single GPU · Python / PyTorch · maximum 1 MiB. Remove
                 credentials before sharing a script.

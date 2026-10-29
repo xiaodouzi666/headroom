@@ -1,0 +1,25 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+........EE.............                                                  [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_real_judge_binding_api_dispatch_uses_only_judge_ledger[thread] _
+file /home/xiaodouzi/workspace/headroom/tests/test_judge_api.py, line 205
+  @pytest.mark.parametrize("mode", ["thread", "process"])
+  def test_real_judge_binding_api_dispatch_uses_only_judge_ledger(judge_pool, monkeypatch, mode):
+E       fixture 'judge_pool' not found
+>       available fixtures: cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, isolated_settings, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, setup, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/home/xiaodouzi/workspace/headroom/tests/test_judge_api.py:205
+_ ERROR at setup of test_real_judge_binding_api_dispatch_uses_only_judge_ledger[process] _
+file /home/xiaodouzi/workspace/headroom/tests/test_judge_api.py, line 205
+  @pytest.mark.parametrize("mode", ["thread", "process"])
+  def test_real_judge_binding_api_dispatch_uses_only_judge_ledger(judge_pool, monkeypatch, mode):
+E       fixture 'judge_pool' not found
+>       available fixtures: cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, isolated_settings, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, setup, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/home/xiaodouzi/workspace/headroom/tests/test_judge_api.py:205
+=========================== short test summary info ============================
+ERROR tests/test_judge_api.py::test_real_judge_binding_api_dispatch_uses_only_judge_ledger[thread]
+ERROR tests/test_judge_api.py::test_real_judge_binding_api_dispatch_uses_only_judge_ledger[process]
+21 passed, 2 errors in 2.83s

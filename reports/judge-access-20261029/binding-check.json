@@ -1,0 +1,45 @@
+{
+  "schema": "headroom.judge-binding.offline-check.v1",
+  "created_at_utc": "2026-10-29T07:45:59.455170+00:00",
+  "source_revision": "8a10eaba91d8239221b65d868aced089b0b81dbd",
+  "files": {
+    "headroom/acceptance/judge_binding.py": "4a988ccfd0a1732dbe79a94727e020626297d3f0af20ab8f0150b23fd7d7a793",
+    "tests/test_judge_binding.py": "0c1d19551e39f34d5534bab419570a197ad3ef719cdb4f015772d5144503c3e4"
+  },
+  "pytest_command": [
+    ".venv/bin/pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--tb=short",
+    "tests/test_judge_binding.py"
+  ],
+  "pytest_exit_code": 0,
+  "pytest_summary": "38 passed in 2.32s",
+  "elapsed_seconds": 3.2198969500605017,
+  "log_sha256": "014ae7fae99d72997c57507c6605d0e4b48161c0e79262d9b395bcdaf83f93ef",
+  "checks": {
+    "ruff": {
+      "exit_code": 0,
+      "output": "All checks passed!"
+    },
+    "format": {
+      "exit_code": 0,
+      "output": "2 files already formatted"
+    },
+    "diff": {
+      "exit_code": 0,
+      "output": ""
+    },
+    "gitleaks": {
+      "exit_code": 0,
+      "scope": "Two new source/test files via stdin",
+      "findings": 0
+    }
+  },
+  "source_unchanged": true,
+  "scope": "Synthetic temporary pools, fake credentials, SDK MockTransport only. Test guard denies network, subprocesses, production cache/runs/credential access. No production activation or real API/GPU work.",
+  "admission_basis": "existing_reviewed_local_estimate_with_margin",
+  "cost_limit_interpretation": "Application admission budget with reviewed estimate margins, not a mathematical provider-bill upper bound.",
+  "initial_guard_failure": "The first 26 failures were dir_fd relative paths rejected by the test guard; corrected against the actual descriptor before the passing runs. No external dispatch occurred."
+}

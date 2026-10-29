@@ -9,13 +9,23 @@ from fastapi import HTTPException
 
 def judge_authorized(settings, request):
     configured = settings.judge_token
-    supplied = request.headers.get("authorization", "")
+    authorizations = request.headers.getlist("authorization")
+    if len(authorizations) > 1:
+        raise HTTPException(
+            401, "Invalid judge access token", headers={"WWW-Authenticate": "Bearer"}
+        )
+    supplied = authorizations[0] if authorizations else ""
     prefix = "Bearer "
-    return bool(
+    valid = bool(
         configured
         and supplied.startswith(prefix)
         and secrets.compare_digest(supplied[len(prefix) :].encode(), configured.encode())
     )
+    if authorizations and not valid:
+        raise HTTPException(
+            401, "Invalid judge access token", headers={"WWW-Authenticate": "Bearer"}
+        )
+    return valid
 
 
 def client_address(settings, request):

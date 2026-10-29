@@ -21,6 +21,7 @@ def main():
     if requested not in {"true", "false"}:
         raise SystemExit("Use explicit true or false; the default public mode is read-only")
     demo = None
+    judge = None
     if requested == "true":
         receipt_path = os.environ.get("HEADROOM_PUBLIC_ALLOCATION_RECEIPT")
         if not receipt_path:
@@ -34,6 +35,14 @@ def main():
         # Process-local selection also keeps availability observations on this pool.
         os.environ["HEADROOM_BUDGET_DB_PATH"] = demo.receipt["ledger_path"]
         os.environ["HEADROOM_DAILY_BUDGET_USD"] = demo.receipt["amounts"]["daily_limit_usd"]
+        judge_receipt_path = os.environ.get("HEADROOM_JUDGE_ALLOCATION_RECEIPT")
+        if judge_receipt_path:
+            from headroom.acceptance.judge_binding import JudgeAllocation
+
+            try:
+                judge = JudgeAllocation(judge_receipt_path, project_root=root)
+            except (OSError, ValueError):
+                raise SystemExit("The judge allocation could not be verified") from None
     state = root / "runs/public-api"
     data = state / "submissions"
     source_root = root / "public-evidence"
@@ -66,7 +75,13 @@ def main():
         snapshot_submissions_enabled=False,
         run_submission_disabled_reason="Live analysis is temporarily paused.",
     )
-    application = create_app(settings, demo_allocation=demo) if demo else create_app(settings)
+    application = (
+        create_app(settings, demo_allocation=demo, judge_allocation=judge)
+        if judge is not None
+        else create_app(settings, demo_allocation=demo)
+        if demo is not None
+        else create_app(settings)
+    )
     uvicorn.run(application, host="127.0.0.1", port=8766, proxy_headers=False)
 
 

@@ -9,7 +9,7 @@ import re
 import secrets
 import subprocess
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from dataclasses import field as dataclass_field
 from decimal import Decimal, InvalidOperation, localcontext
 from functools import partial
@@ -35,7 +35,7 @@ from headroom.api.presentation import (
     product_run,
     wants_product,
 )
-from headroom.api.public_access import client_address, protect_public_submission
+from headroom.api.public_access import client_address, judge_authorized, protect_public_submission
 from headroom.api.queue import TERMINAL, AdmissionError, RunQueue
 from headroom.api.security import ARTIFACTS, RUN_ID, artifact_relative, job_directory, open_regular
 from headroom.api.verified_routes import register_verified
@@ -315,6 +315,7 @@ def create_app(
     snapshot_worker=None,
     snapshot_allocation_parent=None,
     demo_allocation=None,
+    judge_allocation=None,
 ):
     settings = settings or ApiSettings()
     if demo_allocation is not None:
@@ -322,6 +323,12 @@ def create_app(
             raise ValueError("Public allocation requires its matching project and public host")
         settings.runtime_profile = demo_allocation.receipt["profile_path"]
         settings.daily_budget_usd = demo_allocation.receipt["amounts"]["daily_limit_usd"]
+    if judge_allocation is not None and (
+        not settings.public_host
+        or not settings.judge_token
+        or judge_allocation.root != settings.project_root
+    ):
+        raise ValueError("Judge allocation requires its matching project, public host and token")
     settings.data_root.mkdir(parents=True, exist_ok=True, mode=0o700)
     settings.run_root.mkdir(parents=True, exist_ok=True, mode=0o700)
     store = Store(settings.db_path)
@@ -338,6 +345,7 @@ def create_app(
         grace=settings.shutdown_grace_seconds,
         hourly_limit=1 if settings.public_host else 2,
         demo_allocation=demo_allocation,
+        judge_allocation=judge_allocation,
     )
     catalog = _catalog(settings)
     availability = availability_monitor or AvailabilityMonitor(
@@ -373,6 +381,7 @@ def create_app(
     app.state.store, app.state.queue, app.state.settings = store, queue, settings
     app.state.availability = availability
     app.state.demo_allocation = demo_allocation
+    app.state.judge_allocation = judge_allocation
     register_evaluations(app, settings.data_root)
     register_verified(app, settings)
     from headroom.api.snapshot_routes import register_snapshot_routes
@@ -409,7 +418,7 @@ def create_app(
                         for part in response.headers.get("Vary", "").split(",")
                         if part.strip()
                     ]
-                    + ["X-Headroom-View"]
+                    + ["X-Headroom-View", "Authorization"]
                 )
             )
         return response
@@ -422,17 +431,23 @@ def create_app(
             raise HTTPException(404, "Run not found")
         return row
 
-    def submission_config():
+    def funding(request):
+        authorized = judge_authorized(settings, request) if settings.public_host else False
+        if authorized and judge_allocation is not None:
+            return "judge", judge_allocation
+        return ("demo", demo_allocation) if demo_allocation is not None else ("default", None)
+
+    def submission_config(request):
+        _, allocation = funding(request)
         enabled = bool(
-            settings.run_submissions_enabled
-            and (demo_allocation is None or demo_allocation.available)
+            settings.run_submissions_enabled and (allocation is None or allocation.available)
         )
         return {
             "enabled": enabled,
             "reason": None if enabled else settings.run_submission_disabled_reason,
         }
 
-    def observed_availability():
+    def observed_availability(request):
         observed = availability.snapshot()
         if not settings.public_host:
             return observed
@@ -454,7 +469,13 @@ def create_app(
                     for key in fields
                 },
             }
+        kind, allocation = funding(request)
         budget_status = observed.get("local_budget", {}).get("status")
+        if allocation is not None:
+            budget_status = "available" if allocation.available else "exhausted"
+        if kind == "judge":
+            # The receipt verifies the selected profile; provider reachability is shared.
+            public["token_factory"]["configured"] = True
         public["local_budget"] = {
             "scope": "service_availability",
             "status": (
@@ -474,13 +495,13 @@ def create_app(
         return state
 
     @app.get("/api/config")
-    def config():
+    def config(request: Request):
         snapshot_requested = bool(
             settings.snapshot_submissions_enabled and settings.run_submissions_enabled
         )
         snapshot_available = snapshot_requested and snapshots.submissions_available
         return {
-            "run_submissions": submission_config(),
+            "run_submissions": submission_config(request),
             "public_demo": bool(settings.public_host),
             "verified_runs_enabled": settings.verified_runs_enabled,
             "snapshot_submissions": {
@@ -497,7 +518,10 @@ def create_app(
                 "retention_hours": 24,
             },
             "judge_scripts_available": bool(
-                settings.public_host and settings.judge_token and submission_config()["enabled"]
+                settings.public_host
+                and settings.judge_token
+                and settings.run_submissions_enabled
+                and (judge_allocation is not None or submission_config(request)["enabled"])
             ),
             "limits": {
                 "runs_per_ip_per_hour": 1 if settings.public_host else 2,
@@ -509,7 +533,8 @@ def create_app(
     @app.post("/api/runs", status_code=202)
     async def submit(request: Request):
         # Reject before reading uploads, preparing repositories, admission or worker dispatch.
-        if not submission_config()["enabled"]:
+        funding_kind, selected_allocation = funding(request)
+        if not submission_config(request)["enabled"]:
             raise HTTPException(503, settings.run_submission_disabled_reason)
         origin = request.headers.get("origin")
         if origin and urlsplit(origin).netloc != request.url.netloc:
@@ -584,7 +609,16 @@ def create_app(
                 )
         run_id = uuid4().hex
 
-        prepare = partial(_prepare_submission, settings, submission, source, run_id)
+        preparation_settings = (
+            replace(
+                settings,
+                runtime_profile=selected_allocation.receipt["profile_path"],
+                daily_budget_usd=selected_allocation.receipt["amounts"]["daily_limit_usd"],
+            )
+            if selected_allocation is not None
+            else settings
+        )
+        prepare = partial(_prepare_submission, preparation_settings, submission, source, run_id)
 
         try:
             position = await asyncio.to_thread(
@@ -607,6 +641,7 @@ def create_app(
                 request.state.owner,
                 client_ip,
                 prepare,
+                funding_kind=funding_kind,
             )
         except AdmissionError as error:
             raise HTTPException(error.status, str(error), headers={"Retry-After": "60"}) from None
@@ -800,18 +835,18 @@ def create_app(
             "bounded_cost_calls": bounded,
             "unresolved_cost_calls": unresolved,
             "conservative_total_usd": str(conservative) if conservative is not None else None,
-            "local_budget": observed_availability()["local_budget"],
+            "local_budget": observed_availability(request)["local_budget"],
         }
 
     @app.get("/api/health")
     def health(request: Request):
         store.list_runs(1)
-        observed = observed_availability()
+        observed = observed_availability(request)
         return {
             "status": "ok",
             "db": "ok",
             "queue": product_queue(queue_status()) if wants_product(request) else queue_status(),
-            "run_submissions": submission_config(),
+            "run_submissions": submission_config(request),
             **observed,
             "deployment": "public_host_configured" if settings.public_host else "localhost",
             "authentication": "local_session_only",
