@@ -26,7 +26,7 @@
 | F4 文档替换 | 产品文档、来源核对和相关检查完成 | R7/HF/精度两档及消融实测已更新；VIDEO_URL 等最终剪辑上传；原始历史保持 |
 | F5 干净环境复跑 | 环境修复后真实CLI复跑结束，未得到自动修复 | clean自身CLI与GPU/模型链已运行44.36秒、3调用，需补充信息；费用$0.075498372，清理与结算通过；原零调用失败保留 |
 | F6 视频素材 | F6 素材就绪，交本地 Opus | Part1–5已交到本机 Downloads，含成功s3、snapshot、Watch、F5两次和最终Results/Home；尚待本地Opus成片与Public视频链接 |
-| F7 Devpost 提交 | 定稿与独立字段/测试说明草稿已备；尚未提交 | docs/SUBMISSION_FIELDS.md 已写入当前开放预置示例的测试步骤；Frank 完成实际提交后核实 Submitted |
+| F7 Devpost 提交 | 定稿与独立字段/测试说明草稿已备；尚未提交 | docs/SUBMISSION_FIELDS.md 已写入预置示例和judge表单步骤；浏览器访问、评委持续访问安排、视频与Submitted仍缺 |
 | F8 最终检查 | 工程交付预检完成，正式提交前仍待收尾 | 五页390px与API/控制台检查通过；预置示例恢复、snapshot暂停；最终视频/Submitted/账户余额刷新仍待，见 reports/final-summary.md |
 
 ## 2026-10-29 视频分工更新

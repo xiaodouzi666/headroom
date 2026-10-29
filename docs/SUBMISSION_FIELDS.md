@@ -10,12 +10,12 @@ Preparation checklist for [FINAL_48H, F7](FINAL_48H.md). This file does not reco
 | Tagline | Copy the Tagline from [DEVPOST.md](DEVPOST.md). |
 | Project description | Copy the seven sections from Inspiration through What's next in [DEVPOST.md](DEVPOST.md), retaining its current Limitations when preparing the form. |
 | Built With | Nebius Token Factory, NVIDIA Nemotron 3 Ultra, NVIDIA Nemotron 3 Super, NVIDIA Nemotron 3 Nano, Tavily, PyTorch, CUDA, Docker, FastAPI, React |
-| Track | **Coding and Agentic Engineering** |
+| Track | **Coding and Agentic Engineering Track** |
 | Feedback | Use the first five paragraphs of [FEEDBACK.md](FEEDBACK.md), as requested by F7. |
 | Demo URL | [Headroom public demo](https://headroom.tail45186b.ts.net/) |
 | Repository URL | [Headroom source](https://github.com/xiaodouzi666/headroom) |
 | Video URL | `{{PUBLIC_YOUTUBE_URL}}` — replace after Frank reviews the final video, uploads it as Public and verifies playback. |
-| Testing instructions | Use the current instructions below. Replace them with the enabled-feature version only after its listed prerequisites are verified. |
+| Testing instructions | Use the current instructions below and resolve the judge-access requirements before submitting. |
 
 Video production instructions are in [FINAL_48H, §4](FINAL_48H.md). The current [media index](media/final/README.md) records available assets and missing prerequisites. A toolchain smoke clip is not the submission video.
 
@@ -25,13 +25,13 @@ Video production instructions are in [FINAL_48H, §4](FINAL_48H.md). The current
 
 Opening the gallery and Results only reads existing evidence. Clicking Start analysis launches a real GPU and model job.
 
-## Testing instructions — template after feature enablement
+## Judge-only script workflow
 
-**Use only after live validation.** A (the explicit run-pool authorization) and C (the public gallery permission) are complete; the gallery is published and the private judge credential is configured. Complete the actual live checks, then verify the deployed controls, access method and rate limit. Fill the placeholders only from the deployed, tested flow.
+The implemented interface is **Run → Paste a script → Python training script → Judge access token → Start analysis**. The token is sent in the Authorization header, not a query string or project description. The public examples need no token. The current judge-script path still shares the public request and spending limits.
 
-> Open https://headroom.tail45186b.ts.net/ without signing in. Open Verified runs to inspect the published historical cases; Verified runs needs no token. To start a new repair, follow `{{VERIFIED_LIVE_ENTRY_STEPS}}` and choose the s3 eval-loop example. The limit is one live run per IP per hour. Inspect the resulting timeline, diagnosis, patch and numerical comparison; a new run may succeed or fail, and its actual outcome is displayed. For the enabled judge-only workflow, use `{{VERIFIED_JUDGE_ACCESS_STEPS}}` with the credential supplied through `{{PRIVATE_CREDENTIAL_HANDOFF}}`. If a live run is unavailable, the recorded cases and Results remain available to inspect.
+The site's current configuration reports preset runs and judge scripts enabled, snapshot uploads disabled, and a maximum of one run per IP per hour. These are current capabilities, not a promise of unrestricted judging-period access.
 
-Before using this version, record the verified example URL or entry steps, a genuine new run ID, the actual judge access method and the current limit in the private handoff. Do not present a prepared historical case as a newly executed run.
+The official [Testing requirement](https://nebiusglobalaihackathon.devpost.com/rules) requires free access for the organizers and judges through the end of judging. If access is private, its credentials belong in the testing instructions. The current limits and finite demo allowance have not been confirmed to satisfy that requirement. Before final submission, verify the visibility of the Devpost testing field and provide the actual credential through the field intended for judges; do not paste it into publicly visible text. Browser access to the account is currently unavailable because local browser use is disabled in Work settings.
 
 ## Judge credential handoff
 

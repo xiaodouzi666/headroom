@@ -1,0 +1,13 @@
+# Submission requirements and remaining access gap — 2026-10-29
+
+This supplements FINAL_48H without editing its frozen text. Official sources were checked today.
+
+- Submission closes on October 30 at 10:00 PDT, or October 31 at 01:00 Beijing time. Judging ends on December 15 at 12:00 PST, or December 16 at 04:00 Beijing time. Keep the intended review service available through that endpoint. [Official dates](https://nebiusglobalaihackathon.devpost.com/details/dates).
+- The track is Coding and Agentic Engineering Track. A public open-source repository, English submission materials, a working demo/test-build URL, and tool feedback in the submission form are required. The video must be public on YouTube and shorter than three minutes; the planned 170-second edit fits. [Official rules, section 4](https://nebiusglobalaihackathon.devpost.com/rules).
+- Testing requires free access for organizers and judges through the end of judging. Private access credentials must be supplied in testing instructions. The current one-run-per-IP-per-hour restriction and finite demo scope do not establish that the entire judging-period requirement is met. Read-only historical evidence does not, by itself, prove full test access. [Official Testing provision](https://nebiusglobalaihackathon.devpost.com/rules).
+- The current public configuration has preset runs and judge scripts enabled, snapshot uploads disabled. GPU and budget readiness were available, with no running/preparing/queued work, when checked this turn. The UI separately handles loading, queue, GPU and budget readiness.
+- The sole approved allocation remains $6.43 net; the demo's unchanged aggregate cap is $0.30 and its last verified remainder is $0.23047582. No new allowance, recharge, or provider request was created by this review. An unrestricted-judging assertion would require a verified access arrangement; this report does not create one.
+- Work settings currently disable local browser use. This prevents checking the account's actual Devpost draft, testing-field visibility, final video URL, or fresh provider balance. The user has been asked whether to enable access or supply those observations.
+- The README now uses reclaim mode for the s3 example because that workload already completes. This is a documentation correction. The actual F5 command used fix-oom, returned needs_human, and remains unchanged; it is not rescored or rerun.
+
+The next concrete decisions depend on current account state: confirm the testing field's privacy and credential delivery, establish the funded judge-access period within the user's no-recharge limit, and obtain the final public video and Submitted receipt. No fabricated success or unlimited-access claim is substituted for them.

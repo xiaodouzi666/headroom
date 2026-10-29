@@ -53,6 +53,7 @@ The provider account balance has not been refreshed in this report. The original
 
 1. Finish the local Opus edit, at most 170 seconds, using real footage and the current result wording; upload the final video as Public and provide its URL.
 2. Replace the video placeholders and complete Devpost. Record the actual project URL and Submitted confirmation.
-3. Perform the planned closing availability and account-balance check before the deadline. Keep the service available for judging.
+3. Verify the Devpost testing field and supply judge credentials privately. The existing request and spending limits do not establish unrestricted free judging-period access; resolve the [official access requirement](submission-requirements-20261029.md) before claiming this is complete.
+4. Perform the planned closing availability and account-balance check before the deadline. The judging period ends on December 16 at 04:00 Beijing time.
 
 The original 6/9 repair requirement and saved-snapshot validation remain unmet. Publishing a report, creating a tag, passing offline tests, or preparing submission fields does not change those outcomes.

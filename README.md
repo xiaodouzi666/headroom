@@ -82,8 +82,10 @@ uv sync --locked --python 3.12
 bash scripts/build_lab_image.sh
 cp .env.example .env && chmod 600 .env   # add NEBIUS_API_KEY, TAVILY_API_KEY
 # Complete docs/RUNTIME.md, then:
-uv run headroom fix scenarios/s3_eval_no_grad_missing/train.py
+uv run headroom fix scenarios/s3_eval_no_grad_missing/train.py --target reclaim --reclaim-reduction-pct 30
 ```
+
+The s3 example already fits in GPU memory; this command asks Headroom to reduce its peak usage. Use `--target fix-oom` for a workload that actually runs out of memory.
 
 `headroom fix` prints a live timeline and writes `report.md` and the evidence pack under `runs/jobs/<id>/` by default, plus `patch.diff` when a candidate is kept. `headroom snapshot <script>` captures without calling a model; `headroom watch -- <command>` captures CUDA OOM evidence and attempts repair for supported Python entrypoints. `headroom serve` starts the web app on port 8000. See [CLI](docs/CLI.md) and [Runtime setup](docs/RUNTIME.md).
 
