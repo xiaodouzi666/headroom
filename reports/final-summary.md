@@ -32,6 +32,7 @@ The number check verified 1,927 claims against present raw sources, with zero er
 
 ## Publication and access
 
+- Latest readability release: upper-right decorative status dot removed, body text enlarged to 18px, secondary text darkened, controls and narrow layouts improved. Frontend 138 and focused backend 66 checks passed; real public browser verification covers five pages, 23 current/historical downloads and an existing completed run detail. Responsive and sampled contrast checks passed. No model/GPU rerun was made and snapshot upload remains paused. See [readability report](frontend-readability-20261029/README.md) and [deployment receipt](frontend-readability-20261029/deployment.json).
 - Public URL: https://headroom.tail45186b.ts.net/
 - Source: https://github.com/xiaodouzi666/headroom — independently confirmed public, with GitHub reporting Apache-2.0.
 - The public gallery contains four successes and two failures. Its s3/s4 cards use the latest successful browser-demo/campaign records; the old catalog and previously published download URLs remain available. See [gallery refresh](verified-refresh-20261029/README.md).

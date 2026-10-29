@@ -1,0 +1,64 @@
+Started UTC: 2026-10-29T03:42:45.639903+00:00
+Command: /home/xiaodouzi/workspace/headroom/.venv/bin/pytest -q -p no:cacheprovider tests/test_demo_api.py tests/test_verified_routes.py tests/test_verified_refresh.py tests/test_snapshot_routes.py tests/test_api.py::test_run_artifacts_sessions_examples_usage_and_terminal_sse tests/test_api.py::test_sse_includes_events_added_after_stream_started tests/test_api.py::test_legacy_public_flag_no_longer_grants_private_session_access tests/test_api.py::test_configuration_downloads_are_fixed_and_owner_scoped tests/test_api.py::test_origin_and_host_controls_reject_cross_origin_submissions tests/test_api.py::test_public_tunnel_cookie_and_client_ip_rate_limit tests/test_api.py::test_expired_queue_sse_waits_for_report_or_explicit_render_failure tests/test_api.py::test_static_build_is_served_without_exposing_parent_paths
+Isolation: provider environment removed; offline workers; GPU visibility disabled.
+
+...F..............................................................       [100%]
+=================================== FAILURES ===================================
+______________ test_launcher_requires_real_receipt_for_live_mode _______________
+
+launcher = (<module 'headroom_public_launcher_test' from '/home/xiaodouzi/workspace/headroom/scripts/serve_public.py'>, PosixPath('/tmp/pytest-of-xiaodouzi/pytest-375/test_launcher_requires_real_re0/project'))
+demo_pool = {'root': PosixPath('/tmp/pytest-of-xiaodouzi/pytest-375/test_launcher_requires_real_re0/offline-project'), 'receipt': ...tion/runtime-profile.json', max_rounds=6, search_mode='until_target', source_profile=None, research_enabled=True), ...}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7eb5b9b8e570>
+
+    def test_launcher_requires_real_receipt_for_live_mode(launcher, demo_pool, monkeypatch):
+        module, _ = launcher
+        root = demo_pool["root"]
+        monkeypatch.setattr(module, "__file__", str(root / "scripts/serve_public.py"))
+        monkeypatch.setenv("HEADROOM_PUBLIC_HOST", "demo.example")
+        monkeypatch.setenv("HEADROOM_RUN_SUBMISSIONS_ENABLED", "true")
+        monkeypatch.setenv("HEADROOM_PUBLIC_ALLOCATION_RECEIPT", str(demo_pool["path"]))
+        monkeypatch.setenv("HEADROOM_BUDGET_DB_PATH", demo_pool["receipt"]["ledger_path"])
+        monkeypatch.setenv("HEADROOM_DAILY_BUDGET_USD", "6.43")
+        for relative in (
+            "public-evaluations.json",
+            "published-evaluations/r6-20261027.json",
+            "published-evaluations/r5-20261027.json",
+        ):
+            path = root / "public-evidence" / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("{}")
+        seen = {}
+    
+        def create(settings, *, demo_allocation):
+            seen.update(settings=settings, controller=demo_allocation)
+            return object()
+    
+        monkeypatch.setattr(module, "create_app", create)
+        monkeypatch.setattr(module.uvicorn, "run", lambda *a, **kw: None)
+>       module.main()
+
+tests/test_demo_api.py:284: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/serve_public.py:40: in main
+    entries = _registry(source_root)
+              ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+root = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-375/test_launcher_requires_real_re0/offline-project/public-evidence')
+
+    def _registry(root):
+        try:
+            with open_regular(root, "public-evaluations.json", 65536) as handle:
+                document = json.load(handle)
+        except FileNotFoundError:
+            return []
+        if not isinstance(document, dict) or document.get("version") != 1:
+>           raise ValueError("Invalid publication manifest")
+E           ValueError: Invalid publication manifest
+
+headroom/api/evaluations.py:184: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_demo_api.py::test_launcher_requires_real_receipt_for_live_mode
+1 failed, 65 passed in 15.31s
+
+Exit code: 1

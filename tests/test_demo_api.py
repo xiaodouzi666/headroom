@@ -265,23 +265,43 @@ def test_launcher_requires_real_receipt_for_live_mode(launcher, demo_pool, monke
     monkeypatch.setenv("HEADROOM_PUBLIC_ALLOCATION_RECEIPT", str(demo_pool["path"]))
     monkeypatch.setenv("HEADROOM_BUDGET_DB_PATH", demo_pool["receipt"]["ledger_path"])
     monkeypatch.setenv("HEADROOM_DAILY_BUDGET_USD", "6.43")
-    for relative in (
-        "public-evaluations.json",
-        "published-evaluations/r6-20261027.json",
-        "published-evaluations/r5-20261027.json",
-    ):
+    publications = {
+        "public-evaluations.json": {
+            "version": 1,
+            "campaigns": [{"id": "offline-startup", "title": "Offline startup fixture"}],
+        },
+        "published-evaluations/offline-startup.json": {
+            "mode": "campaign",
+            "provenance": "offline_fixture",
+            "rows": [],
+        },
+    }
+    for relative, document in publications.items():
         path = root / "public-evidence" / relative
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("{}")
+        path.write_text(json.dumps(document))
     seen = {}
+    starts = []
 
     def create(settings, *, demo_allocation):
         seen.update(settings=settings, controller=demo_allocation)
         return object()
 
     monkeypatch.setattr(module, "create_app", create)
-    monkeypatch.setattr(module.uvicorn, "run", lambda *a, **kw: None)
+    monkeypatch.setattr(module.uvicorn, "run", lambda *a, **kw: starts.append((a, kw)))
+    monkeypatch.delenv("HEADROOM_PUBLIC_ALLOCATION_RECEIPT")
+    with pytest.raises(SystemExit, match="explicit public allocation receipt"):
+        module.main()
+    assert not seen and not starts
+    invalid_receipt = root / "invalid-receipt.json"
+    invalid_receipt.write_text("{}")
+    monkeypatch.setenv("HEADROOM_PUBLIC_ALLOCATION_RECEIPT", str(invalid_receipt))
+    with pytest.raises(SystemExit, match="public allocation could not be verified"):
+        module.main()
+    assert not seen and not starts
+    monkeypatch.setenv("HEADROOM_PUBLIC_ALLOCATION_RECEIPT", str(demo_pool["path"]))
     module.main()
+    assert len(starts) == 1
     assert seen["settings"].run_submissions_enabled
     assert not seen["settings"].snapshot_submissions_enabled
     assert seen["controller"].receipt == demo_pool["receipt"]

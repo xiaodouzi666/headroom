@@ -95,10 +95,6 @@ function Navigation({ config }: { config: Dict }) {
             About
           </a>
         </nav>
-        <span className="nav-note">
-          <span className="status-dot" />
-          Evidence first
-        </span>
       </div>
     </header>
   );

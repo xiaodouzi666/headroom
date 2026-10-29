@@ -65,15 +65,15 @@ export default function MemoryChart({
               dataKey="event"
               type="number"
               domain={["dataMin", "dataMax"]}
-              tick={{ fontSize: 11, fill: theme.muted }}
+              tick={{ fontSize: 14, fill: theme.muted }}
               tickLine={false}
               axisLine={false}
               minTickGap={45}
             />
             <YAxis
               unit=" GB"
-              width={64}
-              tick={{ fontSize: 11, fill: theme.muted }}
+              width={80}
+              tick={{ fontSize: 14, fill: theme.muted }}
               tickLine={false}
               axisLine={false}
             />
@@ -85,10 +85,10 @@ export default function MemoryChart({
               contentStyle={{
                 borderRadius: 12,
                 borderColor: theme.border,
-                fontSize: 12,
+                fontSize: 16,
               }}
             />
-            <Legend iconType="plainline" wrapperStyle={{ fontSize: 12 }} />
+            <Legend iconType="plainline" wrapperStyle={{ fontSize: 16 }} />
             {hasBefore && (
               <Line
                 dataKey="before"
@@ -124,7 +124,7 @@ export default function MemoryChart({
                 label={{
                   value: "OOM",
                   position: "insideTopRight",
-                  fontSize: 10,
+                  fontSize: 14,
                   fill: "#b95340",
                 }}
               />

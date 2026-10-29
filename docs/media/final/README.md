@@ -4,6 +4,8 @@ Status: **raw recording handoff available** on 2026-10-29. Parts 1–5 include a
 
 ## Current recording handoff
 
+The current Home still image includes the 2026-10-29 readability update. Existing raw clips retain their original font sizes and header decoration; their measured results remain unchanged. They are not a newly edited final video.
+
 Frank's latest direction: Codex records each implemented user-facing feature as
 separate real-operation clips; Opus edits, narrates and captions the final
 submission demo on Frank's local computer. Server-side Claude Code login is
@@ -29,7 +31,7 @@ public video URL after local editing and review.
 |---|---|---|
 | Public Headroom website | https://headroom.tail45186b.ts.net/ | Existing public demo URL. |
 | Public repository | https://github.com/xiaodouzi666/headroom | Existing source repository. |
-| Home screenshot | [home.png](home.png) | Existing screenshot supplied by the main task; retained unchanged. |
+| Home screenshot | [home.png](home.png) | Updated from the verified readability release on 2026-10-29; see [capture evidence](../../../reports/frontend-readability-20261029/README.md). |
 | Genuine CUDA OOM traceback | [oom-traceback.txt](oom-traceback.txt) | Complete, byte-identical copy of a preserved s1 capture. |
 | Historical gallery data | [verified-runs.json](../../../public-evidence/verified-runs.json) | Published: four historical successes and two failures; see the publication receipt. |
 | Intended gallery page | https://headroom.tail45186b.ts.net/verified | Publicly verified in Chrome, including an expandable allocation-stack citation. |

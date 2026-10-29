@@ -1,0 +1,38 @@
+{
+  "schema": "headroom.frontend-browser-reproduction.v1",
+  "script_sha256": {
+    ".cache/frontend-readability-20261029/browser_check.py": "769a2ce47268a0ffa6e671b43aeb0a0aa2e3ebd15d14e7d44a730fdde75028b7",
+    ".cache/frontend-readability-20261029/owner_check.py": "22f22ddfc2ff2956cfd5fef9b1ae79a44b7bba3fbc34f861ea2290c4c36cb840",
+    ".cache/frontend-readability-20261029/supplement.py": "ccb0c08312ecb0da154ad3cb254e44362d57b3c7696e768e3237926fcb2d9f31",
+    ".cache/frontend-readability-20261029/inspect.py": "0abff164f37a16442f4bd306416a65397efc6018b57a22dc231ed8de854aaed1"
+  },
+  "image": "sha256:983d2a4e654e9d55ca0f73d7fbf25306fa94d7de34878e741957c4c1d7eac8ff",
+  "docker_options": [
+    "--rm",
+    "--user",
+    "1000:1000",
+    "--read-only",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges",
+    "--cpus",
+    "2",
+    "--memory",
+    "2g",
+    "--shm-size",
+    "512m",
+    "--tmpfs",
+    "/tmp:rw,size=512m"
+  ],
+  "public_command": "Mount browser_check.py as /check.py:ro, public-evidence as /source:ro and this report folder as /out:rw; run python /check.py.",
+  "owner_command": "Mount owner_check.py as /check.py:ro, this report folder as /out:rw, and the original project test owner storage state as /owner-session.json:ro; run python /check.py. Do not publish or print storage state.",
+  "supplement_command": "Mount the script folder as /scripts:ro, report folder as /out:rw and original project test owner storage state as /owner-session.json:ro; run python -P /scripts/supplement.py. -P prevents the diagnostic inspect.py file from shadowing the Python stdlib inspect module.",
+  "request_policy": "Only GET/HEAD may reach the public service. In the explicit mock context, POST /api/runs is locally fulfilled with synthetic 429 and never reaches the server.",
+  "evidence_interpretation": {
+    "browser-attempt-1": "Original About CSS zoom overflow, plus test-harness diff/regex errors; retained. Original owner instantaneous post-resize width also retained.",
+    "browser-attempt-2": "About layout fixed; one test regex remained incorrect. The original source catalog did not contain rendered download URLs, so download coverage was incomplete; not counted as 23 verified downloads.",
+    "final": "Current browser-check.json explicitly requires 23 distinct current/historical assets and verifies every SHA, plus rendered browser download. Owner layout waits for chart resize and two animation frames; records instant and stable widths separately.",
+    "zoom": "CSS zoom2 is a stress test. Separate 720CSS width/DPR2 approximates 1440 desktop at 200% reflow, not an actual browser toolbar zoom action."
+  }
+}
