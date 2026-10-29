@@ -17,8 +17,8 @@ import headroom.snapshot_diagnosis as core
 from headroom.api.snapshot_routes import public_result
 from headroom.budget import BudgetExceeded
 from headroom.config import ULTRA_MODEL, RuntimeConfig, VerifiedCapabilities, candidate_models
-from headroom.llm.client import TokenFactoryClient
-from headroom.llm.router import LLMRouter
+from headroom.llm.client import LLMError, TokenFactoryClient
+from headroom.llm.router import LLMRouter, ResponseValidationError
 from headroom.runtime import RuntimeNotReady
 from headroom.snapshot_diagnosis import (
     SnapshotDiagnosisRequest,
@@ -110,8 +110,9 @@ def diagnosis(reference):
 class OfflineRuntimeFactory:
     """Exercise the real router/schema and persist a fake wire receipt under the supplied job."""
 
-    def __init__(self, mutate=None):
+    def __init__(self, mutate=None, *, finish_reason="stop"):
         self.mutate = mutate
+        self.finish_reason = finish_reason
         self.calls = []
         self.requests = []
         self.closed = False
@@ -155,7 +156,7 @@ class OfflineRuntimeFactory:
                     "choices": [
                         {
                             "index": 0,
-                            "finish_reason": "stop",
+                            "finish_reason": self.finish_reason,
                             "message": {
                                 "role": "assistant",
                                 "content": payload
@@ -235,6 +236,14 @@ def test_native_upload_reaches_real_validator_and_produces_bound_unverified_arti
     assert len(validations) == 1 and validations[0].valid
     assert factory.closed and len(factory.requests) == 1
     assert factory.requests[0]["max_tokens"] == 2000
+    system_messages = "\n".join(
+        message["content"]
+        for message in factory.requests[0]["messages"]
+        if message["role"] == "system"
+    )
+    assert "2000-token completion cap" in system_messages
+    assert "16384-token completion cap" not in system_messages
+    assert factory.requests[0]["chat_template_kwargs"]["enable_thinking"] is False
     assert factory.requests[0]["model"] == ULTRA_MODEL
     assert result["verification"] == {
         "status": "not_run",
@@ -666,3 +675,118 @@ def test_path_redaction_preserves_interleaved_repair_constraints(
     assert binding["diagnosis_sha256"] == canonical_hash(result["diagnosis"])
     job = tmp_path / "jobs" / result["run_id"]
     assert expected in (job / "diagnosis.md").read_text()
+
+
+@pytest.mark.parametrize(
+    ("mutate", "finish_reason", "reason"),
+    [
+        (lambda payload: "{not-json", "stop", "invalid_json"),
+        (lambda payload: payload, "length", "truncated"),
+        (lambda payload: {"unexpected": "field"}, "stop", "schema_mismatch"),
+    ],
+)
+def test_snapshot_model_failures_keep_private_response_evidence_without_retry(
+    upload, tmp_path, mutate, finish_reason, reason
+):
+    factory = OfflineRuntimeFactory(mutate, finish_reason=finish_reason)
+    result = execute(upload, tmp_path, factory)
+    job = tmp_path / "jobs" / result["run_id"]
+    receipt = job / "private" / "model-error.json"
+    saved = json.loads(receipt.read_text())
+    assert result["status"] == "failed" and result["error"] == "diagnosis_unavailable"
+    assert result["diagnosis"] is None and result["patch"]["diff"] is None
+    assert len(factory.requests) == 1 and factory.closed
+    assert saved["error_type"] == "ResponseValidationError"
+    assert saved["error_reason"] == reason and saved["finish_reason"] == finish_reason
+    assert saved["phase"] == "diagnose" and saved["usage"]["completion_tokens"] == 100
+    response = saved["response"]
+    assert response["utf8_bytes"] > 0 and not response["excerpt_truncated"]
+    assert response["sha256"] == hashlib.sha256(response["text_excerpt"].encode()).hexdigest()
+    assert receipt.stat().st_mode & 0o777 == 0o600
+    assert receipt.parent.stat().st_mode & 0o777 == 0o700
+    assert "model-error.json" not in (job / "public-report.json").read_text()
+    assert json.loads((job / "private" / "cleanup.json").read_text())["cleanup_verified"]
+
+
+def test_untrusted_error_and_response_are_never_copied_to_public_outputs(upload, tmp_path):
+    marker = "private-offline-marker"
+    response_text = marker + "é" * (core._PRIVATE_RESPONSE_BYTES + 100)
+    original = OfflineRuntimeFactory()
+
+    def factory(*args):
+        runtime = original(*args)
+
+        def rejected(*args, **kwargs):
+            raise ResponseValidationError(
+                marker + " arbitrary exception text",
+                reason=marker,
+                response=SimpleNamespace(
+                    text=response_text, finish_reason=marker, role=marker, usage=None
+                ),
+            )
+
+        runtime.router.chat = rejected
+        return runtime
+
+    result = execute(upload, tmp_path, factory)
+    job = tmp_path / "jobs" / result["run_id"]
+    saved = json.loads((job / "private/model-error.json").read_text())
+    assert saved["error_reason"] == "unknown"
+    assert saved["finish_reason"] is None and saved["role"] is None
+    response = saved["response"]
+    assert response["excerpt_truncated"]
+    assert len(response["text_excerpt"].encode()) <= core._PRIVATE_RESPONSE_BYTES
+    assert response["sha256"] == hashlib.sha256(response_text.encode()).hexdigest()
+    assert (
+        saved["exception_sha256"]
+        == hashlib.sha256((marker + " arbitrary exception text").encode()).hexdigest()
+    )
+    for name in ["public-report.json", "diagnosis.json", "diagnosis.md"]:
+        assert marker not in (job / name).read_text()
+    assert marker not in json.dumps(result)
+    assert original.closed
+
+
+@pytest.mark.parametrize(
+    ("message", "reason"),
+    [
+        ("Token Factory HTTP 503; attempts=1", "http_error"),
+        ("Token Factory timeout; attempts=1", "timeout"),
+        ("Token Factory returned a refusal", "refusal"),
+        ("private-offline-marker arbitrary exception", "unclassified_llm_error"),
+    ],
+)
+def test_snapshot_client_error_records_only_safe_reason(upload, tmp_path, message, reason):
+    def refused(*args):
+        raise LLMError(message)
+
+    result = execute(upload, tmp_path, refused)
+    job = tmp_path / "jobs" / result["run_id"]
+    saved = json.loads((job / "private/model-error.json").read_text())
+    assert saved["error_type"] == "LLMError" and saved["error_reason"] == reason
+    assert saved["response"] is None
+    assert "private-offline-marker" not in json.dumps(saved)
+    assert "private-offline-marker" not in json.dumps(result)
+
+
+def test_private_error_write_failure_preserves_public_failure_and_cleanup_evidence(
+    upload, tmp_path, monkeypatch
+):
+    write_json = core._write_json
+
+    def failing_write(path, value):
+        if path.name == "model-error.json":
+            raise OSError("private-offline-write-error")
+        return write_json(path, value)
+
+    monkeypatch.setattr(core, "_write_json", failing_write)
+    factory = OfflineRuntimeFactory(lambda payload: "{invalid")
+    result = execute(upload, tmp_path, factory)
+    job = tmp_path / "jobs" / result["run_id"]
+    assert factory.closed and len(factory.requests) == 1
+    assert result["status"] == "failed" and result["error"] == "worker_error"
+    assert not json.loads((job / "private/cleanup.json").read_text())["cleanup_verified"]
+    assert json.loads((job / "private/cleanup-failures.json").read_text()) == {
+        "steps": ["model_error_evidence"]
+    }
+    assert "private-offline-write-error" not in (job / "diagnosis.md").read_text()

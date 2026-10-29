@@ -1043,3 +1043,29 @@ def test_verifier_pairing_evidence_is_retained_in_round_artifact_and_report(tmp_
     assert verification["pairing_evidence"] == expected
     assert report["rounds"][0]["verification"]["pairing_evidence"] == expected
     store.close()
+
+
+def test_invalid_information_request_reports_validation_failure_without_new_rounds(tmp_path):
+    result, store, requests, verifies, root = search_run(
+        tmp_path,
+        [{"needs_more_info": True, "description": "Use bf16 autocast for every operation."}],
+        max_rounds=6,
+    )
+    try:
+        assert result["status"] == "needs_human" and result["target_met"] is False
+        assert result["search"]["stop_reason"] == "diagnosis_validation_failed"
+        assert "failed validation" in result["reason"]
+        assert "restarting with new evidence" not in result["reason"]
+        # Preserve the existing single bounded correction, without starting another round.
+        assert len(requests) == 2 and verifies == []
+        assert (root / "train.py").read_text() == "VALUE = 1\n"
+        diagnosis = json.loads((Path(result["run_dir"]) / "diagnosis.json").read_text())
+        assert not diagnosis["valid"] and diagnosis["diagnosis"]["needs_more_info"]
+        assert diagnosis["issues"]
+        report = json.loads(Path(result["report_json"]).read_text())
+        assert len(report["rounds"]) == 1
+        assert report["rounds"][0]["reason"] == "diagnosis_validation_failed"
+        assert report["rounds"][0]["requested_information"] == []
+        assert "patch.written" not in [e["kind"] for e in store.events(result["run_id"])]
+    finally:
+        store.close()

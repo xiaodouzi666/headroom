@@ -15,10 +15,12 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 from headroom.budget import BudgetExceeded, BudgetLedger, money
 from headroom.diagnose import build_diagnosis_messages, validate_diagnosis
+from headroom.diagnosis_protocol import FINAL48_DIAGNOSIS_ONLY
 from headroom.diagnosis_schema import build_diagnosis_schema
 from headroom.evidence_blockers import build_evidence_availability_catalog
 from headroom.ledger_path import require_initialized_ledger, select_budget_database
 from headroom.llm.client import LLMError
+from headroom.llm.router import ResponseValidationError, response_validation_metadata
 from headroom.patch import PatchEngine
 from headroom.runtime import PROJECT_ROOT, RuntimeNotReady, build_live_runtime, read_live_profile
 from headroom.snapshot_evidence import prepare_snapshot_evidence
@@ -110,11 +112,67 @@ def canonical_hash(value):
 
 def _write_json(path, value):
     temporary = path.with_name(path.name + ".tmp")
-    with temporary.open("x", encoding="utf-8") as stream:
+    descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
         json.dump(value, stream, ensure_ascii=False, indent=2, allow_nan=False)
         stream.write("\n")
     temporary.chmod(0o600)
     temporary.replace(path)
+
+
+_PRIVATE_RESPONSE_BYTES = 64 * 1024
+_SAFE_CLIENT_ERRORS = {
+    "Token Factory response error; attempts=": "response_error",
+    "Token Factory timeout; attempts=": "timeout",
+    "Token Factory transport_error; attempts=": "transport_error",
+}
+_SAFE_CLIENT_MESSAGES = {
+    "Token Factory response model identity is missing or mismatched": "response_model_mismatch",
+    "Token Factory returned no completion choices": "missing_choices",
+    "Token Factory returned no assistant message": "missing_message",
+    "Token Factory returned a refusal": "refusal",
+    "Request rejected outside the configured Token Factory endpoint": "endpoint_rejected",
+    "Request has no admitted attempt context": "missing_admission",
+}
+
+
+def _model_error_evidence(error, *, phase):
+    """Bounded private response facts; never serialize arbitrary exception text or SDK objects."""
+    message = str(error)
+    evidence = {
+        "schema": "headroom.snapshot-model-error.v1",
+        "phase": phase,
+        "error_type": "ResponseValidationError"
+        if isinstance(error, ResponseValidationError)
+        else "LLMError",
+        "error_reason": _SAFE_CLIENT_MESSAGES.get(message, "unclassified_llm_error"),
+        "exception_sha256": hashlib.sha256(message.encode("utf-8", errors="replace")).hexdigest(),
+        "response": None,
+    }
+    if isinstance(error, ResponseValidationError):
+        evidence.update(response_validation_metadata(error))
+        evidence["schema"] = "headroom.snapshot-model-error.v1"
+        response = error.response
+        text = getattr(response, "text", None)
+        if type(text) is str:
+            raw = text.encode("utf-8", errors="replace")
+            evidence["response"] = {
+                "text_excerpt": raw[:_PRIVATE_RESPONSE_BYTES].decode("utf-8", errors="ignore"),
+                "utf8_bytes": len(raw),
+                "sha256": hashlib.sha256(raw).hexdigest(),
+                "excerpt_truncated": len(raw) > _PRIVATE_RESPONSE_BYTES,
+            }
+    else:
+        http = re.fullmatch(r"Token Factory HTTP ([1-5][0-9]{2}); attempts=([0-9]{1,4})", message)
+        if http:
+            evidence.update(
+                error_reason="http_error", http_status=int(http[1]), attempts=int(http[2])
+            )
+        for prefix, reason in _SAFE_CLIENT_ERRORS.items():
+            suffix = message.removeprefix(prefix)
+            if message.startswith(prefix) and re.fullmatch(r"[0-9]{1,4}", suffix):
+                evidence.update(error_reason=reason, attempts=int(suffix))
+    return evidence
 
 
 def render_diagnosis_markdown(result):
@@ -285,6 +343,8 @@ def run_snapshot_diagnosis(
     store.create_run(run_id, {"status": "running", "kind": "snapshot_diagnosis"})
     runtime = budget = None
     prepared = None
+    phase = "preparation"
+    private_error_write_failed = False
     try:
         prepared = prepare_snapshot_evidence(
             request.snapshot,
@@ -307,19 +367,21 @@ def run_snapshot_diagnosis(
             evidence,
             prepared["markdown"],
         )
+        phase = "diagnose"
         messages = build_diagnosis_messages(
             prepared["markdown"],
             goal=GOAL,
             policy=prepared["policy"],
             execution_context=evidence.get("execution_context"),
             evidence_availability_catalog=evidence["evidence_availability_catalog"],
+            request_policy=FINAL48_DIAGNOSIS_ONLY,
         )
         response = runtime.router.chat(
             "diagnose",
             messages,
             build_diagnosis_schema(evidence=evidence, policy=prepared["policy"]),
-            max_tokens=2000,
-            reasoning=False,
+            max_tokens=FINAL48_DIAGNOSIS_ONLY.max_completion_tokens,
+            reasoning=FINAL48_DIAGNOSIS_ONLY.reasoning,
         )
         validation = validate_diagnosis(
             response.parsed, evidence=evidence, policy=prepared["policy"]
@@ -341,6 +403,7 @@ def run_snapshot_diagnosis(
                 "needs_human" if validation.diagnosis.needs_more_info else "completed"
             )
             if prepared["source_root"] and validation.ready_for_patch:
+                phase = "patch"
                 patch = services.patch_factory(
                     runtime.router,
                     max_repairs=0,
@@ -376,12 +439,17 @@ def run_snapshot_diagnosis(
         result.update(status="budget_exceeded", error="budget_exceeded")
     except RuntimeNotReady:
         result.update(status="failed", error="runtime_unavailable")
-    except LLMError:
+    except LLMError as error:
         result.update(status="failed", error="diagnosis_unavailable")
+        try:
+            _write_json(private / "model-error.json", _model_error_evidence(error, phase=phase))
+        except (OSError, ValueError, TypeError, UnicodeError):
+            # Keep public failures readable even when private evidence cannot be saved.
+            private_error_write_failed = True
     except Exception:  # noqa: BLE001 -- keep arbitrary worker errors out of public reports
         result.update(status="failed", error="worker_error")
     finally:
-        failed_cleanup = []
+        failed_cleanup = ["model_error_evidence"] if private_error_write_failed else []
         try:
             result["cost_usd"] = _cost(runtime)
         except Exception:  # noqa: BLE001 -- failed accounting must never look like zero cost

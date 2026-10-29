@@ -723,21 +723,31 @@ def run_fix(
                 needs_information = bool(
                     checked.diagnosis is not None and checked.diagnosis.needs_more_info
                 )
+                invalid_information_request = needs_information and not checked.valid
                 blocked_reason = (
-                    "diagnosis_needs_more_info" if needs_information else "diagnosis_not_ready"
+                    "diagnosis_validation_failed"
+                    if invalid_information_request
+                    else "diagnosis_needs_more_info"
+                    if needs_information
+                    else "diagnosis_not_ready"
                 )
                 finish_round(
                     {
                         "reason": blocked_reason,
                         "diagnosis": _artifact(directory, round_dir / "diagnosis.json"),
                         "requested_information": (
-                            checked.diagnosis.notes if needs_information else []
+                            checked.diagnosis.notes if needs_information and checked.valid else []
                         ),
                         "supplement_request": checked.supplement_request,
                     }
                 )
                 if needs_information:
-                    data["search"]["stop_reason"] = "diagnosis_needs_more_info"
+                    data["search"]["stop_reason"] = blocked_reason
+                    if invalid_information_request:
+                        raise RuntimeNotReady(
+                            "Diagnosis failed validation; inspect diagnosis.json issues "
+                            "before deciding whether additional evidence is needed"
+                        )
                     raise RuntimeNotReady(
                         "Diagnosis requests additional information; inspect diagnosis.json notes "
                         "before restarting with new evidence"
