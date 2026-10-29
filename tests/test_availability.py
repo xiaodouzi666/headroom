@@ -5,7 +5,6 @@ import socket
 import sqlite3
 import subprocess
 import threading
-from pathlib import Path
 from types import SimpleNamespace
 
 import httpx
@@ -524,7 +523,7 @@ def test_health_and_usage_share_safe_global_observations(tmp_path):
             self.closed = True
 
     monitor = Monitor()
-    project = Path(__file__).resolve().parents[1]
+    project = tmp_path
     settings = ApiSettings(
         project_root=project,
         data_root=tmp_path / "api",

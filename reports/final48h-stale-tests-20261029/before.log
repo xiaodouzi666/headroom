@@ -1,0 +1,86 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+___ test_reviewed_public_suites_keep_fixed_denominators_and_private_data_out ___
+
+    def test_reviewed_public_suites_keep_fixed_denominators_and_private_data_out():
+        from pathlib import Path
+    
+        root = Path(__file__).resolve().parents[1] / "public-evidence"
+        with client(root) as api:
+            listing = api.get("/api/evaluations").json()["evaluations"]
+>           assert [item["id"] for item in listing] == ["r6-20261027", "r5-20261027"]
+E           AssertionError: assert ['r7-20261029...emo-20261029'] == ['r6-20261027', 'r5-20261027']
+E             
+E             At index 0 diff: 'r7-20261029' != 'r6-20261027'
+E             Left contains 3 more items, first extra item: 'r5-20261027'
+E             Use -v to get more diff
+
+tests/test_published_evaluations.py:341: AssertionError
+___________ test_public_launcher_ignores_snapshot_enable_environment ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-379/test_public_launcher_ignores_s0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d315f022390>
+
+    def test_public_launcher_ignores_snapshot_enable_environment(tmp_path, monkeypatch):
+        source = Path(__file__).resolve().parents[1] / "scripts/serve_public.py"
+        spec = importlib.util.spec_from_file_location("snapshot_public_launcher_integration", source)
+        launcher = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(launcher)
+        project = tmp_path / "public-project"
+        monkeypatch.setattr(launcher, "__file__", str(project / "scripts/serve_public.py"))
+        for name in (
+            "public-evaluations.json",
+            "published-evaluations/r6-20261027.json",
+            "published-evaluations/r5-20261027.json",
+        ):
+            path = project / "public-evidence" / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("{}")
+        (project / "scenarios").mkdir()
+        (project / "scenarios/INDEX.yaml").write_text('{"scenarios":[]}')
+        monkeypatch.setenv("HEADROOM_PUBLIC_HOST", "headroom.example")
+        monkeypatch.setenv("HEADROOM_SNAPSHOT_SUBMISSIONS_ENABLED", "true")
+        observed = {}
+    
+        def build(config):
+            observed["settings"] = config
+            return integrated_app(config)
+    
+        def inspect(app, **options):
+            assert options == {"host": "127.0.0.1", "port": 8766, "proxy_headers": False}
+            with TestClient(app) as client:
+                config = client.get("/api/config").json()
+                assert config["snapshot_submissions"]["enabled"] is False
+                assert client.post("/api/snapshots", content=b"invalid").status_code == 503
+                assert app.state.snapshots.thread is None
+                assert app.state.snapshots.expiry_thread.is_alive()
+            observed["inspected"] = True
+    
+        monkeypatch.setattr(launcher, "create_app", build)
+        monkeypatch.setattr(launcher.uvicorn, "run", inspect)
+>       launcher.main()
+
+tests/test_snapshot_integration.py:405: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/serve_public.py:40: in main
+    entries = _registry(source_root)
+              ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+root = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-379/test_public_launcher_ignores_s0/public-project/public-evidence')
+
+    def _registry(root):
+        try:
+            with open_regular(root, "public-evaluations.json", 65536) as handle:
+                document = json.load(handle)
+        except FileNotFoundError:
+            return []
+        if not isinstance(document, dict) or document.get("version") != 1:
+>           raise ValueError("Invalid publication manifest")
+E           ValueError: Invalid publication manifest
+
+headroom/api/evaluations.py:184: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_published_evaluations.py::test_reviewed_public_suites_keep_fixed_denominators_and_private_data_out
+FAILED tests/test_snapshot_integration.py::test_public_launcher_ignores_snapshot_enable_environment
+2 failed in 1.13s

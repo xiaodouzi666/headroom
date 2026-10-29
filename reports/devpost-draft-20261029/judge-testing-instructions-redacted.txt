@@ -1,0 +1,38 @@
+HEADROOM — PRIVATE TESTING INSTRUCTIONS FOR JUDGES AND ORGANIZERS
+Prepared 2026-10-29. Keep this attachment and its credential private.
+
+Working demo: https://headroom.tail45186b.ts.net/
+Source and setup: https://github.com/xiaodouzi666/headroom
+
+1. Open the demo without signing in. Verified runs contains four historical
+successes and two unsuccessful cases, with diagnoses, allocation stacks,
+patches and verification. Results contains campaign results and the measured
+diagnosis comparison. These views do not call a model.
+
+2. To run an example, open Run, choose "S3 Eval No Grad Missing" and verify that
+"Reclaim headroom" is selected automatically. Keep the default policy and click
+Start analysis once. This launches a real GPU/model job; a fresh run can succeed
+or fail. Its timeline and files show the actual result. The recorded successful
+s3 run is also available under "Browser demonstration" in Results.
+
+3. To test your own Python training script, use Run -> Paste a script, enter the
+script, then enter the credential below in the "Judge access token" field.
+Choose the appropriate memory target and click Start analysis. Do not put the
+credential in a URL, source file, public project description or GitHub issue.
+
+Judge access token: [PRIVATE TOKEN INSERTED ONLY IN THE PRIVATE ATTACHMENT]
+
+This credential grants only the app's judge-script workflow. It is not a
+Nebius or Tavily API key and does not grant shell access.
+
+Current service limits: one new run per IP per hour, up to two waiting jobs,
+up to eight minutes per job, and a shared sponsored-credit allowance. The judge
+script workflow currently shares these limits; the credential does not bypass
+them. Snapshot uploads remain paused after unsuccessful diagnosis validation.
+Recorded results and downloadable evidence stay available without a token.
+
+Numerical evidence differs by workload. The separate successful s3 demo has
+20 exactly matching losses and a 73.378694% peak reduction; this is not added
+to the latest fixed-nine campaign. The latest campaign reached one of nine
+memory targets. Please use the current RESULTS documentation for the detailed
+successes, failures and comparison boundaries.

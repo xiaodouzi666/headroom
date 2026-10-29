@@ -10,7 +10,6 @@ from test_orchestrator import search_run
 
 from headroom.api.app import ApiSettings, create_app
 from headroom.api.security import artifact_relative
-from headroom.lab.runner import PROJECT_ROOT
 from headroom.orchestrator import RunCancelled
 
 BACKUP_ID = "a" * 32
@@ -19,7 +18,7 @@ BACKUP_ID = "a" * 32
 @pytest.fixture
 def settings(tmp_path):
     return ApiSettings(
-        project_root=PROJECT_ROOT,
+        project_root=tmp_path,
         data_root=tmp_path / "api",
         db_path=tmp_path / "api-store.db",
         run_root=tmp_path / "jobs",

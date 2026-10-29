@@ -7,14 +7,14 @@ repos:
         language: system
         types_or: [python, pyi]
         # Archived target inputs retain their original source hashes.
-        exclude: ^reports/multicapture-wrapper-20261024/cpu-parent-evidence/
+        exclude: ^reports/(multicapture-wrapper-20261024/cpu-parent-evidence/|final48h-closing-regression-20261029/[^/]+\.py$)
       - id: ruff-format
         name: ruff-format
         entry: .venv/bin/ruff format --check
         language: system
         types_or: [python, pyi]
         # Archived target inputs retain their original source hashes.
-        exclude: ^reports/multicapture-wrapper-20261024/cpu-parent-evidence/
+        exclude: ^reports/(multicapture-wrapper-20261024/cpu-parent-evidence/|final48h-closing-regression-20261029/[^/]+\.py$)
       - id: gitleaks
         name: gitleaks
         entry: .tools/bin/gitleaks protect --staged --redact --no-banner

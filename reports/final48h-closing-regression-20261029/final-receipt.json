@@ -1,0 +1,197 @@
+{
+  "schema": "headroom.final48h.closing-engineering-check.v1",
+  "completed_at_utc": "2026-10-29T04:56:30.796536+00:00",
+  "full_source_head": "e6cf7a220bd59846e74e057a1a972526e514e2ed",
+  "one_full_run_only": true,
+  "full_receipt": "reports/final48h-closing-regression-20261029/full-regression-20261029T042732Z-b4d55445-receipt.json",
+  "full_result": {
+    "passed": 4182,
+    "failed": 185,
+    "errors": 18,
+    "exit_code": 1,
+    "pytest_seconds": 653.25,
+    "driver_seconds": 655.167015224928,
+    "source_entries": 436,
+    "source_unchanged": true
+  },
+  "focused_results": [
+    {
+      "name": "non_cpu",
+      "selected": 158,
+      "started_at_utc": "2026-10-29T04:45:34.226051+00:00",
+      "log": "non_cpu-focused.log",
+      "status": "completed",
+      "exit_code": 1,
+      "elapsed_seconds": 70.20087611908093,
+      "summary": "22 failed, 136 passed in 69.22s (0:01:09)",
+      "log_sha256": "9593ae4ae6b397d1c3645743a16b4503bba58b1388b7878853d6f732d51872d6"
+    },
+    {
+      "name": "api_isolation",
+      "selected": 16,
+      "started_at_utc": "2026-10-29T04:49:28.928542+00:00",
+      "log": "api_isolation-focused.log",
+      "pid": 1879475,
+      "status": "completed",
+      "exit_code": 0,
+      "elapsed_seconds": 3.4203417690005153,
+      "summary": "16 passed in 2.89s",
+      "log_sha256": "e94c24c9465d750cd938b7d97833d79d13a3485529725cab9a7aa83bed659558"
+    },
+    {
+      "name": "retention_capability",
+      "selected": 3,
+      "started_at_utc": "2026-10-29T04:49:32.349293+00:00",
+      "log": "retention_capability-focused.log",
+      "pid": 1879608,
+      "status": "completed",
+      "exit_code": 0,
+      "elapsed_seconds": 0.765419360017404,
+      "summary": "3 passed in 0.46s",
+      "log_sha256": "11523d8e58b0bef64748b5426fb83c42626f33fe1eb9edbc5bb754ab39e6658a"
+    },
+    {
+      "name": "cpu_representatives",
+      "selected": 13,
+      "started_at_utc": "2026-10-29T04:49:33.115055+00:00",
+      "log": "cpu_representatives-focused.log",
+      "pid": 1879626,
+      "status": "completed",
+      "exit_code": 0,
+      "elapsed_seconds": 74.2123125679791,
+      "summary": "13 passed in 73.94s (0:01:13)",
+      "log_sha256": "9ee24841e24f5c498486374526d9994a86f3a8705756bf01f9f2725fabfa4814"
+    },
+    {
+      "name": "excluded_and_timing",
+      "selected": 10,
+      "started_at_utc": "2026-10-29T04:53:42.113740+00:00",
+      "log": "excluded_and_timing-focused.log",
+      "pid": 1884176,
+      "status": "completed",
+      "exit_code": 1,
+      "elapsed_seconds": 15.75086969602853,
+      "summary": "1 failed, 9 passed in 15.25s",
+      "log_sha256": "3c375ea9693b39918a69ad0d3036f4dd1f7a5d8de86a377ceb6b4af25760aa7d"
+    }
+  ],
+  "focused_commands": "See focused-result.json, remaining-focused-result.json and last-focused-result.json; all include explicit node IDs.",
+  "original_focused_deadline_utc": "2026-10-29T04:55:34.224574+00:00",
+  "last_focused_finished_at_utc": "2026-10-29T04:53:57.896831+00:00",
+  "second_full_run": false,
+  "unrechecked_cpu_nodes": [
+    "tests/test_in_backward_adamw.py::test_parameter_callbacks_do_not_inflate_lab_logical_updates",
+    "tests/test_in_backward_adamw.py::test_twenty_cpu_updates_match_every_parameter_and_optimizer_state[options0]",
+    "tests/test_in_backward_adamw.py::test_twenty_cpu_updates_match_every_parameter_and_optimizer_state[options1]",
+    "tests/test_in_backward_adamw.py::test_twenty_cpu_updates_match_every_parameter_and_optimizer_state[options2]",
+    "tests/test_in_backward_adamw.py::test_unsupported_usage_fails_instead_of_silently_claiming_equivalence",
+    "tests/test_lab_deadline.py::test_real_cpu_soft_timeout_retains_complete_capture_and_readonly_clock",
+    "tests/test_lab_deadline.py::test_real_cpu_swallowed_soft_timeout_cannot_become_completed[0]",
+    "tests/test_lab_deadline.py::test_real_cpu_swallowed_soft_timeout_cannot_become_completed[20]",
+    "tests/test_lab_deadline.py::test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline[blocked]",
+    "tests/test_lab_deadline.py::test_real_cpu_uncapturable_target_hits_unchanged_hard_deadline[ignored]",
+    "tests/test_lab_finalize.py::test_real_cpu_hard_stop_during_serialization_keeps_partial_timeout",
+    "tests/test_pairing.py::test_real_cpu_default_verifier_produces_auditable_pairing[s1]",
+    "tests/test_pairing.py::test_real_cpu_default_verifier_produces_auditable_pairing[s3]",
+    "tests/test_pairing.py::test_real_cpu_default_verifier_produces_auditable_pairing[s4]",
+    "tests/test_runner.py::test_adamw_steps_and_all_three_seeds_are_deterministic",
+    "tests/test_runner.py::test_infinite_loop_timeout_30_seconds_cleans_container_and_children",
+    "tests/test_runner.py::test_keys_absent_and_source_read_only",
+    "tests/test_subprocess_reference.py::test_three_real_cpu_pairs_use_independent_subprocess_controller[adamw]",
+    "tests/test_subprocess_reference.py::test_three_real_cpu_pairs_use_independent_subprocess_controller[hf_trainer]",
+    "tests/test_subprocess_reference.py::test_three_real_cpu_pairs_use_independent_subprocess_controller[sgd]",
+    "tests/test_verify_checkpoint_reference.py::test_real_cpu_wrapper_attests_transformed_source_original_argv_and_twenty_updates",
+    "tests/test_verify_runner.py::test_cpu_pair_is_identical_and_half_model_is_rejected",
+    "tests/test_watch.py::test_real_cpu_supported_flags_match_repair_lab_environment"
+  ],
+  "unresolved_checks": [
+    {
+      "nodeid": "tests/test_api_deadline.py::test_waiting_job_expires_without_starting_and_slow_report_does_not_delay_watchdog",
+      "state": "failed_again",
+      "reason": "Second submission with deadline=1.2 raises AdmissionError(504): Source preparation exceeded its admission deadline before the intended queued-wait assertions.",
+      "product_impact": "A real test failure under this guarded environment; root cause and applicability to normal deployment deadlines remain unresolved. No claim of no product impact.",
+      "temporary_evidence": "deadline-temporary-state.json"
+    },
+    {
+      "nodeid": "tests/test_runtime_image.py::test_build_wrapper_uses_synced_project_python_without_dotenv_or_system_python",
+      "state": "guard_refused",
+      "reason": "The offline guard deliberately refuses /bin/bash scripts/build_lab_image.sh --prepare-only; no actual build/network was allowed."
+    },
+    {
+      "nodeid": "tests/test_verify_runner.py::test_existing_saved_lab_result_cannot_supply_missing_parameter_evidence",
+      "state": "additional_historical_copy_not_prepared",
+      "reason": "The historical loop also requests another saved result.json outside the three isolated JSON copies; access remained denied."
+    }
+  ],
+  "isolation": {
+    "provider_environment_removed": true,
+    "parent_and_spawn_probes_passed": true,
+    "dns_inet_denied": true,
+    "gpu_denied": true,
+    "production_credentials_and_databases_denied": true,
+    "historical_json_read_copies": 3,
+    "real_model_calls": 0,
+    "gpu_jobs": 0
+  },
+  "cpu_cleanup": "cpu-cleanup.json: all 17 saved result records have cleanup_verified=true.",
+  "source_changes_after_original_full": [
+    "tests/test_availability.py",
+    "tests/test_before_evidence_downloads.py",
+    "tests/test_published_evaluations.py",
+    "tests/test_search_mode_interfaces.py",
+    "tests/test_snapshot_integration.py"
+  ],
+  "production_code_changed": false,
+  "test_fixture_changes_this_agent": [
+    "tests/test_availability.py",
+    "tests/test_before_evidence_downloads.py",
+    "tests/test_search_mode_interfaces.py"
+  ],
+  "all_repository_ruff_check": {
+    "command": [
+      ".venv/bin/ruff",
+      "check",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "All checks passed!\n"
+  },
+  "fixture_ruff_format_and_diff_check": [
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "tests/test_availability.py",
+        "tests/test_before_evidence_downloads.py",
+        "tests/test_search_mode_interfaces.py"
+      ],
+      "exit_code": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "tests/test_availability.py",
+        "tests/test_before_evidence_downloads.py",
+        "tests/test_search_mode_interfaces.py"
+      ],
+      "exit_code": 0,
+      "stdout": "3 files already formatted\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "interpretation": "The original full suite failed and is preserved. Focused passes are separate observations and must never be combined into a new full-suite pass or a live repair success."
+}

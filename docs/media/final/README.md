@@ -1,10 +1,10 @@
 # Final demo media preparation
 
-Status: **raw recording handoff available** on 2026-10-29. Parts 1–5 include actual pages, failed attempts and a new successful s3 live run. Part 5 supplies the current Results/Home pages and the unsuccessful F5 environment-recovery test. The final edited, narrated submission video and its public URL are still pending.
+Status: **Parts 1–6 delivered for local editing** on 2026-10-29. Part 6 supplies four updated-font page and completed-result clips, totaling **120.08 seconds**, with the header status light removed. It shows existing real results; it is not a new live execution. Part 4 remains the original recording of the actual successful s3 submission and execution. Part 5 retains the unsuccessful F5 environment-recovery test. The final edited, narrated submission video and its public URL are still pending.
 
 ## Current recording handoff
 
-The current Home still image includes the 2026-10-29 readability update. Existing raw clips retain their original font sizes and header decoration; their measured results remain unchanged. They are not a newly edited final video.
+The current Home still image and Part 6 clips include the 2026-10-29 readability update. Use Part 6 for the latest Home, Verified runs, Results and completed s3 detail shots. Parts 1–5 retain their original typography and measured results; keep Part 4 for evidence of the actual live submission and execution. None of these raw clips is the final edited video.
 
 Frank's latest direction: Codex records each implemented user-facing feature as
 separate real-operation clips; Opus edits, narrates and captions the final
@@ -323,3 +323,54 @@ Read [RESULTS](../../RESULTS.md) before recording final narration.
 Before delivery, check duration, 1920×1080 dimensions, audio and subtitle timing.
 The final MP4, duration, public video URL and Devpost submission state are still
 to be recorded by the main task after Frank reviews the local edit.
+
+
+## Part 6 — readable page and completed-result refresh
+
+Delivered archive: `clips/headroom-demo-clips-part6-readability-20261029.zip`,
+**47,549,749 bytes**, 53 files. SHA256:
+`67d8f3d74d9811be7d59990515c244cb65e06c9c36eeb56d56fb0dfa9befcca5`.
+The archive and its JSON receipt are in Frank's local
+`Downloads/Headroom-demo-materials/`; the local ZIP hash was independently
+checked against the server receipt. See the [public delivery receipt](../../../reports/final48h-readability-clips-20261029/delivery.json).
+
+The four recommended clips total **120.08 seconds**, each at 1920×1080,
+25 fps and without audio, with both MP4 and original WebM available.
+They show the actual published interface from readability revision `e6cf7a2`:
+larger body text, readable labels and no header breathing light. No page text,
+result, animation or synthetic data was inserted during capture.
+
+| Folder | Duration | Recorded content |
+| --- | ---: | --- |
+| `01-home` | 19.76 s | Current Home and product workflow. |
+| `02-verified` | 26.60 s | Historical gallery, including successful and unsolved cards. |
+| `03-results` | 24.20 s | R7 fixed-nine result, diagnosis comparison and the separate existing s3 demo. |
+| `04-existing-s3-details-retry` | 49.52 s | Existing completed s3 timeline, chart, diagnosis, allocation stack, diff, verification and Sources. |
+
+These are **existing real result displays, not a new live execution**. The s3
+run is `d9926ee7bb624e7fb22540bbc4c92cdc`; Part 4's
+`06-s3-live-after-budget-fix` remains the genuine recording of its submission
+and execution. Use Part 6 as readable replacement page/detail shots and retain
+Part 4's actual live-start footage. The earlier editing brief's Home/Results
+shot references may now use Part 6; its evidence and narration limits still
+apply. R7 remains 1/9 against the unchanged 6/9 gate.
+
+The extra `04-existing-s3-details` folder preserves the first, 46.64-second
+partial attempt and its error receipt. A recording selector matched a hidden
+stack block; one authorized retry selected visible content and completed.
+The partial attempt is not included in the 120.08-second recommended total
+and does not establish complete diff/verification coverage. The first three
+clips and all earlier packages remain unchanged.
+
+The package includes its own README, capture/action receipts, source URLs,
+run ID, screenshots, media properties and per-file SHA256 manifest.
+Only GET/HEAD reached Headroom: no submission, model call, GPU run, upload or
+service restart occurred. Exact matching against existing private credential
+values found no leaks, and the final package-folder gitleaks scan passed.
+No owner session, cookie, judge token, environment file or private allocation
+binding is included. Editing the delivered media needs no server credentials.
+
+The local Chinese editing note is `README-最新剪辑交接-Part6.txt` in the same
+Downloads folder. Opus still needs to produce and validate the final narrated,
+captioned video at 1920×1080 and at most 170 seconds; Frank then supplies its
+public URL for the final submission.

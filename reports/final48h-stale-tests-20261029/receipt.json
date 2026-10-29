@@ -1,0 +1,55 @@
+{
+  "schema": "headroom.final48-stale-test-repair.v1",
+  "created_at_utc": "2026-10-29T04:43:19.601896+00:00",
+  "source_commit": "e6cf7a220bd59846e74e057a1a972526e514e2ed",
+  "changed_test_files": {
+    "tests/test_published_evaluations.py": "b323272db83fec97b19bec99742a16fee08cc5817ed1d29a4b7a2b533863c5eb",
+    "tests/test_snapshot_integration.py": "95d32fe9d6c9c376e9fd70491cf38e512f9d18a5d81722068f8b44237e5ddf29"
+  },
+  "findings": [
+    {
+      "test": "tests/test_published_evaluations.py::test_reviewed_public_suites_keep_fixed_denominators_and_private_data_out",
+      "cause": "Exact catalog assertion predates R7, Watch and separate browser demo publications",
+      "change": "Use the reviewed five-entry order; preserve existing fixed-nine, six-target and privacy/numerical assertions"
+    },
+    {
+      "test": "tests/test_snapshot_integration.py::test_public_launcher_ignores_snapshot_enable_environment",
+      "cause": "Placeholder {} manifest no longer satisfies real launcher registry/campaign validation",
+      "change": "Use a valid version-1 manifest and an empty offline_fixture campaign in tmp_path; real validation and publication copy still execute"
+    },
+    {
+      "test": "tests/test_public_access.py::test_disabled_submission_cannot_be_bypassed_with_judge_token",
+      "cause": "Full log shows dir_fd-relative runs path rejected by external closing guard, not stale catalog assertion",
+      "change": "No change; delegated guard repair is separate"
+    }
+  ],
+  "before": {
+    "command": ".venv/bin/python -m pytest -q tests/test_published_evaluations.py::test_reviewed_public_suites_keep_fixed_denominators_and_private_data_out tests/test_snapshot_integration.py::test_public_launcher_ignores_snapshot_enable_environment",
+    "result": "2 failed in 1.13s",
+    "log": "before.log"
+  },
+  "after": {
+    "command": ".venv/bin/python -m pytest -q tests/test_published_evaluations.py::test_reviewed_public_suites_keep_fixed_denominators_and_private_data_out tests/test_snapshot_integration.py::test_public_launcher_ignores_snapshot_enable_environment tests/test_published_evaluations.py::test_invalid_publication_is_unavailable_without_diagnostics",
+    "result": "5 passed in 1.15s",
+    "log": "after.log",
+    "expanded_case_count": 5
+  },
+  "checks": [
+    "ruff check: passed",
+    "ruff format --check: passed",
+    "git diff --check: passed"
+  ],
+  "boundaries": {
+    "business_source_modified": false,
+    "test_public_access_modified": false,
+    "full_suite_rerun": false,
+    "provider_calls": 0,
+    "gpu_runs": 0,
+    "external_requests": 0,
+    "production_database_access": false,
+    "public_switches_modified": false,
+    "ledger_modified": false,
+    "committed": false
+  },
+  "offline_controls": "Existing autouse fixtures deny network/provider calls; launcher uses a tmp_path project and real in-process ASGI TestClient with an offline availability monitor. No uvicorn listener starts."
+}

@@ -26,7 +26,7 @@ This is the submission preparation report. It does not record a completed Devpos
 | User's mobile data check | [Mobile access evidence](mobile-access-20261029/) |
 | Versioned documentation numbers | [R7 supplement](final48h-docs-20261029/numbers-r7-v1.json) |
 
-Post-run fixes preserve invalid diagnosis evidence, align the snapshot prompt and actual output limit, add one narrowly scoped zero-dispatch environment recovery, and publish separate campaign/Watch/browser-demo results. Related focused checks passed: 140 snapshot/orchestrator checks, 51 number-verifier checks, 75 recovery checks, 29 Results UI checks and 10 launcher checks. These groups overlap and must not be summed into a unique test count. No additional full regression has been claimed.
+Post-run fixes preserve invalid diagnosis evidence, align the snapshot prompt and actual output limit, add one narrowly scoped zero-dispatch environment recovery, and publish separate campaign/Watch/browser-demo results. Related focused checks passed: 140 snapshot/orchestrator checks, 51 number-verifier checks, 75 recovery checks, 29 Results UI checks and 10 launcher checks. These groups overlap and must not be summed into a unique test count. The single final offline full regression on source e6cf7a2 completed with 4,182 passed, 185 failed and 18 setup errors in 653.25 seconds. Its failed receipt is retained. Most failures arose from the external guard misinterpreting directory-relative paths or Docker container command arguments; the exact classification and isolated focused checks are in the closing-regression report. Two stale test fixtures were independently reproduced and corrected, with five related checks passing; see the [fixture repair report](final48h-stale-tests-20261029/README.md). It is not a passing regression result, and no second full run is planned. The guarded follow-up first returned 136 passed / 22 failed; after temporary-project isolation and harness corrections, separate groups passed 16, 3 and 13 checks. The final excluded-node/deadline group returned 9 passed / 1 failed. The short spawn-deadline test remains failed; 23 CPU nodes and two guarded historical/shell cases were not fully revalidated. These groups overlap and must not be combined into a new full-suite total. See the [closing regression report](final48h-closing-regression-20261029/README.md).
 
 The number check verified 1,927 claims against present raw sources, with zero errors, including README and Devpost displayed metrics. It is not a complete automated prose audit of every file. The earlier RESULTS history is retained.
 
@@ -44,17 +44,35 @@ The number check verified 1,927 claims against present raw sources, with zero er
 - Rootless Funnel and the user service remain the deployment path; visitors need no Tailscale client.
 - Original clips Part1–5 have been delivered to the user's local Downloads folder. They are source material, not the final narrated video. Part5 includes the final Results page, enabled Home entry and the failed clean-checkout recovery. Its ZIP SHA256 is 56a6cbd380320d3b7b3c4ec7c04f6ece4f46a95baf36483f520961e1f898a0ec. A supplemental 42.84-second gallery clip now shows the refreshed s3/s4 cards; headroom-gallery-refresh-20261029.zip was delivered with matching local/server SHA256 febc63add2414f0f55b1b0b7e6d5e39c021101fcf6aaf22b43d0d92cfa03f0f6.
 
+The supplementary Part 6 has also been delivered with matching SHA256: four
+1920×1080 clips totalling 120.08 seconds show the new typography and existing
+Home/Verified/Results/s3 details. This is read-only footage, not a new live run;
+Part 4 remains the actual submission recording. See [delivery receipt](final48h-readability-clips-20261029/delivery.json).
+
 ## Funding
 
 The sole FINAL_48H allocation remains $6.43 net / $7.79 gross, gift credit only, no recharge. After the clean-checkout recovery, the conservative charged total is $2.067736672. Some complete actual costs remain unknown; bounds are not relabelled as actual provider bills. The two browser demonstrations together account for $0.06952418 within their unchanged $0.30 aggregate scope, leaving $0.23047582 for the public demo. Historical records and previous unknown costs remain intact.
 
-The provider account balance has not been refreshed in this report. The original confirmed balance and authorized allowance are not a new billing-page observation.
+A fresh authenticated provider-balance check on 2026-10-29 confirmed that the account remains above the planned $8 reserve. The amount and transaction details are retained in a private receipt. The separate Builder grant was then located and redeemed through the provider promo-code interface; the new gift transaction and increased balance were visibly verified. The promo email states credits do not expire once applied. No card payment or new allocation was made; the approved model and demo caps remain unchanged.
 
 ## Remaining user-dependent steps
 
 1. Finish the local Opus edit, at most 170 seconds, using real footage and the current result wording; upload the final video as Public and provide its URL.
 2. Replace the video placeholders and complete Devpost. Record the actual project URL and Submitted confirmation.
-3. Verify the Devpost testing field and supply judge credentials privately. The existing request and spending limits do not establish unrestricted free judging-period access; resolve the [official access requirement](submission-requirements-20261029.md) before claiming this is complete.
+3. Agree the judging-period access and gift-credit allowance. The existing judge credential and instructions have already been supplied through the verified private Additional info attachment, after Frank's explicit approval. Current shared request/spending limits have not been confirmed to satisfy the [official access wording](submission-requirements-20261029.md); this is an unresolved arrangement, not a disqualification determination.
 4. Perform the planned closing availability and account-balance check before the deadline. The judging period ends on December 16 at 04:00 Beijing time.
 
 The original 6/9 repair requirement and saved-snapshot validation remain unmet. Publishing a report, creating a tag, passing offline tests, or preparing submission fields does not change those outcomes.
+
+## Devpost draft saved — 2026-10-29
+
+The existing entry is now named Headroom and its project story, links, tags and technical feedback are saved. The [project preview](https://devpost.com/software/headroom-8vfuwj) explicitly shows INCOMPLETE SUBMISSION; the workflow remains DRAFT / 3 of 5 steps. The supplied personal declarations and career-value response are saved. The approved Home image and private judge attachment are uploaded and verified. Moderate learning is saved; no IRL city is claimed because Frank confirmed no attendance. The final video, judging-period access arrangements and final submission remain pending. The actual form and saved fields are recorded in [the draft report](devpost-draft-20261029/README.md).
+
+## Scheduled closing check
+
+A one-off task is scheduled for October 30 at 16:00 Beijing time, within the
+planned F8 window. It will check service/Funnel/public access, reserve, final
+links and publication, and run the one remaining F8 live smoke only if the
+existing authorization and readiness checks allow it. It must not repeat this
+turn's full regression or create a new spending allowance. Scheduling is not
+evidence that F8 has completed.

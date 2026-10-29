@@ -31,7 +31,7 @@ The implemented interface is **Run → Paste a script → Python training script
 
 The site's current configuration reports preset runs and judge scripts enabled, snapshot uploads disabled, and a maximum of one run per IP per hour. These are current capabilities, not a promise of unrestricted judging-period access.
 
-The official [Testing requirement](https://nebiusglobalaihackathon.devpost.com/rules) requires free access for the organizers and judges through the end of judging. If access is private, its credentials belong in the testing instructions. The current limits and finite demo allowance have not been confirmed to satisfy that requirement. Before final submission, verify the visibility of the Devpost testing field and provide the actual credential through the field intended for judges; do not paste it into publicly visible text. Browser access to the account is currently unavailable because local browser use is disabled in Work settings.
+The official [Testing requirement](https://nebiusglobalaihackathon.devpost.com/rules) requires free access for the organizers and judges through the end of judging. If access is private, its credentials belong in the testing instructions. The current limits and finite demo allowance have not been confirmed to satisfy that requirement. Before final submission, verify the visibility of the Devpost testing field and provide the actual credential through the field intended for judges; do not paste it into publicly visible text. Local Chrome access was restored on 2026-10-29. The actual Additional info page is labelled for judges and organizers; country is explicitly public. No dedicated Testing instructions field is present. Its Upload a File control is the available private attachment location. Frank approved uploading the existing judge credential and testing instructions. The file was saved in that private attachment control and its filename verified after reopening the form. The public Home image was also saved as the thumbnail and image-gallery item.
 
 ## Judge credential handoff
 
@@ -42,3 +42,7 @@ Supply any eventual credential through a private channel whose visibility has be
 ## Submission verification
 
 Frank completes the submission after the final video and chosen testing instructions are ready. Record the actual Devpost project URL and Submitted confirmation, and open the demo, repository and Public YouTube links from the submitted entry. No Submitted confirmation is recorded by this file.
+
+## Actual draft prepared — 2026-10-29
+
+[Headroom project preview](https://devpost.com/software/headroom-8vfuwj) now contains the saved name, tagline, current story, technology tags and both public links. The hackathon entry still says DRAFT / 3 of 5 steps; no Submitted confirmation exists. The separate technical feedback fields are saved, with the actual question mapping and proposed subjective ratings in [the draft report](../reports/devpost-draft-20261029/README.md). Personal eligibility and career-value answers are saved. Moderate learning is saved and no IRL event city is selected, matching Frank's explicit answers. The final video remains pending. The final Rules/Terms checkbox has not been selected. Do not infer submission from the existence of a project page.

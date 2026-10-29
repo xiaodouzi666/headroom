@@ -298,3 +298,118 @@ condition = "AND"
 regexTarget = "secret"
 paths = ['''^reports/live\-campaign\-20261025/mvp\-v4\-finance\-review\.json$''']
 regexes = ['''^a15ee9a357b4e0c41aeb46219081066c4d5a2299a777f8f87127dde60118026c$''']
+
+# Closing-check inventories: exact report paths AND recomputed public source SHA256s.
+[[rules.allowlists]]
+description = "Recomputed nonsecret source SHA256 in closing-check inventory"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/final48h\-closing\-regression\-20261029/final\-source\-inventory\.json$''']
+regexes = [
+    '''^32d42762fcf9bc01236196cd7ac52f189d9df3127f7495e4af52fe695008536d$''',
+    '''^39dad6e84796addf88c8cf7a63a98baba4370e2443b71ce707ec74a320fb05a3$''',
+    '''^3f3b7590863929549b0c91a3991df49e7cf78247ad35c7d87613cc5802a40d02$''',
+    '''^594fcc78924b9684c546a9b60cbb4bdfbb2b864e0c3b0ec597de252e72381fcd$''',
+    '''^5c938d9f26a8208e51b466973e054f1cf424d7906c4443b94e79bbda11230620$''',
+    '''^6567ca44cc51274c8e5eb01784da5c9df750b47eeaf7677d38358011af652a13$''',
+    '''^6e78c46022ed02d4960d1f21d3df12742dd2885f3ed13b5ec2c056daf2c10bcf$''',
+    '''^be9ab1f1726df69417f4bacf2b0ea1e4130bc6ffee3007abdedc549279b6a152$''',
+    '''^dc410ba0b7e27913756c20509cb688507878494bf863234e8dac7259d42c954f$''',
+    '''^ef71935e14d900a91191efa58c2f06175344ccf52a27654e4f282cb43b9030c6$''',
+    '''^f2eafb75d8ccd6626386b0566279e4bd62b2eaf900317489f6b040c2b2d894c0$''',
+]
+
+[[rules.allowlists]]
+description = "Recomputed nonsecret source SHA256 in closing-check inventory"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/final48h\-closing\-regression\-20261029/focused\-sources\-before\.json$''']
+regexes = [
+    '''^32d42762fcf9bc01236196cd7ac52f189d9df3127f7495e4af52fe695008536d$''',
+    '''^39dad6e84796addf88c8cf7a63a98baba4370e2443b71ce707ec74a320fb05a3$''',
+    '''^3f3b7590863929549b0c91a3991df49e7cf78247ad35c7d87613cc5802a40d02$''',
+    '''^594fcc78924b9684c546a9b60cbb4bdfbb2b864e0c3b0ec597de252e72381fcd$''',
+    '''^5c938d9f26a8208e51b466973e054f1cf424d7906c4443b94e79bbda11230620$''',
+    '''^6567ca44cc51274c8e5eb01784da5c9df750b47eeaf7677d38358011af652a13$''',
+    '''^6e78c46022ed02d4960d1f21d3df12742dd2885f3ed13b5ec2c056daf2c10bcf$''',
+    '''^be9ab1f1726df69417f4bacf2b0ea1e4130bc6ffee3007abdedc549279b6a152$''',
+    '''^dc410ba0b7e27913756c20509cb688507878494bf863234e8dac7259d42c954f$''',
+    '''^ef71935e14d900a91191efa58c2f06175344ccf52a27654e4f282cb43b9030c6$''',
+    '''^f2eafb75d8ccd6626386b0566279e4bd62b2eaf900317489f6b040c2b2d894c0$''',
+]
+
+[[rules.allowlists]]
+description = "Recomputed nonsecret source SHA256 in closing-check inventory"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/final48h\-closing\-regression\-20261029/last\-focused\-sources\-after\.json$''']
+regexes = [
+    '''^32d42762fcf9bc01236196cd7ac52f189d9df3127f7495e4af52fe695008536d$''',
+    '''^39dad6e84796addf88c8cf7a63a98baba4370e2443b71ce707ec74a320fb05a3$''',
+    '''^3f3b7590863929549b0c91a3991df49e7cf78247ad35c7d87613cc5802a40d02$''',
+    '''^594fcc78924b9684c546a9b60cbb4bdfbb2b864e0c3b0ec597de252e72381fcd$''',
+    '''^5c938d9f26a8208e51b466973e054f1cf424d7906c4443b94e79bbda11230620$''',
+    '''^6567ca44cc51274c8e5eb01784da5c9df750b47eeaf7677d38358011af652a13$''',
+    '''^6e78c46022ed02d4960d1f21d3df12742dd2885f3ed13b5ec2c056daf2c10bcf$''',
+    '''^be9ab1f1726df69417f4bacf2b0ea1e4130bc6ffee3007abdedc549279b6a152$''',
+    '''^dc410ba0b7e27913756c20509cb688507878494bf863234e8dac7259d42c954f$''',
+    '''^ef71935e14d900a91191efa58c2f06175344ccf52a27654e4f282cb43b9030c6$''',
+    '''^f2eafb75d8ccd6626386b0566279e4bd62b2eaf900317489f6b040c2b2d894c0$''',
+]
+
+[[rules.allowlists]]
+description = "Recomputed nonsecret source SHA256 in closing-check inventory"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/final48h\-closing\-regression\-20261029/last\-focused\-sources\-before\.json$''']
+regexes = [
+    '''^32d42762fcf9bc01236196cd7ac52f189d9df3127f7495e4af52fe695008536d$''',
+    '''^39dad6e84796addf88c8cf7a63a98baba4370e2443b71ce707ec74a320fb05a3$''',
+    '''^3f3b7590863929549b0c91a3991df49e7cf78247ad35c7d87613cc5802a40d02$''',
+    '''^594fcc78924b9684c546a9b60cbb4bdfbb2b864e0c3b0ec597de252e72381fcd$''',
+    '''^5c938d9f26a8208e51b466973e054f1cf424d7906c4443b94e79bbda11230620$''',
+    '''^6567ca44cc51274c8e5eb01784da5c9df750b47eeaf7677d38358011af652a13$''',
+    '''^6e78c46022ed02d4960d1f21d3df12742dd2885f3ed13b5ec2c056daf2c10bcf$''',
+    '''^be9ab1f1726df69417f4bacf2b0ea1e4130bc6ffee3007abdedc549279b6a152$''',
+    '''^dc410ba0b7e27913756c20509cb688507878494bf863234e8dac7259d42c954f$''',
+    '''^ef71935e14d900a91191efa58c2f06175344ccf52a27654e4f282cb43b9030c6$''',
+    '''^f2eafb75d8ccd6626386b0566279e4bd62b2eaf900317489f6b040c2b2d894c0$''',
+]
+
+[[rules.allowlists]]
+description = "Recomputed nonsecret source SHA256 in closing-check inventory"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/final48h\-closing\-regression\-20261029/remaining\-focused\-sources\-after\.json$''']
+regexes = [
+    '''^32d42762fcf9bc01236196cd7ac52f189d9df3127f7495e4af52fe695008536d$''',
+    '''^39dad6e84796addf88c8cf7a63a98baba4370e2443b71ce707ec74a320fb05a3$''',
+    '''^3f3b7590863929549b0c91a3991df49e7cf78247ad35c7d87613cc5802a40d02$''',
+    '''^594fcc78924b9684c546a9b60cbb4bdfbb2b864e0c3b0ec597de252e72381fcd$''',
+    '''^5c938d9f26a8208e51b466973e054f1cf424d7906c4443b94e79bbda11230620$''',
+    '''^6567ca44cc51274c8e5eb01784da5c9df750b47eeaf7677d38358011af652a13$''',
+    '''^6e78c46022ed02d4960d1f21d3df12742dd2885f3ed13b5ec2c056daf2c10bcf$''',
+    '''^be9ab1f1726df69417f4bacf2b0ea1e4130bc6ffee3007abdedc549279b6a152$''',
+    '''^dc410ba0b7e27913756c20509cb688507878494bf863234e8dac7259d42c954f$''',
+    '''^ef71935e14d900a91191efa58c2f06175344ccf52a27654e4f282cb43b9030c6$''',
+    '''^f2eafb75d8ccd6626386b0566279e4bd62b2eaf900317489f6b040c2b2d894c0$''',
+]
+
+[[rules.allowlists]]
+description = "Recomputed nonsecret source SHA256 in closing-check inventory"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/final48h\-closing\-regression\-20261029/remaining\-focused\-sources\-before\.json$''']
+regexes = [
+    '''^32d42762fcf9bc01236196cd7ac52f189d9df3127f7495e4af52fe695008536d$''',
+    '''^39dad6e84796addf88c8cf7a63a98baba4370e2443b71ce707ec74a320fb05a3$''',
+    '''^3f3b7590863929549b0c91a3991df49e7cf78247ad35c7d87613cc5802a40d02$''',
+    '''^594fcc78924b9684c546a9b60cbb4bdfbb2b864e0c3b0ec597de252e72381fcd$''',
+    '''^5c938d9f26a8208e51b466973e054f1cf424d7906c4443b94e79bbda11230620$''',
+    '''^6567ca44cc51274c8e5eb01784da5c9df750b47eeaf7677d38358011af652a13$''',
+    '''^6e78c46022ed02d4960d1f21d3df12742dd2885f3ed13b5ec2c056daf2c10bcf$''',
+    '''^be9ab1f1726df69417f4bacf2b0ea1e4130bc6ffee3007abdedc549279b6a152$''',
+    '''^dc410ba0b7e27913756c20509cb688507878494bf863234e8dac7259d42c954f$''',
+    '''^ef71935e14d900a91191efa58c2f06175344ccf52a27654e4f282cb43b9030c6$''',
+    '''^f2eafb75d8ccd6626386b0566279e4bd62b2eaf900317489f6b040c2b2d894c0$''',
+]

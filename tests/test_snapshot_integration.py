@@ -372,14 +372,22 @@ def test_public_launcher_ignores_snapshot_enable_environment(tmp_path, monkeypat
     spec.loader.exec_module(launcher)
     project = tmp_path / "public-project"
     monkeypatch.setattr(launcher, "__file__", str(project / "scripts/serve_public.py"))
-    for name in (
-        "public-evaluations.json",
-        "published-evaluations/r6-20261027.json",
-        "published-evaluations/r5-20261027.json",
-    ):
+    publications = {
+        "public-evaluations.json": {
+            "version": 1,
+            "campaigns": [{"id": "offline-fixture", "title": "Offline launcher fixture"}],
+        },
+        "published-evaluations/offline-fixture.json": {
+            "mode": "campaign",
+            "provenance": "offline_fixture",
+            "status": "finished",
+            "rows": [],
+        },
+    }
+    for name, document in publications.items():
         path = project / "public-evidence" / name
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("{}")
+        path.write_text(json.dumps(document))
     (project / "scenarios").mkdir()
     (project / "scenarios/INDEX.yaml").write_text('{"scenarios":[]}')
     monkeypatch.setenv("HEADROOM_PUBLIC_HOST", "headroom.example")

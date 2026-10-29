@@ -1,0 +1,60 @@
+{
+  "changed_at_utc": "2026-10-29T04:49:01.239739+00:00",
+  "before_sha256": {
+    "tests/test_availability.py": "af928a4df00c818d1bab53db2e8accbea275eea171744726085bcfaeef4124bb",
+    "tests/test_before_evidence_downloads.py": "dd10a7cc174e275b22951e29729bd002b515f299608f8504f9f174535ba2a028",
+    "tests/test_search_mode_interfaces.py": "154f184d160800f9e14906548edf43777da39216d031e83bfc3d3d91bc093599"
+  },
+  "after_sha256": {
+    "tests/test_availability.py": "a2505fc7568feaca4ed5ace6e393ab381bbd26ccaf043183ed208b3474be9976",
+    "tests/test_before_evidence_downloads.py": "d3150d64283946dcda5c89bff8da3fa1f874d37d7838f5230e003fc62efdcb15",
+    "tests/test_search_mode_interfaces.py": "2d1ef8457a56f7958812e78cf3d644ae741a431b31fa9d753ff3f29c71afd662"
+  },
+  "change": "Bind ApiSettings.project_root to pytest tmp_path; all existing security assertions and production code preserved.",
+  "post_validation_style_cleanup": {
+    "changed_at_utc": "2026-10-29T04:52:58.932212+00:00",
+    "description": "Remove only now-unused imports and format keyword argument layout; no behavioral change or assertion changes."
+  },
+  "final_sha256": {
+    "tests/test_availability.py": "8b0d34ecd9714c37883289a588c5311b5966a8fcb11afe70c5002170eec0a4e5",
+    "tests/test_before_evidence_downloads.py": "53f89a06eb43af5783f5b8843fa2ac5f3c41ba32dc35ada4aaae59fd62fc92a3",
+    "tests/test_search_mode_interfaces.py": "26b5bb13fb23dcf294456e9c3217c13fa7388a86f583d65511b940d394dae23d"
+  },
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "tests/test_availability.py",
+        "tests/test_before_evidence_downloads.py",
+        "tests/test_search_mode_interfaces.py"
+      ],
+      "exit_code": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "tests/test_availability.py",
+        "tests/test_before_evidence_downloads.py",
+        "tests/test_search_mode_interfaces.py"
+      ],
+      "exit_code": 0,
+      "stdout": "3 files already formatted\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

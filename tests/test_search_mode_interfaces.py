@@ -19,7 +19,6 @@ from headroom.evaluation import (
     run_campaign,
     run_fixture_campaign,
 )
-from headroom.lab.runner import PROJECT_ROOT
 
 cli = CliRunner()
 
@@ -153,7 +152,7 @@ def test_api_submission_persists_actual_mode_and_forwards_request(tmp_path, mode
         return {"status": "needs_human", "target_met": False}
 
     settings = ApiSettings(
-        project_root=PROJECT_ROOT,
+        project_root=tmp_path,
         data_root=tmp_path / "api",
         db_path=tmp_path / "store.db",
         run_root=tmp_path / "jobs",
@@ -187,7 +186,10 @@ def test_api_rejects_invalid_mode_without_admission(tmp_path, mode):
         pytest.fail("Invalid submission must never reach a worker")
 
     settings = ApiSettings(
-        data_root=tmp_path / "api", db_path=tmp_path / "store.db", run_root=tmp_path / "jobs"
+        project_root=tmp_path,
+        data_root=tmp_path / "api",
+        db_path=tmp_path / "store.db",
+        run_root=tmp_path / "jobs",
     )
     with TestClient(create_app(settings, worker=forbidden)) as client:
         result = client.post("/api/runs", json={"script_text": "print(1)", "search_mode": mode})

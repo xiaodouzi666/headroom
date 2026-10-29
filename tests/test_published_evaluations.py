@@ -338,7 +338,13 @@ def test_reviewed_public_suites_keep_fixed_denominators_and_private_data_out():
     root = Path(__file__).resolve().parents[1] / "public-evidence"
     with client(root) as api:
         listing = api.get("/api/evaluations").json()["evaluations"]
-        assert [item["id"] for item in listing] == ["r6-20261027", "r5-20261027"]
+        assert [item["id"] for item in listing] == [
+            "r7-20261029",
+            "r6-20261027",
+            "r5-20261027",
+            "watch-20261029",
+            "live-demo-20261029",
+        ]
         for identifier, targets, causes, blocked in (
             ("r6-20261027", 2, 3, 5),
             ("r5-20261027", 3, 6, 0),

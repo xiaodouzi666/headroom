@@ -1,0 +1,95 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+.........F                                                               [100%]
+=================================== FAILURES ===================================
+_ test_waiting_job_expires_without_starting_and_slow_report_does_not_delay_watchdog _
+
+queue = (<headroom.api.queue.RunQueue object at 0x7ba274207fb0>, PosixPath('/tmp/pytest-of-xiaodouzi/pytest-385/test_waiting_job_expires_witho0/train.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ba27421a390>
+
+    def test_waiting_job_expires_without_starting_and_slow_report_does_not_delay_watchdog(
+        queue, monkeypatch
+    ):
+        from headroom.api import queue as module
+    
+        jobs, script = queue
+        first = submit(jobs, script)
+        wait_until(lambda: (jobs.run_root / first / "started").exists())
+        jobs.deadline = 1.2
+        render = module.generate_report
+        report_started = __import__("threading").Event()
+        report_release = __import__("threading").Event()
+    
+        def slow_report(directory, *args, **kwargs):
+            if Path(directory).name != first:
+                report_started.set()
+                report_release.wait(8)
+            return render(directory, *args, **kwargs)
+    
+        monkeypatch.setattr(module, "generate_report", slow_report)
+        admitted = jobs.store.get_run(first)["api_admitted_at"]
+>       second = submit(jobs, script)
+                 ^^^^^^^^^^^^^^^^^^^^
+
+tests/test_api_deadline.py:152: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_api_deadline.py:74: in submit
+    queue.submit(
+headroom/api/queue.py:471: in submit
+    prepared, _ = self._prepare(prepare, deadline)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <headroom.api.queue.RunQueue object at 0x7ba274207fb0>
+prepare = functools.partial(<function fake_prepare at 0x7ba276076340>, PosixPath('/tmp/pytest-of-xiaodouzi/pytest-385/test_waiting_job_expires_witho0/train.py'))
+deadline = 1805388.0340612559
+
+    def _prepare(self, prepare, deadline):
+        if self.mode == "thread":
+            # Trusted in-process fixtures only. Production always uses spawn.
+            return prepare(deadline=deadline), True
+        receiver, sender = multiprocessing.get_context("spawn").Pipe(duplex=True)
+        process = multiprocessing.get_context("spawn").Process(
+            target=_prepare_entry, args=(prepare, deadline, sender, os.getpid()), daemon=True
+        )
+        result, outcome, identity, ready = None, None, None, False
+        try:
+            process.start()
+            identity = _preparation_identity(process.pid)
+            sender.close()
+            while not self.closing and time.monotonic() < deadline:
+                if receiver.poll(min(0.05, max(0, deadline - time.monotonic()))):
+                    try:
+                        kind, payload = receiver.recv()
+                    except EOFError:
+                        break
+                    if kind == "ready":
+                        ready = True
+                        receiver.send("proceed")
+                    else:
+                        outcome = kind
+                        result = payload
+                        break
+    
+        except (OSError, EOFError):
+            outcome = "error"
+        finally:
+            cleaned = (
+                _stop_preparation(process, identity, ready) if process.pid is not None else True
+            )
+            sender.close()
+            receiver.close()
+        if not cleaned:
+            with self.condition:
+                self.halted = True
+                self.condition.notify_all()
+            raise AdmissionError("Source preparation cleanup could not be verified", 503)
+        if self.closing:
+            raise AdmissionError("Queue stopped while source was being prepared", 503)
+        if outcome == "timeout" or time.monotonic() >= deadline:
+>           raise AdmissionError("Source preparation exceeded its admission deadline", 504)
+E           headroom.api.queue.AdmissionError: Source preparation exceeded its admission deadline
+
+headroom/api/queue.py:393: AdmissionError
+=========================== short test summary info ============================
+FAILED tests/test_api_deadline.py::test_waiting_job_expires_without_starting_and_slow_report_does_not_delay_watchdog
+1 failed, 9 passed in 15.25s

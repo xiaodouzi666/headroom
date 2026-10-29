@@ -1,0 +1,2179 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied"}}
+.........................................F.......FFFFFFFF............... [ 45%]
+........FFFFFFFFF............................FF...F....................F [ 91%]
+..............                                                           [100%]
+=================================== FAILURES ===================================
+_ test_waiting_job_expires_without_starting_and_slow_report_does_not_delay_watchdog _
+
+queue = (<headroom.api.queue.RunQueue object at 0x7e7123de6780>, PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_waiting_job_expires_witho0/train.py'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e71225ee900>
+
+    def test_waiting_job_expires_without_starting_and_slow_report_does_not_delay_watchdog(
+        queue, monkeypatch
+    ):
+        from headroom.api import queue as module
+    
+        jobs, script = queue
+        first = submit(jobs, script)
+        wait_until(lambda: (jobs.run_root / first / "started").exists())
+        jobs.deadline = 1.2
+        render = module.generate_report
+        report_started = __import__("threading").Event()
+        report_release = __import__("threading").Event()
+    
+        def slow_report(directory, *args, **kwargs):
+            if Path(directory).name != first:
+                report_started.set()
+                report_release.wait(8)
+            return render(directory, *args, **kwargs)
+    
+        monkeypatch.setattr(module, "generate_report", slow_report)
+        admitted = jobs.store.get_run(first)["api_admitted_at"]
+>       second = submit(jobs, script)
+                 ^^^^^^^^^^^^^^^^^^^^
+
+tests/test_api_deadline.py:152: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_api_deadline.py:74: in submit
+    queue.submit(
+headroom/api/queue.py:471: in submit
+    prepared, _ = self._prepare(prepare, deadline)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <headroom.api.queue.RunQueue object at 0x7e7123de6780>
+prepare = functools.partial(<function fake_prepare at 0x7e7129d19e40>, PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_waiting_job_expires_witho0/train.py'))
+deadline = 1804915.8219741909
+
+    def _prepare(self, prepare, deadline):
+        if self.mode == "thread":
+            # Trusted in-process fixtures only. Production always uses spawn.
+            return prepare(deadline=deadline), True
+        receiver, sender = multiprocessing.get_context("spawn").Pipe(duplex=True)
+        process = multiprocessing.get_context("spawn").Process(
+            target=_prepare_entry, args=(prepare, deadline, sender, os.getpid()), daemon=True
+        )
+        result, outcome, identity, ready = None, None, None, False
+        try:
+            process.start()
+            identity = _preparation_identity(process.pid)
+            sender.close()
+            while not self.closing and time.monotonic() < deadline:
+                if receiver.poll(min(0.05, max(0, deadline - time.monotonic()))):
+                    try:
+                        kind, payload = receiver.recv()
+                    except EOFError:
+                        break
+                    if kind == "ready":
+                        ready = True
+                        receiver.send("proceed")
+                    else:
+                        outcome = kind
+                        result = payload
+                        break
+    
+        except (OSError, EOFError):
+            outcome = "error"
+        finally:
+            cleaned = (
+                _stop_preparation(process, identity, ready) if process.pid is not None else True
+            )
+            sender.close()
+            receiver.close()
+        if not cleaned:
+            with self.condition:
+                self.halted = True
+                self.condition.notify_all()
+            raise AdmissionError("Source preparation cleanup could not be verified", 503)
+        if self.closing:
+            raise AdmissionError("Queue stopped while source was being prepared", 503)
+        if outcome == "timeout" or time.monotonic() >= deadline:
+>           raise AdmissionError("Source preparation exceeded its admission deadline", 504)
+E           headroom.api.queue.AdmissionError: Source preparation exceeded its admission deadline
+
+headroom/api/queue.py:393: AdmissionError
+_____________ test_health_and_usage_share_safe_global_observations _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_health_and_usage_share_sa0')
+
+    def test_health_and_usage_share_safe_global_observations(tmp_path):
+        class Monitor:
+            closed = False
+    
+            def snapshot(self):
+                return {
+                    "gpu": {
+                        "status": "busy",
+                        "busy": True,
+                        "available": False,
+                        "checked_at": "2026-10-24T00:00:00+00:00",
+                    },
+                    "token_factory": {
+                        "configured": False,
+                        "reachable": None,
+                        "authentication_checked": False,
+                    },
+                    "local_budget": {
+                        "status": "exhausted",
+                        "scope": "local_application_authorization",
+                        "remaining_usd": "0",
+                        "account_balance": None,
+                    },
+                }
+    
+            def close(self):
+                self.closed = True
+    
+        monitor = Monitor()
+        project = Path(__file__).resolve().parents[1]
+        settings = ApiSettings(
+            project_root=project,
+            data_root=tmp_path / "api",
+            db_path=tmp_path / "api.db",
+            run_root=tmp_path / "runs",
+            web_dist=tmp_path / "web",
+        )
+>       with TestClient(
+            create_app(
+                settings, worker=lambda *a, **kw: pytest.fail("no job"), availability_monitor=monitor
+            )
+        ) as client:
+
+tests/test_availability.py:535: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/starlette/testclient.py:572: in __enter__
+    portal.call(self.wait_startup)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:608: in wait_startup
+    await receive()
+.venv/lib/python3.12/site-packages/starlette/testclient.py:599: in receive
+    self.task.result()
+/usr/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:589: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1181: in __call__
+    await lifespan(
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_runtime.py:238: in lifespan
+    await app(scope, wrapped_receive, wrapped_send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:103: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:37: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/gzip.py:63: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:49: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:678: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2798: in app
+    await self.lifespan(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:656: in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:248: in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+headroom/api/app.py:350: in lifespan
+    snapshots.start(
+headroom/api/snapshot_queue.py:226: in start
+    root_fd = directory_fd(self.root, create=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/api/snapshot_queue.py:45: in directory_fd
+    os.mkdir(component, 0o700, dir_fd=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'os.mkdir', args = ('runs', 448, 20)
+
+    def closing_audit(event, args):
+        # Python's open audit event omits dir_fd. Relative opens are checked by the
+        # wrappers above, which possess it; absolute C-level opens are checked here.
+        if event == "open" and args and isinstance(args[0], (str, bytes, os.PathLike)):
+            if os.path.isabs(os.fsdecode(args[0])) and protected(args[0]):
+                raise PermissionError("Closing regression denies production file access")
+        if event in {"os.remove", "os.rmdir", "os.mkdir", "os.chmod", "os.truncate"}:
+            index = 1 if event in {"os.remove", "os.rmdir"} else 2
+            fd = args[index] if len(args) > index else None
+            if args and protected(actual_path(args[0], fd)):
+>               raise PermissionError("Closing regression denies production mutations")
+E               PermissionError: Closing regression denies production mutations
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:213: PermissionError
+_ test_real_orchestrator_finally_locators_drive_recovered_pair_downloads[False] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_real_orchestrator_finally0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e7123d0dc10>
+settings = ApiSettings(project_root=PosixPath('/home/xiaodouzi/workspace/headroom'), data_root=PosixPath('/tmp/pytest-of-xiaodouz...00, shutdown_grace_seconds=5, event_poll_seconds=0.01, allowed_hosts=('localhost', '127.0.0.1', '[::1]', 'testserver'))
+interrupted = False
+
+    @pytest.mark.parametrize("interrupted", [False, True])
+    def test_real_orchestrator_finally_locators_drive_recovered_pair_downloads(
+        tmp_path, monkeypatch, settings, interrupted
+    ):
+        originals = {}
+    
+        def recover(bundle, annotations, *, provenance):
+            recovered = {**bundle, "annotation_delivery": {"status": "not_attached"}}
+            for key in ("evidence_json", "evidence_md"):
+                canonical = Path(bundle[key])
+                originals[canonical.suffix] = canonical.read_bytes()
+                backup = canonical.with_name(
+                    canonical.stem + ".unannotated-" + BACKUP_ID + canonical.suffix
+                )
+                backup.write_bytes(originals[canonical.suffix])
+                canonical.write_text(
+                    '{"wrong":"partially published"}'
+                    if canonical.suffix == ".json"
+                    else "wrong partial Markdown"
+                )
+                recovered[key] = str(backup)
+            if interrupted:
+                # Matches the publisher's shared-bundle synchronization before rethrow.
+                bundle.update(recovered)
+                raise RunCancelled("Synthetic publication cancellation")
+            return recovered
+    
+        monkeypatch.setattr("headroom.orchestrator.annotate_evidence_bundle", recover)
+        pipeline = tmp_path / "pipeline"
+        pipeline.mkdir()
+        result, source_store, calls, _, _ = search_run(
+            pipeline,
+            [{"before": "VALUE = 1\n", "after": "VALUE = 2\n", "peak": 20, "target": True}],
+            max_rounds=1,
+        )
+        try:
+            row = source_store.get_run(result["run_id"])
+            expected = {
+                name: f"evidence/before/evidence.unannotated-{BACKUP_ID}.{suffix}"
+                for name, suffix in (("evidence.json", "json"), ("evidence.md", "md"))
+            }
+            assert row["before_evidence_paths"] == expected
+            report = json.loads(Path(result["report_json"]).read_text())
+            assert report["run"]["before_evidence_paths"] == expected
+            for name, key in (("evidence.json", "evidence_json"), ("evidence.md", "evidence_md")):
+                assert (
+                    Path(report["evidence"]["before"][key]).relative_to(result["run_dir"]).as_posix()
+                    == expected[name]
+                )
+            if interrupted:
+                assert result["status"] == "timeout" and calls == []
+            else:
+                assert result["target_met"]
+    
+            settings.run_root = Path(result["run_dir"]).parent
+            app = create_app(settings, worker=completed_worker)
+>           with TestClient(app) as client:
+
+tests/test_before_evidence_downloads.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/starlette/testclient.py:572: in __enter__
+    portal.call(self.wait_startup)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:608: in wait_startup
+    await receive()
+.venv/lib/python3.12/site-packages/starlette/testclient.py:599: in receive
+    self.task.result()
+/usr/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:589: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1181: in __call__
+    await lifespan(
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_runtime.py:238: in lifespan
+    await app(scope, wrapped_receive, wrapped_send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:103: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:37: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/gzip.py:63: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:49: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:678: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2798: in app
+    await self.lifespan(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:656: in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:248: in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+headroom/api/app.py:350: in lifespan
+    snapshots.start(
+headroom/api/snapshot_queue.py:226: in start
+    root_fd = directory_fd(self.root, create=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/api/snapshot_queue.py:45: in directory_fd
+    os.mkdir(component, 0o700, dir_fd=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'os.mkdir', args = ('runs', 448, 26)
+
+    def closing_audit(event, args):
+        # Python's open audit event omits dir_fd. Relative opens are checked by the
+        # wrappers above, which possess it; absolute C-level opens are checked here.
+        if event == "open" and args and isinstance(args[0], (str, bytes, os.PathLike)):
+            if os.path.isabs(os.fsdecode(args[0])) and protected(args[0]):
+                raise PermissionError("Closing regression denies production file access")
+        if event in {"os.remove", "os.rmdir", "os.mkdir", "os.chmod", "os.truncate"}:
+            index = 1 if event in {"os.remove", "os.rmdir"} else 2
+            fd = args[index] if len(args) > index else None
+            if args and protected(actual_path(args[0], fd)):
+>               raise PermissionError("Closing regression denies production mutations")
+E               PermissionError: Closing regression denies production mutations
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:213: PermissionError
+_ test_real_orchestrator_finally_locators_drive_recovered_pair_downloads[True] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_real_orchestrator_finally1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e712998f8c0>
+settings = ApiSettings(project_root=PosixPath('/home/xiaodouzi/workspace/headroom'), data_root=PosixPath('/tmp/pytest-of-xiaodouz...00, shutdown_grace_seconds=5, event_poll_seconds=0.01, allowed_hosts=('localhost', '127.0.0.1', '[::1]', 'testserver'))
+interrupted = True
+
+    @pytest.mark.parametrize("interrupted", [False, True])
+    def test_real_orchestrator_finally_locators_drive_recovered_pair_downloads(
+        tmp_path, monkeypatch, settings, interrupted
+    ):
+        originals = {}
+    
+        def recover(bundle, annotations, *, provenance):
+            recovered = {**bundle, "annotation_delivery": {"status": "not_attached"}}
+            for key in ("evidence_json", "evidence_md"):
+                canonical = Path(bundle[key])
+                originals[canonical.suffix] = canonical.read_bytes()
+                backup = canonical.with_name(
+                    canonical.stem + ".unannotated-" + BACKUP_ID + canonical.suffix
+                )
+                backup.write_bytes(originals[canonical.suffix])
+                canonical.write_text(
+                    '{"wrong":"partially published"}'
+                    if canonical.suffix == ".json"
+                    else "wrong partial Markdown"
+                )
+                recovered[key] = str(backup)
+            if interrupted:
+                # Matches the publisher's shared-bundle synchronization before rethrow.
+                bundle.update(recovered)
+                raise RunCancelled("Synthetic publication cancellation")
+            return recovered
+    
+        monkeypatch.setattr("headroom.orchestrator.annotate_evidence_bundle", recover)
+        pipeline = tmp_path / "pipeline"
+        pipeline.mkdir()
+        result, source_store, calls, _, _ = search_run(
+            pipeline,
+            [{"before": "VALUE = 1\n", "after": "VALUE = 2\n", "peak": 20, "target": True}],
+            max_rounds=1,
+        )
+        try:
+            row = source_store.get_run(result["run_id"])
+            expected = {
+                name: f"evidence/before/evidence.unannotated-{BACKUP_ID}.{suffix}"
+                for name, suffix in (("evidence.json", "json"), ("evidence.md", "md"))
+            }
+            assert row["before_evidence_paths"] == expected
+            report = json.loads(Path(result["report_json"]).read_text())
+            assert report["run"]["before_evidence_paths"] == expected
+            for name, key in (("evidence.json", "evidence_json"), ("evidence.md", "evidence_md")):
+                assert (
+                    Path(report["evidence"]["before"][key]).relative_to(result["run_dir"]).as_posix()
+                    == expected[name]
+                )
+            if interrupted:
+                assert result["status"] == "timeout" and calls == []
+            else:
+                assert result["target_met"]
+    
+            settings.run_root = Path(result["run_dir"]).parent
+            app = create_app(settings, worker=completed_worker)
+>           with TestClient(app) as client:
+
+tests/test_before_evidence_downloads.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/starlette/testclient.py:572: in __enter__
+    portal.call(self.wait_startup)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:608: in wait_startup
+    await receive()
+.venv/lib/python3.12/site-packages/starlette/testclient.py:599: in receive
+    self.task.result()
+/usr/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:589: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1181: in __call__
+    await lifespan(
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_runtime.py:238: in lifespan
+    await app(scope, wrapped_receive, wrapped_send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:103: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:37: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/gzip.py:63: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:49: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:678: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2798: in app
+    await self.lifespan(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:656: in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:248: in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+headroom/api/app.py:350: in lifespan
+    snapshots.start(
+headroom/api/snapshot_queue.py:226: in start
+    root_fd = directory_fd(self.root, create=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/api/snapshot_queue.py:45: in directory_fd
+    os.mkdir(component, 0o700, dir_fd=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'os.mkdir', args = ('runs', 448, 29)
+
+    def closing_audit(event, args):
+        # Python's open audit event omits dir_fd. Relative opens are checked by the
+        # wrappers above, which possess it; absolute C-level opens are checked here.
+        if event == "open" and args and isinstance(args[0], (str, bytes, os.PathLike)):
+            if os.path.isabs(os.fsdecode(args[0])) and protected(args[0]):
+                raise PermissionError("Closing regression denies production file access")
+        if event in {"os.remove", "os.rmdir", "os.mkdir", "os.chmod", "os.truncate"}:
+            index = 1 if event in {"os.remove", "os.rmdir"} else 2
+            fd = args[index] if len(args) > index else None
+            if args and protected(actual_path(args[0], fd)):
+>               raise PermissionError("Closing regression denies production mutations")
+E               PermissionError: Closing regression denies production mutations
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:213: PermissionError
+________ test_legacy_and_recorded_canonical_downloads_unchanged[False] _________
+
+settings = ApiSettings(project_root=PosixPath('/home/xiaodouzi/workspace/headroom'), data_root=PosixPath('/tmp/pytest-of-xiaodouz...00, shutdown_grace_seconds=5, event_poll_seconds=0.01, allowed_hosts=('localhost', '127.0.0.1', '[::1]', 'testserver'))
+recorded = False
+
+    @pytest.mark.parametrize("recorded", [False, True])
+    def test_legacy_and_recorded_canonical_downloads_unchanged(settings, recorded):
+        app = create_app(settings, worker=completed_worker)
+>       with TestClient(app) as client:
+
+tests/test_before_evidence_downloads.py:103: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/starlette/testclient.py:572: in __enter__
+    portal.call(self.wait_startup)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:608: in wait_startup
+    await receive()
+.venv/lib/python3.12/site-packages/starlette/testclient.py:599: in receive
+    self.task.result()
+/usr/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:589: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1181: in __call__
+    await lifespan(
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_runtime.py:238: in lifespan
+    await app(scope, wrapped_receive, wrapped_send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:103: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:37: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/gzip.py:63: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:49: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:678: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2798: in app
+    await self.lifespan(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:656: in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:248: in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+headroom/api/app.py:350: in lifespan
+    snapshots.start(
+headroom/api/snapshot_queue.py:226: in start
+    root_fd = directory_fd(self.root, create=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/api/snapshot_queue.py:45: in directory_fd
+    os.mkdir(component, 0o700, dir_fd=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'os.mkdir', args = ('runs', 448, 29)
+
+    def closing_audit(event, args):
+        # Python's open audit event omits dir_fd. Relative opens are checked by the
+        # wrappers above, which possess it; absolute C-level opens are checked here.
+        if event == "open" and args and isinstance(args[0], (str, bytes, os.PathLike)):
+            if os.path.isabs(os.fsdecode(args[0])) and protected(args[0]):
+                raise PermissionError("Closing regression denies production file access")
+        if event in {"os.remove", "os.rmdir", "os.mkdir", "os.chmod", "os.truncate"}:
+            index = 1 if event in {"os.remove", "os.rmdir"} else 2
+            fd = args[index] if len(args) > index else None
+            if args and protected(actual_path(args[0], fd)):
+>               raise PermissionError("Closing regression denies production mutations")
+E               PermissionError: Closing regression denies production mutations
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:213: PermissionError
+_________ test_legacy_and_recorded_canonical_downloads_unchanged[True] _________
+
+settings = ApiSettings(project_root=PosixPath('/home/xiaodouzi/workspace/headroom'), data_root=PosixPath('/tmp/pytest-of-xiaodouz...00, shutdown_grace_seconds=5, event_poll_seconds=0.01, allowed_hosts=('localhost', '127.0.0.1', '[::1]', 'testserver'))
+recorded = True
+
+    @pytest.mark.parametrize("recorded", [False, True])
+    def test_legacy_and_recorded_canonical_downloads_unchanged(settings, recorded):
+        app = create_app(settings, worker=completed_worker)
+>       with TestClient(app) as client:
+
+tests/test_before_evidence_downloads.py:103: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/starlette/testclient.py:572: in __enter__
+    portal.call(self.wait_startup)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:608: in wait_startup
+    await receive()
+.venv/lib/python3.12/site-packages/starlette/testclient.py:599: in receive
+    self.task.result()
+/usr/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:589: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1181: in __call__
+    await lifespan(
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_runtime.py:238: in lifespan
+    await app(scope, wrapped_receive, wrapped_send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:103: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:37: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/gzip.py:63: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:49: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:678: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2798: in app
+    await self.lifespan(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:656: in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:248: in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+headroom/api/app.py:350: in lifespan
+    snapshots.start(
+headroom/api/snapshot_queue.py:226: in start
+    root_fd = directory_fd(self.root, create=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/api/snapshot_queue.py:45: in directory_fd
+    os.mkdir(component, 0o700, dir_fd=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'os.mkdir', args = ('runs', 448, 32)
+
+    def closing_audit(event, args):
+        # Python's open audit event omits dir_fd. Relative opens are checked by the
+        # wrappers above, which possess it; absolute C-level opens are checked here.
+        if event == "open" and args and isinstance(args[0], (str, bytes, os.PathLike)):
+            if os.path.isabs(os.fsdecode(args[0])) and protected(args[0]):
+                raise PermissionError("Closing regression denies production file access")
+        if event in {"os.remove", "os.rmdir", "os.mkdir", "os.chmod", "os.truncate"}:
+            index = 1 if event in {"os.remove", "os.rmdir"} else 2
+            fd = args[index] if len(args) > index else None
+            if args and protected(actual_path(args[0], fd)):
+>               raise PermissionError("Closing regression denies production mutations")
+E               PermissionError: Closing regression denies production mutations
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:213: PermissionError
+_ test_download_rejects_missing_or_linked_backup_without_canonical_fallback[missing] _
+
+settings = ApiSettings(project_root=PosixPath('/home/xiaodouzi/workspace/headroom'), data_root=PosixPath('/tmp/pytest-of-xiaodouz...00, shutdown_grace_seconds=5, event_poll_seconds=0.01, allowed_hosts=('localhost', '127.0.0.1', '[::1]', 'testserver'))
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_download_rejects_missing_0')
+damage = 'missing'
+
+    @pytest.mark.parametrize("damage", ["missing", "leaf_link", "ancestor_link"])
+    def test_download_rejects_missing_or_linked_backup_without_canonical_fallback(
+        settings, tmp_path, damage
+    ):
+        app = create_app(settings, worker=completed_worker)
+>       with TestClient(app) as client:
+
+tests/test_before_evidence_downloads.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/starlette/testclient.py:572: in __enter__
+    portal.call(self.wait_startup)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:608: in wait_startup
+    await receive()
+.venv/lib/python3.12/site-packages/starlette/testclient.py:599: in receive
+    self.task.result()
+/usr/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:589: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1181: in __call__
+    await lifespan(
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_runtime.py:238: in lifespan
+    await app(scope, wrapped_receive, wrapped_send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:103: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:37: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/gzip.py:63: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:49: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:678: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2798: in app
+    await self.lifespan(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:656: in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:248: in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+headroom/api/app.py:350: in lifespan
+    snapshots.start(
+headroom/api/snapshot_queue.py:226: in start
+    root_fd = directory_fd(self.root, create=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/api/snapshot_queue.py:45: in directory_fd
+    os.mkdir(component, 0o700, dir_fd=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'os.mkdir', args = ('runs', 448, 35)
+
+    def closing_audit(event, args):
+        # Python's open audit event omits dir_fd. Relative opens are checked by the
+        # wrappers above, which possess it; absolute C-level opens are checked here.
+        if event == "open" and args and isinstance(args[0], (str, bytes, os.PathLike)):
+            if os.path.isabs(os.fsdecode(args[0])) and protected(args[0]):
+                raise PermissionError("Closing regression denies production file access")
+        if event in {"os.remove", "os.rmdir", "os.mkdir", "os.chmod", "os.truncate"}:
+            index = 1 if event in {"os.remove", "os.rmdir"} else 2
+            fd = args[index] if len(args) > index else None
+            if args and protected(actual_path(args[0], fd)):
+>               raise PermissionError("Closing regression denies production mutations")
+E               PermissionError: Closing regression denies production mutations
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:213: PermissionError
+_ test_download_rejects_missing_or_linked_backup_without_canonical_fallback[leaf_link] _
+
+settings = ApiSettings(project_root=PosixPath('/home/xiaodouzi/workspace/headroom'), data_root=PosixPath('/tmp/pytest-of-xiaodouz...00, shutdown_grace_seconds=5, event_poll_seconds=0.01, allowed_hosts=('localhost', '127.0.0.1', '[::1]', 'testserver'))
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_download_rejects_missing_1')
+damage = 'leaf_link'
+
+    @pytest.mark.parametrize("damage", ["missing", "leaf_link", "ancestor_link"])
+    def test_download_rejects_missing_or_linked_backup_without_canonical_fallback(
+        settings, tmp_path, damage
+    ):
+        app = create_app(settings, worker=completed_worker)
+>       with TestClient(app) as client:
+
+tests/test_before_evidence_downloads.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/starlette/testclient.py:572: in __enter__
+    portal.call(self.wait_startup)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:608: in wait_startup
+    await receive()
+.venv/lib/python3.12/site-packages/starlette/testclient.py:599: in receive
+    self.task.result()
+/usr/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:589: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1181: in __call__
+    await lifespan(
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_runtime.py:238: in lifespan
+    await app(scope, wrapped_receive, wrapped_send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:103: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:37: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/gzip.py:63: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:49: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:678: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2798: in app
+    await self.lifespan(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:656: in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:248: in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+headroom/api/app.py:350: in lifespan
+    snapshots.start(
+headroom/api/snapshot_queue.py:226: in start
+    root_fd = directory_fd(self.root, create=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/api/snapshot_queue.py:45: in directory_fd
+    os.mkdir(component, 0o700, dir_fd=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'os.mkdir', args = ('runs', 448, 38)
+
+    def closing_audit(event, args):
+        # Python's open audit event omits dir_fd. Relative opens are checked by the
+        # wrappers above, which possess it; absolute C-level opens are checked here.
+        if event == "open" and args and isinstance(args[0], (str, bytes, os.PathLike)):
+            if os.path.isabs(os.fsdecode(args[0])) and protected(args[0]):
+                raise PermissionError("Closing regression denies production file access")
+        if event in {"os.remove", "os.rmdir", "os.mkdir", "os.chmod", "os.truncate"}:
+            index = 1 if event in {"os.remove", "os.rmdir"} else 2
+            fd = args[index] if len(args) > index else None
+            if args and protected(actual_path(args[0], fd)):
+>               raise PermissionError("Closing regression denies production mutations")
+E               PermissionError: Closing regression denies production mutations
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:213: PermissionError
+_ test_download_rejects_missing_or_linked_backup_without_canonical_fallback[ancestor_link] _
+
+settings = ApiSettings(project_root=PosixPath('/home/xiaodouzi/workspace/headroom'), data_root=PosixPath('/tmp/pytest-of-xiaodouz...00, shutdown_grace_seconds=5, event_poll_seconds=0.01, allowed_hosts=('localhost', '127.0.0.1', '[::1]', 'testserver'))
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_download_rejects_missing_2')
+damage = 'ancestor_link'
+
+    @pytest.mark.parametrize("damage", ["missing", "leaf_link", "ancestor_link"])
+    def test_download_rejects_missing_or_linked_backup_without_canonical_fallback(
+        settings, tmp_path, damage
+    ):
+        app = create_app(settings, worker=completed_worker)
+>       with TestClient(app) as client:
+
+tests/test_before_evidence_downloads.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/starlette/testclient.py:572: in __enter__
+    portal.call(self.wait_startup)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:608: in wait_startup
+    await receive()
+.venv/lib/python3.12/site-packages/starlette/testclient.py:599: in receive
+    self.task.result()
+/usr/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:589: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1181: in __call__
+    await lifespan(
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_runtime.py:238: in lifespan
+    await app(scope, wrapped_receive, wrapped_send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:103: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:37: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/gzip.py:63: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:49: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:678: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2798: in app
+    await self.lifespan(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:656: in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:248: in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+headroom/api/app.py:350: in lifespan
+    snapshots.start(
+headroom/api/snapshot_queue.py:226: in start
+    root_fd = directory_fd(self.root, create=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/api/snapshot_queue.py:45: in directory_fd
+    os.mkdir(component, 0o700, dir_fd=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'os.mkdir', args = ('runs', 448, 41)
+
+    def closing_audit(event, args):
+        # Python's open audit event omits dir_fd. Relative opens are checked by the
+        # wrappers above, which possess it; absolute C-level opens are checked here.
+        if event == "open" and args and isinstance(args[0], (str, bytes, os.PathLike)):
+            if os.path.isabs(os.fsdecode(args[0])) and protected(args[0]):
+                raise PermissionError("Closing regression denies production file access")
+        if event in {"os.remove", "os.rmdir", "os.mkdir", "os.chmod", "os.truncate"}:
+            index = 1 if event in {"os.remove", "os.rmdir"} else 2
+            fd = args[index] if len(args) > index else None
+            if args and protected(actual_path(args[0], fd)):
+>               raise PermissionError("Closing regression denies production mutations")
+E               PermissionError: Closing regression denies production mutations
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:213: PermissionError
+_ test_build_wrapper_uses_synced_project_python_without_dotenv_or_system_python _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_build_wrapper_uses_synced0')
+
+    def test_build_wrapper_uses_synced_project_python_without_dotenv_or_system_python(tmp_path):
+        uv = tmp_path / "uv"
+        uv.write_text("#!/bin/sh\nprintf '%s\\n' \"$@\"\n")
+        uv.chmod(0o755)
+        python = tmp_path / "python3"
+        python.write_text("#!/bin/sh\nexit 99\n")
+        python.chmod(0o755)
+>       result = subprocess.run(
+            ["/bin/bash", str(ROOT / "scripts/build_lab_image.sh"), "--prepare-only"],
+            env={"PATH": str(tmp_path) + ":/usr/bin:/bin"},
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+tests/test_runtime_image.py:197: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/subprocess.py:548: in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/subprocess.py:1026: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+/usr/lib/python3.12/subprocess.py:1823: in _execute_child
+    sys.audit("subprocess.Popen", executable, args, cwd, env)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'subprocess.Popen'
+args = ('/bin/bash', ['/bin/bash', '/home/xiaodouzi/workspace/headroom/scripts/build_lab_image.sh', '--prepare-only'], None, {'PATH': '/tmp/pytest-of-xiaodouzi/pytest-381/test_build_wrapper_uses_synced0:/usr/bin:/bin'})
+
+    def closing_audit(event, args):
+        # Python's open audit event omits dir_fd. Relative opens are checked by the
+        # wrappers above, which possess it; absolute C-level opens are checked here.
+        if event == "open" and args and isinstance(args[0], (str, bytes, os.PathLike)):
+            if os.path.isabs(os.fsdecode(args[0])) and protected(args[0]):
+                raise PermissionError("Closing regression denies production file access")
+        if event in {"os.remove", "os.rmdir", "os.mkdir", "os.chmod", "os.truncate"}:
+            index = 1 if event in {"os.remove", "os.rmdir"} else 2
+            fd = args[index] if len(args) > index else None
+            if args and protected(actual_path(args[0], fd)):
+                raise PermissionError("Closing regression denies production mutations")
+        if event in {"os.rename", "os.link"}:
+            if any(protected(actual_path(args[i], args[i+2] if len(args)>i+2 else None)) for i in (0,1)):
+                raise PermissionError("Closing regression denies production mutations")
+        if event == "os.symlink" and protected(actual_path(args[1],args[2] if len(args)>2 else None)):
+            raise PermissionError("Closing regression denies production mutations")
+        if event == "subprocess.Popen":
+            command = args[1]
+            if not isinstance(command, (list, tuple)):
+                raise PermissionError("Closing regression requires explicit subprocess argv")
+            words = [str(value) for value in command]
+            executable = Path(words[0]).name if words else ""
+            if executable in {"sh", "bash", "zsh", "curl", "wget", "ssh", "scp", "nvidia-smi", "systemctl", "service", "tailscale"}:
+>               raise PermissionError("Closing regression denies external network/service commands")
+E               PermissionError: Closing regression denies external network/service commands
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:226: PermissionError
+_____ test_api_submission_persists_actual_mode_and_forwards_request[None] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_api_submission_persists_a0')
+mode = None
+
+    @pytest.mark.parametrize("mode", [None, "until_target", "bounded_pareto"])
+    def test_api_submission_persists_actual_mode_and_forwards_request(tmp_path, mode):
+        captured = []
+    
+        def worker(request, **kwargs):
+            captured.append(request)
+            return {"status": "needs_human", "target_met": False}
+    
+        settings = ApiSettings(
+            project_root=PROJECT_ROOT,
+            data_root=tmp_path / "api",
+            db_path=tmp_path / "store.db",
+            run_root=tmp_path / "jobs",
+            web_dist=tmp_path / "dist",
+        )
+        api = create_app(settings, worker=worker)
+>       with TestClient(api) as client:
+
+tests/test_search_mode_interfaces.py:163: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/starlette/testclient.py:572: in __enter__
+    portal.call(self.wait_startup)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:608: in wait_startup
+    await receive()
+.venv/lib/python3.12/site-packages/starlette/testclient.py:599: in receive
+    self.task.result()
+/usr/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:589: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1181: in __call__
+    await lifespan(
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_runtime.py:238: in lifespan
+    await app(scope, wrapped_receive, wrapped_send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:103: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:37: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/gzip.py:63: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:49: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:678: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2798: in app
+    await self.lifespan(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:656: in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:248: in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+headroom/api/app.py:350: in lifespan
+    snapshots.start(
+headroom/api/snapshot_queue.py:226: in start
+    root_fd = directory_fd(self.root, create=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/api/snapshot_queue.py:45: in directory_fd
+    os.mkdir(component, 0o700, dir_fd=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'os.mkdir', args = ('runs', 448, 46)
+
+    def closing_audit(event, args):
+        # Python's open audit event omits dir_fd. Relative opens are checked by the
+        # wrappers above, which possess it; absolute C-level opens are checked here.
+        if event == "open" and args and isinstance(args[0], (str, bytes, os.PathLike)):
+            if os.path.isabs(os.fsdecode(args[0])) and protected(args[0]):
+                raise PermissionError("Closing regression denies production file access")
+        if event in {"os.remove", "os.rmdir", "os.mkdir", "os.chmod", "os.truncate"}:
+            index = 1 if event in {"os.remove", "os.rmdir"} else 2
+            fd = args[index] if len(args) > index else None
+            if args and protected(actual_path(args[0], fd)):
+>               raise PermissionError("Closing regression denies production mutations")
+E               PermissionError: Closing regression denies production mutations
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:213: PermissionError
+_ test_api_submission_persists_actual_mode_and_forwards_request[until_target] __
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_api_submission_persists_a1')
+mode = 'until_target'
+
+    @pytest.mark.parametrize("mode", [None, "until_target", "bounded_pareto"])
+    def test_api_submission_persists_actual_mode_and_forwards_request(tmp_path, mode):
+        captured = []
+    
+        def worker(request, **kwargs):
+            captured.append(request)
+            return {"status": "needs_human", "target_met": False}
+    
+        settings = ApiSettings(
+            project_root=PROJECT_ROOT,
+            data_root=tmp_path / "api",
+            db_path=tmp_path / "store.db",
+            run_root=tmp_path / "jobs",
+            web_dist=tmp_path / "dist",
+        )
+        api = create_app(settings, worker=worker)
+>       with TestClient(api) as client:
+
+tests/test_search_mode_interfaces.py:163: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/starlette/testclient.py:572: in __enter__
+    portal.call(self.wait_startup)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:608: in wait_startup
+    await receive()
+.venv/lib/python3.12/site-packages/starlette/testclient.py:599: in receive
+    self.task.result()
+/usr/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:589: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1181: in __call__
+    await lifespan(
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_runtime.py:238: in lifespan
+    await app(scope, wrapped_receive, wrapped_send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:103: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:37: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/gzip.py:63: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:49: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:678: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2798: in app
+    await self.lifespan(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:656: in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:248: in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+headroom/api/app.py:350: in lifespan
+    snapshots.start(
+headroom/api/snapshot_queue.py:226: in start
+    root_fd = directory_fd(self.root, create=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/api/snapshot_queue.py:45: in directory_fd
+    os.mkdir(component, 0o700, dir_fd=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'os.mkdir', args = ('runs', 448, 47)
+
+    def closing_audit(event, args):
+        # Python's open audit event omits dir_fd. Relative opens are checked by the
+        # wrappers above, which possess it; absolute C-level opens are checked here.
+        if event == "open" and args and isinstance(args[0], (str, bytes, os.PathLike)):
+            if os.path.isabs(os.fsdecode(args[0])) and protected(args[0]):
+                raise PermissionError("Closing regression denies production file access")
+        if event in {"os.remove", "os.rmdir", "os.mkdir", "os.chmod", "os.truncate"}:
+            index = 1 if event in {"os.remove", "os.rmdir"} else 2
+            fd = args[index] if len(args) > index else None
+            if args and protected(actual_path(args[0], fd)):
+>               raise PermissionError("Closing regression denies production mutations")
+E               PermissionError: Closing regression denies production mutations
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:213: PermissionError
+_ test_api_submission_persists_actual_mode_and_forwards_request[bounded_pareto] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_api_submission_persists_a2')
+mode = 'bounded_pareto'
+
+    @pytest.mark.parametrize("mode", [None, "until_target", "bounded_pareto"])
+    def test_api_submission_persists_actual_mode_and_forwards_request(tmp_path, mode):
+        captured = []
+    
+        def worker(request, **kwargs):
+            captured.append(request)
+            return {"status": "needs_human", "target_met": False}
+    
+        settings = ApiSettings(
+            project_root=PROJECT_ROOT,
+            data_root=tmp_path / "api",
+            db_path=tmp_path / "store.db",
+            run_root=tmp_path / "jobs",
+            web_dist=tmp_path / "dist",
+        )
+        api = create_app(settings, worker=worker)
+>       with TestClient(api) as client:
+
+tests/test_search_mode_interfaces.py:163: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/starlette/testclient.py:572: in __enter__
+    portal.call(self.wait_startup)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:608: in wait_startup
+    await receive()
+.venv/lib/python3.12/site-packages/starlette/testclient.py:599: in receive
+    self.task.result()
+/usr/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:589: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1181: in __call__
+    await lifespan(
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_runtime.py:238: in lifespan
+    await app(scope, wrapped_receive, wrapped_send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:103: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:37: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/gzip.py:63: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:49: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:678: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2798: in app
+    await self.lifespan(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:656: in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:248: in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+headroom/api/app.py:350: in lifespan
+    snapshots.start(
+headroom/api/snapshot_queue.py:226: in start
+    root_fd = directory_fd(self.root, create=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/api/snapshot_queue.py:45: in directory_fd
+    os.mkdir(component, 0o700, dir_fd=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'os.mkdir', args = ('runs', 448, 50)
+
+    def closing_audit(event, args):
+        # Python's open audit event omits dir_fd. Relative opens are checked by the
+        # wrappers above, which possess it; absolute C-level opens are checked here.
+        if event == "open" and args and isinstance(args[0], (str, bytes, os.PathLike)):
+            if os.path.isabs(os.fsdecode(args[0])) and protected(args[0]):
+                raise PermissionError("Closing regression denies production file access")
+        if event in {"os.remove", "os.rmdir", "os.mkdir", "os.chmod", "os.truncate"}:
+            index = 1 if event in {"os.remove", "os.rmdir"} else 2
+            fd = args[index] if len(args) > index else None
+            if args and protected(actual_path(args[0], fd)):
+>               raise PermissionError("Closing regression denies production mutations")
+E               PermissionError: Closing regression denies production mutations
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:213: PermissionError
+__________ test_api_rejects_invalid_mode_without_admission[unbounded] __________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_api_rejects_invalid_mode_0')
+mode = 'unbounded'
+
+    @pytest.mark.parametrize("mode", ["unbounded", False, None, [], {}])
+    def test_api_rejects_invalid_mode_without_admission(tmp_path, mode):
+        def forbidden(*args, **kwargs):
+            pytest.fail("Invalid submission must never reach a worker")
+    
+        settings = ApiSettings(
+            data_root=tmp_path / "api", db_path=tmp_path / "store.db", run_root=tmp_path / "jobs"
+        )
+>       with TestClient(create_app(settings, worker=forbidden)) as client:
+
+tests/test_search_mode_interfaces.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/starlette/testclient.py:572: in __enter__
+    portal.call(self.wait_startup)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:608: in wait_startup
+    await receive()
+.venv/lib/python3.12/site-packages/starlette/testclient.py:599: in receive
+    self.task.result()
+/usr/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:589: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1181: in __call__
+    await lifespan(
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_runtime.py:238: in lifespan
+    await app(scope, wrapped_receive, wrapped_send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:103: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:37: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/gzip.py:63: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:49: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:678: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2798: in app
+    await self.lifespan(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:656: in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:248: in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+headroom/api/app.py:350: in lifespan
+    snapshots.start(
+headroom/api/snapshot_queue.py:226: in start
+    root_fd = directory_fd(self.root, create=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/api/snapshot_queue.py:45: in directory_fd
+    os.mkdir(component, 0o700, dir_fd=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'os.mkdir', args = ('runs', 448, 53)
+
+    def closing_audit(event, args):
+        # Python's open audit event omits dir_fd. Relative opens are checked by the
+        # wrappers above, which possess it; absolute C-level opens are checked here.
+        if event == "open" and args and isinstance(args[0], (str, bytes, os.PathLike)):
+            if os.path.isabs(os.fsdecode(args[0])) and protected(args[0]):
+                raise PermissionError("Closing regression denies production file access")
+        if event in {"os.remove", "os.rmdir", "os.mkdir", "os.chmod", "os.truncate"}:
+            index = 1 if event in {"os.remove", "os.rmdir"} else 2
+            fd = args[index] if len(args) > index else None
+            if args and protected(actual_path(args[0], fd)):
+>               raise PermissionError("Closing regression denies production mutations")
+E               PermissionError: Closing regression denies production mutations
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:213: PermissionError
+____________ test_api_rejects_invalid_mode_without_admission[False] ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_api_rejects_invalid_mode_1')
+mode = False
+
+    @pytest.mark.parametrize("mode", ["unbounded", False, None, [], {}])
+    def test_api_rejects_invalid_mode_without_admission(tmp_path, mode):
+        def forbidden(*args, **kwargs):
+            pytest.fail("Invalid submission must never reach a worker")
+    
+        settings = ApiSettings(
+            data_root=tmp_path / "api", db_path=tmp_path / "store.db", run_root=tmp_path / "jobs"
+        )
+>       with TestClient(create_app(settings, worker=forbidden)) as client:
+
+tests/test_search_mode_interfaces.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/starlette/testclient.py:572: in __enter__
+    portal.call(self.wait_startup)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:608: in wait_startup
+    await receive()
+.venv/lib/python3.12/site-packages/starlette/testclient.py:599: in receive
+    self.task.result()
+/usr/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:589: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1181: in __call__
+    await lifespan(
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_runtime.py:238: in lifespan
+    await app(scope, wrapped_receive, wrapped_send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:103: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:37: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/gzip.py:63: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:49: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:678: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2798: in app
+    await self.lifespan(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:656: in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:248: in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+headroom/api/app.py:350: in lifespan
+    snapshots.start(
+headroom/api/snapshot_queue.py:226: in start
+    root_fd = directory_fd(self.root, create=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/api/snapshot_queue.py:45: in directory_fd
+    os.mkdir(component, 0o700, dir_fd=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'os.mkdir', args = ('runs', 448, 56)
+
+    def closing_audit(event, args):
+        # Python's open audit event omits dir_fd. Relative opens are checked by the
+        # wrappers above, which possess it; absolute C-level opens are checked here.
+        if event == "open" and args and isinstance(args[0], (str, bytes, os.PathLike)):
+            if os.path.isabs(os.fsdecode(args[0])) and protected(args[0]):
+                raise PermissionError("Closing regression denies production file access")
+        if event in {"os.remove", "os.rmdir", "os.mkdir", "os.chmod", "os.truncate"}:
+            index = 1 if event in {"os.remove", "os.rmdir"} else 2
+            fd = args[index] if len(args) > index else None
+            if args and protected(actual_path(args[0], fd)):
+>               raise PermissionError("Closing regression denies production mutations")
+E               PermissionError: Closing regression denies production mutations
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:213: PermissionError
+____________ test_api_rejects_invalid_mode_without_admission[None] _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_api_rejects_invalid_mode_2')
+mode = None
+
+    @pytest.mark.parametrize("mode", ["unbounded", False, None, [], {}])
+    def test_api_rejects_invalid_mode_without_admission(tmp_path, mode):
+        def forbidden(*args, **kwargs):
+            pytest.fail("Invalid submission must never reach a worker")
+    
+        settings = ApiSettings(
+            data_root=tmp_path / "api", db_path=tmp_path / "store.db", run_root=tmp_path / "jobs"
+        )
+>       with TestClient(create_app(settings, worker=forbidden)) as client:
+
+tests/test_search_mode_interfaces.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/starlette/testclient.py:572: in __enter__
+    portal.call(self.wait_startup)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:608: in wait_startup
+    await receive()
+.venv/lib/python3.12/site-packages/starlette/testclient.py:599: in receive
+    self.task.result()
+/usr/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:589: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1181: in __call__
+    await lifespan(
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_runtime.py:238: in lifespan
+    await app(scope, wrapped_receive, wrapped_send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:103: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:37: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/gzip.py:63: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:49: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:678: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2798: in app
+    await self.lifespan(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:656: in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:248: in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+headroom/api/app.py:350: in lifespan
+    snapshots.start(
+headroom/api/snapshot_queue.py:226: in start
+    root_fd = directory_fd(self.root, create=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/api/snapshot_queue.py:45: in directory_fd
+    os.mkdir(component, 0o700, dir_fd=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'os.mkdir', args = ('runs', 448, 59)
+
+    def closing_audit(event, args):
+        # Python's open audit event omits dir_fd. Relative opens are checked by the
+        # wrappers above, which possess it; absolute C-level opens are checked here.
+        if event == "open" and args and isinstance(args[0], (str, bytes, os.PathLike)):
+            if os.path.isabs(os.fsdecode(args[0])) and protected(args[0]):
+                raise PermissionError("Closing regression denies production file access")
+        if event in {"os.remove", "os.rmdir", "os.mkdir", "os.chmod", "os.truncate"}:
+            index = 1 if event in {"os.remove", "os.rmdir"} else 2
+            fd = args[index] if len(args) > index else None
+            if args and protected(actual_path(args[0], fd)):
+>               raise PermissionError("Closing regression denies production mutations")
+E               PermissionError: Closing regression denies production mutations
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:213: PermissionError
+____________ test_api_rejects_invalid_mode_without_admission[mode3] ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_api_rejects_invalid_mode_3')
+mode = []
+
+    @pytest.mark.parametrize("mode", ["unbounded", False, None, [], {}])
+    def test_api_rejects_invalid_mode_without_admission(tmp_path, mode):
+        def forbidden(*args, **kwargs):
+            pytest.fail("Invalid submission must never reach a worker")
+    
+        settings = ApiSettings(
+            data_root=tmp_path / "api", db_path=tmp_path / "store.db", run_root=tmp_path / "jobs"
+        )
+>       with TestClient(create_app(settings, worker=forbidden)) as client:
+
+tests/test_search_mode_interfaces.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/starlette/testclient.py:572: in __enter__
+    portal.call(self.wait_startup)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:608: in wait_startup
+    await receive()
+.venv/lib/python3.12/site-packages/starlette/testclient.py:599: in receive
+    self.task.result()
+/usr/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:589: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1181: in __call__
+    await lifespan(
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_runtime.py:238: in lifespan
+    await app(scope, wrapped_receive, wrapped_send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:103: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:37: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/gzip.py:63: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:49: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:678: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2798: in app
+    await self.lifespan(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:656: in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:248: in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+headroom/api/app.py:350: in lifespan
+    snapshots.start(
+headroom/api/snapshot_queue.py:226: in start
+    root_fd = directory_fd(self.root, create=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/api/snapshot_queue.py:45: in directory_fd
+    os.mkdir(component, 0o700, dir_fd=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'os.mkdir', args = ('runs', 448, 62)
+
+    def closing_audit(event, args):
+        # Python's open audit event omits dir_fd. Relative opens are checked by the
+        # wrappers above, which possess it; absolute C-level opens are checked here.
+        if event == "open" and args and isinstance(args[0], (str, bytes, os.PathLike)):
+            if os.path.isabs(os.fsdecode(args[0])) and protected(args[0]):
+                raise PermissionError("Closing regression denies production file access")
+        if event in {"os.remove", "os.rmdir", "os.mkdir", "os.chmod", "os.truncate"}:
+            index = 1 if event in {"os.remove", "os.rmdir"} else 2
+            fd = args[index] if len(args) > index else None
+            if args and protected(actual_path(args[0], fd)):
+>               raise PermissionError("Closing regression denies production mutations")
+E               PermissionError: Closing regression denies production mutations
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:213: PermissionError
+____________ test_api_rejects_invalid_mode_without_admission[mode4] ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_api_rejects_invalid_mode_4')
+mode = {}
+
+    @pytest.mark.parametrize("mode", ["unbounded", False, None, [], {}])
+    def test_api_rejects_invalid_mode_without_admission(tmp_path, mode):
+        def forbidden(*args, **kwargs):
+            pytest.fail("Invalid submission must never reach a worker")
+    
+        settings = ApiSettings(
+            data_root=tmp_path / "api", db_path=tmp_path / "store.db", run_root=tmp_path / "jobs"
+        )
+>       with TestClient(create_app(settings, worker=forbidden)) as client:
+
+tests/test_search_mode_interfaces.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/starlette/testclient.py:572: in __enter__
+    portal.call(self.wait_startup)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:608: in wait_startup
+    await receive()
+.venv/lib/python3.12/site-packages/starlette/testclient.py:599: in receive
+    self.task.result()
+/usr/lib/python3.12/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:589: in lifespan
+    await self.app(scope, self.stream_receive.receive, self.stream_send.send)
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1181: in __call__
+    await lifespan(
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_runtime.py:238: in lifespan
+    await app(scope, wrapped_receive, wrapped_send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:103: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:37: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/gzip.py:63: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:49: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:678: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2798: in app
+    await self.lifespan(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:656: in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:248: in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+/usr/lib/python3.12/contextlib.py:210: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+headroom/api/app.py:350: in lifespan
+    snapshots.start(
+headroom/api/snapshot_queue.py:226: in start
+    root_fd = directory_fd(self.root, create=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/api/snapshot_queue.py:45: in directory_fd
+    os.mkdir(component, 0o700, dir_fd=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+event = 'os.mkdir', args = ('runs', 448, 65)
+
+    def closing_audit(event, args):
+        # Python's open audit event omits dir_fd. Relative opens are checked by the
+        # wrappers above, which possess it; absolute C-level opens are checked here.
+        if event == "open" and args and isinstance(args[0], (str, bytes, os.PathLike)):
+            if os.path.isabs(os.fsdecode(args[0])) and protected(args[0]):
+                raise PermissionError("Closing regression denies production file access")
+        if event in {"os.remove", "os.rmdir", "os.mkdir", "os.chmod", "os.truncate"}:
+            index = 1 if event in {"os.remove", "os.rmdir"} else 2
+            fd = args[index] if len(args) > index else None
+            if args and protected(actual_path(args[0], fd)):
+>               raise PermissionError("Closing regression denies production mutations")
+E               PermissionError: Closing regression denies production mutations
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:213: PermissionError
+_ test_retention_only_removes_expired_owned_subtrees_and_keeps_quota_metadata __
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_retention_only_removes_ex0')
+
+    def test_retention_only_removes_expired_owned_subtrees_and_keeps_quota_metadata(tmp_path):
+        clock = [100000.0]
+        manager = SnapshotQueue(settings(tmp_path), worker=failed_worker, clock=lambda: clock[0])
+        manager.start()
+        try:
+            identifier, _ = manager.reserve("a" * 64, "203.0.113.1")
+            job = manager.root / identifier
+            (job / "source.py").write_text("private source")
+            outside = tmp_path / "outside"
+            outside.mkdir()
+            (outside / "keep").write_text("untouched")
+            (job / "linked").symlink_to(outside, target_is_directory=True)
+            unrelated = manager.root / "unrelated"
+            unrelated.mkdir()
+            clock[0] += RETENTION_SECONDS
+>           manager.cleanup()
+
+tests/test_snapshot_routes.py:457: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <headroom.api.snapshot_queue.SnapshotQueue object at 0x7e7123cf4a70>
+
+    def cleanup(self):
+        """Remove only owned 32-hex children, never descend through a symlink."""
+        with self._lock:
+            cutoff = self.clock() - RETENTION_SECONDS
+            descriptor = directory_fd(self.root)
+            try:
+                with self._connect() as db:
+                    recorded = {
+                        row["id"]: row["created_at"]
+                        for row in db.execute("SELECT id,created_at FROM snapshots")
+                    }
+                    for name in os.listdir(descriptor):
+                        if not RUN_ID.fullmatch(name):
+                            continue
+                        info = os.stat(name, dir_fd=descriptor, follow_symlinks=False)
+                        created = recorded.get(name, info.st_mtime)
+                        if created > cutoff:
+                            continue
+                        if stat.S_ISDIR(info.st_mode):
+                            if not shutil.rmtree.avoids_symlink_attacks:
+>                               raise RuntimeError("Secure retention cleanup is unavailable")
+E                               RuntimeError: Secure retention cleanup is unavailable
+
+headroom/api/snapshot_queue.py:410: RuntimeError
+_____ test_startup_marks_interrupted_work_failed_and_cleans_expired_inputs _____
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_startup_marks_interrupted0')
+
+    def test_startup_marks_interrupted_work_failed_and_cleans_expired_inputs(tmp_path):
+        clock = [100000.0]
+        config = settings(tmp_path)
+        first = SnapshotQueue(config, worker=failed_worker, clock=lambda: clock[0])
+        first.start()
+        identifier, _ = first.reserve("a" * 64, "203.0.113.1")
+        first.close()
+        with sqlite3.connect(first.registry) as db:
+            db.execute("update snapshots set status='running'")
+        second = SnapshotQueue(config, worker=failed_worker, clock=lambda: clock[0])
+        second.start()
+        assert second.row_for_owner(identifier, "a" * 64)["status"] == "failed"
+        second.reserve("a" * 64, "203.0.113.1")
+        with pytest.raises(SnapshotAdmissionError):
+            second.reserve("a" * 64, "203.0.113.1")
+        second.close()
+        clock[0] += RETENTION_SECONDS
+        third = SnapshotQueue(config, worker=failed_worker, clock=lambda: clock[0])
+>       third.start()
+
+tests/test_snapshot_routes.py:486: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/api/snapshot_queue.py:265: in start
+    self.cleanup()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <headroom.api.snapshot_queue.SnapshotQueue object at 0x7e712821c6b0>
+
+    def cleanup(self):
+        """Remove only owned 32-hex children, never descend through a symlink."""
+        with self._lock:
+            cutoff = self.clock() - RETENTION_SECONDS
+            descriptor = directory_fd(self.root)
+            try:
+                with self._connect() as db:
+                    recorded = {
+                        row["id"]: row["created_at"]
+                        for row in db.execute("SELECT id,created_at FROM snapshots")
+                    }
+                    for name in os.listdir(descriptor):
+                        if not RUN_ID.fullmatch(name):
+                            continue
+                        info = os.stat(name, dir_fd=descriptor, follow_symlinks=False)
+                        created = recorded.get(name, info.st_mtime)
+                        if created > cutoff:
+                            continue
+                        if stat.S_ISDIR(info.st_mode):
+                            if not shutil.rmtree.avoids_symlink_attacks:
+>                               raise RuntimeError("Secure retention cleanup is unavailable")
+E                               RuntimeError: Secure retention cleanup is unavailable
+
+headroom/api/snapshot_queue.py:410: RuntimeError
+__ test_retention_runs_with_jobs_disabled_and_other_instance_stays_read_only ___
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-381/test_retention_runs_with_jobs_0')
+
+    def test_retention_runs_with_jobs_disabled_and_other_instance_stays_read_only(tmp_path):
+        config = settings(tmp_path)
+        clock = [100000.0]
+        first = SnapshotQueue(config, worker=failed_worker, clock=lambda: clock[0])
+        assert first.start() is True
+        assert first.start() is True
+        identifier, _ = first.reserve("a" * 64, "203.0.113.1")
+        first.fail_upload(identifier)
+        other = SnapshotQueue(
+            settings(tmp_path, data_root=tmp_path / "different/api"),
+            worker=failed_worker,
+            clock=lambda: clock[0],
+        )
+        assert other.registry == first.registry
+        assert other.start() is False
+        assert other.row_for_owner(identifier, "a" * 64)["status"] == "failed"
+        with pytest.raises(SnapshotAdmissionError) as error:
+            other.reserve("a" * 64, "203.0.113.1")
+        assert error.value.status == 503
+        other.close()
+        assert first._started is True
+        first.close()
+        first.close()
+        assert other.start(process_jobs=False) is True
+        assert other.thread is None and other.expiry_thread.is_alive()
+        with pytest.raises(SnapshotAdmissionError):
+            other.reserve("a" * 64, "203.0.113.1")
+        clock[0] += RETENTION_SECONDS
+>       other.cleanup()
+
+tests/test_snapshot_routes.py:606: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <headroom.api.snapshot_queue.SnapshotQueue object at 0x7e71282ff3b0>
+
+    def cleanup(self):
+        """Remove only owned 32-hex children, never descend through a symlink."""
+        with self._lock:
+            cutoff = self.clock() - RETENTION_SECONDS
+            descriptor = directory_fd(self.root)
+            try:
+                with self._connect() as db:
+                    recorded = {
+                        row["id"]: row["created_at"]
+                        for row in db.execute("SELECT id,created_at FROM snapshots")
+                    }
+                    for name in os.listdir(descriptor):
+                        if not RUN_ID.fullmatch(name):
+                            continue
+                        info = os.stat(name, dir_fd=descriptor, follow_symlinks=False)
+                        created = recorded.get(name, info.st_mtime)
+                        if created > cutoff:
+                            continue
+                        if stat.S_ISDIR(info.st_mode):
+                            if not shutil.rmtree.avoids_symlink_attacks:
+>                               raise RuntimeError("Secure retention cleanup is unavailable")
+E                               RuntimeError: Secure retention cleanup is unavailable
+
+headroom/api/snapshot_queue.py:410: RuntimeError
+___ test_existing_saved_lab_result_cannot_supply_missing_parameter_evidence ____
+
+    def test_existing_saved_lab_result_cannot_supply_missing_parameter_evidence():
+        # Existing actual Lab captures predate parameter hooks. Read without altering them.
+        root = Path(__file__).resolve().parents[1]
+        source = root / "reports/t1.1-acceptance.json"
+        if not source.exists():
+            pytest.skip("Historical acceptance report is not available in this checkout")
+        records = json.loads(source.read_text())["runs"]
+        candidates = []
+        for entry in records.values():
+            path = root / entry["run_dir"] / "result.json"
+            if path.exists():
+>               value = json.loads(path.read_text())
+                                   ^^^^^^^^^^^^^^^^
+
+tests/test_verify_runner.py:114: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1029: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+file = PosixPath('/home/xiaodouzi/workspace/headroom/runs/lab-acceptance/20261023T022523Z/584cc1c4c2c04ba79954eaa22d471a0b/result.json')
+args = ('r', -1, 'locale', None, None), kwargs = {}
+
+    def guarded(file, *args, **kwargs):
+        actual = actual_path(file, kwargs.get("dir_fd"))
+        if isinstance(actual, (str, bytes, os.PathLike)):
+            key = str(Path(os.fsdecode(actual)).resolve())
+            if key in HISTORICAL_READ_COPIES:
+                mode = args[0] if args else kwargs.get("flags", kwargs.get("mode", "r"))
+                readonly = (mode & (os.O_WRONLY|os.O_RDWR|os.O_CREAT|os.O_TRUNC|os.O_APPEND) == 0) if isinstance(mode,int) else mode in {"r","rb","rt"}
+                if not readonly:
+                    raise PermissionError("Closing regression historical copies are read only")
+                file = HISTORICAL_READ_COPIES[key]
+        if protected(actual_path(file, kwargs.get('dir_fd'))):
+>           raise PermissionError("Integration cannot access live credentials/profile/databases")
+E           PermissionError: Integration cannot access live credentials/profile/databases
+
+reports/final48h-closing-regression-20261029/closing_guarded_v3.py:76: PermissionError
+=========================== short test summary info ============================
+FAILED tests/test_api_deadline.py::test_waiting_job_expires_without_starting_and_slow_report_does_not_delay_watchdog
+FAILED tests/test_availability.py::test_health_and_usage_share_safe_global_observations
+FAILED tests/test_before_evidence_downloads.py::test_real_orchestrator_finally_locators_drive_recovered_pair_downloads[False]
+FAILED tests/test_before_evidence_downloads.py::test_real_orchestrator_finally_locators_drive_recovered_pair_downloads[True]
+FAILED tests/test_before_evidence_downloads.py::test_legacy_and_recorded_canonical_downloads_unchanged[False]
+FAILED tests/test_before_evidence_downloads.py::test_legacy_and_recorded_canonical_downloads_unchanged[True]
+FAILED tests/test_before_evidence_downloads.py::test_download_rejects_missing_or_linked_backup_without_canonical_fallback[missing]
+FAILED tests/test_before_evidence_downloads.py::test_download_rejects_missing_or_linked_backup_without_canonical_fallback[leaf_link]
+FAILED tests/test_before_evidence_downloads.py::test_download_rejects_missing_or_linked_backup_without_canonical_fallback[ancestor_link]
+FAILED tests/test_runtime_image.py::test_build_wrapper_uses_synced_project_python_without_dotenv_or_system_python
+FAILED tests/test_search_mode_interfaces.py::test_api_submission_persists_actual_mode_and_forwards_request[None]
+FAILED tests/test_search_mode_interfaces.py::test_api_submission_persists_actual_mode_and_forwards_request[until_target]
+FAILED tests/test_search_mode_interfaces.py::test_api_submission_persists_actual_mode_and_forwards_request[bounded_pareto]
+FAILED tests/test_search_mode_interfaces.py::test_api_rejects_invalid_mode_without_admission[unbounded]
+FAILED tests/test_search_mode_interfaces.py::test_api_rejects_invalid_mode_without_admission[False]
+FAILED tests/test_search_mode_interfaces.py::test_api_rejects_invalid_mode_without_admission[None]
+FAILED tests/test_search_mode_interfaces.py::test_api_rejects_invalid_mode_without_admission[mode3]
+FAILED tests/test_search_mode_interfaces.py::test_api_rejects_invalid_mode_without_admission[mode4]
+FAILED tests/test_snapshot_routes.py::test_retention_only_removes_expired_owned_subtrees_and_keeps_quota_metadata
+FAILED tests/test_snapshot_routes.py::test_startup_marks_interrupted_work_failed_and_cleans_expired_inputs
+FAILED tests/test_snapshot_routes.py::test_retention_runs_with_jobs_disabled_and_other_instance_stays_read_only
+FAILED tests/test_verify_runner.py::test_existing_saved_lab_result_cannot_supply_missing_parameter_evidence
+22 failed, 136 passed in 69.22s (0:01:09)
