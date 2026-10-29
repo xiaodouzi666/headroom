@@ -146,6 +146,18 @@ def verify_feature_parent(parent, *, environ=None, active=True):
 
 def _quiet_registry(conn, *, allowed_run=None):
     # Cleanup uncertainty must not be escaped by switching from F3b to F5.
+    if conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='f5_zero_dispatch_recoveries'"
+    ).fetchone():
+        require(
+            conn.execute(
+                "SELECT 1 FROM f5_zero_dispatch_recoveries WHERE state!='settled' "
+                "AND (? IS NULL OR run_id!=?) LIMIT 1",
+                (allowed_run, allowed_run),
+            ).fetchone()
+            is None,
+            "F5_RECOVERY_UNSETTLED",
+        )
     for table in ("feature_children", "f3_children"):
         row = conn.execute(
             f"SELECT run_id FROM {table} WHERE state!='settled' "
@@ -342,6 +354,12 @@ def verify_feature_child_binding(
     project_root=None,
     environ=None,
 ):
+    if binding.get("schema") == "headroom.final48.f5-zero-dispatch-recovery.v1":
+        from headroom.acceptance.f5_recovery import verify_f5_recovery
+
+        return verify_f5_recovery(
+            binding, intent=intent, run_id=run_id, project_root=project_root, environ=environ
+        )
     receipt, parent = _child_record(binding, environ=environ)
     require(run_id == binding["run_id"], "FEATURE_CHILD_RUN_CHANGED")
     require(
