@@ -1,0 +1,88 @@
+{
+  "scope": "offline MockTransport and synthetic Lab only; no real provider/GPU/deployment/commit",
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/python",
+        "reports/final48h-closing-regression-20261029/closing_guarded_v5.py",
+        "tests/test_runtime_refinement.py",
+        "tests/test_runtime_refinement_loop.py",
+        "tests/test_orchestrator.py",
+        "tests/test_solver_context.py",
+        "tests/test_patch.py",
+        "tests/test_store.py"
+      ],
+      "exit_code": 0,
+      "seconds": 16.253513935022056
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/runtime_refinement.py",
+        "headroom/orchestrator.py",
+        "headroom/solver_context.py",
+        "headroom/patch.py",
+        "headroom/store/db.py",
+        "tests/test_runtime_refinement.py",
+        "tests/test_runtime_refinement_loop.py",
+        "tests/test_orchestrator.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.007328626001253724
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/runtime_refinement.py",
+        "headroom/orchestrator.py",
+        "headroom/solver_context.py",
+        "headroom/patch.py",
+        "headroom/store/db.py",
+        "tests/test_runtime_refinement.py",
+        "tests/test_runtime_refinement_loop.py",
+        "tests/test_orchestrator.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.005533956922590733
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "--",
+        "headroom/runtime_refinement.py",
+        "headroom/orchestrator.py",
+        "headroom/solver_context.py",
+        "headroom/patch.py",
+        "headroom/store/db.py",
+        "tests/test_runtime_refinement.py",
+        "tests/test_runtime_refinement_loop.py",
+        "tests/test_orchestrator.py",
+        "tests/fixtures/runtime-error-r15-s4.json"
+      ],
+      "exit_code": 0,
+      "seconds": 0.00442115287296474
+    }
+  ],
+  "result": "147 passed in 15.56s",
+  "source_hashes": {
+    "headroom/runtime_refinement.py": "bbbae174801149c8d9f7061e5df07462cbc1cd9d2a733bda69d35c8f82924768",
+    "headroom/orchestrator.py": "daac8cd0db44743a13fbf5e972c89c5c3077e1c94dba697d5b87b2cbff894b6d",
+    "headroom/solver_context.py": "50f2b054652dbba171faadbd82b2defb87a0b941835cc02c1eff02e607ab12d0",
+    "headroom/patch.py": "c8c72c317bd9d3892c871129844d8fc49f03f95095534d980bde7a256962f6aa",
+    "headroom/store/db.py": "f4e80ea7567476111694b9053ab01168bf7efe5cbad1ac0d82e4a885d53aeba1",
+    "tests/test_runtime_refinement.py": "e56228657a46ce1f687415f1e1a134e70819b00617778977427af00014cb07ab",
+    "tests/test_runtime_refinement_loop.py": "df8f50e1e9b22b37be0dfe70502a5226677085bbccdac193579cfaaf34806693",
+    "tests/test_orchestrator.py": "129b1e365902712c3faf792dfe191fd76b714fee26ddd2ed2639b0935e401d9f",
+    "tests/fixtures/runtime-error-r15-s4.json": "91eb70604cd85a2f1f92a3fd3c296cc306de899ec1b1b801c7baad8cefdf0495"
+  },
+  "unchanged_during_checks": true,
+  "new_provider_calls": 0,
+  "gpu_jobs": 0,
+  "original_proposal_preserved": true,
+  "preexisting_test_expectation_attribution": "baseline-review-attribution.json"
+}

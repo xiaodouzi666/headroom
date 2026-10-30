@@ -1,0 +1,136 @@
+{
+  "status": "READ_ONLY_RECOMMENDATION_NOT_IMPLEMENTED",
+  "source_freeze": "R15; no production/tests/requiredchecks edits",
+  "scope": "Avoid silent training coverage reduction without confusing legitimate optimizer-in-backward grouping",
+  "actual_r14_s7": [
+    {
+      "role": "baseline",
+      "run_id": "e0280b91ce614893a1207e3ccc185726",
+      "path": "runs/repair-followup/execution-r14-20261030/jobs/0fba6eeccc18411590b036557f7f9526/lab/e0280b91ce614893a1207e3ccc185726/result.json",
+      "sha256": "1a4620b817b2d92dcef6219b5dbb0472defb6590e95e35b662bded42273781f8",
+      "status": "completed",
+      "steps": 20,
+      "registered_parameter_count": 1075970304,
+      "registered_count_complete": true,
+      "catalog_entries": 34,
+      "catalog_numel": 1075970304,
+      "catalog_requires_grad_true_numel": 1075970304,
+      "catalog_requires_grad_false_numel": 0,
+      "observations_complete": true,
+      "logical_boundary_complete": true,
+      "update_sets_complete": true,
+      "logical_updates": 20,
+      "updated_numel_per_logical_update": [
+        1075970304,
+        1075970304,
+        1075970304,
+        1075970304,
+        1075970304,
+        1075970304,
+        1075970304,
+        1075970304,
+        1075970304,
+        1075970304,
+        1075970304,
+        1075970304,
+        1075970304,
+        1075970304,
+        1075970304,
+        1075970304,
+        1075970304,
+        1075970304,
+        1075970304,
+        1075970304
+      ],
+      "all_records_update_catalog": true,
+      "optimizer_classes": [
+        "torch.optim.adamw.AdamW"
+      ]
+    },
+    {
+      "role": "candidate",
+      "run_id": "71a577d707ef40fdb0dbb10659d44a49",
+      "path": "runs/repair-followup/execution-r14-20261030/jobs/0fba6eeccc18411590b036557f7f9526/lab/71a577d707ef40fdb0dbb10659d44a49/result.json",
+      "sha256": "dcd5bf033c5a8fda64257be7c374c5cb4dd62f811bf6e0c8ee48aa24f3bab3fa",
+      "status": "completed",
+      "steps": 20,
+      "registered_parameter_count": 1075970304,
+      "registered_count_complete": true,
+      "catalog_entries": 2,
+      "catalog_numel": 2097408,
+      "catalog_requires_grad_true_numel": 2097408,
+      "catalog_requires_grad_false_numel": 0,
+      "observations_complete": true,
+      "logical_boundary_complete": true,
+      "update_sets_complete": true,
+      "logical_updates": 20,
+      "updated_numel_per_logical_update": [
+        2097408,
+        2097408,
+        2097408,
+        2097408,
+        2097408,
+        2097408,
+        2097408,
+        2097408,
+        2097408,
+        2097408,
+        2097408,
+        2097408,
+        2097408,
+        2097408,
+        2097408,
+        2097408,
+        2097408,
+        2097408,
+        2097408,
+        2097408
+      ],
+      "all_records_update_catalog": true,
+      "optimizer_classes": [
+        "torch.optim.adamw.AdamW"
+      ]
+    }
+  ],
+  "existing_verification": {
+    "parameter_count_unchanged": true,
+    "parameter_policy": true,
+    "loss_tolerance": false,
+    "numerical_acceptance": false,
+    "max_loss_delta": 3.3520333766937256,
+    "target_met": false
+  },
+  "findings": [
+    "Current parameter policy compares total registered nn.Module parameters, which are unchanged by disabling gradients or removing parameters from optimizer groups.",
+    "R14 real optimizer captures show 34-to-2 catalog entries and 1075970304-to-2097408 trainable/updated elements at every one of 20 logical updates; existing loss gate already rejected the candidate.",
+    "Existing optimizer summary can expose this measured narrowing, but it is cooperative evidence rather than authentication or bitwise parameter-state equivalence."
+  ],
+  "minimum_proposed_design": [
+    "Add an independent host-derived training-coverage comparison observation for baseline/original-workload reference and candidate, with explicit status comparable/changed/unknown and raw supporting totals; leave current acceptance unchanged until separately approved.",
+    "Only use validated source/run-bound captures with complete logical boundaries and update sets. For completed original baseline use its 20 actual logical records; for original OOM use only a completed original-workload-bound reference. Zero-step OOM initial constructor metadata is not proof of baseline update coverage.",
+    "Compare counts/numel of actually catalogued requires-grad parameters and per-logical-update union coverage, never optimizer object counts or raw post-hook call counts. Legitimate 34 child AdamW optimizers grouped into one backward remain 20 logical updates over 34 unique parameter identities.",
+    "When strict no-model-change policy and complete comparable captures demonstrate reduced trainable/update coverage, surface a specific semantic-policy violation with measured before/after fields before accepting the repair. Do not infer equivalence merely from equal coverage or use this observation to relax existing loss/input/reference gates.",
+    "Prefer planner/preflight feedback for an explicit freeze/filter plan contradicting a fully trainable executed baseline, allowing another plan within the existing six rounds; do not rewrite the model plan or auto-clear flags."
+  ],
+  "limitations": [
+    "Local p00001-style IDs identify process-local Parameter lifetimes; they cannot be compared across runs as stable layer identities.",
+    "Current requires_grad_at_observation is captured only on first optimizer/graph observation; it does not record later flag transitions or the entire model.",
+    "An absent optimizer parameter is not by itself proof that it is frozen. Report optimizer coverage reduction, not invented global frozen counts.",
+    "Equal aggregate counts/numel cannot detect replacing one same-sized subset by another; exact cross-run sets would require a separately designed stable parameter identity/name binding.",
+    "Version-counter advancement is an update observation, not proof that numerical values changed. A generic exact optimizer that skips numerically unchanged updates can alter version patterns; do not make unsupported broad equivalence claims.",
+    "Constructor registration newly improves zero-step initial evidence but does not certify successful subclass construction or future updates.",
+    "No numerical tolerance, fixed-nine denominator, six-target threshold, historical outcome or required acceptance check was edited."
+  ],
+  "source_hashes": {
+    "headroom/verify/compare.py": "96ec0fe80be65ddd6b1a65d4144bdec232ad4fbe72fa379f34c5bea3cee890de",
+    "headroom/optimizer_observations.py": "586978258d26914f72f8f5c76a1dee24ab16ce4260f53ea66af48682d862ae77",
+    "headroom/lab/hooks.py": "0781d54b5c34b7edddb5502f6d78d5c91be995bca53b91ceb5f7ab5877e22686",
+    "headroom/verify/numerical_requirement.py": "e81761e5650ae0ffd25e7e8dd2f6664e8a2de498e8e23889959bf4f00d2c869d"
+  },
+  "execution": {
+    "model_calls": 0,
+    "gpu_runs": 0,
+    "tests_run": 0,
+    "production_edits": []
+  }
+}

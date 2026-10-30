@@ -970,13 +970,17 @@ def test_interruption_during_pareto_publication_cannot_commit_unkept_point(tmp_p
 
 
 @pytest.mark.parametrize("empty_plan", [False, True])
-def test_diagnosis_information_request_stops_without_repeating_same_evidence(tmp_path, empty_plan):
+def test_diagnosis_information_request_stops_after_existing_bounded_review(tmp_path, empty_plan):
     result, store, requests, verifies, root = search_run(
         tmp_path, [{"needs_more_info": True, "empty_plan": empty_plan}], max_rounds=6
     )
     assert result["status"] == "needs_human"
     assert result["target_met"] is False
-    assert len(requests) == 1
+    # The existing prerequisite review may reconsider one nonempty blocked plan;
+    # it adds no runtime evidence or patch round. Empty plans do not get a review.
+    assert len(requests) == (1 if empty_plan else 2)
+    if not empty_plan:
+        assert "Prior prerequisite metadata" in requests[1]["messages"][-1]["content"]
     assert verifies == []
     assert (root / "train.py").read_text() == "VALUE = 1\n"
     report = json.loads(Path(result["report_json"]).read_text())

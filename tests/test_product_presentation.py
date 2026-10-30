@@ -148,6 +148,17 @@ def test_product_detail_sse_and_download_contract(tmp_path):
         (folder / "report.json").write_text(json.dumps(REPORT))
         (folder / "patch.diff").write_text(PATCH)
         store.add_event(run_id, "diagnose.done", {"reason": RAW_REASON, "cost_usd": None})
+        store.add_event(
+            run_id,
+            "diagnose.reused_for_patch_refinement",
+            {
+                "round": 2,
+                "source_round": 1,
+                "source_sha256": "private-origin-marker",
+                "new_model_call": False,
+            },
+        )
+        store.add_event(run_id, "diagnose.refinement_invalidated", {"round": 3})
         store.update_run(run_id, reason=RAW_REASON)
         return {"status": "needs_human", "reason": RAW_REASON}
 
@@ -171,12 +182,20 @@ def test_product_detail_sse_and_download_contract(tmp_path):
         assert raw_report.json() == REPORT
         projected = client.get(path + "/report.json", headers=PRODUCT)
         assert projected.json() == product_report(REPORT)
-        assert projected.headers["vary"] == "X-Headroom-View"
+        # Representation and authorization both participate in protected cache identity.
+        assert {part.strip().lower() for part in projected.headers["vary"].split(",")} == {
+            "x-headroom-view",
+            "authorization",
+        }
         assert client.get(path + "/patch.diff", headers=PRODUCT).text == PATCH
         raw_stream = client.get(path + "/events").text
         stream = client.get(path + "/events?view=product-v1").text
         assert RAW_REASON in raw_stream and RAW_REASON not in stream
         assert "Diagnosis completed" in stream and "event: stream.end" in stream
+        assert "Continuing from the previous diagnosis" in stream
+        assert "Diagnosis context changed; checking again" in stream
+        assert "event: diagnose.reused_for_patch_refinement" in stream
+        assert "private-origin-marker" in raw_stream and "private-origin-marker" not in stream
         assert (
             "id: 1\n"
             not in client.get(path + "/events?view=product-v1", headers={"Last-Event-ID": "1"}).text

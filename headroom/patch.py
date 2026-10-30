@@ -658,6 +658,7 @@ class PatchEngine:
                         "candidate_evidence",
                         "verification_feedback",
                         "numerical_reference_context",
+                        "runtime_patch_refinement",
                     )
                 }
             )

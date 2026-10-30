@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-30T12:30:41.488510+00:00",
+  "scope": "bounded broker backpressure correctness",
+  "initial_full_reference": {
+    "completed_steps": 8,
+    "required_steps": 20,
+    "status": "error",
+    "reason": "ConnectionResetError",
+    "elapsed_seconds": 149.47659871797077,
+    "peak_serialized_bytes": 17788307688,
+    "cleanup_verified": true,
+    "fixed_nine_score_changed": false,
+    "model_calls": 0
+  },
+  "root_cause": "Reply can reach sequential client before worker finally returns concurrency permit; old accept(False) reset a later legal request without dispatch.",
+  "regression_before": {
+    "failed": 1,
+    "seconds": 0.3,
+    "exception": "ConnectionResetError"
+  },
+  "regression_after": {
+    "passed": 60,
+    "failed": 0,
+    "seconds": 9.78
+  },
+  "limits_unchanged": {
+    "active_workers": 2,
+    "listen_backlog": 2,
+    "connection_seconds": 10,
+    "max_bytes": 68719476736,
+    "host_directory_mounted_in_target": false,
+    "quota_before_each_append": true
+  },
+  "artifacts": {
+    "reports/reference-scratch-20261030/backpressure-before.log": "cb49d2419ca0db75891e3bcf3e03a43f48771f7edf3e6f3862193e0e4df1c5e9",
+    "reports/reference-scratch-20261030/backpressure-after.log": "d2df807e96296740e36c3fe05f71b628fd8778559193652aa8b3f2d83f1a1378",
+    "reports/reference-scratch-20261030/full-reference-smoke.json": "484eb23180b5021a6363f3b13dd79bfa2143c82f282ed1ecae4d613a61f459d9",
+    "reports/reference-scratch-20261030/run_full_reference_smoke.py": "8e54938d94c8b7ae45b611843356430101f7af73f0590b72695dced5d3c84461"
+  },
+  "new_core_sha256": "4ac92b1fb8cbbeb2c1345ad8639b2a6a8268d1e66d202d3e2ba9d8fd67b08289",
+  "independent_review": "reports/reference-scratch-backpressure-review-20261030/independent-review.json"
+}

@@ -1,0 +1,179 @@
+{
+  "scope": "exact gate-related saved R15 metadata; not a new run or repair result",
+  "row": {
+    "decision": "revert",
+    "verification": {
+      "completed": false,
+      "loss_equivalence": "n/a",
+      "numerics_changed": false,
+      "checks": {
+        "baseline_capture": true,
+        "target_mode_valid": true,
+        "candidate_completed_required_steps": false,
+        "finite_candidate_losses": true,
+        "parameter_count_unchanged": true,
+        "numerics_policy": true,
+        "same_seed": true,
+        "same_inputs": null,
+        "same_effective_batch": null,
+        "same_objective": null,
+        "small_batch_reference_completed": false,
+        "small_batch_reference_same_seed": false,
+        "loss_decreases": false,
+        "loss_series_aligned_to_updates": false,
+        "loss_series_comparison_available": false,
+        "original_workload_offload_reference": false,
+        "loss_comparable": false,
+        "repository_no_reference_exception": false,
+        "loss_tolerance": false,
+        "numerical_acceptance": false,
+        "parameter_policy": true,
+        "measured_cuda_peaks": true,
+        "same_gpu_hardware": true,
+        "gpu_observation_clear": true,
+        "throughput_limit": null,
+        "memory_target": false
+      },
+      "after": {
+        "run_id": "60d51c16a0204696aa0b1ece1728757d",
+        "status": "error",
+        "execution_status": "error",
+        "protocol": "headroom.lab.v1",
+        "capture_complete": true,
+        "cleanup_verified": true,
+        "shared_gpu": false,
+        "gpu_observation_complete": true,
+        "exception": {
+          "type": "AttributeError",
+          "message": "'float' object has no attribute 'item'"
+        },
+        "execution": {
+          "timed_out": false,
+          "returncode": 1,
+          "artifact_quota_bytes": 536870912,
+          "artifact_quota_inodes": 4096,
+          "deadline_control": {
+            "protocol": "headroom.deadline.v1",
+            "clock_identity": {
+              "clock": "CLOCK_MONOTONIC",
+              "boot_id": "a4458013-9ffc-488c-916d-639030ea9fa4",
+              "monotonic_offset": {
+                "seconds": 0,
+                "nanoseconds": 0
+              },
+              "time_namespace_device": 5,
+              "time_namespace_inode": 4026531834
+            },
+            "started_monotonic_ns": 1918237466428961,
+            "hard_deadline_monotonic_ns": 1918357466428961,
+            "capture_deadline_monotonic_ns": 1918352466428961,
+            "max_seconds": 120,
+            "capture_reserve_seconds": 5.0
+          },
+          "log_limit_bytes_per_stream": 8388608,
+          "state": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "",
+            "StartedAt": "2026-10-30T12:14:38.840925171Z",
+            "FinishedAt": "2026-10-30T12:14:45.561271387Z"
+          },
+          "image_id": "sha256:5703e9edc41be02a69ba7bdf4eb9e5126a5f8915e1dd235ab9fe94b9a412afe5",
+          "cleanup_verified": true,
+          "cleanup_attempts": [
+            {
+              "operation": "stop",
+              "returncode": 0,
+              "stderr": ""
+            },
+            {
+              "operation": "kill",
+              "returncode": 1,
+              "stderr": "Error response from daemon: cannot kill container: 316b8ea856bb9fa2907777f08e06e709c6da88f7daf7ea6b0bf6cb4a9583a6e3: container 316b8ea856bb9fa2907777f08e06e709c6da88f7daf7ea6b0bf6cb4a9583a6e3 is not running\n"
+            },
+            {
+              "operation": "rm",
+              "returncode": 0,
+              "stderr": ""
+            }
+          ],
+          "cleanup_inspect": {
+            "returncode": 1,
+            "stdout": "[]\n",
+            "stderr": "Error response from daemon: No such container: 316b8ea856bb9fa2907777f08e06e709c6da88f7daf7ea6b0bf6cb4a9583a6e3\n"
+          },
+          "artifact_export": {
+            "files": 9,
+            "bytes": 371361,
+            "export_verified": true
+          },
+          "artifact_cleanup": {
+            "cleanup_verified": true
+          }
+        },
+        "pid": 1
+      }
+    },
+    "candidate_evidence": {
+      "diff": {
+        "available": true,
+        "reason": null,
+        "sha256": "242fe9f4a5d02e6f83dce01a38218250302e5200ecb602a0ffa559297004f7ea",
+        "utf8_bytes": 564,
+        "text": "--- a/train.py\n+++ b/train.py\n@@ -101,10 +101,10 @@\n         loss = (predictions - targets).square().mean()\n         # BUG: this training loop needlessly retains saved forward tensors.\n         # Each graph is only traversed once, so retain_graph is unnecessary.\n-        loss.backward(retain_graph=True)\n+        loss.backward()\n         optimizer.step()\n         # BUG: the epoch metric holds every retained graph instead of a float.\n-        total_loss += loss\n+        total_loss += loss.item()\n         synchronize(device)\n         emit(\n             \"step\",\n",
+        "included_bytes": 564,
+        "omitted_bytes": 0,
+        "truncated": false
+      }
+    }
+  },
+  "patch": {
+    "status": "applied",
+    "policy_report": {
+      "allowed": true,
+      "issues": [],
+      "notes": [],
+      "requires_runtime_verification": true
+    },
+    "env_changes": {},
+    "cli_changes": []
+  },
+  "failure": {
+    "schema": "headroom.runtime_patch_error.v1",
+    "content_is_untrusted_data": true,
+    "run_id": "60d51c16a0204696aa0b1ece1728757d",
+    "exception_type": "AttributeError",
+    "exception_message": "'float' object has no attribute 'item'",
+    "exception_message_truncated": false,
+    "trace_sha256": "230e2e0910d7bf8f3839fecee0d72e309bb4b6fa267b0c3eac83b5dc0221ea00",
+    "trace_bytes": 524,
+    "trace_complete": true,
+    "source_frames": [
+      {
+        "source_path": "train.py",
+        "source_sha256": "0e854979d8a0d359909a96db7baea1d59caf14be1bc8ee482ff683b090273fe0",
+        "line": 123,
+        "function": "<module>"
+      },
+      {
+        "source_path": "train.py",
+        "source_sha256": "0e854979d8a0d359909a96db7baea1d59caf14be1bc8ee482ff683b090273fe0",
+        "line": 114,
+        "function": "main"
+      }
+    ],
+    "manifest_sha256": "486b6cc8cb5d64f2fb080f9a9cfcb2dc29aef318b78fb808fc730445b3bfbf5c",
+    "scope": "failed candidate implementation; not retained source or acceptance evidence"
+  },
+  "diagnosis_flags": {
+    "valid": true,
+    "ready_for_patch": true,
+    "requires_supplement": false
+  }
+}

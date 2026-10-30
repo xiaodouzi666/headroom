@@ -50,7 +50,8 @@ def test_real_failed_request_gets_exact_context_without_mutation_or_readiness(re
         assert observation["kind"] == "source"
         assert observation["visible_ranges"] == [[1, 175]]
         assert "advertised_unknown_runtime_reference" not in context
-        assert "runtime values unverified" in context["availability_contract"]
+        assert "availability check verifies no runtime values" in context["availability_contract"]
+        assert "does not negate separate scoped observations" in context["availability_contract"]
     else:
         assert observation["kind"] == "field"
         assert "must both be null" in context["range_contract"]

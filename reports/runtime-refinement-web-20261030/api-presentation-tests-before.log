@@ -1,0 +1,59 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "cpu_docker_exact_pull_never": "allowed", "cpu_docker_other_pull_modes": "denied", "duplicate_docker_network_options": "denied", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "cpu_docker_exact_pull_never": "allowed", "cpu_docker_other_pull_modes": "denied", "duplicate_docker_network_options": "denied", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+..F.                                                                     [100%]
+=================================== FAILURES ===================================
+________________ test_product_detail_sse_and_download_contract _________________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-530/test_product_detail_sse_and_do0')
+
+    def test_product_detail_sse_and_download_contract(tmp_path):
+        project = tmp_path / "project"
+        (project / "scenarios").mkdir(parents=True)
+        (project / "scenarios" / "INDEX.yaml").write_text('{"scenarios": []}')
+        settings = ApiSettings(
+            project_root=project,
+            data_root=tmp_path / "api",
+            db_path=tmp_path / "db.sqlite3",
+            run_root=tmp_path / "jobs",
+            web_dist=tmp_path / "dist",
+            event_poll_seconds=0.001,
+        )
+    
+        def worker(request, *, store, run_root, run_id):
+            folder = Path(run_root) / run_id
+            folder.mkdir(parents=True, exist_ok=True)
+            (folder / "report.json").write_text(json.dumps(REPORT))
+            (folder / "patch.diff").write_text(PATCH)
+            store.add_event(run_id, "diagnose.done", {"reason": RAW_REASON, "cost_usd": None})
+            store.update_run(run_id, reason=RAW_REASON)
+            return {"status": "needs_human", "reason": RAW_REASON}
+    
+        app = create_app(settings, worker=worker)
+        with TestClient(app) as client:
+            response = client.post("/api/runs", json={"script_text": "print('offline fixture')"})
+            assert response.status_code == 202, response.text
+            run_id = response.json()["run_id"]
+            path = f"/api/runs/{run_id}"
+            for _ in range(200):
+                detail = client.get(path).json()
+                if detail.get("api_worker_finished"):
+                    break
+                time.sleep(0.01)
+            assert detail["api_worker_finished"] is True
+            assert detail["reason"] == RAW_REASON
+            product = client.get(path, headers=PRODUCT).json()
+            assert product["reason"] == "The provider has not supplied a complete usage total."
+            raw_report = client.get(path + "/report.json")
+            assert raw_report.content == json.dumps(REPORT).encode()
+            assert raw_report.json() == REPORT
+            projected = client.get(path + "/report.json", headers=PRODUCT)
+            assert projected.json() == product_report(REPORT)
+>           assert projected.headers["vary"] == "X-Headroom-View"
+E           AssertionError: assert 'X-Headroom-V...Authorization' == 'X-Headroom-View'
+E             
+E             - X-Headroom-View
+E             + X-Headroom-View, Authorization
+
+tests/test_product_presentation.py:174: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_product_presentation.py::test_product_detail_sse_and_download_contract
+1 failed, 3 passed in 1.68s

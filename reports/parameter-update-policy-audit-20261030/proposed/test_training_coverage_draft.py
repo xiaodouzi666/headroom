@@ -1,0 +1,329 @@
+"""Executable proposal tests only: production headroom and tests stay unchanged."""
+
+import copy
+import importlib.machinery
+import importlib.util
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+DIRECTORY = Path(__file__).parent
+
+
+def load_draft(name, path):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    loader.exec_module(module)
+    return module
+
+
+coverage = load_draft("headroom.verify.training_coverage", DIRECTORY / "training_coverage.py")
+compare = load_draft("headroom.verify.compare_draft", DIRECTORY / "compare.py.txt")
+PAIR = {"same_inputs": True, "same_effective_batch": True, "same_objective": True}
+
+
+def captured(role, *, parameters=34, registered=None, child_optimizers=False):
+    digest = ("a" if role == "baseline" else "b") * 64
+    identity = ("c" if role == "baseline" else "d") * 32
+    ids = [f"p{number:05d}" for number in range(1, parameters + 1)]
+    return {
+        "protocol": "headroom.lab.v1",
+        "run_id": identity,
+        "capture_complete": True,
+        "cleanup_verified": True,
+        "status": "completed",
+        "steps": 20,
+        "loss_series": [1 - number * 0.01 for number in range(20)],
+        "peak_allocated_bytes": 10_000_000_000 if role == "baseline" else 6_000_000_000,
+        "peak_reserved_bytes": 11_000_000_000 if role == "baseline" else 7_000_000_000,
+        "step_ms_median": 100,
+        "shared_gpu": False,
+        "gpu_observation_complete": True,
+        "parameter_count": parameters * 7 if registered is None else registered,
+        "parameter_count_complete": True,
+        "parameter_count_source": "lab_module_parameter_hooks",
+        "env": {
+            "device": "cuda",
+            "seed": 7,
+            "seeded": {"torch": True, "python": True, "numpy": True},
+            "deterministic_algorithms": True,
+            "gpu_name": "offline fixture GPU",
+            "gpu_total_memory_bytes": 24 * 2**30,
+        },
+        "pairing_capture": {
+            "source_contract": {"source_sha256": digest, "supported": False},
+        },
+        "optimizer_update_observation": {
+            "protocol": "headroom.optimizer_updates.v1",
+            "complete": True,
+            "logical_boundary_complete": True,
+            "parameter_update_sets_complete": True,
+            "optimizer_step_calls": 20 * parameters if child_optimizers else 20,
+            "successful_optimizer_step_calls": 20 * parameters if child_optimizers else 20,
+            "logical_updates": 20,
+            "parameter_catalog": [
+                {"id": token, "numel": 7, "requires_grad_at_observation": True} for token in ids
+            ],
+        },
+        "step_records": [
+            {
+                "step": number,
+                "optimizer_classes": ["torch.optim.adamw.AdamW"],
+                "updated_parameter_ids": list(ids),
+                "parameter_update_coverage_complete": True,
+                "optimizer_step_calls": parameters if child_optimizers else 1,
+                "update_basis": "complete_tensor_backward"
+                if child_optimizers
+                else "optimizer_post_hook",
+            }
+            for number in range(1, 21)
+        ],
+    }
+
+
+def bindings(left, right):
+    return {
+        role: {
+            "run_id": capture["run_id"],
+            "source_sha256": capture["pairing_capture"]["source_contract"]["source_sha256"],
+        }
+        for role, capture in (("baseline", left), ("candidate", right))
+    }
+
+
+def proof(left=None, right=None, binding=None):
+    left = captured("baseline") if left is None else left
+    right = captured("candidate") if right is None else right
+    return coverage.training_coverage_evidence(
+        left, right, bindings(left, right) if binding is None else binding
+    )
+
+
+def test_complete_34_child_optimizers_keep_same_logical_parameter_union():
+    left, right = captured("baseline"), captured("candidate", child_optimizers=True)
+    before = copy.deepcopy((left, right))
+    result = proof(left, right)
+    assert result["status"] == "no_reduction_observed"
+    assert result["not_reduced"] is True
+    assert result["measurements"]["candidate"]["updated_numel_per_logical_update"] == [238] * 20
+    assert right["optimizer_update_observation"]["successful_optimizer_step_calls"] == 680
+    assert (left, right) == before
+    assert result["numerical_equivalence_proven"] is False
+
+
+def test_same_registered_count_cannot_hide_actual_optimizer_subset():
+    left = captured("baseline")
+    right = captured("candidate", parameters=2, registered=238)
+    result = proof(left, right)
+    assert result["not_reduced"] is False
+    assert result["reduced_fields"] == [
+        "requires_grad_true_numel",
+        "updated_numel_per_logical_update",
+    ]
+    assert result["narrowed_logical_updates"] == list(range(1, 21))
+    assert result["measurements"]["baseline"]["requires_grad_true_numel"] == 238
+    assert result["measurements"]["candidate"]["requires_grad_true_numel"] == 14
+
+
+def test_requires_grad_freeze_and_update_subset_are_detected_without_deleting_layers():
+    left, right = captured("baseline"), captured("candidate")
+    observation = right["optimizer_update_observation"]
+    for item in observation["parameter_catalog"][:-2]:
+        item["requires_grad_at_observation"] = False
+    ids = [item["id"] for item in observation["parameter_catalog"][-2:]]
+    for record in right["step_records"]:
+        record["updated_parameter_ids"] = ids
+    result = proof(left, right)
+    assert result["not_reduced"] is False
+    assert "catalog_numel" not in result["reduced_fields"]
+    assert "requires_grad_true_numel" in result["reduced_fields"]
+    assert "updated_numel_per_logical_update" in result["reduced_fields"]
+
+
+def test_parameter_entry_count_alone_does_not_reject_lossless_flattening():
+    left = captured("baseline")
+    right = captured("candidate", parameters=1, registered=238)
+    right["optimizer_update_observation"]["parameter_catalog"][0]["numel"] = 238
+    result = proof(left, right)
+    assert result["not_reduced"] is True
+    assert result["numerical_equivalence_proven"] is False
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "zero_step_oom",
+        "nineteen",
+        "incomplete_capture",
+        "incomplete_cleanup",
+        "incomplete_boundary",
+        "incomplete_set",
+        "missing_observation",
+        "wrong_digest",
+        "wrong_run",
+        "duplicate_id",
+        "unknown_update_id",
+        "bool_numel",
+        "invalid_requires_grad",
+        "invalid_parameter_count_source",
+    ],
+)
+def test_missing_or_malformed_measurements_stay_unknown(mutation):
+    left, right = captured("baseline"), captured("candidate", parameters=2, registered=238)
+    expected = bindings(left, right)
+    if mutation == "zero_step_oom":
+        left.update(status="oom", steps=0, step_records=[])
+    elif mutation == "nineteen":
+        right["steps"] = 19
+    elif mutation == "incomplete_capture":
+        right["capture_complete"] = False
+    elif mutation == "incomplete_cleanup":
+        right["cleanup_verified"] = False
+    elif mutation == "incomplete_boundary":
+        right["optimizer_update_observation"]["logical_boundary_complete"] = False
+    elif mutation == "incomplete_set":
+        right["step_records"][0]["parameter_update_coverage_complete"] = False
+    elif mutation == "missing_observation":
+        right.pop("optimizer_update_observation")
+    elif mutation == "wrong_digest":
+        expected["candidate"]["source_sha256"] = "0" * 64
+    elif mutation == "wrong_run":
+        expected["candidate"]["run_id"] = "0" * 32
+    elif mutation == "duplicate_id":
+        right["optimizer_update_observation"]["parameter_catalog"][1]["id"] = "p00001"
+    elif mutation == "unknown_update_id":
+        right["step_records"][0]["updated_parameter_ids"] = ["p99999"]
+    elif mutation == "bool_numel":
+        right["optimizer_update_observation"]["parameter_catalog"][0]["numel"] = True
+    elif mutation == "invalid_requires_grad":
+        right["optimizer_update_observation"]["parameter_catalog"][0][
+            "requires_grad_at_observation"
+        ] = 1
+    else:
+        right["parameter_count_source"] = "target_self_report"
+    result = proof(left, right, expected)
+    assert result["status"] == "unknown"
+    assert result["not_reduced"] is None
+    assert result["numerical_equivalence_proven"] is False
+
+
+def test_missing_binding_does_not_self_authenticate_capture_claim():
+    assert proof(binding={})["not_reduced"] is None
+
+
+@pytest.mark.parametrize("policy", [{}, {"allow_numerics_change": True}])
+def test_existing_parameter_policy_rejects_subset_even_with_identical_loss_or_precision_permission(
+    policy,
+):
+    left = captured("baseline")
+    right = captured("candidate", parameters=2, registered=238)
+    report = compare.compare_runs(
+        left,
+        right,
+        target="reclaim",
+        pairing=PAIR,
+        policy=policy,
+        training_source_bindings=bindings(left, right),
+    )
+    assert report.checks["parameter_count_unchanged"] is True
+    assert report.checks["training_coverage_not_reduced"] is False
+    assert report.checks["parameter_policy"] is False
+    assert report.loss_equivalence == "identical"
+    assert report.target_met is False
+    assert report.notes[0].startswith("TRAINING_COVERAGE_REDUCED")
+    assert "238/238 -> 14/14" in report.notes[0]
+    assert compare.REQUIRED_CHECKS.count("parameter_policy") == 1
+    assert "training_coverage_not_reduced" not in compare.REQUIRED_CHECKS
+
+
+def test_legacy_direct_caller_missing_coverage_preserves_acceptance_without_faking_evidence():
+    report = compare.compare_runs(
+        captured("baseline"), captured("candidate"), target="reclaim", pairing=PAIR
+    )
+    assert report.checks["training_coverage_not_reduced"] is None
+    assert report.checks["parameter_policy"] is True
+    assert report.target_met is True
+
+
+def test_34_child_optimizer_rewrite_passes_original_checks_unchanged():
+    left = captured("baseline")
+    right = captured("candidate", child_optimizers=True)
+    report = compare.compare_runs(
+        left,
+        right,
+        target="reclaim",
+        pairing=PAIR,
+        training_source_bindings=bindings(left, right),
+    )
+    assert report.checks["training_coverage_not_reduced"] is True
+    assert report.checks["parameter_policy"] is True
+    assert report.target_met is True
+
+
+def test_real_r14_optimizer_projection_retains_measured_policy_failure():
+    fixture = json.loads((DIRECTORY.parent / "r14-s7-optimizer-fixture.json").read_text())
+    result = proof(fixture["baseline"], fixture["candidate"], fixture["source_bindings"])
+    assert result["not_reduced"] is False
+    assert result["measurements"]["baseline"]["catalog_numel"] == 1_075_970_304
+    assert result["measurements"]["candidate"]["catalog_numel"] == 2_097_408
+    assert result["narrowed_logical_updates"] == list(range(1, 21))
+
+
+def test_removing_already_frozen_and_never_updated_optimizer_members_is_not_rejected():
+    left = captured("baseline")
+    right = captured("candidate", parameters=2, registered=238)
+    observation = left["optimizer_update_observation"]
+    for item in observation["parameter_catalog"][:-2]:
+        item["requires_grad_at_observation"] = False
+    remaining = [item["id"] for item in observation["parameter_catalog"][-2:]]
+    for record in left["step_records"]:
+        record["updated_parameter_ids"] = remaining
+    result = proof(left, right)
+    assert result["not_reduced"] is True
+    assert result["measurements"]["baseline"]["catalog_numel"] == 238
+    assert result["measurements"]["candidate"]["catalog_numel"] == 14
+    assert result["measurements"]["baseline"]["requires_grad_true_numel"] == 14
+    assert result["measurements"]["candidate"]["requires_grad_true_numel"] == 14
+
+
+def test_source_bindings_hash_real_owned_source_without_executing_it(tmp_path):
+    left, right = captured("baseline"), captured("candidate")
+    original, candidate = tmp_path / "original.py", tmp_path / "candidate.py"
+    original.write_text("raise RuntimeError('must never execute')\n")
+    candidate.write_text("raise RuntimeError('also never execute')\n")
+    result = coverage.bind_training_coverage_sources(left, original, right, candidate)
+    assert result["baseline"]["run_id"] == left["run_id"]
+    assert result["candidate"]["run_id"] == right["run_id"]
+    assert len(result["baseline"]["source_sha256"]) == 64
+    assert result["baseline"]["source_sha256"] != result["candidate"]["source_sha256"]
+    missing = coverage.bind_training_coverage_sources(left, None, right, candidate)
+    assert "baseline" not in missing
+    assert coverage.training_coverage_evidence(left, right, missing)["not_reduced"] is None
+
+
+def test_specific_failure_is_visible_in_existing_bounded_next_round_feedback():
+    from headroom.diagnose import round_verification_feedback
+
+    left = captured("baseline")
+    right = captured("candidate", parameters=2, registered=238)
+    report = compare.compare_runs(
+        left,
+        right,
+        target="reclaim",
+        pairing=PAIR,
+        training_source_bindings=bindings(left, right),
+    )
+    feedback = round_verification_feedback(
+        {"number": 1, "verification": report.model_dump(), "decision": "revert"},
+        selected_result=left,
+        selected_round=None,
+        selected_target_met=False,
+    )
+    assert "parameter_policy" in feedback["verification"]["failed_checks"]
+    assert "training_coverage_not_reduced" in feedback["verification"]["failed_checks"]
+    assert feedback["verification"]["notes"][0].startswith("TRAINING_COVERAGE_REDUCED")
+    assert "238/238 -> 14/14" in feedback["verification"]["notes"][0]

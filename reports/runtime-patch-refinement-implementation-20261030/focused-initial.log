@@ -1,0 +1,82 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "cpu_docker_exact_pull_never": "allowed", "cpu_docker_other_pull_modes": "denied", "duplicate_docker_network_options": "denied", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "cpu_docker_exact_pull_never": "allowed", "cpu_docker_other_pull_modes": "denied", "duplicate_docker_network_options": "denied", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+............................F......FF.F.                                 [100%]
+=================================== FAILURES ===================================
+_ test_one_ultra_then_two_fresh_supers_reverts_original_source_and_marks_reuse _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-527/test_one_ultra_then_two_fresh_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a819de3ef60>
+
+    def test_one_ultra_then_two_fresh_supers_reverts_original_source_and_marks_reuse(
+        tmp_path, monkeypatch
+    ):
+        install_capture_adapters(monkeypatch)
+        result, store, requests, verifies, root = fixtures.search_run(tmp_path, plans())
+        try:
+>           assert result["target_met"]  # Synthetic verification only.
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           assert False
+
+tests/test_runtime_refinement_loop.py:152: AssertionError
+____ test_six_round_limit_counts_every_refinement_and_never_adds_a_seventh _____
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-527/test_six_round_limit_counts_ev0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a819d9a4d70>
+
+    def test_six_round_limit_counts_every_refinement_and_never_adds_a_seventh(tmp_path, monkeypatch):
+        install_capture_adapters(monkeypatch)
+        result, store, requests, verifies, _ = fixtures.search_run(
+            tmp_path, plans(count=6, all_error=True), max_rounds=6
+        )
+        try:
+            assert not result["target_met"]
+>           assert len(verifies) == 6
+E           AssertionError: assert 1 == 6
+E            +  where 1 = len([{'original': {'run_id': 'aef21a33286f41029712ff99d244f8ce', 'run_dir': '/tmp/pytest-of-xiaodouzi/pytest-527/test_six_...tches/patch-engine-45b3489025484617917c57af26ec91f4/attempt-1/patch-03031ef144694f51a3c3b4094b40b25d/candidate', ...}}])
+
+tests/test_runtime_refinement_loop.py:239: AssertionError
+_________ test_existing_budget_hook_stops_fresh_super_before_transport _________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-527/test_existing_budget_hook_stop0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a81a0537560>
+
+    def test_existing_budget_hook_stops_fresh_super_before_transport(tmp_path, monkeypatch):
+        install_capture_adapters(monkeypatch, deny_second_patch=True)
+        result, store, requests, verifies, root = fixtures.search_run(tmp_path, plans())
+        try:
+>           assert result["status"] == "budget_exceeded"
+E           AssertionError: assert 'failed' == 'budget_exceeded'
+E             
+E             - budget_exceeded
+E             + failed
+
+tests/test_runtime_refinement_loop.py:253: AssertionError
+_______ test_unavailable_combined_context_falls_back_to_normal_diagnosis _______
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-527/test_unavailable_combined_cont0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a81a0535820>
+
+    def test_unavailable_combined_context_falls_back_to_normal_diagnosis(tmp_path, monkeypatch):
+        install_capture_adapters(monkeypatch)
+        real = orchestrator.solver_prompt_context
+    
+        def bounded(**kwargs):
+            if kwargs.get("runtime_patch_refinement") is not None:
+                raise ValueError("Synthetic combined-context admission refusal")
+            return real(**kwargs)
+    
+        monkeypatch.setattr(orchestrator, "solver_prompt_context", bounded)
+        result, store, requests, _, _ = fixtures.search_run(tmp_path, plans())
+        try:
+>           assert outcomes(requests).count(ULTRA_MODEL) == 2
+E           assert 1 == 2
+E            +  where 1 = <built-in method count of list object at 0x7a819da64280>('nvidia/Nemotron-3-Ultra-550b-a55b')
+E            +    where <built-in method count of list object at 0x7a819da64280> = ['nvidia/Nemotron-3-Ultra-550b-a55b', 'nvidia/nemotron-3-super-120b-a12b'].count
+E            +      where ['nvidia/Nemotron-3-Ultra-550b-a55b', 'nvidia/nemotron-3-super-120b-a12b'] = outcomes([{'model': 'nvidia/Nemotron-3-Ultra-550b-a55b', 'messages': [{'role': 'system', 'content': 'Return only valid JSON mat...rounds": [], "verification_rounds": []}}}}'}], 'max_tokens': 4000, 'chat_template_kwargs': {'enable_thinking': False}}])
+
+tests/test_runtime_refinement_loop.py:288: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_runtime_refinement_loop.py::test_one_ultra_then_two_fresh_supers_reverts_original_source_and_marks_reuse
+FAILED tests/test_runtime_refinement_loop.py::test_six_round_limit_counts_every_refinement_and_never_adds_a_seventh
+FAILED tests/test_runtime_refinement_loop.py::test_existing_budget_hook_stops_fresh_super_before_transport
+FAILED tests/test_runtime_refinement_loop.py::test_unavailable_combined_context_falls_back_to_normal_diagnosis
+4 failed, 36 passed in 5.31s

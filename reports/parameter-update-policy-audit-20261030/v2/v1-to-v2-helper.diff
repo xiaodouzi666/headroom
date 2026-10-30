@@ -1,0 +1,51 @@
+--- v1/training_coverage.py
++++ v2/training_coverage.py
+@@ -29,7 +29,7 @@
+ 
+ 
+ def training_coverage_evidence(baseline, candidate, source_bindings=None, *, required_steps=20):
+-    """Compare actual element coverage only for two complete bound 20-update runs.
++    """Compare actual updated elements only for two complete bound 20-update runs.
+ 
+     Parameter IDs are process local. Compare element totals within each logical
+     update, never IDs or optimizer object/call counts across processes. Equal
+@@ -40,7 +40,7 @@
+         "status": "unknown",
+         "not_reduced": None,
+         "numerical_equivalence_proven": False,
+-        "scope": "cooperative source/run-bound actual optimizer element coverage",
++        "scope": "cooperative source/run-bound actual updated element coverage",
+     }
+ 
+     def unknown(reason):
+@@ -99,7 +99,10 @@
+             "updated_numel_per_logical_update": updated_numel,
+         }
+     before, after = measured["baseline"], measured["candidate"]
+-    reduced = [name for name in ("requires_grad_true_numel",) if after[name] < before[name]]
++    # Catalog membership and first-observation requires_grad flags are not
++    # full-model eligibility. They may narrow when unused optimizer members
++    # are removed without changing any actual update. Keep them informational.
++    reduced = []
+     narrowed_updates = [
+         number
+         for number, (left, right) in enumerate(
+@@ -129,7 +132,7 @@
+         before_update = before["updated_numel_per_logical_update"]
+         after_update = after["updated_numel_per_logical_update"]
+         evidence["feedback"] = (
+-            "TRAINING_COVERAGE_REDUCED: source-bound 20-update captures show optimizer/trainable "
++            "TRAINING_COVERAGE_REDUCED: source-bound 20-update captures show catalog/first-flag "
+             f"elements {before_catalog}/{before_trainable} -> "
+             f"{after_catalog}/{after_trainable}; updated elements per "
+             f"logical boundary {min(before_update)}..{max(before_update)} -> "
+@@ -139,7 +142,7 @@
+         )
+     else:
+         evidence["feedback"] = (
+-            "No reduction in observed optimizer/trainable/update element coverage; this does "
+-            "not prove identical parameter sets or numerical equivalence."
++            "No reduction in observed actual update-element coverage; catalog and first flags do "
++            "not prove full-model eligibility, identical parameter sets or numerical equivalence."
+         )
+     return evidence

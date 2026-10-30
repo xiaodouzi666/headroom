@@ -1,0 +1,77 @@
+{
+  "schema": "headroom.optimizer_group_options_implementation_review.v2",
+  "status": "applied_focused_pass_pending_independent_review",
+  "production_paths": {
+    "headroom/lab/hooks.py": "2b2b7cf9147110523cf18aae4d69378f6ce81553bae16e42410717e6864df370",
+    "headroom/optimizer_observations.py": "2606c5ee53700e5cc73e92cad82ad0cd27cb2c12424e6b87acc55eb6f013adf7",
+    "tests/test_optimizer_group_options.py": "8b4e485f645554a258c5e3632dcfebc8fc4f17dfca372d7c70afdad8ef802a80"
+  },
+  "patch_sha256": "0ad4cbc27a5c82588a420e4299bb0c6e2502ffdda409f6eed854f7ae0e6b46e0",
+  "original_v1_patch_preserved": true,
+  "focused": {
+    "guard": "reports/final48h-closing-regression-20261029/closing_guarded_v5.py",
+    "guard_sha256": "7fbbde0fe3942a2ea6675dcd3ede9141a45f57814208bce3b130a9e143539cc5",
+    "tests": 167,
+    "failures": 0,
+    "errors": 0,
+    "deselected": 4,
+    "seconds": 9.02,
+    "new_group_option_cases": 26,
+    "junit_sha256": "ff0a38693c929d72291f83c7d50c468b58ad52f9ed6770697cd8f0a7867b3573",
+    "log_sha256": "55eb225ef248458563951daf82305f85a56d0d27436df1b2a7e66483df2af97a",
+    "scope": "installed-hook actual CPU SGD + standard library/synthetic metadata + legacy optimizer/lab/context regressions; real_cpu Docker nodes excluded"
+  },
+  "ruff_check": "pass",
+  "format_check": "pass",
+  "preserved": [
+    "3072B total optimizer context cap",
+    "1024B component cap",
+    "source SHA/run ID gate",
+    "legacy unsupported/partial/observed meaning",
+    "zero updates and unknown numeric coverage after OOM",
+    "metadata cannot add legacy parameter identities",
+    "no new validator or policy behavior",
+    "no provider/GPU calls or budget changes"
+  ],
+  "raw_contract": {
+    "canonical_json_bytes": 65536,
+    "new_record_admission_bytes": 61440,
+    "reserved_counter_growth_bytes": 4096,
+    "strict_no_tensor_scalar_read": true,
+    "unknown_options": "count only, no names/values",
+    "existing_parameter_identity_only": true
+  },
+  "new_testcases": [
+    "test_constructor_observes_actual_sgd_group_options_without_inventing_updates",
+    "test_step_pre_records_changed_actual_lr_without_mutating_native_step",
+    "test_optional_group_metadata_failure_does_not_replace_native_behavior",
+    "test_group_metadata_never_populates_legacy_catalog_after_initial_observer_failure",
+    "test_added_no_grad_group_does_not_expand_legacy_catalog_via_optional_metadata",
+    "test_unsupported_values_are_unknown_without_copying_values[nan]",
+    "test_unsupported_values_are_unknown_without_copying_values[inf]",
+    "test_unsupported_values_are_unknown_without_copying_values[-9223372036854775809]",
+    "test_unsupported_values_are_unknown_without_copying_values[9223372036854775808]",
+    "test_unsupported_values_are_unknown_without_copying_values[private-value]",
+    "test_unsupported_values_are_unknown_without_copying_values[value5]",
+    "test_unsupported_values_are_unknown_without_copying_values[value6]",
+    "test_no_tensor_scalar_read_or_custom_object_conversion",
+    "test_betas_types_and_absent_keys_are_not_synthesized",
+    "test_unknown_group_names_and_values_are_not_exposed",
+    "test_source_mismatch_still_hides_all_new_metadata",
+    "test_legacy_capture_and_near_cap_restore_old_observed_facts",
+    "test_oversized_raw_rejects_only_options_not_parent_facts",
+    "test_malformed_metadata_is_unverified_without_losing_parent_facts[<lambda>0]",
+    "test_malformed_metadata_is_unverified_without_losing_parent_facts[<lambda>1]",
+    "test_malformed_metadata_is_unverified_without_losing_parent_facts[<lambda>2]",
+    "test_malformed_metadata_is_unverified_without_losing_parent_facts[<lambda>3]",
+    "test_malformed_metadata_is_unverified_without_losing_parent_facts[<lambda>4]",
+    "test_malformed_metadata_is_unverified_without_losing_parent_facts[<lambda>5]",
+    "test_observer_retains_no_strong_optimizer_reference",
+    "test_deadline_baseexception_propagates"
+  ],
+  "remaining": [
+    "independent code review by root/prereq agent",
+    "new preparation pins before any subsequent live campaign",
+    "real future captures required for new options; never backfill old captures"
+  ]
+}

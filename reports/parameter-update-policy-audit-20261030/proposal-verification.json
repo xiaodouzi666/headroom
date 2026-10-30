@@ -1,0 +1,56 @@
+{
+  "status": "REVIEWABLE_PROPOSAL_NOT_APPLIED",
+  "base_revision": "964b6581d0322a6699e81eae7619129f0e90d3e7",
+  "production_files_modified": [],
+  "production_tests_modified": [],
+  "proposed_destinations": [
+    "headroom/verify/training_coverage.py",
+    "headroom/verify/compare.py",
+    "headroom/verify/runner.py",
+    "tests/test_training_coverage.py"
+  ],
+  "existing_gate_reused": "parameter_policy",
+  "required_checks_changed": false,
+  "numerical_or_memory_thresholds_changed": false,
+  "source_pins_still_match": true,
+  "guarded_draft_validation": {
+    "passed": 27,
+    "failed": 0,
+    "seconds": 0.79,
+    "exit_code": 0,
+    "guard": "closing_guarded_v5",
+    "scope": "Report-only helper and compare loaded under ephemeral module names; production files untouched; production test body has equivalent imports",
+    "no_model": true,
+    "no_gpu": true,
+    "no_production_database": true
+  },
+  "core_cases": [
+    "Actual R14 source-bound capture projection: 1075970304-to-2097408 trainable/update elements, still rejected",
+    "Equal registered model count and identical scalar losses cannot hide a narrowed optimizer set",
+    "Native34-child optimizer-in-backward:680calls,20logical parameter unions, no rejection from object/call count",
+    "Already-frozen never-updated optimizer members can be removed without rejection",
+    "Lossless flattening with same element coverage is not rejected due to fewer Parameter objects",
+    "Missing/malformed/source-mismatched/run-mismatched/incomplete/zero-step OOM evidence stays unknown",
+    "Precision permission does not exempt dropping updates",
+    "Concrete before/after counts and failed existing parameter_policy survive bounded next-round feedback"
+  ],
+  "limits": [
+    "Cooperative runtime observations and source digest binding are not target authentication.",
+    "Only strict allow_model_change=false path adds the rejection; allow_model_change=true is not automatically objective authorization and remains subject to existing patch permission/marker checks.",
+    "Element coverage equality is not equality of cross-process parameter identities, values, optimizer state or objective.",
+    "Initial requires-grad flags describe first observation; per-update actual version observations provide separate coverage, not proof of numeric value changes.",
+    "The original OOM baseline remains unknown here even if a reference is later available; no new reference admission or proof path is introduced.",
+    "Missing coverage remains an unknown diagnostic, not a new universal mandatory gate and not an equivalence pass."
+  ],
+  "hashes": {
+    "reports/parameter-update-policy-audit-20261030/proposal.diff": "5edc8656021f8f9f2e3accf1cbea41990e3b80de5557c12a83716689e8ff4117",
+    "reports/parameter-update-policy-audit-20261030/proposed/training_coverage.py": "a4447fd1847b929eedf76ee2bbb044681bca4fd4273433734fd16d3b57fe13ba",
+    "reports/parameter-update-policy-audit-20261030/proposed/compare.py.txt": "2a665950b41b623204008caa810a6a15043e2b24caa780dadafb7229994f414c",
+    "reports/parameter-update-policy-audit-20261030/proposed/runner.py.txt": "530938778e70d5629e672f2c47d75e7df0311ee6064dac83f6ca8fde351a5f7d",
+    "reports/parameter-update-policy-audit-20261030/proposed/test_training_coverage.py.txt": "43121d9c19d3785e690625cfdd21c826bc34c1eda8b50daab8d430122ad8db8a",
+    "reports/parameter-update-policy-audit-20261030/proposed/test_training_coverage_draft.py": "d004641d0be244de239f6d77fe79ebcfd5df70fc99d699f56bcb7e0f0b868eab",
+    "reports/parameter-update-policy-audit-20261030/r14-s7-optimizer-fixture.json": "025907fdea5b194f13fe3a6440f133f50553418c9a6d2255b4ec8235a3ba21d5",
+    "reports/parameter-update-policy-audit-20261030/proposal-tests.xml": "254e1a0298e6c1b8932fd0cece00af91460efd255c09cd86983b4c4c6a296307",
+    "reports/parameter-update-policy-audit-20261030/proposal-tests.log": "2b02b6a89cadb0d1d0ceb32756f1e0873cb46d0089e53033f72ac6d0d65037ca"
+  }
+}

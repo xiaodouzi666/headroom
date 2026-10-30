@@ -1,0 +1,30 @@
+--- v2/training_coverage.py
++++ v3/training_coverage.py
+@@ -1,5 +1,6 @@
+ """Observe narrowed training coverage; never infer numerical equivalence from totals."""
+ 
++import re
+ from collections.abc import Mapping
+ from pathlib import Path
+ 
+@@ -20,10 +21,18 @@
+     ):
+         if script is None or not isinstance(capture, Mapping):
+             continue
+-        contract = source_contract(Path(script))
++        try:
++            contract = source_contract(Path(script))
++        except (OSError, ValueError, TypeError):
++            # Source evidence may have disappeared or become unreadable after
++            # execution. Preserve the verification result; this role stays unbound.
++            continue
++        digest = contract.get("source_sha256") if isinstance(contract, Mapping) else None
++        if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
++            continue
+         result[role] = {
+             "run_id": capture.get("run_id"),
+-            "source_sha256": contract.get("source_sha256"),
++            "source_sha256": digest,
+         }
+     return result
+ 

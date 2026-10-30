@@ -1,0 +1,164 @@
+"""Read-only focused document numeric validation; network/subprocess denied."""
+import copy
+from datetime import datetime, timezone
+from decimal import Decimal, localcontext
+import hashlib
+import importlib.util
+import json
+from pathlib import Path
+import re
+import socket
+import subprocess
+import sys
+
+sys.dont_write_bytecode = True
+ROOT = Path(__file__).resolve().parents[2]
+OUT = Path(__file__).resolve().parent
+
+def denied(*args, **kwargs):
+    raise AssertionError("No network/workload allowed in documentation validation")
+socket.getaddrinfo = denied
+socket.socket.connect = denied
+subprocess.Popen = denied
+spec = importlib.util.spec_from_file_location("original_numbers", ROOT/"scripts/verify_public_numbers.py")
+v = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(v)
+manifest_path = OUT/"numbers-r15-draft-v1.json"
+m = json.loads(manifest_path.read_text())
+assert m["version"] == "r15-draft-v1" and m["prepared_only"] and not m["public_documents_changed"]
+claims = {name:item["value"] for name,item in m["claims"].items()}
+checked_sources = []
+for name,item in m["claims"].items():
+    if "source" not in item:
+        continue
+    ref = item["source"]
+    raw = (ROOT/ref["path"]).read_bytes()
+    assert len(raw) == ref["bytes"] and v.digest(raw) == ref["sha256"], name
+    assert v.equal(v.pointer(v.parse_json(raw),ref["json_pointer"]),item["value"]), name
+    checked_sources.append({"claim":name,"source":ref})
+previous_path = ROOT/m["previous_numbers"]["path"]
+assert v.digest(previous_path.read_bytes()) == m["previous_numbers"]["sha256"]
+previous = json.loads(previous_path.read_text())
+previous_claims = {name:item["value"] for name,item in previous["claims"].items()}
+base_raw = (ROOT/previous["base_manifest"]["path"]).read_bytes()
+assert v.digest(base_raw) == previous["base_manifest"]["sha256"] == v.REVIEWED_SHA256
+base = v.Evidence(ROOT,v.parse_json(base_raw),allow_excerpts=True).verify()
+old_update = ROOT/previous["previous_update"]["path"]
+assert v.digest(old_update.read_bytes()) == v.SUPPLEMENT_SHA256
+prev = v.SupplementEvidence(base,v.parse_json(old_update.read_bytes()),manifest_path=previous["base_manifest"]["path"],manifest_raw=base_raw)
+r14_path = ROOT/m["previous_r14_draft"]["path"]
+assert v.digest(r14_path.read_bytes()) == m["previous_r14_draft"]["sha256"]
+r14 = json.loads(r14_path.read_text())
+for kind in ["valid","ready"]:
+    key = "latest.final_"+kind
+    assert claims[key] == sum(claims[n] is True for n in m["claims"][key]["inputs"])
+assert claims["latest.final_valid"] == 5 and claims["latest.final_ready"] == 1
+rows = claims["latest.rows"]
+assert len(rows)==9 and len({r["scenario_id"] for r in rows})==9
+assert sum(r["target_met"] is True for r in rows)==claims["latest.targets"]==1
+assert sum(r["first_round_diagnosis"]["raw_category_matches"] is True for r in rows)==claims["latest.raw_category_matches"]==4
+assert sum(r["first_round_diagnosis"]["valid_and_correct"] is True for r in rows)==claims["latest.valid_correct_first_causes"]==3
+assert sum(r["first_round_diagnosis"]["ready_for_patch"] is True for r in rows)==claims["latest.first_round_ready"]==2
+assert sum(r["first_round_diagnosis"]["ready_valid_and_correct"] is True for r in rows)==claims["latest.first_round_ready_valid_correct"]==1
+assert claims["latest.execution_status"]=="finished" and claims["latest.executed_cases"]==claims["latest.fixed_denominator"]==9
+assert claims["latest.minimum_targets"]==6 and claims["latest.targets"]<6
+assert claims["latest.actual_total_usd"] is None
+assert Decimal(claims["latest.charged_upper_usd"])==Decimal("0.65563404")
+assert Decimal(claims["latest.known_actual_subtotal_usd"])==Decimal("0.62755938")
+assert sum(Decimal(r["cost"]["charged_usd"]) for r in rows)==Decimal(claims["latest.charged_upper_usd"])
+assert sum(Decimal(r["cost"]["known_actual_subtotal_usd"]) for r in rows)==Decimal(claims["latest.known_actual_subtotal_usd"])
+assert all(r["cost"]["actual_usd"] is None for r in rows)
+old_scenarios={r["scenario_id"] for r in previous["historical_best_selection"]}
+assert len(old_scenarios | {r["scenario_id"] for r in rows if r["target_met"]})==m["historical_union_targets"]==5
+assert max(previous["summary"]["best_single_campaign_targets"],r14["claims"]["latest.targets"]["value"],claims["latest.targets"])==m["best_single_targets"]==3
+selections={r["scenario_id"]:r for r in m["historical_best_selection"]}
+assert len(selections)==5
+for old in previous["historical_best_selection"]:
+    if old["scenario_id"]!="s3_eval_no_grad_missing":assert old==selections[old["scenario_id"]]
+s3=selections["s3_eval_no_grad_missing"]
+assert s3["run_id"]=="0317411d868e41309c09974d1f573cb2" and s3["source_commit"]==claims["latest.source_revision"]=="964b6581d0322a6699e81eae7619129f0e90d3e7"
+assert claims["previous.s3.after_bytes"]==claims["selected.s3.after_bytes"]==648419840
+assert claims["selected.s3.target_met"] is True
+assert claims["selected.s3.before_updates"]==claims["selected.s3.after_updates"]==20
+assert claims["selected.s3.before_losses"]==claims["selected.s3.after_losses"] and len(claims["selected.s3.before_losses"])==20
+assert claims["selected.s3.params_before"]==claims["selected.s3.params_after"]==37791744
+assert all(claims["previous.s3.checks"][key] is True for key in ["same_inputs","same_effective_batch","same_objective","same_seed"])
+assert all(claims["selected.s3.checks"][key] is None for key in ["same_inputs","same_effective_batch","same_objective"])
+assert claims["selected.s3.checks"]["same_seed"] is True and claims["selected.s3.checks"]["loss_comparable"] is False
+assert claims["selected.s3.first_category"]=="retained_graph" and claims["selected.s3.authored_cause"]=="activations" and claims["selected.s3.first_valid_correct"] is False
+with localcontext() as c:
+    c.prec=40
+    before=Decimal(claims["selected.s3.before_bytes"]);after=Decimal(claims["selected.s3.after_bytes"])
+    assert Decimal(claims["selected.s3.before_GB"])==before/10**9
+    assert Decimal(claims["selected.s3.after_GB"])==after/10**9
+    assert Decimal(claims["selected.s3.reduction_pct"])==(before-after)*100/before
+assert len(claims["publication.entries"])==11 and claims["publication.entries"][0]["id"]=="r15-terminal-20261030"
+assert claims["publication.old_entries_preserved"] is True
+
+class Latest(v.SupplementEvidence):
+    def __init__(self):
+        self.root=ROOT
+        self.document={**prev.document,"summary":{**prev.document["summary"],"latest_campaign":"R15"}}
+        self.levels=copy.deepcopy(prev.levels)
+    def selected(self,scenario):
+        if scenario=="s3_eval_no_grad_missing":return {"scenario_id":scenario,"campaign":"R15"}
+        if scenario=="s8_two_models_resident":return {"scenario_id":scenario,"campaign":"R13"}
+        return prev.selected(scenario)
+    def value(self,name):
+        mapping={"R15.s3_eval_no_grad_missing.before.GB":"selected.s3.before_GB","R15.s3_eval_no_grad_missing.after.GB":"selected.s3.after_GB","best.s3_eval_no_grad_missing.reduction_pct":"selected.s3.reduction_pct"}
+        if name in mapping:return claims[mapping[name]]
+        if name in previous_claims:return previous_claims[name]
+        return prev.value(name)
+evidence=Latest()
+checked_lines=[]
+summary_expected={
+    "README.md":[5,3,1,3,2,4,1],"docs/DEVPOST.md":[5,3,1,3,2,4,1],
+    "docs/RESULTS.md":[1,3,4,2,1,5,1,6,3],
+}
+for name,record in m["documents"].items():
+    source=ROOT/name;draft=ROOT/record["draft_path"]
+    assert v.digest(source.read_bytes())==record["source_sha256"],("source document changed",name)
+    assert v.digest(draft.read_bytes())==record["draft_sha256"]
+    text=draft.read_text()
+    for number,line in enumerate(text.splitlines(),1):
+        if "<!-- numbers:" not in line:continue
+        if "numbers: summary" in line:
+            fractions=list(v.FRACTION.finditer(v.rendered_line(line)))
+            assert [int(f[1]) for f in fractions]==summary_expected[name]
+            assert all(int(f[2])==9 for f in fractions)
+            checked_lines.append({"document":name,"line":number,"type":"explicit timepoint/scoped summary fractions","values":summary_expected[name]})
+        else:
+            checked_lines.append({"document":name,"line":number,"claims":v.verify_line(evidence,line)})
+    assert "latest October 30 evaluation" in text
+readme=(OUT/"docs-draft/README.md").read_text();devpost=(OUT/"docs-draft/docs/DEVPOST.md").read_text();results=(OUT/"docs-draft/docs/RESULTS.md").read_text()
+assert "20 scalar losses identical; workload pairing incomplete | <!-- numbers: best.s3_eval_no_grad_missing -->" in readme
+assert "input, effective-batch and objective pairing was not established for the selected latest run" in devpost
+assert "matched inputs, effective batch, objective and seed" not in devpost
+assert "An earlier s3 run had complete pairing" in readme
+assert "Category mismatch / target met" in next(line for line in results.splitlines() if line.startswith("| s3: evaluation autograd | Activations"))
+assert "| s3: evaluation autograd | 0317411d868e41309c09974d1f573cb2 | 20 → 20 | 20 | 37,791,744 |" in results
+assert "[2026-10-30 / 964b658]" in results
+source_results=(OUT/"before/docs__RESULTS.md").read_text();r14results=(ROOT/"reports/r14-20261030-review/docs-draft/docs/RESULTS.md").read_text()
+marker="## Full campaign history"
+assert results[results.index(marker):]==source_results[source_results.index(marker):]==r14results[r14results.index(marker):]
+for rev in ["R8","R9","R10","R13"]:
+    old=next(line for line in source_results.splitlines() if line.startswith("| ["+rev+"]"))
+    assert old in results
+r14row=next(line for line in r14results.splitlines() if line.startswith("| [R14]"));assert r14row in results
+assert "| [R15](../reports/r15-20261030-review/terminal-review-20261030/review.md) | 1/9 | 4/9 | 3/9 | 1/9 | 0.65563404 |" in results
+assert "All six completed all nine scenarios" in results
+assert "known actual subtotal of $0.62755938" in results and "exact actual total remains unknown" in results
+assert "R11 stopped after two scenarios" in results and "R12 stopped after one annotation timeout" in results
+report={
+    "schema":"headroom.public-number-draft-check.v1","created_at":datetime.now(timezone.utc).isoformat(),"passed":True,"draft_only":True,"published":False,
+    "manifest":{"path":str(manifest_path.relative_to(ROOT)),"sha256":v.digest(manifest_path.read_bytes())},
+    "source_claims_checked":len(checked_sources),"raw_hashes_pointers_and_values":True,"derived_claims_checked":True,
+    "scoped_numeric_lines_checked":len(checked_lines),"checked_lines":checked_lines,
+    "source_documents_unchanged":True,"archived_history_bytes_preserved":True,"R14_historical_row_preserved":True,
+    "s3_exact_byte_tie_latest_selected":True,"new_s3_pairing_incomplete_not_borrowed":True,"new_s3_first_category_mismatch_reported":True,
+    "first_and_final_readiness_timepoints_separate":True,"union5_best3_unchanged":True,
+    "public_catalog11_is_not_full_campaign_count":True,"no_model_gpu_or_network_calls":True,
+    "legacy_source_levels":{**base.levels,**prev.levels},
+    "limitations":["Only drafts under reports were written; do not apply over a later complete evaluation.","Original source-number manifests and historical excerpts are unchanged; inherited unavailable originals use the existing reviewed excerpt mechanism, not new raw evidence.","The production checker remains R7-pinned. This reports-only adapter extends explicit source bindings without changing that checker or acceptance gates.","Full scalar identity does not establish the new selected s3 workload pairing, which remains unknown."]}
+(OUT/"validation.json").write_text(json.dumps(report,indent=2,ensure_ascii=False)+"\n")
+print(json.dumps({k:report[k] for k in ["passed","draft_only","source_claims_checked","scoped_numeric_lines_checked","s3_exact_byte_tie_latest_selected","new_s3_pairing_incomplete_not_borrowed"]},indent=2))

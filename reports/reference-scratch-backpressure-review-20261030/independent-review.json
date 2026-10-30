@@ -1,0 +1,34 @@
+{
+  "status": "PASS",
+  "scope": "Independent read-only review of broker accept backpressure change and deterministic regression",
+  "source_modified_by_reviewer": false,
+  "test_or_gpu_or_model_execution_by_reviewer": false,
+  "source_sha256": "4ac92b1fb8cbbeb2c1345ad8639b2a6a8268d1e66d202d3e2ba9d8fd67b08289",
+  "test_sha256": "10a9dae5688e3f6571dcdfe9a0aacc3e3c008143c430aff5fc552fd0926b9058",
+  "only_accept_ast_changed": true,
+  "checks": [
+    "Acquire a bounded worker permit before accept, leaving the next legal sequential client queued while completed workers have not yet released permits.",
+    "The bounded acquire0.2s and listener timeout0.2s permit periodic stop checking; maximum worker2/backlog2/connection deadline10s are unchanged.",
+    "Unacquired timeout has no release; accept TimeoutError/OSError each release exactly the acquired permit; successful dispatch delegates the single release to worker finally.",
+    "No additional worker or accepted connection is created without a permit; protocol operations,4MiB chunks,4096objects,64GiB quota,1GiB reserve and sameUID peer check are unchanged.",
+    "Host paths remain unmounted; server does not deserialize tensors, and per-object quota reservations and verified deletion are untouched.",
+    "Regression holds the release of two workers whose replies already reached a sequential client; third request must wait then succeed when release resumes.",
+    "Test teardown always releases held workers before close; exact request3/failed0/live0/cleanupTrue assertions cover both service and cleanup outcome."
+  ],
+  "root_test_receipts": {
+    "before": {
+      "path": "reports/reference-scratch-20261030/backpressure-before.log",
+      "sha256": "cb49d2419ca0db75891e3bcf3e03a43f48771f7edf3e6f3862193e0e4df1c5e9",
+      "deterministic_ConnectionResetError_verified": true
+    },
+    "after": {
+      "path": "reports/reference-scratch-20261030/backpressure-after.log",
+      "sha256": "d2df807e96296740e36c3fe05f71b628fd8778559193652aa8b3f2d83f1a1378",
+      "passed": 60,
+      "seconds": 9.78
+    },
+    "receipts_preserved_unmodified": true
+  },
+  "findings": [],
+  "acceptance_scope": "Infrastructure review only; not a new fixed-nine target result or numerical reference success"
+}

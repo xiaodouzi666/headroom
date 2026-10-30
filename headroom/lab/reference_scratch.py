@@ -242,15 +242,19 @@ class ReferenceScratchBroker:
 
     def _accept(self):
         while not self._stop.is_set():
+            # A reply can reach a sequential client before its worker releases
+            # its slot. Backpressure in the bounded listen queue avoids resetting
+            # that client's next request while preserving the two-worker limit.
+            if not self._slots.acquire(timeout=0.2):
+                continue
             try:
                 connection, _ = self._listener.accept()
             except TimeoutError:
+                self._slots.release()
                 continue
             except OSError:
+                self._slots.release()
                 break
-            if not self._slots.acquire(blocking=False):
-                connection.close()
-                continue
             connection.settimeout(CONNECTION_SECONDS)
             worker = threading.Thread(target=self._serve, args=(connection,), daemon=True)
             with self._lock:

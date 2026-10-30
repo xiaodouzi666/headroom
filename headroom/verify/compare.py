@@ -17,6 +17,7 @@ from headroom.verify.numerical_requirement import (
 )
 from headroom.verify.offload import LEGACY_STRATEGY, STRATEGY, reference_proof
 from headroom.verify.precision import derive_precision
+from headroom.verify.training_coverage import training_coverage_evidence
 
 # Original-plan acceptance gates. Diagnostic observations (including optional
 # workload pairing) must not silently become additional mandatory requirements.
@@ -154,6 +155,7 @@ def compare_runs(
     reclaim_reduction_pct=30,
     acceptance_scope="standard",
     reference_strategy=LEGACY_STRATEGY,
+    training_source_bindings=None,
 ) -> VerifyReport:
     """Apply PLAN C.5, with the explicit T1.9 repository no-reference exception.
 
@@ -430,6 +432,17 @@ def compare_runs(
     checks["parameter_policy"] = parameter_equal is True or (
         parameter_equal is False and policy.get("allow_model_change", False)
     )
+    coverage = training_coverage_evidence(
+        baseline, candidate, training_source_bindings, required_steps=required_steps
+    )
+    checks["training_coverage_not_reduced"] = coverage["not_reduced"]
+    if coverage["not_reduced"] is False and not policy.get("allow_model_change", False):
+        # Enforce the existing no-freeze/no-subset contract through its existing
+        # parameter-policy gate; no new required check or acceptance threshold.
+        checks["parameter_policy"] = False
+        notes.insert(0, coverage["feedback"])
+    elif coverage["not_reduced"] is None:
+        notes.append("Training coverage remains unknown: " + coverage["reason"] + ".")
     gpu_pair = all(r.get("env", {}).get("device") == "cuda" for r in (baseline, candidate))
     hardware_equal = gpu_pair and (
         baseline.get("env", {}).get("gpu_name") == candidate.get("env", {}).get("gpu_name")

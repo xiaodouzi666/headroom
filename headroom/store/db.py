@@ -22,6 +22,8 @@ EVENT_KINDS = frozenset(
         "annotate.done",
         "diagnose.started",
         "diagnose.done",
+        "diagnose.reused_for_patch_refinement",
+        "diagnose.refinement_invalidated",
         "research.called",
         "research.done",
         "patch.written",

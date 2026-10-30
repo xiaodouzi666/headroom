@@ -1,0 +1,52 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "cpu_docker_exact_pull_never": "allowed", "cpu_docker_other_pull_modes": "denied", "duplicate_docker_network_options": "denied", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "cpu_docker_exact_pull_never": "allowed", "cpu_docker_other_pull_modes": "denied", "duplicate_docker_network_options": "denied", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+........................................................................ [ 40%]
+..............F......................................................... [ 81%]
+................................                                         [100%]
+=================================== FAILURES ===================================
+___ test_existing_saved_lab_result_cannot_supply_missing_parameter_evidence ____
+
+    def test_existing_saved_lab_result_cannot_supply_missing_parameter_evidence():
+        # Existing actual Lab captures predate parameter hooks. Read without altering them.
+        root = Path(__file__).resolve().parents[1]
+        source = root / "reports/t1.1-acceptance.json"
+        if not source.exists():
+            pytest.skip("Historical acceptance report is not available in this checkout")
+        records = json.loads(source.read_text())["runs"]
+        candidates = []
+        for entry in records.values():
+            path = root / entry["run_dir"] / "result.json"
+            if path.exists():
+>               value = json.loads(path.read_text())
+                                   ^^^^^^^^^^^^^^^^
+
+tests/test_verify_runner.py:114: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1029: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+file = PosixPath('/home/xiaodouzi/workspace/headroom/runs/lab-acceptance/20261023T022523Z/584cc1c4c2c04ba79954eaa22d471a0b/result.json')
+args = ('r', -1, 'locale', None, None), kwargs = {}
+
+    def guarded(file, *args, **kwargs):
+        actual = actual_path(file, kwargs.get("dir_fd"))
+        if isinstance(actual, (str, bytes, os.PathLike)):
+            key = str(Path(os.fsdecode(actual)).resolve())
+            if key in HISTORICAL_READ_COPIES:
+                mode = args[0] if args else kwargs.get("flags", kwargs.get("mode", "r"))
+                readonly = (mode & (os.O_WRONLY|os.O_RDWR|os.O_CREAT|os.O_TRUNC|os.O_APPEND) == 0) if isinstance(mode,int) else mode in {"r","rb","rt"}
+                if not readonly:
+                    raise PermissionError("Closing regression historical copies are read only")
+                file = HISTORICAL_READ_COPIES[key]
+        if protected(actual_path(file, kwargs.get('dir_fd'))):
+>           raise PermissionError("Integration cannot access live credentials/profile/databases")
+E           PermissionError: Integration cannot access live credentials/profile/databases
+
+reports/final48h-closing-regression-20261029/closing_guarded_v5.py:76: PermissionError
+=========================== short test summary info ============================
+FAILED tests/test_verify_runner.py::test_existing_saved_lab_result_cannot_supply_missing_parameter_evidence
+1 failed, 175 passed in 21.64s

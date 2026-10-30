@@ -1,0 +1,71 @@
+{
+  "status": "REVIEWABLE_V3_PROPOSAL_NOT_APPLIED",
+  "base_revision": "964b6581d0322a6699e81eae7619129f0e90d3e7",
+  "production_files_modified": [],
+  "production_tests_modified": [],
+  "v1_v2_source_preservation": "v2 source/receipts checked byte-for-byte against v2-preservation-pins.json; v1 remained untouched",
+  "source_pins_still_match": true,
+  "change_from_v2": "bind_training_coverage_sources catches OSError/ValueError/TypeError and leaves role unbound unless source_contract returns a lowercase64hex source digest in a Mapping",
+  "strict_rejection_basis": "unchanged v2: only actual updated elements reduced at complete corresponding20 logical boundaries",
+  "catalog_or_first_flag_can_independently_reject": false,
+  "existing_gate_reused": "parameter_policy",
+  "required_checks_changed": false,
+  "thresholds_changed": false,
+  "validation": {
+    "guard": "closing_guarded_v5",
+    "ephemeral_plugin": "proposed/draft_training_coverage_plugin.py replaces helper/compare/runner only within the pytest process, never production files",
+    "passed": 175,
+    "failed": 0,
+    "deselected": 1,
+    "seconds": 20.26,
+    "exit_code": 0,
+    "draft_cases": 42,
+    "previous_v2_cases": 28,
+    "new_v3_binding_cases": 14,
+    "counts_by_suite": {
+      "reports.parameter-update-policy-audit-20261030.v3.proposed.test_training_coverage_draft": 42,
+      "tests.test_compare": 39,
+      "tests.test_verify_runner": 10,
+      "tests.test_verify_parameters": 4,
+      "tests.test_verification_feedback": 7,
+      "tests.test_verify_offload_reference": 73
+    },
+    "initial_full_focus": {
+      "passed": 175,
+      "failed_by_immutable_guard": 1,
+      "seconds": 21.64,
+      "artifact_prefix": "initial-with-legacy-guard-block-"
+    },
+    "deselected_test": "tests/test_verify_runner.py::test_existing_saved_lab_result_cannot_supply_missing_parameter_evidence",
+    "deselection_reason": "Existing test reads an unredirected runs/lab-acceptance historical path; immutable v5 guard denies live runs reads. Test and guard unmodified; no product assertion failure was found.",
+    "models": false,
+    "gpu": false,
+    "docker": false,
+    "production_database": false
+  },
+  "new_negative_cases": [
+    "Actual missing source path remains unbound",
+    "Actual chmod000 source remains unbound and permissions restored",
+    "source_contract OSError/PermissionError/ValueError/TypeError remains unbound",
+    "Missing,None,empty,wronglength,nonhex,bool,int and nonmapping digest results remain unbound"
+  ],
+  "proposed_destinations": [
+    "headroom/verify/training_coverage.py",
+    "headroom/verify/compare.py",
+    "headroom/verify/runner.py",
+    "tests/test_training_coverage.py"
+  ],
+  "hashes": {
+    "reports/parameter-update-policy-audit-20261030/v3/proposal.diff": "bc60ab9ebab5563672420039b25c6dbbd39e020e567fe844447ae7f761c96489",
+    "reports/parameter-update-policy-audit-20261030/v3/proposed/training_coverage.py": "065cb685a1ba1430afe15ef3d5af0a0d0604519f92350d84c70af405b32faf12",
+    "reports/parameter-update-policy-audit-20261030/v3/proposed/compare.py.txt": "2a665950b41b623204008caa810a6a15043e2b24caa780dadafb7229994f414c",
+    "reports/parameter-update-policy-audit-20261030/v3/proposed/runner.py.txt": "530938778e70d5629e672f2c47d75e7df0311ee6064dac83f6ca8fde351a5f7d",
+    "reports/parameter-update-policy-audit-20261030/v3/proposed/test_training_coverage.py.txt": "3b03c41ad3672c6cd51d729ec126b3616824e5b93f416cdf153bf1427be7792d",
+    "reports/parameter-update-policy-audit-20261030/v3/proposed/test_training_coverage_draft.py": "6fda3799c407069790f20bb4ff33383cfc9190b05466746a6835e85354934030",
+    "reports/parameter-update-policy-audit-20261030/v3/proposed/draft_training_coverage_plugin.py": "442dcb1774410480eecb182713b96c34c684c1470ad0e4ae1ce630101764ce99",
+    "reports/parameter-update-policy-audit-20261030/v3/proposal-tests.xml": "44f775eab499eea08cdf0a94a353087eb80dcab261a1f0bf322f04f8ba22479b",
+    "reports/parameter-update-policy-audit-20261030/v3/proposal-tests.log": "e0d946c23b051150d11b1d66ad8dc2d5423825656504d8f93825a974c20b848d",
+    "reports/parameter-update-policy-audit-20261030/v3/v2-to-v3-helper.diff": "0d9b57626cc38f0112407321253005bbaf99a1f1bd2a5b3b15bae7e5840a50ac",
+    "reports/parameter-update-policy-audit-20261030/v3/v2-preservation-pins.json": "0b4e13bdb4cb55ab6e27ac352b125a5f88b8fa5bf5926976eb3c32310b13ddca"
+  }
+}

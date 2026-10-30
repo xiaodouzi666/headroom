@@ -1,0 +1,26 @@
+import sys
+from pathlib import Path
+import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
+import test_runtime_refinement_loop as helpers
+
+
+def test_trace_gate(tmp_path, monkeypatch):
+    helpers.install_capture_adapters(monkeypatch)
+    seen = []
+
+    def tracing(frame, event, arg):
+        if event == "exception" and frame.f_code.co_filename.endswith("/headroom/orchestrator.py"):
+            seen.append((frame.f_lineno, arg[0].__name__, str(arg[1])[:500]))
+        return tracing
+
+    sys.settrace(tracing)
+    try:
+        result, store, calls, _, _ = helpers.fixtures.search_run(tmp_path, helpers.plans())
+    finally:
+        sys.settrace(None)
+    try:
+        print("DEBUG", result["reason"], seen, len(calls))
+    finally:
+        store.close()

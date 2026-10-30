@@ -1,0 +1,37 @@
+--- a/headroom/evidence_blockers.py
++++ b/headroom/evidence_blockers.py
+@@ -392,7 +392,7 @@
+                     "evidence_ref": ref,
+                     "source_line_start": start,
+                     "source_line_end": end,
+-                    "observation": "visible supplied text only; runtime values and semantic prerequisites remain unverified",
++                    "observation": "visible supplied text; this availability check makes no runtime determination and does not override separate scoped observations",
+                 }
+             )
+     if (
+--- a/headroom/validation_feedback.py
++++ b/headroom/validation_feedback.py
+@@ -121,8 +121,9 @@
+         if issue.code == "EVIDENCE_AVAILABILITY_CONTRADICTED" and observation is not None:
+             context["availability_contract"] = (
+                 "The exact cited text/range is visible, so calling that text missing, "
+-                "redacted or truncated is contradicted. Meaning may remain ambiguous and "
+-                "runtime values unverified. Retain genuine missing-value dependencies. "
++                "redacted or truncated is contradicted. This availability check verifies no "
++                "runtime values and does not negate separate scoped observations. Retain "
++                "genuine missing-value dependencies. "
+                 "This rejects the reason declaration, not the existence of the requested "
+                 "implementation or semantic answer. A missing feature inside visible source "
+                 "does not make the source text missing. Use ambiguous or other for unresolved "
+--- a/headroom/prompts/diagnose_compact.md
++++ b/headroom/prompts/diagnose_compact.md
+@@ -68,7 +68,8 @@
+ Final output self-check:
+ Use only supplied stack IDs, invocation references and exact visible source ranges.
+ For evidence requests distinguish missing text from ambiguous meaning; copy an
+-advertised evidence_ref and both ordered line bounds only for a source subrange.
++advertised evidence_ref. For non-source refs both line bounds must be null; use
++both ordered bounds only for a visible source subrange.
+ Rebuild blocked_plan_ids from this response: current_plan needs a nonempty unique
+ subset of its actual fix_ids; alternative_plan, overall_feasibility and null scope
+ use empty IDs. A plan=[] response cannot declare a current-plan dependency.

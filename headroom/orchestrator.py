@@ -1,5 +1,6 @@
 """Baseline/evidence/diagnosis/patch/verification pipeline with durable partial results."""
 
+import hashlib
 import json
 import os
 import re
@@ -25,7 +26,7 @@ from pydantic import (
 
 from headroom.annotate import annotate_stacks
 from headroom.budget import BudgetExceeded, BudgetLedger, RunBudgetReached, money
-from headroom.diagnose import diagnose_with_router, round_verification_feedback
+from headroom.diagnose import diagnose_with_router, round_verification_feedback, validate_diagnosis
 from headroom.evidence import annotate_evidence_bundle, build_evidence
 from headroom.execution import prepare_local_command, replay_argv
 from headroom.lab.envs import validate_allocator
@@ -39,6 +40,12 @@ from headroom.report import generate_report
 from headroom.research.tavily_tool import ResearchSession
 from headroom.research.tool_loop import ResearchToolLoop
 from headroom.runtime import RuntimeNotReady, build_live_runtime, read_live_profile
+from headroom.runtime_refinement import (
+    contract_fingerprint,
+    refinement_context,
+    refinement_eligible,
+    runtime_failure_context,
+)
 from headroom.search import (
     baseline_target_met,
     decide_keep,
@@ -48,7 +55,12 @@ from headroom.search import (
     write_cumulative_patch,
     write_pareto,
 )
-from headroom.solver_context import candidate_context, candidate_evidence, execution_context
+from headroom.solver_context import (
+    candidate_context,
+    candidate_evidence,
+    execution_context,
+    solver_prompt_context,
+)
 from headroom.store.db import Store, _bounded_cost
 from headroom.verify.candidate_preflight import candidate_reference_preflight
 from headroom.verify.compare import parse_target
@@ -578,6 +590,7 @@ def run_fix(
         current_numerics = "none"
         original_reference = None
         policy = request.policy.model_dump()
+        pending_refinement = None
 
         for number in range(1, request.max_rounds + 1):
             active_round = {
@@ -653,7 +666,6 @@ def run_fix(
                     tier_context, allow_nan=False
                 )
             diagnose_start = len(store.llm_calls(run_id))
-            emit("diagnose.started", role="diagnose", round=number)
             diagnostic_evidence = {
                 **evidence_json,
                 "execution_context": invocation,
@@ -683,20 +695,92 @@ def run_fix(
                     },
                 },
             }
-            checked = services.diagnose(
-                bundle.router,
-                prompt_evidence,
-                evidence=diagnostic_evidence,
-                goal=request.target,
-                policy=policy,
-                verification_feedback=verification_feedback,
-                required_saving_gb=_required_reduction(
-                    current_result,
-                    request.target,
-                    original_baseline=baseline,
-                    reclaim_reduction_pct=request.reclaim_reduction_pct,
-                ),
+            required_saving = _required_reduction(
+                current_result,
+                request.target,
+                original_baseline=baseline,
+                reclaim_reduction_pct=request.reclaim_reduction_pct,
             )
+            retained_contract = contract_fingerprint(
+                directory,
+                current_source,
+                source_files,
+                [current_evidence["evidence_json"], current_evidence["evidence_md"]],
+                {
+                    "script": str(relative),
+                    "script_args": list(current_args),
+                    "execution_argv": invocation.get("execution_argv"),
+                    "policy": policy,
+                    "target": request.target,
+                    "reclaim_reduction_pct": request.reclaim_reduction_pct,
+                    "reference": request.numerical_reference.model_dump(),
+                    "seed": request.seed,
+                    "max_steps": request.max_steps,
+                    "max_seconds": request.max_seconds,
+                    "max_rounds": request.max_rounds,
+                    "allocator": current_allocator,
+                    "numerics": current_numerics,
+                    "selected_run_id": current_result.get("run_id"),
+                    "selected_round": data["kept"]["round"] if data.get("kept") else None,
+                    "target_already_met": data["target_met"],
+                    "source_kwargs": source_kwargs,
+                },
+            )
+            ticket, pending_refinement = pending_refinement, None
+            checked = runtime_patch_refinement = reused_origin = None
+            if (
+                ticket is not None
+                and retained_contract is not None
+                and ticket["retained_contract"] == retained_contract
+            ):
+                reused = validate_diagnosis(
+                    ticket["diagnosis"],
+                    evidence=diagnostic_evidence,
+                    policy=policy,
+                    required_saving_gb=required_saving,
+                )
+                if reused.ready_for_patch and not reused.requires_supplement:
+                    try:
+                        solver_prompt_context(
+                            execution_context=invocation,
+                            numerical_reference_context=reference_capabilities,
+                            candidate_evidence=prior_candidates,
+                            verification_feedback=verification_feedback,
+                            runtime_patch_refinement=ticket["context"],
+                        )
+                    except (TypeError, ValueError):
+                        emit(
+                            "diagnose.refinement_invalidated",
+                            round=number,
+                            reason="bounded_context_unavailable",
+                        )
+                    else:
+                        checked = reused
+                        runtime_patch_refinement = ticket["context"]
+                        reused_origin = ticket["origin"]
+                        emit(
+                            "diagnose.reused_for_patch_refinement",
+                            round=number,
+                            source_round=reused_origin["round"],
+                            source_sha256=reused_origin["sha256"],
+                            new_model_call=False,
+                        )
+            if checked is None:
+                emit("diagnose.started", role="diagnose", round=number)
+                checked = services.diagnose(
+                    bundle.router,
+                    prompt_evidence,
+                    evidence=diagnostic_evidence,
+                    goal=request.target,
+                    policy=policy,
+                    verification_feedback=verification_feedback,
+                    required_saving_gb=_required_reduction(
+                        current_result,
+                        request.target,
+                        original_baseline=baseline,
+                        reclaim_reduction_pct=request.reclaim_reduction_pct,
+                    ),
+                )
             diagnosis = checked.diagnosis.model_dump() if checked.diagnosis else None
             diagnosis_data = {
                 "diagnosis": diagnosis,
@@ -710,6 +794,8 @@ def run_fix(
                     getattr(checked, "response_validation_failures", ())
                 ),
                 "response_request_modes": list(getattr(checked, "response_request_modes", ())),
+                "model_response_reused_from": reused_origin,
+                "new_diagnosis_request": reused_origin is None,
             }
             _write(round_dir / "diagnosis.json", diagnosis_data)
             _write(directory / "diagnosis.json", diagnosis_data)
@@ -762,6 +848,11 @@ def run_fix(
                         "supplement; inspect diagnosis.json before restarting"
                     )
                 continue
+            diagnosis_origin = reused_origin or {
+                "round": number,
+                "path": _artifact(directory, round_dir / "diagnosis.json"),
+                "sha256": hashlib.sha256((round_dir / "diagnosis.json").read_bytes()).hexdigest(),
+            }
             step = checked.diagnosis.plan[0]
             step_data = step.model_dump()
             active_round["fix_id"] = step.fix_id
@@ -873,6 +964,8 @@ def run_fix(
                     if topic in research_results
                 ],
             }
+            if runtime_patch_refinement is not None:
+                context["runtime_patch_refinement"] = runtime_patch_refinement
             if tier_context is not None:
                 context["numerical_requirement"] = tier_context
             patch_start = len(store.llm_calls(run_id))
@@ -1106,6 +1199,29 @@ def run_fix(
                     after_evidence_status=data["after_evidence_status"],
                     search=data["search"],
                 )
+            if number < request.max_rounds and not decision.keep and retained_contract is not None:
+                failure = runtime_failure_context(directory, verified["candidate"])
+                if failure is not None and refinement_eligible(
+                    checked, active_round, asdict(patch), failure
+                ):
+                    recorded = candidate_evidence(
+                        directory,
+                        active_round,
+                        selected_round=data["kept"]["round"] if data.get("kept") else None,
+                    )
+                    correction = refinement_context(
+                        failure,
+                        recorded,
+                        failed_round=number,
+                        origin_round=diagnosis_origin["round"],
+                    )
+                    if correction is not None:
+                        pending_refinement = {
+                            "diagnosis": checked.diagnosis.model_dump(),
+                            "origin": diagnosis_origin,
+                            "context": correction,
+                            "retained_contract": retained_contract,
+                        }
             finish_round(
                 {"decision": "keep" if decision.keep else "revert", "reason": decision.reason}
             )

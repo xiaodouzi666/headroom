@@ -20,6 +20,7 @@ from headroom.verify.offload import (
     validate_limit,
 )
 from headroom.verify.pairing import derive_pairing, source_contract
+from headroom.verify.training_coverage import bind_training_coverage_sources
 
 _ALLOWED_BATCH_FLAGS = {"--batch", "--batch_size", "--batch-size"}
 
@@ -442,6 +443,9 @@ def verify_script(
         pairing=pairing,
         required_steps=required_steps,
         reference_strategy=reference_strategy,
+        training_source_bindings=bind_training_coverage_sources(
+            baseline, baseline_script, candidate, candidate_script
+        ),
         **comparison_options,
     )
     report.notes.append(

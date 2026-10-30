@@ -1,0 +1,47 @@
+"""Before/after attribution of one existing bounded-review test expectation."""
+
+import hashlib
+import importlib
+import importlib.machinery
+import importlib.util
+import json
+import sys
+from pathlib import Path
+
+BASE = Path(__file__).parent
+sys.path.insert(0, str(BASE.resolve().parents[1] / "tests"))
+fixtures = importlib.import_module("test_orchestrator")
+
+
+def test_preexisting_baseline_also_performs_the_one_bounded_prerequisite_review(
+    tmp_path, monkeypatch
+):
+    path = BASE / "baseline-orchestrator-964b658.py.txt"
+    name = "headroom._baseline_before_runtime_refinement"
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(name, loader)
+    module = importlib.util.module_from_spec(spec)
+    monkeypatch.setitem(sys.modules, name, module)
+    loader.exec_module(module)
+    monkeypatch.setattr(fixtures, "run_fix", module.run_fix)
+    monkeypatch.setattr(fixtures, "FixRequest", module.FixRequest)
+    monkeypatch.setattr(fixtures, "Services", module.Services)
+    result, store, requests, verifies, _ = fixtures.search_run(
+        tmp_path, [{"needs_more_info": True, "empty_plan": False}], max_rounds=6
+    )
+    try:
+        record = {
+            "baseline_source_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            "source_revision": "964b6581d0322a6699e81eae7619129f0e90d3e7",
+            "status": result["status"],
+            "mock_transport_requests": len(requests),
+            "verifications": len(verifies),
+            "provider_calls": 0,
+            "gpu_jobs": 0,
+            "reason": "nonempty blocked plan gets the preexisting single bounded prerequisite review",
+        }
+        (BASE / "baseline-review-attribution.json").write_text(json.dumps(record, indent=2) + "\n")
+        assert result["status"] == "needs_human"
+        assert len(requests) == 2 and not verifies
+    finally:
+        store.close()

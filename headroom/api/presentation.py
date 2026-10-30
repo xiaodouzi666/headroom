@@ -90,6 +90,8 @@ EVENT_LABELS = {
     "annotate.done": "Stack labels ready",
     "diagnose.started": "Diagnosis started",
     "diagnose.done": "Diagnosis completed",
+    "diagnose.reused_for_patch_refinement": "Continuing from the previous diagnosis",
+    "diagnose.refinement_invalidated": "Diagnosis context changed; checking again",
     "research.called": "Research started",
     "research.done": "Research completed",
     "patch.written": "Patch written",

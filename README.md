@@ -40,7 +40,7 @@ The recorded suite contains eight synthetic PyTorch training cases and pinned na
 
 | Scenario | Historical memory target | Peak before → after | Numerical comparison |
 |---|---|---|---|
-| [s3 eval loop without no_grad](docs/RESULTS.md) | Met | 2.44 GB → 0.65 GB (−73.4%) | 20 losses identical; workload pairing matched | <!-- numbers: best.s3_eval_no_grad_missing -->
+| [s3 eval loop without no_grad](docs/RESULTS.md) | Met | 2.44 GB → 0.65 GB (−73.4%) | 20 scalar losses identical; workload pairing incomplete | <!-- numbers: best.s3_eval_no_grad_missing -->
 | [s8 unused teacher on GPU](docs/RESULTS.md) | Met | 3.10 GB → 0.12 GB (−96.1%) | 20 scalar losses identical; workload pairing incomplete | <!-- numbers: best.s8_two_models_resident -->
 | [s4 retained loss graph](docs/RESULTS.md) | Met | 24.77 GB (OOM) → 2.53 GB (−89.8%) | First 5 reference losses identical; candidate completed 20 updates | <!-- numbers: best.s4_loss_accumulation_graph -->
 | [s2 fp32 AdamW](docs/RESULTS.md) | Met | 22.92 GB → 18.64 GB (−18.7%) | 20 losses within tolerance; workload pairing incomplete | <!-- numbers: best.s2_capacity_v2 -->
@@ -50,7 +50,7 @@ The recorded suite contains eight synthetic PyTorch training cases and pinned na
 | [s5 variable-length allocations](docs/RESULTS.md) | Not met | — | No qualifying historical target result |
 | [nanoGPT pinned workload](docs/RESULTS.md) | Not met | — | No qualifying historical target result |
 
-Historically, **5 of 9** distinct scenarios have a run that met its configured memory target. The best single evaluation reached **3 of 9**. The latest October 30 evaluation reached **1 of 9**, with **2 of 9** valid correct first-cause diagnoses and **1 of 9** ready for patching; raw first-category matches were **5 of 9**. <!-- numbers: summary -->
+Historically, **5 of 9** distinct scenarios have a run that met its configured memory target. The best single evaluation reached **3 of 9**. The latest October 30 evaluation reached **1 of 9**. Its first saved diagnosis rounds produced **3 of 9** valid correct first-cause diagnoses and **2 of 9** ready for patching; raw first-category matches were **4 of 9**. At the final stopping point, **1 of 9** diagnoses remained ready. <!-- numbers: summary -->
 
 ### Does the snapshot matter?
 
@@ -101,7 +101,7 @@ All model calls use Token Factory's OpenAI-compatible API (`us-central1`). Headr
 
 ## Limitations
 
-The historical table combines separate runs and workload versions. s3 has a paired, identical full loss series; s1 and s4 compare the first five backward-loss values against documented references. s2 uses a tolerance-based comparison, and s2/s8 lack complete input, effective-batch and objective pairing. An OOM baseline only shows the peak reached before failure; s1's candidate peak is reconstructed. Verification covers short training runs, not full training quality. Distributed training and compiled extensions are outside the current repair workflow.
+The historical table combines separate runs and workload versions. The selected s3 and s8 runs have identical recorded scalar loss series but incomplete input, effective-batch and objective pairing. An earlier s3 run had complete pairing, as preserved in the history. s1 and s4 compare the first five backward-loss values against documented references, and s2 uses a tolerance-based comparison with incomplete workload pairing. An OOM baseline only shows the peak reached before failure; s1's candidate peak is reconstructed. Verification covers short training runs, not full training quality. Distributed training and compiled extensions are outside the current repair workflow.
 
 Four scenarios have no recorded target success in this history. The latest October 30 evaluation met one of nine memory targets, below the target of six; matching a cause was often insufficient to produce a usable patch. The first-cause counts use the first saved diagnosis round, which can include correction requests within that round; raw category matches and validated diagnoses are separate measures. The two additional s2 precision-policy tests did not pass, and HF Trainer repair failed after a configuration edit passed its static check. They produced no successful memory-versus-speed comparison or new successful gallery cases.
 

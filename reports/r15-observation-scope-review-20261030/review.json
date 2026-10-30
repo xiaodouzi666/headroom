@@ -1,0 +1,50 @@
+{
+  "status": "read_only_review_proposal_not_applied",
+  "wire_call_ids": [
+    5,
+    6,
+    22,
+    23,
+    25,
+    26
+  ],
+  "excerpt_sha256": "6fac73e806828c71664aa872d57bb73e33abd451ffd3da97ab81f79f31d6c27b",
+  "patch_sha256": "30a81afbb659e25952b600bfdeafc9dcd4fb7304d7c35bcdccf6f2e008b79768",
+  "production_file_pins": {
+    "headroom/evidence_blockers.py": "be19ff5b56da52e1db6df30a7375194420c37cf4605031049ccb21b63b8dba5a",
+    "headroom/validation_feedback.py": "459c8c29a4d6ed047d2a53a014771595c297205687ced01787750c2c97139aab",
+    "headroom/prompts/diagnose_compact.md": "879da448b0f9110a9e344bda485633c61ce6e7f128cec21d3337652d87f3796c"
+  },
+  "findings": [
+    {
+      "finding": "scope wording can mislead",
+      "support": "Availability catalog and invocation provenance correctly scope false verification to literal metadata, but literal_observations says runtime values remain unverified without that qualifier. Initial system already says availability neither proves nor cancels a separate observation.",
+      "causal_status": "plausible mechanism and matching final wording, not proven by controlled model comparison"
+    },
+    {
+      "finding": "s2 observed update count was already supplied",
+      "support": "calls5/6 show observed20 logical updates,20 complete update-set records, source/run-bound capture; final request still asks count alignment to be runtime confirmed.",
+      "unresolved": "initialized moment buffers/shapes/dtypes/device are not recorded by parameter-catalog numel and remain separate questions"
+    },
+    {
+      "finding": "s8 observed catalog count was already supplied",
+      "support": "calls25/26 show optimizer catalog8 entries and2886912numel, registered747474432numel mismatch,20 completed observed updates",
+      "unresolved": "parameter/moment dtypes and semantic applicability are not established by those counts"
+    },
+    {
+      "finding": "s7 reference range invalid",
+      "support": "final evidence_ref runtime_optimizer_observations.parameters has106-108 source bounds; actual observed34 requires_grad_true entries and20 all-catalog updates do not support intended frozen semantics",
+      "unresolved": "explicitly null non-source line bounds fixes only output format, not workload-semantics contradiction"
+    }
+  ],
+  "proposal_scope": [
+    "text-only clarification; no verification flag changes",
+    "no host clearing needs_more_info",
+    "no removal of genuine moments/dtype/mathematical unknowns",
+    "no scenario-specific strategy/source/ground-truth references in proposed text",
+    "all JSON schema/caps/call and round budgets unchanged",
+    "non-source evidence refs require both bounds null; source ranges still validated"
+  ],
+  "production_modified": false,
+  "model_gpu_calls": 0
+}

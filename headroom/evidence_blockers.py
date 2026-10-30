@@ -392,7 +392,7 @@ def validate_evidence_requests(diagnosis, evidence):
                     "evidence_ref": ref,
                     "source_line_start": start,
                     "source_line_end": end,
-                    "observation": "visible supplied text only; runtime values and semantic prerequisites remain unverified",
+                    "observation": "visible supplied text; this availability check makes no runtime determination and does not override separate scoped observations",
                 }
             )
     if (

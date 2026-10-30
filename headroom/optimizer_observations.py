@@ -5,6 +5,7 @@ capture prose is read; these facts do not establish numerical equivalence.
 """
 
 import json
+import math
 import re
 from collections.abc import Mapping
 
@@ -38,6 +39,205 @@ def _count(value, maximum=2**63 - 1):
 
 def _flag(value):
     return value if type(value) is bool else None
+
+
+_GROUP_OPTION_NAMES = frozenset(
+    {
+        "lr",
+        "momentum",
+        "weight_decay",
+        "dampening",
+        "nesterov",
+        "betas",
+        "eps",
+        "amsgrad",
+        "maximize",
+        "foreach",
+        "fused",
+        "capturable",
+        "differentiable",
+        "initial_lr",
+        "alpha",
+        "rho",
+        "lr_decay",
+        "initial_accumulator_value",
+        "lambd",
+        "t0",
+        "etas",
+        "step_sizes",
+        "momentum_decay",
+        "decoupled_weight_decay",
+    }
+)
+
+
+def _typed_group_option(value, *, sequence=False):
+    if type(value) is not list or len(value) != 2:
+        return False
+    tag, item = value
+    if type(tag) is not str:
+        return False
+    if tag in {"none", "unsupported"}:
+        return item is None
+    if tag == "bool":
+        return type(item) is bool
+    if tag == "int":
+        return type(item) is int and -(2**63) <= item < 2**63
+    if tag == "float":
+        return type(item) is float and math.isfinite(item)
+    return (
+        sequence
+        and tag in {"tuple", "list"}
+        and type(item) is list
+        and len(item) == 2
+        and all(_typed_group_option(child) and child[0] in {"int", "float"} for child in item)
+    )
+
+
+def _optimizer_group_options(raw, parameters, calls, constructor_returns):
+    """Accept only bounded, typed metadata from the already source-bound run."""
+    invalid = {"status": "unverified", "reason": "group metadata invalid or incomplete"}
+    if raw is not None:
+        try:
+            if (
+                len(
+                    json.dumps(
+                        raw,
+                        ensure_ascii=True,
+                        allow_nan=False,
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    ).encode()
+                )
+                > 65536
+            ):
+                return invalid
+        except (TypeError, ValueError, OverflowError, RecursionError):
+            return invalid
+    if not isinstance(raw, Mapping) or raw.get("protocol") != "headroom.optimizer_group_options.v1":
+        return "not_captured" if raw is None else invalid
+    if (
+        type(raw.get("complete")) is not bool
+        or type(raw.get("stopped_at_limit_or_error")) is not bool
+    ):
+        return invalid
+    events = raw.get("events")
+    if (
+        type(events) is not dict
+        or set(events) != {"base_constructor_return", "step_pre"}
+        or any(_count(value, 65536) is None for value in events.values())
+        or events["step_pre"] != calls
+        or events["base_constructor_return"] != constructor_returns
+    ):
+        return invalid
+    configs, groups = raw.get("configurations"), raw.get("groups")
+    if (
+        type(configs) is not list
+        or len(configs) > 64
+        or type(groups) is not list
+        or len(groups) > 256
+    ):
+        return invalid
+    known = {}
+    for item in configs:
+        if type(item) is not dict:
+            return invalid
+        identity, present, extra = (
+            item.get("id"),
+            item.get("present"),
+            item.get("unrecognized_option_keys"),
+        )
+        if (
+            type(identity) is not str
+            or re.fullmatch(r"c[0-9]{3}", identity) is None
+            or identity in known
+            or type(present) is not dict
+            or set(present) - _GROUP_OPTION_NAMES
+            or _count(extra, 64) is None
+            or any(
+                not _typed_group_option(value, sequence=name in {"betas", "etas", "step_sizes"})
+                for name, value in present.items()
+            )
+        ):
+            return invalid
+        known[identity] = {
+            "id": identity,
+            "present": present,
+            "unrecognized_option_keys": extra,
+            "group_records": {"base_constructor_return": 0, "step_pre": 0},
+        }
+    members = 0
+    seen = set()
+    group_observations = {stage: 0 for stage in events}
+    for record in groups:
+        if type(record) is not dict:
+            return invalid
+        config, stage, pids = (
+            record.get("config_id"),
+            record.get("stage"),
+            record.get("parameter_ids"),
+        )
+        first, last, count = (
+            record.get("first_call"),
+            record.get("last_call"),
+            record.get("observations"),
+        )
+        if (
+            type(config) is not str
+            or config not in known
+            or type(stage) is not str
+            or stage not in events
+            or type(record.get("optimizer_id")) is not str
+            or re.fullmatch(r"o[0-9]{4}", record["optimizer_id"]) is None
+            or _count(record.get("group_index"), 63) is None
+            or type(pids) is not list
+            or len(pids) > 8192
+            or any(type(token) is not str or token not in parameters for token in pids)
+            or len(set(pids)) != len(pids)
+            or _count(first, 65536) is None
+            or _count(last, 65536) is None
+            or first > last
+            or _count(count, 65536) is None
+            or count < 1
+            or count > events[stage]
+            or (stage == "base_constructor_return" and (first != 0 or last != 0))
+            or (stage == "step_pre" and (first < 1 or last > calls))
+        ):
+            return invalid
+        key = (record["optimizer_id"], record["group_index"], stage, config, tuple(pids))
+        if key in seen:
+            return invalid
+        seen.add(key)
+        group_observations[stage] += count
+        members += len(pids)
+        if members > 16384:
+            return invalid
+        known[config]["group_records"][stage] += 1
+    if raw["complete"] and any(
+        not events[stage] <= group_observations[stage] <= events[stage] * 64 for stage in events
+    ):
+        return invalid
+    used = [item for item in known.values() if sum(item["group_records"].values())]
+    options_supported = all(
+        item["unrecognized_option_keys"] == 0
+        and all(value[0] != "unsupported" for value in item["present"].values())
+        for item in used
+    )
+    summary = {
+        "status": "observed"
+        if used and raw["complete"] and not raw["stopped_at_limit_or_error"] and options_supported
+        else "partial",
+        "events": events,
+        "configurations": used,
+        "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof.",
+    }
+    if len(json.dumps(summary, ensure_ascii=True, allow_nan=False).encode()) > 1024:
+        return {
+            "status": "unverified",
+            "reason": "group metadata omitted at bounded context",
+            "events": events,
+        }
+    return summary
 
 
 def runtime_optimizer_observations(result, source_files, *, script, selected_round=None):
@@ -226,6 +426,29 @@ def runtime_optimizer_observations(result, source_files, *, script, selected_rou
     summary["status"] = (
         "observed" if flags_complete and steps and complete_records == steps else "partial"
     )
+    initialization = observation.get("parameter_catalog_initialization")
+    constructor_returns = (
+        _count(initialization.get("successful_base_constructor_returns"), 65536)
+        if isinstance(initialization, Mapping)
+        else None
+    )
+    legacy_group_value = summary["optimizer_group_hyperparameters"]
+    summary["optimizer_group_hyperparameters"] = _optimizer_group_options(
+        observation.get("group_options"), parameters, calls, constructor_returns
+    )
+    if (
+        len(json.dumps(summary, ensure_ascii=True, allow_nan=False).encode())
+        > MAX_OPTIMIZER_OBSERVATION_BYTES
+    ):
+        summary["optimizer_group_hyperparameters"] = {
+            "status": "unverified",
+            "reason": "group metadata omitted at existing context bound",
+        }
+    if (
+        len(json.dumps(summary, ensure_ascii=True, allow_nan=False).encode())
+        > MAX_OPTIMIZER_OBSERVATION_BYTES
+    ):
+        summary["optimizer_group_hyperparameters"] = legacy_group_value
     if (
         len(json.dumps(summary, ensure_ascii=True, allow_nan=False).encode())
         > MAX_OPTIMIZER_OBSERVATION_BYTES

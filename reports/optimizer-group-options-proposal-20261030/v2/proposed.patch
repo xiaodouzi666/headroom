@@ -1,0 +1,797 @@
+--- a/headroom/lab/hooks.py
++++ b/headroom/lab/hooks.py
+@@ -167,6 +167,201 @@
+         return child, False
+ 
+ 
++_GROUP_OPTIONS = (
++    "lr",
++    "momentum",
++    "weight_decay",
++    "dampening",
++    "nesterov",
++    "betas",
++    "eps",
++    "amsgrad",
++    "maximize",
++    "foreach",
++    "fused",
++    "capturable",
++    "differentiable",
++    "initial_lr",
++    "alpha",
++    "rho",
++    "lr_decay",
++    "initial_accumulator_value",
++    "lambd",
++    "t0",
++    "etas",
++    "step_sizes",
++    "momentum_decay",
++    "decoupled_weight_decay",
++)
++_GROUP_MAX_OPTIMIZERS = 256
++_GROUP_MAX_GROUPS = 64
++_GROUP_MAX_GROUP_KEYS = 64
++_GROUP_MAX_CONFIGS = 64
++_GROUP_MAX_RECORDS = 256
++_GROUP_MAX_MEMBERS = 16384
++_GROUP_MAX_RAW_BYTES = 65536
++
++
++def _optimizer_option_scalar(value):
++    if value is None:
++        return ["none", None]
++    if type(value) is bool:
++        return ["bool", value]
++    if type(value) is int and -(2**63) <= value < 2**63:
++        return ["int", value]
++    if type(value) is float and math.isfinite(value):
++        return ["float", value]
++    return ["unsupported", None]
++
++
++def _encode_optimizer_group_option(name, value):
++    # Preserve the exact built-in scalar/container types. Never cast objects,
++    # tensor scalars, numpy scalars, custom sequences or subclasses.
++    if name in {"betas", "etas", "step_sizes"} and type(value) in (tuple, list):
++        if len(value) != 2:
++            return ["unsupported", None]
++        values = [_optimizer_option_scalar(item) for item in value]
++        if any(item[0] not in {"int", "float"} for item in values):
++            return ["unsupported", None]
++        return ["tuple" if type(value) is tuple else "list", values]
++    return _optimizer_option_scalar(value)
++
++
++def _optimizer_option_canonical(value):
++    return json.dumps(
++        value, ensure_ascii=True, allow_nan=False, sort_keys=True, separators=(",", ":")
++    )
++
++
++class _OptimizerGroupOptionObserver:
++    def __init__(self):
++        self._identities = {}
++        self._identity_count = 0
++        self._configs = {}
++        self._records = {}
++        self._member_count = 0
++        self.complete = True
++        self.stopped = False
++        self.events = {"base_constructor_return": 0, "step_pre": 0}
++
++    def observe(self, optimizer, *, stage, call, identify):
++        # Optional observer failures must never replace the target's native
++        # result. Deadline/step-limit BaseExceptions still propagate.
++        try:
++            self._observe(optimizer, stage=stage, call=call, identify=identify)
++        except Exception:  # noqa: BLE001 - optional metadata must not replace native behavior
++            self.complete = False
++            self.stopped = True
++
++    def _observe(self, optimizer, *, stage, call, identify):
++        if stage not in self.events or type(call) is not int or not 0 <= call <= 65536:
++            raise ValueError("unsupported observation boundary")
++        self.events[stage] += 1
++        if self.events[stage] > 65536:
++            raise ValueError("observation event limit")
++        if self.stopped:
++            return
++        identity = self._identities.get(id(optimizer))
++        if identity is None or identity[0]() is not optimizer:
++            if self._identity_count >= _GROUP_MAX_OPTIMIZERS:
++                raise ValueError("optimizer identity limit")
++            self._identity_count += 1
++            identity = (weakref.ref(optimizer), f"o{self._identity_count:04d}")
++            self._identities[id(optimizer)] = identity
++        # Access only the real instance dictionary and exact built-in
++        # containers. Do not traverse properties or arbitrary mapping objects.
++        attributes = object.__getattribute__(optimizer, "__dict__")
++        if type(attributes) is not dict:
++            raise ValueError("unsupported optimizer attributes")
++        groups = attributes.get("param_groups")
++        if type(groups) is not list or not 0 < len(groups) <= _GROUP_MAX_GROUPS:
++            raise ValueError("unsupported optimizer groups")
++        for index, group in enumerate(groups):
++            if type(group) is not dict or len(group) > _GROUP_MAX_GROUP_KEYS:
++                raise ValueError("unsupported optimizer group")
++            params = group.get("params")
++            if type(params) not in (list, tuple) or len(params) > 8192:
++                raise ValueError("unsupported optimizer parameters")
++            parameter_ids = [identify(parameter) for parameter in params]
++            if any(
++                type(token) is not str or re.fullmatch(r"p[0-9]{5,6}", token) is None
++                for token in parameter_ids
++            ):
++                raise ValueError("unsupported parameter identity")
++            if len(set(parameter_ids)) != len(parameter_ids):
++                raise ValueError("duplicate optimizer parameter")
++            present = {
++                name: _encode_optimizer_group_option(name, group[name])
++                for name in _GROUP_OPTIONS
++                if name in group
++            }
++            unknown_keys = sum(
++                type(key) is not str or key not in (*_GROUP_OPTIONS, "params") for key in group
++            )
++            config = {"present": present, "unrecognized_option_keys": unknown_keys}
++            config_key = _optimizer_option_canonical(config)
++            new_config = config_key not in self._configs
++            if new_config and len(self._configs) >= _GROUP_MAX_CONFIGS:
++                raise ValueError("configuration limit")
++            config_record = self._configs.get(config_key) or {
++                "id": f"c{len(self._configs) + 1:03d}",
++                **config,
++            }
++            config_id = config_record["id"]
++            key = _optimizer_option_canonical([identity[1], index, stage, config_id, parameter_ids])
++            new_record = key not in self._records
++            if new_record and (
++                len(self._records) >= _GROUP_MAX_RECORDS
++                or self._member_count + len(params) > _GROUP_MAX_MEMBERS
++            ):
++                raise ValueError("group record limit")
++            record = (
++                dict(self._records[key])
++                if not new_record
++                else {
++                    "optimizer_id": identity[1],
++                    "group_index": index,
++                    "stage": stage,
++                    "config_id": config_id,
++                    "parameter_ids": parameter_ids,
++                    "first_call": call,
++                    "last_call": call,
++                    "observations": 0,
++                }
++            )
++            record["last_call"] = call
++            record["observations"] += 1
++            trial = self.snapshot()
++            if new_config:
++                trial["configurations"].append(config_record)
++            trial["groups"] = [
++                value for existing, value in self._records.items() if existing != key
++            ] + [record]
++            # New records/configs are byte-checked atomically. Unchanged rows
++            # only grow bounded counters; reserve 4096 bytes for all such growth.
++            if (new_config or new_record) and len(
++                _optimizer_option_canonical(trial).encode()
++            ) > _GROUP_MAX_RAW_BYTES - 4096:
++                raise ValueError("raw metadata byte limit")
++            if new_config:
++                self._configs[config_key] = config_record
++            self._records[key] = record
++            if new_record:
++                self._member_count += len(params)
++            if unknown_keys or any(value[0] == "unsupported" for value in present.values()):
++                self.complete = False
++
++    def snapshot(self):
++        return {
++            "protocol": "headroom.optimizer_group_options.v1",
++            "complete": bool(sum(self.events.values())) and self.complete and not self.stopped,
++            "stopped_at_limit_or_error": self.stopped,
++            "events": dict(self.events),
++            "configurations": list(self._configs.values()),
++            "groups": list(self._records.values()),
++        }
++
++
+ class CaptureSession:
+     """Per-process capture; instantiated inside a network/filesystem sandbox."""
+ 
+@@ -207,6 +402,7 @@
+         self._optimizer_init_wrapper: Any = None
+         self._optimizer_base_constructions_observed = 0
+         self._optimizer_initial_catalog_complete = True
++        self._optimizer_group_options = _OptimizerGroupOptionObserver()
+         self._optimizer_pending: dict[tuple[int, int], dict[str, Any]] = {}
+         self._backward_groups: dict[int, dict[str, Any]] = {}
+         self._optimizer_step_calls = 0
+@@ -434,6 +630,12 @@
+                     session._observe_optimizer_initial_parameters(optimizer)
+                 except Exception:  # noqa: BLE001 - optional metadata cannot replace native behavior
+                     session._optimizer_initial_catalog_complete = False
++                session._optimizer_group_options.observe(
++                    optimizer,
++                    stage="base_constructor_return",
++                    call=0,
++                    identify=session._existing_update_identity,
++                )
+             return returned
+ 
+         self._optimizer_init_wrapper = recorded_optimizer_init
+@@ -624,6 +826,12 @@
+         if reason not in group["reasons"] and len(group["reasons"]) < 16:
+             group["reasons"].append(reason)
+ 
++    def _existing_update_identity(self, parameter):
++        identity = self._update_identities.get(id(parameter))
++        if identity is None or identity[0]() is not parameter:
++            raise ValueError("parameter identity not previously observed")
++        return identity[1]
++
+     def _observe_optimizer_initial_parameters(self, optimizer):
+         """Observe existing groups after base construction, without reading tensor values.
+ 
+@@ -700,6 +908,12 @@
+         if os.getpid() != self.pid or self.finished:
+             return
+         self._optimizer_step_calls += 1
++        self._optimizer_group_options.observe(
++            optimizer,
++            stage="step_pre",
++            call=self._optimizer_step_calls,
++            identify=self._existing_update_identity,
++        )
+         task = self._graph_task()
+         groups = list(self._backward_groups.values())
+         group = groups[0] if len(groups) == 1 and task is not None and task >= 0 else None
+@@ -906,6 +1120,7 @@
+             "successful_optimizer_step_calls": self._optimizer_successful_step_calls,
+             "logical_updates": len(self.step_records),
+             "parameter_catalog": self._update_catalog,
++            "group_options": self._optimizer_group_options.snapshot(),
+             "parameter_catalog_initialization": {
+                 "successful_base_constructor_returns": self._optimizer_base_constructions_observed,
+                 "complete": bool(self._optimizer_base_constructions_observed)
+--- a/headroom/optimizer_observations.py
++++ b/headroom/optimizer_observations.py
+@@ -5,6 +5,7 @@
+ """
+ 
+ import json
++import math
+ import re
+ from collections.abc import Mapping
+ 
+@@ -38,6 +39,205 @@
+ 
+ def _flag(value):
+     return value if type(value) is bool else None
++
++
++_GROUP_OPTION_NAMES = frozenset(
++    {
++        "lr",
++        "momentum",
++        "weight_decay",
++        "dampening",
++        "nesterov",
++        "betas",
++        "eps",
++        "amsgrad",
++        "maximize",
++        "foreach",
++        "fused",
++        "capturable",
++        "differentiable",
++        "initial_lr",
++        "alpha",
++        "rho",
++        "lr_decay",
++        "initial_accumulator_value",
++        "lambd",
++        "t0",
++        "etas",
++        "step_sizes",
++        "momentum_decay",
++        "decoupled_weight_decay",
++    }
++)
++
++
++def _typed_group_option(value, *, sequence=False):
++    if type(value) is not list or len(value) != 2:
++        return False
++    tag, item = value
++    if type(tag) is not str:
++        return False
++    if tag in {"none", "unsupported"}:
++        return item is None
++    if tag == "bool":
++        return type(item) is bool
++    if tag == "int":
++        return type(item) is int and -(2**63) <= item < 2**63
++    if tag == "float":
++        return type(item) is float and math.isfinite(item)
++    return (
++        sequence
++        and tag in {"tuple", "list"}
++        and type(item) is list
++        and len(item) == 2
++        and all(_typed_group_option(child) and child[0] in {"int", "float"} for child in item)
++    )
++
++
++def _optimizer_group_options(raw, parameters, calls, constructor_returns):
++    """Accept only bounded, typed metadata from the already source-bound run."""
++    invalid = {"status": "unverified", "reason": "group metadata invalid or incomplete"}
++    if raw is not None:
++        try:
++            if (
++                len(
++                    json.dumps(
++                        raw,
++                        ensure_ascii=True,
++                        allow_nan=False,
++                        sort_keys=True,
++                        separators=(",", ":"),
++                    ).encode()
++                )
++                > 65536
++            ):
++                return invalid
++        except (TypeError, ValueError, OverflowError, RecursionError):
++            return invalid
++    if not isinstance(raw, Mapping) or raw.get("protocol") != "headroom.optimizer_group_options.v1":
++        return "not_captured" if raw is None else invalid
++    if (
++        type(raw.get("complete")) is not bool
++        or type(raw.get("stopped_at_limit_or_error")) is not bool
++    ):
++        return invalid
++    events = raw.get("events")
++    if (
++        type(events) is not dict
++        or set(events) != {"base_constructor_return", "step_pre"}
++        or any(_count(value, 65536) is None for value in events.values())
++        or events["step_pre"] != calls
++        or events["base_constructor_return"] != constructor_returns
++    ):
++        return invalid
++    configs, groups = raw.get("configurations"), raw.get("groups")
++    if (
++        type(configs) is not list
++        or len(configs) > 64
++        or type(groups) is not list
++        or len(groups) > 256
++    ):
++        return invalid
++    known = {}
++    for item in configs:
++        if type(item) is not dict:
++            return invalid
++        identity, present, extra = (
++            item.get("id"),
++            item.get("present"),
++            item.get("unrecognized_option_keys"),
++        )
++        if (
++            type(identity) is not str
++            or re.fullmatch(r"c[0-9]{3}", identity) is None
++            or identity in known
++            or type(present) is not dict
++            or set(present) - _GROUP_OPTION_NAMES
++            or _count(extra, 64) is None
++            or any(
++                not _typed_group_option(value, sequence=name in {"betas", "etas", "step_sizes"})
++                for name, value in present.items()
++            )
++        ):
++            return invalid
++        known[identity] = {
++            "id": identity,
++            "present": present,
++            "unrecognized_option_keys": extra,
++            "group_records": {"base_constructor_return": 0, "step_pre": 0},
++        }
++    members = 0
++    seen = set()
++    group_observations = {stage: 0 for stage in events}
++    for record in groups:
++        if type(record) is not dict:
++            return invalid
++        config, stage, pids = (
++            record.get("config_id"),
++            record.get("stage"),
++            record.get("parameter_ids"),
++        )
++        first, last, count = (
++            record.get("first_call"),
++            record.get("last_call"),
++            record.get("observations"),
++        )
++        if (
++            type(config) is not str
++            or config not in known
++            or type(stage) is not str
++            or stage not in events
++            or type(record.get("optimizer_id")) is not str
++            or re.fullmatch(r"o[0-9]{4}", record["optimizer_id"]) is None
++            or _count(record.get("group_index"), 63) is None
++            or type(pids) is not list
++            or len(pids) > 8192
++            or any(type(token) is not str or token not in parameters for token in pids)
++            or len(set(pids)) != len(pids)
++            or _count(first, 65536) is None
++            or _count(last, 65536) is None
++            or first > last
++            or _count(count, 65536) is None
++            or count < 1
++            or count > events[stage]
++            or (stage == "base_constructor_return" and (first != 0 or last != 0))
++            or (stage == "step_pre" and (first < 1 or last > calls))
++        ):
++            return invalid
++        key = (record["optimizer_id"], record["group_index"], stage, config, tuple(pids))
++        if key in seen:
++            return invalid
++        seen.add(key)
++        group_observations[stage] += count
++        members += len(pids)
++        if members > 16384:
++            return invalid
++        known[config]["group_records"][stage] += 1
++    if raw["complete"] and any(
++        not events[stage] <= group_observations[stage] <= events[stage] * 64 for stage in events
++    ):
++        return invalid
++    used = [item for item in known.values() if sum(item["group_records"].values())]
++    options_supported = all(
++        item["unrecognized_option_keys"] == 0
++        and all(value[0] != "unsupported" for value in item["present"].values())
++        for item in used
++    )
++    summary = {
++        "status": "observed"
++        if used and raw["complete"] and not raw["stopped_at_limit_or_error"] and options_supported
++        else "partial",
++        "events": events,
++        "configurations": used,
++        "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof.",
++    }
++    if len(json.dumps(summary, ensure_ascii=True, allow_nan=False).encode()) > 1024:
++        return {
++            "status": "unverified",
++            "reason": "group metadata omitted at bounded context",
++            "events": events,
++        }
++    return summary
+ 
+ 
+ def runtime_optimizer_observations(result, source_files, *, script, selected_round=None):
+@@ -226,6 +426,29 @@
+     summary["status"] = (
+         "observed" if flags_complete and steps and complete_records == steps else "partial"
+     )
++    initialization = observation.get("parameter_catalog_initialization")
++    constructor_returns = (
++        _count(initialization.get("successful_base_constructor_returns"), 65536)
++        if isinstance(initialization, Mapping)
++        else None
++    )
++    legacy_group_value = summary["optimizer_group_hyperparameters"]
++    summary["optimizer_group_hyperparameters"] = _optimizer_group_options(
++        observation.get("group_options"), parameters, calls, constructor_returns
++    )
++    if (
++        len(json.dumps(summary, ensure_ascii=True, allow_nan=False).encode())
++        > MAX_OPTIMIZER_OBSERVATION_BYTES
++    ):
++        summary["optimizer_group_hyperparameters"] = {
++            "status": "unverified",
++            "reason": "group metadata omitted at existing context bound",
++        }
++    if (
++        len(json.dumps(summary, ensure_ascii=True, allow_nan=False).encode())
++        > MAX_OPTIMIZER_OBSERVATION_BYTES
++    ):
++        summary["optimizer_group_hyperparameters"] = legacy_group_value
+     if (
+         len(json.dumps(summary, ensure_ascii=True, allow_nan=False).encode())
+         > MAX_OPTIMIZER_OBSERVATION_BYTES
+--- /dev/null
++++ b/tests/test_optimizer_group_options.py
+@@ -0,0 +1,289 @@
++"""CPU-only actual group options; no model API/GPU workloads or source defaults."""
++
++import gc
++import json
++import math
++import weakref
++
++import pytest
++import torch
++
++from headroom import optimizer_observations as summary_module
++from headroom.lab import hooks
++
++
++@pytest.fixture(autouse=True)
++def cleanup_capture():
++    yield
++    session = hooks.active_session()
++    if session is not None:
++        session.finish("error", RuntimeError("CPU metadata test cleanup"))
++
++
++def source_bound_result(options=None):
++    observation = {
++        "protocol": "headroom.optimizer_updates.v1",
++        "complete": False,
++        "logical_boundary_complete": True,
++        "parameter_update_sets_complete": False,
++        "optimizer_step_calls": 0,
++        "successful_optimizer_step_calls": 0,
++        "logical_updates": 0,
++        "parameter_catalog": [{"id": "p00001", "numel": 1, "requires_grad_at_observation": True}],
++        "parameter_catalog_initialization": {"successful_base_constructor_returns": 1},
++    }
++    if options is not None:
++        observation["group_options"] = options
++    return {
++        "protocol": "headroom.lab.v1",
++        "run_id": "1" * 32,
++        "capture_complete": True,
++        "pairing_capture": {"source_contract": {"source_sha256": "a" * 64}},
++        "parameter_count": 1,
++        "parameter_count_complete": True,
++        "steps": 0,
++        "step_records": [],
++        "optimizer_update_observation": observation,
++    }
++
++
++def summarize(result, *, digest="a" * 64):
++    return summary_module.runtime_optimizer_observations(
++        result, [{"path": "train.py", "sha256": digest}], script="train.py"
++    )
++
++
++class MetadataOptimizer:
++    def __init__(self, **options):
++        self.param_groups = [{"params": [object()], **options}]
++
++
++def metadata(**options):
++    optimizer = MetadataOptimizer(**options)
++    observer = hooks._OptimizerGroupOptionObserver()
++    observer.observe(
++        optimizer, stage="base_constructor_return", call=0, identify=lambda p: "p00001"
++    )
++    return observer.snapshot()
++
++
++def test_constructor_observes_actual_sgd_group_options_without_inventing_updates(tmp_path):
++    session = hooks.CaptureSession(tmp_path, device="cpu").start()
++    first = torch.nn.Parameter(torch.tensor([1.0], device="cpu"))
++    second = torch.nn.Parameter(torch.tensor([2.0], device="cpu"))
++    optimizer = torch.optim.SGD(
++        [{"params": [first], "lr": 0.01}, {"params": [second], "lr": 0.03}], momentum=0.9
++    )
++    result = session.finish(exc=RuntimeError("synthetic forward failure before backward"))
++    observation = result["optimizer_update_observation"]
++    raw = observation["group_options"]
++    assert raw["events"] == {"base_constructor_return": 1, "step_pre": 0}
++    assert [row["present"]["lr"] for row in raw["configurations"]] == [
++        ["float", 0.01],
++        ["float", 0.03],
++    ]
++    assert all(row["present"]["momentum"] == ["float", 0.9] for row in raw["configurations"])
++    assert [row["parameter_ids"] for row in raw["groups"]] == [["p00001"], ["p00002"]]
++    assert optimizer.state == {}
++    assert (
++        result["steps"]
++        == observation["logical_updates"]
++        == observation["optimizer_step_calls"]
++        == 0
++    )
++    assert observation["complete"] is False
++    assert observation["parameter_update_sets_complete"] is False
++
++
++def test_step_pre_records_changed_actual_lr_without_mutating_native_step(tmp_path):
++    session = hooks.CaptureSession(tmp_path, device="cpu").start()
++    parameter = torch.nn.Parameter(torch.tensor([1.0], device="cpu"))
++    optimizer = torch.optim.SGD([parameter], lr=0.1)
++    optimizer.param_groups[0]["lr"] = 0.05
++    parameter.square().sum().backward()
++    optimizer.step()
++    result = session.finish()
++    raw = result["optimizer_update_observation"]["group_options"]
++    assert [row["present"]["lr"] for row in raw["configurations"]] == [
++        ["float", 0.1],
++        ["float", 0.05],
++    ]
++    assert [row["stage"] for row in raw["groups"]] == ["base_constructor_return", "step_pre"]
++    assert parameter.item() == pytest.approx(0.9)
++    assert result["steps"] == 1
++
++
++def test_optional_group_metadata_failure_does_not_replace_native_behavior(tmp_path, monkeypatch):
++    session = hooks.CaptureSession(tmp_path, device="cpu").start()
++
++    def broken(*args, **kwargs):
++        raise RuntimeError("optional unavailable")
++
++    monkeypatch.setattr(session._optimizer_group_options, "_observe", broken)
++    parameter = torch.nn.Parameter(torch.tensor([1.0], device="cpu"))
++    optimizer = torch.optim.SGD([parameter], lr=0.1)
++    parameter.square().sum().backward()
++    optimizer.step()
++    result = session.finish()
++    assert parameter.item() == pytest.approx(0.8)
++    assert result["steps"] == 1
++    assert result["optimizer_update_observation"]["group_options"]["complete"] is False
++
++
++def test_group_metadata_never_populates_legacy_catalog_after_initial_observer_failure(
++    tmp_path, monkeypatch
++):
++    session = hooks.CaptureSession(tmp_path, device="cpu").start()
++
++    def broken(*args, **kwargs):
++        raise RuntimeError("initial unavailable")
++
++    monkeypatch.setattr(session, "_observe_optimizer_initial_parameters", broken)
++    parameter = torch.nn.Parameter(torch.tensor([1.0], device="cpu"))
++    optimizer = torch.optim.SGD([parameter], lr=0.1)
++    assert optimizer.param_groups[0]["params"][0] is parameter
++    result = session.finish()
++    raw = result["optimizer_update_observation"]
++    assert raw["parameter_catalog"] == []
++    assert raw["group_options"]["complete"] is False
++
++
++def test_added_no_grad_group_does_not_expand_legacy_catalog_via_optional_metadata(tmp_path):
++    session = hooks.CaptureSession(tmp_path, device="cpu").start()
++    first = torch.nn.Parameter(torch.tensor([1.0], device="cpu"))
++    second = torch.nn.Parameter(torch.tensor([2.0], device="cpu"))
++    optimizer = torch.optim.SGD([first], lr=0.1)
++    optimizer.add_param_group({"params": [second]})
++    first.square().sum().backward()
++    optimizer.step()
++    result = session.finish()
++    raw = result["optimizer_update_observation"]
++    assert len(raw["parameter_catalog"]) == 1
++    assert raw["group_options"]["complete"] is False
++    assert second.grad is None
++
++
++@pytest.mark.parametrize(
++    "value",
++    [
++        float("nan"),
++        float("inf"),
++        -(2**63) - 1,
++        2**63,
++        "private-value",
++        {"secret": "private-value"},
++        object(),
++    ],
++)
++def test_unsupported_values_are_unknown_without_copying_values(value):
++    raw = metadata(lr=value)
++    assert raw["complete"] is False
++    assert raw["configurations"][0]["present"]["lr"] == ["unsupported", None]
++    assert "private-value" not in json.dumps(raw)
++
++
++def test_no_tensor_scalar_read_or_custom_object_conversion(monkeypatch):
++    value = torch.tensor(0.1, device="cpu")
++
++    def forbidden(*args, **kwargs):
++        raise AssertionError("tensor value read")
++
++    monkeypatch.setattr(torch.Tensor, "item", forbidden)
++    monkeypatch.setattr(torch.Tensor, "__float__", forbidden)
++    monkeypatch.setattr(torch.Tensor, "cpu", forbidden)
++    monkeypatch.setattr(torch.Tensor, "numpy", forbidden)
++    raw = metadata(lr=value)
++    assert raw["configurations"][0]["present"]["lr"] == ["unsupported", None]
++
++
++def test_betas_types_and_absent_keys_are_not_synthesized():
++    summary = summarize(source_bound_result(metadata(betas=(0.9, 0.999), foreach=None)))
++    values = summary["optimizer_group_hyperparameters"]["configurations"][0]["present"]
++    assert values == {
++        "betas": ["tuple", [["float", 0.9], ["float", 0.999]]],
++        "foreach": ["none", None],
++    }
++    assert "lr" not in values
++    assert hooks._encode_optimizer_group_option("betas", [0.9, 0.99])[0] == "list"
++    assert hooks._encode_optimizer_group_option("betas", (True, 0.99))[0] == "unsupported"
++
++
++def test_unknown_group_names_and_values_are_not_exposed():
++    raw = metadata(lr=0.1, private_label="private-value")
++    assert raw["complete"] is False
++    assert raw["configurations"][0]["unrecognized_option_keys"] == 1
++    assert "private_label" not in json.dumps(raw)
++    assert "private-value" not in json.dumps(raw)
++
++
++def test_source_mismatch_still_hides_all_new_metadata():
++    summary = summarize(source_bound_result(metadata(lr=0.1)), digest="b" * 64)
++    assert summary["status"] == "unverified"
++    assert summary["optimizer_group_hyperparameters"] == "not_captured"
++
++
++def test_legacy_capture_and_near_cap_restore_old_observed_facts(monkeypatch):
++    old = summarize(source_bound_result())
++    assert old["optimizer_group_hyperparameters"] == "not_captured"
++    monkeypatch.setattr(
++        summary_module,
++        "MAX_OPTIMIZER_OBSERVATION_BYTES",
++        len(json.dumps(old, ensure_ascii=True, allow_nan=False).encode()),
++    )
++    new = summarize(source_bound_result(metadata(lr=0.1)))
++    assert new == old
++
++
++def test_oversized_raw_rejects_only_options_not_parent_facts():
++    raw = metadata(lr=0.1)
++    raw["untrusted_extra"] = "x" * 65536
++    result = summarize(source_bound_result(raw))
++    assert result["optimizer_group_hyperparameters"]["status"] == "unverified"
++    assert result["status"] == "partial"
++    assert result["parameters"]["catalog_entries"] == 1
++    assert result["logical_updates"] == 0
++    assert len(json.dumps(result, ensure_ascii=True, allow_nan=False).encode()) <= 3072
++
++
++@pytest.mark.parametrize(
++    "mutation",
++    [
++        lambda r: r["configurations"][0]["present"].update(lr=[[], 0.1]),
++        lambda r: r["groups"][0].update(stage=[]),
++        lambda r: r["groups"][0].update(parameter_ids=["unknown"]),
++        lambda r: r["groups"][0].update(first_call=1),
++        lambda r: r["events"].update(step_pre=True),
++        lambda r: r["configurations"][0]["present"].update(lr=["float", math.nan]),
++    ],
++)
++def test_malformed_metadata_is_unverified_without_losing_parent_facts(mutation):
++    raw = metadata(lr=0.1)
++    mutation(raw)
++    result = summarize(source_bound_result(raw))
++    assert result["optimizer_group_hyperparameters"]["status"] == "unverified"
++    assert result["parameters"]["catalog_entries"] == 1
++
++
++def test_observer_retains_no_strong_optimizer_reference():
++    optimizer = MetadataOptimizer(lr=0.1)
++    ref = weakref.ref(optimizer)
++    observer = hooks._OptimizerGroupOptionObserver()
++    observer.observe(
++        optimizer, stage="base_constructor_return", call=0, identify=lambda p: "p00001"
++    )
++    del optimizer
++    gc.collect()
++    assert ref() is None
++
++
++def test_deadline_baseexception_propagates():
++    class Deadline(BaseException):
++        pass
++
++    def identify(parameter):
++        raise Deadline()
++
++    with pytest.raises(Deadline):
++        hooks._OptimizerGroupOptionObserver().observe(
++            MetadataOptimizer(), stage="base_constructor_return", call=0, identify=identify
++        )

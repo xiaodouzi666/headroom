@@ -67,8 +67,8 @@ An empty plan is allowed when no complete compliant candidate can be supported.
 
 Final output self-check:
 Use only supplied stack IDs, invocation references and exact visible source ranges.
-For evidence requests distinguish missing text from ambiguous meaning; copy an
-advertised evidence_ref and both ordered line bounds only for a source subrange.
+For evidence requests copy an advertised evidence_ref; non-source line bounds are both null.
+Only a visible source subrange uses both ordered bounds. Distinguish missing text from ambiguous meaning.
 Rebuild blocked_plan_ids from this response: current_plan needs a nonempty unique
 subset of its actual fix_ids; alternative_plan, overall_feasibility and null scope
 use empty IDs. A plan=[] response cannot declare a current-plan dependency.

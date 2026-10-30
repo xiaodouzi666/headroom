@@ -1,0 +1,88 @@
+{
+  "schema": "headroom.optimizer_group_options_proposal_review.v1",
+  "status": "draft_not_applied",
+  "production_files_modified": false,
+  "provider_calls": 0,
+  "gpu_executions": 0,
+  "proposal_sha256": "013b8e15de5b7bbb15b010c5059bf6faf01ba588dbf8ba3ed3d6c73d4edcaa53",
+  "source_pins": {
+    "headroom/lab/hooks.py": "0781d54b5c34b7edddb5502f6d78d5c91be995bca53b91ceb5f7ab5877e22686",
+    "headroom/optimizer_observations.py": "586978258d26914f72f8f5c76a1dee24ab16ce4260f53ea66af48682d862ae77",
+    "headroom/solver_context.py": "88ea2cec74aadbf51da6358ceb90c337c9ea769e40c504dd80fe5cfc8691dba0",
+    "headroom/diagnose.py": "0ee946bbb6a0395732d56e5d39e8916252ae976f0ac1313273791d1bb65772bb",
+    "headroom/patch.py": "f028460b7af312924734360057ed5e9a89bac934c2166db944bbc586a933035c"
+  },
+  "draft_pins": {
+    "headroom/lab/hooks.py": "ba6be0fe7f64976f04687066d8d7b018d26056ea987041834343ef97be4efd0a",
+    "headroom/optimizer_observations.py": "4ea2c3adcb060adfbeeaaccb2cafa43237d6d2e50b33aca0ad46c0f987ae93c2"
+  },
+  "offline_contract_tests": {
+    "passed": 19,
+    "log_sha256": "1b1ee5db8181fb75debfcbd2d86dfc39b719fea7ad5595189aba8abd3fa38860",
+    "scope": "stdlib-only drafted observer/parser; no installed hook lifecycle"
+  },
+  "ruff_check": "pass",
+  "draft_ast_compile": "pass",
+  "bounds": {
+    "context_bytes_unchanged": 3072,
+    "component_bytes": 1024,
+    "raw_bytes": 65536,
+    "new_raw_record_ceiling_bytes": 61440,
+    "optimizers": 256,
+    "groups_per_optimizer": 64,
+    "group_keys": 64,
+    "configurations": 64,
+    "group_records": 256,
+    "combined_record_parameter_members": 16384,
+    "parameters_per_group": 8192,
+    "event_counts": 65536,
+    "signed_integer_bits": 64,
+    "float": "exact built-in finite Python float, JSON round-trip; no coercion",
+    "pair": "exact built-in list/tuple, exactly two int/float scalars"
+  },
+  "real_legacy_capture": {
+    "run_id": "05e95a18625f4eb594676d66d2af9765",
+    "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+    "old_output_identical": true,
+    "logical_updates": 0,
+    "optimizer_calls": 0,
+    "summary_bytes": 1843,
+    "historical_artifact_modified": false
+  },
+  "synthetic_extension_not_a_real_observation": {
+    "summary_bytes": 2477,
+    "group_component_bytes": 648,
+    "parent_status_unchanged": true,
+    "zero_updates_retained": true,
+    "coverage_false_retained": true
+  },
+  "synthetic_34_child_20_boundary_shape_not_real_updates": {
+    "constructor_events": 34,
+    "step_pre_events": 680,
+    "configurations": 1,
+    "group_records": 68,
+    "raw_bytes": 12432,
+    "component_bytes": 511,
+    "status": "observed"
+  },
+  "not_yet_run": [
+    "new installed-hook CPU integration cases",
+    "existing 86 focused integration regressions against proposed production code",
+    "new provider/GPU outcomes"
+  ],
+  "dataflow": [
+    "hooks selected capture group_options",
+    "runtime_optimizer_observations source SHA and run ID gate",
+    "solver_context.py:445 runtime execution context",
+    "diagnose.py:619 shared solver context",
+    "patch.py:653 shared solver context"
+  ],
+  "semantic_limits": [
+    "constructor-return only does not establish subclass completion or any update",
+    "step-pre only does not prove a closure/custom step uses unchanged values",
+    "unknown option keys counted without copying names or values",
+    "missing/tensor/custom values remain unknown; no source defaults substituted",
+    "legacy captures remain not_captured; no historical result edited",
+    "group record aggregates do not prove complete LR schedule or numeric equivalence"
+  ]
+}

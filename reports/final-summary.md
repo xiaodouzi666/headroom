@@ -1,3 +1,11 @@
+## 2026-10-30T12:40:46.809689+00:00 — R15 complete; next implementation checks underway
+
+R15 完整九项，自动目标 **1/9（s3）**，仍低于原6/9；首个保存诊断轮的raw分类4/9、valid correct3/9、ready2/9，最终valid5/9、ready1/9，不混用这些口径。s3新GPU候选20更新、0.648419840GB、比较损失完全一致；s4候选仅1步后出现float.item AttributeError，未运行原始offload参考，不能计成功。全部11 Lab清理、9 worker退出、180实现/30输入pins匹配。报告reports/r15-20261030-terminal-review/terminal-review.json；公网Results已发布独立R15，原10条逐文件保留。
+
+R15本轮保守计费$0.65563404净额，known actual subtotal$0.62755938；9 Nano actual未知但已按原保护resolved，精确总费用不冒称已知。批准开发池累计$2.26000522，剩余$2.630499180；不充值、不扩额、保留$8。
+
+独立全尺寸原s4参考infra在第8步遇到ConnectionResetError（约17.8GB/149.48秒），没有MVP成功；退出后目标、495个暂存对象和GPU清理均验证。root用确定性负例复现reply-return/permit-release竞态，修为有界backpressure，60 focused通过、独审PASS；原失败保留。下一版本还补实际optimizer group scalar观测、引用检查scope措辞与禁止实际训练覆盖缩小的既有parameter_policy执行。167/148/175分别为独立focused组，不拼成全量回归。补丁runtime失败后的同策略重修仍在完整循环离线集成；全部新修复尚未获得新一轮固定九项通过结论。网页新提交为GPU/源码验收继续维护暂停，正式Submitted5/5和视频不变。
+
 ## 2026-10-30T12:16:20.573071+00:00 — R15 live campaign started
 
 修复源码964b658已推送；focused tests、独立审阅、Ruff/format/gitleaks通过。小CPU Docker和唯一tiny CUDA暂存基础设施验证成功（63次真实GPU张量spill/unpack），不计入固定九项。R15在源码冻结后以原九项/.60每项/6轮/20步/seed1337启动；180 implementation pins、30 input pins与提交/实盘逐项核对，所有控制/数据/校准/repository身份与R14相同。独立准备审阅 reports/repair-followup-20261030/r15-independent-preflight.json。

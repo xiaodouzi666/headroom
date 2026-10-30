@@ -1,0 +1,106 @@
+"""Generate review-only full drafts and diff; never writes production paths."""
+
+import ast
+import difflib
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+helper = (ROOT / "draft/headroom/lab/optimizer_group_options.py").read_text()
+helper = helper[helper.index("OPTIONS =") :]
+for old, new in [
+    ("OptimizerGroupOptionObserver", "_OptimizerGroupOptionObserver"),
+    ("encode_option", "_encode_optimizer_group_option"),
+    ("_scalar", "_optimizer_option_scalar"),
+    ("canonical", "_optimizer_option_canonical"),
+    ("OPTIONS", "_GROUP_OPTIONS"),
+    ("MAX_OPTIMIZERS", "_GROUP_MAX_OPTIMIZERS"),
+    ("MAX_GROUPS", "_GROUP_MAX_GROUPS"),
+    ("MAX_GROUP_KEYS", "_GROUP_MAX_GROUP_KEYS"),
+    ("MAX_CONFIGS", "_GROUP_MAX_CONFIGS"),
+    ("MAX_RECORDS", "_GROUP_MAX_RECORDS"),
+    ("MAX_MEMBERS", "_GROUP_MAX_MEMBERS"),
+    ("MAX_RAW_BYTES", "_GROUP_MAX_RAW_BYTES"),
+]:
+    helper = helper.replace(old, new)
+hooks = Path("headroom/lab/hooks.py").read_text()
+assert hooks.count("class CaptureSession:") == 1
+hooks = hooks.replace("class CaptureSession:", helper + "\n\nclass CaptureSession:", 1)
+for needle, added in [
+    (
+        "        self._optimizer_initial_catalog_complete = True\n",
+        "        self._optimizer_group_options = _OptimizerGroupOptionObserver()\n",
+    ),
+    (
+        "                    session._optimizer_initial_catalog_complete = False\n",
+        '                session._optimizer_group_options.observe(\n                    optimizer, stage="base_constructor_return", call=0, identify=session._existing_update_identity\n                )\n',
+    ),
+    (
+        "        self._optimizer_step_calls += 1\n",
+        '        self._optimizer_group_options.observe(\n            optimizer, stage="step_pre", call=self._optimizer_step_calls, identify=self._existing_update_identity\n        )\n',
+    ),
+    (
+        '            "parameter_catalog": self._update_catalog,\n',
+        '            "group_options": self._optimizer_group_options.snapshot(),\n',
+    ),
+]:
+    assert hooks.count(needle) == 1
+    hooks = hooks.replace(needle, needle + added, 1)
+needle = "    def _observe_optimizer_initial_parameters(self, optimizer):"
+assert hooks.count(needle) == 1
+hooks = hooks.replace(
+    needle,
+    """    def _existing_update_identity(self, parameter):
+        identity = self._update_identities.get(id(parameter))
+        if identity is None or identity[0]() is not parameter:
+            raise ValueError("parameter identity not previously observed")
+        return identity[1]
+
+"""
+    + needle,
+    1,
+)
+(ROOT / "draft/headroom/lab/hooks.py").write_text(hooks)
+s = (
+    Path("headroom/optimizer_observations.py")
+    .read_text()
+    .replace("import json\n", "import json\nimport math\n")
+)
+s = s.replace(
+    "def runtime_optimizer_observations(",
+    (ROOT / "optimizer_options_summary.py.txt").read_text()
+    + "\n\ndef runtime_optimizer_observations(",
+    1,
+)
+needle = "    if (\n        len(json.dumps(summary, ensure_ascii=True, allow_nan=False).encode())\n"
+assert s.count(needle) == 1
+addition = """    initialization = observation.get("parameter_catalog_initialization")
+    constructor_returns = (
+        _count(initialization.get("successful_base_constructor_returns"), 65536)
+        if isinstance(initialization, Mapping) else None
+    )
+    legacy_group_value = summary["optimizer_group_hyperparameters"]
+    summary["optimizer_group_hyperparameters"] = _optimizer_group_options(
+        observation.get("group_options"), parameters, calls, constructor_returns
+    )
+    if len(json.dumps(summary, ensure_ascii=True, allow_nan=False).encode()) > MAX_OPTIMIZER_OBSERVATION_BYTES:
+        summary["optimizer_group_hyperparameters"] = {
+            "status": "unverified", "reason": "group metadata omitted at existing context bound"
+        }
+    if len(json.dumps(summary, ensure_ascii=True, allow_nan=False).encode()) > MAX_OPTIMIZER_OBSERVATION_BYTES:
+        summary["optimizer_group_hyperparameters"] = legacy_group_value
+"""
+s = s.replace(needle, addition + needle, 1)
+(ROOT / "draft/headroom/optimizer_observations.py").write_text(s)
+chunks = []
+for fn in ["headroom/lab/hooks.py", "headroom/optimizer_observations.py"]:
+    new = (ROOT / "draft" / fn).read_text()
+    ast.parse(new)
+    chunks.extend(
+        difflib.unified_diff(
+            Path(fn).read_text().splitlines(True),
+            new.splitlines(True),
+            fromfile="a/" + fn,
+            tofile="b/" + fn,
+        )
+    )
+(ROOT / "proposed.patch").write_text("".join(chunks))

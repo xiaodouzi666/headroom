@@ -832,6 +832,7 @@ def solver_prompt_context(
     verification_feedback=None,
     numerical_reference_context=None,
     evidence_availability_catalog=None,
+    runtime_patch_refinement=None,
 ):
     """Bound the combined model-visible context using Super's ASCII-escaped wire size.
 
@@ -843,6 +844,10 @@ def solver_prompt_context(
             runtime_operator_catalog(), MAX_CATALOG_BYTES, "runtime_operator_catalog"
         )
     }
+    if runtime_patch_refinement is not None:
+        fields["runtime_patch_refinement"] = bounded_json(
+            runtime_patch_refinement, 8192, "runtime_patch_refinement"
+        )
     if evidence_availability_catalog is not None:
         fields["evidence_availability_catalog"] = bounded_json(
             evidence_availability_catalog,

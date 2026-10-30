@@ -121,8 +121,9 @@ def validation_issue_context(issue, diagnosis, evidence=None):
         if issue.code == "EVIDENCE_AVAILABILITY_CONTRADICTED" and observation is not None:
             context["availability_contract"] = (
                 "The exact cited text/range is visible, so calling that text missing, "
-                "redacted or truncated is contradicted. Meaning may remain ambiguous and "
-                "runtime values unverified. Retain genuine missing-value dependencies. "
+                "redacted or truncated is contradicted. This availability check verifies no "
+                "runtime values and does not negate separate scoped observations. Retain "
+                "genuine missing-value dependencies. "
                 "This rejects the reason declaration, not the existence of the requested "
                 "implementation or semantic answer. A missing feature inside visible source "
                 "does not make the source text missing. Use ambiguous or other for unresolved "
