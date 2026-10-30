@@ -8,6 +8,7 @@ from collections.abc import Mapping
 from pathlib import PurePosixPath
 
 from headroom.api.security import open_regular
+from headroom.operator_capabilities import MAX_CATALOG_BYTES, runtime_operator_catalog
 from headroom.retained_state import retained_state_reading_aid
 from headroom.verify.candidate_preflight import SCHEMA as PREFLIGHT_SCHEMA
 from headroom.verify.candidate_preflight import reference_family_reading_aid
@@ -833,7 +834,11 @@ def solver_prompt_context(
     Drop oldest round identifiers from both histories together; never re-pair by
     list position. This is only prompt visibility, not the persisted search state.
     """
-    fields = {}
+    fields = {
+        "runtime_operator_catalog": bounded_json(
+            runtime_operator_catalog(), MAX_CATALOG_BYTES, "runtime_operator_catalog"
+        )
+    }
     if evidence_availability_catalog is not None:
         fields["evidence_availability_catalog"] = bounded_json(
             evidence_availability_catalog,

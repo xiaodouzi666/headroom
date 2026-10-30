@@ -1,0 +1,67 @@
+{
+  "scope": "offline_temporary_ledgers_only_no_campaign_provider_GPU_or_funding_execution",
+  "junit": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "9",
+    "time": "1.240",
+    "timestamp": "2026-10-30T11:35:31.452040+01:00",
+    "hostname": "ubuntu"
+  },
+  "files": {
+    "reports/repair-followup-20261030/execute-fixed9.py.txt": "ee21edd154eb5a3a7ff99aa302555c45cc22af8f91e298444d2057bd9da51544",
+    "reports/repair-followup-20261030/execute-fixed9-v1-r12.py.txt": "ee21edd154eb5a3a7ff99aa302555c45cc22af8f91e298444d2057bd9da51544",
+    "reports/repair-followup-20261030/execute-fixed9-v2.py.txt": "590189eb3b23f1f932c62a849afd1aee26edb9968822964e65a8c3b7f04ed426",
+    "tests/test_repair_followup_controller_v2.py": "8dcf80401fb5a948b2d0cd6a356a25b89396ce895fb68734ce54b0a9fa014900"
+  },
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "--stdin-filename",
+        "execute-fixed9-v2.py",
+        "-"
+      ],
+      "exit_code": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "--stdin-filename",
+        "execute-fixed9-v2.py",
+        "-"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "tests/test_repair_followup_controller_v2.py"
+      ],
+      "exit_code": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "v1_copy_mode": "0o400"
+}

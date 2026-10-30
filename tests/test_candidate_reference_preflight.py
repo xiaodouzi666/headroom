@@ -124,7 +124,11 @@ def test_capability_and_retained_reading_aids_preserve_full_metadata_and_wire_bo
     assert result["numerical_reference_context"] == original == context
     assert len(json.dumps(result, ensure_ascii=True).encode()) <= MAX_SOLVER_CONTEXT_BYTES
     assert reference_family_reading_aid(None) is None
-    assert solver_prompt_context() == {}
+    empty_context = solver_prompt_context()
+    assert "execution_context" not in empty_context
+    assert "numerical_reference_context" not in empty_context
+    assert empty_context["runtime_operator_catalog"]["current_target_applicability"] == "unverified"
+    assert empty_context["runtime_operator_catalog"]["current_runtime_availability"] == "unverified"
 
 
 def test_known_unsupported_patch_skips_verify_and_reaches_next_round_with_exact_feedback(

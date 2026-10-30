@@ -1,0 +1,401 @@
+{
+  "schema": "headroom.r12.terminal-readonly-review.v1",
+  "observed_at_utc": "2026-10-30T10:28:12.565618+00:00",
+  "campaign_status": "partial",
+  "stop_reason": "child_execution_or_cost_unverified",
+  "metrics": {
+    "fixed_denominator": 9,
+    "minimum_targets": 6,
+    "attempted_cells": 1,
+    "not_run_cells": 8,
+    "selected_targets": 0,
+    "valid_ready_diagnoses": 0,
+    "diagnosis_model_requests": 0,
+    "patch_model_requests": 0,
+    "candidate_gpu_executions": 0,
+    "baseline_gpu_executions": 1,
+    "full_nine_completed": false
+  },
+  "sources": [
+    {
+      "path": "runs/repair-followup/execution-r12-20261030/campaign.json",
+      "bytes": 14055,
+      "sha256": "662c8c3bfa4cb280e9611cd233101d5fd8cb1fe9ee600978e31014e772f343ad"
+    },
+    {
+      "path": "runs/repair-followup/execution-r12-20261030/jobs/8f6874405d9a423ea51856e938213007/report.json",
+      "bytes": 624620,
+      "sha256": "d9df71865204fee5a1e54153182b83537281da78bbba430cca7cb46119b8def4"
+    },
+    {
+      "path": "runs/final48-repair-preparation-20261030-r12/preparation.json",
+      "bytes": 66993,
+      "sha256": "e7e5ec90e2522ceb38cdfa34309f337e990ee2e58e5549e0a350603d31565cfb"
+    },
+    {
+      "path": ".cache/repair-followup-20261030-v3/r12-proposal.json",
+      "bytes": 12415,
+      "sha256": "8a5ce92b420149fd83dd73773b7fd9ded13604087ac37bea2ff985a855a6885e"
+    }
+  ],
+  "source_pins": {
+    "implementation_count": 174,
+    "input_count": 30,
+    "mismatches": [],
+    "preparation_sha256": "3ae11df50dd3eefdc1eb9f7bce4a0292fb501e5a934e2a47d1628c018f168f90",
+    "proposal_sha256": "85f761cd0b620c50b6b78b43b0184daad211e52efebd5cf6f306eaca316e2059"
+  },
+  "rows": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "run_id": "8f6874405d9a423ea51856e938213007",
+      "status": "budget_exceeded",
+      "target_met": false
+    },
+    {
+      "scenario_id": "s2_capacity_v2",
+      "run_id": null,
+      "status": "not_run",
+      "target_met": null
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "run_id": null,
+      "status": "not_run",
+      "target_met": null
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "run_id": null,
+      "status": "not_run",
+      "target_met": null
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "run_id": null,
+      "status": "not_run",
+      "target_met": null
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "run_id": null,
+      "status": "not_run",
+      "target_met": null
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "run_id": null,
+      "status": "not_run",
+      "target_met": null
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "run_id": null,
+      "status": "not_run",
+      "target_met": null
+    },
+    {
+      "scenario_id": "nanogpt",
+      "run_id": null,
+      "status": "not_run",
+      "target_met": null
+    }
+  ],
+  "raw_controller_accounting_preserved_but_stale": {
+    "scope_cap_usd": "4.890504400",
+    "scope_charged_usd": "0",
+    "scope_actual_usd": "0",
+    "scope_remaining_usd": "4.890504400",
+    "all_costs_resolved": true
+  },
+  "controller_accounting_verified": false,
+  "direct_original_ledger_observation": {
+    "ledger_path": ".cache/repair-followup-20261030-v3/budget.db",
+    "cap_usd": "4.890504400",
+    "retained_reservation_usd": "0.01644864",
+    "known_actual_subtotal_usd": "0",
+    "actual_total_usd": null,
+    "unresolved_attempts": 1,
+    "arithmetic_remaining_usd": "4.874055760",
+    "further_dispatch_blocked": true,
+    "funding_external_commitments": [],
+    "runs": [
+      {
+        "id": "8f6874405d9a423ea51856e938213007",
+        "day": "2026-10-30",
+        "limit_usd": "0.6",
+        "status": "closed",
+        "halt_reason": "provider_charge_unknown",
+        "budget_mode": "strict_reservation"
+      }
+    ],
+    "attempts": [
+      {
+        "id": "d682009978a047849a1e8ad9e3eac4c4",
+        "run_id": "8f6874405d9a423ea51856e938213007",
+        "upper_usd": "0.01644864",
+        "charged_usd": "0.01644864",
+        "actual_usd": null,
+        "settled": 1,
+        "admission_kind": "verified_provider_bound",
+        "dispatched": 1,
+        "charge_status": "unknown",
+        "charge_basis": null,
+        "review_sha256": null
+      }
+    ]
+  },
+  "call_metadata": [
+    {
+      "id": 1,
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "role": "annotate",
+      "input_tokens": null,
+      "output_tokens": null,
+      "actual_usd": null,
+      "outcome": "timeout",
+      "billing_status": "unresolved",
+      "http_status": null,
+      "elapsed_seconds": 122.26568631408736,
+      "request_wire_body_sha256": "100afe43cef2bd940f1accd5134c1907691db98e57cbaf44fc08269a7e54a000",
+      "delivery_confirmed": false
+    }
+  ],
+  "run_events": [
+    {
+      "sequence": 1,
+      "kind": "run.started",
+      "data": {
+        "target": "fix-oom",
+        "provenance": "live"
+      }
+    },
+    {
+      "sequence": 2,
+      "kind": "run.preflight",
+      "data": {
+        "stage": "runtime_and_budget"
+      }
+    },
+    {
+      "sequence": 3,
+      "kind": "budget.reserved",
+      "data": {
+        "limit_usd": "0.6",
+        "live": true,
+        "run_budget_mode": "strict_reservation"
+      }
+    },
+    {
+      "sequence": 4,
+      "kind": "baseline.started",
+      "data": {
+        "script": "train.py",
+        "device": "cuda"
+      }
+    },
+    {
+      "sequence": 5,
+      "kind": "baseline.oom",
+      "data": {
+        "lab_run_id": "259a8d3ec10f4adea3f15da75594b989",
+        "peak_alloc_gb": 24.750424064
+      }
+    },
+    {
+      "sequence": 6,
+      "kind": "evidence.started",
+      "data": {
+        "lab_run_id": "259a8d3ec10f4adea3f15da75594b989"
+      }
+    },
+    {
+      "sequence": 7,
+      "kind": "evidence.built",
+      "data": {
+        "token_count": 21061,
+        "round": 0
+      }
+    },
+    {
+      "sequence": 8,
+      "kind": "annotate.done",
+      "data": {
+        "status": "failed",
+        "models": [
+          "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+        ],
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "cost_usd": null,
+        "cost_upper_usd": null,
+        "cost_basis": null,
+        "billing_complete": false,
+        "elapsed_seconds": 122.26568631408736,
+        "llm_calls": [
+          {
+            "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+            "role": "annotate",
+            "elapsed_seconds": 122.26568631408736,
+            "cost_usd": null,
+            "cost_upper_usd": null,
+            "cost_basis": null,
+            "outcome": "timeout",
+            "billing_status": "unresolved"
+          }
+        ]
+      }
+    },
+    {
+      "sequence": 9,
+      "kind": "diagnose.started",
+      "data": {
+        "role": "diagnose",
+        "round": 1
+      }
+    },
+    {
+      "sequence": 10,
+      "kind": "budget.exceeded",
+      "data": {
+        "reason": "Run budget is closed or halted"
+      }
+    },
+    {
+      "sequence": 11,
+      "kind": "round.done",
+      "data": {
+        "decision": "revert",
+        "round": 1,
+        "reason": "budget_exceeded"
+      }
+    },
+    {
+      "sequence": 12,
+      "kind": "report.started",
+      "data": {
+        "partial": true
+      }
+    },
+    {
+      "sequence": 13,
+      "kind": "report.written",
+      "data": {
+        "report": "report.md"
+      }
+    }
+  ],
+  "saved_worker_timing": {
+    "limit_seconds": 480,
+    "wall_seconds": 136.2004692510236,
+    "cleanup_seconds": 0.05185200204141438,
+    "within_wall_limit": true,
+    "deadline_exceeded": false,
+    "worker_exit_code": 78,
+    "cleanup_verified": true,
+    "cli": {
+      "argv": [
+        "fix",
+        "/home/xiaodouzi/workspace/headroom/scenarios/s1_batch_too_big/train.py",
+        "--source-root",
+        "/home/xiaodouzi/workspace/headroom/scenarios/s1_batch_too_big",
+        "--target",
+        "fix-oom",
+        "--reclaim-reduction-pct",
+        "30.0",
+        "--max-throughput-regression-pct",
+        "25.0",
+        "--max-steps",
+        "20",
+        "--max-seconds",
+        "120",
+        "--budget",
+        "0.6",
+        "--daily-budget",
+        "4.890504400",
+        "--device",
+        "cuda",
+        "--seed",
+        "1337",
+        "--max-rounds",
+        "6",
+        "--search-mode",
+        "until_target",
+        "--allocator-conf",
+        "",
+        "--reference-strategy",
+        "original_workload_checkpoint",
+        "--reference-cpu-bytes",
+        "17179869184",
+        "--reference-disk-bytes",
+        "0",
+        "--reference-max-seconds",
+        "480",
+        "--no-allow-numerics-change",
+        "--allow-batch-grad-accum",
+        "--research",
+        "--runtime-profile",
+        "/home/xiaodouzi/workspace/headroom/.cache/repair-followup-20261030-v3/runtime-profile.json"
+      ],
+      "bridge_sha256": "261884432b8c91495c61d6d69b0d5fa892b1f59e747ca04019a43d68aa3a21b2",
+      "cli_sha256": "9e3e96e02a241ae42e128a1e97f38b5bae22ee2b42632144e24d6a6b29cf5b54",
+      "console_path": "/home/xiaodouzi/workspace/headroom/.venv/bin/headroom",
+      "console_sha256": "86fba6f7d268049444b7a7695c720768bdf1a9024964b50d30ec9e14dc360d09",
+      "finished_monotonic": 1911592.185344711,
+      "invocation_kind": "installed_console_script",
+      "invoked": true,
+      "observed_exit_code": 78,
+      "package_root": "/home/xiaodouzi/workspace/headroom",
+      "pid": 2495647,
+      "request_sha256": "ddf7be229b7ff55308ef79af4f681d5fbca6b77562c0675bdf3b37550e0701dd",
+      "result_saved": true,
+      "result_sha256": "6ef046fb0532462bb0b66c23d8bba4327bcec1f4f2109e8b252ec645607ebb93",
+      "returned": true,
+      "run_dispatched": true,
+      "run_id": "8f6874405d9a423ea51856e938213007",
+      "started_monotonic": 1911458.127657704,
+      "verified": true
+    }
+  },
+  "lab": [
+    {
+      "source": {
+        "path": "runs/repair-followup/execution-r12-20261030/jobs/8f6874405d9a423ea51856e938213007/lab/259a8d3ec10f4adea3f15da75594b989/result.json",
+        "bytes": 279674,
+        "sha256": "d42aea31559920d2418702cfc4cce324969e9350cbd38e72c95b466dd31bcc5f"
+      },
+      "status": "oom",
+      "steps": 0,
+      "reason": null,
+      "cleanup_verified": true,
+      "gpu_after": {
+        "available": true,
+        "processes": [],
+        "devices_csv": "0, NVIDIA GeForce RTX 3090 Ti, 24564, 24056",
+        "error": ""
+      },
+      "execution": {
+        "timed_out": false,
+        "returncode": 42,
+        "cleanup_verified": true
+      }
+    }
+  ],
+  "worker_pid_present": false,
+  "unit": {
+    "returncode": 0,
+    "show": "Result=exit-code\nExecMainStatus=1\nActiveState=failed\nSubState=failed",
+    "stderr": ""
+  },
+  "audit_provider_calls": 0,
+  "audit_gpu_jobs": 0,
+  "audit_mutated_sources_or_ledger": false,
+  "limitations": [
+    "The controller's zero charged/zero actual/all_costs_resolved values are stale; they do not establish zero cost or resolved billing.",
+    "One Nano annotation request timed out with unknown usage and actual charge; its full .01644864 verified provider reservation remains charged and unresolved in the original target ledger.",
+    "diagnose.started was pre-dispatch; no diagnosis model request, patch or candidate execution occurred.",
+    "The baseline GPU capture genuinely OOMed; numerical and repair target outcomes were not tested.",
+    "The main runs/headroom.db intentionally has no R12 record; R12 uses its isolated Store.",
+    "Eight unrun cells remain unknown/not_run among the fixed nine; no historical result is reassigned to R12.",
+    "No retry, billing review, budget mutation or deployment was performed by this auditor."
+  ]
+}

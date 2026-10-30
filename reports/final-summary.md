@@ -1,3 +1,17 @@
+## 2026-10-30 18:34 北京 — 超时费用完整保留审阅完成
+
+$0.01644864未释放、actual仍unknown；精确receipt经独立审查后应用，原R12文件未改，默认unknown保护不变。新开发池剩$4.874055760净额，可用于下一轮独立运行；R12没有被改成通过或重试。新控制器修正异常情况下汇总不刷新的问题，下一轮proposal会绑定过去实际支出。
+
+# Repair continuation — 2026-10-30 18:26 Beijing
+
+Source e4341c4 is pushed and deployed; 106 combined focused checks passed. Six causal fixes and a separate gift-funded follow-up allocation are recorded in [the continuation report](repair-followup-20261030/README.md). No full-suite rerun or acceptance relaxation occurred.
+
+R11 attempted two cases and left seven unrun. Its s1 candidate reduced GPU peak by30.86% over20 updates but could not be numerically certified and was reverted. R12 stopped after the s1 baseline because its only Nano request timed out; no diagnosis, patch or candidate GPU execution followed, and eight cases were unrun. The target ledger retains the full$0.01644864 reservation, actual cost is unknown and further development dispatch is blocked pending a narrow reviewed retention. The old campaign accounting section is a stale pre-call snapshot, not a zero-cost result. See [the independent terminal review](r12-20261030-terminal-review/README.md).
+
+Public Home, Verified runs and health return200; live task and snapshot admission were restored after the stopped campaign. The fixed-nine6/9 requirement remains unmet. Submitted5/5, video and historical results remain intact. Later updates will separately record any new run; none is pre-certified here.
+
+## Earlier F8 report retained
+
 # F8 completed — 2026-10-30 after 16:00 Beijing
 
 The scheduled closing check finished. Public website, Funnel, user services, displayed credit reserve of at least$8, Submitted5/5 and static checks were confirmed. One new public s3 smoke used real GPU/Nebius inference and **failed diagnosis with ResponseValidationError**. No patch/candidate was executed. Resolved conservative charge **$0.08019350 net** within the original$0.30 cap; no retry/recharge. Queue idle and cleanup verified. Remaining FINAL48 shared pool **$1.787809228 net**. Total exact API cost remains unknown; the known subtotal is$0.07639712.

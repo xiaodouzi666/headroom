@@ -1,0 +1,58 @@
+{
+  "schema": "headroom.operator-capabilities.verification.v1",
+  "utc": "2026-10-30T10:46:58.134081+00:00",
+  "result": "93 passed in 6.31s",
+  "guarded_log": "reports/operator-capabilities-20261030/focused-final-v2.log",
+  "guarded_receipt": "reports/operator-capabilities-20261030/focused-final-v2.json",
+  "catalog_wire_bytes_ascii": 2825,
+  "operator_source_sha256": "4990d71729b1db73e7eccddbddc6e55dbf872e23fb0a092ec4d7903067c7677b",
+  "source_hashes": {
+    "headroom/operator_capabilities.py": "3078fc325dfd7980567a29c99d276dea81c9694ca1e64d4663ca14860138dc00",
+    "headroom/solver_context.py": "4fa943323f732fc45b8bef381afb3f9f9eae6280919ba2d5ae0da2a46809ec27",
+    "tests/test_operator_capabilities.py": "6a5487310ba859aedad5acfa5740b3a910c8901e40edc11246d865da21101c15",
+    "tests/test_candidate_reference_preflight.py": "c120180b319cdfe34e8077b8a9812c1d94ac23e18a64b918ddde10f13ad2abf6"
+  },
+  "checks": {
+    "ruff": {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/operator_capabilities.py",
+        "headroom/solver_context.py",
+        "tests/test_operator_capabilities.py",
+        "tests/test_candidate_reference_preflight.py"
+      ],
+      "exit_code": 0
+    },
+    "format": {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/operator_capabilities.py",
+        "headroom/solver_context.py",
+        "tests/test_operator_capabilities.py",
+        "tests/test_candidate_reference_preflight.py"
+      ],
+      "exit_code": 0
+    },
+    "diff": {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "--",
+        "headroom/operator_capabilities.py",
+        "headroom/solver_context.py",
+        "tests/test_operator_capabilities.py",
+        "tests/test_candidate_reference_preflight.py"
+      ],
+      "exit_code": 0
+    }
+  },
+  "provider_requests": 0,
+  "gpu_executions": 0,
+  "new_tool_calls": 0,
+  "deployed": false,
+  "model_repair_success_claimed": false
+}

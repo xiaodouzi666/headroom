@@ -1,0 +1,110 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+....FF                                                                   [100%]
+=================================== FAILURES ===================================
+_ test_finally_persists_unknown_cost_instead_of_stale_zero_and_does_not_retry __
+
+controller = <module 'repair_followup_controller_v2_offline' from '/home/xiaodouzi/workspace/headroom/reports/repair-followup-20261030/execute-fixed9-v2.py.txt'>
+pool = (<headroom.budget.BudgetLedger object at 0x753eed6e0ce0>, {'ledger_path': '/tmp/pytest-of-xiaodouzi/pytest-493/test_finally_persists_unknown_0/budget.db', 'target_net_usd': '4.890504400'})
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-493/test_finally_persists_unknown_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x753eed6c7b30>
+
+    def test_finally_persists_unknown_cost_instead_of_stale_zero_and_does_not_retry(
+        controller, pool, tmp_path, monkeypatch
+    ):
+        ledger, output, _ = configure_main(controller, pool, tmp_path, monkeypatch)
+        dispatches = []
+    
+        def failed_child(request, **kwargs):
+            dispatches.append(kwargs["run_id"])
+            charge(ledger, run_id=kwargs["run_id"], amount=".01644864", actual=None)
+            return {
+                "status": "timeout",
+                "evaluation_timing": {
+                    "cleanup_verified": False,
+                    "within_wall_limit": False,
+                    "cli": {"verified": True},
+                },
+            }
+    
+        monkeypatch.setattr(controller, "supervise_evaluation_run", failed_child)
+>       controller.main()
+
+tests/test_repair_followup_controller_v2.py:195: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def main():
+        os.umask(0o077)
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--proposal", required=True)
+        parser.add_argument("--expected-sha256", required=True)
+        parser.add_argument("--output", required=True)
+        parser.add_argument("--execute-reviewed", action="store_true")
+        args = parser.parse_args()
+        assert args.execute_reviewed
+        proposal = repair.read_json(repair.inside(ROOT, args.proposal), max_bytes=2 * 1024 * 1024)
+        assert alloc.digest(proposal) == args.expected_sha256
+        assert proposal["controller_sha256"] == repair.file_record(Path(__file__), 512000)["sha256"]
+        receipt = funding(proposal["funding_receipt_path"], proposal["funding_receipt_sha256"])
+        prepared = repair.verify_preparation(
+            proposal["prepared_path"], expected_sha256=proposal["preparation_sha256"]
+        )
+        cells = [c for c in prepared["cells"] if c["result_group"] == "fixed_nine"]
+        assert tuple(c["cell_id"] for c in cells) == CELL_IDS
+        bound = repair.bound_requests(
+>           prepared, profile_path=receipt["profile_path"], daily_limit_usd=receipt["target_net_usd"]
+                                   ^^^^^^^^^^^^^^^^^^^^^^^
+        )
+E       KeyError: 'profile_path'
+
+reports/repair-followup-20261030/execute-fixed9-v2.py.txt:122: KeyError
+_______ test_changed_starting_pool_snapshot_stops_before_output_or_child _______
+
+controller = <module 'repair_followup_controller_v2_offline' from '/home/xiaodouzi/workspace/headroom/reports/repair-followup-20261030/execute-fixed9-v2.py.txt'>
+pool = (<headroom.budget.BudgetLedger object at 0x753eed6e1580>, {'ledger_path': '/tmp/pytest-of-xiaodouzi/pytest-493/test_changed_starting_pool_sna0/budget.db', 'target_net_usd': '4.890504400'})
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-493/test_changed_starting_pool_sna0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x753eed6e1a30>
+
+    def test_changed_starting_pool_snapshot_stops_before_output_or_child(
+        controller, pool, tmp_path, monkeypatch
+    ):
+        ledger, output, _ = configure_main(controller, pool, tmp_path, monkeypatch)
+        charge(ledger)
+        monkeypatch.setattr(
+            controller,
+            "supervise_evaluation_run",
+            lambda *args, **kwargs: pytest.fail("Stale proposal must not dispatch"),
+        )
+        with pytest.raises(AssertionError):
+>           controller.main()
+
+tests/test_repair_followup_controller_v2.py:229: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def main():
+        os.umask(0o077)
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--proposal", required=True)
+        parser.add_argument("--expected-sha256", required=True)
+        parser.add_argument("--output", required=True)
+        parser.add_argument("--execute-reviewed", action="store_true")
+        args = parser.parse_args()
+        assert args.execute_reviewed
+        proposal = repair.read_json(repair.inside(ROOT, args.proposal), max_bytes=2 * 1024 * 1024)
+        assert alloc.digest(proposal) == args.expected_sha256
+        assert proposal["controller_sha256"] == repair.file_record(Path(__file__), 512000)["sha256"]
+        receipt = funding(proposal["funding_receipt_path"], proposal["funding_receipt_sha256"])
+        prepared = repair.verify_preparation(
+            proposal["prepared_path"], expected_sha256=proposal["preparation_sha256"]
+        )
+        cells = [c for c in prepared["cells"] if c["result_group"] == "fixed_nine"]
+        assert tuple(c["cell_id"] for c in cells) == CELL_IDS
+        bound = repair.bound_requests(
+>           prepared, profile_path=receipt["profile_path"], daily_limit_usd=receipt["target_net_usd"]
+                                   ^^^^^^^^^^^^^^^^^^^^^^^
+        )
+E       KeyError: 'profile_path'
+
+reports/repair-followup-20261030/execute-fixed9-v2.py.txt:122: KeyError
+=========================== short test summary info ============================
+FAILED tests/test_repair_followup_controller_v2.py::test_finally_persists_unknown_cost_instead_of_stale_zero_and_does_not_retry
+FAILED tests/test_repair_followup_controller_v2.py::test_changed_starting_pool_snapshot_stops_before_output_or_child

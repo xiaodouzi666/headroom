@@ -1,0 +1,330 @@
+"""One fixed-nine live campaign under its separately authorized development allocation."""
+
+import argparse
+import os
+import sys
+import time
+from pathlib import Path
+from uuid import uuid4
+
+if sys.flags.optimize:
+    raise RuntimeError("Reviewed execution requires non-optimized Python")
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+from headroom.acceptance import allocation as alloc
+from headroom.acceptance import final48_repair as repair
+from headroom.acceptance.f3_retry import CELL_IDS
+from headroom.budget import money
+from headroom.evaluation import Scenario, result_row
+from headroom.evaluation_worker import supervise_evaluation_run
+from headroom.ledger_path import existing_file_identity, require_initialized_ledger
+from headroom.orchestrator import FixRequest
+from headroom.store.db import Store
+
+
+def funding(path, expected):
+    receipt = repair.read_json(repair.inside(ROOT, path), max_bytes=512000)
+    sha = receipt.pop("receipt_sha256")
+    assert sha == expected == alloc.digest(receipt)
+    receipt["receipt_sha256"] = sha
+    assert receipt["state"] == "active" and receipt["scope"] == "DEVELOPMENT_REPAIR_FOLLOWUP"
+    assert money(receipt["target_net_usd"]) == money("4.890504400")
+    require_initialized_ledger(
+        receipt["ledger_path"], expected_identity=tuple(receipt["ledger_identity"])
+    )
+    profile = repair.read_json(Path(receipt["profile_path"]))
+    assert alloc.digest(profile) == receipt["profile_sha256"]
+    for donor in receipt["donors"]:
+        assert existing_file_identity(donor["ledger_path"]) == tuple(donor["ledger_identity"])
+        state = alloc._budget_state(donor)
+        rows = state["external_commitments"]
+        assert len(rows) == 1 and rows[0]["receipt_sha256"] == receipt["plan_sha256"]
+        assert rows[0]["transfer_id"] == "repair-followup-20261030-authorized-v3"
+        assert money(rows[0]["amount_usd"]) == money(donor["amount_usd"])
+    return receipt
+
+
+def accounting(receipt):
+    """Read facts even when unresolved; reporting never grants admission."""
+    state = alloc._budget_state(receipt)
+    cap = money(receipt["target_net_usd"])
+    run_states = [
+        {
+            "run_id": run_id,
+            "status": row["status"],
+            "halt_reason": row["halt_reason"],
+            "limit_usd": row["limit_usd"],
+            "budget_mode": row.get("budget_mode"),
+            "day": row.get("day"),
+        }
+        for run_id, row in sorted(state["runs"].items())
+    ]
+    attempts = [
+        {
+            "attempt_id": row["id"],
+            "run_id": row["run_id"],
+            "charged_usd": str(money(row["charged_usd"])),
+            "actual_usd": None if row["actual_usd"] is None else str(money(row["actual_usd"])),
+            "settled": bool(row["settled"]),
+            "charge_status": row.get("charge_status"),
+            "resolved": row["id"] in state["resolved_attempt_ids"],
+        }
+        for row in sorted(state["attempts"], key=lambda row: row["id"])
+    ]
+    return state, {
+        "status": "observed",
+        "scope_cap_usd": str(cap),
+        "scope_charged_usd": str(state["charged"]),
+        "scope_actual_usd": str(
+            sum((money(a["actual_usd"]) for a in state["attempts"]), money("0"))
+        )
+        if state["known"]
+        else None,
+        "scope_encumbered_usd": str(state["encumbered"]),
+        "scope_remaining_usd": str(cap - state["charged"] - state["encumbered"]),
+        "all_costs_known": state["known"],
+        "all_costs_resolved": state["resolved"],
+        "run_states": run_states,
+        "attempts": attempts,
+        "open_runs": [row for row in run_states if row["status"] != "closed"],
+        "halted_runs": [row for row in run_states if row["halt_reason"]],
+        "unresolved_attempts": [row for row in attempts if not row["resolved"]],
+    }
+
+
+def require_admission(state, receipt):
+    """The separate gate: prior costs must be resolved and all budgets closed."""
+    alloc._quiet_pool(state)
+    assert state["encumbered"] == 0
+    assert 0 <= state["charged"] <= money(receipt["target_net_usd"])
+
+
+def main():
+    os.umask(0o077)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--proposal", required=True)
+    parser.add_argument("--expected-sha256", required=True)
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--execute-reviewed", action="store_true")
+    args = parser.parse_args()
+    assert args.execute_reviewed
+    proposal = repair.read_json(repair.inside(ROOT, args.proposal), max_bytes=2 * 1024 * 1024)
+    assert alloc.digest(proposal) == args.expected_sha256
+    assert proposal["controller_sha256"] == repair.file_record(Path(__file__), 512000)["sha256"]
+    receipt = funding(proposal["funding_receipt_path"], proposal["funding_receipt_sha256"])
+    prepared = repair.verify_preparation(
+        proposal["prepared_path"], expected_sha256=proposal["preparation_sha256"]
+    )
+    cells = [c for c in prepared["cells"] if c["result_group"] == "fixed_nine"]
+    assert tuple(c["cell_id"] for c in cells) == CELL_IDS
+    bound = repair.bound_requests(
+        prepared, profile_path=receipt["profile_path"], daily_limit_usd=receipt["target_net_usd"]
+    )
+    assert proposal["requests"] == {
+        c["cell_id"]: bound[c["cell_id"]].model_dump(mode="json") for c in cells
+    }
+    assert all(
+        money(r["budget_usd"]) == money(".60")
+        and r["max_rounds"] == 6
+        and r["max_steps"] == 20
+        and r["seed"] == 1337
+        for r in proposal["requests"].values()
+    )
+    output = repair.inside(ROOT, args.output)
+    assert output.is_relative_to(ROOT / "runs") and not output.exists()
+    initial_state, initial = accounting(receipt)
+    assert proposal["starting_pool_accounting"] == initial
+    require_admission(initial_state, receipt)
+    output.mkdir(parents=True, mode=0o700, exist_ok=False)
+    os.environ["HEADROOM_BUDGET_DB_PATH"] = receipt["ledger_path"]
+    document = {
+        "schema": "headroom.development-repair-campaign.v2",
+        "scope": "DEVELOPMENT_REPAIR_FOLLOWUP",
+        "provenance": "live",
+        "revision": proposal["revision"],
+        "proposal_sha256": args.expected_sha256,
+        "preparation_sha256": proposal["preparation_sha256"],
+        "funding_receipt_sha256": proposal["funding_receipt_sha256"],
+        "fixed_denominator": 9,
+        "minimum_targets": 6,
+        "planned_cells": 9,
+        "historical_scores_modified": False,
+        "status": "running",
+        "stop_reason": None,
+        "rows": [repair._empty_row(c, "live") for c in cells],
+        "starting_pool_accounting": initial,
+        "accounting": initial,
+    }
+
+    def persist():
+        rows = document["rows"]
+        document.update(
+            executed_cells=sum(r["status"] not in {"not_run", "running"} for r in rows),
+            remaining_unrun_cells=sum(r["status"] == "not_run" for r in rows),
+            target_met_count=sum(r.get("target_met") is True for r in rows),
+        )
+        document["threshold_met"] = document["target_met_count"] >= 6
+        repair.write_json(output / "campaign.json", document)
+
+    persist()
+    store = Store(output / "headroom.db")
+    try:
+        for index, cell in enumerate(cells):
+            receipt = funding(proposal["funding_receipt_path"], proposal["funding_receipt_sha256"])
+            repair.verify_preparation(
+                proposal["prepared_path"], expected_sha256=proposal["preparation_sha256"]
+            )
+            state, account = accounting(receipt)
+            document["accounting"] = account
+            persist()
+            require_admission(state, receipt)
+            if money(account["scope_remaining_usd"]) < money(".60"):
+                document["stop_reason"] = "insufficient_full_run_allowance"
+                break
+            run_id = uuid4().hex
+            request = FixRequest.model_validate(proposal["requests"][cell["cell_id"]])
+            document["rows"][index].update(status="running", run_id=run_id)
+            persist()
+            result, failure = {}, None
+            started = time.monotonic()
+            try:
+                result = supervise_evaluation_run(
+                    request,
+                    store=store,
+                    run_root=output / "jobs",
+                    run_id=run_id,
+                    condition="full_ultra",
+                    audit_dir=output / ("condition-" + run_id),
+                    started=started,
+                    wall_limit_seconds=480,
+                    preparation={
+                        "case": cell["case"],
+                        "study_protocol": None,
+                        "project_root": str(ROOT),
+                        "input_dir": str(output / ("input-" + run_id)),
+                    },
+                )
+            except Exception as error:  # noqa: BLE001 - preserve child failure and stop admission.
+                failure = type(error).__name__
+            timing = result.get("evaluation_timing", {})
+            state = alloc._budget_state(receipt)
+            costs = alloc._cost_summary(
+                state, [a for a in state["attempts"] if a["run_id"] == run_id]
+            )
+            run = state["runs"].get(run_id)
+            terminal = failure is None and result.get("status") in {
+                "completed",
+                "done",
+                "failed",
+                "needs_human",
+                "budget_exceeded",
+                "timeout",
+                "cancelled",
+                "rejected",
+            }
+            settled = (
+                run is not None
+                and run["status"] == "closed"
+                and not run["halt_reason"]
+                and costs["resolved"]
+            )
+            safe = (
+                terminal
+                and settled
+                and timing.get("cleanup_verified") is True
+                and timing.get("within_wall_limit") is True
+                and timing.get("cli", {}).get("verified") is True
+                and 0 <= costs["charged"] <= money(".60")
+            )
+            settlement = {
+                "status": "settled" if settled else "unverified",
+                "actual_usd": str(costs["actual"])
+                if settled and costs["actual"] is not None
+                else None,
+                "charged_usd": str(costs["charged"]),
+                "cost_resolved": settled,
+                "cost_basis": "provider_actual" if costs["known"] else "conservative_bound",
+            }
+            usage = store.usage(run_id) if store.get_run(run_id) is not None else None
+            row = result_row(
+                Scenario.model_validate(cell["case"]),
+                "full_ultra",
+                result,
+                usage,
+                provenance="live",
+            )
+            row.update(
+                cell_id=cell["cell_id"],
+                result_group="fixed_nine",
+                policy_name=cell["policy_name"],
+                run_id=run_id,
+                wall_seconds=time.monotonic() - started,
+                run_wall_limit_seconds=480,
+                evaluation_timing=timing,
+                settlement=settlement,
+                cost_usd=settlement["actual_usd"],
+                charged_usd=settlement["charged_usd"],
+                cost_resolved=settled,
+                execution_certified=safe,
+                error_type=failure,
+            )
+            if failure:
+                row["status"] = "error"
+            if not safe:
+                row["target_met"] = False
+            document["rows"][index] = row
+            persist()
+            if not safe:
+                document["stop_reason"] = "child_execution_or_cost_unverified"
+                break
+        document["status"] = "finished" if document["stop_reason"] is None else "partial"
+    except BaseException as error:
+        document.update(
+            status="partial", stop_reason="interrupted_or_admission_refused:" + type(error).__name__
+        )
+        raise
+    finally:
+        try:
+            store.close()
+        except Exception as error:  # Preserve failure while refreshing facts.
+            document["status"] = "partial"
+            document["store_close_error_type"] = type(error).__name__
+            if document["stop_reason"] is None:
+                document["stop_reason"] = "store_close_failed"
+            raise
+        finally:
+            try:
+                _, document["accounting"] = accounting(receipt)
+            except Exception as error:  # Persist explicit unknowns, then re-raise.
+                document["last_known_accounting"] = document.get("accounting")
+                document["accounting"] = {
+                    "status": "unavailable",
+                    "read_error_type": type(error).__name__,
+                    "scope_cap_usd": receipt["target_net_usd"],
+                    **dict.fromkeys(
+                        (
+                            "scope_charged_usd",
+                            "scope_actual_usd",
+                            "scope_encumbered_usd",
+                            "scope_remaining_usd",
+                            "all_costs_known",
+                            "all_costs_resolved",
+                            "run_states",
+                            "attempts",
+                            "open_runs",
+                            "halted_runs",
+                            "unresolved_attempts",
+                        )
+                    ),
+                }
+                document["status"] = "partial"
+                if document["stop_reason"] is None:
+                    document["stop_reason"] = "final_accounting_unavailable"
+                raise
+            finally:
+                persist()
+
+
+if __name__ == "__main__":
+    main()
