@@ -1,0 +1,172 @@
+diff --git a/headroom/api/evaluations.py b/headroom/api/evaluations.py
+index b37a957..7b3df02 100644
+--- a/headroom/api/evaluations.py
++++ b/headroom/api/evaluations.py
+@@ -80,6 +80,7 @@ def _public_row(row, provenance):
+             {
+                 "original_plan_first_five_backward_scalars",
+                 "original_plan_full_backward_scalar_series",
++                "baseline_derived_checkpoint_first_five_backward_scalars",
+                 "original_workload_offload_first_five_backward_scalars",
+                 "repository_no_reference_exception",
+                 "unavailable",
+diff --git a/headroom/evidence_blockers.py b/headroom/evidence_blockers.py
+index e4560e2..e155365 100644
+--- a/headroom/evidence_blockers.py
++++ b/headroom/evidence_blockers.py
+@@ -245,6 +245,33 @@ def build_evidence_availability_catalog(evidence, evidence_markdown):
+     while len(json.dumps(result, ensure_ascii=True, allow_nan=False).encode()) > MAX_CATALOG_BYTES:
+         result["entries"].pop()
+         result["omitted_entries"] += 1
++    # This component already belongs to the outgoing observation. Advertise its
++    # exact field only after preserving all prior fields/source entries and caps.
++    metadata = optimizer.get("parameter_tensor_metadata") if optimizer_summary else None
++    if isinstance(metadata, Mapping):
++        optional = {
++            "evidence_ref": "execution_context.runtime_optimizer_observations.parameter_tensor_metadata",
++            "kind": "field",
++            "availability": "visible"
++            if optimizer.get("status") in {"observed", "partial"}
++            else "unknown",
++            "text_availability_only": True,
++            "runtime_values_verified": False,
++        }
++        extended = dict(result, entries=[*result["entries"], optional])
++        if (
++            len(extended["entries"]) <= MAX_SOURCE_FILES + MAX_FIELD_ENTRIES
++            and len(json.dumps(extended, ensure_ascii=True, allow_nan=False).encode())
++            <= MAX_CATALOG_BYTES
++        ):
++            result = extended
++        else:
++            omitted = dict(result, omitted_entries=result["omitted_entries"] + 1)
++            if (
++                len(json.dumps(omitted, ensure_ascii=True, allow_nan=False).encode())
++                <= MAX_CATALOG_BYTES
++            ):
++                result = omitted
+     return result
+ 
+ 
+diff --git a/headroom/observation_feedback.py b/headroom/observation_feedback.py
+index f5cbd15..6f8d069 100644
+--- a/headroom/observation_feedback.py
++++ b/headroom/observation_feedback.py
+@@ -66,6 +66,78 @@ def _small_values(mapping, numbers=(), flags=()):
+     }
+ 
+ 
++def _supplied_parameter_tensor_metadata(observed):
++    """Copy the existing sampled-attribute summary, never infer shapes or state."""
++    metadata = observed.get("parameter_tensor_metadata")
++    if not isinstance(metadata, Mapping):
++        return None
++    status = metadata.get("status")
++    if type(status) is not str or status not in {
++        "observed",
++        "partial",
++        "unverified",
++        "not_captured",
++    }:
++        return None
++    if status in {"unverified", "not_captured"}:
++        return {"status": status}
++    events = metadata.get("events")
++    count = metadata.get("parameters")
++    changed = metadata.get("changed_parameters")
++    unsupported = metadata.get("unsupported_observations")
++    if not (
++        metadata.get("scope") == "sampled_parameters_only_not_states"
++        and type(events) is list
++        and len(events) == 3
++        and all(type(n) is int and 0 <= n <= 65536 for n in events)
++        and type(count) is int
++        and 0 <= count <= 8192
++        and type(changed) is int
++        and 0 <= changed <= count
++        and type(unsupported) is int
++        and 0 <= unsupported <= 65536
++        and metadata.get("state_tensors") == "not_captured"
++        and isinstance(observed.get("parameters"), Mapping)
++        and type(observed["parameters"].get("catalog_entries")) is int
++        and count == observed["parameters"]["catalog_entries"]
++        and type(observed.get("optimizer_step_calls")) is int
++        and type(observed.get("successful_optimizer_step_calls")) is int
++        and events[1] == observed.get("optimizer_step_calls")
++        and events[2] == observed.get("successful_optimizer_step_calls")
++    ):
++        return None
++    uniform = metadata.get("all_observed")
++    if uniform is not None and not (
++        type(uniform) is dict
++        and set(uniform) == {"dtype", "device_type", "device_index", "layout", "is_leaf"}
++        and type(uniform.get("dtype")) is str
++        and uniform["dtype"] in {"float32", "float64", "float16", "bfloat16"}
++        and uniform.get("device_type") in ("cpu", "cuda")
++        and (
++            uniform.get("device_index") is None
++            or type(uniform["device_index"]) is int
++            and 0 <= uniform["device_index"] <= 255
++        )
++        and uniform.get("layout") == "strided"
++        and type(uniform.get("is_leaf")) is bool
++    ):
++        return None
++    if status == "observed" and (not count or uniform is None or changed or unsupported):
++        return None
++    if status == "partial" and uniform is not None:
++        return None
++    return {
++        "status": status,
++        "scope": metadata["scope"],
++        "events": list(events),
++        "parameters": count,
++        "all_observed": dict(uniform) if uniform is not None else None,
++        "changed_parameters": changed,
++        "unsupported_observations": unsupported,
++        "state_tensors": metadata["state_tensors"],
++    }
++
++
+ def supplied_runtime_observation(evidence, evidence_ref):
+     """Copy only already-sent optimizer facts next to their scoped question."""
+     if (
+@@ -77,6 +149,7 @@ def supplied_runtime_observation(evidence, evidence_ref):
+             _PREFIX + ".parameters",
+             _PREFIX + ".updates",
+             _PREFIX + ".optimizer_group_hyperparameters",
++            _PREFIX + ".parameter_tensor_metadata",
+         }
+     ):
+         return None
+@@ -115,6 +188,17 @@ def supplied_runtime_observation(evidence, evidence_ref):
+     }
+     if observed["status"] not in {"observed", "partial"}:
+         return result
++    if suffix == "parameter_tensor_metadata":
++        metadata = _supplied_parameter_tensor_metadata(observed)
++        if metadata is None:
++            return None
++        scoped = dict(result, parameter_tensor_metadata=metadata)
++        return (
++            scoped
++            if len(json.dumps(scoped, ensure_ascii=True, allow_nan=False).encode())
++            <= MAX_OBSERVATION_FEEDBACK_BYTES
++            else None
++        )
+     result.update(
+         _small_values(
+             observed,
+diff --git a/headroom/report.py b/headroom/report.py
+index 25c8f29..4ba493d 100644
+--- a/headroom/report.py
++++ b/headroom/report.py
+@@ -336,6 +336,8 @@ def numerical_basis_label(value):
+     return {
+         "original_plan_first_five_backward_scalars": "Observed first five backward losses (original plan)",
+         "original_plan_full_backward_scalar_series": "Observed full backward-loss sequence (original plan)",
++        "baseline_derived_checkpoint_first_five_backward_scalars": "Observed first five backward losses with baseline-derived checkpoint reference",
++        "original_workload_offload_first_five_backward_scalars": "Observed first five backward losses with original-workload offload reference",
+         "repository_no_reference_exception": "Repository without reference; numerical equivalence unverified",
+         "unavailable": "Comparison unavailable",
+     }.get(value, "Comparison basis not recorded")

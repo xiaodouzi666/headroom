@@ -1,0 +1,71 @@
+{
+  "schema": "headroom.final-independent-funding-v2-preparation.v1",
+  "utc": "2026-10-30T15:52:31.065480+00:00",
+  "status": "REVIEWABLE_V2_PENDING_INDEPENDENT_REVIEW_AND_USER_APPROVAL_NOT_ACTIVATED",
+  "adapter": {
+    "private_path": ".cache/final-funding-option-20261030/activate-independent-pool-v2.py.txt",
+    "sha256": "ff15f43851ba400c294e6b31472e2b188c130057f298fbb8e7881e074f0e5d34",
+    "mode": "0600"
+  },
+  "controller": {
+    "path": "reports/repair-followup-20261030/execute-fixed9-final-v2.py.txt",
+    "sha256": "694a8e62c9378ec25dc3e25077ff72084a39f7b8f95d7d167c7e040673d1b72e",
+    "base_path": "reports/repair-followup-20261030/execute-fixed9-v2.py.txt",
+    "base_sha256": "590189eb3b23f1f932c62a849afd1aee26edb9968822964e65a8c3b7f04ed426",
+    "only_funding_binding_single_claim_hook_and_unused_import_cleanup_changed": true,
+    "all_other_AST_exactly_equal": true
+  },
+  "private_clone_receipt": {
+    "path": ".cache/final-funding-option-20261030/v2-clone-verification.json",
+    "sha256": "68e277780c276ceb0858d73c2eb106e726aa6b9345f40c2e8d16afbc6d8f9822",
+    "passed_gates": 25
+  },
+  "verification_scope": "Canonical real source authority was checked read-only. Activation and claim tests use temporary cloned histories plus a clearly declared synthetic authority-path seam; fake approvals are not user authorization.",
+  "single_execution_contract": [
+    "Receipt binds fixed campaignID r19-20261030 and fixed output execution-r19-20261030, without circular proposal binding.",
+    "Permanent claim records newreceiptSHA/ledgeridentity/proposalSHA/controllerSHA/campaignID/fixedoutput.",
+    "Claim creation uses O_EXCL|O_NOFOLLOW mode0600, file fsync and parent-directory fsync before output creation, Store, run-open, worker/provider/GPU steps.",
+    "Same/different proposal, changed output, concurrency, partial write and file/dir fsync failures were checked; surviving claims are never deleted/reset.",
+    "Crash after donor hold leaves immutable hold and durable activation intent; no automatic activation retry/resume."
+  ],
+  "clone_gates": [
+    "clone_activation_preserves_all_old_history_and_creates_fresh_independent_pool",
+    "claim_bound_all_identities_fsync_file_and_parent_before_output_exists",
+    "second_same_proposal_claim_rejected",
+    "second_different_proposal_claim_rejected",
+    "activation_not_reusable",
+    "busy_claim_activation_refuses_without_mutation_or_interrupt",
+    "active_budget_activation_refuses_without_mutation_or_interrupt",
+    "unexpected_hold_activation_refuses_without_mutation_or_interrupt",
+    "fsync_failure_1_prevents_paid_progress",
+    "fsync_failure_1_claim_permanently_blocks_retry",
+    "fsync_failure_2_prevents_paid_progress",
+    "fsync_failure_2_claim_permanently_blocks_retry",
+    "different_output_rejected_before_claim",
+    "symlink_claim_rejected_no_follow_or_overwrite",
+    "crash_after_donor_hold_no_activation_receipt",
+    "crash_after_hold_never_resumes_or_releases_hold",
+    "concurrent_claims_exactly_one_success",
+    "claim_retry_flag_tamper_rejected",
+    "partial_claim_write_blocks_before_any_progress",
+    "partial_claim_write_is_never_removed_or_reset",
+    "new_pool_open_run_refuses_claim",
+    "controller_claim_precedes_output_store_worker_run_and_paid_progress",
+    "actual_controller_main_claim_refusal_prevents_output_store_worker",
+    "actual_controller_main_crash_after_durable_claim_prevents_output_store_worker",
+    "actual_controller_main_second_dispatch_after_crash_refused"
+  ],
+  "caps_and_policy": "New independent pool1.50 only; oldv3 remainder untouched. Fixed9/min6, percase.60/6rounds/20updates/seed1337/120seconds unchanged. Only new profile/daily funding bindings vary.",
+  "busy_visitors": "Read-only preparation checks claims; activation holds existing claims transaction briefly and refuses unsettled claim or active donor budget before any new commitment. It never cancels or clears visitors.",
+  "ruff": "PASS",
+  "format": "PASS",
+  "public_v1_blocked_interface_preserved": true,
+  "private_original_unreviewed_draft_preserved": true,
+  "user_approval_received_by_agent": false,
+  "real_target_directory_created": false,
+  "actual_funding_prepare_or_activation_performed": false,
+  "provider_calls": 0,
+  "gpu_jobs": 0,
+  "real_ledger_writes": false,
+  "publication_boundary": "Account balance, donor spending/commitment details and exact financial proposal remain private. This receipt contains implementation hashes, guards and clone qualification only."
+}

@@ -1,0 +1,222 @@
+--- reports/repair-followup-20261030/prepare-r18.py.txt
++++ reports/repair-followup-20261030/prepare-r19-provisional.py.txt
+@@ -1,7 +1,8 @@
+-"""Prepare R18 only after a reviewed final commit; never fund, dispatch or run workloads.
++"""BLOCKED DRAFT: prepare R19 only after new-pool approval and exact funding review.
++Never fund, dispatch or run workloads; the pending binding gate refuses execution.
+ 
+ Nothing is written without --write-reviewed plus the exact revision and script SHA.
+-All output names are new; existing R14/R18 artifacts are never overwritten.
++All output names are new; existing R14/R19 artifacts are never overwritten.
+ """
+ 
+ import argparse
+@@ -30,13 +31,17 @@
+ BASE_PROPOSAL = CACHE / "r14-proposal.json"
+ BASE_PROPOSAL_SHA = "f3a8041e026e535a338fa283959929b7bc6f31ba181b1844719d66ff2b734026"
+ BASE_PREPARATION_SHA = "a2c1fcf6fbc77ba196c2b559c16f99ed19a6346d902608f76bce43516ba49898"
+-CONTROLLER = ROOT / "reports/repair-followup-20261030/execute-fixed9-v2.py.txt"
+-CONTROLLER_SHA = "590189eb3b23f1f932c62a849afd1aee26edb9968822964e65a8c3b7f04ed426"
+-FUNDING_SHA = "3b5f9e2573fda21f34c4858a4af64b27a5952e5c1c6bb944dcdb3d01a67bf889"
+-PREPARATION = ROOT / "runs/final48-repair-preparation-20261030-r18/preparation.json"
+-PROPOSAL = CACHE / "r18-proposal.json"
+-PREFLIGHT = ROOT / "reports/repair-followup-20261030/r18-preflight.json"
+-EXECUTION = ROOT / "runs/repair-followup/execution-r18-20261030"
++CONTROLLER = ROOT / "reports/repair-followup-20261030/execute-fixed9-final-v1.py.txt"
++CONTROLLER_SHA = "PENDING_REVIEWED_INDEPENDENT_CONTROLLER_SHA256"
++FUNDING_SHA = "PENDING_REVIEWED_NEW_ACTIVATION_SHA256"
++FUNDING_RECEIPT = ROOT / ".cache/repair-final-20261030-v1/activation.json"
++EXPECTED_PROFILE = ROOT / ".cache/repair-final-20261030-v1/runtime-profile.json"
++EXPECTED_POOL_ID = "repair-final-20261030-v1"
++REVIEWED_BINDINGS_COMPLETE = False
++PREPARATION = ROOT / "runs/final48-repair-preparation-20261030-r19/preparation.json"
++PROPOSAL = CACHE / "r19-proposal.json"
++PREFLIGHT = ROOT / "reports/repair-followup-20261030/r19-preflight.json"
++EXECUTION = ROOT / "runs/repair-followup/execution-r19-20261030"
+ SEMANTIC_FIELDS = (
+     "controls",
+     "cells",
+@@ -49,7 +54,7 @@
+     "headroom/lab/hooks.py": "fe5463bd8838daaf09e3c9b6cc8e1cdf97353413b0a013af16889b1ef7982531",
+     "headroom/optimizer_observations.py": "e27720f2eaac084a3f4b89b4128f0b16ae764829774d7836ed1573b0d71bab57",
+     "headroom/prompts/diagnose_compact.md": "1ac08beb3ee909d5596a1c548521bde25f7e459d44fdb76b47790e6fef436699",
+-    "headroom/evidence_blockers.py": "bd3ce28d90fdb501d18b14c0f97e2816c8205b53acca1c885fc802bdc6b67633",
++    "headroom/evidence_blockers.py": "af4769f2f4cf7437812b23a86dd04456597651edc12663865872c26452ab129e",
+     "headroom/validation_feedback.py": "d86b92e6e8aa5c3339779e2d2ad22c66283520708678436ac621a7a13ff75e60",
+     "headroom/runtime_refinement.py": "bbbae174801149c8d9f7061e5df07462cbc1cd9d2a733bda69d35c8f82924768",
+     "headroom/orchestrator.py": "daac8cd0db44743a13fbf5e972c89c5c3077e1c94dba697d5b87b2cbff894b6d",
+@@ -65,7 +70,7 @@
+     "headroom/diagnosis_protocol.py": "853dbc02f9c250de40b2bc806b5321948a395d514faa3f3c3da0fce1ba9db969",
+     "headroom/prerequisite_review.py": "ab4817036218e947c1c64fbcec1dd6ad483c2ea707f328d05982baa41a9c7543",
+     "headroom/operator_capabilities.py": "25f3bc7b074e692cb41f8bc7b6d71b25c4b5490ed47ed9655e782c38fefb8677",
+-    "headroom/observation_feedback.py": "3e401b255039035d15997c7cd9711c3b81200e908505f1b196652fcf5e6b3ec4",
++    "headroom/observation_feedback.py": "2e197a557c983e376b31709f64b1da01796a8e293b860990b8c54f418adbcc9a",
+     "headroom/diagnose.py": "ef73daf512509fe7d61ac39d322301fccaf8af3df8e3b96a2fe21f4feb53020c",
+     "headroom/verify/reference_context.py": "6685f808e692abec1f34dd9d252672172ac87585041d347c92aa379db54a7b1f",
+     "headroom/training_plan_intent.py": "ab3699e1137e12c5fbb9626e211a61599d993e68b3639b1e4a0b1da3563d457c",
+@@ -73,15 +78,20 @@
+     "headroom/prompts/patch_fix.md": "c656a03e9d43f47c22a2ff52b17b9ea99a29416caace2bc5827c05bc170797de",
+     "headroom/verify/checkpoint.py": "4b96b3ce99bdca1d7533d6b4335e7180e97088ed3347dcc441f1019303295d8a",
+     "headroom/verify/reference_callsites.py": "b71f84827f8a474768fae49c7c0eb48a95ec52eb983e91d6622fd2875272b020",
++    "headroom/report.py": "2b33cdf814a4509c3275017c9d62a3a1875c714c09700fa8acf43aebddf192da",
++    "headroom/api/evaluations.py": "458ffdc3d1af4599c691c639380eb5b1c9ed966180050638fa2fdc1de32f6903",
+ }
+ EXPECTED_STARTING_ACCOUNTING = {
+-    "scope_cap_usd": "4.890504400",
+-    "scope_charged_usd": "3.72274640",
+-    "scope_actual_usd": None,
++    "status": "observed",
++    "scope_cap_usd": "1.50",
++    "scope_charged_usd": "0",
++    "scope_actual_usd": "0",
+     "scope_encumbered_usd": "0",
+-    "scope_remaining_usd": "1.167758000",
+-    "all_costs_known": False,
++    "scope_remaining_usd": "1.50",
++    "all_costs_known": True,
+     "all_costs_resolved": True,
++    "run_states": [],
++    "attempts": [],
+     "open_runs": [],
+     "halted_runs": [],
+     "unresolved_attempts": [],
+@@ -96,7 +106,7 @@
+ def check_starting_accounting(observed):
+     for key, expected in EXPECTED_STARTING_ACCOUNTING.items():
+         require(
+-            key in observed and observed[key] == expected,
++            key in observed and type(observed[key]) is type(expected) and observed[key] == expected,
+             "REVIEWED_STARTING_ACCOUNTING_CHANGED:" + key,
+         )
+ 
+@@ -153,8 +163,21 @@
+ 
+ def fixed_requests(requests, previous):
+     require(tuple(requests) == CELL_IDS and len(requests) == 9, "FIXED_REQUEST_SET_CHANGED")
+-    require(requests == previous, "BOUND_REQUESTS_CHANGED_FROM_R14")
+-    for request in requests.values():
++    require(tuple(previous) == CELL_IDS and len(previous) == 9, "R14_REQUEST_SET_CHANGED")
++    for cell_id, request in requests.items():
++        require(
++            type(request.get("runtime_profile")) is str
++            and request["runtime_profile"] == str(EXPECTED_PROFILE),
++            "NEW_INDEPENDENT_PROFILE_REQUIRED",
++        )
++        require(
++            type(request.get("daily_budget_usd")) is str and request["daily_budget_usd"] == "1.50",
++            "NEW_INDEPENDENT_DAILY_LIMIT_REQUIRED",
++        )
++        rebound = copy.deepcopy(request)
++        for field in ("runtime_profile", "daily_budget_usd"):
++            rebound[field] = previous[cell_id][field]
++        require(rebound == previous[cell_id], "NON_FUNDING_REQUEST_CHANGED_FROM_R14")
+         require(money(request["budget_usd"]) == money("0.60"), "RUN_ALLOWANCE_CHANGED")
+         require(
+             request["max_rounds"] == 6 and request["max_steps"] == 20, "ROUNDS_OR_UPDATES_CHANGED"
+@@ -166,13 +189,41 @@
+     return True
+ 
+ 
++def require_reviewed_bindings():
++    require(
++        REVIEWED_BINDINGS_COMPLETE is True, "PENDING_EXPLICIT_APPROVAL_AND_EXACT_NEW_FUNDING_REVIEW"
++    )
++    require(
++        bool(re.fullmatch(r"[a-f0-9]{64}", CONTROLLER_SHA)), "EXACT_NEW_CONTROLLER_SHA_REQUIRED"
++    )
++    require(bool(re.fullmatch(r"[a-f0-9]{64}", FUNDING_SHA)), "EXACT_NEW_ACTIVATION_SHA_REQUIRED")
++
++
++def check_new_receipt(receipt):
++    require(
++        receipt.get("schema") == "headroom.repair-final-activation.v1",
++        "NEW_ACTIVATION_SCHEMA_REQUIRED",
++    )
++    require(receipt.get("funding_pool_id") == EXPECTED_POOL_ID, "NEW_INDEPENDENT_POOL_REQUIRED")
++    require(
++        type(receipt.get("target_net_usd")) is str and receipt["target_net_usd"] == "1.50",
++        "EXACT_NEW_POOL_CAP_REQUIRED",
++    )
++    require(
++        type(receipt.get("profile_path")) is str
++        and receipt["profile_path"] == str(EXPECTED_PROFILE),
++        "EXACT_NEW_PROFILE_REQUIRED",
++    )
++
++
+ def load_controller():
++    require_reviewed_bindings()
+     require(
+         repair.file_record(CONTROLLER, 512000)["sha256"] == CONTROLLER_SHA,
+         "CONTROLLER_SOURCE_CHANGED",
+     )
+     loader = importlib.machinery.SourceFileLoader(
+-        "reviewed_r18_controller_preparation", str(CONTROLLER)
++        "reviewed_r19_controller_preparation", str(CONTROLLER)
+     )
+     spec = importlib.util.spec_from_loader(loader.name, loader)
+     module = importlib.util.module_from_spec(spec)
+@@ -190,6 +241,7 @@
+ 
+ 
+ def prepare(expected_revision, expected_script_sha):
++    require_reviewed_bindings()
+     require(repair.ROOT == ROOT, "PREPARATION_IMPORTED_FROM_ANOTHER_PROJECT")
+     require(
+         bool(re.fullmatch(r"[a-f0-9]{64}", expected_script_sha)), "REVIEWED_SCRIPT_SHA_REQUIRED"
+@@ -200,7 +252,7 @@
+     )
+     for path in (PREPARATION.parent, PROPOSAL, PREFLIGHT, EXECUTION):
+         repair.inside(ROOT, path)
+-        require(not path.exists(), "NEW_R18_OUTPUT_REQUIRED")
++        require(not path.exists(), "NEW_R19_OUTPUT_REQUIRED")
+     base_proposal = repair.read_json(BASE_PROPOSAL, max_bytes=2 * 1024 * 1024)
+     require(repair.digest(base_proposal) == BASE_PROPOSAL_SHA, "R14_PROPOSAL_CHANGED")
+     base_path = repair.inside(ROOT, base_proposal["prepared_path"])
+@@ -216,8 +268,8 @@
+     )
+     # Do not verify the old pack with current implementation pins: its code is historical.
+     controller = load_controller()
+-    receipt = controller.funding(base_proposal["funding_receipt_path"], FUNDING_SHA)
+-    require(base_proposal["funding_receipt_sha256"] == FUNDING_SHA, "FUNDING_IDENTITY_CHANGED")
++    receipt = controller.funding(str(FUNDING_RECEIPT), FUNDING_SHA)
++    check_new_receipt(receipt)
+     initial_state, initial = controller.accounting(receipt)
+     controller.require_admission(initial_state, receipt)
+     check_starting_accounting(initial)
+@@ -243,13 +295,14 @@
+         "controller_sha256": CONTROLLER_SHA,
+         "prepared_path": str(PREPARATION),
+         "preparation_sha256": fresh["preparation_sha256"],
+-        "funding_receipt_path": base_proposal["funding_receipt_path"],
++        "funding_receipt_path": str(FUNDING_RECEIPT),
+         "funding_receipt_sha256": FUNDING_SHA,
+         "starting_pool_accounting": initial,
+         "requests": requests,
+     }
+     # Re-read real funding, every charge and all source pins before writing.
+-    receipt2 = controller.funding(base_proposal["funding_receipt_path"], FUNDING_SHA)
++    receipt2 = controller.funding(str(FUNDING_RECEIPT), FUNDING_SHA)
++    check_new_receipt(receipt2)
+     state2, observed2 = controller.accounting(receipt2)
+     controller.require_admission(state2, receipt2)
+     require(
+@@ -270,7 +323,7 @@
+     reread = repair.read_json(PROPOSAL, max_bytes=2 * 1024 * 1024)
+     require(reread == proposal, "PROPOSAL_WRITE_CHECK_FAILED")
+     preflight = {
+-        "scope": "R18_PREPARED_ONLY_NO_LIVE_EXECUTION",
++        "scope": "R19_PREPARED_ONLY_NO_LIVE_EXECUTION",
+         "revision": expected_revision,
+         "preparation_script_sha256": expected_script_sha,
+         "controller_sha256": CONTROLLER_SHA,
+@@ -289,6 +342,9 @@
+         "fixed_denominator": 9,
+         "minimum_targets": 6,
+         "fixed_requests": 9,
++        "request_semantics_identical_to_R14": True,
++        "only_request_funding_fields_rebound": ["runtime_profile", "daily_budget_usd"],
++        "funding_pool_id": EXPECTED_POOL_ID,
+         "execution_started": False,
+         "funding_changed": False,
+         "model_calls": 0,

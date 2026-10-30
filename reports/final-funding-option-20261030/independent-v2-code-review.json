@@ -1,0 +1,43 @@
+{
+  "result": "PASS_CONDITIONAL_CODE_AND_CLONE_QUALIFICATION_ONLY",
+  "scope": "INDEPENDENT_FREE_REVIEW_OF_V2_SINGLE_CAMPAIGN_FUNDING_ADAPTER_NOT_ACTIVATION",
+  "artifact_sha256": {
+    "adapter": "ff15f43851ba400c294e6b31472e2b188c130057f298fbb8e7881e074f0e5d34",
+    "controller": "694a8e62c9378ec25dc3e25077ff72084a39f7b8f95d7d167c7e040673d1b72e",
+    "tests": "85a9fb29f42bf43188bf7ff7c0fcdbe4215a7a92d28766c57e540a7886195135",
+    "clones": "68e277780c276ceb0858d73c2eb106e726aa6b9345f40c2e8d16afbc6d8f9822",
+    "public_status": "8841f9ba3477b76bbe2d54f6691993a3b82d641ca152cc3fe08b28beda59d272"
+  },
+  "old_controller_sha256": "590189eb3b23f1f932c62a849afd1aee26edb9968822964e65a8c3b7f04ed426",
+  "checked": [
+    "Distinct target identity/profile/ledger with exact target cap; inherited model, tariff, runtime and policy profile values are compared unchanged outside four funding/evidence fields.",
+    "Old authoritative receipt is pinned, donor identities and the exact old-plus-new commitment set are checked; transferred commitment is not recorded as model spending, and the old development pool is not merged.",
+    "Preparation uses read-only claims checks; activation acquires the established claims transaction and refuses an unsettled visitor or active donor budget before any new intent/commitment. It does not cancel visitors.",
+    "Activation intent is exclusive and durable before the new hold; any prior activation artifact or new hold forbids retry/resume. A crash after the hold leaves it retained rather than releasing or crediting it twice.",
+    "Receipt binds fixed campaign/output, avoiding a receipt/proposal hash cycle. The permanent campaign claim then binds receipt, ledger identity, proposal, controller, campaign and fixed output.",
+    "Claim uses O_EXCL and O_NOFOLLOW with mode0600, file flush/fsync and directory fsync before output creation, Store, new run or worker/provider/GPU progress. No production claim deletion/reset path exists.",
+    "Concurrent claim tests have one winner; same or different proposal, changed output, symlink, partial write and file/directory fsync faults refuse progress and preserve a surviving claim.",
+    "Actual controller main fault spies prove claim refusal and crash immediately after durable claim both precede output/Store/worker, and a second dispatch after that crash is refused.",
+    "All remaining controller AST is identical to reviewed v2 after removing only its funding binding, one new claim call and obsolete ledger import.",
+    "Private source/test/clone files remain mode0600 and ignored. Public V1 blocked interface and production BudgetLedger source remain unchanged."
+  ],
+  "clone_gates_reviewed": 25,
+  "source_authority_qualification_limit": "The canonical authority was checked read-only by the implementing agent; activation/fault tests use temporary cloned histories and an explicit synthetic authority-path seam. No real activation was used as a test.",
+  "durability_limit": "A failed directory fsync is not treated as successful durability; no paid progress is permitted on that path. The implementation never removes or resets a surviving intent/claim.",
+  "ready_for_explicit_approval_review": true,
+  "user_approval_recorded": false,
+  "real_activation_authorized_by_this_review": false,
+  "actual_funding_ready": false,
+  "actual_dispatch_ready": false,
+  "remaining_gates": [
+    "Explicit user/root authorization with its exact statement reference.",
+    "Fresh private balance/reserve/commitment evidence independently confirmed before actual activation.",
+    "Final R19 preparation must bind the reviewed V2 schema/controller and the real activation digest; the current pending draft remains blocked.",
+    "Root must review resulting activation/preparation and explicitly choose the one allowed dispatch."
+  ],
+  "financial_private_figures_included": false,
+  "real_ledger_reads_or_writes_by_review": false,
+  "tests_repeated_by_review": 0,
+  "provider_calls": 0,
+  "gpu_jobs": 0
+}

@@ -1,0 +1,22 @@
+--- reports/repair-followup-20261030/prepare-r19-provisional.py.txt
++++ reports/repair-followup-20261030/prepare-r19-finance-v2-provisional.py.txt
+@@ -31,8 +31,8 @@
+ BASE_PROPOSAL = CACHE / "r14-proposal.json"
+ BASE_PROPOSAL_SHA = "f3a8041e026e535a338fa283959929b7bc6f31ba181b1844719d66ff2b734026"
+ BASE_PREPARATION_SHA = "a2c1fcf6fbc77ba196c2b559c16f99ed19a6346d902608f76bce43516ba49898"
+-CONTROLLER = ROOT / "reports/repair-followup-20261030/execute-fixed9-final-v1.py.txt"
+-CONTROLLER_SHA = "PENDING_REVIEWED_INDEPENDENT_CONTROLLER_SHA256"
++CONTROLLER = ROOT / "reports/repair-followup-20261030/execute-fixed9-final-v2.py.txt"
++CONTROLLER_SHA = "694a8e62c9378ec25dc3e25077ff72084a39f7b8f95d7d167c7e040673d1b72e"
+ FUNDING_SHA = "PENDING_REVIEWED_NEW_ACTIVATION_SHA256"
+ FUNDING_RECEIPT = ROOT / ".cache/repair-final-20261030-v1/activation.json"
+ EXPECTED_PROFILE = ROOT / ".cache/repair-final-20261030-v1/runtime-profile.json"
+@@ -201,7 +201,7 @@
+ 
+ def check_new_receipt(receipt):
+     require(
+-        receipt.get("schema") == "headroom.repair-final-activation.v1",
++        receipt.get("schema") == "headroom.repair-final-activation.v2",
+         "NEW_ACTIVATION_SCHEMA_REQUIRED",
+     )
+     require(receipt.get("funding_pool_id") == EXPECTED_POOL_ID, "NEW_INDEPENDENT_POOL_REQUIRED")

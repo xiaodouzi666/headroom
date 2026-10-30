@@ -1,0 +1,49 @@
+--- reports/repair-followup-20261030/execute-fixed9-v2.py.txt
++++ reports/repair-followup-20261030/execute-fixed9-final-v1.py.txt
+@@ -18,31 +18,26 @@
+ from headroom.budget import money
+ from headroom.evaluation import Scenario, result_row
+ from headroom.evaluation_worker import supervise_evaluation_run
+-from headroom.ledger_path import existing_file_identity, require_initialized_ledger
+ from headroom.orchestrator import FixRequest
+ from headroom.store.db import Store
+ 
+ 
+ def funding(path, expected):
+-    receipt = repair.read_json(repair.inside(ROOT, path), max_bytes=512000)
+-    sha = receipt.pop("receipt_sha256")
+-    assert sha == expected == alloc.digest(receipt)
+-    receipt["receipt_sha256"] = sha
+-    assert receipt["state"] == "active" and receipt["scope"] == "DEVELOPMENT_REPAIR_FOLLOWUP"
+-    assert money(receipt["target_net_usd"]) == money("4.890504400")
+-    require_initialized_ledger(
+-        receipt["ledger_path"], expected_identity=tuple(receipt["ledger_identity"])
+-    )
+-    profile = repair.read_json(Path(receipt["profile_path"]))
+-    assert alloc.digest(profile) == receipt["profile_sha256"]
+-    for donor in receipt["donors"]:
+-        assert existing_file_identity(donor["ledger_path"]) == tuple(donor["ledger_identity"])
+-        state = alloc._budget_state(donor)
+-        rows = state["external_commitments"]
+-        assert len(rows) == 1 and rows[0]["receipt_sha256"] == receipt["plan_sha256"]
+-        assert rows[0]["transfer_id"] == "repair-followup-20261030-authorized-v3"
+-        assert money(rows[0]["amount_usd"]) == money(donor["amount_usd"])
+-    return receipt
++    import importlib.machinery
++    import importlib.util
++
++    adapter_path = (
++        ROOT / "reports/final-funding-option-20261030/activate-independent-pool-v1.py.txt"
++    )
++    assert (
++        repair.file_record(adapter_path, 512000)["sha256"]
++        == "d9e880dff9ad1d55278e7042616a4903239657a64eb4507e4c22ecc1b7b7fb3e"
++    )
++    loader = importlib.machinery.SourceFileLoader("reviewed_final_pool_funding", str(adapter_path))
++    spec = importlib.util.spec_from_loader(loader.name, loader)
++    module = importlib.util.module_from_spec(spec)
++    loader.exec_module(module)
++    return module.verify_funding(path, expected)
+ 
+ 
+ def accounting(receipt):

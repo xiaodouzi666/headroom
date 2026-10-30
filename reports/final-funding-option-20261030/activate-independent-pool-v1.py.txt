@@ -1,0 +1,36 @@
+"""Blocked funding interface only. No approval, activation or paid dispatch."""
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+DIRECTORY = ROOT / ".cache/repair-final-20261030-v1"
+CONTROLLER = ROOT / "reports/repair-followup-20261030/execute-fixed9-final-v1.py.txt"
+SCHEMA = "headroom.repair-final-activation.v1"
+SCOPE = "DEVELOPMENT_REPAIR_FOLLOWUP"
+FUNDING_POOL_ID = "repair-final-20261030-v1"
+TARGET_NET_USD = "1.50"
+STATUS = "BLOCKED_APPROVAL_AND_SINGLE_CAMPAIGN_BINDING_REVIEW_PENDING"
+
+
+class FundingNotReady(RuntimeError):
+    """Preparation and activation remain unavailable in this draft."""
+
+
+def prepare(*args, **kwargs):
+    raise FundingNotReady(STATUS)
+
+
+def activate(*args, **kwargs):
+    raise FundingNotReady(STATUS)
+
+
+def verify_funding(*args, **kwargs):
+    raise FundingNotReady(STATUS)
+
+
+def main():
+    raise FundingNotReady(STATUS)
+
+
+if __name__ == "__main__":
+    main()

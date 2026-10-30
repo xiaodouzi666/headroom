@@ -1,0 +1,71 @@
+{
+  "schema": "headroom.final-funding-adapter-draft-status.v1",
+  "utc": "2026-10-30T15:42:46.513789+00:00",
+  "status": "BLOCKED_NOT_ACTIVATED_NOT_QUALIFIED",
+  "approval_at_preparation": "Pending; root has not authorized activation.",
+  "public_adapter": {
+    "path": "reports/final-funding-option-20261030/activate-independent-pool-v1.py.txt",
+    "sha256": "d9e880dff9ad1d55278e7042616a4903239657a64eb4507e4c22ecc1b7b7fb3e",
+    "all_entry_points_raise": true
+  },
+  "controller": {
+    "path": "reports/repair-followup-20261030/execute-fixed9-final-v1.py.txt",
+    "sha256": "4439002f669f575a3691d10c041806d3f2c2d329a6aa53dc1a9b79de6201b01e",
+    "base_path": "reports/repair-followup-20261030/execute-fixed9-v2.py.txt",
+    "base_sha256": "590189eb3b23f1f932c62a849afd1aee26edb9968822964e65a8c3b7f04ed426",
+    "changes": "Only funding() binding function and removal of its two unused original ledger imports. All other AST bodies, controls, accounting, cleanup and admission gates are identical."
+  },
+  "private_unreviewed_expanded_source": {
+    "path": ".cache/final-funding-option-20261030/UNREVIEWED_NOT_READY-activation-expanded-source.py.txt",
+    "sha256": "e550faad22ed5de2935e72abbf798a7b3a2f106af92e70df1d89be06b6285503",
+    "mode": "0600",
+    "ready_to_execute": false,
+    "reason": "No peer-reviewed proposal/output-bound at-most-one-campaign claim or complete activation E2E qualification. Do not execute."
+  },
+  "required_future_work": [
+    "Obtain the explicit root-relayed user approval and bind its exact message reference/statement hash.",
+    "Peer-review a minimal private activation plan and exact old+new donor-hold checker; refusal on busy judge claims/runs must not cancel visitors.",
+    "Before the first paid step, create a one-time O_EXCL+fsync claim binding the expected proposal hash and fixed output path. Never delete/reset it; a crash forbids another claim until a new user decision. No automatic retry/resume.",
+    "Use a new independent pool/profile/ledger capped1.50. Original v3 allocation/receipt/profile/ledger and remainder remain untouched.",
+    "Run cloned activation/failure-path qualification and independent review; primitive budget-hold clone checks are not full activation qualification.",
+    "Only after approval, reviewed code/pins, fresh private fiscal checks and the one-time binding may root activate and dispatch once."
+  ],
+  "new_real_profile_or_ledger_created": false,
+  "new_real_preparation_or_proposal_created": false,
+  "real_money_or_ledger_mutation": false,
+  "provider_calls": 0,
+  "gpu_jobs": 0,
+  "financial_details_publicly_repeated": false,
+  "historical_publication_note": "Original financial report was published in9948214 and redacted in13b0eb7; original remains in Git history. See publication-redaction-receipt.json.",
+  "verification": {
+    "blocked_entry_points": [
+      {
+        "entry_point": "prepare",
+        "result": "BLOCKED_BEFORE_READING_OR_WRITING_A_REAL_FUNDING_ARTIFACT"
+      },
+      {
+        "entry_point": "activate",
+        "result": "BLOCKED_BEFORE_READING_OR_WRITING_A_REAL_FUNDING_ARTIFACT"
+      },
+      {
+        "entry_point": "verify_funding",
+        "result": "BLOCKED_BEFORE_READING_OR_WRITING_A_REAL_FUNDING_ARTIFACT"
+      },
+      {
+        "entry_point": "main",
+        "result": "BLOCKED_BEFORE_READING_OR_WRITING_A_REAL_FUNDING_ARTIFACT"
+      },
+      {
+        "entry_point": "controller.funding",
+        "result": "PINNED_ADAPTER_BLOCKED"
+      }
+    ],
+    "all_other_controller_AST_unchanged": true,
+    "ruff": "PASS",
+    "format": "PASS",
+    "actual_target_directory_existence_unchanged": true,
+    "activation_e2e_qualified": false,
+    "one_time_campaign_claim_implemented": false,
+    "single_dispatch_authorization_received_by_agent": false
+  }
+}

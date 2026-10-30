@@ -1,0 +1,26 @@
+{
+  "result": "PASS_AS_UNQUALIFIED_FAIL_CLOSED_INTERFACE_ONLY",
+  "scope": "STATIC_READ_ONLY_BLOCKED_ADAPTER_REVIEW_NOT_ACTIVATION_QUALIFICATION",
+  "adapter_sha256": "d9e880dff9ad1d55278e7042616a4903239657a64eb4507e4c22ecc1b7b7fb3e",
+  "controller_sha256": "4439002f669f575a3691d10c041806d3f2c2d329a6aa53dc1a9b79de6201b01e",
+  "base_controller_sha256": "590189eb3b23f1f932c62a849afd1aee26edb9968822964e65a8c3b7f04ed426",
+  "blocked_status_receipt_sha256": "c4ac6887b6b72b6d6992e299e71a714528494db670f4af4d068ae5e6658ddba3",
+  "checked": [
+    "All four adapter entry points consist solely of an unconditional FundingNotReady raise. No real funding artifact is read or written by those functions.",
+    "The controller pins this blocked adapter source and delegates only to its blocked verify_funding; all other controller AST is identical to v2 after removing its unused ledger import.",
+    "The explicit status correctly states approval, complete activation E2E and a durable at-most-one-campaign claim are not implemented or qualified.",
+    "Private expanded draft remains ignored/untracked with mode0600 and is explicitly not certified or executed.",
+    "No actual new activation/profile/ledger/preparation/execution artifact exists."
+  ],
+  "funding_ready": false,
+  "activation_ready": false,
+  "dispatch_ready": false,
+  "one_time_campaign_claim_implemented": false,
+  "follow_up": "Do not fill the R19 final binding placeholders or dispatch through this interface. Complete explicit approval, reviewed activation/donor checks, durable one-time claim and clone qualification first.",
+  "private_financial_figures_included": false,
+  "entrypoints_executed_by_review": 0,
+  "real_ledger_access_by_review": false,
+  "tests_by_review": 0,
+  "provider_calls": 0,
+  "gpu_jobs": 0
+}

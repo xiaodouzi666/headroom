@@ -1,0 +1,300 @@
+"""Read-only static review of a blocked R19 draft; never prepare, fund, or dispatch."""
+
+import ast
+import copy
+import hashlib
+import json
+import runpy
+import socket
+import subprocess
+import sys
+from pathlib import Path
+
+sys.dont_write_bytecode = True
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / "reports/repair-followup-20261030/prepare-r19-finance-v2-provisional.py.txt"
+REPORT = ROOT / "reports/repair-followup-20261030/r19-finance-v2-provisional-readonly-check.json"
+SOURCE_REVISION = "13b0eb7027eda3ee438dc0b8aa17c035138b6a62"
+checks = []
+
+
+def check(condition, label):
+    if not condition:
+        raise AssertionError(label)
+    checks.append(label)
+
+
+def reject(function, label, *args):
+    try:
+        function(*args)
+    except (ValueError, RuntimeError):
+        checks.append(label)
+    else:
+        raise AssertionError(label)
+
+
+def no_network(*args, **kwargs):
+    raise RuntimeError("Read-only draft review cannot use the network")
+
+
+def main():
+    socket.getaddrinfo = no_network
+    socket.socket.connect = no_network
+    socket.socket.connect_ex = no_network
+    raw = SCRIPT.read_bytes()
+    tree = ast.parse(raw, filename=str(SCRIPT))
+    compile(tree, str(SCRIPT), "exec")
+    module = runpy.run_path(str(SCRIPT), run_name="_r19_blocked_preparation_readonly_review")
+    outputs = (
+        module["PREPARATION"].parent,
+        module["PROPOSAL"],
+        module["PREFLIGHT"],
+        module["EXECUTION"],
+    )
+    check(all(not p.exists() for p in outputs), "real R19 outputs absent before review")
+    check(
+        module["REVIEWED_BINDINGS_COMPLETE"] is False,
+        "approval/final bindings are explicitly incomplete",
+    )
+    check(
+        module["FUNDING_SHA"].startswith("PENDING_"),
+        "activation digest remains fail-closed placeholder",
+    )
+    check(
+        module["CONTROLLER_SHA"]
+        == "694a8e62c9378ec25dc3e25077ff72084a39f7b8f95d7d167c7e040673d1b72e",
+        "new controller digest is pinned to independently reviewed V2",
+    )
+    check(
+        hashlib.sha256(module["CONTROLLER"].read_bytes()).hexdigest() == module["CONTROLLER_SHA"],
+        "actual V2 controller bytes match reviewed digest",
+    )
+    adapter = ROOT / ".cache/final-funding-option-20261030/activate-independent-pool-v2.py.txt"
+    check(
+        hashlib.sha256(adapter.read_bytes()).hexdigest()
+        == "ff15f43851ba400c294e6b31472e2b188c130057f298fbb8e7881e074f0e5d34",
+        "actual private V2 adapter bytes match reviewed digest",
+    )
+    reject(module["require_reviewed_bindings"], "pending binding gate refuses execution")
+    reject(module["load_controller"], "pending gate refuses controller import")
+    reject(
+        module["prepare"],
+        "pending gate refuses actual preparation before any write",
+        "a" * 40,
+        "b" * 64,
+    )
+    check(
+        module["EXPECTED_POOL_ID"] == "repair-final-20261030-v1", "fresh pool has distinct identity"
+    )
+    check(
+        module["FUNDING_RECEIPT"] == ROOT / ".cache/repair-final-20261030-v1/activation.json",
+        "new activation path only",
+    )
+    check(
+        module["EXPECTED_PROFILE"] == ROOT / ".cache/repair-final-20261030-v1/runtime-profile.json",
+        "new profile path only",
+    )
+    check(
+        module["BASE_PROPOSAL_SHA"]
+        == "f3a8041e026e535a338fa283959929b7bc6f31ba181b1844719d66ff2b734026",
+        "original R14 proposal anchor unchanged",
+    )
+    check(
+        module["BASE_PREPARATION_SHA"]
+        == "a2c1fcf6fbc77ba196c2b559c16f99ed19a6346d902608f76bce43516ba49898",
+        "original R14 preparation anchor unchanged",
+    )
+    base_proposal = module["repair"].read_json(module["BASE_PROPOSAL"])
+    check(
+        module["repair"].digest(base_proposal) == module["BASE_PROPOSAL_SHA"],
+        "R14 proposal canonical digest verified",
+    )
+    base = module["repair"].read_json(Path(base_proposal["prepared_path"]))
+    body = copy.deepcopy(base)
+    stored = body.pop("preparation_sha256")
+    check(
+        stored == module["BASE_PREPARATION_SHA"] == module["repair"].digest(body),
+        "R14 preparation digest verified",
+    )
+    check(len(base["input_pins"]) == 30, "fixed thirty historical input pins")
+    for name, pin in base["input_pins"].items():
+        check(
+            hashlib.sha256((ROOT / name).read_bytes()).hexdigest() == pin["sha256"],
+            "unchanged input " + name,
+        )
+    implementation = module["repair"].implementation_pins()
+    check(len(implementation) == 185, "same implementation file membership")
+    for name, pin in implementation.items():
+        committed = subprocess.check_output(
+            ["git", "--no-optional-locks", "show", SOURCE_REVISION + ":" + name], cwd=ROOT
+        )
+        check(
+            hashlib.sha256(committed).hexdigest() == pin["sha256"],
+            "committed implementation " + name,
+        )
+    check(
+        len(module["NEW_REVIEWED_SOURCE"]) == 29,
+        "twenty-nine reviewed inherited/new runtime identities",
+    )
+    for name, digest in module["NEW_REVIEWED_SOURCE"].items():
+        check(implementation[name]["sha256"] == digest, "reviewed source " + name)
+    check(
+        "web/src/EvaluationView.tsx" not in implementation,
+        "web UI is not silently added to workload pins",
+    )
+    old_functions = {
+        n.name: ast.dump(n, include_attributes=False)
+        for n in ast.parse(
+            (ROOT / "reports/repair-followup-20261030/prepare-r18.py.txt").read_bytes()
+        ).body
+        if isinstance(n, ast.FunctionDef)
+    }
+    new_functions = {
+        n.name: ast.dump(n, include_attributes=False)
+        for n in tree.body
+        if isinstance(n, ast.FunctionDef)
+    }
+    changed = [name for name in old_functions if old_functions[name] != new_functions[name]]
+    check(
+        changed == ["check_starting_accounting", "fixed_requests", "load_controller", "prepare"],
+        "only reviewed funding/start-state existing functions differ",
+    )
+    check(
+        set(new_functions) - set(old_functions)
+        == {"require_reviewed_bindings", "check_new_receipt"},
+        "only two exact new funding guards added",
+    )
+    fake_fresh = copy.deepcopy(base)
+    fake_fresh["implementation_pins"] = implementation
+    module["immutable_preparation"](base, fake_fresh)
+    checks.append("six semantic fields and all non-implementation preparation fields unchanged")
+    for field in module["SEMANTIC_FIELDS"]:
+        broken = copy.deepcopy(fake_fresh)
+        broken[field] = "changed"
+        reject(module["immutable_preparation"], "semantic mutation rejected " + field, base, broken)
+    requests = copy.deepcopy(base_proposal["requests"])
+    for request in requests.values():
+        request["runtime_profile"] = str(module["EXPECTED_PROFILE"])
+        request["daily_budget_usd"] = "1.50"
+    module["fixed_requests"](requests, base_proposal["requests"])
+    checks.append("nine requests accepted with exactly two new funding fields only")
+    first = next(iter(requests))
+    for field in requests[first]:
+        broken = copy.deepcopy(requests)
+        broken[first][field] = "changed"
+        reject(
+            module["fixed_requests"],
+            "request mutation rejected " + field,
+            broken,
+            base_proposal["requests"],
+        )
+    for field, bad in (
+        ("daily_budget_usd", 1.5),
+        ("daily_budget_usd", "1.500"),
+        ("runtime_profile", Path(str(module["EXPECTED_PROFILE"]))),
+        ("runtime_profile", base_proposal["requests"][first]["runtime_profile"]),
+    ):
+        broken = copy.deepcopy(requests)
+        broken[first][field] = bad
+        reject(
+            module["fixed_requests"],
+            "typed exact new funding field rejected " + field + ":" + type(bad).__name__,
+            broken,
+            base_proposal["requests"],
+        )
+    shorter = dict(list(requests.items())[:-1])
+    reject(
+        module["fixed_requests"], "non-nine requests rejected", shorter, base_proposal["requests"]
+    )
+    expected = module["EXPECTED_STARTING_ACCOUNTING"]
+    module["check_starting_accounting"](expected)
+    checks.append("fresh zero-charge known/resolved independent pool accepted")
+    for key in expected:
+        broken = copy.deepcopy(expected)
+        broken[key] = "changed"
+        reject(
+            module["check_starting_accounting"],
+            "changed new starting accounting rejected " + key,
+            broken,
+        )
+        del broken[key]
+        reject(
+            module["check_starting_accounting"],
+            "missing new starting accounting rejected " + key,
+            broken,
+        )
+    old_account = copy.deepcopy(expected)
+    old_account.update(
+        scope_cap_usd="4.890504400",
+        scope_charged_usd="4.29653168",
+        scope_remaining_usd="0.593972720",
+    )
+    reject(
+        module["check_starting_accounting"],
+        "old follow-up pool cannot substitute or merge",
+        old_account,
+    )
+    receipt = {
+        "schema": "headroom.repair-final-activation.v2",
+        "funding_pool_id": module["EXPECTED_POOL_ID"],
+        "target_net_usd": "1.50",
+        "profile_path": str(module["EXPECTED_PROFILE"]),
+    }
+    module["check_new_receipt"](receipt)
+    for field in receipt:
+        broken = dict(receipt)
+        broken[field] = "changed"
+        reject(module["check_new_receipt"], "wrong new receipt identity rejected " + field, broken)
+    for field, bad in (
+        ("target_net_usd", 1.5),
+        ("target_net_usd", "1.500"),
+        ("profile_path", Path(str(module["EXPECTED_PROFILE"]))),
+    ):
+        broken = dict(receipt)
+        broken[field] = bad
+        reject(
+            module["check_new_receipt"],
+            "non-exact new receipt field rejected " + field + ":" + type(bad).__name__,
+            broken,
+        )
+    check(all(not p.exists() for p in outputs), "real R19 outputs remain absent after review")
+    out = {
+        "scope": "R19_BLOCKED_DRAFT_STATIC_READ_ONLY_REVIEW_NOT_NEW_PREPARATION",
+        "script_sha256": hashlib.sha256(raw).hexdigest(),
+        "source_revision_checked": SOURCE_REVISION,
+        "check_count": len(checks),
+        "checks": checks,
+        "implementation_pins_checked": len(implementation),
+        "input_pins_checked": len(base["input_pins"]),
+        "reviewed_source_hashes": module["NEW_REVIEWED_SOURCE"],
+        "semantic_inputs_identical": True,
+        "request_fields_changed_only": ["runtime_profile", "daily_budget_usd"],
+        "full_request_byte_identity_claimed": False,
+        "funding_scope_is_new": True,
+        "approval_and_exact_new_bindings_pending": True,
+        "actual_preparation_written": False,
+        "actual_proposal_written": False,
+        "actual_new_funding_written": False,
+        "old_ledger_opened": False,
+        "new_ledger_opened": False,
+        "controller_imported": False,
+        "model_calls": 0,
+        "GPU_jobs": 0,
+        "status": "PASS_BLOCKED_DRAFT_PENDING_EXPLICIT_FINANCIAL_APPROVAL_AND_FINAL_EXACT_BINDINGS",
+    }
+    if REPORT.exists():
+        raise ValueError("READONLY_REVIEW_REPORT_ALREADY_EXISTS")
+    REPORT.write_text(json.dumps(out, indent=2) + "\n")
+    print(
+        json.dumps(
+            {
+                "status": out["status"],
+                "checks": len(checks),
+                "report_sha256": hashlib.sha256(REPORT.read_bytes()).hexdigest(),
+            }
+        )
+    )
+
+
+if __name__ == "__main__":
+    main()
