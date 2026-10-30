@@ -16,6 +16,7 @@ from headroom.diagnosis_protocol import (
     DEFAULT_DIAGNOSIS_CAP,
     DiagnosisRequestPolicy,
     carried_diagnosis_request_policy,
+    compact_diagnosis_schema,
     diagnosis_cap,
     diagnosis_prompt,
     resolve_diagnosis_request_policy,
@@ -974,7 +975,10 @@ def diagnose_with_router(
         request_policy=request_policy,
     )
     schema = build_diagnosis_schema(evidence=evidence, policy=policy)
+    schema = compact_diagnosis_schema(schema, request_policy=request_policy)
     initial_messages = copy.deepcopy(messages)
+    request_purpose = "initial"
+    prerequisite_review_used = False
     response_failures = []
     request_modes = []
     requested_reasoning = True if request_policy is None else request_policy.reasoning
@@ -983,6 +987,7 @@ def diagnose_with_router(
         request_modes.append(
             {
                 "request_index": attempt + 1,
+                "purpose": request_purpose,
                 "requested_reasoning": requested_reasoning,
                 "max_completion_tokens": completion_cap,
                 "scope": "host_requested_mode_only",
@@ -1034,6 +1039,7 @@ def diagnose_with_router(
                 # Start from the full original evidence/schema, not partial JSON
                 # or hidden reasoning. Same model, evidence, schema and output cap;
                 # the normal runtime must admit and account for this new call.
+                request_purpose = "response_repair"
                 messages = copy.deepcopy(initial_messages)
                 messages.append(
                     {
@@ -1090,12 +1096,31 @@ def diagnose_with_router(
                 observations=observations,
                 schema_errors=schema_errors,
             )
+        if (
+            attempt < max_supplements
+            and not prerequisite_review_used
+            and result.valid
+            and result.diagnosis.needs_more_info
+        ):
+            from headroom.prerequisite_review import prerequisite_review
+
+            review = prerequisite_review(result.diagnosis, evidence)
+            if review is not None:
+                prerequisite_review_used = True
+                # This uses the same finite supplement as format/validation repair.
+                # Restart from original evidence, not a large rejected answer that
+                # encourages verbatim repetition or consumes the output allowance.
+                messages = copy.deepcopy(initial_messages)
+                messages.append({"role": "user", "content": review})
+                request_purpose = "prerequisite_review"
+                continue
         if not result.requires_supplement or attempt == max_supplements:
             return replace(
                 result,
                 response_validation_failures=tuple(response_failures),
                 response_request_modes=tuple(request_modes),
             )
+        request_purpose = "validation_repair"
         messages.extend(
             [
                 {"role": "assistant", "content": json.dumps(parsed, allow_nan=False)},

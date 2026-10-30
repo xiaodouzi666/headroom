@@ -12,6 +12,7 @@ from headroom.config import RuntimeConfig, VerifiedCapabilities, candidate_model
 from headroom.diagnose import PROMPT_PATH, build_diagnosis_messages, diagnose_with_router
 from headroom.diagnosis_protocol import (
     COMMON_4000,
+    COMPACT_DIAGNOSIS_INSTRUCTIONS,
     FINAL48_DIAGNOSIS_ONLY,
     PROMPT_CAP_MARKER,
     DiagnosisRequestPolicy,
@@ -99,7 +100,9 @@ def test_explicit_policy_changes_prompt_cap_without_changing_old_requests():
     template = PROMPT_PATH.read_text()
     assert ordinary[0]["content"] == template.replace(PROMPT_CAP_MARKER, "16384")
     assert study[0]["content"] == template.replace(PROMPT_CAP_MARKER, "4000")
-    assert final48[0]["content"] == template.replace(PROMPT_CAP_MARKER, "2000")
+    assert final48[0]["content"] == (
+        COMPACT_DIAGNOSIS_INSTRUCTIONS + "\n" + template.replace(PROMPT_CAP_MARKER, "2000")
+    )
     assert ordinary[1] == study[1] == final48[1]
     assert diagnosis_cap() == 16384
     assert diagnosis_cap(COMMON_4000) == 4000
@@ -154,7 +157,7 @@ def test_study_and_request_policy_cannot_be_mixed():
         ({"request_policy": FINAL48_DIAGNOSIS_ONLY}, 2000, False),
     ],
 )
-def test_wire_prompt_and_recorded_mode_agree_and_native_schema_stays(kwargs, cap, reasoning):
+def test_wire_prompt_recorded_mode_and_selected_schema_agree(kwargs, cap, reasoning):
     requests = []
     with client_for([(json.dumps(payload()), "stop")], requests) as client:
         result = diagnose(LLMRouter(client), max_supplements=0, **kwargs)
@@ -165,12 +168,16 @@ def test_wire_prompt_and_recorded_mode_agree_and_native_schema_stays(kwargs, cap
     assert "max_tokens" not in body
     assert body["chat_template_kwargs"] == {"enable_thinking": reasoning}
     assert body["response_format"]["type"] == "json_schema"
-    assert body["messages"][1]["content"] == PROMPT_PATH.read_text().replace(
-        PROMPT_CAP_MARKER, str(cap)
-    )
+    expected_prompt = PROMPT_PATH.read_text().replace(PROMPT_CAP_MARKER, str(cap))
+    if kwargs.get("request_policy") is FINAL48_DIAGNOSIS_ONLY:
+        expected_prompt = COMPACT_DIAGNOSIS_INSTRUCTIONS + "\n" + expected_prompt
+    assert body["messages"][1]["content"] == expected_prompt
+    schema = body["response_format"]["json_schema"]["schema"]
+    assert schema["properties"]["plan"].get("maxItems") == (1 if cap == 2000 else None)
     assert result.response_request_modes == (
         {
             "request_index": 1,
+            "purpose": "initial",
             "requested_reasoning": reasoning,
             "max_completion_tokens": cap,
             "scope": "host_requested_mode_only",

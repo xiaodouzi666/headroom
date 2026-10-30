@@ -1,0 +1,155 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+F............FFF......................                                   [100%]
+=================================== FAILURES ===================================
+____ test_explicit_policy_changes_prompt_cap_without_changing_old_requests _____
+
+    def test_explicit_policy_changes_prompt_cap_without_changing_old_requests():
+        ordinary = build_diagnosis_messages("same evidence", goal="reclaim", policy={})
+        study = build_diagnosis_messages(
+            "same evidence", goal="reclaim", policy={}, study_protocol=COMMON_4000
+        )
+        final48 = build_diagnosis_messages(
+            "same evidence", goal="reclaim", policy={}, request_policy=FINAL48_DIAGNOSIS_ONLY
+        )
+        template = PROMPT_PATH.read_text()
+        assert ordinary[0]["content"] == template.replace(PROMPT_CAP_MARKER, "16384")
+        assert study[0]["content"] == template.replace(PROMPT_CAP_MARKER, "4000")
+>       assert final48[0]["content"] == template.replace(PROMPT_CAP_MARKER, "2000")
+E       AssertionError: assert 'Compact outp...ance rules.\n' == 'You diagnose...ance rules.\n'
+E         
+E         + Compact output contract for this bounded request:
+E         + Return compact JSON with at most two supported root causes and ONE complete,
+E         + independent candidate. Include all imports/setup and dependent edits inside that
+E         + candidate; do not append unrelated fallback strategies or speculative alternatives.
+E         + Prefer the strongest source-supported producer/lifetime change for the selected goal.
+E         + Use short IDs and titles, at most four relevant stack references per cause, concise...
+E         
+E         ...Full output truncated (544 lines hidden), use '-vv' to show
+
+tests/test_final48_request_policy.py:102: AssertionError
+_ test_wire_prompt_and_recorded_mode_agree_and_native_schema_stays[kwargs0-16384-True] _
+
+kwargs = {}, cap = 16384, reasoning = True
+
+    @pytest.mark.parametrize(
+        "kwargs,cap,reasoning",
+        [
+            ({}, 16384, True),
+            ({"study_protocol": COMMON_4000}, 4000, True),
+            ({"request_policy": FINAL48_DIAGNOSIS_ONLY}, 2000, False),
+        ],
+    )
+    def test_wire_prompt_and_recorded_mode_agree_and_native_schema_stays(kwargs, cap, reasoning):
+        requests = []
+        with client_for([(json.dumps(payload()), "stop")], requests) as client:
+            result = diagnose(LLMRouter(client), max_supplements=0, **kwargs)
+        assert result.valid
+        assert len(requests) == 1
+        body = requests[0]
+        assert body["max_completion_tokens"] == cap
+        assert "max_tokens" not in body
+        assert body["chat_template_kwargs"] == {"enable_thinking": reasoning}
+        assert body["response_format"]["type"] == "json_schema"
+        assert body["messages"][1]["content"] == PROMPT_PATH.read_text().replace(
+            PROMPT_CAP_MARKER, str(cap)
+        )
+>       assert result.response_request_modes == (
+            {
+                "request_index": 1,
+                "requested_reasoning": reasoning,
+                "max_completion_tokens": cap,
+                "scope": "host_requested_mode_only",
+            },
+        )
+E       AssertionError: assert ({'request_in... 16384, ...},) == ({'request_in..._mode_only'},)
+E         
+E         At index 0 diff: {'request_index': 1, 'purpose': 'initial', 'requested_reasoning': True, 'max_completion_tokens': 16384, 'scope': 'host_requested_mode_only'} != {'request_index': 1, 'requested_reasoning': True, 'max_completion_tokens': 16384, 'scope': 'host_requested_mode_only'}
+E         Use -v to get more diff
+
+tests/test_final48_request_policy.py:171: AssertionError
+_ test_wire_prompt_and_recorded_mode_agree_and_native_schema_stays[kwargs1-4000-True] _
+
+kwargs = {'study_protocol': 'common-diagnosis-4000-v1'}, cap = 4000
+reasoning = True
+
+    @pytest.mark.parametrize(
+        "kwargs,cap,reasoning",
+        [
+            ({}, 16384, True),
+            ({"study_protocol": COMMON_4000}, 4000, True),
+            ({"request_policy": FINAL48_DIAGNOSIS_ONLY}, 2000, False),
+        ],
+    )
+    def test_wire_prompt_and_recorded_mode_agree_and_native_schema_stays(kwargs, cap, reasoning):
+        requests = []
+        with client_for([(json.dumps(payload()), "stop")], requests) as client:
+            result = diagnose(LLMRouter(client), max_supplements=0, **kwargs)
+        assert result.valid
+        assert len(requests) == 1
+        body = requests[0]
+        assert body["max_completion_tokens"] == cap
+        assert "max_tokens" not in body
+        assert body["chat_template_kwargs"] == {"enable_thinking": reasoning}
+        assert body["response_format"]["type"] == "json_schema"
+        assert body["messages"][1]["content"] == PROMPT_PATH.read_text().replace(
+            PROMPT_CAP_MARKER, str(cap)
+        )
+>       assert result.response_request_modes == (
+            {
+                "request_index": 1,
+                "requested_reasoning": reasoning,
+                "max_completion_tokens": cap,
+                "scope": "host_requested_mode_only",
+            },
+        )
+E       AssertionError: assert ({'request_in...: 4000, ...},) == ({'request_in..._mode_only'},)
+E         
+E         At index 0 diff: {'request_index': 1, 'purpose': 'initial', 'requested_reasoning': True, 'max_completion_tokens': 4000, 'scope': 'host_requested_mode_only'} != {'request_index': 1, 'requested_reasoning': True, 'max_completion_tokens': 4000, 'scope': 'host_requested_mode_only'}
+E         Use -v to get more diff
+
+tests/test_final48_request_policy.py:171: AssertionError
+_ test_wire_prompt_and_recorded_mode_agree_and_native_schema_stays[kwargs2-2000-False] _
+
+kwargs = {'request_policy': DiagnosisRequestPolicy(id='final48-diagnosis-only-2000-v1', max_completion_tokens=2000, reasoning=False)}
+cap = 2000, reasoning = False
+
+    @pytest.mark.parametrize(
+        "kwargs,cap,reasoning",
+        [
+            ({}, 16384, True),
+            ({"study_protocol": COMMON_4000}, 4000, True),
+            ({"request_policy": FINAL48_DIAGNOSIS_ONLY}, 2000, False),
+        ],
+    )
+    def test_wire_prompt_and_recorded_mode_agree_and_native_schema_stays(kwargs, cap, reasoning):
+        requests = []
+        with client_for([(json.dumps(payload()), "stop")], requests) as client:
+            result = diagnose(LLMRouter(client), max_supplements=0, **kwargs)
+        assert result.valid
+        assert len(requests) == 1
+        body = requests[0]
+        assert body["max_completion_tokens"] == cap
+        assert "max_tokens" not in body
+        assert body["chat_template_kwargs"] == {"enable_thinking": reasoning}
+        assert body["response_format"]["type"] == "json_schema"
+>       assert body["messages"][1]["content"] == PROMPT_PATH.read_text().replace(
+            PROMPT_CAP_MARKER, str(cap)
+        )
+E       AssertionError: assert 'Compact outp...ance rules.\n' == 'You diagnose...ance rules.\n'
+E         
+E         + Compact output contract for this bounded request:
+E         + Return compact JSON with at most two supported root causes and ONE complete,
+E         + independent candidate. Include all imports/setup and dependent edits inside that
+E         + candidate; do not append unrelated fallback strategies or speculative alternatives.
+E         + Prefer the strongest source-supported producer/lifetime change for the selected goal.
+E         + Use short IDs and titles, at most four relevant stack references per cause, concise...
+E         
+E         ...Full output truncated (544 lines hidden), use '-vv' to show
+
+tests/test_final48_request_policy.py:168: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_final48_request_policy.py::test_explicit_policy_changes_prompt_cap_without_changing_old_requests
+FAILED tests/test_final48_request_policy.py::test_wire_prompt_and_recorded_mode_agree_and_native_schema_stays[kwargs0-16384-True]
+FAILED tests/test_final48_request_policy.py::test_wire_prompt_and_recorded_mode_agree_and_native_schema_stays[kwargs1-4000-True]
+FAILED tests/test_final48_request_policy.py::test_wire_prompt_and_recorded_mode_agree_and_native_schema_stays[kwargs2-2000-False]
+4 failed, 34 passed in 5.93s

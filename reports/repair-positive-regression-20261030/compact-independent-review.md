@@ -1,0 +1,9 @@
+# Independent compact-output and prerequisite review
+
+Read-only review PASS; no blocking defect found. This review initiated no model, GPU or test execution. The explicit FINAL48 2000-token/false policy selects a deep-copied wire schema with fewer/shorter causes, one complete candidate, bounded notes and evidence requests. Default16k/study4k choices remain unchanged. The original host Diagnosis/schema, reference IDs, policy permissions, saving checks and hardware/numerical gates are not loosened. Compact wire failures remain schema errors on the existing bounded supplement path.
+
+Genuine unknowns remain needs_more_info. Empty plans cannot be ready. Grouping at most two evidence questions is not resolving them; incomplete prerequisites must remain blocked. Removing optional alternatives cannot contribute their savings. Original source is not executed or read by the helper; metadata already supplied to the request is the only feedback source.
+
+The prerequisite recheck shares the original max_supplements+1 loop, normally two total requests. It cannot add a third call after a format supplement, clear the existing flag itself, create new facts or waive cost admission. Corrected focused receipt182passed30.59s, compactcombined44passed5.79s, and budget14passed1.29s were read, not rerun by this review.
+
+Three historical diagnoses remain accepted by the host validator, and three original standardized Super proposals still produce exact historical candidate bytes under current static patch checks. This is NOT proof that original long historical diagnosis JSON fits the new compact wire format. All three have size/count issues against that intentionally narrower generation schema; they are not auto-transformed. The live model must newly produce a complete compact answer. Old responses and patches are only offline regression inputs and never become new live repair scores.

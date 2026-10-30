@@ -1,0 +1,147 @@
+"""Offline preservation check of real historical diagnoses and patches; never a live score."""
+import hashlib
+import json
+import socket
+import subprocess
+import tempfile
+from datetime import UTC, datetime
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+import sys
+sys.path.insert(0, str(ROOT))
+from headroom.diagnose import validate_diagnosis
+from headroom.diagnosis_protocol import FINAL48_DIAGNOSIS_ONLY, compact_diagnosis_schema
+from headroom.diagnosis_schema import build_diagnosis_schema
+from jsonschema import Draft202012Validator
+from headroom.diagnose import build_evidence_availability_catalog
+from headroom.orchestrator import FixRequest, _required_reduction
+from headroom.patch import apply_proposal
+from headroom.solver_context import execution_context
+from headroom.verify.reference_context import numerical_reference_context
+
+CASES = {
+    "s3": "runs/evaluation/live/20261027T022818939585Z-151818b1/jobs/84f929ba8ace49b3829df6455419641d",
+    "s4": "runs/final48-f3/execution-20261029-v1/jobs/e8213706570e478f9845e49e24c2b54b",
+    "s8": "runs/evaluation/live/20261027T002717226380Z-119f2528/jobs/d10adf0ffac74dcf8d874a460a2a3628",
+}
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+def no_network(*_a, **_kw):
+    raise AssertionError("Network forbidden for historical contract replay")
+
+socket.socket.connect = no_network
+socket.socket.connect_ex = no_network
+socket.getaddrinfo = no_network
+_original_run = subprocess.run
+
+def offline_run(command, *a, **kw):
+    is_compile = (isinstance(command, (list, tuple)) and len(command) > 5
+                  and str(command[0]) == sys.executable
+                  and list(command[1:5]) == ["-I", "-S", "-m", "py_compile"]
+                  and all(any(part.startswith("headroom-positive-replay-") for part in Path(p).parts)
+                          and Path(p).suffix == ".py" for p in command[5:]))
+    is_lint = (isinstance(command, (list, tuple)) and len(command) == 17
+               and list(command[:5]) == [sys.executable, "-I", "-m", "ruff", "check"]
+               and list(command[5:15]) == ["--isolated", "--no-cache", "--ignore-noqa", "--select", "F821", "--target-version", "py312", "--output-format", "json", "--stdin-filename"]
+               and command[-1] == "-")
+    if not isinstance(command, (list, tuple)) or not command or (Path(str(command[0])).name != "git" and not is_compile and not is_lint):
+        raise AssertionError("Only temporary git patch and isolated py_compile are allowed")
+    return _original_run(command, *a, **kw)
+
+subprocess.run = offline_run
+manifest = json.loads((ROOT / "reports/repair-positive-regression-20261030/historical-inputs.json").read_text())
+for relative, expected in manifest["files"].items():
+    assert sha(ROOT / relative) == expected, "Historical input changed: " + relative
+code_paths = ["headroom/diagnose.py", "headroom/patch.py", "headroom/diagnosis_schema.py",
+              "headroom/schemas.py", "headroom/solver_context.py", "headroom/evidence_blockers.py"]
+code_before = {path: sha(ROOT / path) for path in code_paths}
+records = []
+with tempfile.TemporaryDirectory(prefix="headroom-positive-replay-") as temporary:
+    for case, relative in CASES.items():
+        job = ROOT / relative
+        report_path = job / "report.json"
+        report = json.loads(report_path.read_text())
+        request = FixRequest.model_validate(report["run"]["request"])
+        diagnosis_path = job / "rounds/01/diagnosis.json"
+        saved = json.loads(diagnosis_path.read_text())
+        evidence_path = job / "evidence/before/evidence.json"
+        markdown_path = job / "evidence/before/evidence.md"
+        evidence = json.loads(evidence_path.read_text())
+        patch_response_path = next(job.glob("rounds/01/patches/*/attempt-1-response.json"))
+        response = json.loads(patch_response_path.read_text())
+        source = patch_response_path.parent / "baseline"
+        baseline = report["run"]["baseline"]
+        evidence["execution_context"] = execution_context(
+            script="train.py", script_args=request.script_args,
+            execution_argv=request.execution_argv,
+            source_files=evidence.get("sources", []), selected_round=None,
+            repository_mode=request.repository_mode, seed=request.seed,
+            max_steps=request.max_steps, device=request.device,
+            allocator_conf=request.allocator_conf, runtime_result=baseline,
+        )
+        evidence["numerical_reference_context"] = numerical_reference_context(
+            request.numerical_reference, baseline=baseline,
+            original_script=source / "train.py", original_args=request.script_args,
+            retained_script=source / "train.py", required_steps=request.max_steps,
+            max_seconds=request.max_seconds, repository_mode=request.repository_mode,
+            command_mode=request.execution_argv is not None,
+        )
+        evidence["evidence_availability_catalog"] = build_evidence_availability_catalog(
+            evidence, markdown_path.read_text()
+        )
+        required = _required_reduction(
+            baseline, request.target, original_baseline=baseline,
+            reclaim_reduction_pct=request.reclaim_reduction_pct,
+        )
+        before = {str(p.relative_to(source)): sha(p) for p in source.rglob("*") if p.is_file()}
+        checked = validate_diagnosis(
+            saved["diagnosis"], evidence=evidence, policy=request.policy.model_dump(),
+            required_saving_gb=required,
+        )
+        compact_wire = compact_diagnosis_schema(
+            build_diagnosis_schema(evidence=evidence, policy=request.policy.model_dump()),
+            request_policy=FINAL48_DIAGNOSIS_ONLY,
+        )
+        wire_errors = [
+            {"path": "/" + "/".join(str(part) for part in error.absolute_path), "rule": error.validator}
+            for error in Draft202012Validator(compact_wire).iter_errors(saved["diagnosis"])
+        ]
+        proposal = response.get("normalized_proposal") or response["parsed"]
+        patched = apply_proposal(
+            source, proposal, work_root=Path(temporary)/case,
+            policy=request.policy.model_dump(), base_cli=request.script_args,
+        )
+        after = {str(p.relative_to(source)): sha(p) for p in source.rglob("*") if p.is_file()}
+        assert before == after, "Archived source modified"
+        candidate = Path(patched.candidate_dir) if patched.candidate_dir else None
+        original_candidate = Path(report["run"]["kept"]["source"])
+        expected = sha(original_candidate / "train.py")
+        actual = sha(candidate / "train.py") if candidate else None
+        records.append({
+            "case":case, "historical_job":relative,
+            "inputs":[{"path":str(p.relative_to(ROOT)),"sha256":sha(p)} for p in (
+                report_path, diagnosis_path, evidence_path, markdown_path, patch_response_path,
+                source/"train.py")],
+            "historical_target_met":report["summary"]["target_met"],
+            "required_saving_gb":required,
+            "current_diagnosis_valid":checked.valid,
+            "compact_wire_valid_for_historical_response":not wire_errors,
+            "compact_wire_errors":wire_errors,
+            "current_ready_for_patch":checked.ready_for_patch,
+            "issue_codes":[i.code for i in checked.issues],
+            "current_patch_applied":patched.applied,
+            "patch_reason":patched.reason,
+            "candidate_train_sha256":actual,
+            "historical_candidate_train_sha256":expected,
+            "candidate_bytes_equal_historical":actual==expected,
+            "archived_source_unchanged":before==after,
+            "model_response_reused_for_offline_contract_check_only":True,
+        })
+code_after = {path: sha(ROOT / path) for path in code_paths}
+assert code_before == code_after, "Source changed during replay; rerun after freeze"
+result={"code_sha256": code_after, "code_unchanged_during_replay": True, "at":datetime.now(UTC).isoformat(),"scope":"offline historical response contract and static patch application only", "new_model_calls":0,"new_gpu_jobs":0,"new_repair_successes":0,"records":records}
+(ROOT/"reports/repair-positive-regression-20261030/replay-result.json").write_text(json.dumps(result,indent=2)+"\n")
+print(json.dumps({"cases":len(records),"all_current_diagnoses_ready":all(r["current_ready_for_patch"] for r in records),"all_patches_equal":all(r["candidate_bytes_equal_historical"] for r in records),"issues":[[r["case"],r["issue_codes"],r["patch_reason"]] for r in records]}))

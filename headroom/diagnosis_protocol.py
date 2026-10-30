@@ -4,6 +4,7 @@ This is request configuration, never a billing clamp or funding authorization.
 The named study is the original independent end-to-end three-arm comparison.
 """
 
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Literal
 
@@ -110,11 +111,61 @@ def resolve_diagnosis_request_policy(*, carried=None, explicit=None, study_proto
     return selected
 
 
+COMPACT_DIAGNOSIS_INSTRUCTIONS = """Compact output contract for this bounded request:
+Return compact JSON with at most two supported root causes and ONE complete,
+independent candidate. Include all imports/setup and dependent edits inside that
+candidate; do not append unrelated fallback strategies or speculative alternatives.
+Prefer the strongest source-supported producer/lifetime change for the selected goal.
+Use short IDs and titles, at most four relevant stack references per cause, concise
+plan description/risk and at most three short notes. Avoid repeating source,
+measurements or policy already present in the evidence.
+Keep EVERY genuine unresolved prerequisite explicit. At most two evidence-request
+entries may group related preconditions in their detail; grouping never resolves a
+precondition. If any required premise is unresolved, retain needs_more_info=true.
+A blocked candidate may use an empty plan rather than invent readiness or omit a
+blocker. If all genuine blockers cannot fit, retain needs_more_info=true and state
+that the dependency list is incomplete; the host must not execute that result.
+Never change a policy, inflate savings, remove necessary setup or evidence,
+shorten the required training, or suppress uncertainty to satisfy these size limits.
+All original source, evidence, numerical and hardware verification rules still apply.
+"""
+
+
+def compact_diagnosis_schema(schema, *, request_policy=None):
+    """Narrow only a selected 2k wire schema; never edit a response or host model."""
+    if request_policy is None:
+        return schema
+    diagnosis_cap(request_policy=request_policy)
+    result = deepcopy(schema)
+    try:
+        props = result["properties"]
+        defs = result["$defs"]
+        props["root_causes"]["maxItems"] = 2
+        props["plan"]["maxItems"] = 1
+        props["notes"]["maxItems"] = 3
+        props["notes"]["items"]["maxLength"] = 160
+        props["evidence_requests"]["maxItems"] = 2
+        root = defs["RootCause"]["properties"]
+        root["id"]["maxLength"] = 24
+        root["title"]["maxLength"] = 96
+        root["evidence_refs"]["maxItems"] = 4
+        plan = defs["PlanStep"]["properties"]
+        for field, limit in (("fix_id", 24), ("title", 96), ("description", 640), ("risk", 256)):
+            plan[field]["maxLength"] = limit
+        defs["EvidenceRequest"]["properties"]["detail"]["maxLength"] = 768
+    except (KeyError, TypeError) as error:
+        raise ValueError("Unsupported diagnosis schema for bounded output") from error
+    return result
+
+
 def diagnosis_prompt(template, study_protocol=None, *, request_policy=None):
     cap = diagnosis_cap(study_protocol, request_policy=request_policy)
     if template.count(PROMPT_CAP_MARKER) != 1:
         raise ValueError("Diagnosis prompt requires exactly one completion-cap marker")
-    return template.replace(PROMPT_CAP_MARKER, str(cap))
+    prompt = template.replace(PROMPT_CAP_MARKER, str(cap))
+    if request_policy is not None:
+        return COMPACT_DIAGNOSIS_INSTRUCTIONS + "\n" + prompt
+    return prompt
 
 
 def study_metadata(study_protocol=None):

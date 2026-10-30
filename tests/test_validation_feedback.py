@@ -106,7 +106,7 @@ def test_sdk_repeated_invalid_response_keeps_original_call_and_token_bounds(
         assert "must both be null" in requests[-1]["messages"][-1]["content"]
 
 
-def test_valid_genuine_unknown_needs_no_extra_request():
+def test_valid_genuine_unknown_remains_blocked_after_shared_review():
     evidence, markdown = source()
     reply = payload()
     reply["evidence_requests"] = [
@@ -128,9 +128,13 @@ def test_valid_genuine_unknown_needs_no_extra_request():
             policy={},
             request_policy=FINAL48_DIAGNOSIS_ONLY,
         )
-    assert len(requests) == 1
+    assert len(requests) == 2
     assert result.valid and not result.ready_for_patch
     assert result.diagnosis.needs_more_info
+    assert [item["purpose"] for item in result.response_request_modes] == [
+        "initial",
+        "prerequisite_review",
+    ]
 
 
 @pytest.mark.parametrize(

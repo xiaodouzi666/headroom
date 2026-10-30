@@ -1,0 +1,46 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+F....................................................................... [ 39%]
+........................................................................ [ 79%]
+......................................                                   [100%]
+=================================== FAILURES ===================================
+_____ test_model_can_replace_strategy_but_full_validator_decides_readiness _____
+
+    def test_model_can_replace_strategy_but_full_validator_decides_readiness():
+        first = blocked()
+        before = copy.deepcopy(first)
+        second = payload()
+        second["plan"][0].update(
+            fix_id="independent",
+            title="Release unused retained temporary",
+            description="Release a temporary only after its final consuming operation.",
+        )
+        result, requests = invoke([first, second])
+        assert result.ready_for_patch and len(requests) == 2
+        assert result.diagnosis.plan[0].fix_id == "independent"
+        assert first == before and first["needs_more_info"] is True
+        assert [item["purpose"] for item in result.response_request_modes] == [
+            "initial",
+            "prerequisite_review",
+        ]
+        followup = requests[1]["messages"]
+        assert [item["role"] for item in followup] == [
+            *[item["role"] for item in requests[0]["messages"]],
+            "user",
+        ]
+        assert followup[:-1] == requests[0]["messages"]
+        review = followup[-1]["content"]
+        assert "No new measurement or missing fact" in review
+        assert "abandon an inapplicable or blocked strategy" in review
+        data = json.loads(review.split("Prior prerequisite metadata: ", 1)[1])
+        assert data["new_runtime_evidence_supplied"] is False
+        entry = data["requests"][0]["declared_reference_observation"]
+>       assert entry["availability"] == "unknown" and entry["runtime_values_verified"] is False
+E       AssertionError: assert ('unsupported' == 'unknown'
+E         
+E         - unknown
+E         + unsupported)
+
+tests/test_prerequisite_review.py:86: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_prerequisite_review.py::test_model_can_replace_strategy_but_full_validator_decides_readiness
+1 failed, 181 passed in 29.98s

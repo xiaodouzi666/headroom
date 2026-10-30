@@ -1,0 +1,172 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+F......F................................................................ [ 39%]
+.........F.............................................................. [ 79%]
+......................................                                   [100%]
+=================================== FAILURES ===================================
+_____ test_model_can_replace_strategy_but_full_validator_decides_readiness _____
+
+    def test_model_can_replace_strategy_but_full_validator_decides_readiness():
+        first = blocked()
+        before = copy.deepcopy(first)
+        second = payload()
+        second["plan"][0].update(
+            fix_id="independent",
+            title="Release unused retained temporary",
+            description="Release a temporary only after its final consuming operation.",
+        )
+        result, requests = invoke([first, second])
+        assert result.ready_for_patch and len(requests) == 2
+        assert result.diagnosis.plan[0].fix_id == "independent"
+        assert first == before and first["needs_more_info"] is True
+        assert [item["purpose"] for item in result.response_request_modes] == [
+            "initial",
+            "prerequisite_review",
+        ]
+        followup = requests[1]["messages"]
+>       assert [item["role"] for item in followup] == ["system", "user", "user"]
+E       AssertionError: assert ['system', 's...user', 'user'] == ['system', 'user', 'user']
+E         
+E         At index 1 diff: 'system' != 'user'
+E         Left contains one more item: 'user'
+E         Use -v to get more diff
+
+tests/test_prerequisite_review.py:75: AssertionError
+_____________ test_replanning_cannot_bypass_original_checks[stack] _____________
+
+mutation = 'stack'
+
+    @pytest.mark.parametrize("mutation", ["policy", "known_saving", "stack"])
+    def test_replanning_cannot_bypass_original_checks(mutation):
+        reply = payload()
+        if mutation == "policy":
+            reply["plan"][0]["title"] = "Switch to bf16"
+            expected = "NUMERICS_CHANGE_FORBIDDEN"
+        elif mutation == "known_saving":
+            reply["plan"][0]["expected_saving_gb"] = 0.1
+            expected = "INSUFFICIENT_EXPECTED_SAVING"
+        else:
+            reply["root_causes"][0]["evidence_refs"] = ["not_a_measured_stack"]
+            expected = "UNKNOWN_STACK_REFERENCE"
+>       result, requests = invoke([blocked(), reply])
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_prerequisite_review.py:124: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_prerequisite_review.py:42: in invoke
+    result = diagnose_with_router(
+headroom/diagnose.py:997: in diagnose_with_router
+    response = router.chat(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <headroom.llm.router.LLMRouter object at 0x709f1421e3c0>
+role = 'diagnose'
+messages = [{'role': 'system', 'content': 'Return only valid JSON matching this schema, without markdown or commentary.\n{"$defs"...l, "source_line_end": null, "blocking_scope": "current_plan", "blocked_plan_ids": ["fix"]}}], "omitted_requests": 0}'}]
+json_schema = {'$defs': {'EvidenceRequest': {'additionalProperties': False, 'properties': {'field': {'maxLength': 160, 'minLength': ... Info', 'type': 'boolean'}, ...}, 'required': ['root_causes', 'plan', 'verification', 'needs_more_info', 'notes'], ...}
+tools = None, reasoning = False, low_effort = False, token_budget = None
+max_tokens = 2000, temperature = None
+
+    def chat(
+        self,
+        role: str,
+        messages: Sequence[Mapping[str, Any]],
+        json_schema: Mapping[str, Any] | type[BaseModel] | None = None,
+        tools: Sequence[Mapping[str, Any]] | None = None,
+        *,
+        reasoning: bool | None = None,
+        low_effort: bool = False,
+        token_budget: int | None = None,
+        max_tokens: int = 4000,
+        temperature: float | None = None,
+    ) -> ChatResult:
+        model_type = None
+        schema = None
+        if isinstance(json_schema, type) and issubclass(json_schema, BaseModel):
+            model_type = json_schema
+            schema = json_schema.model_json_schema()
+        elif isinstance(json_schema, Mapping):
+            schema = copy.deepcopy(dict(json_schema))
+        elif json_schema is not None:
+            raise ValueError("json_schema must be a JSON Schema mapping or Pydantic model class")
+        if schema is not None:
+            _check_local_references(schema)
+            Draft202012Validator.check_schema(schema)
+            messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "Return only valid JSON matching this schema, without markdown or commentary.\n"
+                        + json.dumps(schema, ensure_ascii=False, allow_nan=False)
+                    ),
+                },
+                *copy.deepcopy(list(messages)),
+            ]
+        response = self.client.complete(
+            role,
+            messages,
+            schema=schema,
+            tools=tools,
+            reasoning=reasoning,
+            low_effort=low_effort,
+            token_budget=token_budget,
+            max_tokens=max_tokens,
+            temperature=temperature,
+        )
+        parsed = None
+        try:
+            if schema is not None:
+                if response.finish_reason in {"length", "content_filter"}:
+                    raise ResponseValidationError(
+                        "Structured response was truncated or filtered",
+                        reason="truncated" if response.finish_reason == "length" else "filtered",
+                    )
+                parsed = parse_json(response.text)
+                # Both validation paths return data, not a Pydantic instance, for downstream use.
+                if model_type is not None:
+                    try:
+                        model_type.model_validate(parsed, strict=True)
+                    except ValidationError:
+                        raise ResponseValidationError(
+                            "Model JSON does not match the requested schema",
+                            reason="schema_mismatch",
+                        ) from None
+                if next(Draft202012Validator(schema).iter_errors(parsed), None) is not None:
+>                   raise ResponseValidationError(
+                        "Model JSON does not match the requested schema", reason="schema_mismatch"
+                    )
+E                   headroom.llm.router.ResponseValidationError: Model JSON does not match the requested schema
+
+headroom/llm/router.py:209: ResponseValidationError
+______________ test_valid_genuine_unknown_needs_no_extra_request _______________
+
+    def test_valid_genuine_unknown_needs_no_extra_request():
+        evidence, markdown = source()
+        reply = payload()
+        reply["evidence_requests"] = [
+            request(
+                evidence_ref="execution_context.runtime_input_observations",
+                field="runtime shape",
+                reason="missing",
+                source_line_start=None,
+                source_line_end=None,
+            )
+        ]
+        requests = []
+        with provider_client([reply], requests) as client:
+            result = diagnose_with_router(
+                LLMRouter(client),
+                markdown,
+                evidence=evidence,
+                goal="reclaim",
+                policy={},
+                request_policy=FINAL48_DIAGNOSIS_ONLY,
+            )
+>       assert len(requests) == 1
+E       AssertionError: assert 2 == 1
+E        +  where 2 = len([{'model': 'nvidia/Nemotron-3-Ultra-550b-a55b', 'messages': [{'role': 'system', 'content': 'Return only valid JSON mat...more_info': {...}, ...}, 'required': ['root_causes', 'plan', 'verification', 'needs_more_info', 'notes'], ...}}}, ...}])
+
+tests/test_validation_feedback.py:131: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_prerequisite_review.py::test_model_can_replace_strategy_but_full_validator_decides_readiness
+FAILED tests/test_prerequisite_review.py::test_replanning_cannot_bypass_original_checks[stack]
+FAILED tests/test_validation_feedback.py::test_valid_genuine_unknown_needs_no_extra_request
+3 failed, 179 passed in 30.31s
