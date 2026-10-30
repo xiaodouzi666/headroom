@@ -35,7 +35,7 @@ def blocked():
     return reply
 
 
-def invoke(replies, *, limit=1):
+def invoke(replies, *, limit=1, goal="reclaim", required_saving_gb=0.5):
     requests = []
     evidence, markdown = source()
     original = copy.deepcopy(evidence)
@@ -44,9 +44,9 @@ def invoke(replies, *, limit=1):
             LLMRouter(sdk),
             markdown,
             evidence=evidence,
-            goal="reclaim",
+            goal=goal,
             policy={},
-            required_saving_gb=0.5,
+            required_saving_gb=required_saving_gb,
             max_supplements=limit,
             request_policy=FINAL48_DIAGNOSIS_ONLY,
         )
@@ -127,8 +127,8 @@ def test_replanning_cannot_bypass_original_checks(mutation):
     assert expected in {issue.code for issue in result.issues}
 
 
-@pytest.mark.parametrize("mutation", ["ready", "no_plan", "legacy", "withheld"])
-def test_no_review_for_ready_absent_plan_or_unstructured_unsafe_request(mutation):
+@pytest.mark.parametrize("mutation", ["ready", "no_plan", "withheld"])
+def test_no_review_for_ready_absent_plan_or_withheld_scoped_request(mutation):
     reply = blocked()
     if mutation == "ready":
         reply = payload()
@@ -137,8 +137,6 @@ def test_no_review_for_ready_absent_plan_or_unstructured_unsafe_request(mutation
         reply["evidence_requests"][0].update(
             blocking_scope="overall_feasibility", blocked_plan_ids=[]
         )
-    elif mutation == "legacy":
-        reply["evidence_requests"] = [{"field": "loss", "reason": "ambiguous", "detail": "Unknown"}]
     else:
         reply["evidence_requests"][0]["detail"] = "password = synthetic-fixture-only"
     result, requests = invoke([reply])
@@ -209,3 +207,91 @@ def test_denied_budget_for_review_never_dispatches_or_bypasses_admission(monkeyp
             )
         assert len(admissions) == 2
         assert len(requests) == len(sdk.ledger.entries) == 1
+
+
+def unlocatable(kind):
+    reply = blocked()
+    if kind == "empty":
+        reply["evidence_requests"] = []
+    elif kind == "legacy":
+        reply["evidence_requests"] = [
+            {
+                "field": "loss",
+                "reason": "ambiguous",
+                "detail": "unsafe_question_canary password=do-not-copy",
+            }
+        ]
+    else:
+        reply["evidence_requests"][0].update(
+            field="required_saving_gb",
+            reason="missing",
+            detail="unsafe_question_canary password=do-not-copy",
+            evidence_ref=None,
+            blocking_scope="overall_feasibility",
+            blocked_plan_ids=[],
+        )
+    reply["notes"] = ["unsafe_notes_canary password=do-not-copy"]
+    return reply
+
+
+@pytest.mark.parametrize("kind", ["empty", "required_saving_null", "legacy"])
+def test_neutral_review_for_empty_or_unlocatable_requests_never_copies_unsafe_text(kind):
+    reply = unlocatable(kind)
+    diagnosis = Diagnosis.model_validate(reply)
+    before = diagnosis.model_dump()
+    evidence, _ = source(lines=("source_bytes_canary = 1", "pass"))
+    review = prerequisite_review(diagnosis, evidence)
+    assert review is not None
+    assert len(review.encode()) <= MAX_REVIEW_BYTES
+    assert "unsafe_question_canary" not in review
+    assert "unsafe_notes_canary" not in review
+    assert "source_bytes_canary" not in review
+    assert "password=" not in review
+    data = json.loads(review.split("Prior prerequisite metadata: ", 1)[1])
+    assert data["request_context_status"] == "none_locatable"
+    assert data["declared_needs_more_info"] is True
+    assert data["new_runtime_evidence_supplied"] is False
+    assert data["requests"] == []
+    assert data["omitted_requests"] == len(reply["evidence_requests"])
+    assert diagnosis.model_dump() == before
+
+
+@pytest.mark.parametrize("kind", ["empty", "required_saving_null"])
+@pytest.mark.parametrize("limit,expected_calls", [(0, 1), (1, 2), (3, 2)])
+def test_real_unknown_stays_blocked_after_neutral_review_with_shared_limit(
+    kind, limit, expected_calls
+):
+    reply = unlocatable(kind)
+    result, requests = invoke([reply], limit=limit, goal="fix-oom", required_saving_gb=None)
+    assert len(requests) == expected_calls
+    assert result.valid and result.diagnosis.needs_more_info and not result.ready_for_patch
+    assert result.diagnosis.evidence_requests == Diagnosis.model_validate(reply).evidence_requests
+    if expected_calls == 2:
+        assert requests[1]["messages"][:-1] == requests[0]["messages"]
+        assert result.response_request_modes[-1]["purpose"] == "prerequisite_review"
+        assert "unconfigured numerical savings threshold" in requests[1]["messages"][-1]["content"]
+
+
+@pytest.mark.parametrize("kind", ["empty", "required_saving_null"])
+def test_model_can_independently_replace_unlocatable_blocker_but_host_never_clears_it(kind):
+    first = unlocatable(kind)
+    before = copy.deepcopy(first)
+    result, requests = invoke([first, payload()], goal="fix-oom", required_saving_gb=None)
+    assert len(requests) == 2
+    assert result.ready_for_patch and result.valid
+    assert first == before and first["needs_more_info"] is True
+    assert result.response_request_modes[-1]["purpose"] == "prerequisite_review"
+    initial = json.loads(requests[0]["messages"][-1]["content"])
+    assert initial["goal"] == "fix-oom" and initial["required_saving_gb"] is None
+
+
+def test_neutral_review_cannot_add_a_call_after_existing_validation_supplement():
+    invalid = payload()
+    invalid["plan"][0]["title"] = "Switch to bf16"
+    result, requests = invoke([invalid, unlocatable("empty")])
+    assert len(requests) == 2
+    assert result.valid and result.diagnosis.needs_more_info and not result.ready_for_patch
+    assert [item["purpose"] for item in result.response_request_modes] == [
+        "initial",
+        "validation_repair",
+    ]

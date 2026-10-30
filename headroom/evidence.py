@@ -165,6 +165,83 @@ def _local_imports(
     return matches
 
 
+def _literal_source_cwd(manifest: dict) -> PurePosixPath | None:
+    entry = manifest.get("execution_entrypoint")
+    if not isinstance(entry, dict) or entry.get("complete") is not True:
+        return None
+    value = entry.get("startup_cwd")
+    if not isinstance(value, str):
+        return None
+    path = PurePosixPath(value)
+    if not path.is_relative_to("/source") or ".." in path.parts:
+        return None
+    return path.relative_to("/source")
+
+
+def _literal_exec_sources(tree: ast.AST, available: set[str], cwd: PurePosixPath | None):
+    """Find static source candidates; never execute readers or infer applied config."""
+    changes_cwd = any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, (ast.Name, ast.Attribute))
+        and (node.func.id if isinstance(node.func, ast.Name) else node.func.attr)
+        in {"chdir", "fchdir"}
+        for node in ast.walk(tree)
+    )
+    matches = []
+    for node in ast.walk(tree):
+        if not (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "exec"
+            and node.args
+        ):
+            continue
+        read = node.args[0]
+        if not (
+            isinstance(read, ast.Call)
+            and isinstance(read.func, ast.Attribute)
+            and read.func.attr == "read"
+            and not read.args
+            and not read.keywords
+        ):
+            continue
+        opened = read.func.value
+        if not (
+            isinstance(opened, ast.Call)
+            and isinstance(opened.func, ast.Name)
+            and opened.func.id == "open"
+            and 1 <= len(opened.args) <= 2
+            and isinstance(opened.args[0], ast.Constant)
+            and type(opened.args[0].value) is str
+        ):
+            continue
+        mode = opened.args[1] if len(opened.args) == 2 else ast.Constant(value="r")
+        modes = [keyword.value for keyword in opened.keywords if keyword.arg == "mode"]
+        if modes:
+            if len(opened.args) == 2 or len(modes) != 1:
+                continue
+            mode = modes[0]
+        if (
+            any(keyword.arg is None for keyword in opened.keywords)
+            or not isinstance(mode, ast.Constant)
+            or mode.value not in {"r", "rt"}
+        ):
+            continue
+        try:
+            literal = _safe_relative(opened.args[0].value)
+        except ValueError:
+            continue
+        if cwd is None or changes_cwd:
+            return [], "launch cwd unavailable or source may change the working directory"
+        try:
+            relative = _safe_relative(str(cwd / literal))
+        except ValueError:
+            continue
+        if relative in available and all(path != relative for path, _ in matches):
+            matches.append((relative, node.lineno))
+    return matches, None
+
+
 def _frame_location(frame: dict) -> tuple[str, int] | None:
     filename = frame.get("filename", "")
     if not isinstance(filename, str) or not filename.startswith("/source/"):
@@ -190,6 +267,7 @@ def collect_sources(run_dir: Path, manifest: dict, analysis: dict) -> tuple[list
     if primary is None or primary not in available:
         return [], [*warnings, "Main Python source could not be resolved from the run manifest."]
     import_roots = _source_import_roots(manifest, primary)
+    literal_cwd = _literal_source_cwd(manifest)
     entry_package_sources = []
     command = manifest.get("command", [])
     parsed = parse_command(command)
@@ -238,6 +316,23 @@ def collect_sources(run_dir: Path, manifest: dict, analysis: dict) -> tuple[list
         try:
             tree = ast.parse(content, filename=relative)
             pending.extend(_local_imports(tree, relative, available, import_roots))
+            dependencies, unavailable = _literal_exec_sources(tree, available, literal_cwd)
+            if unavailable:
+                warnings.append(f"Literal exec dependencies in {relative} omitted: {unavailable}.")
+            for dependency, line in dependencies:
+                pending.append(dependency)
+                observations.append(
+                    {
+                        "line": line,
+                        "kind": "static_source_dependency",
+                        "path": dependency,
+                        "note": (
+                            "Literal exec(open(...).read()) source candidate relative to captured "
+                            "launch cwd; read-time cwd, execution and applied configuration remain "
+                            "unverified"
+                        ),
+                    }
+                )
             for node in ast.walk(tree):
                 if (
                     isinstance(node, ast.AugAssign)

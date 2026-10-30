@@ -1,0 +1,59 @@
+{
+  "scope": "offline reading-aid reconstruction from retained historical feedback, not a new model or GPU result",
+  "inputs": [
+    {
+      "path": "runs/final48-f3-retry/execution-r8-20261030/jobs/09e02b63095741e7b16e9f54c66c3e44/rounds/02/verification-feedback.json",
+      "sha256": "f20d2d90bf1b7061977eea212037150de1a790be789cdec65cdaea19d9b9191b"
+    },
+    {
+      "path": "runs/final48-f3-retry/execution-r8-20261030/jobs/09e02b63095741e7b16e9f54c66c3e44/rounds/03/diagnosis.json",
+      "sha256": "c09dbafaf89213fce615a6b239215658cc079a05512dc6e3143eebdabbafe6d2"
+    }
+  ],
+  "historical_model_note": "Previous round 2 candidate failed verification due to UnboundLocalError — the patch must guard all teacher uses (instantiation, forward pass, emit). The current retained source (after round 2) already has the teacher instantiation guarded but the emit at lines 110-112 still references teacher.parameters(). That emit must also be guarded or teacher.parameters() must not be accessed when teacher is not created.",
+  "observed_state": {
+    "round": null,
+    "basis": "original_baseline",
+    "target_met": false,
+    "run_id": "586689fac7da49aea64c1018ae233ed0",
+    "status": "completed",
+    "reason": null,
+    "error": null,
+    "exception": {
+      "type": "StepLimitReached",
+      "message": "Reached 20 optimizer updates"
+    },
+    "oom": {
+      "requested_bytes": null,
+      "free_bytes": null,
+      "requested_gb": null,
+      "free_gb": null
+    },
+    "capture_complete": true,
+    "steps": 20,
+    "peak_allocated_bytes": 3100141568,
+    "peak_reserved_bytes": 3107979264,
+    "step_ms_median": 4.525009426288307
+  },
+  "new_reading_aid": {
+    "schema": "headroom.retained_state_reading_aid.v1",
+    "selection_known": true,
+    "current_source_basis": "original_baseline",
+    "current_retained_round": null,
+    "source_identity_reference": "execution_context.source_files",
+    "edit_coordinate_basis": "current source documents, never a prior candidate diff or artifact path",
+    "history_scope": "candidate_selected and selected_after_round in older entries describe that round's end, not the current request",
+    "prior_candidates": [
+      {
+        "round": 2,
+        "recorded_decision": "revert",
+        "is_current_retained_round": false
+      }
+    ],
+    "scope": "orchestration selection only; not source equivalence or verification proof"
+  },
+  "model_calls": 0,
+  "gpu_runs": 0,
+  "history_modified": false,
+  "acceptance_modified": false
+}

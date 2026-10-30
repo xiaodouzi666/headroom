@@ -79,7 +79,9 @@ class SnapshotPublicAllocation:
             _quiet_pool(state)
             cap = min(
                 money(request.budget_usd),
-                money(limits["total_limit_usd"]) - state["charged"],
+                money(limits["total_limit_usd"])
+                - state["charged"]
+                - state.get("encumbered", money("0")),
             )
             require(cap > 0, "JUDGE_EXHAUSTED")
             effective_request = request.model_copy(update={"budget_usd": str(cap)})

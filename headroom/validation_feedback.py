@@ -122,8 +122,22 @@ def validation_issue_context(issue, diagnosis, evidence=None):
             context["availability_contract"] = (
                 "The exact cited text/range is visible, so calling that text missing, "
                 "redacted or truncated is contradicted. Meaning may remain ambiguous and "
-                "runtime values unverified. Retain genuine missing-value dependencies."
+                "runtime values unverified. Retain genuine missing-value dependencies. "
+                "This rejects the reason declaration, not the existence of the requested "
+                "implementation or semantic answer. A missing feature inside visible source "
+                "does not make the source text missing. Use ambiguous or other for unresolved "
+                "meaning or capability in visible text; do not claim that capability exists. "
+                "Recheck whether the proposed strategy preserves the actual source objective "
+                "and reduction before keeping its prerequisites or choosing another strategy."
             )
+            context["availability_declaration"] = {
+                "reason_field_path": f"/evidence_requests/{int(match[1])}/reason",
+                "declared_reason": request["reason"],
+                "evidence_ref": request["evidence_ref"],
+                "reason_scope": "availability of the exact cited text, not feature existence",
+                "semantic_answer_supplied": False,
+                "correcting_reason_resolves_prerequisite": False,
+            }
             unknown = catalog.get("execution_context.runtime_input_observations")
             if isinstance(unknown, dict) and unknown.get("availability") == "unknown":
                 context["advertised_unknown_runtime_reference"] = _reference_observation(unknown)

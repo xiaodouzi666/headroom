@@ -1,0 +1,48 @@
+{
+  "schema": "headroom.repair-followup-independent-review.v1",
+  "reviewed_at_utc": "2026-10-30T10:18:14.510866+00:00",
+  "verdict": "PASS",
+  "prepared_plan_sha256": "9fd715f595c91f80145dc64ffce9fb4a97ab81f9c90af6203196fd927cebc75e",
+  "activation_script_sha256": "6ec05feb6979beb9508146ea1b5b2dfc8a670f48adf66ae116adbd892939cf95",
+  "budget_source_sha256": "5b85f5665b62ad65b0db165093f0be24f1a9b37c894fbac4e53ef76d9852ba78",
+  "activation_test_sha256": "35bf3943694fcf618bf0c8a88690aa6056d1645eea955c38ea4ba17d4754ab7f",
+  "scope": "DEVELOPMENT_REPAIR_FOLLOWUP",
+  "approved_net_usd": "5.40",
+  "approved_gross_usd": "6.54",
+  "already_consumed_r11_net_usd": "0.19949560",
+  "final48_donor_hold_net_usd": "1.288313628",
+  "judge_donor_hold_net_usd": "3.612190772",
+  "target_new_development_net_usd": "4.890504400",
+  "retained_anonymous_final48_net_usd": "0.30",
+  "locked_uncredited_precision_reserve_net_usd": "0.01",
+  "checks": {
+    "original_authorization_not_expanded": true,
+    "r11_consumption_not_double_allocated": true,
+    "two_donors_permanently_encumbered_before_target_credit": true,
+    "external_holds_are_not_model_costs": true,
+    "old_model_attempt_and_actual_cost_history_preserved": true,
+    "pending_unknown_or_active_donor_state_rejected": true,
+    "resolved_conservative_charges_remain_unknown_actual_and_retained": true,
+    "profile_after_interruption_reused_only_if_regular_private_and_exact": true,
+    "target_separate_ledger_cap_and_scope": true,
+    "anonymous_demo_funds_retained": true,
+    "eight_dollar_reserve_and_lag_and_tax_in_financial_check": true
+  },
+  "evidence": {
+    "budget_guarded_tests": "98 passed in 4.79s",
+    "temporary_activation_and_commitment_guarded_tests": "25 passed in 1.57s",
+    "activation_e2e_receipt": "reports/repair-followup-20261030/activation-e2e-initial.json",
+    "activation_e2e_log": "reports/repair-followup-20261030/activation-e2e-initial.log",
+    "source_collector_guarded_tests": "49 passed in 8.08s"
+  },
+  "reviewer_real_donor_mutations": 0,
+  "reviewer_model_calls": 0,
+  "reviewer_gpu_jobs": 0,
+  "reviewer_activated_pool": false,
+  "limitations": [
+    "This is source/plan/temporary-ledger evidence, not an actual pool activation or a repaired GPU scenario.",
+    "A completed activation is intentionally single-shot and rejects another activation call; the tested profile-before-receipt interruption resumes safely.",
+    "Interrupted partial or mismatching profile data fails closed and requires inspection, rather than releasing donor commitments.",
+    "Provider balance was a fresh read-only UI observation; the plan retains a precision margin and does not assert more precision than the display."
+  ]
+}

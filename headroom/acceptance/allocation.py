@@ -558,6 +558,18 @@ def _budget_state(receipt):
         conn.execute("BEGIN")
         runs = {row["id"]: dict(row) for row in conn.execute("SELECT * FROM budget_runs")}
         attempts = [dict(row) for row in conn.execute("SELECT * FROM budget_attempts")]
+        commitments = (
+            [
+                dict(row)
+                for row in conn.execute(
+                    "SELECT * FROM budget_external_commitments ORDER BY transfer_id"
+                )
+            ]
+            if conn.execute(
+                "SELECT 1 FROM sqlite_schema WHERE type='table' AND name='budget_external_commitments'"
+            ).fetchone()
+            else []
+        )
         reviewed = {
             tuple(row)
             for row in conn.execute(
@@ -572,6 +584,8 @@ def _budget_state(receipt):
         "attempts": attempts,
         "known": known,
         "charged": total,
+        "external_commitments": commitments,
+        "encumbered": sum((money(row["amount_usd"]) for row in commitments), Decimal(0)),
         "resolved": len(resolved_ids) == len(attempts),
         "resolved_attempt_ids": resolved_ids,
     }

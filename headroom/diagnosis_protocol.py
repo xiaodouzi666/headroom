@@ -119,6 +119,12 @@ Prefer the strongest source-supported producer/lifetime change for the selected 
 Use short IDs and titles, at most four relevant stack references per cause, concise
 plan description/risk and at most three short notes. Avoid repeating source,
 measurements or policy already present in the evidence.
+For a loss-related candidate name the original source loss/reduction and explain
+how the same objective and normalization are preserved. Reject a strategy that
+requires a different objective instead of asking to confirm the source means
+something else. Evidence-request reasons describe cited text availability, not
+whether a helper or semantic answer exists within visible text. Unknown meaning
+or implementation availability may remain ambiguous; do not invent it.
 Keep EVERY genuine unresolved prerequisite explicit. At most two evidence-request
 entries may group related preconditions in their detail; grouping never resolves a
 precondition. If any required premise is unresolved, retain needs_more_info=true.

@@ -120,7 +120,11 @@ class DemoAllocation:
         own = [a for a in state["attempts"] if a["run_id"] in ids]
         cost = _cost_summary(state, own)
         require(cost["resolved"], "DEMO_COST_UNKNOWN")
-        remaining = money(receipt["amounts"]["approved_net_usd"]) - state["charged"]
+        remaining = (
+            money(receipt["amounts"]["approved_net_usd"])
+            - state["charged"]
+            - state.get("encumbered", money("0"))
+        )
         if self.legacy_scope:
             spent = cost["charged"]
             require(spent <= self.cap, "DEMO_SCOPE_EXCEEDED")

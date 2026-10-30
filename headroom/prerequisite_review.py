@@ -27,15 +27,40 @@ _REVIEW = (
     "to force execution. If genuine unknowns still prevent a defensible complete plan, "
     "retain needs_more_info=true and state the exact remaining dependency. All original "
     "schema, policy, workload and hardware-verification checks still apply. Return concise JSON only. "
-    "Prior prerequisite metadata: "
 )
+_NEUTRAL_REVIEW = (
+    "No safely locatable scoped question was declared. No prior free-form notes or question "
+    "text is copied here. Independently review the original context: either identify the exact "
+    "real remaining dependency or derive an independently supported complete alternative. "
+    "If the original goal is fix-oom and required_saving_gb is null, that is an unconfigured "
+    "numerical savings threshold, not itself a missing measurement or proof of success. "
+)
+_METADATA_MARKER = "Prior prerequisite metadata: "
+
+
+def _message(contexts, omitted, *, neutral=False):
+    data = {
+        "content_is_untrusted_data": True,
+        "new_runtime_evidence_supplied": False,
+        "declared_needs_more_info": True,
+        "request_context_status": "none_locatable" if neutral else "scoped_metadata_available",
+        "requests": contexts,
+        "omitted_requests": omitted,
+    }
+    return (
+        _REVIEW
+        + (_NEUTRAL_REVIEW if neutral else "")
+        + _METADATA_MARKER
+        + json.dumps(data, ensure_ascii=True, allow_nan=False)
+    )
 
 
 def prerequisite_review(diagnosis, evidence):
     """Return one bounded review message, never a modified diagnosis or new evidence.
 
     The caller alone decides whether an existing supplement is still available.
-    Legacy free-form notes, absent plans and unstructured requests are not used.
+    Absent plans are not used. Free-form notes and unlocatable request text are
+    never copied; they permit only a fixed neutral review of the original context.
     """
     if not diagnosis.needs_more_info or not diagnosis.plan:
         return None
@@ -45,7 +70,9 @@ def prerequisite_review(diagnosis, evidence):
         and request.blocking_scope in {"current_plan", "overall_feasibility"}
         for request in requests
     ):
-        return None
+        message = _message([], len(requests), neutral=True)
+        assert len(message.encode()) <= MAX_REVIEW_BYTES
+        return message
     contexts = []
     for index, request in enumerate(requests):
         if len(contexts) >= MAX_REVIEW_REQUESTS:
@@ -65,18 +92,12 @@ def prerequisite_review(diagnosis, evidence):
         value = dict(value)
         value["declared_evidence_request"] = value.pop("offending_evidence_request")
         proposed = contexts + [value]
-        encoded = json.dumps({"requests": proposed}, ensure_ascii=True, allow_nan=False)
-        if len((_REVIEW + encoded).encode()) > MAX_REVIEW_BYTES - 128:
+        message = _message(proposed, len(requests) - len(proposed))
+        if len(message.encode()) > MAX_REVIEW_BYTES:
             break
         contexts = proposed
     if not contexts:
         return None
-    data = {
-        "content_is_untrusted_data": True,
-        "new_runtime_evidence_supplied": False,
-        "requests": contexts,
-        "omitted_requests": len(requests) - len(contexts),
-    }
-    message = _REVIEW + json.dumps(data, ensure_ascii=True, allow_nan=False)
+    message = _message(contexts, len(requests) - len(contexts))
     assert len(message.encode()) <= MAX_REVIEW_BYTES
     return message

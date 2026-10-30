@@ -339,7 +339,9 @@ class JudgeAllocation:
                 limits = _funding_limits(receipt, connection=connection)
                 state = _budget_state(receipt)
                 _quiet_pool(state)
-                return state["charged"] < money(limits["total_limit_usd"])
+                return state["charged"] + state.get("encumbered", money("0")) < money(
+                    limits["total_limit_usd"]
+                )
         except (OSError, ValueError, sqlite3.Error, ArithmeticError, KeyError):
             return False
 
@@ -359,7 +361,11 @@ class JudgeAllocation:
             )
             state = _budget_state(receipt)
             _quiet_pool(state)
-            remaining = money(limits["total_limit_usd"]) - state["charged"]
+            remaining = (
+                money(limits["total_limit_usd"])
+                - state["charged"]
+                - state.get("encumbered", money("0"))
+            )
             limit = min(money(request.budget_usd), remaining)
             require(limit > 0, "JUDGE_EXHAUSTED")
             request = request.model_copy(update={"budget_usd": str(limit)})

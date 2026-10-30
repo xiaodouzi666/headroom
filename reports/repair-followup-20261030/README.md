@@ -1,0 +1,13 @@
+# Repair continuation under a separately authorized gift allocation
+
+The original F3 $4 ceiling, its history, nine-case denominator and six-target requirement remain unchanged. R11 used the original remaining allowance: two real cases ran, seven were not dispatched, neither candidate was accepted. Compact diagnosis responses parsed without a recorded truncation, but that is not a hardware repair success.
+
+The next changes address actual saved failures: distinguish a feature absent inside visible source from missing source text; plan from the actual objective instead of applying an unrelated cross-entropy recipe; explicitly distinguish the currently retained source from rejected/superseded candidates; collect safely bounded literal local configuration dependencies; reject statically unsupported reference candidates before GPU execution; and allow one neutral reconsideration of unlocated prerequisites within the same original supplement limit. Numeric, policy, loss, throughput and source gates remain active.
+
+The user authorized development reallocation of at most $5.40 net ($6.54 gross), using existing gifts only, no top-up or overage, and preserving at least $8. R11 already used $0.19949560 of the previously unspent source. The final v3 preparation transfers $1.288313628 from the old FINAL48 allowance and $3.612190772 from judge credit. It leaves $0.30 in the original anonymous-demo pool and locks another $0.01 net for balance-display precision. New development dispatch is limited to $4.890504400 net, at most $0.60 per fixed-nine run. These amounts are not extra provider credit.
+
+Donor commitments are durable records separate from runs, attempts and actual model fees. The budget counts them against total and daily admission; historical costs and immutable funding receipts are not rewritten. Both donor commitments must exist before the separate development profile/ledger can become active. Partial activation cannot credit the target early. Earlier v1/v2 drafts are preserved without activation.
+
+`activate-pool.py.txt` and `execute-fixed9.py.txt` are reviewable scripts, require non-optimized Python, and make no provider call unless the explicitly reviewed campaign execution is selected. The controller binds the source preparation, nine requests, funding receipt, ledger identity, profile and both donor commitments. Every result still requires the normal installed CLI, supervised worker, verified cleanup, complete cost accounting and unchanged acceptance checks. Missing cases remain unrun, never new failures or successes.
+
+Validation and activation/execution receipts are recorded separately. Financial balance observations and credential-free operational plans remain in private server cache files.

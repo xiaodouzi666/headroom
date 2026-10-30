@@ -75,9 +75,9 @@ def test_strategy_instructions_keep_permission_weighting_and_reference_boundarie
     )
     if name == "diagnose.md":
         temporary_requirements = (
-            "source already computes cross-entropy from full-vocabulary logits",
-            "Do not replace MSE or another objective",
-            "omit this strategy when inapplicable",
+            "actual source loss/reduction",
+            "same mathematical expression the candidate preserves",
+            "Only if the source already uses cross-entropy",
             *temporary_requirements[2:],
         )
     for required in temporary_requirements:

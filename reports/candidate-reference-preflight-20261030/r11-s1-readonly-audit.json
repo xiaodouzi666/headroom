@@ -1,0 +1,55 @@
+{
+  "scope": "read_only_R11_s1_inspection_no_new_GPU_or_provider_execution",
+  "campaign": "runs/final48-f3-retry/execution-r11-20261030",
+  "job_id": "c767e47a7b6b49df942754a6694c1ddc",
+  "round": 1,
+  "patch": "runs/final48-f3-retry/execution-r11-20261030/jobs/c767e47a7b6b49df942754a6694c1ddc/rounds/01/patches/patch-engine-56ceb7aaf298496abd4f02ea18c3e4d9/attempt-2/patch-6ed86bf2700241ddad268994ef6482c3/patch.diff",
+  "candidate_source": "runs/final48-f3-retry/execution-r11-20261030/jobs/c767e47a7b6b49df942754a6694c1ddc/rounds/01/patches/patch-engine-56ceb7aaf298496abd4f02ea18c3e4d9/attempt-2/patch-6ed86bf2700241ddad268994ef6482c3/candidate/train.py",
+  "original_source_contract": {
+    "supported": true,
+    "profile": "s1",
+    "contract_sha256": "f3fedffd6687879dcd7c0b452a49dac26d119dd8898dad9b3ef650af478c1c6e",
+    "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+    "capture_line": 94,
+    "checkpointed": false,
+    "optimizer_foreach_disabled": false,
+    "tensor_names": [
+      "inputs",
+      "targets"
+    ],
+    "objective": "fixed_tensors_residual_mlp_sgd_mse_mean_v1"
+  },
+  "candidate_source_contract": {
+    "supported": false,
+    "reason": "source outside pinned s1/s2/s3/s4 AST contracts",
+    "source_sha256": "5d5e58608c6204cce156f0a3d0745853fd4a847c50fd6fac3ccb6665041fd214"
+  },
+  "candidate_status": "completed",
+  "candidate_updates": 20,
+  "candidate_backward_scalar_count": 160,
+  "candidate_peak_allocated_bytes": 17112406528,
+  "verification_target_met": false,
+  "loss_equivalence": "n/a",
+  "numerical_basis": "unavailable",
+  "reference_discovery": {
+    "found": false,
+    "strategy": "original_workload_checkpoint",
+    "attempts": [],
+    "prerequisites": {
+      "original_argv_available": true,
+      "standalone_execution": true,
+      "original_source_supported": true,
+      "original_profile_supported": true,
+      "original_uncheckpointed": true,
+      "candidate_source_supported": false,
+      "candidate_profile_supported": false
+    },
+    "unmet_prerequisites": [
+      "candidate_source_supported",
+      "candidate_profile_supported"
+    ],
+    "preparation_attempted": false,
+    "reason": "Checkpoint reference prerequisites unmet: candidate_source_supported, candidate_profile_supported"
+  },
+  "interpretation": "unsupported comparison family; no measured numerical mismatch and no equivalence proof"
+}

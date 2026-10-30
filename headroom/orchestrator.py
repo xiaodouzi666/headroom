@@ -50,6 +50,7 @@ from headroom.search import (
 )
 from headroom.solver_context import candidate_context, candidate_evidence, execution_context
 from headroom.store.db import Store, _bounded_cost
+from headroom.verify.candidate_preflight import candidate_reference_preflight
 from headroom.verify.compare import parse_target
 from headroom.verify.numerical_requirement import (
     NumericalRequirement,
@@ -430,6 +431,8 @@ def run_fix(
             if data.get("kept")
             else data["search"]["baseline_target_met"],
         )
+        if row.get("candidate_reference_preflight") is not None:
+            feedback["candidate_reference_preflight"] = row["candidate_reference_preflight"]
         candidate_history.append(recorded_candidate)
         row["candidate_evidence"] = recorded_candidate
         feedback_path = directory / "rounds" / f"{row['number']:02d}" / "verification-feedback.json"
@@ -902,6 +905,16 @@ def run_fix(
                 finish_round({"reason": patch.reason})
                 continue
             emit("patch.applied", fix_id=step.fix_id, round=number)
+            preflight = candidate_reference_preflight(
+                Path(patch.candidate_dir) / relative, reference_capabilities
+            )
+            if preflight["status"] != "not_applicable":
+                active_round["candidate_reference_preflight"] = preflight
+                _write(round_dir / "candidate-reference-preflight.json", preflight)
+                emit("run.preflight", stage="candidate_reference", round=number, **preflight)
+            if preflight["status"] == "rejected":
+                finish_round({"reason": preflight["reason"]})
+                continue
             allocator = patch.env_changes.get("PYTORCH_CUDA_ALLOC_CONF", current_allocator)
             severity = {"none": 0, "minor": 1, "significant": 2}
             candidate_numerics = max((current_numerics, step.numerics_impact), key=severity.get)

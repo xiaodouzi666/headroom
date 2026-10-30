@@ -1,0 +1,42 @@
+{
+  "utc": "2026-10-30T10:06:48.212747+00:00",
+  "baseline_commit": "d64b6db09387a7dfac37262f0462350184059251",
+  "baseline_evidence_sha256": "b53e1405ed6f80c103201e676d046a47f09bfceda37f70251967a52296ccb5b4",
+  "method": "A temporary pytest startup plugin loads the git HEAD evidence module in memory after the unchanged guard installs; the workspace is not replaced and no guard is bypassed.",
+  "command": [
+    ".venv/bin/python",
+    "reports/final48h-closing-regression-20261029/closing_guarded_v4.py",
+    "-p",
+    "baseline_evidence_plugin",
+    "--basetemp",
+    "/tmp/headroom-evidence-before-ynnabvtc/pytest",
+    "tests/test_command_replay.py::test_real_cpu_repair_backend_preserves_flags_imports_argv_and_source_context[False]"
+  ],
+  "exit_code": 1,
+  "seconds": 0.7284260878805071,
+  "representative_results": [
+    {
+      "status": "error",
+      "reason": "ARTIFACT_EXPORT_FAILED",
+      "image_id": null,
+      "cleanup_verified": true,
+      "execution": {
+        "timed_out": false,
+        "returncode": null,
+        "error": "ARTIFACT_EXPORT_FAILED",
+        "cleanup_verified": true,
+        "artifact_export": {
+          "export_verified": false,
+          "error": "ArtifactStoreError"
+        },
+        "artifact_cleanup": {
+          "cleanup_verified": true
+        }
+      }
+    }
+  ],
+  "workspace_evidence_sha256": "0d13db1a39a35cf21b5c55fdd298ae2ed12eeb42adfd4e7ec51f30ca95c1c700",
+  "workspace_unchanged": true,
+  "provider_calls": 0,
+  "gpu_jobs": 0
+}

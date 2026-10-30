@@ -1,0 +1,47 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_real_cpu_repair_backend_preserves_flags_imports_argv_and_source_context[False] _
+
+tmp_path = PosixPath('/tmp/headroom-evidence-before-ynnabvtc/pytest/test_real_cpu_repair_backend_p0')
+module = False
+
+    @pytest.mark.parametrize("module", [False, True])
+    def test_real_cpu_repair_backend_preserves_flags_imports_argv_and_source_context(tmp_path, module):
+        from headroom.evidence import collect_sources
+    
+        source = tmp_path / "source"
+        package = source / "pkg"
+        package.mkdir(parents=True)
+        (package / "__init__.py").write_text("")
+        (package / "helper.py").write_text("VALUE = 17\n")
+        script = package / "entry.py"
+        script.write_text(
+            ("from .helper import VALUE\n" if module else "from helper import VALUE\n")
+            + "import json, sys\n"
+            + "print('REPLAY:' + json.dumps([VALUE, sys.flags.optimize, sys._xoptions, __package__, sys.argv[1:]]))\n"
+        )
+        target = ["-m", "pkg.entry"] if module else ["pkg/entry.py"]
+        command = ["python", "-O", "-X", "dev", *target, "--batch", "8"]
+        prepared = prepare_local_command(source, command)
+        runs = []
+        for arguments in (prepared.script_args, ("--batch", "1")):
+            result = run_script(
+                prepared.script,
+                source_root=source,
+                execution_argv=command,
+                script_args=arguments,
+                run_root=tmp_path / "runs",
+                device="cpu",
+                max_seconds=30,
+            )
+>           assert result["status"] == "completed" and result["capture_complete"]
+E           AssertionError: assert ('error' == 'completed'
+E             
+E             - completed
+E             + error)
+
+tests/test_command_replay.py:164: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_command_replay.py::test_real_cpu_repair_backend_preserves_flags_imports_argv_and_source_context[False]
+1 failed in 0.27s

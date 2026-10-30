@@ -156,6 +156,15 @@ class BudgetLedger:
                 receipt_sha256 TEXT PRIMARY KEY, attempt_id TEXT NOT NULL UNIQUE,
                 run_id TEXT NOT NULL, reviewed_at TEXT NOT NULL, evidence_json TEXT NOT NULL
             )""")
+            conn.execute("""CREATE TABLE IF NOT EXISTS budget_external_commitments (
+                transfer_id TEXT PRIMARY KEY, amount_usd TEXT NOT NULL,
+                receipt_sha256 TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL
+            )""")
+            for operation in ("UPDATE", "DELETE"):
+                conn.execute(f"""CREATE TRIGGER IF NOT EXISTS
+                    budget_external_commitments_no_{operation.lower()}
+                    BEFORE {operation} ON budget_external_commitments
+                    BEGIN SELECT RAISE(ABORT, 'External commitments are immutable'); END""")
             conn.execute("""UPDATE budget_runs SET halt_reason='provider_charge_unknown'
                 WHERE halt_reason IS NULL AND id IN (
                     SELECT run_id FROM budget_attempts
@@ -293,9 +302,83 @@ class BudgetLedger:
                 "Actual-usage mode requires finite positive global and daily pools"
             )
 
+    @staticmethod
+    def _external_committed(conn):
+        return sum(
+            (
+                money(row[0])
+                for row in conn.execute("SELECT amount_usd FROM budget_external_commitments")
+            ),
+            Decimal(0),
+        )
+
+    @property
+    def committed_hold_usd(self):
+        """Read-only external funding commitments; never a provider charge."""
+        with self._transaction() as conn:
+            return self._external_committed(conn)
+
+    def external_commitments(self):
+        """Return immutable funding receipts without changing run/attempt history."""
+        with self._transaction() as conn:
+            return [
+                dict(row)
+                for row in conn.execute(
+                    "SELECT * FROM budget_external_commitments ORDER BY transfer_id"
+                )
+            ]
+
+    def encumber(self, transfer_id, amount, receipt_sha256):
+        """Permanently reserve donor funds for a separately authorized allocation.
+
+        No model attempt or actual charge is created. The caller coordinates the
+        external allocation; this ledger never credits another ledger. Refunds
+        and automatic release are deliberately unsupported.
+        """
+        if not isinstance(transfer_id, str) or not re.fullmatch(
+            r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}", transfer_id
+        ):
+            raise ValueError("A bounded transfer identity is required")
+        if not isinstance(receipt_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", receipt_sha256):
+            raise ValueError("A transfer receipt SHA256 is required")
+        hold = money(amount)
+        if hold <= 0:
+            raise ValueError("An external commitment must be positive")
+        self.require_actual_pool()
+        with self._transaction() as conn:
+            if self.day != current_utc_day():
+                raise BudgetExceeded("External funding commitments require the current UTC day")
+            if conn.execute(
+                "SELECT 1 FROM budget_external_commitments WHERE transfer_id=? OR receipt_sha256=?",
+                (transfer_id, receipt_sha256),
+            ).fetchone():
+                raise ValueError("External funding commitment already exists")
+            self._require_clear(conn)
+            if conn.execute(
+                "SELECT 1 FROM budget_runs WHERE status != 'closed' LIMIT 1"
+            ).fetchone():
+                raise BudgetExceeded("Active run budgets block an external funding commitment")
+            if self._committed(conn) + hold > self.total_limit:
+                raise BudgetExceeded("Total authorized pool cannot fund this commitment")
+            if self._committed(conn, day=self.day) + hold > self.daily_limit:
+                raise BudgetExceeded("Daily pool cannot fund this commitment")
+            record = {
+                "transfer_id": transfer_id,
+                "amount_usd": str(hold),
+                "receipt_sha256": receipt_sha256,
+                "created_at": datetime.now(UTC).isoformat(),
+            }
+            conn.execute(
+                "INSERT INTO budget_external_commitments "
+                "(transfer_id,amount_usd,receipt_sha256,created_at) VALUES (?,?,?,?)",
+                tuple(record.values()),
+            )
+        return record
+
     def _committed(self, conn, *, day=None, run_id=None, additional=Decimal(0)):
-        """Open-run floors plus outstanding/actual charges, including a proposed attempt."""
-        total = Decimal(0)
+        """Open-run floors, charges and permanent external funding commitments."""
+        # Holds are counted on EVERY day: changing dates must not recycle donor funds.
+        total = self._external_committed(conn)
         for row in conn.execute("SELECT * FROM budget_runs"):
             if day is not None and row["day"] != day:
                 continue
@@ -319,18 +402,10 @@ class BudgetLedger:
             self._require_clear(conn)
             if self._strict_pool(conn):
                 self.require_actual_pool()
-            total_committed = Decimal(0)
-            for row in conn.execute("SELECT * FROM budget_runs"):
-                used = self._charged(conn, row["id"])
-                total_committed += (
-                    max(money(row["limit_usd"]), used) if row["status"] == "open" else used
-                )
+            total_committed = self._committed(conn)
             if self.total_limit is not None and total_committed + limit > self.total_limit:
                 raise BudgetExceeded("Total authorized budget cannot reserve this run")
-            committed = Decimal(0)
-            for row in conn.execute("SELECT * FROM budget_runs WHERE day=?", (self.day,)):
-                used = self._charged(conn, row["id"])
-                committed += max(money(row["limit_usd"]), used) if row["status"] == "open" else used
+            committed = self._committed(conn, day=self.day)
             if committed + limit > self.daily_limit:
                 raise BudgetExceeded("Daily budget cannot reserve this run")
             conn.execute(

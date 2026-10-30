@@ -308,21 +308,22 @@ permission is absent, unknown or disabled, do not propose it even as a fallback.
 Preserve every sample, its order, effective batch, objective and required updates;
 never invent configuration flags or infer equivalence from a matching shape.
 
-Only when the source already computes cross-entropy from full-vocabulary logits,
-consider chunked cross-entropy for its evidenced temporaries peak. Do not replace
-MSE or another objective with cross-entropy; omit this strategy when inapplicable.
-Stream the producer/projection and loss over tokens without
-materializing the full FP32 logits tensor. Slicing an already materialized tensor
-or retaining every chunk's autograd graph may not reduce the peak: account for
-backward lifetimes and use only source-supported recomputation or an available
-equivalent implementation. Every token must still see the full vocabulary;
+For an evidenced temporaries peak, first trace the existing producer, consuming
+operation and actual source loss/reduction. In the plan describe those original
+operations and the same mathematical expression the candidate preserves. Stream
+or recompute that expression; do not substitute an objective that better matches
+a familiar optimization recipe. Do not ask for confirmation that explicit source
+computes a different loss merely to justify an inapplicable candidate.
+Slicing an already materialized tensor or retaining every chunk's autograd graph
+may not reduce the peak. Only if the source already uses cross-entropy consider
+a CE-specific token-streaming strategy: Every token must still see the full vocabulary;
 independent softmax over vocabulary chunks changes the objective. Preserve the
 original reduction, masks, class weights, ignore_index and label smoothing.
-Move any existing FP32 conversion into bounded chunks without removing it or
-changing computation/loss dtypes; precision changes still require
-allow_numerics_change=true. Do not discard logits needed by another consumer.
-Chunking can change floating-point order or the recorded backward-scalar series;
-retain the host-selected numerical_basis, reference, tolerance and loss checks.
+Keep any FP32 conversion without removing it or changing computation/loss dtypes;
+precision changes still require allow_numerics_change=true. Do not discard values
+needed by another consumer. Chunking can change floating-point order or the
+recorded backward-scalar series; retain the host-selected numerical_basis,
+reference, tolerance and loss checks.
 Do not suppress, rescale or hide changed losses to claim success. Treat savings
 and numerical equivalence as unverified until the existing real checks pass.
 

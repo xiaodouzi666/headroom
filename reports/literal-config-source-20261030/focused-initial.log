@@ -1,0 +1,829 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+.............................................................FF........F [ 85%]
+FFFFFFFF....                                                             [100%]
+=================================== FAILURES ===================================
+_ test_real_cpu_repair_backend_preserves_flags_imports_argv_and_source_context[False] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_real_cpu_repair_backend_p0')
+module = False
+
+    @pytest.mark.parametrize("module", [False, True])
+    def test_real_cpu_repair_backend_preserves_flags_imports_argv_and_source_context(tmp_path, module):
+        from headroom.evidence import collect_sources
+    
+        source = tmp_path / "source"
+        package = source / "pkg"
+        package.mkdir(parents=True)
+        (package / "__init__.py").write_text("")
+        (package / "helper.py").write_text("VALUE = 17\n")
+        script = package / "entry.py"
+        script.write_text(
+            ("from .helper import VALUE\n" if module else "from helper import VALUE\n")
+            + "import json, sys\n"
+            + "print('REPLAY:' + json.dumps([VALUE, sys.flags.optimize, sys._xoptions, __package__, sys.argv[1:]]))\n"
+        )
+        target = ["-m", "pkg.entry"] if module else ["pkg/entry.py"]
+        command = ["python", "-O", "-X", "dev", *target, "--batch", "8"]
+        prepared = prepare_local_command(source, command)
+        runs = []
+        for arguments in (prepared.script_args, ("--batch", "1")):
+            result = run_script(
+                prepared.script,
+                source_root=source,
+                execution_argv=command,
+                script_args=arguments,
+                run_root=tmp_path / "runs",
+                device="cpu",
+                max_seconds=30,
+            )
+>           assert result["status"] == "completed" and result["capture_complete"]
+E           AssertionError: assert ('error' == 'completed'
+E             
+E             - completed
+E             + error)
+
+tests/test_command_replay.py:164: AssertionError
+_ test_real_cpu_repair_backend_preserves_flags_imports_argv_and_source_context[True] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_real_cpu_repair_backend_p1')
+module = True
+
+    @pytest.mark.parametrize("module", [False, True])
+    def test_real_cpu_repair_backend_preserves_flags_imports_argv_and_source_context(tmp_path, module):
+        from headroom.evidence import collect_sources
+    
+        source = tmp_path / "source"
+        package = source / "pkg"
+        package.mkdir(parents=True)
+        (package / "__init__.py").write_text("")
+        (package / "helper.py").write_text("VALUE = 17\n")
+        script = package / "entry.py"
+        script.write_text(
+            ("from .helper import VALUE\n" if module else "from helper import VALUE\n")
+            + "import json, sys\n"
+            + "print('REPLAY:' + json.dumps([VALUE, sys.flags.optimize, sys._xoptions, __package__, sys.argv[1:]]))\n"
+        )
+        target = ["-m", "pkg.entry"] if module else ["pkg/entry.py"]
+        command = ["python", "-O", "-X", "dev", *target, "--batch", "8"]
+        prepared = prepare_local_command(source, command)
+        runs = []
+        for arguments in (prepared.script_args, ("--batch", "1")):
+            result = run_script(
+                prepared.script,
+                source_root=source,
+                execution_argv=command,
+                script_args=arguments,
+                run_root=tmp_path / "runs",
+                device="cpu",
+                max_seconds=30,
+            )
+>           assert result["status"] == "completed" and result["capture_complete"]
+E           AssertionError: assert ('error' == 'completed'
+E             
+E             - completed
+E             + error)
+
+tests/test_command_replay.py:164: AssertionError
+_ test_real_cpu_wrapper_candidate_and_reference_apply_target_args_and_collect_sources[False] _
+
+wrapper_source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_real_cpu_wrapper_candidat0/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_real_cpu_wrapper_candidat0')
+inline = False
+
+    @pytest.mark.parametrize("inline", [False, True])
+    def test_real_cpu_wrapper_candidate_and_reference_apply_target_args_and_collect_sources(
+        wrapper_source,
+        tmp_path,
+        inline,
+    ):
+        from headroom.evidence import collect_sources
+    
+        arguments = ["--batch=8", "literal space;$(text)"]
+        command = (
+            ["/bin/sh", "-c", 'cd sub && exec python -O -m pkg.entry "$@"', "launcher", *arguments]
+            if inline
+            else ["/bin/sh", "launch.sh", *arguments]
+        )
+        baseline = run_argv(wrapper_source, command, run_root=tmp_path / "runs", device="cpu")
+>       assert baseline["status"] == "completed" and baseline["capture_complete"], baseline
+E       AssertionError: {'status': 'error', 'reason': 'ARTIFACT_EXPORT_FAILED', 'execution_capture': {'captured_process_count': 1, 'single_pyt...rypoint': False, 'complete': False, 'invocations_complete': False, ...}, 'selected_capture_relative': 'artifacts', ...}
+E       assert ('error' == 'completed'
+E         
+E         - completed
+E         + error)
+
+tests/test_wrapper_execution.py:198: AssertionError
+_ test_real_cpu_wrapper_candidate_and_reference_apply_target_args_and_collect_sources[True] _
+
+wrapper_source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_real_cpu_wrapper_candidat1/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_real_cpu_wrapper_candidat1')
+inline = True
+
+    @pytest.mark.parametrize("inline", [False, True])
+    def test_real_cpu_wrapper_candidate_and_reference_apply_target_args_and_collect_sources(
+        wrapper_source,
+        tmp_path,
+        inline,
+    ):
+        from headroom.evidence import collect_sources
+    
+        arguments = ["--batch=8", "literal space;$(text)"]
+        command = (
+            ["/bin/sh", "-c", 'cd sub && exec python -O -m pkg.entry "$@"', "launcher", *arguments]
+            if inline
+            else ["/bin/sh", "launch.sh", *arguments]
+        )
+        baseline = run_argv(wrapper_source, command, run_root=tmp_path / "runs", device="cpu")
+>       assert baseline["status"] == "completed" and baseline["capture_complete"], baseline
+E       AssertionError: {'status': 'error', 'reason': 'ARTIFACT_EXPORT_FAILED', 'execution_capture': {'captured_process_count': 1, 'single_pyt...rypoint': False, 'complete': False, 'invocations_complete': False, ...}, 'selected_capture_relative': 'artifacts', ...}
+E       assert ('error' == 'completed'
+E         
+E         - completed
+E         + error)
+
+tests/test_wrapper_execution.py:198: AssertionError
+___________ test_real_cpu_wrong_wrapper_target_fails_replay_matching ___________
+
+wrapper_source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_real_cpu_wrong_wrapper_ta0/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_real_cpu_wrong_wrapper_ta0')
+
+    def test_real_cpu_wrong_wrapper_target_fails_replay_matching(wrapper_source, tmp_path):
+        command = ["/bin/sh", "launch.sh", "--batch=8"]
+        baseline = run_argv(wrapper_source, command, run_root=tmp_path / "runs", device="cpu")
+        run = Path(baseline["run_dir"])
+>       prepared = prepare_captured_command(
+            run / "source", command, baseline, json.loads((run / "manifest.json").read_text())
+        )
+
+tests/test_wrapper_execution.py:246: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/execution.py:399: in prepare_captured_command
+    descriptor = captured_wrapper_descriptor(argv, capture, manifest)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+command = ('/bin/sh', 'launch.sh', '--batch=8')
+capture = {'status': 'error', 'reason': 'ARTIFACT_EXPORT_FAILED', 'execution_capture': {'captured_process_count': 1, 'single_pyt...rypoint': False, 'complete': False, 'invocations_complete': False, ...}, 'selected_capture_relative': 'artifacts', ...}
+manifest = {'source_root': '/tmp/pytest-of-xiaodouzi/pytest-480/test_real_cpu_wrong_wrapper_ta0/source', 'source': {'files': {'la...skipped': [], 'total_bytes': 245}, 'command': ['/bin/sh', 'launch.sh', '--batch=8'], 'target_argv_override': None, ...}
+
+    def captured_wrapper_descriptor(command, capture, manifest):
+        """Resolve an explicitly selected Python target, preserving its root launcher."""
+        inventory = capture.get("execution_capture", {})
+        selection = inventory.get("selection", {})
+        selected = capture.get("selected_capture_relative")
+        approved = (
+            inventory.get("complete") is True
+            and selection.get("status") in {"single", "unique_oom", "matched_replay"}
+            and selection.get("matching_target_count") == 1
+            and selection.get("selected_capture_relative") == selected
+            and isinstance(selected, str)
+        )
+        legacy_single = (
+            not selection
+            and inventory.get("single_python_entrypoint") is True
+            and inventory.get("captured_process_count") == 1
+        )
+        if not approved and not legacy_single:
+>           raise ValueError(
+                selection.get("reason") or inventory.get("reason") or "CAPTURE_ENTRYPOINT_AMBIGUOUS"
+            )
+E           ValueError: CAPTURE_ROSTER_INCOMPLETE
+
+headroom/execution.py:268: ValueError
+________ test_real_cpu_multiple_python_entries_are_explicitly_ambiguous ________
+
+wrapper_source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_real_cpu_multiple_python_0/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_real_cpu_multiple_python_0')
+
+    def test_real_cpu_multiple_python_entries_are_explicitly_ambiguous(wrapper_source, tmp_path):
+        (wrapper_source / "launch.sh").write_text("cd sub\npython -m pkg.entry\npython -m pkg.entry\n")
+        command = ["/bin/sh", "launch.sh"]
+        result = run_argv(wrapper_source, command, run_root=tmp_path / "runs", device="cpu")
+>       assert result["execution_capture"]["captured_process_count"] == 2
+E       assert 1 == 2
+
+tests/test_wrapper_execution.py:271: AssertionError
+_ test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_report[False] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_watch_synthetic_oom_reach0')
+multiple = False
+
+    @pytest.mark.parametrize("multiple", [False, True])
+    def test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_report(
+        tmp_path, multiple
+    ):
+        """Synthetic CUDA/memory verdicts; actual capture and candidate argv are CPU Docker."""
+        from dataclasses import replace
+        from decimal import Decimal
+    
+        import httpx
+    
+        from headroom.config import RuntimeConfig, VerifiedCapabilities, candidate_models
+        from headroom.llm.client import TokenFactoryClient
+        from headroom.llm.cost import Pricing
+        from headroom.llm.router import LLMRouter
+        from headroom.orchestrator import Services, run_fix
+        from headroom.search import HARD_CHECKS
+        from headroom.store.db import Store
+        from headroom.watch import watch_command
+    
+        source = tmp_path / "flow-source"
+        source.mkdir()
+        (source / "launch.sh").write_text(
+            ('python -c "print(123)"\n' if multiple else "") + 'exec python -O train.py "$@"\n'
+        )
+        (source / "train.py").write_text(
+            "VALUE = 1\nimport json, sys\n"
+            "print('FLOW:' + json.dumps({'value': VALUE, 'args': sys.argv[1:]}))\n"
+            "if VALUE == 1:\n    raise RuntimeError('synthetic CPU failure')\n"
+        )
+        command = ["/bin/sh", "launch.sh", "--batch=8"]
+        calls, observed = [], []
+        store = Store(tmp_path / "flow.sqlite")
+        diagnosis = {
+            "root_causes": [
+                {
+                    "id": "c1",
+                    "title": "Offline fixture",
+                    "category": "activations",
+                    "bytes_gb": 2.0,
+                    "evidence_refs": ["stk_fixture"],
+                    "confidence": 0.9,
+                }
+            ],
+            "plan": [
+                {
+                    "fix_id": "f1",
+                    "type": "code",
+                    "title": "Fixture edit and batch",
+                    "description": "Synthetic workflow test only.",
+                    "expected_saving_gb": 1.0,
+                    "numerics_impact": "none",
+                    "throughput_impact": "none",
+                    "risk": "Offline fixture only.",
+                    "requires_policy": [],
+                }
+            ],
+            "verification": {"max_steps": 20, "compare_loss": True, "tolerance": 0.001},
+            "needs_more_info": False,
+            "notes": ["No real GPU acceptance is claimed."],
+        }
+        proposal = {
+            "diff": "diff --git a/train.py b/train.py\n--- a/train.py\n+++ b/train.py\n"
+            "@@ -1,5 +1,5 @@\n-VALUE = 1\n+VALUE = 2\n import json, sys\n"
+            " print('FLOW:' + json.dumps({'value': VALUE, 'args': sys.argv[1:]}))\n"
+            " if VALUE == 1:\n     raise RuntimeError('synthetic CPU failure')\n",
+            "env_changes": {},
+            "cli_changes": ["--batch=4"],
+            "notes": ["Offline fixture only."],
+        }
+    
+        def runtime(run_id, store, directory):
+            models = {
+                name: replace(
+                    spec,
+                    pricing=Pricing(Decimal(1), Decimal(2), verified=True, source="offline fixture"),
+                )
+                for name, spec in candidate_models().items()
+            }
+    
+            models["ultra"] = replace(
+                models["ultra"],
+                capabilities=VerifiedCapabilities(
+                    reasoning_method="chat_template_kwargs", evidence="offline mock only"
+                ),
+            )
+            models["super"] = replace(models["super"], capabilities=models["ultra"].capabilities)
+    
+            def respond(request):
+                body = json.loads(request.content)
+                calls.append(body)
+                payload = diagnosis if len(calls) == 1 else anchored_fixture(proposal, body)
+                return httpx.Response(
+                    200,
+                    json={
+                        "id": "offline-fixture",
+                        "object": "chat.completion",
+                        "created": 0,
+                        "model": body["model"],
+                        "choices": [
+                            {
+                                "index": 0,
+                                "finish_reason": "stop",
+                                "message": {
+                                    "role": "assistant",
+                                    "content": json.dumps(payload),
+                                },
+                            }
+                        ],
+                        "usage": {"prompt_tokens": 10, "completion_tokens": 10, "total_tokens": 20},
+                    },
+                )
+    
+            client = TokenFactoryClient(
+                config=RuntimeConfig(models=models), transport=httpx.MockTransport(respond)
+            )
+            return SimpleNamespace(
+                router=LLMRouter(client), client=client, evidence_token_budget=1000, close=client.close
+            )
+    
+        def synthetic_oom(result, *, watch=False):
+            assert result["capture_complete"] and result["cleanup_verified"]
+            assert result["execution"]["state"]["ExitCode"] == 1
+            return {
+                **result,
+                "status": "oom",
+                "termination_reason": "oom",
+                "oom": {"traceback": "Explicit synthetic OOM from a captured CPU exception"},
+                "env": {**result["env"], "device": "cuda" if watch else "cpu"},
+                "peak_allocated_bytes": 2_000_000_000,
+                "peak_alloc_gb": 2.0,
+            }
+    
+        def watch_lab(root, argv, **options):
+            options["device"] = "cpu"
+            raw = run_argv(root, argv, **options)
+            if multiple:
+                from test_multicapture import synthesize_unique_target_oom
+    
+                raw = synthesize_unique_target_oom(raw)
+            return synthetic_oom(raw, watch=True)
+    
+        def baseline(script, **options):
+            assert options["execution_argv"] == command
+            options["device"] = "cpu"
+            result = run_script(script, **options)
+            assert result["execution_replay"]["matched"]
+            return synthetic_oom(result)
+    
+        def evidence(run, *, output_dir, **options):
+            output_dir.mkdir(parents=True)
+            data = {
+                "sources": [{"path": "train.py"}],
+                "analysis": {"stack_catalog": {"stk_fixture": []}},
+            }
+            (output_dir / "evidence.json").write_text(json.dumps(data))
+            (output_dir / "evidence.md").write_text("Synthetic fixture stack stk_fixture.\n")
+            return {
+                "evidence_json": str(output_dir / "evidence.json"),
+                "evidence_md": str(output_dir / "evidence.md"),
+                "token_count": 10,
+                "analysis": data["analysis"],
+            }
+    
+        def verify(before, script, **options):
+            assert options["execution_argv"] == command
+            assert options["script_args"] == ("--batch", "4")
+            result = run_script(
+                script,
+                source_root=options["candidate_source_root"],
+                execution_argv=command,
+                execution_entrypoint=options["execution_entrypoint"],
+                script_args=options["script_args"],
+                run_root=options["run_root"],
+                device="cpu",
+            )
+            assert result["status"] == "completed" and result["execution_replay"]["matched"], result
+            output = (Path(result["run_dir"]) / "stdout.log").read_text()
+            assert json.loads(
+                next(line[5:] for line in output.splitlines() if line.startswith("FLOW:"))
+            ) == {"value": 2, "args": ["--batch", "4"]}
+            observed.append(result)
+            return {
+                "candidate": {**result, "peak_allocated_bytes": 1_000_000_000, "peak_alloc_gb": 1.0},
+                "reference": None,
+                "report": {
+                    "completed": True,
+                    "target_met": True,
+                    "loss_equivalence": "identical",
+                    "peak_before": 2.0,
+                    "peak_after": 1.0,
+                    "reduction_pct": 50.0,
+                    "notes": ["Synthetic memory/numerical verdict; CPU argv replay is measured."],
+                    "checks": {
+                        **dict.fromkeys(HARD_CHECKS, True),
+                        "parameter_count_unchanged": True,
+                        "numerical_acceptance": True,
+                        "loss_tolerance": True,
+                        "loss_decreases": True,
+                        "throughput_limit": None,
+                    },
+                },
+            }
+    
+        def repair(request, **options):
+            assert request.execution_entrypoint["root_argv"] == command
+            assert request.execution_entrypoint["script_args"] == ["--batch=8"]
+            assert request.repository_mode is False
+            return run_fix(
+                request.model_copy(update={"device": "cpu", "research_enabled": False}),
+                store=store,
+                services=Services(
+                    baseline=baseline,
+                    evidence=evidence,
+                    verify=verify,
+                    runtime_factory=runtime,
+                    provenance="offline_fixture",
+                ),
+                **options,
+            )
+    
+        try:
+>           result = watch_command(
+                command,
+                source_root=source,
+                run_root=tmp_path / "watch",
+                device="cuda",
+                lab_runner=watch_lab,
+                fix_runner=repair,
+            )
+
+tests/test_wrapper_execution.py:498: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/watch.py:122: in watch_command
+    result = (lab_runner or run_argv)(
+tests/test_wrapper_execution.py:416: in watch_lab
+    return synthetic_oom(raw, watch=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = {'status': 'error', 'reason': 'ARTIFACT_EXPORT_FAILED', 'execution_capture': {'captured_process_count': 1, 'single_pyt...rypoint': False, 'complete': False, 'invocations_complete': False, ...}, 'selected_capture_relative': 'artifacts', ...}
+watch = True
+
+    def synthetic_oom(result, *, watch=False):
+>       assert result["capture_complete"] and result["cleanup_verified"]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'capture_complete'
+
+tests/test_wrapper_execution.py:397: KeyError
+_ test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_report[True] _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_watch_synthetic_oom_reach1')
+multiple = True
+
+    @pytest.mark.parametrize("multiple", [False, True])
+    def test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_report(
+        tmp_path, multiple
+    ):
+        """Synthetic CUDA/memory verdicts; actual capture and candidate argv are CPU Docker."""
+        from dataclasses import replace
+        from decimal import Decimal
+    
+        import httpx
+    
+        from headroom.config import RuntimeConfig, VerifiedCapabilities, candidate_models
+        from headroom.llm.client import TokenFactoryClient
+        from headroom.llm.cost import Pricing
+        from headroom.llm.router import LLMRouter
+        from headroom.orchestrator import Services, run_fix
+        from headroom.search import HARD_CHECKS
+        from headroom.store.db import Store
+        from headroom.watch import watch_command
+    
+        source = tmp_path / "flow-source"
+        source.mkdir()
+        (source / "launch.sh").write_text(
+            ('python -c "print(123)"\n' if multiple else "") + 'exec python -O train.py "$@"\n'
+        )
+        (source / "train.py").write_text(
+            "VALUE = 1\nimport json, sys\n"
+            "print('FLOW:' + json.dumps({'value': VALUE, 'args': sys.argv[1:]}))\n"
+            "if VALUE == 1:\n    raise RuntimeError('synthetic CPU failure')\n"
+        )
+        command = ["/bin/sh", "launch.sh", "--batch=8"]
+        calls, observed = [], []
+        store = Store(tmp_path / "flow.sqlite")
+        diagnosis = {
+            "root_causes": [
+                {
+                    "id": "c1",
+                    "title": "Offline fixture",
+                    "category": "activations",
+                    "bytes_gb": 2.0,
+                    "evidence_refs": ["stk_fixture"],
+                    "confidence": 0.9,
+                }
+            ],
+            "plan": [
+                {
+                    "fix_id": "f1",
+                    "type": "code",
+                    "title": "Fixture edit and batch",
+                    "description": "Synthetic workflow test only.",
+                    "expected_saving_gb": 1.0,
+                    "numerics_impact": "none",
+                    "throughput_impact": "none",
+                    "risk": "Offline fixture only.",
+                    "requires_policy": [],
+                }
+            ],
+            "verification": {"max_steps": 20, "compare_loss": True, "tolerance": 0.001},
+            "needs_more_info": False,
+            "notes": ["No real GPU acceptance is claimed."],
+        }
+        proposal = {
+            "diff": "diff --git a/train.py b/train.py\n--- a/train.py\n+++ b/train.py\n"
+            "@@ -1,5 +1,5 @@\n-VALUE = 1\n+VALUE = 2\n import json, sys\n"
+            " print('FLOW:' + json.dumps({'value': VALUE, 'args': sys.argv[1:]}))\n"
+            " if VALUE == 1:\n     raise RuntimeError('synthetic CPU failure')\n",
+            "env_changes": {},
+            "cli_changes": ["--batch=4"],
+            "notes": ["Offline fixture only."],
+        }
+    
+        def runtime(run_id, store, directory):
+            models = {
+                name: replace(
+                    spec,
+                    pricing=Pricing(Decimal(1), Decimal(2), verified=True, source="offline fixture"),
+                )
+                for name, spec in candidate_models().items()
+            }
+    
+            models["ultra"] = replace(
+                models["ultra"],
+                capabilities=VerifiedCapabilities(
+                    reasoning_method="chat_template_kwargs", evidence="offline mock only"
+                ),
+            )
+            models["super"] = replace(models["super"], capabilities=models["ultra"].capabilities)
+    
+            def respond(request):
+                body = json.loads(request.content)
+                calls.append(body)
+                payload = diagnosis if len(calls) == 1 else anchored_fixture(proposal, body)
+                return httpx.Response(
+                    200,
+                    json={
+                        "id": "offline-fixture",
+                        "object": "chat.completion",
+                        "created": 0,
+                        "model": body["model"],
+                        "choices": [
+                            {
+                                "index": 0,
+                                "finish_reason": "stop",
+                                "message": {
+                                    "role": "assistant",
+                                    "content": json.dumps(payload),
+                                },
+                            }
+                        ],
+                        "usage": {"prompt_tokens": 10, "completion_tokens": 10, "total_tokens": 20},
+                    },
+                )
+    
+            client = TokenFactoryClient(
+                config=RuntimeConfig(models=models), transport=httpx.MockTransport(respond)
+            )
+            return SimpleNamespace(
+                router=LLMRouter(client), client=client, evidence_token_budget=1000, close=client.close
+            )
+    
+        def synthetic_oom(result, *, watch=False):
+            assert result["capture_complete"] and result["cleanup_verified"]
+            assert result["execution"]["state"]["ExitCode"] == 1
+            return {
+                **result,
+                "status": "oom",
+                "termination_reason": "oom",
+                "oom": {"traceback": "Explicit synthetic OOM from a captured CPU exception"},
+                "env": {**result["env"], "device": "cuda" if watch else "cpu"},
+                "peak_allocated_bytes": 2_000_000_000,
+                "peak_alloc_gb": 2.0,
+            }
+    
+        def watch_lab(root, argv, **options):
+            options["device"] = "cpu"
+            raw = run_argv(root, argv, **options)
+            if multiple:
+                from test_multicapture import synthesize_unique_target_oom
+    
+                raw = synthesize_unique_target_oom(raw)
+            return synthetic_oom(raw, watch=True)
+    
+        def baseline(script, **options):
+            assert options["execution_argv"] == command
+            options["device"] = "cpu"
+            result = run_script(script, **options)
+            assert result["execution_replay"]["matched"]
+            return synthetic_oom(result)
+    
+        def evidence(run, *, output_dir, **options):
+            output_dir.mkdir(parents=True)
+            data = {
+                "sources": [{"path": "train.py"}],
+                "analysis": {"stack_catalog": {"stk_fixture": []}},
+            }
+            (output_dir / "evidence.json").write_text(json.dumps(data))
+            (output_dir / "evidence.md").write_text("Synthetic fixture stack stk_fixture.\n")
+            return {
+                "evidence_json": str(output_dir / "evidence.json"),
+                "evidence_md": str(output_dir / "evidence.md"),
+                "token_count": 10,
+                "analysis": data["analysis"],
+            }
+    
+        def verify(before, script, **options):
+            assert options["execution_argv"] == command
+            assert options["script_args"] == ("--batch", "4")
+            result = run_script(
+                script,
+                source_root=options["candidate_source_root"],
+                execution_argv=command,
+                execution_entrypoint=options["execution_entrypoint"],
+                script_args=options["script_args"],
+                run_root=options["run_root"],
+                device="cpu",
+            )
+            assert result["status"] == "completed" and result["execution_replay"]["matched"], result
+            output = (Path(result["run_dir"]) / "stdout.log").read_text()
+            assert json.loads(
+                next(line[5:] for line in output.splitlines() if line.startswith("FLOW:"))
+            ) == {"value": 2, "args": ["--batch", "4"]}
+            observed.append(result)
+            return {
+                "candidate": {**result, "peak_allocated_bytes": 1_000_000_000, "peak_alloc_gb": 1.0},
+                "reference": None,
+                "report": {
+                    "completed": True,
+                    "target_met": True,
+                    "loss_equivalence": "identical",
+                    "peak_before": 2.0,
+                    "peak_after": 1.0,
+                    "reduction_pct": 50.0,
+                    "notes": ["Synthetic memory/numerical verdict; CPU argv replay is measured."],
+                    "checks": {
+                        **dict.fromkeys(HARD_CHECKS, True),
+                        "parameter_count_unchanged": True,
+                        "numerical_acceptance": True,
+                        "loss_tolerance": True,
+                        "loss_decreases": True,
+                        "throughput_limit": None,
+                    },
+                },
+            }
+    
+        def repair(request, **options):
+            assert request.execution_entrypoint["root_argv"] == command
+            assert request.execution_entrypoint["script_args"] == ["--batch=8"]
+            assert request.repository_mode is False
+            return run_fix(
+                request.model_copy(update={"device": "cpu", "research_enabled": False}),
+                store=store,
+                services=Services(
+                    baseline=baseline,
+                    evidence=evidence,
+                    verify=verify,
+                    runtime_factory=runtime,
+                    provenance="offline_fixture",
+                ),
+                **options,
+            )
+    
+        try:
+>           result = watch_command(
+                command,
+                source_root=source,
+                run_root=tmp_path / "watch",
+                device="cuda",
+                lab_runner=watch_lab,
+                fix_runner=repair,
+            )
+
+tests/test_wrapper_execution.py:498: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/watch.py:122: in watch_command
+    result = (lab_runner or run_argv)(
+tests/test_wrapper_execution.py:415: in watch_lab
+    raw = synthesize_unique_target_oom(raw)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = {'status': 'error', 'reason': 'ARTIFACT_EXPORT_FAILED', 'execution_capture': {'captured_process_count': 1, 'single_pyt...rypoint': False, 'complete': False, 'invocations_complete': False, ...}, 'selected_capture_relative': 'artifacts', ...}
+
+    def synthesize_unique_target_oom(result):
+        """Relabel only a copied test capture; preserve original CPU evidence beside it."""
+        run = Path(result["run_dir"])
+        manifest = json.loads((run / "manifest.json").read_text())
+        records, _ = runner._read_capture_roster(run, manifest)
+>       target = next(
+            row
+            for row in records
+            if (
+                (row["capture"] or {}).get("execution_entrypoint", {}).get("main_file")
+                == "/source/train.py"
+            )
+        )
+E       StopIteration
+
+tests/test_multicapture.py:125: StopIteration
+___________ test_real_cpu_executable_wrapper_preserves_non_oom_exit ____________
+
+wrapper_source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_real_cpu_executable_wrapp0/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_real_cpu_executable_wrapp0')
+
+    def test_real_cpu_executable_wrapper_preserves_non_oom_exit(wrapper_source, tmp_path):
+        from headroom.watch import watch_command
+    
+        launcher = wrapper_source / "launch.sh"
+        launcher.write_text("#!/bin/sh\n" + launcher.read_text())
+        launcher.chmod(0o755)
+        entry = wrapper_source / "sub/pkg/entry.py"
+        entry.write_text(entry.read_text() + "raise SystemExit(7)\n")
+        result = watch_command(
+            ["./launch.sh", "--batch=8"],
+            source_root=wrapper_source,
+            run_root=tmp_path / "watch",
+            device="cpu",
+            fix_runner=lambda *a, **k: pytest.fail("Non-OOM must not repair"),
+        )
+>       assert result["exit_code"] == result["original_exit_code"] == 7
+E       assert 125 == 7
+
+tests/test_wrapper_execution.py:540: AssertionError
+_ test_real_cpu_verify_runner_overrides_wrapper_candidate_and_small_batch_reference[False] _
+
+wrapper_source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_real_cpu_verify_runner_ov0/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_real_cpu_verify_runner_ov0')
+module = False
+
+    @pytest.mark.parametrize("module", [False, True])
+    def test_real_cpu_verify_runner_overrides_wrapper_candidate_and_small_batch_reference(
+        wrapper_source,
+        tmp_path,
+        module,
+    ):
+        from headroom.verify.runner import verify_script
+    
+        script = wrapper_source / ("sub/pkg/entry.py" if module else "train.py")
+        if not module:
+            (wrapper_source / "launch.sh").write_text('exec python -O train.py "$@"\n')
+        script.write_text(
+            "import argparse, torch\n"
+            "p = argparse.ArgumentParser()\np.add_argument('--batch', type=int, default=8)\n"
+            "args = p.parse_args()\n"
+            "model = torch.nn.Linear(1, 1)\nopt = torch.optim.SGD(model.parameters(), lr=0.01)\n"
+            "x = torch.ones(args.batch, 1)\n"
+            "for _ in range(30):\n"
+            "    opt.zero_grad()\n    loss = model(x).square().mean()\n"
+            "    loss.backward()\n    opt.step()\n"
+        )
+        command = ["/bin/sh", "launch.sh", "--batch", "8"]
+        captured = run_argv(wrapper_source, command, run_root=tmp_path / "runs", device="cpu")
+>       assert captured["status"] == "completed" and captured["steps"] == 20
+E       AssertionError: assert ('error' == 'completed'
+E         
+E         - completed
+E         + error)
+
+tests/test_wrapper_execution.py:568: AssertionError
+_ test_real_cpu_verify_runner_overrides_wrapper_candidate_and_small_batch_reference[True] _
+
+wrapper_source = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_real_cpu_verify_runner_ov1/source')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-480/test_real_cpu_verify_runner_ov1')
+module = True
+
+    @pytest.mark.parametrize("module", [False, True])
+    def test_real_cpu_verify_runner_overrides_wrapper_candidate_and_small_batch_reference(
+        wrapper_source,
+        tmp_path,
+        module,
+    ):
+        from headroom.verify.runner import verify_script
+    
+        script = wrapper_source / ("sub/pkg/entry.py" if module else "train.py")
+        if not module:
+            (wrapper_source / "launch.sh").write_text('exec python -O train.py "$@"\n')
+        script.write_text(
+            "import argparse, torch\n"
+            "p = argparse.ArgumentParser()\np.add_argument('--batch', type=int, default=8)\n"
+            "args = p.parse_args()\n"
+            "model = torch.nn.Linear(1, 1)\nopt = torch.optim.SGD(model.parameters(), lr=0.01)\n"
+            "x = torch.ones(args.batch, 1)\n"
+            "for _ in range(30):\n"
+            "    opt.zero_grad()\n    loss = model(x).square().mean()\n"
+            "    loss.backward()\n    opt.step()\n"
+        )
+        command = ["/bin/sh", "launch.sh", "--batch", "8"]
+        captured = run_argv(wrapper_source, command, run_root=tmp_path / "runs", device="cpu")
+>       assert captured["status"] == "completed" and captured["steps"] == 20
+E       AssertionError: assert ('error' == 'completed'
+E         
+E         - completed
+E         + error)
+
+tests/test_wrapper_execution.py:568: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_command_replay.py::test_real_cpu_repair_backend_preserves_flags_imports_argv_and_source_context[False]
+FAILED tests/test_command_replay.py::test_real_cpu_repair_backend_preserves_flags_imports_argv_and_source_context[True]
+FAILED tests/test_wrapper_execution.py::test_real_cpu_wrapper_candidate_and_reference_apply_target_args_and_collect_sources[False]
+FAILED tests/test_wrapper_execution.py::test_real_cpu_wrapper_candidate_and_reference_apply_target_args_and_collect_sources[True]
+FAILED tests/test_wrapper_execution.py::test_real_cpu_wrong_wrapper_target_fails_replay_matching
+FAILED tests/test_wrapper_execution.py::test_real_cpu_multiple_python_entries_are_explicitly_ambiguous
+FAILED tests/test_wrapper_execution.py::test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_report[False]
+FAILED tests/test_wrapper_execution.py::test_watch_synthetic_oom_reaches_real_orchestrator_sdk_patch_replay_and_report[True]
+FAILED tests/test_wrapper_execution.py::test_real_cpu_executable_wrapper_preserves_non_oom_exit
+FAILED tests/test_wrapper_execution.py::test_real_cpu_verify_runner_overrides_wrapper_candidate_and_small_batch_reference[False]
+FAILED tests/test_wrapper_execution.py::test_real_cpu_verify_runner_overrides_wrapper_candidate_and_small_batch_reference[True]
+11 failed, 73 passed in 11.26s

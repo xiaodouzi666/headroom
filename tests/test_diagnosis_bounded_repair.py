@@ -237,7 +237,7 @@ def test_persistent_policy_violation_stops_at_existing_allowance(limit):
     assert result.requires_supplement and not result.ready_for_patch
 
 
-def test_valid_remaining_evidence_gap_does_not_force_an_extra_call_or_ready():
+def test_valid_remaining_gap_uses_one_available_neutral_review_without_forcing_ready():
     bad = payload()
     bad["plan"][0]["title"] = "Reduce sequence length"
     gap = payload()
@@ -254,7 +254,12 @@ def test_valid_remaining_evidence_gap_does_not_force_an_extra_call_or_ready():
     requests = []
     with provider_client([bad, gap], requests) as sdk:
         result = run(LLMRouter(sdk), max_supplements=3)
-    assert len(requests) == 2
+    assert len(requests) == 3  # One validation repair, one neutral review, no fourth call.
+    assert [item["purpose"] for item in result.response_request_modes] == [
+        "initial",
+        "validation_repair",
+        "prerequisite_review",
+    ]
     assert result.valid and not result.ready_for_patch and not result.requires_supplement
     assert result.diagnosis.needs_more_info
 

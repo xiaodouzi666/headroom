@@ -1,0 +1,153 @@
+"""Reviewed internal gift allocation; no provider request or financial transaction."""
+import argparse
+import json
+import os
+import sys
+from datetime import UTC, datetime
+from pathlib import Path
+
+if sys.flags.optimize:
+    raise RuntimeError("Reviewed execution requires non-optimized Python")
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+from headroom.acceptance import allocation as alloc
+from headroom.acceptance.judge_binding import JudgeAllocation
+from headroom.budget import BudgetLedger, money
+from headroom.ledger_path import existing_file_identity
+from headroom.runtime import LiveProfile, read_live_profile
+
+DIRECTORY = ROOT / ".cache/repair-followup-20261030-v3"
+TRANSFER = "repair-followup-20261030-authorized-v3"
+JUDGE_TRANSFER = money("3.612190772")
+APPROVED_NET = money("5.40")
+R11_CHARGED = money("0.19949560")
+STATEMENT = "允许上述调拨，含税最多 $6.54"
+
+
+def write(path, value):
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    data = json.dumps(value, indent=2, ensure_ascii=False, allow_nan=False) + "\n"
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(fd, "w") as handle:
+        handle.write(data)
+
+
+def donors():
+    final = alloc.verify_receipt(ROOT / ".cache/final48-allocation/receipt.json", project_root=ROOT)
+    judge = JudgeAllocation(ROOT / ".cache/judge-access/receipt.json", project_root=ROOT)
+    records = []
+    for name, receipt, limits in [
+        ("final48", final, {"total_limit_usd": final["amounts"]["approved_net_usd"], "daily_limit_usd": final["amounts"]["daily_limit_usd"]}),
+        ("judge", judge.receipt, judge.funding_limits),
+    ]:
+        state = alloc._budget_state(receipt)
+        alloc._quiet_pool(state)
+        records.append((name, receipt, limits, state))
+    return records
+
+
+def prepare(balance_path):
+    assert not DIRECTORY.exists(), "A fresh allocation directory is required"
+    balance = json.loads(Path(balance_path).read_text())
+    observed = datetime.fromisoformat(balance["observed_at"])
+    assert observed.tzinfo is not None and 0 <= (datetime.now(UTC)-observed).total_seconds() <= 3600
+    assert balance["gift_only"] is True and balance["read_only_observation"] is True
+    items = donors()
+    assert all(state["encumbered"] == 0 for _, _, _, state in items)
+    final_remaining = money(items[0][2]["total_limit_usd"]) - items[0][3]["charged"]
+    final_transfer = final_remaining - money("0.30")
+    assert final_transfer > 0
+    target = final_transfer + JUDGE_TRANSFER - money("0.01")
+    assert target == APPROVED_NET - R11_CHARGED - money("0.01") - money("0.30") == money("4.890504400")
+    old_profile = read_live_profile(ROOT / ".cache/tokenfactory-runtime-v2-r5.json")
+    old_state = alloc._budget_state({"ledger_path": str(ROOT / ".cache/budget.db")})
+    alloc._quiet_pool(old_state)
+    old_remaining = money(old_profile.authorized_total_usd) - old_state["charged"] - old_state["encumbered"]
+    judge_remaining = money(items[1][2]["total_limit_usd"]) - items[1][3]["charged"] - JUDGE_TRANSFER
+    assert min(old_remaining, judge_remaining) >= 0
+    tax, reserve, lag = money("1.21"), money("8"), money("3.63")
+    financial_commitment = (old_remaining + money("0.30") + judge_remaining + target) * tax + reserve + lag
+    assert financial_commitment <= money(balance["balance_gross_usd"]) - money("0.01")
+    profile = read_live_profile(items[0][1]["profile_path"]).model_dump(mode="json")
+    profile.update(available_credit_usd=str(target), authorized_total_usd=str(target),
+                   verified_at=datetime.now(UTC).isoformat(), evidence=str(DIRECTORY / "activation.json"))
+    LiveProfile.model_validate(profile).runtime_config()
+    plan = {
+        "schema": "headroom.repair-followup-allocation.v1", "scope": "DEVELOPMENT_REPAIR_FOLLOWUP",
+        "project_root": str(ROOT), "transfer_id": TRANSFER,
+        "authorization": {"statement": STATEMENT, "approval_ref": "2026-10-30 user reply to call_a0a61f673bf1484a91fb437101d8eb40", "statement_sha256": alloc.digest(STATEMENT),
+                          "approved_net_usd": str(APPROVED_NET), "approved_gross_usd": "6.54", "gift_only": True, "no_topup": True, "no_overage": True},
+        "already_consumed_under_original_authority_net_usd": str(R11_CHARGED),
+        "target_net_usd": str(target), "locked_precision_reserve_net_usd": "0.01", "anonymous_demo_retained_net_usd": "0.30", "run_cap_usd": "0.60", "fixed_denominator": 9, "minimum_targets": 6,
+        "target_ledger_path": str(DIRECTORY / "budget.db"), "target_profile_path": str(DIRECTORY / "runtime-profile.json"),
+        "profile": profile, "balance_evidence": balance,
+        "financial_check": {"future_commitment_including_reserve_and_lag_gross_usd": str(financial_commitment), "reserve_gross_usd": str(reserve), "lag_reserve_gross_usd": str(lag), "tax_factor": str(tax)},
+        "donors": [
+            {"name": name, "ledger_path": receipt["ledger_path"], "ledger_identity": receipt["ledger_identity"], "receipt_sha256": receipt["receipt_sha256"],
+             "limits": {key: limits[key] for key in ("total_limit_usd", "daily_limit_usd")}, "charged_before_usd": str(state["charged"]),
+             "amount_usd": str(final_transfer if name == "final48" else JUDGE_TRANSFER)}
+            for name, receipt, limits, state in items
+        ],
+    }
+    plan["plan_sha256"] = alloc.digest(plan)
+    write(DIRECTORY / "plan.json", plan)
+    print(json.dumps({"state":"prepared_only", "plan_sha256":plan["plan_sha256"], "target_net_usd":str(target), "reserve_preserved":True}))
+
+
+def activate(expected):
+    plan = json.loads((DIRECTORY / "plan.json").read_text())
+    sha = plan.pop("plan_sha256")
+    assert sha == expected == alloc.digest(plan)
+    plan["plan_sha256"] = sha
+    assert not (DIRECTORY / "activation.json").exists()
+    actual = donors()
+    for intended, (name, receipt, limits, state) in zip(plan["donors"], actual, strict=True):
+        assert name == intended["name"] and receipt["receipt_sha256"] == intended["receipt_sha256"]
+        assert receipt["ledger_identity"] == intended["ledger_identity"]
+        assert str(state["charged"]) == intended["charged_before_usd"]
+        assert existing_file_identity(receipt["ledger_path"]) == tuple(intended["ledger_identity"])
+        ledger = BudgetLedger(receipt["ledger_path"], require_existing=True, expected_identity=tuple(intended["ledger_identity"]),
+                              total_limit=intended["limits"]["total_limit_usd"], daily_limit=intended["limits"]["daily_limit_usd"])
+        records = ledger.external_commitments()
+        if records:
+            assert len(records) == 1 and records[0]["transfer_id"] == TRANSFER
+            assert money(records[0]["amount_usd"]) == money(intended["amount_usd"])
+            assert records[0]["receipt_sha256"] == sha
+        else:
+            ledger.encumber(TRANSFER, intended["amount_usd"], sha)
+        assert ledger.committed_hold_usd == money(intended["amount_usd"])
+    # Only after both donor commitments exist may a target profile/ledger be usable.
+    target = BudgetLedger(plan["target_ledger_path"], total_limit=plan["target_net_usd"], daily_limit=plan["target_net_usd"])
+    assert target.external_commitments() == []
+    with target._transaction() as conn:
+        assert conn.execute("SELECT count(*) FROM budget_runs").fetchone()[0] == 0
+        assert conn.execute("SELECT count(*) FROM budget_attempts").fetchone()[0] == 0
+    profile_path = Path(plan["target_profile_path"])
+    if profile_path.exists() or profile_path.is_symlink():
+        assert profile_path.is_file() and not profile_path.is_symlink()
+        assert profile_path.stat().st_mode & 0o777 == 0o600
+        assert json.loads(profile_path.read_text()) == plan["profile"]
+    else:
+        write(profile_path, plan["profile"])
+    receipt = {"schema":"headroom.repair-followup-activation.v1", "state":"active", "scope":plan["scope"], "plan_sha256":sha,
+               "target_net_usd":plan["target_net_usd"], "ledger_path":plan["target_ledger_path"], "ledger_identity":existing_file_identity(plan["target_ledger_path"]),
+               "profile_path":plan["target_profile_path"], "profile_sha256":alloc.digest(plan["profile"]), "donors":plan["donors"],
+               "activated_at":datetime.now(UTC).isoformat(), "model_calls":0, "gpu_jobs":0}
+    receipt["receipt_sha256"] = alloc.digest(receipt)
+    write(DIRECTORY / "activation.json", receipt)
+    print(json.dumps({"state":"active", "receipt_sha256":receipt["receipt_sha256"], "target_net_usd":receipt["target_net_usd"], "model_calls":0}))
+
+
+if __name__ == "__main__":
+    os.umask(0o077)
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--balance-evidence")
+    parser.add_argument("--activate-reviewed-sha256")
+    args=parser.parse_args()
+    if args.activate_reviewed_sha256:
+        activate(args.activate_reviewed_sha256)
+    elif args.balance_evidence:
+        prepare(args.balance_evidence)
+    else:
+        parser.error("Select explicit prepare or reviewed activation")

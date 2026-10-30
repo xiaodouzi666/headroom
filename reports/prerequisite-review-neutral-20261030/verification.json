@@ -1,0 +1,55 @@
+{
+  "scope": "offline_only_no_provider_GPU_or_production_state",
+  "junit": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "101",
+    "time": "2.375",
+    "timestamp": "2026-10-30T11:14:48.146451+01:00",
+    "hostname": "ubuntu"
+  },
+  "files": {
+    "headroom/prerequisite_review.py": "f1cc29ec9f666d74c068492872daa8c151637b081f977998387ae9c5e9be88b7",
+    "tests/test_prerequisite_review.py": "a4b0526b0b6e4f8b78c322877dc88ecfbbaef7db72c3aa858f3b16ffa0460bea",
+    "tests/test_diagnosis_bounded_repair.py": "578ffd839b69dc114d5c9dbed003dc9a8cabe40d70da0528e3697ba71ee9f82d"
+  },
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/prerequisite_review.py",
+        "tests/test_prerequisite_review.py",
+        "tests/test_diagnosis_bounded_repair.py"
+      ],
+      "exit_code": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/prerequisite_review.py",
+        "tests/test_prerequisite_review.py",
+        "tests/test_diagnosis_bounded_repair.py"
+      ],
+      "exit_code": 0,
+      "stdout": "3 files already formatted\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

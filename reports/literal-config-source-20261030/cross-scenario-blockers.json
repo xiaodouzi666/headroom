@@ -1,0 +1,1712 @@
+{
+  "schema": "headroom.cross-scenario-readonly-audit.v1",
+  "utc": "2026-10-30T10:08:07.711163+00:00",
+  "fixed_denominator": 9,
+  "minimum_targets": 6,
+  "sources": [
+    {
+      "path": "runs/final48-f3-retry/execution-r8-20261030/campaign.json",
+      "sha256": "3b2c2119b4d2d3aedbb8cfda95247d2d0bfca713aa2a52dfcc2456b1f2c01a50"
+    },
+    {
+      "path": "runs/final48-f3-retry/execution-r9-20261030/campaign.json",
+      "sha256": "d1379002f4804d5a9ef935a12e30bb4141463719214140686bf05be8043dd371"
+    },
+    {
+      "path": "runs/final48-f3-retry/execution-r10-20261030/campaign.json",
+      "sha256": "39459b2cac6a68dc7666afc947bb4b949f116432da4fcdbd0434e1439c61de86"
+    },
+    {
+      "path": "runs/final48-f3-retry/execution-r11-20261030/campaign.json",
+      "sha256": "08a90f5956272465b87cf5e96ffc5c6d97aa38de386fecc3860cdba9f33b74bc"
+    }
+  ],
+  "rows": [
+    {
+      "revision": "r8",
+      "scenario_id": "s1_batch_too_big",
+      "run_id": "e5d4a541c34b49b09d2477efc1200348",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_validation_failed",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r8-20261030/jobs/e5d4a541c34b49b09d2477efc1200348/rounds/01/diagnosis.json",
+          "sha256": "721f6ae4c876892d3a776b4a055f728bd1cb2c94876f05fb3a9608d80da4d8eb",
+          "round": "01",
+          "valid": true,
+          "ready": true,
+          "needs_more_info": false,
+          "plan_ids": [
+            "fix_activation_checkpointing",
+            "fix_chunked_linear"
+          ],
+          "plan_titles": [
+            "Checkpoint each ResidualBlock to avoid retaining all block activations simultaneously",
+            "Chunk the 4x-expansion linear layer within each block to bound temporary workspace"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [],
+          "evidence_requests": []
+        },
+        {
+          "path": "runs/final48-f3-retry/execution-r8-20261030/jobs/e5d4a541c34b49b09d2477efc1200348/rounds/02/diagnosis.json",
+          "sha256": "7609489ab5f9b73c37ed41ea2710529787940c34651754b29a691955a5fc6388",
+          "round": "02",
+          "valid": false,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "fix_gradient_accumulation_microbatch",
+            "fix_activation_checkpointing_per_block"
+          ],
+          "plan_titles": [
+            "Gradient accumulation over microbatches to bound activation peak",
+            "Checkpoint individual ResidualBlocks to limit recomputation peak"
+          ],
+          "issue_codes": [
+            "INVALID_EVIDENCE_DEPENDENCY"
+          ],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "numerical_reference_context.original_workload_checkpoint_reference",
+              "reason": "missing",
+              "detail": "Completed baseline reference run (original_workload_checkpoint_reference) is required for loss equivalence verification but is unavailable. The host's verification feedback lists this as an unavailable check.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "overall_feasibility",
+              "blocked_plan_ids": [
+                "fix_gradient_accumulation_microbatch",
+                "fix_activation_checkpointing_per_block"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r8",
+      "scenario_id": "s2_capacity_v2",
+      "run_id": "cb9863fad0564d0cb4988dd30a3d9522",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_validation_failed",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r8-20261030/jobs/cb9863fad0564d0cb4988dd30a3d9522/rounds/01/diagnosis.json",
+          "sha256": "6c4ab69580d4507f6e25709ffaaa5e1564b2d22e547e507d74e8d8e923c39cc2",
+          "round": "01",
+          "valid": false,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "fix_chunked_ce",
+            "fix_activation_checkpoint_blocks"
+          ],
+          "plan_titles": [
+            "Chunked cross-entropy to avoid full [B*T, V] logits materialization",
+            "Selective activation checkpointing on repeated ResidualBlock segments"
+          ],
+          "issue_codes": [
+            "EVIDENCE_AVAILABILITY_CONTRADICTED"
+          ],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "source_files[0].content lines 140-170",
+              "reason": "missing",
+              "detail": "Need the exact loss computation source (cross_entropy or equivalent) to confirm chunked CE applicability, the reduction denominator (mean over valid elements), masks, class weights, ignore_index, label smoothing, and whether full logits are consumed elsewhere.",
+              "evidence_ref": "source[0]",
+              "source_line_start": 140,
+              "source_line_end": 170,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_chunked_ce"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r8",
+      "scenario_id": "s3_eval_no_grad_missing",
+      "run_id": "e00152629f84428987f026a5bde4cb14",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_validation_failed",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r8-20261030/jobs/e00152629f84428987f026a5bde4cb14/rounds/01/diagnosis.json",
+          "sha256": "ddad6f32d87d760214300400797a1d81ae6b1881f9d7b1e10fe6da89c861fba1",
+          "round": "01",
+          "valid": false,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "fix_grad_accum",
+            "fix_eval_nograd"
+          ],
+          "plan_titles": [
+            "Gradient accumulation: run K micro-forward/backward chunks per optimizer step with loss weighted by valid elements",
+            "Add torch.no_grad() to evaluate() to disable autograd for validation"
+          ],
+          "issue_codes": [
+            "INVALID_EVIDENCE_RANGE"
+          ],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_input_observations.tensors.train_inputs.shape",
+              "reason": "ambiguous",
+              "detail": "Source shows train_batch=1 in scenario_start emit (line 101) but args.batch default 16 (line 81) and train_inputs = torch.randn(1, sequence, width) (line 84). Need confirmed runtime training batch size to design micro-batch chunks for gradient accumulation. If batch=1, chunking not possible; if batch=16, can chunk.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": 84,
+              "source_line_end": 101,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_grad_accum"
+              ]
+            },
+            {
+              "field": "execution_context.runtime_input_observations.effective_batch_per_optimizer_update",
+              "reason": "missing",
+              "detail": "Confirmed value is 1 from logical_updates, but need to ensure gradient accumulation preserves exactly one optimizer step per original effective batch. This is a mathematical prerequisite for the plan.",
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_grad_accum"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r8",
+      "scenario_id": "s4_loss_accumulation_graph",
+      "run_id": "d7349e5a38824f218b8c207be9e621e3",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_needs_more_info",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r8-20261030/jobs/d7349e5a38824f218b8c207be9e621e3/rounds/01/diagnosis.json",
+          "sha256": "f4335b62bc1c1abe76ae3c7533c0c038776312b327996900713ce1ed58181a52",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "fix_remove_retain_graph",
+            "fix_gradient_accumulation_microbatch"
+          ],
+          "plan_titles": [
+            "Remove retain_graph=True from loss.backward() call",
+            "Implement gradient accumulation with microbatches to reduce activation peak"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [
+            {
+              "schema": "headroom.response-validation-metadata.v1",
+              "error_reason": "truncated",
+              "finish_reason": "length",
+              "role": "diagnose",
+              "usage": {
+                "prompt_tokens": 51121,
+                "completion_tokens": 2000,
+                "total_tokens": 53121,
+                "cached_tokens": 0,
+                "reasoning_tokens": 0
+              },
+              "request_index": 1,
+              "requested_reasoning": false
+            }
+          ],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_input_observations.optimizer_input_name",
+              "reason": "missing",
+              "detail": "Need the exact optimizer input tensor name and its per-update shape to verify microbatch loss weighting denominator and gradient accumulation correctness.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_gradient_accumulation_microbatch"
+              ]
+            },
+            {
+              "field": "execution_context.runtime_input_observations.effective_batch_per_optimizer_update",
+              "reason": "missing",
+              "detail": "Need the confirmed effective batch size per optimizer update to ensure microbatch plan preserves the original update cadence and sample coverage.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_gradient_accumulation_microbatch"
+              ]
+            },
+            {
+              "field": "source[0] lines 100-107",
+              "reason": "ambiguous",
+              "detail": "Source shows loss = (predictions - targets).square().mean() — unclear if mean reduces over batch*seq elements or only batch. Microbatch loss weighting requires knowing the full reduction denominator N.",
+              "evidence_ref": "source[0]",
+              "source_line_start": 100,
+              "source_line_end": 107,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_gradient_accumulation_microbatch"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r8",
+      "scenario_id": "s5_fragmentation_varlen",
+      "run_id": "baa63908fc8341efbda40e282201c252",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_validation_failed",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r8-20261030/jobs/baa63908fc8341efbda40e282201c252/rounds/01/diagnosis.json",
+          "sha256": "1bcd5a045bf7f06229c29472270c1958f3fc0f9acb20d4d1d2e9d77a8f1821cf",
+          "round": "01",
+          "valid": false,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "p1"
+          ],
+          "plan_titles": [
+            "Gradient checkpointing per TokenMLP block with reentrant=False"
+          ],
+          "issue_codes": [
+            "INVALID_EVIDENCE_RANGE"
+          ],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "plan[0].expected_saving_gb",
+              "reason": "insufficient_saving",
+              "detail": "Need measured peak after checkpointing one block to confirm the 1.2 GB estimate covers the required 1.004 GB, accounting for boundary inputs and the unknown 100 MB stack (stk_c78ac71a2d513035).",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "p1"
+              ]
+            },
+            {
+              "field": "root_causes[2].bytes_gb",
+              "reason": "ambiguous",
+              "detail": "stk_c78ac71a2d513035 (100 MB) is categorized unknown with nano-label params. Confirm whether this allocation is persistent parameter memory or a one-time initialization temporary, and whether it remains live at the global peak (event 3122).",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": 82,
+              "source_line_end": 84,
+              "blocking_scope": "overall_feasibility",
+              "blocked_plan_ids": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r8",
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "run_id": "c140031271b64af082067fa410ec4fe1",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_needs_more_info",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r8-20261030/jobs/c140031271b64af082067fa410ec4fe1/rounds/01/diagnosis.json",
+          "sha256": "1eaf50445115ec77d17996bccd35a1f500b0b7e3187ca18c93187d5ad89d8f28",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "fix_chunked_cross_entropy",
+            "fix_gradient_checkpointing"
+          ],
+          "plan_titles": [
+            "Implement chunked cross-entropy to avoid full FP32 logits materialization",
+            "Apply gradient checkpointing to transformer blocks to reduce activation peak"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_input_observations",
+              "reason": "missing",
+              "detail": "Runtime tensor shapes (logits [batch*seq_len, vocab], activations per block) and per-optimizer-update input association not observed. Needed to confirm chunked CE and checkpointing applicability, and to verify effective batch/seq_len match source.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_chunked_cross_entropy",
+                "fix_gradient_checkpointing"
+              ]
+            },
+            {
+              "field": "numerical_reference_context.comparison_reference.supported_candidate_boundaries",
+              "reason": "missing",
+              "detail": "Host-selected numerical reference strategy boundaries (supported candidate types, loss equivalence contract, resource limits) not described. Needed to ensure chunked CE recomputation and checkpointing recomputation fall within supported verification boundaries.",
+              "evidence_ref": null,
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "overall_feasibility",
+              "blocked_plan_ids": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r8",
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "run_id": "b3f864c78f9b4c36884c4aef8163a6c4",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_needs_more_info",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r8-20261030/jobs/b3f864c78f9b4c36884c4aef8163a6c4/rounds/01/diagnosis.json",
+          "sha256": "a899a89cf9c71fa3af6220ea8eef23b1201075629b5ba72e00b8bdaba157033e",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "fix_optimizer_backbone_only",
+            "fix_gradient_accumulation_microbatch"
+          ],
+          "plan_titles": [
+            "Restrict optimizer to head parameters only",
+            "Gradient accumulation with microbatches to reduce activation peak"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "source[0].lines[106:108]",
+              "reason": "ambiguous",
+              "detail": "Optimizer constructed with model.parameters() but comment says 'train only the head'. Need confirmation that backbone parameters have requires_grad=False or are excluded from optimizer param_groups at runtime.",
+              "evidence_ref": "source[0]",
+              "source_line_start": 106,
+              "source_line_end": 108,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_optimizer_backbone_only"
+              ]
+            },
+            {
+              "field": "source[0].lines[128:132]",
+              "reason": "ambiguous",
+              "detail": "Loss computation uses F.cross_entropy with default reduction='mean'. Need to confirm reduction is mean over batch elements only (no token/feature axes) and no label_smoothing, ignore_index, or class weights that would change weighting for microbatch accumulation.",
+              "evidence_ref": "source[0]",
+              "source_line_start": 128,
+              "source_line_end": 132,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_gradient_accumulation_microbatch"
+              ]
+            },
+            {
+              "field": "execution_context.runtime_input_observations",
+              "reason": "missing",
+              "detail": "Runtime tensor shapes for optimizer_input_name and effective_batch_per_optimizer_update not observed. Needed to verify actual parameter groups, gradient production, and update cadence for both proposed fixes.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "overall_feasibility",
+              "blocked_plan_ids": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r8",
+      "scenario_id": "s8_two_models_resident",
+      "run_id": "09e02b63095741e7b16e9f54c66c3e44",
+      "status": "failed",
+      "target_met": false,
+      "stop_reason": "pipeline_error",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r8-20261030/jobs/09e02b63095741e7b16e9f54c66c3e44/rounds/01/diagnosis.json",
+          "sha256": "00302c75346c30a0d8ba90b9c51983e523d5b1d5ce09d0b468cc3cb08c6d80a9",
+          "round": "01",
+          "valid": true,
+          "ready": true,
+          "needs_more_info": false,
+          "plan_ids": [
+            "fix_remove_teacher_model"
+          ],
+          "plan_titles": [
+            "Remove teacher model instantiation; keep distillation disabled"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [],
+          "evidence_requests": []
+        },
+        {
+          "path": "runs/final48-f3-retry/execution-r8-20261030/jobs/09e02b63095741e7b16e9f54c66c3e44/rounds/02/diagnosis.json",
+          "sha256": "0e5d70ca2204e0bf06d49428242438ef80bba5132ffd17225d2cdbadb5669648",
+          "round": "02",
+          "valid": true,
+          "ready": true,
+          "needs_more_info": false,
+          "plan_ids": [
+            "remove_teacher_model"
+          ],
+          "plan_titles": [
+            "Remove teacher model instantiation when distillation_weight is zero"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [],
+          "evidence_requests": []
+        },
+        {
+          "path": "runs/final48-f3-retry/execution-r8-20261030/jobs/09e02b63095741e7b16e9f54c66c3e44/rounds/03/diagnosis.json",
+          "sha256": "c09dbafaf89213fce615a6b239215658cc079a05512dc6e3143eebdabbafe6d2",
+          "round": "03",
+          "valid": true,
+          "ready": true,
+          "needs_more_info": false,
+          "plan_ids": [
+            "conditional_teacher_instantiation"
+          ],
+          "plan_titles": [
+            "Instantiate teacher model only when distillation_weight > 0"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [
+            {
+              "schema": "headroom.response-validation-metadata.v1",
+              "error_reason": "truncated",
+              "finish_reason": "length",
+              "role": "diagnose",
+              "usage": {
+                "prompt_tokens": 55079,
+                "completion_tokens": 2000,
+                "total_tokens": 57079,
+                "cached_tokens": 0,
+                "reasoning_tokens": 0
+              },
+              "request_index": 1,
+              "requested_reasoning": false
+            }
+          ],
+          "evidence_requests": []
+        },
+        {
+          "path": "runs/final48-f3-retry/execution-r8-20261030/jobs/09e02b63095741e7b16e9f54c66c3e44/rounds/04/diagnosis.json",
+          "sha256": "d27291d5faa04481c8997dd62a8800628b4bfa1afa23c3ae13494724d1ce7cde",
+          "round": "04",
+          "valid": true,
+          "ready": true,
+          "needs_more_info": false,
+          "plan_ids": [
+            "lazy_teacher_instantiation"
+          ],
+          "plan_titles": [
+            "Instantiate teacher model only when distillation_weight > 0"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [],
+          "evidence_requests": []
+        }
+      ]
+    },
+    {
+      "revision": "r8",
+      "scenario_id": "nanogpt",
+      "run_id": "00ca31ef1ce343fb959d777275d05ebf",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_validation_failed",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r8-20261030/jobs/00ca31ef1ce343fb959d777275d05ebf/rounds/01/diagnosis.json",
+          "sha256": "7d9f9a1012125ca2eaddd27e32f2b53492e4cf1a9c415bf22646e88d5122dcdb",
+          "round": "01",
+          "valid": false,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "grad_accum",
+            "chunked_ce"
+          ],
+          "plan_titles": [
+            "Increase gradient accumulation steps",
+            "Chunked cross-entropy to avoid full logits materialization"
+          ],
+          "issue_codes": [
+            "INVALID_EVIDENCE_DEPENDENCY",
+            "EVIDENCE_AVAILABILITY_CONTRADICTED"
+          ],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_input_observations.effective_batch_per_optimizer_update",
+              "reason": "ambiguous",
+              "detail": "Source defaults (batch_size=12, gradient_accumulation_steps=40) give effective batch 480, but invocation tokens (--batch_size=32, --gradient_accumulation_steps=40) give 1280. The target's actual applied values are unknown; this blocks the grad_accum plan step which must preserve the original effective batch and update cadence.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "grad_accum"
+              ]
+            },
+            {
+              "field": "model.py:52-76 forward attention and logits projection",
+              "reason": "missing",
+              "detail": "Need the actual source implementation of the output projection (c_proj) and cross-entropy loss to assess whether chunked cross-entropy over vocabulary is feasible without changing the mathematical objective (preserving reduction, masks, class weights, ignore_index, label smoothing). Current evidence only shows allocation stack stk_2ee23ee881631696.",
+              "evidence_ref": "source[1]",
+              "source_line_start": 52,
+              "source_line_end": 92,
+              "blocking_scope": "alternative_plan",
+              "blocked_plan_ids": [
+                "chunked_ce"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r9",
+      "scenario_id": "s1_batch_too_big",
+      "run_id": "a04d28ed80f640df9a3da447c3d367b9",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_needs_more_info",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r9-20261030/jobs/a04d28ed80f640df9a3da447c3d367b9/rounds/01/diagnosis.json",
+          "sha256": "c925d6c59a2ba22ae4f45455226d11389fe5ad788e6ac3f7f549fd05172dbf58",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "fix1"
+          ],
+          "plan_titles": [
+            "Gradient checkpointing per residual block"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "required_saving_gb",
+              "reason": "missing",
+              "detail": "The goal does not specify a numeric required_saving_gb; cannot confirm plan meets target reduction.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "overall_feasibility",
+              "blocked_plan_ids": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r9",
+      "scenario_id": "s2_capacity_v2",
+      "run_id": "0e58b67a1c434ce1b1cd005ab509da2c",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_needs_more_info",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r9-20261030/jobs/0e58b67a1c434ce1b1cd005ab509da2c/rounds/01/diagnosis.json",
+          "sha256": "39abed371b8e0964cfd9730fca4b3345ee569372a38e8559e6d7bd2a09cb4ef5",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "grad_accum_2x",
+            "optimizer_state_offload_cpu"
+          ],
+          "plan_titles": [
+            "Gradient accumulation x2 (microbatch 12) to reduce activation peak",
+            "Offload AdamW optimizer state (moments) to CPU pinned memory"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [
+            {
+              "schema": "headroom.response-validation-metadata.v1",
+              "error_reason": "truncated",
+              "finish_reason": "length",
+              "role": "diagnose",
+              "usage": {
+                "prompt_tokens": 52408,
+                "completion_tokens": 2000,
+                "total_tokens": 54408,
+                "cached_tokens": 4352,
+                "reasoning_tokens": 0
+              },
+              "request_index": 1,
+              "requested_reasoning": false
+            }
+          ],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_input_observations.logical_updates.effective_batch_per_optimizer_update",
+              "reason": "ambiguous",
+              "detail": "Need confirmation that the effective batch per optimizer update (24) equals the product of microbatch size and accumulation steps, and that the loss reduction denominator (mean over 24 elements) is preserved by weighting each microbatch mean by its valid count / 24.",
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates.effective_batch_per_optimizer_update",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "grad_accum_2x"
+              ]
+            },
+            {
+              "field": "execution_context.runtime_input_observations.tensors.inputs.shape",
+              "reason": "missing",
+              "detail": "Need the exact runtime input tensor shape for the training path to confirm the leading batch dimension (24) and any sequence/feature axes that participate in the loss mean reduction.",
+              "evidence_ref": "execution_context.runtime_input_observations.training_forwards_per_optimizer_update",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "grad_accum_2x"
+              ]
+            },
+            {
+              "field": "execution_context.runtime_input_observations.logical_updates.backwards_per_optimizer_update",
+              "reason": "ambiguous",
+              "detail": "Confirm whether the current backwards_per_optimizer_update=1 matches the proposed accumulation steps=2 (i.e., two backward passes per optimizer step) and that the gradient reset occurs only once per effective batch.",
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates.backwards_per_optimizer_update",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "grad_accum_2x"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r9",
+      "scenario_id": "s3_eval_no_grad_missing",
+      "run_id": "0f09d72c0ada4a9fbcde5a7828c6c81f",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_needs_more_info",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r9-20261030/jobs/0f09d72c0ada4a9fbcde5a7828c6c81f/rounds/01/diagnosis.json",
+          "sha256": "c7e670c6f2d6255e6045aee795ca8936fc8015680aa23727b84cdb38eb195d5d",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "step1_chunked_ce",
+            "step2_gradient_checkpointing"
+          ],
+          "plan_titles": [
+            "Chunked cross-entropy to avoid full-vocabulary logits materialization",
+            "Activation checkpointing on residual blocks"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "source[0]",
+              "reason": "ambiguous",
+              "detail": "Task type unclear: train.py uses MSE loss on targets shaped [batch, width] (width=768), suggesting regression or token-wise regression, not classification. Chunked cross-entropy requires classification with vocabulary-sized logits. Need to confirm if the model output is logits over vocabulary (classification) or direct predictions (regression).",
+              "evidence_ref": "source[0]",
+              "source_line_start": 109,
+              "source_line_end": 111,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "step1_chunked_ce"
+              ]
+            },
+            {
+              "field": "execution_context.runtime_input_observations.tensors.train_targets",
+              "reason": "missing",
+              "detail": "train_targets shape [1, 768] and dtype float32 observed, but semantic meaning (class indices vs regression values) unknown. This determines whether chunked CE is mathematically valid.",
+              "evidence_ref": "execution_context.runtime_input_observations.training_forwards_per_optimizer_update",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "step1_chunked_ce"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r9",
+      "scenario_id": "s4_loss_accumulation_graph",
+      "run_id": "9b05f42fc2dc49e1a0f4d456dc9207e9",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_needs_more_info",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r9-20261030/jobs/9b05f42fc2dc49e1a0f4d456dc9207e9/rounds/01/diagnosis.json",
+          "sha256": "78f91f2d1ce854652b16cd494cecd05799be1a4f3be73620b3964ceb449433d7",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "fix1",
+            "fix2"
+          ],
+          "plan_titles": [
+            "Remove unnecessary retain_graph=True from loss.backward()",
+            "Enable gradient checkpointing for transformer blocks to reduce activation peak"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "required_saving_gb",
+              "reason": "missing",
+              "detail": "The goal requires a specific memory reduction target in GB; without it, feasibility of the proposed plan cannot be confirmed.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "overall_feasibility",
+              "blocked_plan_ids": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r9",
+      "scenario_id": "s5_fragmentation_varlen",
+      "run_id": "17784db48d47480ab377f88629508db9",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_needs_more_info",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r9-20261030/jobs/17784db48d47480ab377f88629508db9/rounds/01/diagnosis.json",
+          "sha256": "5463d65ef3dca19c793f44c95df5d4f18d4a9dd4885096f1c5e785565716f83a",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "fix1",
+            "fix2"
+          ],
+          "plan_titles": [
+            "Chunked cross-entropy via token-wise streaming to avoid full-vocabulary logits",
+            "Gradient checkpointing on repeated transformer blocks to bound activation peak"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_input_observations.status",
+              "reason": "missing",
+              "detail": "Runtime tensor shapes (optimizer_input_name, effective_batch_per_optimizer_update) not observed; needed to confirm loss reduction axes, sample weighting, and update boundary for any accumulation or microbatch proposal.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "alternative_plan",
+              "blocked_plan_ids": []
+            },
+            {
+              "field": "source/train.py:119 loss_reduction_semantics",
+              "reason": "ambiguous",
+              "detail": "MSE loss reduction axes, masks, weights, and denominator are not explicitly defined in source; chunked CE must preserve exact unreduced loss and weighting. Source shows F.mse_loss(outputs, inputs) without reduction args.",
+              "evidence_ref": "source[0]",
+              "source_line_start": 119,
+              "source_line_end": 119,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix1"
+              ]
+            },
+            {
+              "field": "source/train.py:92 forward_logits_producer",
+              "reason": "ambiguous",
+              "detail": "Exact producer of full-vocabulary logits tensor and its consumers (loss + any other) not fully resolved from source; needed to ensure chunked CE does not discard logits needed elsewhere.",
+              "evidence_ref": "source[0]",
+              "source_line_start": 92,
+              "source_line_end": 92,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix1"
+              ]
+            },
+            {
+              "field": "source/train.py:82 block_structure",
+              "reason": "ambiguous",
+              "detail": "TokenMLP uses 6 identical Sequential(Linear, GELU, Linear) blocks; checkpoint granularity must account for retained boundary inputs plus largest recomputed segment. Source does not specify if blocks share parameters or have cross-block dependencies.",
+              "evidence_ref": "source[0]",
+              "source_line_start": 82,
+              "source_line_end": 82,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix2"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r9",
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "run_id": "55b492d70ab84f62bf34016c86125589",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_validation_failed",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r9-20261030/jobs/55b492d70ab84f62bf34016c86125589/rounds/01/diagnosis.json",
+          "sha256": "089ace6722ab5e63729fc45a9d2ec2bebc8296398d8da089c4c06e8989a03d19",
+          "round": "01",
+          "valid": false,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "fix_chunked_cross_entropy",
+            "fix_gradient_accumulation_microbatch"
+          ],
+          "plan_titles": [
+            "Chunked cross-entropy without full FP32 logits materialization",
+            "Gradient accumulation with microbatches to reduce activation peak"
+          ],
+          "issue_codes": [
+            "NUMERICS_CHANGE_FORBIDDEN"
+          ],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_input_observations.tensor_shapes",
+              "reason": "missing",
+              "detail": "Need confirmed runtime shapes for logits (batch, seq_len, vocab), loss reduction axes, and any masks/weights to validate chunked CE preserves original loss semantics exactly.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_chunked_cross_entropy"
+              ]
+            },
+            {
+              "field": "execution_context.runtime_input_observations.loss_reduction_semantics",
+              "reason": "missing",
+              "detail": "Need explicit confirmation of cross_entropy reduction='mean' denominator (batch*seq_len=16384), ignore_index handling, label_smoothing, and class weights to derive correct per-chunk loss weights for microbatch accumulation.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_gradient_accumulation_microbatch"
+              ]
+            },
+            {
+              "field": "execution_context.runtime_input_observations.cross_sample_coupling",
+              "reason": "missing",
+              "detail": "Need to confirm no batch normalization, distributed all-reduce, gradient clipping, or other cross-sample operations that would couple microbatches and break gradient accumulation equivalence.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_gradient_accumulation_microbatch"
+              ]
+            },
+            {
+              "field": "execution_context.runtime_input_observations.rng_scheduler_semantics",
+              "reason": "missing",
+              "detail": "Need to confirm RNG state (dropout, data ordering) and scheduler step cadence are compatible with microbatch splitting without changing update semantics.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_gradient_accumulation_microbatch"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r9",
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "run_id": "7c39f282b90343499a9da91c099a298c",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_needs_more_info",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r9-20261030/jobs/7c39f282b90343499a9da91c099a298c/rounds/01/diagnosis.json",
+          "sha256": "3cb2e3caa17fcc1e438725313d907c2f35863be61904e423134c8b2b380f01ec",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "freeze_backbone_params",
+            "disable_backbone_gradients",
+            "chunked_cross_entropy"
+          ],
+          "plan_titles": [
+            "Exclude frozen backbone parameters from optimizer",
+            "Set backbone parameters requires_grad=False",
+            "Implement chunked cross-entropy to avoid full logits materialization"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "policy.allow_model_change",
+              "reason": "policy_infeasible",
+              "detail": "Plan step freeze_backbone_params changes the set of trainable parameters (backbone excluded from optimizer). allow_model_change=false; need explicit confirmation that this objective change is authorized despite policy. Source comment indicates intent but code contradicts.",
+              "evidence_ref": "source[0]",
+              "source_line_start": 87,
+              "source_line_end": 88,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "freeze_backbone_params"
+              ]
+            },
+            {
+              "field": "execution_context.runtime_input_observations",
+              "reason": "missing",
+              "detail": "Need observed tensor shapes for optimizer_input_name and effective_batch_per_optimizer_update to verify training-update contract. Current evidence has status unsupported/unverified.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "overall_feasibility",
+              "blocked_plan_ids": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r9",
+      "scenario_id": "s8_two_models_resident",
+      "run_id": "86ed2f80b2174b92830c3158327d0ba1",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_needs_more_info",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r9-20261030/jobs/86ed2f80b2174b92830c3158327d0ba1/rounds/01/diagnosis.json",
+          "sha256": "6d1dcf222ef84b998878b0041ab6204427b04d352cbf11894f9240eb7e1ff1a4",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "f1_remove_teacher_resident",
+            "f2_gradient_accumulation",
+            "f3_chunked_cross_entropy"
+          ],
+          "plan_titles": [
+            "Remove eager teacher model GPU residency",
+            "Enable gradient accumulation to reduce microbatch activation peak",
+            "Stream cross-entropy loss in vocabulary chunks to avoid full FP32 logits"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [
+            {
+              "schema": "headroom.response-validation-metadata.v1",
+              "error_reason": "truncated",
+              "finish_reason": "length",
+              "role": "diagnose",
+              "usage": {
+                "prompt_tokens": 50986,
+                "completion_tokens": 2000,
+                "total_tokens": 52986,
+                "cached_tokens": 4352,
+                "reasoning_tokens": 0
+              },
+              "request_index": 1,
+              "requested_reasoning": false
+            }
+          ],
+          "evidence_requests": []
+        }
+      ]
+    },
+    {
+      "revision": "r9",
+      "scenario_id": "nanogpt",
+      "run_id": "b943d8b920b943168bd467ca89b09e45",
+      "status": "failed",
+      "target_met": false,
+      "stop_reason": "pipeline_error",
+      "diagnoses": []
+    },
+    {
+      "revision": "r10",
+      "scenario_id": "s1_batch_too_big",
+      "run_id": "13b73ffc28a34bdbb9070b22582f43f9",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_needs_more_info",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r10-20261030/jobs/13b73ffc28a34bdbb9070b22582f43f9/rounds/01/diagnosis.json",
+          "sha256": "d993eb0cc50081518df0129a79f48449600d118f55c548bbc6a3fff6bf318a40",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "fix_grad_accum_microbatch"
+          ],
+          "plan_titles": [
+            "Gradient accumulation with microbatches to bound activation peak"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_input_observations.optimizer_input_name",
+              "reason": "missing",
+              "detail": "Need the exact tensor name and shape that the optimizer consumes as gradient input for each parameter, to confirm microbatch gradient accumulation feeds the same buffers.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_grad_accum_microbatch"
+              ]
+            },
+            {
+              "field": "execution_context.runtime_input_observations.effective_batch_per_optimizer_update",
+              "reason": "missing",
+              "detail": "Need confirmation that one optimizer update occurs per logical step (steps=20) with effective batch=32, to preserve update cadence under accumulation.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_grad_accum_microbatch"
+              ]
+            },
+            {
+              "field": "source[0] lines 94-103",
+              "reason": "ambiguous",
+              "detail": "Source shows loss.backward() then optimizer.step() once per step. Need to confirm no hidden gradient clipping, sync, or scheduler step that would couple microbatch gradients across the accumulation boundary.",
+              "evidence_ref": "source[0]",
+              "source_line_start": 94,
+              "source_line_end": 103,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_grad_accum_microbatch"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r10",
+      "scenario_id": "s2_capacity_v2",
+      "run_id": "a3ca53ac352649aa8d49488761d5d933",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_validation_failed",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r10-20261030/jobs/a3ca53ac352649aa8d49488761d5d933/rounds/01/diagnosis.json",
+          "sha256": "f3e7f83fc38019bcdac6f71c6c735e8091dea21c9898d68d07e5590496fab6a7",
+          "round": "01",
+          "valid": false,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "step1"
+          ],
+          "plan_titles": [
+            "Reduce effective batch per optimizer update via gradient accumulation"
+          ],
+          "issue_codes": [
+            "INVALID_EVIDENCE_RANGE"
+          ],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_input_observations.logical_updates.training_forwards_per_optimizer_update",
+              "reason": "ambiguous",
+              "detail": "The source shows a single forward/backward per optimizer step, but the runtime observation records training_forwards_per_optimizer_update=1 and backwards_per_optimizer_update=1. Confirm that restructuring the loop to multiple microbatch forward/backwards per optimizer step is semantically valid and does not introduce extra optimizer steps or change loss reduction semantics.",
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates",
+              "source_line_start": 139,
+              "source_line_end": 147,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "step1"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r10",
+      "scenario_id": "s3_eval_no_grad_missing",
+      "run_id": "f3962d0c96ff43f48b2409fe1deff19d",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_needs_more_info",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r10-20261030/jobs/f3962d0c96ff43f48b2409fe1deff19d/rounds/01/diagnosis.json",
+          "sha256": "9b7c6a354f3acf042949a582f5bcd91f26107225439f0a572e102949ef4be031",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "fix_01",
+            "fix_02",
+            "fix_03"
+          ],
+          "plan_titles": [
+            "Add gradient checkpointing to ResidualBlock forward",
+            "Fuse LayerNorm + Linear in FFN to avoid materialized intermediate",
+            "Reduce eval batch size from 16 to 8"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_input_observations.tensors.eval_inputs.shape",
+              "reason": "ambiguous",
+              "detail": "Eval input shape [16, 512, 768] observed but unclear if this is fixed by source or varies with args.batch/args.tiny. Need to confirm eval batch is independently configurable for reduction.",
+              "evidence_ref": "execution_context.runtime_input_observations.initial_tensors",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_03"
+              ]
+            },
+            {
+              "field": "execution_context.runtime_input_observations.tensors.train_inputs.shape",
+              "reason": "ambiguous",
+              "detail": "Train input shape [1, 512, 768] with batch=1; unclear if this is fixed or derived from args.batch. If train batch can be reduced further, additional activation savings possible but must preserve effective batch=1 per optimizer update.",
+              "evidence_ref": "execution_context.runtime_input_observations.initial_tensors",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "alternative_plan",
+              "blocked_plan_ids": []
+            },
+            {
+              "field": "source_files[0].content lines 26-30",
+              "reason": "ambiguous",
+              "detail": "ResidualBlock.forward implementation truncated in visible source (line 29 shows 'hidden = block(hidden)' but block variable undefined). Need complete forward method to confirm checkpointing boundaries and data dependencies.",
+              "evidence_ref": "source[0]",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_01"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r10",
+      "scenario_id": "s4_loss_accumulation_graph",
+      "run_id": "4758c91756394e31908588898e8f5eca",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_needs_more_info",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r10-20261030/jobs/4758c91756394e31908588898e8f5eca/rounds/01/diagnosis.json",
+          "sha256": "7f904a7ef3e8d477cd576ed3435e7217e2ed8b60a6d3c8db00dd4d50633f9e26",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "fix_retain_graph_false",
+            "fix_gradient_accumulation"
+          ],
+          "plan_titles": [
+            "Remove retain_graph=True from loss.backward()",
+            "Add gradient accumulation with microbatches to reduce activation peak"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_input_observations.logical_updates",
+              "reason": "missing",
+              "detail": "Need optimizer_input_name and effective_batch_per_optimizer_update from a retained run to confirm update cadence and loss denominator for gradient accumulation weighting.",
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "overall_feasibility",
+              "blocked_plan_ids": []
+            },
+            {
+              "field": "source[training_loop].loss_reduction_semantics",
+              "reason": "ambiguous",
+              "detail": "Source uses .mean() over predictions-targets. Need to confirm reduction axes (batch only vs feature/token axes) to derive correct per-chunk loss weights for gradient accumulation.",
+              "evidence_ref": "source[0]",
+              "source_line_start": 100,
+              "source_line_end": 101,
+              "blocking_scope": "overall_feasibility",
+              "blocked_plan_ids": []
+            },
+            {
+              "field": "policy.allow_batch_grad_accum",
+              "reason": "policy_infeasible",
+              "detail": "Policy shows allow_batch_grad_accum=true, but gradient accumulation also requires verified loss weighting, unchanged effective batch/updates, and no cross-sample coupling. These are unresolved.",
+              "evidence_ref": null,
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "overall_feasibility",
+              "blocked_plan_ids": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r10",
+      "scenario_id": "s5_fragmentation_varlen",
+      "run_id": "484a012babba400ab1ff89fe914878b8",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_needs_more_info",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r10-20261030/jobs/484a012babba400ab1ff89fe914878b8/rounds/01/diagnosis.json",
+          "sha256": "5e952d0fe7baf827a6fb35cd6584a21bce1064c789fa0b454945842caaa8ed15",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "p1",
+            "p2"
+          ],
+          "plan_titles": [
+            "Enable gradient checkpointing on TokenMLP blocks",
+            "Reduce microbatch size via gradient accumulation"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [
+            {
+              "schema": "headroom.response-validation-metadata.v1",
+              "error_reason": "truncated",
+              "finish_reason": "length",
+              "role": "diagnose",
+              "usage": {
+                "prompt_tokens": 45109,
+                "completion_tokens": 2000,
+                "total_tokens": 47109,
+                "cached_tokens": 0,
+                "reasoning_tokens": 0
+              },
+              "request_index": 1,
+              "requested_reasoning": false
+            }
+          ],
+          "evidence_requests": [
+            {
+              "field": "plan[1].description",
+              "reason": "ambiguous",
+              "detail": "Loss reduction denominator and per-sample weighting for variable-length sequences (train.py:101 lengths, train.py:119 MSE loss) are not established. Must know original reduction axes, masks, and whether mean covers token/feature axes to derive correct accumulation weights.",
+              "evidence_ref": "source[0]",
+              "source_line_start": 101,
+              "source_line_end": 120,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "p2"
+              ]
+            },
+            {
+              "field": "plan[1].description",
+              "reason": "ambiguous",
+              "detail": "Optimizer step boundary and scheduler coupling: train.py uses SGD with no explicit scheduler, but accumulation must preserve exactly one optimizer.step, zero_grad, and any scheduler step per original effective batch. Runtime evidence of optimizer_input_name and effective_batch_per_optimizer_update needed.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "p2"
+              ]
+            },
+            {
+              "field": "plan[0].description",
+              "reason": "ambiguous",
+              "detail": "Checkpoint segment peak: wrapping the full 6-layer stack (train.py:92) may recreate large activation set during backward recompute. Need evidence on per-block activation sizes or runtime peak with per-block checkpointing to estimate recompute peak.",
+              "evidence_ref": "source[0]",
+              "source_line_start": 76,
+              "source_line_end": 93,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "p1"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r10",
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "run_id": "f319c4d260664d3d9092fa860b3d8db9",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_needs_more_info",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r10-20261030/jobs/f319c4d260664d3d9092fa860b3d8db9/rounds/01/diagnosis.json",
+          "sha256": "0e149a191d1b60d92a5363ba2361a076716cf46ef04e1be509f531df68eb4c77",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "fix1",
+            "fix2"
+          ],
+          "plan_titles": [
+            "Chunked cross-entropy to avoid full fp32 logits",
+            "Gradient accumulation with microbatches"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [
+            {
+              "schema": "headroom.response-validation-metadata.v1",
+              "error_reason": "truncated",
+              "finish_reason": "length",
+              "role": "diagnose",
+              "usage": {
+                "prompt_tokens": 37441,
+                "completion_tokens": 2000,
+                "total_tokens": 39441,
+                "cached_tokens": 0,
+                "reasoning_tokens": 0
+              },
+              "request_index": 1,
+              "requested_reasoning": false
+            }
+          ],
+          "evidence_requests": [
+            {
+              "field": "root_causes[2].bytes_gb",
+              "reason": "ambiguous",
+              "detail": "Unclassified 17.2 GB peak component lacks causal attribution; need allocator live block breakdown or stack-resolved composition at peak event index 29.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "overall_feasibility",
+              "blocked_plan_ids": []
+            },
+            {
+              "field": "plan[1].expected_saving_gb",
+              "reason": "missing",
+              "detail": "Microbatch activation scaling factor unknown; need runtime input observation of activation memory vs batch size or per-microbatch peak measurement.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix2"
+              ]
+            },
+            {
+              "field": "verification.compare_loss",
+              "reason": "policy_infeasible",
+              "detail": "Loss equivalence gate requires host-selected numerical reference and tolerance; chunked CE and microbatching may change floating-point reduction order. Need user decision on acceptable tolerance or reference strategy if default 0.001 fails.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "overall_feasibility",
+              "blocked_plan_ids": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r10",
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "run_id": "b27e24cfdb3d4ca78b82404b2ccc3230",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_needs_more_info",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r10-20261030/jobs/b27e24cfdb3d4ca78b82404b2ccc3230/rounds/01/diagnosis.json",
+          "sha256": "87efe50a60c03091ddd251b536318328e5cf0cb6abd2a0168f66463f7666099f",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "fix_exclude_backbone_params",
+            "fix_gradient_accumulation_microbatch"
+          ],
+          "plan_titles": [
+            "Exclude backbone parameters from optimizer",
+            "Gradient accumulation with micro-batches to reduce activation peak"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "root_causes[2].bytes_gb",
+              "reason": "ambiguous",
+              "detail": "The unknown peak component (4.3 GB at stk_a58381bcf915d100) is labeled 'params' by an untrusted nano model opinion but lacks measured category provenance. Its true category (params vs optimizer_state vs other) affects whether fix_exclude_backbone_params fully covers it.",
+              "evidence_ref": "source[0]",
+              "source_line_start": 67,
+              "source_line_end": 156,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix_exclude_backbone_params"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r10",
+      "scenario_id": "s8_two_models_resident",
+      "run_id": "784b5765eae849f6ac3f2d47857618b1",
+      "status": "failed",
+      "target_met": false,
+      "stop_reason": "pipeline_error",
+      "diagnoses": []
+    },
+    {
+      "revision": "r10",
+      "scenario_id": "nanogpt",
+      "run_id": "1b4dcf35dff341509ecaebb67905e373",
+      "status": "failed",
+      "target_met": false,
+      "stop_reason": "pipeline_error",
+      "diagnoses": []
+    },
+    {
+      "revision": "r11",
+      "scenario_id": "s1_batch_too_big",
+      "run_id": "c767e47a7b6b49df942754a6694c1ddc",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_needs_more_info",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r11-20261030/jobs/c767e47a7b6b49df942754a6694c1ddc/rounds/01/diagnosis.json",
+          "sha256": "4cd97a3e0d0254043152d09a09690bbf7b14a87d5266a220ce61352351a48424",
+          "round": "01",
+          "valid": true,
+          "ready": true,
+          "needs_more_info": false,
+          "plan_ids": [
+            "grad_accum"
+          ],
+          "plan_titles": [
+            "Gradient accumulation with microbatches to reduce activation peak"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [],
+          "evidence_requests": []
+        },
+        {
+          "path": "runs/final48-f3-retry/execution-r11-20261030/jobs/c767e47a7b6b49df942754a6694c1ddc/rounds/02/diagnosis.json",
+          "sha256": "dac387ad1b1b4a91bd8abecb407f8cac549d6f005f61ef90dbbb7341c20b7a35",
+          "round": "02",
+          "valid": true,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "ckpt-seg"
+          ],
+          "plan_titles": [
+            "Activation checkpointing per model segment"
+          ],
+          "issue_codes": [],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "plan[0].description",
+              "reason": "ambiguous",
+              "detail": "Exact segment boundaries and checkpoint API (use_reentrant=False) for 192 ResidualBlocks; need source-level confirmation that each block is independently checkpointable without splitting LayerNorm stats.",
+              "evidence_ref": "source[0]",
+              "source_line_start": 11,
+              "source_line_end": 30,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "ckpt-seg"
+              ]
+            },
+            {
+              "field": "overall_feasibility",
+              "reason": "insufficient_saving",
+              "detail": "Required total saving unknown (fix-oom goal); estimated 12 GiB from checkpointing may not reach completion. Need host trial or additional independent savings (e.g., param-copy elimination) to cover gap.",
+              "evidence_ref": null,
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "overall_feasibility",
+              "blocked_plan_ids": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r11",
+      "scenario_id": "s2_capacity_v2",
+      "run_id": "3c5683f9ff4c41febcdefb9a4687402c",
+      "status": "needs_human",
+      "target_met": false,
+      "stop_reason": "diagnosis_validation_failed",
+      "diagnoses": [
+        {
+          "path": "runs/final48-f3-retry/execution-r11-20261030/jobs/3c5683f9ff4c41febcdefb9a4687402c/rounds/01/diagnosis.json",
+          "sha256": "070f6a5ea7c438dc655f68a307f153634163cb307b319c64953b49e9cd5d4b97",
+          "round": "01",
+          "valid": false,
+          "ready": false,
+          "needs_more_info": true,
+          "plan_ids": [
+            "F1"
+          ],
+          "plan_titles": [
+            "Chunk cross-entropy loss over vocabulary to avoid full logits tensor"
+          ],
+          "issue_codes": [
+            "EVIDENCE_AVAILABILITY_CONTRADICTED"
+          ],
+          "response_validation_failures": [],
+          "evidence_requests": [
+            {
+              "field": "loss_function_semantics",
+              "reason": "ambiguous",
+              "detail": "Source shows MSE loss (predictions - targets).square().mean() at line 144, but cross-entropy chunking only applies if the true objective is cross-entropy from full-vocabulary logits. Need confirmation of actual loss semantics, vocabulary size, and any label_smoothing/ignore_index/mask.",
+              "evidence_ref": "source[0]",
+              "source_line_start": 143,
+              "source_line_end": 145,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "F1"
+              ]
+            },
+            {
+              "field": "chunked_cross_entropy_availability",
+              "reason": "missing",
+              "detail": "No evidence of an existing chunked cross-entropy implementation or helper in the supplied source. Need to know if an equivalent streaming implementation is available or must be written, and whether it preserves the exact reduction, masks, class weights, ignore_index, and label_smoothing.",
+              "evidence_ref": "source[0]",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "F1"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "revision": "r11",
+      "scenario_id": "s3_eval_no_grad_missing",
+      "run_id": null,
+      "status": "not_run",
+      "target_met": null,
+      "stop_reason": "not_dispatched",
+      "diagnoses": []
+    },
+    {
+      "revision": "r11",
+      "scenario_id": "s4_loss_accumulation_graph",
+      "run_id": null,
+      "status": "not_run",
+      "target_met": null,
+      "stop_reason": "not_dispatched",
+      "diagnoses": []
+    },
+    {
+      "revision": "r11",
+      "scenario_id": "s5_fragmentation_varlen",
+      "run_id": null,
+      "status": "not_run",
+      "target_met": null,
+      "stop_reason": "not_dispatched",
+      "diagnoses": []
+    },
+    {
+      "revision": "r11",
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "run_id": null,
+      "status": "not_run",
+      "target_met": null,
+      "stop_reason": "not_dispatched",
+      "diagnoses": []
+    },
+    {
+      "revision": "r11",
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "run_id": null,
+      "status": "not_run",
+      "target_met": null,
+      "stop_reason": "not_dispatched",
+      "diagnoses": []
+    },
+    {
+      "revision": "r11",
+      "scenario_id": "s8_two_models_resident",
+      "run_id": null,
+      "status": "not_run",
+      "target_met": null,
+      "stop_reason": "not_dispatched",
+      "diagnoses": []
+    },
+    {
+      "revision": "r11",
+      "scenario_id": "nanogpt",
+      "run_id": null,
+      "status": "not_run",
+      "target_met": null,
+      "stop_reason": "not_dispatched",
+      "diagnoses": []
+    }
+  ],
+  "limitations": [
+    "No new model/GPU outcome. R11 did not execute seven rows; use older revisions only as historical diagnostic evidence.",
+    "Compact one-candidate schema was introduced only for R11; R8-R10 cannot establish its effect on s3-s8 or nanoGPT."
+  ]
+}

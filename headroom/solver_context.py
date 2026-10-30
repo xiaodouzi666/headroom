@@ -8,6 +8,9 @@ from collections.abc import Mapping
 from pathlib import PurePosixPath
 
 from headroom.api.security import open_regular
+from headroom.retained_state import retained_state_reading_aid
+from headroom.verify.candidate_preflight import SCHEMA as PREFLIGHT_SCHEMA
+from headroom.verify.candidate_preflight import reference_family_reading_aid
 
 MAX_DIFF_BYTES = 4096
 MAX_ARTIFACT_BYTES = 512000
@@ -519,6 +522,20 @@ def candidate_outcome_stage(row, *, patch_status=None, patch_reason=None):
         "candidate_runtime_observed": None,
         "candidate_numerical_comparison": "unknown",
     }
+    preflight = row.get("candidate_reference_preflight")
+    if (
+        isinstance(preflight, Mapping)
+        and preflight.get("schema") == PREFLIGHT_SCHEMA
+        and preflight.get("status") == "rejected"
+        and preflight.get("execution_performed_by_preflight") is False
+    ):
+        result.update(
+            stage="inconsistent_preflight_and_verification_evidence"
+            if available
+            else "reference_contract_rejected_before_execution",
+            candidate_runtime_observed=None if available else False,
+        )
+        return result
     # This exact host F821 rejection returns before services.verify. Other
     # failed reasons do not establish whether candidate execution was attempted.
     failed_name_check = patch_status == "failed" and patch_reason == "NEW_UNDEFINED_NAME"
@@ -829,10 +846,17 @@ def solver_prompt_context(
             MAX_NUMERICAL_REFERENCE_CONTEXT_BYTES,
             "numerical_reference_context",
         )
+    family_aid = reference_family_reading_aid(numerical_reference_context)
+    if family_aid is not None:
+        fields["reference_family_reading_aid"] = family_aid
     if execution_context is not None:
         fields["invocation_reading_aid"] = invocation_reading_aid(execution_context)
         fields["execution_context"] = bounded_json(
             execution_context, MAX_EXECUTION_BYTES, "execution_context"
+        )
+    if execution_context is not None or candidate_evidence is not None:
+        fields["retained_state_reading_aid"] = retained_state_reading_aid(
+            execution_context, candidate_evidence
         )
     if candidate_evidence is not None:
         fields["candidate_evidence"] = candidate_context(candidate_evidence)

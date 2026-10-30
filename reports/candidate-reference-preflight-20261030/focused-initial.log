@@ -1,0 +1,31 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+..........F................................................              [100%]
+=================================== FAILURES ===================================
+_ test_known_unsupported_patch_skips_verify_and_reaches_next_round_with_exact_feedback _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-481/test_known_unsupported_patch_s0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x789b487ff5f0>
+
+    def test_known_unsupported_patch_skips_verify_and_reaches_next_round_with_exact_feedback(
+        tmp_path, monkeypatch
+    ):
+        import headroom.orchestrator as module
+    
+        context = active_context()
+        monkeypatch.setattr(
+            module, "numerical_reference_context", lambda *args, **kwargs: copy.deepcopy(context)
+        )
+        # The integration source is intentionally a synthetic, unsupported program.
+        # Every patch is retained as an artifact but must never reach the fake verifier.
+        plans = [{"before": "VALUE = 1\n", "after": "VALUE = 2\n"}] * 6
+        result, store, calls, verifies, root = search_run(tmp_path, plans, max_rounds=6)
+        try:
+>           assert result["status"] == "completed"
+E           AssertionError: assert 'failed' == 'completed'
+E             
+E             - completed
+E             + failed
+
+tests/test_candidate_reference_preflight.py:141: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_candidate_reference_preflight.py::test_known_unsupported_patch_skips_verify_and_reaches_next_round_with_exact_feedback

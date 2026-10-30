@@ -1,0 +1,59 @@
+{
+  "scope": "offline_only_no_GPU_provider_HTTP_or_production_database",
+  "focused_corrected_pass_count_from_progress": 59,
+  "dedicated_final_junit": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "15",
+    "time": "2.123",
+    "timestamp": "2026-10-30T11:07:16.089874+01:00",
+    "hostname": "ubuntu"
+  },
+  "files": {
+    "headroom/verify/candidate_preflight.py": "3d4b7012a0679151e1fa444880058510fc988ab0138077fc293ece3de8b6bfb5",
+    "headroom/orchestrator.py": "a09f47cb96defb8060dbb002ab9dd1a55ef0ce1801bf9eb506ed5570690d6c33",
+    "headroom/solver_context.py": "284934561206ee3d3f7fcdebce4bb856a9fb8dc11d3c05db23effecdaf2565af",
+    "tests/test_candidate_reference_preflight.py": "a7716c0cc4128def26df9d993d2ca720b19e67e6676a11a8dac30bf277d5bee6"
+  },
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/verify/candidate_preflight.py",
+        "headroom/orchestrator.py",
+        "headroom/solver_context.py",
+        "tests/test_candidate_reference_preflight.py"
+      ],
+      "exit_code": 0,
+      "stdout": "4 files already formatted\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/verify/candidate_preflight.py",
+        "headroom/orchestrator.py",
+        "headroom/solver_context.py",
+        "tests/test_candidate_reference_preflight.py"
+      ],
+      "exit_code": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}
