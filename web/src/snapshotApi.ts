@@ -83,9 +83,11 @@ async function responseJSON(response: Response): Promise<Dict> {
         ? "This snapshot is unavailable or its 24-hour retention has ended."
         : response.status === 401 || response.status === 403
           ? "The judge token or session was not accepted."
-          : response.status === 503
-            ? "Snapshot analysis is temporarily paused."
-            : `Snapshot request failed (${response.status}).`;
+          : response.status === 408
+            ? "The snapshot upload exceeded its time limit. Analysis did not start. Try a faster connection or a smaller capture."
+            : response.status === 503
+              ? "Snapshot analysis is temporarily paused."
+              : `Snapshot request failed (${response.status}).`;
     throw new SnapshotAPIError(
       response.status === 429 || response.status === 413
         ? text(body.detail, fallback).slice(0, 300)

@@ -164,7 +164,7 @@ def test_slow_body_timeout_and_cancel_release_receiving_capacity(tmp_path, monke
     import headroom.api.snapshot_routes as routes
 
     app = public_app(tmp_path, monkeypatch)
-    monkeypatch.setattr(routes, "UPLOAD_TIMEOUT_SECONDS", 0.01)
+    monkeypatch.setattr(routes, "AUTHENTICATED_UPLOAD_TIMEOUT_SECONDS", 0.01)
     endpoint = next(
         r.endpoint
         for r in app.routes

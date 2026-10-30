@@ -1,0 +1,111 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+.FF..................................................................... [ 48%]
+........................................................................ [ 97%]
+...                                                                      [100%]
+=================================== FAILURES ===================================
+_ test_real_failed_request_gets_exact_context_without_mutation_or_readiness[s2] _
+
+record = {'case': 's2', 'source': 'runs/final48-f3-retry/execution-r8-20261030/jobs/cb9863fad0564d0cb4988dd30a3d9522/rounds/01/...7d74e8d8e923c39cc2', 'evidence_source_sha256': '4e4b84814dfa83546c09743da9d783693debde6929ab48eb4c680c4559462ca0', ...}
+
+    @pytest.mark.parametrize("record", records(), ids=lambda value: value["case"])
+    def test_real_failed_request_gets_exact_context_without_mutation_or_readiness(record):
+        saved = copy.deepcopy(record)
+        result = validate_diagnosis(
+            record["diagnosis"], evidence=record["evidence"], policy=record["policy"]
+        )
+        issue = record["original_issues"][0]
+        assert not result.valid and not result.ready_for_patch and result.requires_supplement
+        assert result.diagnosis.needs_more_info
+        data = next(item for item in feedback(result)["issues"] if item["code"] == issue["code"])
+        assert data["message"] == issue["message"]
+        number = int(issue["path"].rsplit("/", 1)[1])
+        context = data["request_context"]
+        assert context["offending_evidence_request"] == record["diagnosis"]["evidence_requests"][number]
+        assert context["current_plan_ids"] == [p["fix_id"] for p in record["diagnosis"]["plan"]]
+        assert context["needs_more_info"] is True
+        observation = context["declared_reference_observation"]
+        assert observation["runtime_values_verified"] is False
+        if record["case"] == "s1":
+            assert "blocked_plan_ids=[]" in context["scope_contract"]
+        elif record["case"] == "s2":
+            assert observation["kind"] == "source"
+            assert observation["visible_ranges"] == [[1, 175]]
+            assert context["advertised_unknown_runtime_reference"]["availability"] == "unknown"
+            assert "runtime values unverified" in context["availability_contract"]
+        else:
+            assert observation["kind"] == "field"
+            assert "must both be null" in context["range_contract"]
+        assert len(json.dumps(feedback(result), ensure_ascii=True).encode()) <= 14000
+        assert record == saved
+    
+        # A model-shaped response fixes only the contradictory declaration, not the
+        # genuine missing evidence or the policy. The helper does not make this edit.
+        corrected = copy.deepcopy(record["diagnosis"])
+        request_value = corrected["evidence_requests"][number]
+        if record["case"] == "s1":
+            request_value["blocked_plan_ids"] = []
+        elif record["case"] == "s2":
+            request_value["reason"] = "ambiguous"
+        else:
+            request_value["source_line_start"] = request_value["source_line_end"] = None
+        checked = validate_diagnosis(corrected, evidence=record["evidence"], policy=record["policy"])
+>       assert checked.valid
+E       AssertionError: assert False
+E        +  where False = DiagnosisValidation(diagnosis=Diagnosis(root_causes=[RootCause(id='rc_01_optimizer_state', title='Large Adam optimizer...endency_proven': False, 'runtime_values_verified': False}}, response_validation_failures=(), response_request_modes=()).valid
+
+tests/test_validation_feedback.py:71: AssertionError
+_ test_real_failed_request_gets_exact_context_without_mutation_or_readiness[s3] _
+
+record = {'case': 's3', 'source': 'runs/final48-f3-retry/execution-r8-20261030/jobs/e00152629f84428987f026a5bde4cb14/rounds/01/...e10fe6da89c861fba1', 'evidence_source_sha256': '16494729d78409107b2fd81ae5b0ecf75828d58718abdfef345bb6c450277b43', ...}
+
+    @pytest.mark.parametrize("record", records(), ids=lambda value: value["case"])
+    def test_real_failed_request_gets_exact_context_without_mutation_or_readiness(record):
+        saved = copy.deepcopy(record)
+        result = validate_diagnosis(
+            record["diagnosis"], evidence=record["evidence"], policy=record["policy"]
+        )
+        issue = record["original_issues"][0]
+        assert not result.valid and not result.ready_for_patch and result.requires_supplement
+        assert result.diagnosis.needs_more_info
+        data = next(item for item in feedback(result)["issues"] if item["code"] == issue["code"])
+        assert data["message"] == issue["message"]
+        number = int(issue["path"].rsplit("/", 1)[1])
+        context = data["request_context"]
+        assert context["offending_evidence_request"] == record["diagnosis"]["evidence_requests"][number]
+        assert context["current_plan_ids"] == [p["fix_id"] for p in record["diagnosis"]["plan"]]
+        assert context["needs_more_info"] is True
+        observation = context["declared_reference_observation"]
+        assert observation["runtime_values_verified"] is False
+        if record["case"] == "s1":
+            assert "blocked_plan_ids=[]" in context["scope_contract"]
+        elif record["case"] == "s2":
+            assert observation["kind"] == "source"
+            assert observation["visible_ranges"] == [[1, 175]]
+            assert context["advertised_unknown_runtime_reference"]["availability"] == "unknown"
+            assert "runtime values unverified" in context["availability_contract"]
+        else:
+            assert observation["kind"] == "field"
+            assert "must both be null" in context["range_contract"]
+        assert len(json.dumps(feedback(result), ensure_ascii=True).encode()) <= 14000
+        assert record == saved
+    
+        # A model-shaped response fixes only the contradictory declaration, not the
+        # genuine missing evidence or the policy. The helper does not make this edit.
+        corrected = copy.deepcopy(record["diagnosis"])
+        request_value = corrected["evidence_requests"][number]
+        if record["case"] == "s1":
+            request_value["blocked_plan_ids"] = []
+        elif record["case"] == "s2":
+            request_value["reason"] = "ambiguous"
+        else:
+            request_value["source_line_start"] = request_value["source_line_end"] = None
+        checked = validate_diagnosis(corrected, evidence=record["evidence"], policy=record["policy"])
+>       assert checked.valid
+E       AssertionError: assert False
+E        +  where False = DiagnosisValidation(diagnosis=Diagnosis(root_causes=[RootCause(id='rc_activations_peak', title='Activations peak from ...endency_proven': False, 'runtime_values_verified': False}}, response_validation_failures=(), response_request_modes=()).valid
+
+tests/test_validation_feedback.py:71: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_validation_feedback.py::test_real_failed_request_gets_exact_context_without_mutation_or_readiness[s2]
+FAILED tests/test_validation_feedback.py::test_real_failed_request_gets_exact_context_without_mutation_or_readiness[s3]
+2 failed, 145 passed in 7.54s

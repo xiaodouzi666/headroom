@@ -1,0 +1,54 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+................................................F...............         [100%]
+=================================== FAILURES ===================================
+_________ test_slow_body_timeout_and_cancel_release_receiving_capacity _________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-460/test_slow_body_timeout_and_can0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74e3d522d7f0>
+
+    def test_slow_body_timeout_and_cancel_release_receiving_capacity(tmp_path, monkeypatch):
+        import headroom.api.snapshot_routes as routes
+    
+        app = public_app(tmp_path, monkeypatch)
+        monkeypatch.setattr(routes, "UPLOAD_TIMEOUT_SECONDS", 0.01)
+        endpoint = next(
+            r.endpoint
+            for r in app.routes
+            if getattr(r, "path", "") == "/api/snapshots" and "POST" in r.methods
+        )
+        with TestClient(app):
+            boundary = "offline-boundary"
+    
+            async def receive():
+                await asyncio.sleep(0.05)
+                return {"type": "http.request", "body": b"", "more_body": False}
+    
+            scope = {
+                "type": "http",
+                "method": "POST",
+                "scheme": "http",
+                "path": "/api/snapshots",
+                "query_string": b"",
+                "server": ("testserver", 80),
+                "client": ("127.0.0.1", 1),
+                "headers": [
+                    (b"host", b"testserver"),
+                    (b"authorization", f"Bearer {TOKEN}".encode()),
+                    (b"content-type", f"multipart/form-data; boundary={boundary}".encode()),
+                ],
+                "state": {"owner": "a" * 64},
+            }
+            request = Request(scope, receive=receive)
+            from fastapi import HTTPException
+    
+            with pytest.raises(HTTPException) as error:
+                asyncio.run(endpoint(request))
+>           assert error.value.status_code == 408
+E           AssertionError: assert 400 == 408
+E            +  where 400 = HTTPException(status_code=400, detail='A complete snapshot part is required').status_code
+E            +    where HTTPException(status_code=400, detail='A complete snapshot part is required') = <ExceptionInfo HTTPException(status_code=400, detail='A complete snapshot part is required') tblen=5>.value
+
+tests/test_snapshot_public_safety.py:200: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_snapshot_public_safety.py::test_slow_body_timeout_and_cancel_release_receiving_capacity
+1 failed, 63 passed in 21.03s

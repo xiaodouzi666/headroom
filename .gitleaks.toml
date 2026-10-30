@@ -563,3 +563,24 @@ regexes = [
     '''^3a2cbbe21bfe7748c1b48092e69ae08d83107013e250c0c3f82cfef631473404$''',
     '''^51f78ee8d26bfc444cdc8c640d1e5331b748e88a86fbf83fe3fbe683d28632bb$''',
 ]
+
+[[rules.allowlists]]
+description = "Recomputed snapshotApi source digests, not API keys"
+condition = "AND"
+regexTarget = "secret"
+paths = ["^reports/snapshot\\-repair\\-20261030/authenticated\\-snapshot\\-upload\\-120s\\-pending\\.json$"]
+regexes = ["^be9ab1f1726df69417f4bacf2b0ea1e4130bc6ffee3007abdedc549279b6a152$", "^066f5e5d09794ec2010e0780ea67c0833cbbd98f10046c1f22db5ca88b9b4b44$"]
+
+[[rules.allowlists]]
+description = "Recomputed snapshotApi source digest, not an API key"
+condition = "AND"
+regexTarget = "secret"
+paths = ["^reports/snapshot\\-repair\\-20261030/upload\\-120s\\-final\\-receipt\\.json$"]
+regexes = ["^066f5e5d09794ec2010e0780ea67c0833cbbd98f10046c1f22db5ca88b9b4b44$"]
+
+[[rules.allowlists]]
+description = "Exact synthetic redaction-test sentinel; never an account credential"
+condition = "AND"
+regexTarget = "secret"
+paths = ["^tests/test_validation_feedback\\.py$"]
+regexes = ["^abcdefgh1234$"]

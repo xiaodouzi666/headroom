@@ -50,6 +50,7 @@ CODE_FILES = (
     "headroom/acceptance/snapshot_retry.py",
     "headroom/evidence_blockers.py",
     "headroom/diagnose.py",
+    "headroom/validation_feedback.py",
     "headroom/diagnosis_schema.py",
     "headroom/runtime.py",
     "headroom/llm/router.py",

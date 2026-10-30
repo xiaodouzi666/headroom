@@ -1,0 +1,105 @@
+--- a/headroom/api/snapshot_routes.py
++++ b/headroom/api/snapshot_routes.py
+@@ -35,6 +35,7 @@
+ MAX_BODY_BYTES = sum(LIMITS.values()) + 64 * 1024
+ MAX_REPORT_BYTES = 2 * 1024 * 1024
+ UPLOAD_TIMEOUT_SECONDS = 30.0
++AUTHENTICATED_UPLOAD_TIMEOUT_SECONDS = 120.0
+ VERIFICATION = {"status": "not_run", "message": "Not run — bring the patch to your GPU"}
+ DOWNLOADS = {
+     "diagnosis_json": ("diagnosis.json", "application/json"),
+@@ -539,7 +540,10 @@
+                 manager.root / identifier, request.headers.get("content-type", "")
+             )
+             total = 0
+-            remaining = min(UPLOAD_TIMEOUT_SECONDS, created + manager.deadline - manager.clock())
++            upload_timeout = (
++                AUTHENTICATED_UPLOAD_TIMEOUT_SECONDS if judge else UPLOAD_TIMEOUT_SECONDS
++            )
++            remaining = min(upload_timeout, created + manager.deadline - manager.clock())
+             async with asyncio.timeout(max(0, remaining)):
+                 async for chunk in request.stream():
+                     total += len(chunk)
+--- a/tests/test_snapshot_routes.py
++++ b/tests/test_snapshot_routes.py
+@@ -677,3 +677,44 @@
+     value["evidence"]["diagnosis_binding"]["quantity_source"] = "arbitrary_or_legacy_model_number"
+     with pytest.raises(ValueError, match="evidence binding"):
+         public_result(json.dumps(value))
++
++
++@pytest.mark.parametrize(
++    ("judge", "total_deadline", "minimum", "maximum"),
++    [(True, 480.0, 119.0, 120.0), (False, 480.0, 29.0, 30.0), (True, 0.5, 0.0, 0.5)],
++)
++def test_snapshot_upload_window_depends_on_auth_and_remaining_total_deadline(
++    tmp_path, monkeypatch, judge, total_deadline, minimum, maximum
++):
++    import asyncio
++
++    from headroom.api import snapshot_routes
++
++    observed = []
++    real_timeout = asyncio.timeout
++
++    @asynccontextmanager
++    async def short_recorded_timeout(delay):
++        observed.append(delay)
++        # Exercise timeout cleanup promptly; do not wait 30/120 real seconds.
++        async with real_timeout(0.01):
++            yield
++
++    async def slow(_request):
++        await asyncio.sleep(0.05)
++        yield b""
++
++    app = application(settings(tmp_path, deadline_seconds=total_deadline), worker=failed_worker)
++    with TestClient(app) as client:
++        monkeypatch.setattr(snapshot_routes.asyncio, "timeout", short_recorded_timeout)
++        monkeypatch.setattr(Request, "stream", slow)
++        headers = {"Content-Type": "multipart/form-data; boundary=z"}
++        if judge:
++            headers["Authorization"] = f"Bearer {TOKEN}"
++        response = client.post("/api/snapshots", content=b"x", headers=headers)
++        assert response.status_code == 408
++        assert len(observed) == 1
++        assert minimum < observed[0] <= maximum
++        with sqlite3.connect(app.state.snapshots.registry) as db:
++            assert db.execute("select status from snapshots").fetchall() == [("timeout",)]
++        assert not any(app.state.snapshots.root.glob("*/worker.log"))
+--- a/web/src/snapshotApi.ts
++++ b/web/src/snapshotApi.ts
+@@ -83,9 +83,11 @@
+         ? "This snapshot is unavailable or its 24-hour retention has ended."
+         : response.status === 401 || response.status === 403
+           ? "The judge token or session was not accepted."
+-          : response.status === 503
+-            ? "Snapshot analysis is temporarily paused."
+-            : `Snapshot request failed (${response.status}).`;
++          : response.status === 408
++            ? "The snapshot upload exceeded its time limit. Analysis did not start. Try a faster connection or a smaller capture."
++            : response.status === 503
++              ? "Snapshot analysis is temporarily paused."
++              : `Snapshot request failed (${response.status}).`;
+     throw new SnapshotAPIError(
+       response.status === 429 || response.status === 413
+         ? text(body.detail, fallback).slice(0, 300)
+--- a/web/src/SnapshotDiagnosisPanel.test.tsx
++++ b/web/src/SnapshotDiagnosisPanel.test.tsx
+@@ -546,3 +546,16 @@
+   expect(screen.queryByText("Model response rejected")).not.toBeInTheDocument();
+   expect(screen.queryByText(/bring the patch to your GPU/)).not.toBeInTheDocument();
+ });
++
++
++it("explains an upload timeout without suggesting that a model diagnosis ran", async () => {
++  vi.stubGlobal("fetch", vi.fn(() => reply({ detail: "Snapshot upload deadline exceeded" }, 408)));
++  render(<SnapshotDiagnosisPanel enabled />);
++  selectSnapshot();
++  fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" }));
++  expect(await screen.findByRole("alert")).toHaveTextContent(
++    "The snapshot upload exceeded its time limit. Analysis did not start.",
++  );
++  expect(screen.queryByText("Analysis complete")).not.toBeInTheDocument();
++  expect(vi.mocked(fetch).mock.calls).toHaveLength(1);
++});

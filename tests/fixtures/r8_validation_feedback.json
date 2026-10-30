@@ -1,0 +1,1298 @@
+{
+  "schema": "headroom.r8.feedback-fixtures.v1",
+  "records": [
+    {
+      "case": "s1",
+      "source": "runs/final48-f3-retry/execution-r8-20261030/jobs/e5d4a541c34b49b09d2477efc1200348/rounds/02/diagnosis.json",
+      "source_sha256": "7609489ab5f9b73c37ed41ea2710529787940c34651754b29a691955a5fc6388",
+      "evidence_source_sha256": "008e9609fb55f4e52d1f961de1af972e1a2aeb457a1df96fb90581b4ba18e9a9",
+      "markdown_source_sha256": "bf56e192d420dd164ed45d1c9dff20811e9446e1e9ff2269bbffb2946c3ab437",
+      "diagnosis": {
+        "root_causes": [
+          {
+            "id": "rc_activation_peak",
+            "title": "Full-batch activation peak in deep residual MLP",
+            "category": "activations",
+            "bytes_gb": 22.62,
+            "evidence_refs": [
+              "stk_06043e03ce9c5a63",
+              "stk_f57d11d8f9e8eb04",
+              "stk_4c51a9709f092219",
+              "stk_a7180891f49ae138",
+              "stk_8623bf3ffc7b1ff6",
+              "stk_f4f18ca2fefa1ca6"
+            ],
+            "confidence": 0.92
+          },
+          {
+            "id": "rc_param_resident",
+            "title": "Resident model parameters (weights and biases)",
+            "category": "params",
+            "bytes_gb": 0.376,
+            "evidence_refs": [
+              "stk_26ca48bdf4a7877d",
+              "stk_a0207d6857b4d7c0"
+            ],
+            "confidence": 0.98
+          },
+          {
+            "id": "rc_unknown_overhead",
+            "title": "Unclassified allocator overhead at peak",
+            "category": "unknown",
+            "bytes_gb": 0.0625,
+            "evidence_refs": [
+              "stk_694ae28b1041d1c1",
+              "stk_87bd5511f3eb6534"
+            ],
+            "confidence": 0.45
+          }
+        ],
+        "plan": [
+          {
+            "fix_id": "fix_gradient_accumulation_microbatch",
+            "type": "code",
+            "title": "Gradient accumulation over microbatches to bound activation peak",
+            "description": "Split the forward/backward of each training step into microbatches (e.g., 4 chunks of batch=8). Accumulate gradients across microbatches, then perform a single optimizer.step() per original batch. This reduces the simultaneously live activation working set from the full batch (32) to the microbatch size, while preserving the original effective batch, loss weighting (mean over N=32*2048 elements), update cadence (1 step per batch), and parameter/optimizer state. Requires allow_batch_grad_accum=true. The source shows batch=32, sequence=2048, width=256, depth=192, loss = mean over all elements. Each microbatch loss is weighted by its valid-element count / N before backward.",
+            "expected_saving_gb": 16.0,
+            "numerics_impact": "none",
+            "throughput_impact": "minor",
+            "risk": "Floating-point reordering across microbatches may change loss series; cross-sample ops (none evident) or RNG divergence could affect equivalence. Must preserve one optimizer step, scheduler step, and gradient reset per original batch.",
+            "requires_policy": [
+              "allow_batch_grad_accum"
+            ]
+          },
+          {
+            "fix_id": "fix_activation_checkpointing_per_block",
+            "type": "code",
+            "title": "Checkpoint individual ResidualBlocks to limit recomputation peak",
+            "description": "Wrap each ResidualBlock forward in torch.utils.checkpoint.checkpoint(use_reentrant=False) so that only one block's activations are live during backward recomputation. This reduces the activation peak from depth*block_activations to roughly max(block_activations, boundary_inputs) plus the largest recomputed segment. The prior candidate (fix_activation_checkpointing) wrapped the entire model forward, which recreated a large live set during backward and failed verification (timeout, numerical gates unmet). Per-block checkpointing with explicit reentrant=False preserves RNG and avoids capturing mutable state. Expected saving is a hypothesis for verification; overlap with microbatch plan noted.",
+            "expected_saving_gb": 8.0,
+            "numerics_impact": "none",
+            "throughput_impact": "minor",
+            "risk": "Recomputation cost; backward peak may still include boundary inputs (previous block output) plus current block activations. Numerical equivalence depends on identical operation order and RNG. Must verify loss series and peak reduction on real GPU.",
+            "requires_policy": []
+          }
+        ],
+        "verification": {
+          "max_steps": 20,
+          "compare_loss": true,
+          "tolerance": 0.001
+        },
+        "needs_more_info": true,
+        "notes": [
+          "Peak composition: activations ~22.6 GB, params ~0.38 GB, unknown ~0.06 GB at reconstructed peak (24.75 GB allocated). OOM requested 0.268 GB with only 0.108 GB free; fragmentation_indicator low.",
+          "Prior candidate fix_activation_checkpointing (whole-model checkpoint) reduced peak to 14.3 GB (42%) but failed verification: timeout, candidate_completed_required_steps=false, loss_comparable=false, numerical_acceptance=false, parameter_policy=false, memory_target=false. Original baseline OOM; no completed reference run for loss equivalence.",
+          "Gradient accumulation (plan[0]) is independently expressible but requires allow_batch_grad_accum=true (policy permits). Its prerequisites (loss weighting, update cadence, no cross-sample coupling) are supported by source: loss is mean over all elements, single optimizer.step per batch, no distributed ops evident.",
+          "Checkpointing per block (plan[1]) does not depend on microbatch; can be attempted if accumulation is blocked. Savings estimates overlap; whole-plan sum is a feasibility check, not additive.",
+          "Missing: completed baseline reference for loss comparison (original_workload_checkpoint_reference unavailable). Verification must run on real GPU with unchanged FP32 tolerance 0.001. Parameter count hook coverage incomplete per verification feedback.",
+          "Blocker for current plan: loss equivalence reference unavailable (overall_feasibility). Evidence request for baseline reference completion."
+        ],
+        "invocation_claims": [],
+        "invocation_refs": [],
+        "evidence_requests": [
+          {
+            "field": "numerical_reference_context.original_workload_checkpoint_reference",
+            "reason": "missing",
+            "detail": "Completed baseline reference run (original_workload_checkpoint_reference) is required for loss equivalence verification but is unavailable. The host's verification feedback lists this as an unavailable check.",
+            "evidence_ref": "execution_context.runtime_input_observations",
+            "source_line_start": null,
+            "source_line_end": null,
+            "blocking_scope": "overall_feasibility",
+            "blocked_plan_ids": [
+              "fix_gradient_accumulation_microbatch",
+              "fix_activation_checkpointing_per_block"
+            ]
+          }
+        ]
+      },
+      "original_issues": [
+        {
+          "code": "INVALID_EVIDENCE_DEPENDENCY",
+          "message": "Evidence dependencies must name existing current steps and match their declared scope.",
+          "path": "/evidence_requests/0"
+        }
+      ],
+      "policy": {
+        "allow_numerics_change": false,
+        "allow_model_change": false,
+        "allow_batch_grad_accum": true,
+        "max_throughput_regression_pct": 25.0
+      },
+      "evidence": {
+        "analysis": {
+          "stack_catalog": {
+            "stk_8623bf3ffc7b1ff6": [],
+            "stk_26ca48bdf4a7877d": [],
+            "stk_694ae28b1041d1c1": [],
+            "stk_f4f18ca2fefa1ca6": [],
+            "stk_4c51a9709f092219": [],
+            "stk_87bd5511f3eb6534": [],
+            "stk_f57d11d8f9e8eb04": [],
+            "stk_416e6fa2b5c55fe9": [],
+            "stk_a0207d6857b4d7c0": [],
+            "stk_06043e03ce9c5a63": [],
+            "stk_a7180891f49ae138": []
+          }
+        },
+        "execution_context": {},
+        "evidence_availability_catalog": {
+          "schema": "headroom.evidence_availability.v1",
+          "entries": [
+            {
+              "evidence_ref": "execution_context.script_args",
+              "kind": "field",
+              "availability": "unsupported",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.execution_argv",
+              "kind": "field",
+              "availability": "unsupported",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "kind": "field",
+              "availability": "unknown",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "source[0]",
+              "kind": "source",
+              "path": "train.py",
+              "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+              "availability": "visible",
+              "visible_ranges": [
+                [
+                  1,
+                  123
+                ]
+              ],
+              "redacted_ranges": [],
+              "total_lines": 123,
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            }
+          ],
+          "omitted_entries": 0,
+          "text_availability_only": true,
+          "runtime_values_verified": false,
+          "evidence_markdown_sha256": "bf56e192d420dd164ed45d1c9dff20811e9446e1e9ff2269bbffb2946c3ab437"
+        }
+      },
+      "scope": "Existing failure replay; source content/labels/target answers omitted. s1 round02 uses unchanged baseline catalogue for its runtime dependency."
+    },
+    {
+      "case": "s2",
+      "source": "runs/final48-f3-retry/execution-r8-20261030/jobs/cb9863fad0564d0cb4988dd30a3d9522/rounds/01/diagnosis.json",
+      "source_sha256": "6c4ab69580d4507f6e25709ffaaa5e1564b2d22e547e507d74e8d8e923c39cc2",
+      "evidence_source_sha256": "4e4b84814dfa83546c09743da9d783693debde6929ab48eb4c680c4559462ca0",
+      "markdown_source_sha256": "0775e7c91511443a6f1ccd4e166a11f6f42946ad525a2fdb8d0e76dab2b5fd16",
+      "diagnosis": {
+        "root_causes": [
+          {
+            "id": "rc_01_optimizer_state",
+            "title": "Large Adam optimizer state (two FP32 moments per parameter)",
+            "category": "optimizer_state",
+            "bytes_gb": 4.565,
+            "evidence_refs": [
+              "stk_8cd9860b135702e0",
+              "stk_ef16be86287aecf6",
+              "stk_ee860f0cd4ac1c9f"
+            ],
+            "confidence": 0.95
+          },
+          {
+            "id": "rc_02_temporaries_linear_gelu",
+            "title": "Large temporary buffers in Linear->GELU->Linear forward/backward (full-vocabulary logits, gelu intermediates, and backward temporaries)",
+            "category": "temporaries",
+            "bytes_gb": 9.164,
+            "evidence_refs": [
+              "stk_47a33c87f8ad78dd",
+              "stk_9bb5a0af368c58f6",
+              "stk_175360460be8e43d",
+              "stk_b80bae9ba815d58e",
+              "stk_d370527b6de9221f",
+              "stk_ea1a74c4b22529ae"
+            ],
+            "confidence": 0.9
+          },
+          {
+            "id": "rc_03_params_resident",
+            "title": "Resident model parameters (FP32)",
+            "category": "params",
+            "bytes_gb": 4.565,
+            "evidence_refs": [
+              "stk_16e860e7dcc3e54d",
+              "stk_1dab89f1edc7e581"
+            ],
+            "confidence": 0.95
+          },
+          {
+            "id": "rc_04_activations_forward_backward",
+            "title": "Activations retained for backward (LayerNorm, residual-add, Linear inputs/outputs)",
+            "category": "activations",
+            "bytes_gb": 0.0338,
+            "evidence_refs": [
+              "stk_74abca1986ce4bc8",
+              "stk_7010121d43d32e8c",
+              "stk_11d6f3a3e6b05501"
+            ],
+            "confidence": 0.85
+          },
+          {
+            "id": "rc_05_unknown_small",
+            "title": "Unclassified small allocations at peak",
+            "category": "unknown",
+            "bytes_gb": 0.0254,
+            "evidence_refs": [
+              "stk_8740c7ed9227569b",
+              "stk_6b2659d9a2fa87d7",
+              "stk_3fb65d790bb5bf66"
+            ],
+            "confidence": 0.5
+          }
+        ],
+        "plan": [
+          {
+            "fix_id": "fix_chunked_ce",
+            "type": "code",
+            "title": "Chunked cross-entropy to avoid full [B*T, V] logits materialization",
+            "description": "Replace the full logits + cross_entropy path with a chunked implementation that streams the projection and loss over vocabulary shards (e.g., 4-8 chunks), computes log-softmax and NLL per chunk without materializing the full FP32 logits tensor, and accumulates the weighted loss. Preserves full vocabulary, original reduction (mean over valid elements), masks, class weights, ignore_index, label smoothing, and FP32 conversion. Only the peak temporary logits tensor is avoided; backward recomputes per chunk. Source producer: Linear projection (stk_47a33c87f8ad78dd) -> cross_entropy (stk_9bb5a0af368c58f6) on training path (execution_context.logical_updates.optimizer_input_name='inputs', effective_batch_per_optimizer_update=24, training_forwards_per_optimizer_update=1, backwards_per_optimizer_update=1).",
+            "expected_saving_gb": 1.2,
+            "numerics_impact": "none",
+            "throughput_impact": "minor",
+            "risk": "Floating-point order changes across chunks; host verification uses FP32 reference with tolerance 0.001. Must not drop logits needed by other consumers. Chunked softmax must be mathematically equivalent to full softmax.",
+            "requires_policy": []
+          },
+          {
+            "fix_id": "fix_activation_checkpoint_blocks",
+            "type": "code",
+            "title": "Selective activation checkpointing on repeated ResidualBlock segments",
+            "description": "Wrap individual ResidualBlock modules (or bounded groups of 1-2 blocks) with torch.utils.checkpoint.checkpoint to trade recomputation for peak activation memory. Each block contains LayerNorm->Linear->GELU->Linear->residual-add. Checkpoint granularity: per-block or 2-block segments so that backward recomputes only the segment while retaining boundary inputs. Supported by repeated-block stacks (stk_175360460be8e43d, stk_b80bae9ba815d58e, stk_d370527b6de9221f) and forward peak composition (activations 0.034 GB). Preserves original update cadence (1 forward, 1 backward per optimizer step, 20 updates).",
+            "expected_saving_gb": 0.02,
+            "numerics_impact": "none",
+            "throughput_impact": "minor",
+            "risk": "Recomputation cost ~1 extra forward per checkpointed segment per step. Must verify loss equivalence under host tolerance 0.001. Does not change optimizer state or parameter memory.",
+            "requires_policy": []
+          }
+        ],
+        "verification": {
+          "max_steps": 20,
+          "compare_loss": true,
+          "tolerance": 0.001
+        },
+        "needs_more_info": true,
+        "notes": [
+          "Peak allocated 22.92 GB; target 22 GB requires ~0.92 GB reduction. Proposed steps estimated at ~1.22 GB combined but overlap is uncertain (chunked CE reduces temporaries; checkpointing reduces activations). Optimizer state (4.57 GB) and parameters (4.57 GB) are persistent and not addressed by these steps. If chunked CE savings are lower than estimated, total may fall short.",
+          "Chunked cross-entropy requires source-level change to the loss computation path; verify that no other consumer (e.g., logging, distillation) requires the full logits tensor.",
+          "Activation checkpointing savings are small (activations only 34 MB at peak) because the dominant peak is temporaries (9.16 GB). The recomputation overhead is bounded per segment.",
+          "Policy allows batch/gradient accumulation (allow_batch_grad_accum=true) but current configuration uses batch=24, accumulation=1 (effective_batch=24). Changing batch size would not reduce optimizer state or parameter memory. No batch/accumulation change proposed.",
+          "No precision changes proposed (allow_numerics_change=false). All steps intend numerics_impact='none'; floating-point reordering in chunked CE is a verification risk, not a deliberate precision change.",
+          "Evidence does not contain the exact loss module source (cross_entropy or equivalent). Requesting that snippet to confirm chunked CE applicability and to derive the exact reduction denominator (mean over valid elements)."
+        ],
+        "invocation_claims": [],
+        "invocation_refs": [
+          "script_args[0]",
+          "script_args[1]"
+        ],
+        "evidence_requests": [
+          {
+            "field": "source_files[0].content lines 140-170",
+            "reason": "missing",
+            "detail": "Need the exact loss computation source (cross_entropy or equivalent) to confirm chunked CE applicability, the reduction denominator (mean over valid elements), masks, class weights, ignore_index, label smoothing, and whether full logits are consumed elsewhere.",
+            "evidence_ref": "source[0]",
+            "source_line_start": 140,
+            "source_line_end": 170,
+            "blocking_scope": "current_plan",
+            "blocked_plan_ids": [
+              "fix_chunked_ce"
+            ]
+          }
+        ]
+      },
+      "original_issues": [
+        {
+          "code": "EVIDENCE_AVAILABILITY_CONTRADICTED",
+          "message": "The exact declared source range or field is visible in this request; semantics may remain ambiguous.",
+          "path": "/evidence_requests/0"
+        }
+      ],
+      "policy": {
+        "allow_numerics_change": false,
+        "allow_model_change": false,
+        "allow_batch_grad_accum": true,
+        "max_throughput_regression_pct": 25.0
+      },
+      "evidence": {
+        "analysis": {
+          "stack_catalog": {
+            "stk_ee860f0cd4ac1c9f": [],
+            "stk_16e860e7dcc3e54d": [],
+            "stk_3fb65d790bb5bf66": [],
+            "stk_6ea8acffb89202ad": [],
+            "stk_175360460be8e43d": [],
+            "stk_11d6f3a3e6b05501": [],
+            "stk_851d317e307df284": [],
+            "stk_5bb676f9b4d7ee33": [],
+            "stk_74abca1986ce4bc8": [],
+            "stk_b80bae9ba815d58e": [],
+            "stk_7010121d43d32e8c": [],
+            "stk_70f128ca1c295b13": [],
+            "stk_5c58478673442722": [],
+            "stk_95dad00679f4be68": [],
+            "stk_ef16be86287aecf6": [],
+            "stk_38e11f5491eeae0d": [],
+            "stk_0d30217d184e8973": [],
+            "stk_044d693a3a4847c2": [],
+            "stk_00fdea83ffcda009": [],
+            "stk_2805eecf5f7fb387": [],
+            "stk_828c402178514ec7": [],
+            "stk_9bb5a0af368c58f6": [],
+            "stk_8740c7ed9227569b": [],
+            "stk_47a33c87f8ad78dd": [],
+            "stk_6b2659d9a2fa87d7": [],
+            "stk_d370527b6de9221f": [],
+            "stk_fa0937f88c4eb0d3": [],
+            "stk_ea1a74c4b22529ae": [],
+            "stk_8cd9860b135702e0": [],
+            "stk_1dab89f1edc7e581": [],
+            "stk_b15b5a2937d60e6e": []
+          }
+        },
+        "execution_context": {
+          "schema": "headroom.solver_execution.v1",
+          "basis": "effective_retained_invocation",
+          "content_is_untrusted_data": true,
+          "source_defaults_are_not_effective_configuration": true,
+          "configuration_resolution": {
+            "status": "unverified",
+            "basis": "retained_invocation_not_target_runtime_state",
+            "runtime_values_verified": false
+          },
+          "selected_round": null,
+          "script": "train.py",
+          "script_args": {
+            "values": [
+              "--seed",
+              "1337"
+            ],
+            "complete": true,
+            "omitted_count": 0,
+            "redacted_positions": []
+          },
+          "execution_argv": null,
+          "repository_mode": false,
+          "runtime_input_observations": {
+            "status": "observed",
+            "scope": "captured_named_tensors_and_optimizer_updates_only",
+            "target_effective_configuration": "unverified",
+            "selected_round": null,
+            "selected_run_id": "74c38d75a79543f98bb3075665342cf0",
+            "source_sha256": "9565acfbcfc2f1eefd982c80be7ce943e09828578b9b44c3d70342bc82bf7f4c",
+            "protocol": "headroom.pairing.v1",
+            "initial_tensors": {
+              "status": "observed",
+              "basis": "actual named tensor fingerprints before the first training forward",
+              "tensors": {
+                "inputs": {
+                  "shape": [
+                    24,
+                    128,
+                    2048
+                  ],
+                  "dtype": "torch.float32",
+                  "sha256": "65ac3956844b1109936054dd980e830d3e6000e2c669b302e95f21c0fec0f147"
+                },
+                "targets": {
+                  "shape": [
+                    24,
+                    2048
+                  ],
+                  "dtype": "torch.float32",
+                  "sha256": "1a47be5753666409feb9307202cc2de257505d2ec11d3770fbe554cc1b5435b1"
+                }
+              },
+              "workload_equivalence_proven": false
+            },
+            "logical_updates": {
+              "status": "observed",
+              "required_optimizer_updates": 20,
+              "observed_optimizer_updates": 20,
+              "optimizer_input_name": "inputs",
+              "effective_batch_per_optimizer_update": 24,
+              "training_forwards_per_optimizer_update": 1,
+              "backwards_per_optimizer_update": 1
+            },
+            "required_optimizer_updates": 20,
+            "observed_optimizer_updates": 20,
+            "optimizer_input_name": "inputs",
+            "effective_batch_per_optimizer_update": 24,
+            "training_forwards_per_optimizer_update": 1,
+            "backwards_per_optimizer_update": 1,
+            "tensors": {
+              "inputs": {
+                "shape": [
+                  24,
+                  128,
+                  2048
+                ],
+                "dtype": "torch.float32",
+                "sha256": "65ac3956844b1109936054dd980e830d3e6000e2c669b302e95f21c0fec0f147"
+              },
+              "targets": {
+                "shape": [
+                  24,
+                  2048
+                ],
+                "dtype": "torch.float32",
+                "sha256": "1a47be5753666409feb9307202cc2de257505d2ec11d3770fbe554cc1b5435b1"
+              }
+            },
+            "limitations": [
+              "Only the retained run and source are represented; this is not a reference/candidate equivalence check.",
+              "Other named tensors were captured at initialization; their forward use is not separately counted.",
+              "Pinned standalone adapter and cooperative target only; arbitrary runtime configuration remains unverified."
+            ]
+          },
+          "seed": 1337,
+          "required_optimizer_updates": 20,
+          "device": "cuda",
+          "allocator_environment": {
+            "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True"
+          },
+          "truncated_fields": [],
+          "source_files": [
+            {
+              "path": "train.py",
+              "sha256": "9565acfbcfc2f1eefd982c80be7ce943e09828578b9b44c3d70342bc82bf7f4c"
+            }
+          ],
+          "source_files_omitted": 0
+        },
+        "evidence_availability_catalog": {
+          "schema": "headroom.evidence_availability.v1",
+          "entries": [
+            {
+              "evidence_ref": "execution_context.script_args",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.execution_argv",
+              "kind": "field",
+              "availability": "unsupported",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.initial_tensors",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.optimizer_input_name",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.effective_batch_per_optimizer_update",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.required_optimizer_updates",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.observed_optimizer_updates",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.training_forwards_per_optimizer_update",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.backwards_per_optimizer_update",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates.optimizer_input_name",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates.effective_batch_per_optimizer_update",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates.required_optimizer_updates",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates.observed_optimizer_updates",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates.training_forwards_per_optimizer_update",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates.backwards_per_optimizer_update",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "source[0]",
+              "kind": "source",
+              "path": "train.py",
+              "source_sha256": "9565acfbcfc2f1eefd982c80be7ce943e09828578b9b44c3d70342bc82bf7f4c",
+              "availability": "visible",
+              "visible_ranges": [
+                [
+                  1,
+                  175
+                ]
+              ],
+              "redacted_ranges": [],
+              "total_lines": 175,
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            }
+          ],
+          "omitted_entries": 0,
+          "text_availability_only": true,
+          "runtime_values_verified": false,
+          "evidence_markdown_sha256": "0775e7c91511443a6f1ccd4e166a11f6f42946ad525a2fdb8d0e76dab2b5fd16"
+        }
+      },
+      "scope": "Existing failure replay; source content/labels/target answers omitted. s1 round02 uses unchanged baseline catalogue for its runtime dependency.",
+      "report_source_sha256": "115fe780353459caa07aef3bb8a1b943e104e5f4d76aa52e909bb46a05c7e735",
+      "context_provenance": "Pure host execution_context reconstructed from saved baseline/request/source metadata, including actual literal argv and observed child catalogue; no source execution."
+    },
+    {
+      "case": "s3",
+      "source": "runs/final48-f3-retry/execution-r8-20261030/jobs/e00152629f84428987f026a5bde4cb14/rounds/01/diagnosis.json",
+      "source_sha256": "ddad6f32d87d760214300400797a1d81ae6b1881f9d7b1e10fe6da89c861fba1",
+      "evidence_source_sha256": "16494729d78409107b2fd81ae5b0ecf75828d58718abdfef345bb6c450277b43",
+      "markdown_source_sha256": "864e289c4299f20c5a1bd5b07a80711319c0ec1e09c235cd8ffefe607f8eaa0d",
+      "diagnosis": {
+        "root_causes": [
+          {
+            "id": "rc_activations_peak",
+            "title": "Activations peak from repeated forward/backward with live autograd graph per step",
+            "category": "activations",
+            "bytes_gb": 2.072513,
+            "evidence_refs": [
+              "stk_40bd0ecf4836add8",
+              "stk_18181e481f3cb644",
+              "stk_97e616277db9dfa2",
+              "stk_6ff9d57e39fcf43c"
+            ],
+            "confidence": 0.85
+          },
+          {
+            "id": "rc_temporaries_matmul",
+            "title": "Temporaries from repeated GEMM workspaces in forward/backward",
+            "category": "temporaries",
+            "bytes_gb": 0.184721,
+            "evidence_refs": [
+              "stk_47a33c87f8ad78dd",
+              "stk_044d693a3a4847c2",
+              "stk_8740c7ed9227569b"
+            ],
+            "confidence": 0.75
+          },
+          {
+            "id": "rc_params_resident",
+            "title": "Resident model parameters (params)",
+            "category": "params",
+            "bytes_gb": 0.151167,
+            "evidence_refs": [
+              "stk_40bd0ecf4836add8",
+              "stk_6b2659d9a2fa87d7",
+              "stk_c5a68cff843bbcaa"
+            ],
+            "confidence": 0.95
+          },
+          {
+            "id": "rc_unknown_fragment",
+            "title": "Unclassified allocations at peak",
+            "category": "unknown",
+            "bytes_gb": 0.027316,
+            "evidence_refs": [
+              "stk_a4f5ffbceedae472",
+              "stk_4be26840045a5f02",
+              "stk_cbb85eb06fac7ffa"
+            ],
+            "confidence": 0.4
+          }
+        ],
+        "plan": [
+          {
+            "fix_id": "fix_grad_accum",
+            "type": "code",
+            "title": "Gradient accumulation: run K micro-forward/backward chunks per optimizer step with loss weighted by valid elements",
+            "description": "Modify the training loop in train.py (lines 104-115) to split each optimizer step into K micro-batches. For each non-empty micro-batch, compute predictions and loss on the chunk, scale loss by (chunk_valid_elements / total_valid_elements), call backward(), and accumulate gradients. After K chunks, call optimizer.step() once and zero_grad. Preserve original effective_batch_per_optimizer_update=1, one optimizer step per step, and original loss reduction (mean over all elements). The model forward (ResidualBlock.forward) contains gelu and linear layers; chunking along the batch dimension keeps full sequence and vocab per token. Ensure no empty slices; skip zero-size chunks. This targets the activations peak (stk_40bd0ecf4836add8, stk_18181e481f3cb644) and temporaries from GEMM (stk_47a33c87f8ad78dd).",
+            "expected_saving_gb": 1.5,
+            "numerics_impact": "none",
+            "throughput_impact": "minor",
+            "risk": "Floating-point reorder from chunked backward; loss reduction equivalence must be verified against host FP32 reference with tolerance 0.001. Cross-sample operations or stochastic ordering could prevent equivalence. Chunk count K must divide batch dimension evenly or use weighted uneven chunks. Unknown if current batch=1 permits chunking; needs runtime batch evidence.",
+            "requires_policy": [
+              "allow_batch_grad_accum"
+            ]
+          },
+          {
+            "fix_id": "fix_eval_nograd",
+            "type": "code",
+            "title": "Add torch.no_grad() to evaluate() to disable autograd for validation",
+            "description": "In train.py line 71-73, wrap the evaluation forward pass in torch.no_grad() context. Source shows BUG comment that eval() does not disable autograd. This removes validation activation retention (eval_inputs shape [16,512,768]) from peak working set. Cited stacks stk_97e616277db9dfa2 (evaluate call) and stk_18181e481f3cb644 (gelu/linear activations). Does not change training mathematics or optimizer cadence.",
+            "expected_saving_gb": 0.3,
+            "numerics_impact": "none",
+            "throughput_impact": "none",
+            "risk": "Low; only disables gradient computation for validation. Must ensure no validation loss gradient is needed elsewhere (source shows validation_loss.item() only).",
+            "requires_policy": []
+          }
+        ],
+        "verification": {
+          "max_steps": 20,
+          "compare_loss": true,
+          "tolerance": 0.001
+        },
+        "needs_more_info": true,
+        "notes": [
+          "Required saving 0.487 GB. Combined plan estimates ~1.8 GB but overlap uncertain; activations and temporaries share lifetime. Gradient accumulation (fix_grad_accum) is primary candidate but requires runtime batch size >1 to chunk; current evidence shows train_batch=1 in scenario_start (line 101) but args.batch default 16 (line 81). Resolve actual training batch at runtime.",
+          "eval_no_grad (fix_eval_nograd) is independent and low-risk; saves validation activations (~0.3 GB estimated from eval_inputs 16*512*768*4B ~251 MB).",
+          "Optimizer state and grads are zero at peak (bytes_gb=0 per peak composition); optimizer hook alignment shows step 1 at event 458, peak at event 609, so optimizer state not yet initialized at peak. Gradient accumulation does not reduce param/optimizer storage.",
+          "Chunked cross-entropy/logits streaming not applicable: model outputs hidden.mean(dim=1) -> [batch,width], loss is MSE vs targets [batch,width]; no full-vocab logits tensor.",
+          "Policy allows allow_batch_grad_accum=true. allow_numerics_change=false respected (numerics_impact=none). allow_model_change=false respected (no parameter/architecture change).",
+          "Verification uses host default FP32 check (max_steps=20, compare_loss=true, tolerance=0.001). Candidate must pass host loss equivalence gate; reorder risk noted."
+        ],
+        "invocation_claims": [],
+        "invocation_refs": [],
+        "evidence_requests": [
+          {
+            "field": "execution_context.runtime_input_observations.tensors.train_inputs.shape",
+            "reason": "ambiguous",
+            "detail": "Source shows train_batch=1 in scenario_start emit (line 101) but args.batch default 16 (line 81) and train_inputs = torch.randn(1, sequence, width) (line 84). Need confirmed runtime training batch size to design micro-batch chunks for gradient accumulation. If batch=1, chunking not possible; if batch=16, can chunk.",
+            "evidence_ref": "execution_context.runtime_input_observations",
+            "source_line_start": 84,
+            "source_line_end": 101,
+            "blocking_scope": "current_plan",
+            "blocked_plan_ids": [
+              "fix_grad_accum"
+            ]
+          },
+          {
+            "field": "execution_context.runtime_input_observations.effective_batch_per_optimizer_update",
+            "reason": "missing",
+            "detail": "Confirmed value is 1 from logical_updates, but need to ensure gradient accumulation preserves exactly one optimizer step per original effective batch. This is a mathematical prerequisite for the plan.",
+            "evidence_ref": "execution_context.runtime_input_observations.logical_updates",
+            "source_line_start": null,
+            "source_line_end": null,
+            "blocking_scope": "current_plan",
+            "blocked_plan_ids": [
+              "fix_grad_accum"
+            ]
+          }
+        ]
+      },
+      "original_issues": [
+        {
+          "code": "INVALID_EVIDENCE_RANGE",
+          "message": "Use both ordered source line bounds only with a source reference.",
+          "path": "/evidence_requests/0"
+        }
+      ],
+      "policy": {
+        "allow_numerics_change": false,
+        "allow_model_change": false,
+        "allow_batch_grad_accum": true,
+        "max_throughput_regression_pct": 25.0
+      },
+      "evidence": {
+        "analysis": {
+          "stack_catalog": {
+            "stk_cbb85eb06fac7ffa": [],
+            "stk_40bd0ecf4836add8": [],
+            "stk_a4f5ffbceedae472": [],
+            "stk_dcd5c11d3da3751e": [],
+            "stk_4be26840045a5f02": [],
+            "stk_c5a68cff843bbcaa": [],
+            "stk_73da22902b1acbfe": [],
+            "stk_e60b49e71f7f3b4d": [],
+            "stk_381b99e556485250": [],
+            "stk_f8550df6ac19fb53": [],
+            "stk_63d7b164824ee8cf": [],
+            "stk_98bf4252c507c03b": [],
+            "stk_356380870f29636f": [],
+            "stk_59ed85007673cba7": [],
+            "stk_7ecc8a7b2566319a": [],
+            "stk_5a791a0770f22597": [],
+            "stk_8327400a41a28700": [],
+            "stk_dfad09af9a10686e": [],
+            "stk_0d30217d184e8973": [],
+            "stk_044d693a3a4847c2": [],
+            "stk_00fdea83ffcda009": [],
+            "stk_2805eecf5f7fb387": [],
+            "stk_828c402178514ec7": [],
+            "stk_9bb5a0af368c58f6": [],
+            "stk_8740c7ed9227569b": [],
+            "stk_47a33c87f8ad78dd": [],
+            "stk_6b2659d9a2fa87d7": [],
+            "stk_fa0937f88c4eb0d3": [],
+            "stk_ea1a74c4b22529ae": [],
+            "stk_bf2d0c6808d65262": [],
+            "stk_004b6887e9e677ea": [],
+            "stk_6ff9d57e39fcf43c": [],
+            "stk_7f9861977c1faf9e": [],
+            "stk_18181e481f3cb644": [],
+            "stk_97e616277db9dfa2": [],
+            "stk_73c3c420dd5833d2": [],
+            "stk_58bc67d33631dc9e": [],
+            "stk_eaa67c799fd934cc": [],
+            "stk_0aeba10e01723de6": []
+          }
+        },
+        "execution_context": {
+          "schema": "headroom.solver_execution.v1",
+          "basis": "effective_retained_invocation",
+          "content_is_untrusted_data": true,
+          "source_defaults_are_not_effective_configuration": true,
+          "configuration_resolution": {
+            "status": "unverified",
+            "basis": "retained_invocation_not_target_runtime_state",
+            "runtime_values_verified": false
+          },
+          "selected_round": null,
+          "script": "train.py",
+          "script_args": {
+            "values": [],
+            "complete": true,
+            "omitted_count": 0,
+            "redacted_positions": []
+          },
+          "execution_argv": null,
+          "repository_mode": false,
+          "runtime_input_observations": {
+            "status": "observed",
+            "scope": "captured_named_tensors_and_optimizer_updates_only",
+            "target_effective_configuration": "unverified",
+            "selected_round": null,
+            "selected_run_id": "dfb7ba6574dd47d2bd000f66a1eba086",
+            "source_sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+            "protocol": "headroom.pairing.v1",
+            "initial_tensors": {
+              "status": "observed",
+              "basis": "actual named tensor fingerprints before the first training forward",
+              "tensors": {
+                "train_inputs": {
+                  "shape": [
+                    1,
+                    512,
+                    768
+                  ],
+                  "dtype": "torch.float32",
+                  "sha256": "5cecd5c2d0610962418373a2ceab1632ae736a6cdfc3e75a53543550c66677ed"
+                },
+                "train_targets": {
+                  "shape": [
+                    1,
+                    768
+                  ],
+                  "dtype": "torch.float32",
+                  "sha256": "94e1724df81d495b0136e67d0d2d60bec0679645cd15e1a4563e2e8b5941ff93"
+                },
+                "eval_inputs": {
+                  "shape": [
+                    16,
+                    512,
+                    768
+                  ],
+                  "dtype": "torch.float32",
+                  "sha256": "d9b5f926da5def958cae9a57f15f559eed17e1dec93d3cffff8400954ab1378a"
+                },
+                "eval_targets": {
+                  "shape": [
+                    16,
+                    768
+                  ],
+                  "dtype": "torch.float32",
+                  "sha256": "cb57836dd0c67754f1e9668512cfc6ccb9bea7ec822c4ce92f4810690afa7496"
+                }
+              },
+              "workload_equivalence_proven": false
+            },
+            "logical_updates": {
+              "status": "observed",
+              "required_optimizer_updates": 20,
+              "observed_optimizer_updates": 20,
+              "optimizer_input_name": "train_inputs",
+              "effective_batch_per_optimizer_update": 1,
+              "training_forwards_per_optimizer_update": 1,
+              "backwards_per_optimizer_update": 1
+            },
+            "required_optimizer_updates": 20,
+            "observed_optimizer_updates": 20,
+            "optimizer_input_name": "train_inputs",
+            "effective_batch_per_optimizer_update": 1,
+            "training_forwards_per_optimizer_update": 1,
+            "backwards_per_optimizer_update": 1,
+            "tensors": {
+              "train_inputs": {
+                "shape": [
+                  1,
+                  512,
+                  768
+                ],
+                "dtype": "torch.float32",
+                "sha256": "5cecd5c2d0610962418373a2ceab1632ae736a6cdfc3e75a53543550c66677ed"
+              },
+              "train_targets": {
+                "shape": [
+                  1,
+                  768
+                ],
+                "dtype": "torch.float32",
+                "sha256": "94e1724df81d495b0136e67d0d2d60bec0679645cd15e1a4563e2e8b5941ff93"
+              },
+              "eval_inputs": {
+                "shape": [
+                  16,
+                  512,
+                  768
+                ],
+                "dtype": "torch.float32",
+                "sha256": "d9b5f926da5def958cae9a57f15f559eed17e1dec93d3cffff8400954ab1378a"
+              },
+              "eval_targets": {
+                "shape": [
+                  16,
+                  768
+                ],
+                "dtype": "torch.float32",
+                "sha256": "cb57836dd0c67754f1e9668512cfc6ccb9bea7ec822c4ce92f4810690afa7496"
+              }
+            },
+            "limitations": [
+              "Only the retained run and source are represented; this is not a reference/candidate equivalence check.",
+              "Other named tensors were captured at initialization; their forward use is not separately counted.",
+              "Pinned standalone adapter and cooperative target only; arbitrary runtime configuration remains unverified."
+            ]
+          },
+          "seed": 1337,
+          "required_optimizer_updates": 20,
+          "device": "cuda",
+          "allocator_environment": {},
+          "truncated_fields": [],
+          "source_files": [
+            {
+              "path": "train.py",
+              "sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67"
+            }
+          ],
+          "source_files_omitted": 0
+        },
+        "evidence_availability_catalog": {
+          "schema": "headroom.evidence_availability.v1",
+          "entries": [
+            {
+              "evidence_ref": "execution_context.script_args",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.execution_argv",
+              "kind": "field",
+              "availability": "unsupported",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.initial_tensors",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.optimizer_input_name",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.effective_batch_per_optimizer_update",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.required_optimizer_updates",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.observed_optimizer_updates",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.training_forwards_per_optimizer_update",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.backwards_per_optimizer_update",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates.optimizer_input_name",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates.effective_batch_per_optimizer_update",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates.required_optimizer_updates",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates.observed_optimizer_updates",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates.training_forwards_per_optimizer_update",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates.backwards_per_optimizer_update",
+              "kind": "field",
+              "availability": "visible",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "source[0]",
+              "kind": "source",
+              "path": "train.py",
+              "source_sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+              "availability": "visible",
+              "visible_ranges": [
+                [
+                  1,
+                  137
+                ]
+              ],
+              "redacted_ranges": [],
+              "total_lines": 137,
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            }
+          ],
+          "omitted_entries": 0,
+          "text_availability_only": true,
+          "runtime_values_verified": false,
+          "evidence_markdown_sha256": "864e289c4299f20c5a1bd5b07a80711319c0ec1e09c235cd8ffefe607f8eaa0d"
+        }
+      },
+      "scope": "Existing failure replay; source content/labels/target answers omitted. s1 round02 uses unchanged baseline catalogue for its runtime dependency.",
+      "report_source_sha256": "69da886f282a2d4336f1619c9b9394b6fb48a09e52d30f85a255147bbdb8a457",
+      "context_provenance": "Pure host execution_context reconstructed from saved baseline/request/source metadata, including actual literal argv and observed child catalogue; no source execution."
+    },
+    {
+      "case": "s5",
+      "source": "runs/final48-f3-retry/execution-r8-20261030/jobs/baa63908fc8341efbda40e282201c252/rounds/01/diagnosis.json",
+      "source_sha256": "1bcd5a045bf7f06229c29472270c1958f3fc0f9acb20d4d1d2e9d77a8f1821cf",
+      "evidence_source_sha256": "8819a1269061991b08396bf3ec62ffd1e8704b5373eba78399696ee13e24274f",
+      "markdown_source_sha256": "f6a56b7adf5bdd2b950e582a242a5c57d96b334bb6228504b245b30379a34bc2",
+      "diagnosis": {
+        "root_causes": [
+          {
+            "id": "rc1",
+            "title": "Full-sequence activations peak from repeated TokenMLP blocks",
+            "category": "activations",
+            "bytes_gb": 1.837105,
+            "evidence_refs": [
+              "stk_40789e211cd87036",
+              "stk_47784b7ed9480b2f",
+              "stk_5b9b7a5ded789c4f"
+            ],
+            "confidence": 0.85
+          },
+          {
+            "id": "rc2",
+            "title": "Large backward temporaries from GELU/linear kernels",
+            "category": "temporaries",
+            "bytes_gb": 0.500176,
+            "evidence_refs": [
+              "stk_9bb5a0af368c58f6",
+              "stk_fa0937f88c4eb0d3",
+              "stk_d370527b6de9221f",
+              "stk_5b9b7a5ded789c4f",
+              "stk_47a33c87f8ad78dd",
+              "stk_8740c7ed9227569b"
+            ],
+            "confidence": 0.8
+          },
+          {
+            "id": "rc3",
+            "title": "Unclassified peak stack of 100 MB at forward call site",
+            "category": "unknown",
+            "bytes_gb": 0.100663,
+            "evidence_refs": [
+              "stk_c78ac71a2d513035"
+            ],
+            "confidence": 0.6
+          },
+          {
+            "id": "rc4",
+            "title": "Persistent model parameters (Nano 30B) resident on GPU",
+            "category": "params",
+            "bytes_gb": 0.0,
+            "evidence_refs": [
+              "stk_cc2ed18f85d7f0c2"
+            ],
+            "confidence": 0.9
+          }
+        ],
+        "plan": [
+          {
+            "fix_id": "p1",
+            "type": "code",
+            "title": "Gradient checkpointing per TokenMLP block with reentrant=False",
+            "description": "Wrap each block in TokenMLP.forward with torch.utils.checkpoint.checkpoint(..., use_reentrant=False) so that only one block's forward activations are live at a time during backward recomputation. Preserves full vocabulary logits, MSE loss, and SGD update semantics. Inputs and boundary tensors (batch, seq, hidden) remain live; peak becomes max over boundary + single block recomputation instead of 6 blocks simultaneously.",
+            "expected_saving_gb": 1.2,
+            "numerics_impact": "none",
+            "throughput_impact": "minor",
+            "risk": "Recomputation changes floating-point order; host verification must pass FP32 loss tolerance 0.001. Ensure RNG state and any captured mutable state are preserved across checkpoint boundaries.",
+            "requires_policy": []
+          }
+        ],
+        "verification": {
+          "max_steps": 20,
+          "compare_loss": true,
+          "tolerance": 0.001
+        },
+        "needs_more_info": true,
+        "notes": [
+          "Peak activation saving estimated from 6-block live set to ~1-block live set; exact overlap with temporaries and unknown 100 MB stack not measured.",
+          "Required saving 1.004 GB; plan[0] alone may cover it if boundary overhead is small, but overlap and the unknown stack contribution are unverified.",
+          "Batch size, sequence lengths, and effective batch per optimizer update are fixed by source (batch=8, 20 steps, no accumulation). No policy permission needed for this step.",
+          "Optimizer state (SGD has none) and parameter memory unchanged; only activation lifetime is altered."
+        ],
+        "invocation_claims": [],
+        "invocation_refs": [],
+        "evidence_requests": [
+          {
+            "field": "plan[0].expected_saving_gb",
+            "reason": "insufficient_saving",
+            "detail": "Need measured peak after checkpointing one block to confirm the 1.2 GB estimate covers the required 1.004 GB, accounting for boundary inputs and the unknown 100 MB stack (stk_c78ac71a2d513035).",
+            "evidence_ref": "execution_context.runtime_input_observations",
+            "source_line_start": null,
+            "source_line_end": null,
+            "blocking_scope": "current_plan",
+            "blocked_plan_ids": [
+              "p1"
+            ]
+          },
+          {
+            "field": "root_causes[2].bytes_gb",
+            "reason": "ambiguous",
+            "detail": "stk_c78ac71a2d513035 (100 MB) is categorized unknown with nano-label params. Confirm whether this allocation is persistent parameter memory or a one-time initialization temporary, and whether it remains live at the global peak (event 3122).",
+            "evidence_ref": "execution_context.runtime_input_observations",
+            "source_line_start": 82,
+            "source_line_end": 84,
+            "blocking_scope": "overall_feasibility",
+            "blocked_plan_ids": []
+          }
+        ]
+      },
+      "original_issues": [
+        {
+          "code": "INVALID_EVIDENCE_RANGE",
+          "message": "Use both ordered source line bounds only with a source reference.",
+          "path": "/evidence_requests/1"
+        }
+      ],
+      "policy": {
+        "allow_numerics_change": false,
+        "allow_model_change": false,
+        "allow_batch_grad_accum": true,
+        "max_throughput_regression_pct": 25.0
+      },
+      "evidence": {
+        "analysis": {
+          "stack_catalog": {
+            "stk_cc2ed18f85d7f0c2": [],
+            "stk_dd3f1949dc785e5b": [],
+            "stk_c78ac71a2d513035": [],
+            "stk_f8656707214e7d59": [],
+            "stk_7d524a74442df858": [],
+            "stk_40789e211cd87036": [],
+            "stk_16701b6426f19914": [],
+            "stk_a095f93f01d00239": [],
+            "stk_47784b7ed9480b2f": [],
+            "stk_5b9b7a5ded789c4f": [],
+            "stk_fbc45735d713fbbb": [],
+            "stk_ae99c3d444fa8683": [],
+            "stk_32458f3edc69b9a7": [],
+            "stk_91f011fdf4e3657a": [],
+            "stk_e3e859dd305841d5": [],
+            "stk_9bb5a0af368c58f6": [],
+            "stk_8740c7ed9227569b": [],
+            "stk_47a33c87f8ad78dd": [],
+            "stk_6b2659d9a2fa87d7": [],
+            "stk_d370527b6de9221f": [],
+            "stk_fa0937f88c4eb0d3": []
+          }
+        },
+        "execution_context": {},
+        "evidence_availability_catalog": {
+          "schema": "headroom.evidence_availability.v1",
+          "entries": [
+            {
+              "evidence_ref": "execution_context.script_args",
+              "kind": "field",
+              "availability": "unsupported",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.execution_argv",
+              "kind": "field",
+              "availability": "unsupported",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "kind": "field",
+              "availability": "unknown",
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            },
+            {
+              "evidence_ref": "source[0]",
+              "kind": "source",
+              "path": "train.py",
+              "source_sha256": "627d24ee9e62601455e37f29166df8abe73a43b9e82382a293feec3a6b558169",
+              "availability": "visible",
+              "visible_ranges": [
+                [
+                  1,
+                  146
+                ]
+              ],
+              "redacted_ranges": [],
+              "total_lines": 146,
+              "text_availability_only": true,
+              "runtime_values_verified": false
+            }
+          ],
+          "omitted_entries": 0,
+          "text_availability_only": true,
+          "runtime_values_verified": false,
+          "evidence_markdown_sha256": "f6a56b7adf5bdd2b950e582a242a5c57d96b334bb6228504b245b30379a34bc2"
+        }
+      },
+      "scope": "Existing failure replay; source content/labels/target answers omitted. s1 round02 uses unchanged baseline catalogue for its runtime dependency."
+    }
+  ]
+}

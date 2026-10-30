@@ -1,0 +1,181 @@
+{
+  "schema": "headroom.capture-finalization.performance-review.v1",
+  "created_at": "2026-10-30T05:19:45.938348+00:00",
+  "provenance": "offline_cpu_replay_of_saved_capture_not_new_gpu_acceptance",
+  "source_run_id": "e5d4a541c34b49b09d2477efc1200348",
+  "source_lab_id": "43834c0473d7494f86951152fd2c3a96",
+  "input": {
+    "bytes": 42349547,
+    "limits": {
+      "as_bytes": 2147483648,
+      "cpu_seconds": 75,
+      "fsize_bytes": 134217728
+    },
+    "mode": "before",
+    "sha256": "00d4a6000b5714b68f9ccb975bba39eb2b1e3f128fe774e6165aa9ab2f8477f7",
+    "source_sha256": "67f74ae4f5c7b2ddab23ff6222c409c7133d1f9e9721f3de80150b34c5229d73",
+    "stage": "input"
+  },
+  "observed_original_failure": {
+    "execution_status": "completed",
+    "execution_termination_reason": "step_limit",
+    "recorded_optimizer_updates": 20,
+    "finite_recorded_losses": 20,
+    "capture_complete": false,
+    "finalization_incomplete": true,
+    "finalization_stage": "write:snapshot.json",
+    "snapshot_pickle_complete": true,
+    "snapshot_json_complete": false,
+    "host_max_seconds": 120,
+    "historical_target_met": false
+  },
+  "graph": {
+    "elapsed": 9.362447883933783,
+    "expanded_frames": 9944987,
+    "frame_field_references": 202808,
+    "graph_objects": 338806,
+    "rss_kib": 208180,
+    "stage": "inspect_done",
+    "unique_frame_objects": 397,
+    "unique_stack_objects": 134632
+  },
+  "measurements": {
+    "before": {
+      "codec_sha256": "67f74ae4f5c7b2ddab23ff6222c409c7133d1f9e9721f3de80150b34c5229d73",
+      "encode_cpu_seconds": 53.208282772,
+      "encode_seconds": 53.228971848031506,
+      "rss_kib": 256188,
+      "stage": "encoded",
+      "stats": {
+        "expanded_frame_bytes": 1195881645,
+        "expanded_frame_nodes": 69614909,
+        "expanded_frames": 9944987,
+        "frame_count": 329,
+        "frame_table_bytes": 75500,
+        "max_stack_depth": 112,
+        "payload_nodes": 1421247,
+        "stack_count": 54,
+        "stack_entries": 2911,
+        "stack_references": 202808
+      }
+    },
+    "after": {
+      "codec_sha256": "4152ac042238374a9a12b8f3d459098c1303b3e36e32cee513dcc470271e7eee",
+      "encode_cpu_seconds": 2.593563580999999,
+      "encode_seconds": 2.5940652729477733,
+      "rss_kib": 265612,
+      "stage": "encoded",
+      "stats": {
+        "expanded_frame_bytes": 1195881645,
+        "expanded_frame_nodes": 69614909,
+        "expanded_frames": 9944987,
+        "frame_count": 329,
+        "frame_table_bytes": 75500,
+        "max_stack_depth": 112,
+        "payload_nodes": 1421247,
+        "stack_count": 54,
+        "stack_entries": 2911,
+        "stack_references": 202808
+      }
+    },
+    "speed_ratio": 20.51951907422307,
+    "saved_encode_seconds": 50.63490657508373,
+    "before_json": {
+      "bytes": 27639354,
+      "envelope_sha256": "8cf3ffbc845844d3e67434635f6df9e5a8f268741802a3da2aaf8503951b720d",
+      "rss_kib": 314428,
+      "serialize_seconds": 0.2274373380932957,
+      "stage": "serialized"
+    },
+    "after_json": {
+      "bytes": 27639354,
+      "envelope_sha256": "8cf3ffbc845844d3e67434635f6df9e5a8f268741802a3da2aaf8503951b720d",
+      "rss_kib": 324876,
+      "serialize_seconds": 0.22757510212250054,
+      "stage": "serialized"
+    },
+    "full_candidate": {
+      "compared_values": 1354659,
+      "decoded_native_equal": true,
+      "elapsed": 16.25343097699806,
+      "rss_kib": 442248,
+      "stage": "complete"
+    }
+  },
+  "equivalence": {
+    "identical_envelope_sha256": "8cf3ffbc845844d3e67434635f6df9e5a8f268741802a3da2aaf8503951b720d",
+    "identical_envelope_bytes": 27639354,
+    "all_codec_statistics_identical": true,
+    "candidate_decoded_native_equal": true,
+    "events_or_frames_dropped": false,
+    "historical_capture_rewritten": false
+  },
+  "retained_initial_failures": [
+    {
+      "log": "inspect.log",
+      "reason": "Existing upload-reader 8000000 opcode bound rejects this capture before benchmark; not a product parser change."
+    },
+    {
+      "log": "before.log",
+      "reason": "Original encode/serialization completed, but first equality checker counted repeated shared-node visits and hit its 8000000 comparison bound. SSH detached; terminal exit code not directly retained."
+    },
+    {
+      "log": "after.log",
+      "reason": "Candidate encode/serialization completed, same initial equality-check bound stopped verification."
+    }
+  ],
+  "benchmark_read_boundary": {
+    "input_max_bytes": 52428800,
+    "opcode_allowlist": "existing primitive-only allowlist; globals/reduce/persistent IDs/buffers forbidden",
+    "report_only_count_limits": {
+      "max_opcodes": "input byte length <=50MiB",
+      "max_memo_objects": 4000000
+    },
+    "product_upload_reader_unchanged": true,
+    "resource_limits": {
+      "address_space_bytes": 2147483648,
+      "cpu_seconds": 75,
+      "wall_timeout_seconds": 90,
+      "output_file_max_bytes": 134217728
+    },
+    "network_socket_guard": true,
+    "priority_nice": 19
+  },
+  "verification": {
+    "command": ".venv/bin/python reports/final48h-closing-regression-20261029/closing_guarded_v4.py tests/test_snapshot_codec.py tests/test_snapshot_codec_memo.py",
+    "log": "focused-tests.log",
+    "passed": 70,
+    "elapsed_seconds": 1.82,
+    "parent_and_spawn_guard_selfchecks_passed": true,
+    "ruff_check": "passed",
+    "ruff_format_check": "passed",
+    "git_diff_check": "passed",
+    "independent_read_only_review": "frontend_browser_checks PASS; no blocking findings"
+  },
+  "source_sha256": {
+    "headroom/lab/snapshot_codec.py": "4152ac042238374a9a12b8f3d459098c1303b3e36e32cee513dcc470271e7eee",
+    "tests/test_snapshot_codec_memo.py": "0967704327d29378dd80960494cbdee6f2a768ef67195aab480b7def574df98a"
+  },
+  "artifact_sha256": {
+    "benchmark.py.txt": "97e624f064b415090c6a501e1a800f9afa645f5762b242efe96063c0e9149851",
+    "benchmark-v2.py.txt": "a8dc981487309ab6b1e2288c46908b12ff6f5250186bc89c4d53455eea1b30d6",
+    "benchmark-v3.py.txt": "946f2907665dcb57bcb27983861df56dcb65b2ffd19adcd1aa00e7cf08052340",
+    "snapshot_codec_candidate.py": "4152ac042238374a9a12b8f3d459098c1303b3e36e32cee513dcc470271e7eee",
+    "candidate.patch": "daf7c964cf136f92c03f99f2f1c37383285fec71816bddf0cc90efc31f0c7b59",
+    "inspect.log": "c9337a7adfd5447d8229d941a5d2a69b63807947f5c29f350d9ef07c4a86df2b",
+    "inspect-v2.log": "e696b117844b9ece0ad04275289c0411bdb577643ad7043fb9f2810045a19a53",
+    "before.log": "d7309ca6ec4ac65021b786b729b305f743bc1e1beb0c14f14ded76c4562fa916",
+    "after.log": "39112da20c3b22b4bdebba3d4ef0315072c3e75323eeb46eaa118dd8b49a6b21",
+    "after-v3.log": "3123b61e6f1f133af6c2ddbc2e8893b41f34f8137fd73e242d8fcd2e4d683cb3",
+    "focused-tests.log": "539926f44ef7a9972e71e6a22f4bd22c856232c06794ab3ad7a60c33b028e373"
+  },
+  "unchanged": [
+    "120-second Lab limit",
+    "capture completeness gate",
+    "snapshot JSON required output",
+    "all codec safety limits",
+    "budget and model policies",
+    "historical run records"
+  ],
+  "remaining": "A future authorized actual capture must prove complete finalization and numerical verification; this CPU measurement does not turn the failed R8 candidate into a repair success."
+}

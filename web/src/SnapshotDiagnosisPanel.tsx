@@ -30,7 +30,13 @@ import {
   type SnapshotStatus,
 } from "./snapshotApi";
 const DiffView = lazy(() => import("./DiffView"));
-const NOT_RUN = "Not run — bring the patch to your GPU";
+const NOT_RUN = "Hardware verification was not run";
+const DRAFT_NOT_RUN = "Not run — bring the patch to your GPU";
+function validationRejected(job: SnapshotJob): boolean {
+  return job.status === "needs_human" &&
+    job.result?.diagnosis === null &&
+    job.result?.error === "diagnosis_unavailable";
+}
 const labels: Record<SnapshotStatus, string> = {
   receiving: "Receiving upload",
   preparing: "Preparing evidence",
@@ -161,6 +167,9 @@ function SnapshotResult({ job }: { job: SnapshotJob }) {
     evidence = record(result.evidence);
   const analysis = record(evidence.analysis),
     patch = record(result.patch);
+  const rejected = validationRejected(job);
+  const patchDiff = typeof patch.diff === "string" ? patch.diff : "";
+  const hasPatch = patch.status === "unverified" && patchDiff.trim().length > 0;
   const stacks = boundStacks(evidence);
   const derivedQuantities =
     stacks !== null &&
@@ -181,9 +190,15 @@ function SnapshotResult({ job }: { job: SnapshotJob }) {
       ) : result.provenance !== "live_model" ? (
         <Notice>Diagnosis provenance is unavailable.</Notice>
       ) : null}
+      {rejected && (
+        <Notice tone="amber">
+          The model response did not pass validation. No reliable diagnosis is
+          available for this upload.
+        </Notice>
+      )}
       <Notice>
-        {NOT_RUN}. This analysis uses an uploaded capture. No workload or
-        generated patch was executed.
+        {hasPatch ? DRAFT_NOT_RUN : NOT_RUN}. This analysis uses an uploaded
+        capture. No workload or generated patch was executed.
       </Notice>
       <Section title="Uploaded snapshot" kicker="Captured evidence">
         <div className="metric-grid three">
@@ -290,9 +305,11 @@ function SnapshotResult({ job }: { job: SnapshotJob }) {
           ) : (
             <Empty
               title={
-                diagnosis.needs_more_info === true
-                  ? "More information needed"
-                  : "No diagnosis available"
+                rejected
+                  ? "No validated diagnosis available"
+                  : diagnosis.needs_more_info === true
+                    ? "More information needed"
+                    : "No diagnosis available"
               }
             />
           )}
@@ -320,30 +337,29 @@ function SnapshotResult({ job }: { job: SnapshotJob }) {
         </Section>
       )}
       <Section title="Patch draft" kicker="Hardware verification not run">
-        {patch.status === "unverified" &&
-        typeof patch.diff === "string" &&
-        patch.diff.trim() ? (
+        {hasPatch ? (
           <>
             <Badge tone="amber">Unverified patch</Badge>
             <details>
               <summary>Inspect patch draft</summary>
               <Suspense fallback={<Loading />}>
-                <DiffView diff={patch.diff} recorded />
+                <DiffView diff={patchDiff} recorded />
               </Suspense>
             </details>
           </>
         ) : (
           <p>
-            No patch draft is available. The diagnosis may need more source or
-            runtime information.
+            {rejected
+              ? "No patch draft was generated because the model response did not pass validation."
+              : "No patch draft is available. The diagnosis may need more source or runtime information."}
           </p>
         )}
-        <p className="caption">{NOT_RUN}.</p>
+        <p className="caption">{hasPatch ? DRAFT_NOT_RUN : NOT_RUN}.</p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
           {downloads.map(([kind, label]) => {
             const url = snapshotArtifactURL(job, kind);
             return url &&
-              (kind !== "patch" || patch.status === "unverified") ? (
+              (kind !== "patch" || hasPatch) ? (
               <a className="text-link" key={kind} href={url}>
                 {label}
               </a>
@@ -543,12 +559,12 @@ export default function SnapshotDiagnosisPanel({
         <div style={{ marginTop: 20 }}>
           <Badge
             tone={
-              ["failed", "timeout", "expired"].includes(job.status)
+              ["failed", "timeout", "expired"].includes(job.status) || validationRejected(job)
                 ? "amber"
                 : "neutral"
             }
           >
-            {labels[job.status]}
+            {validationRejected(job) ? "Model response rejected" : labels[job.status]}
           </Badge>
           {job.expires_at && (
             <p className="caption">

@@ -1,0 +1,380 @@
+"""Read completed/partial R9 records and create a new review-only projection.
+
+No ledger, credentials, provider, GPU, service or publication mutation.
+"""
+import argparse
+import hashlib
+import json
+import os
+import re
+import sys
+from datetime import UTC, datetime
+from decimal import Decimal
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from headroom.acceptance.final48_repair import SCENARIOS
+from headroom.api.evaluations import _campaign, _public_row, _registry
+from headroom.api.presentation import product_evaluation
+from headroom.api.security import open_regular
+from headroom.evaluation import evaluation_outcomes, known_cost_subtotal, summarize
+
+POLICY_FIELDS = {
+    "allow_numerics_change", "allow_model_change", "allow_batch_grad_accum",
+    "max_throughput_regression_pct",
+}
+MAX_SOURCE = 64 * 1024 * 1024
+HELPER_FILES = (
+    "headroom/acceptance/final48_repair.py",
+    "headroom/api/evaluations.py",
+    "headroom/api/presentation.py",
+    "headroom/api/security.py",
+    "headroom/evaluation.py",
+    "reports/f3-retry-20261030/execute-fixed9-retry.py.txt",
+    "reports/f3-retry-20261030/summarize-r9.py.txt",
+)
+
+
+def helper_hashes():
+    return {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
+            for name in HELPER_FILES}
+
+
+def amount(value):
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise ValueError("Boolean monetary value")
+    result = Decimal(str(value))
+    if not result.is_finite() or result < 0:
+        raise ValueError("Invalid monetary value")
+    return result
+
+
+def truth(value):
+    return value if type(value) is bool else None
+
+
+class Sources:
+    def __init__(self, root):
+        self.root = Path(root)
+        self.records = {}
+
+    def read(self, relative, maximum=MAX_SOURCE, optional=False):
+        name = Path(relative).as_posix()
+        try:
+            with open_regular(self.root, name, maximum) as handle:
+                raw = handle.read(maximum + 1)
+        except FileNotFoundError:
+            if not optional:
+                raise
+            self.records[name] = {"path": name, "missing": True}
+            return None
+        if len(raw) > maximum:
+            raise ValueError("Oversized source: " + name)
+        self.records[name] = {
+            "path": name, "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest(),
+        }
+        data = json.loads(raw)
+        if not isinstance(data, dict):
+            raise ValueError("Expected source object: " + name)
+        return data
+
+    def recheck(self):
+        original = dict(self.records)
+        for name, record in original.items():
+            self.read(name, max(record.get("bytes", 0), 1), optional=record.get("missing", False))
+            if self.records[name] != record:
+                raise ValueError("Source changed during projection: " + name)
+
+
+def fixed_rows(document):
+    if document.get("schema") != "headroom.final48.f3-retry-campaign.v1":
+        raise ValueError("Only a new F3 retry campaign is accepted; old R7 is not an input")
+    if document.get("status") not in {"finished", "partial"} or document.get("provenance") != "live":
+        raise ValueError("Controller must be terminal or partial, not still running")
+    if (document.get("fixed_denominator"), document.get("minimum_targets")) != (9, 6):
+        raise ValueError("Fixed denominator/threshold changed")
+    if document.get("threshold_scope") != "memory_targets_only":
+        raise ValueError("An explicit memory-only threshold scope is required")
+    if document.get("revision") != "r9":
+        raise ValueError("Only revision r9 is labelled R9")
+    for key in ("proposal_sha256", "preparation_sha256"):
+        if not isinstance(document.get(key), str) or not re.fullmatch("[a-f0-9]{64}", document[key]):
+            raise ValueError("Missing reviewed controller source hash")
+    rows = document.get("rows")
+    if not isinstance(rows, list) or len(rows) != 9:
+        raise ValueError("Exactly nine rows including not_run are required")
+    if tuple(row.get("scenario_id") for row in rows) != SCENARIOS:
+        raise ValueError("Fixed nine order changed")
+    if any(row.get("cell_id") != "fixed9-" + row["scenario_id"] for row in rows):
+        raise ValueError("Fixed cell identity changed")
+    return rows
+
+
+def cost_row(row, report, attempted):
+    if not attempted:
+        return {"actual_usd": None, "known_actual_subtotal_usd": None,
+                "charged_usd": None, "cost_resolved": None, "usage": {}}
+    settlement = row.get("settlement") or {}
+    usage = (report or {}).get("usage") or row.get("usage") or {}
+    actual = amount(settlement.get("actual_usd"))
+    row_actual = amount(row.get("cost_usd"))
+    if actual != row_actual:
+        raise ValueError("Controller actual and settlement disagree")
+    resolved = settlement.get("cost_resolved") is True and row.get("cost_resolved") is True
+    charged = amount(settlement.get("charged_usd"))
+    if charged != amount(row.get("charged_usd")):
+        raise ValueError("Controller charge and settlement disagree")
+    known = amount(known_cost_subtotal({"cost_usd": None, "usage": usage}))
+    if known is None:
+        known = amount(row.get("known_cost_usd"))
+    if actual is not None:
+        if not resolved or (known is not None and known > actual):
+            raise ValueError("Actual amount conflicts with saved accounting")
+        known = actual
+    if charged is not None and known is not None and charged < known:
+        raise ValueError("Charged amount is smaller than known actual subtotal")
+    if actual is not None and charged != actual:
+        raise ValueError("Exact actual and charge disagree")
+    return {
+        "actual_usd": str(actual) if actual is not None else None,
+        "known_actual_subtotal_usd": str(known) if known is not None else None,
+        "charged_usd": str(charged) if resolved and charged is not None else None,
+        "cost_resolved": resolved and charged is not None,
+        "usage": usage,
+    }
+
+
+def collect(campaign_path):
+    campaign_path = Path(campaign_path)
+    sources = Sources(campaign_path.parent)
+    controller = sources.read(campaign_path.name)
+    rows = fixed_rows(controller)
+    output, private_rows, notes = [], [], []
+    for index, row in enumerate(rows):
+        status = row.get("status")
+        attempted = status not in {"not_run", "not_started", "pending"}
+        if status == "running":
+            raise ValueError("A running row is not a completed source")
+        run_id = row.get("run_id")
+        if attempted and not (isinstance(run_id, str) and re.fullmatch("[a-f0-9]{32}", run_id)):
+            raise ValueError("Attempted row has no safe run identity")
+        if not attempted and run_id is not None:
+            raise ValueError("not_run must not conceal an admitted run")
+        job = "jobs/" + run_id if attempted else None
+        report = sources.read(job + "/report.json", optional=True) if job else None
+        diagnosis = sources.read(job + "/rounds/01/diagnosis.json", 1024 * 1024, True) if job else None
+        if report and report.get("run", {}).get("run_id", report.get("run", {}).get("id")) != run_id:
+            raise ValueError("Per-run report does not match controller run identity")
+        if job and report:
+            for number in range(1, 7):
+                for name in ("patch-result.json", "verification.json"):
+                    sources.read(f"{job}/rounds/{number:02d}/{name}", 1024 * 1024, True)
+        saved = (diagnosis or {}).get("diagnosis") or {}
+        causes = saved.get("root_causes") or []
+        category = causes[0].get("category") if causes and isinstance(causes[0], dict) else None
+        if category is not None and not isinstance(category, str):
+            raise ValueError("Invalid saved category")
+        valid = truth((diagnosis or {}).get("valid"))
+        ready = truth((diagnosis or {}).get("ready_for_patch"))
+        needs = truth(saved.get("needs_more_info"))
+        authored = row.get("truth_status") == "authored" and isinstance(row.get("ground_truth"), str)
+        matches = category == row["ground_truth"] if authored and category is not None else None
+        target = truth(row.get("target_met")) if attempted else None
+        if target is True and not (
+            row.get("execution_certified") is True and report
+            and report.get("summary", {}).get("target_met") is True
+        ):
+            raise ValueError("Claimed target lacks certified controller and report evidence")
+        billing = cost_row(row, report, attempted)
+        candidate = dict(row)
+        candidate.update(
+            target_met=target, first_cause=category, first_cause_matches=matches,
+            provenance="live" if attempted else "unknown",
+            cost_usd=billing["actual_usd"], known_cost_usd=billing["known_actual_subtotal_usd"],
+            billing_complete=billing["cost_resolved"] is True,
+            cost_upper_usd=billing["charged_usd"] if billing["actual_usd"] is None else None,
+            cost_basis="actual" if billing["actual_usd"] is not None else
+                       "verified_upper_bound" if billing["cost_resolved"] else None,
+        )
+        if report:
+            measurements = report.get("measurements") or {}
+            summary = report.get("summary") or {}
+            verification = report.get("verification") or {}
+            search = report.get("search") or {}
+            effective = report.get("run", {}).get("request", {}).get("policy") or row.get("policy") or {}
+            if effective.get("numerical_requirement", "legacy") != "legacy":
+                raise ValueError("Fixed-nine legacy numerical contract changed")
+            candidate["policy"] = {k: v for k, v in effective.items() if k in POLICY_FIELDS}
+            candidate.update(evaluation_outcomes({
+                "report": report, "run_dir": str(campaign_path.parent / job),
+                "run_id": run_id, "status": status,
+            }))
+            candidate.update(
+                peak_before_bytes=measurements.get("before", {}).get("peak_allocated_bytes"),
+                peak_after_bytes=measurements.get("after", {}).get("peak_allocated_bytes"),
+                peak_reduction_pct=summary.get("peak_reduction_pct"),
+                step_time_change_pct=summary.get("step_time_change_pct"),
+                loss_equivalence=summary.get("loss_equivalence"),
+                numerical_basis=verification.get("numerical_basis"),
+                acceptance_scope=verification.get("acceptance_scope"),
+                throughput_change_pct=verification.get("throughput_change_pct"),
+                search_mode=search.get("mode"), search_stop_reason=search.get("stop_reason"),
+                search_rounds_executed=search.get("rounds_executed"),
+                rounds=len(report["rounds"]) if isinstance(report.get("rounds"), list) else None,
+            )
+        else:
+            candidate["policy"] = {k: v for k, v in (row.get("policy") or {}).items() if k in POLICY_FIELDS}
+        # Unselected baseline/failed captures are not successful "after" measurements.
+        if candidate.get("selected_round") is None or candidate.get("selected_completed") is not True:
+            candidate["peak_after_bytes"] = None
+            candidate["peak_reduction_pct"] = None
+        public = _public_row(candidate, "live")
+        output.append(public)
+        private_rows.append({
+            "scenario_id": row["scenario_id"], "cell_id": row["cell_id"], "run_id": run_id,
+            "status": status, "target_met": target,
+            "first_round_diagnosis": {
+                "category": category, "truth_status": row.get("truth_status"),
+                "ground_truth": row.get("ground_truth"), "raw_category_matches": matches,
+                "valid": valid, "ready_for_patch": ready, "needs_more_info": needs,
+                "valid_and_correct": matches is True and valid is True,
+                "ready_valid_and_correct": matches is True and valid is True and ready is True,
+                "source": sources.records.get(job + "/rounds/01/diagnosis.json") if job else None,
+                "category_pointer": "/diagnosis/root_causes/0/category",
+                "valid_pointer": "/valid", "ready_pointer": "/ready_for_patch",
+                "issue_codes": [issue.get("code") for issue in (diagnosis or {}).get("issues", [])
+                                if isinstance(issue, dict)],
+            },
+            "cost": {k: v for k, v in billing.items() if k != "usage"},
+            "source_report": sources.records.get(job + "/report.json") if job else None,
+            "campaign_row_pointer": f"/rows/{index}",
+        })
+        if attempted and report is None:
+            notes.append(row["scenario_id"] + ": report unavailable; no new outcome inferred")
+    attempted_rows = [row for row in private_rows if row["run_id"] is not None]
+    costs = [row["cost"] for row in attempted_rows]
+    exact = [amount(row["actual_usd"]) for row in costs]
+    charges = [amount(row["charged_usd"]) for row in costs]
+    known = [amount(row["known_actual_subtotal_usd"]) for row in costs]
+    sum_known = sum((x for x in known if x is not None), Decimal(0))
+    metrics = {
+        "fixed_denominator": 9, "minimum_memory_targets": 6,
+        "threshold_scope": "memory_targets_only", "overall_acceptance": "not_assessed",
+        "attempted_rows": len(attempted_rows), "not_run_rows": 9 - len(attempted_rows),
+        "memory_targets": sum(r["target_met"] is True for r in private_rows),
+        "raw_category_matches": sum(r["first_round_diagnosis"]["raw_category_matches"] is True for r in private_rows),
+        "valid_correct_first_causes": sum(r["first_round_diagnosis"]["valid_and_correct"] for r in private_rows),
+        "valid_ready_diagnoses": sum(r["first_round_diagnosis"]["valid"] is True and
+                                      r["first_round_diagnosis"]["ready_for_patch"] is True for r in private_rows),
+        "ready_valid_correct_first_causes": sum(r["first_round_diagnosis"]["ready_valid_and_correct"] for r in private_rows),
+        "unverified_truth_cases": [r["scenario_id"] for r in private_rows if r["first_round_diagnosis"]["truth_status"] != "authored"],
+        "cost": {
+            "scope": "this_revision_attempted_rows_only",
+            "actual_total_usd": str(sum(exact, Decimal(0))) if exact and all(v is not None for v in exact) else None,
+            "known_actual_subtotal_usd": str(sum_known),
+            "charged_total_usd": str(sum(charges, Decimal(0))) if charges and all(v is not None for v in charges) else None,
+            "known_charged_subtotal_usd": str(sum((v for v in charges if v is not None), Decimal(0))),
+            "unknown_actual_runs": sum(v is None for v in exact),
+            "unresolved_charge_runs": sum(v is None for v in charges),
+        },
+    }
+    metrics["memory_threshold_met"] = metrics["memory_targets"] >= 6
+    sources.recheck()
+    return controller, output, private_rows, metrics, notes, sources
+
+
+def write_new(path, document):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("x", encoding="utf-8") as handle:
+        json.dump(document, handle, indent=2, ensure_ascii=False, allow_nan=False)
+        handle.write("\n")
+
+
+def stage_campaign(campaign_path, output_dir, identifier):
+    if not re.fullmatch(r"r9-[a-z0-9][a-z0-9_-]{0,60}", identifier):
+        raise ValueError("Use a distinct R9 staging identifier")
+    output_dir = Path(output_dir)
+    if output_dir.exists():
+        raise ValueError("Projection output must be a new directory; never replace a publication")
+    source_hashes = helper_hashes()
+    controller, public_rows, rows, metrics, notes, sources = collect(campaign_path)
+    output_dir.mkdir(parents=True, mode=0o700, exist_ok=False)
+    title = (f"R9 - {metrics['memory_targets']}/9 memory targets; first categories "
+             f"{metrics['raw_category_matches']}/9 ({metrics['valid_correct_first_causes']} valid)")
+    entry = {"id": identifier, "title": title}
+    public = {"mode": "campaign", "provenance": "live", "status": controller["status"],
+              "search_mode": "until_target", "rows": public_rows}
+    staging = output_dir / "staging"
+    write_new(staging / "public-evaluations.json", {"version": 1, "campaigns": [entry]})
+    write_new(staging / "published-evaluations" / (identifier + ".json"), public)
+    # Reuse the actual allowlisted API reader and product projection; no API request.
+    entries = _registry(staging)
+    interpreted = _campaign(staging, entries[0])
+    projected = product_evaluation(interpreted)
+    if len(interpreted["rows"]) != 9 or len(projected["rows"]) != 9:
+        raise ValueError("Public projection lost fixed rows")
+    if interpreted["summary"]["attempted_live_runs"] != metrics["attempted_rows"]:
+        raise ValueError("not_run rows were counted as executed")
+    summary = {
+        "schema": "headroom.f3-retry.summary.v1", "prepared_only": True, "published": False,
+        "source_campaign": sources.records[Path(campaign_path).name],
+        "revision": controller.get("revision"), "source_preparation_sha256": controller.get("preparation_sha256"),
+        "metrics": metrics, "rows": rows,
+        "existing_summary_attempted_rows_only": summarize([r for r in public_rows if r["provenance"] == "live"]),
+        "limitations": [
+            "Saved round 01 may follow same-round bounded supplements; it is not necessarily the first HTTP response.",
+            "Unknown/unverified truth is neither correct nor incorrect; every headline denominator stays nine.",
+            "Memory threshold is not valid-first-cause or overall acceptance.",
+            "Public rows retain historical raw category matching; validity and readiness are separate in this summary.",
+            "Staging registry is a proposed single entry to review and merge, never replace the live registry.",
+            "No ledger/invoice or service/process re-audit; fees derive only from saved usage and final settlement metadata.",
+        ] + notes,
+    }
+    write_new(output_dir / "summary.json", summary)
+    sources.recheck()
+    paths = [output_dir / "summary.json", staging / "public-evaluations.json",
+             staging / "published-evaluations" / (identifier + ".json")]
+    if helper_hashes() != source_hashes:
+        raise ValueError("Projection helper source changed; review-only output is incomplete")
+    receipt = {
+        "schema": "headroom.f3-retry.projection-receipt.v1", "generated_at_utc": datetime.now(UTC).isoformat(),
+        "prepared_only": True, "published": False, "provider_calls": 0, "gpu_jobs": 0,
+        "inputs": list(sources.records.values()),
+        "script_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "helper_source_sha256": source_hashes,
+        "outputs": [{"path": str(p.relative_to(output_dir)), "bytes": p.stat().st_size,
+                     "sha256": hashlib.sha256(p.read_bytes()).hexdigest()} for p in paths],
+        "checks": {"sources_unchanged": True, "fixed_nine": True, "api_reader": True,
+                   "product_projection": True, "not_run_not_executed": True,
+                   "no_acceptance_banner": "acceptance" not in public,
+                   "unknown_actual_preserved": True},
+        "metrics": metrics,
+    }
+    write_new(output_dir / "projection-receipt.json", receipt)
+    return summary
+
+
+def main():
+    os.umask(0o077)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--campaign", required=True)
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--id", required=True)
+    args = parser.parse_args()
+    campaign = Path(args.campaign).absolute()
+    output = Path(args.output).absolute()
+    for path in (campaign, output):
+        if ".." in path.parts or any(p.is_symlink() for p in (path, *path.parents)):
+            raise ValueError("Unsafe/symlink path")
+    if not campaign.is_relative_to(ROOT / "runs") or not output.is_relative_to(ROOT / "reports"):
+        raise ValueError("Read runs and create only a new reports staging directory")
+    result = stage_campaign(campaign, output, args.id)
+    print(json.dumps({"output": str(output), "published": False, "metrics": result["metrics"]}))
+
+
+if __name__ == "__main__":
+    main()

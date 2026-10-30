@@ -1,0 +1,66 @@
+{
+  "schema": "headroom.snapshot-upload-window-deployment-readiness.v1",
+  "created_at": "2026-10-30T05:19:13.036457+00:00",
+  "state": "source_frozen_ready_for_root_review_and_deployment",
+  "deployed": false,
+  "source_sha256": {
+    "headroom/api/snapshot_routes.py": "335f0f6d700f74fb3fc2cbe1c20312d18ae88c217d147115901a233a9d50f1a3",
+    "tests/test_snapshot_routes.py": "439428ee9a4d6854fd8742acdc077bfb1bfca5d69f0788edadbc2b894a6d99f4",
+    "tests/test_snapshot_public_safety.py": "998b725889e9bfa4fe2a29732ceb343d79788ccb2c5f908665f3dd8ff60af3bc",
+    "web/src/snapshotApi.ts": "066f5e5d09794ec2010e0780ea67c0833cbbd98f10046c1f22db5ca88b9b4b44",
+    "web/src/SnapshotDiagnosisPanel.tsx": "28652188d3bd16a3952e88c285a15c921a0512e5c2cdc0016ad2afbcaaad96c9",
+    "web/src/SnapshotDiagnosisPanel.test.tsx": "ec82bd0a13f12454393c6c13cf95bb407e7e74b65af9f472c596f0f19cb98a30"
+  },
+  "change": "Authenticated snapshot body deadline 120s, anonymous 30s; remaining overall task deadline still wins. UI explains 408 before analysis and separates validation rejection from genuine unknowns; no patch means no bring-patch instruction.",
+  "limits_preserved": {
+    "total_task_seconds": 480,
+    "active_receiving_queued_running_slots": 3,
+    "snapshot_MiB": 50,
+    "ordinary_run_upload_max_seconds": 30,
+    "anonymous_snapshot_seconds": 30,
+    "worker_memory_or_file_limits_changed": false,
+    "storage_limits_changed": false,
+    "auth_origin_owner_checks_changed": false,
+    "funding_or_provider_limits_changed": false
+  },
+  "verification": {
+    "backend": {
+      "passed": 64,
+      "seconds": 20.51,
+      "exit_code": 0,
+      "log": "reports/snapshot-repair-20261030/upload-120s-api-focused-final.log",
+      "command": ".venv/bin/python reports/final48h-closing-regression-20261029/closing_guarded_v4.py tests/test_snapshot_routes.py tests/test_snapshot_public_safety.py",
+      "scope": "New 3 deadline cases plus existing auth/storage/capacity/timeout/disconnect/cancel/retention/source-binding cases; guarded offline, no production inputs."
+    },
+    "frontend": {
+      "passed": 28,
+      "seconds": 1.62,
+      "exit_code": 0,
+      "log": "reports/snapshot-repair-20261030/upload-120s-ui-focused.log",
+      "kind": "synthetic offline mocked HTTP"
+    },
+    "typecheck": {
+      "exit_code": 0,
+      "log": "reports/snapshot-repair-20261030/upload-120s-ui-typecheck.log"
+    },
+    "static": {
+      "ruff": 0,
+      "format": 0,
+      "diff": 0,
+      "gitleaks": 0
+    }
+  },
+  "initial_failure_preserved": {
+    "log": "reports/snapshot-repair-20261030/upload-120s-api-focused.log",
+    "result": "63 passed, 1 failed; authenticated timeout test patched the old anonymous constant. Only the test timer target was updated; all original 408/cancellation/capacity assertions retained."
+  },
+  "deployment_notes": [
+    "Review these frozen hashes together with separately owned codec change if batching deployment.",
+    "Use safe idle maintenance window before API reload because backend timeout constant is loaded in process.",
+    "Build and atomically publish front-end assets using root workflow.",
+    "Do not treat these offline checks as a successful new large-file public upload; that remains a separate post-deployment verification."
+  ],
+  "no_real_model_gpu_calls": true,
+  "no_production_task_created": true,
+  "no_real_upload_retried": true
+}

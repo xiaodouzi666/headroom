@@ -1,0 +1,186 @@
+{
+  "schema": "headroom.public-snapshot-independent-review.v1",
+  "created_at": "2026-10-30T05:07:19.067259+00:00",
+  "run_id": "915e69ee98c5430db3c7b9a477cb76bb",
+  "disposition": "Real public submission and bounded execution completed; valid diagnosis display acceptance NOT passed",
+  "status": "needs_human",
+  "error": "diagnosis_unavailable",
+  "diagnosis_available": false,
+  "patch": {
+    "status": "unavailable",
+    "diff": null
+  },
+  "verification": {
+    "status": "not_run",
+    "message": "Not run — bring the patch to your GPU"
+  },
+  "cleanup": {
+    "schema": "headroom.snapshot-cleanup.v1",
+    "run_id": "915e69ee98c5430db3c7b9a477cb76bb",
+    "cleanup_verified": true
+  },
+  "sdk_calls": [
+    {
+      "sequence": 1,
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "response_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "role": "diagnose",
+      "input_tokens": 29791,
+      "output_tokens": 1431,
+      "cost_usd": "0.034084",
+      "http_status": 200,
+      "outcome": "response",
+      "settled": true,
+      "billing_status": "known",
+      "cost_status": "known",
+      "reservation_usd": "0.041646",
+      "output_cap_field": "max_completion_tokens",
+      "output_cap_tokens": 2000,
+      "reasoning": false,
+      "request_body_sha256": "bbd1925d45ae276ae4e89cb944f94d0dd01dc82dc52acd5fcd79a78dd56e855b",
+      "request_body_bytes": 88810,
+      "message_roles": [
+        "system",
+        "system",
+        "user"
+      ]
+    },
+    {
+      "sequence": 2,
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "response_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "role": "diagnose",
+      "input_tokens": 32322,
+      "output_tokens": 1175,
+      "cost_usd": "0.01286844",
+      "http_status": 200,
+      "outcome": "response",
+      "settled": true,
+      "billing_status": "known",
+      "cost_status": "known",
+      "reservation_usd": "0.04443",
+      "output_cap_field": "max_completion_tokens",
+      "output_cap_tokens": 2000,
+      "reasoning": false,
+      "request_body_sha256": "9d9b995b832460d08c20ca0a6d5c737c452f1570d8cb7299fa035424af90fe23",
+      "request_body_bytes": 99279,
+      "message_roles": [
+        "system",
+        "system",
+        "user",
+        "assistant",
+        "user"
+      ]
+    }
+  ],
+  "known_settled_model_cost_usd": "0.04695244",
+  "finance_boundary": "Checked only this task calls.db rows and public result. Tax, aggregate gift balance and shared funding-pool claims are outside this read-only review.",
+  "input_integrity": {
+    "snapshot_sha256": "23c24bb43a8c7720b60aee177f3c7115c81548a93596180a35db0df412030404",
+    "matches_original_r7_capture": true,
+    "original_capture_path": "runs/final48-f3/execution-20261029-v1/jobs/ce2e4bf037a84b349d178c5bd661230b/lab/e3edea64ada84cc4ba9ad5bb55a38aab/artifacts/snapshot.pickle",
+    "source_upload_sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+    "source_evidence_copy_sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+    "source_matches_evidence_sha": true,
+    "traceback_sha256": "59582e26812d8d9e012dc13d3bdeef669875ccc57c8f005dc353bf1653f07113",
+    "evidence_sha256": "75960be7010ab6abf6ce3ca81106b5f50d20cc9197110559b9537b9384ff6cbe",
+    "public_report_sha256": "99f5885cff2d8a899b9ac6ea1a16419d606e4dd9233bf97220a4368840ee6322"
+  },
+  "final_issues": [
+    {
+      "code": "BATCH_CHANGE_FORBIDDEN",
+      "path": "/plan/1",
+      "message": "Step f2_zero_grad_set_to_none proposes batch/accumulation changes without permission."
+    },
+    {
+      "code": "SNAPSHOT_MEMORY_QUANTITY_IN_PROSE",
+      "path": "notes[0]",
+      "message": "Keep memory quantities in grounded structured fields, not narrative text."
+    },
+    {
+      "code": "SNAPSHOT_MEMORY_QUANTITY_IN_PROSE",
+      "path": "notes[4]",
+      "message": "Keep memory quantities in grounded structured fields, not narrative text."
+    }
+  ],
+  "attempt_history": {
+    "maximum_corrections": 1,
+    "attempts": [
+      {
+        "attempt": 1,
+        "outcome": "validation_failed",
+        "issues": [
+          {
+            "code": "BATCH_CHANGE_FORBIDDEN",
+            "path": "/plan/1",
+            "message": "Step f2_zero_grad_set_to_none proposes batch/accumulation changes without permission."
+          },
+          {
+            "code": "SNAPSHOT_MEMORY_QUANTITY_IN_PROSE",
+            "path": "root_causes[0].title",
+            "message": "Keep memory quantities in grounded structured fields, not narrative text."
+          },
+          {
+            "code": "SNAPSHOT_MEMORY_QUANTITY_IN_PROSE",
+            "path": "notes[0]",
+            "message": "Keep memory quantities in grounded structured fields, not narrative text."
+          },
+          {
+            "code": "SNAPSHOT_MEMORY_QUANTITY_IN_PROSE",
+            "path": "notes[4]",
+            "message": "Keep memory quantities in grounded structured fields, not narrative text."
+          },
+          {
+            "code": "SNAPSHOT_MEMORY_QUANTITY_IN_PROSE",
+            "path": "notes[5]",
+            "message": "Keep memory quantities in grounded structured fields, not narrative text."
+          }
+        ],
+        "cost_known": true,
+        "correction_scheduled": true
+      },
+      {
+        "attempt": 2,
+        "outcome": "validation_failed",
+        "issues": [
+          {
+            "code": "BATCH_CHANGE_FORBIDDEN",
+            "path": "/plan/1",
+            "message": "Step f2_zero_grad_set_to_none proposes batch/accumulation changes without permission."
+          },
+          {
+            "code": "SNAPSHOT_MEMORY_QUANTITY_IN_PROSE",
+            "path": "notes[0]",
+            "message": "Keep memory quantities in grounded structured fields, not narrative text."
+          },
+          {
+            "code": "SNAPSHOT_MEMORY_QUANTITY_IN_PROSE",
+            "path": "notes[4]",
+            "message": "Keep memory quantities in grounded structured fields, not narrative text."
+          }
+        ],
+        "cost_known": true,
+        "correction_scheduled": false
+      }
+    ]
+  },
+  "no_new_gpu_boundary": {
+    "hardware_verification": "not_run",
+    "patch_generated": false,
+    "script_execution_required_for_snapshot_diagnosis": false,
+    "evidence": "Historical uploaded CUDA snapshot was parsed and model diagnosis attempted; public and private provenance both explicitly not_run. No GPU command was invoked by this review.",
+    "not_claimed": "This review did not inspect or prove inactivity of unrelated concurrent GPU tasks."
+  },
+  "acceptance": {
+    "public_upload_accepted": true,
+    "real_sdk_completed": true,
+    "failure_fail_closed": true,
+    "invalid_diagnosis_not_publicly_exposed": true,
+    "ui_download_interaction": "parent browser task verifies separately",
+    "f3b_successful_diagnosis_card": false,
+    "automatic_repair_success": false,
+    "fixed_nine_score_changed": false
+  },
+  "original_results_or_code_modified": false,
+  "new_tasks_created_by_review": 0
+}

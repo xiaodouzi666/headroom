@@ -35,6 +35,7 @@ from headroom.solver_context import (
     invocation_reference_catalog,
     solver_prompt_context,
 )
+from headroom.validation_feedback import validation_issue_context
 
 PROMPT_PATH = Path(__file__).parent / "prompts" / "diagnose.md"
 PRECISION_CHANGE = re.compile(
@@ -344,7 +345,14 @@ def _precision_issue_trigger(diagnosis, issue):
 
 
 def _repair_validation(
-    diagnosis, issues, *, provenance=None, observations=(), schema_errors=(), savings=None
+    diagnosis,
+    issues,
+    *,
+    provenance=None,
+    observations=(),
+    schema_errors=(),
+    savings=None,
+    evidence=None,
 ):
     """Actionable, bounded error data using the caller's existing supplement cap.
 
@@ -365,6 +373,7 @@ def _repair_validation(
                 "path": issue.path,
                 "repair": _REPAIR_RULES[issue.code],
                 **_precision_issue_trigger(diagnosis, issue),
+                **validation_issue_context(issue, diagnosis, evidence),
             },
         )
         for issue in repairable
@@ -755,6 +764,7 @@ def validate_diagnosis(
         return _repair_validation(
             None,
             issues,
+            evidence=evidence,
             schema_errors=[
                 {"path": _schema_pointer(item["loc"]), "rule": item["type"]} for item in errors
             ],
@@ -866,7 +876,11 @@ def validate_diagnosis(
             )
         )
         return _repair_validation(
-            diagnosis, issues, provenance=provenance, observations=grounding_corrections
+            diagnosis,
+            issues,
+            provenance=provenance,
+            observations=grounding_corrections,
+            evidence=evidence,
         )
     # An explicit request for evidence may legitimately have no proposed fix yet.
     # Repeating the same evidence to demand a larger estimate cannot supply it.
@@ -887,6 +901,7 @@ def validate_diagnosis(
         diagnosis,
         issues,
         provenance=provenance,
+        evidence=evidence,
         observations=grounding_corrections,
         savings={"expected_total": expected_total, "required": required_saving_gb}
         if insufficient
@@ -1071,6 +1086,7 @@ def diagnose_with_router(
                 result.diagnosis,
                 issues,
                 provenance=result.invocation_provenance,
+                evidence=evidence,
                 observations=observations,
                 schema_errors=schema_errors,
             )

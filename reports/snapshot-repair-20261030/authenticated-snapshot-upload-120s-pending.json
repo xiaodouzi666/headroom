@@ -1,0 +1,42 @@
+{
+  "created_at": "2026-10-30T05:12:55.464738+00:00",
+  "status": "prepared_only_not_applied",
+  "patch": "reports/snapshot-repair-20261030/authenticated-snapshot-upload-120s.pending.patch",
+  "patch_sha256": "995210a0ff0368a6e36842d42e61fb0ada1c41895a820e4adca974c384be8885",
+  "base_sha256": {
+    "headroom/api/snapshot_routes.py": "ab79f08db2d8bcfd267ae5ea2ffa6bca0607b0934f1f0c6b9cebb18f8c7e2ec6",
+    "tests/test_snapshot_routes.py": "d14f92a32d361723b21606ae5ee2fe2869bcd0fd598a6ae48d092fe139c085af",
+    "web/src/snapshotApi.ts": "be9ab1f1726df69417f4bacf2b0ea1e4130bc6ffee3007abdedc549279b6a152",
+    "web/src/SnapshotDiagnosisPanel.test.tsx": "1028975d7c393de3ef4ea201fcc3878a1608adc159f47c14712e0cb09361beaf"
+  },
+  "proposed_sha256": {
+    "headroom/api/snapshot_routes.py": "335f0f6d700f74fb3fc2cbe1c20312d18ae88c217d147115901a233a9d50f1a3",
+    "tests/test_snapshot_routes.py": "439428ee9a4d6854fd8742acdc077bfb1bfca5d69f0788edadbc2b894a6d99f4",
+    "web/src/snapshotApi.ts": "066f5e5d09794ec2010e0780ea67c0833cbbd98f10046c1f22db5ca88b9b4b44",
+    "web/src/SnapshotDiagnosisPanel.test.tsx": "ec82bd0a13f12454393c6c13cf95bb407e7e74b65af9f472c596f0f19cb98a30"
+  },
+  "checks": {
+    "python_ast_parse": "passed, no import or execution",
+    "git_apply_check": 0,
+    "focused_tests": "not run on unapplied patch",
+    "all_target_source_files_unchanged": true
+  },
+  "future_verification": [
+    "guarded tests/test_snapshot_routes.py with existing authentication/capacity/disconnect/retention tests",
+    "npm test -- --run src/SnapshotDiagnosisPanel.test.tsx",
+    "npm run typecheck",
+    "reconfirm R8 terminal and immutable source pins before apply"
+  ],
+  "boundaries": {
+    "authenticated_snapshot_upload_seconds": 120,
+    "anonymous_snapshot_upload_seconds": 30,
+    "ordinary_run_upload_seconds": 30,
+    "total_task_seconds_including_upload_and_wait": 480,
+    "active_snapshot_slots_receiving_queued_running": 3,
+    "snapshot_bytes": 52428800,
+    "aggregate_body_bytes": 53805056,
+    "worker_limits_changed": false,
+    "funding_changed": false,
+    "new_model_or_gpu_calls": 0
+  }
+}

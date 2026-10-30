@@ -1,0 +1,121 @@
+{
+  "schema": "headroom.snapshot.s2-independent-review.v1",
+  "created_at": "2026-10-30T05:02:06.185154+00:00",
+  "run_id": "d85f43185b5a448fad52d2a1761b9926",
+  "disposition": "CLI functional path passed with needs_human; factual narrative quality not fully accepted; no repair or accuracy-rate success",
+  "checks": {
+    "status": "needs_human",
+    "live_provenance": "live_model",
+    "validation_issues": [],
+    "patch_status": "unavailable",
+    "patch_diff_absent": true,
+    "verification": "not_run",
+    "cleanup_verified": true,
+    "cost_usd_reported": 0.04389244,
+    "attempt_count": 2,
+    "cost_settlement": "parent controller confirmed; this review did not re-open financial ledgers",
+    "needs_more_info_preserved": true,
+    "evidence_sha_and_diagnosis_sha_and_intent_sha_match": true,
+    "source_references_match_visible_lines": [
+      119,
+      132,
+      133
+    ]
+  },
+  "quantities": [
+    {
+      "cause_id": "optimizer_state_peak",
+      "references": [
+        "stk_1dab89f1edc7e581",
+        "stk_8cd9860b135702e0"
+      ],
+      "deduplicated_peak_bytes": 9130704896,
+      "published_decimal_GB": 9.130704896,
+      "quantity_error_bytes": "0E-9",
+      "references_all_public": true,
+      "not_entire_category_unless_complete": true
+    },
+    {
+      "cause_id": "params_peak",
+      "references": [
+        "stk_16e860e7dcc3e54d"
+      ],
+      "deduplicated_peak_bytes": 4564795392,
+      "published_decimal_GB": 4.564795392,
+      "quantity_error_bytes": "0E-9",
+      "references_all_public": true,
+      "not_entire_category_unless_complete": true
+    },
+    {
+      "cause_id": "temporaries_peak",
+      "references": [
+        "stk_b15b5a2937d60e6e"
+      ],
+      "deduplicated_peak_bytes": 4565352448,
+      "published_decimal_GB": 4.565352448,
+      "quantity_error_bytes": "0E-9",
+      "references_all_public": true,
+      "not_entire_category_unless_complete": true
+    }
+  ],
+  "category_bytes": {
+    "params": 4565352448,
+    "grads": 0,
+    "optimizer_state": 9130704896,
+    "activations": 33751040,
+    "temporaries": 9164259328,
+    "cache": 0,
+    "unknown": 25362944
+  },
+  "reconstruction": {
+    "peak_is_exact": false,
+    "native_peak_counter_verified": false,
+    "fragmentation_confirmed": false,
+    "new_gpu_run": false
+  },
+  "findings": [
+    {
+      "severity": "P2",
+      "path": "diagnosis.notes[0]",
+      "claim": "optimizer_state is the single largest peak category",
+      "result": "false against its own evidence",
+      "optimizer_state_bytes": 9130704896,
+      "temporaries_bytes": 9164259328,
+      "temporaries_exceeds_optimizer_by_bytes": 33554432,
+      "explanation": "The heuristic temporaries category is slightly larger. Root cause 0 combines two moment-stack allocations; its largest-allocation title is also not a proven ranking over complete categories."
+    },
+    {
+      "severity": "P2",
+      "path": "diagnosis.notes[0], diagnosis.notes[4]",
+      "claim": "Optimizer-state pressure cannot be reduced without precision/parameter-count changes; no compliant plan exists",
+      "result": "unsupported exclusive conclusion",
+      "explanation": "Strict policy and incomplete captured context justify not proposing a patch, but do not prove impossibility of every parameter-preserving execution strategy. No intervention or candidate was tested. Retain as a model limitation, not a verified fact."
+    }
+  ],
+  "interpretation": {
+    "authored_scenario_label": "optimizer_state",
+    "label_source": "eval/mvp_phase1_v2.yaml:30",
+    "label_status": "authored, not independent causal proof; model did not receive this review label",
+    "first_cause_matches_authored_label": true,
+    "source_context": "Provided source lines match the descriptions, but captured-source correspondence and runtime values remain unauthenticated as the report says.",
+    "params_quantity": "The selected parameter stack omits the smaller 557056-byte parameter stack; published size correctly means cited stacks only.",
+    "temporaries_quantity": "The selected foreach_sqrt stack is one part of the larger temporaries category; published size correctly means cited stacks only.",
+    "allowed_claim": "A real Snapshot CLI diagnosis completed after one bounded correction, produced a structurally valid diagnosis with exactly grounded cited-stack quantities, and preserved unresolved information.",
+    "not_allowed": [
+      "Fully accurate diagnosis",
+      "Verified causal contribution",
+      "Automatic repair success",
+      "New GPU/loss result",
+      "Fixed-nine acceptance or aggregate diagnostic accuracy improvement"
+    ]
+  },
+  "original_files_unchanged": true,
+  "input_sha256": {
+    "public-report.json": "4d478198de333502a88b5099da5c3813e9c1c3a1f9f7336d1733e11661d57411",
+    "evidence.json": "ed9e4e508c6aff0396004001988f41580f0e49a2899039c41ca68e4e840eb817",
+    "source/train.py": "9565acfbcfc2f1eefd982c80be7ce943e09828578b9b44c3d70342bc82bf7f4c",
+    "private/snapshot-intent.json": "dc15de736bcafd5cf9371efdb30ffdd188838b0f9f6997984fd5180212961c9f",
+    "private/snapshot-quantity-provenance.json": "626184d77960137b5dc4ba89ecd2aa3982a01d4f0530acb055afc4a0e6dfbfc5",
+    "private/diagnosis-correction.json": "925ad9abecb4b83fed6d09cfe2d024af9b0defb1f0e1a434dcbad0e8914ae5f8"
+  }
+}

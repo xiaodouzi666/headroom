@@ -1,0 +1,52 @@
+--- a/headroom/lab/snapshot_codec.py
++++ b/headroom/lab/snapshot_codec.py
+@@ -259,22 +259,39 @@
+         raise TypeError("CUDA snapshot must be a native object")
+     tables = _Tables(limits)
+     frames_by_value, stacks_by_value = {}, {}
++    # Capture graphs share native frame/stack objects. These per-call identity
++    # caches retain their objects, avoiding id reuse and bounded by table limits.
++    # The input, like the original walker, must remain stable during encoding.
++    frame_objects, stack_objects = {}, {}
+ 
+     def frame_field(value, depth):
+         if type(value) in (list, tuple) and all(type(frame) is dict for frame in value):
+             tables.node(depth)
+             if len(value) > limits.max_stack_depth:
+                 raise ValueError("Stack depth exceeds codec limit")
+-            ids = []
+-            for frame in value:
+-                key = _native_key(frame, limits)
+-                if key[0] not in frames_by_value:
+-                    frames_by_value[key[0]] = tables.add_frame(frame, key)
+-                ids.append(frames_by_value[key[0]])
+-            stack_key = tuple(ids)
+-            if stack_key not in stacks_by_value:
+-                stacks_by_value[stack_key] = tables.add_stack(ids)
+-            index = stacks_by_value[stack_key]
++            cached_stack = stack_objects.get(id(value))
++            if cached_stack is not None and cached_stack[0] is value:
++                index = cached_stack[1]
++            else:
++                ids = []
++                for frame in value:
++                    cached_frame = frame_objects.get(id(frame))
++                    if cached_frame is not None and cached_frame[0] is frame:
++                        frame_index = cached_frame[1]
++                    else:
++                        key = _native_key(frame, limits)
++                        if key[0] not in frames_by_value:
++                            frames_by_value[key[0]] = tables.add_frame(frame, key)
++                        frame_index = frames_by_value[key[0]]
++                        if len(frame_objects) < limits.max_frames:
++                            frame_objects[id(frame)] = (frame, frame_index)
++                    ids.append(frame_index)
++                stack_key = tuple(ids)
++                if stack_key not in stacks_by_value:
++                    stacks_by_value[stack_key] = tables.add_stack(ids)
++                index = stacks_by_value[stack_key]
++                if len(stack_objects) < limits.max_stacks:
++                    stack_objects[id(value)] = (value, index)
+             tables.reference(index, depth)
+             return {"stack": index}
+         # Every frames field is tagged, including non-stack native values.

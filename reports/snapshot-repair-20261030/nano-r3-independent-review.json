@@ -1,0 +1,76 @@
+{
+  "schema": "headroom.snapshot.nanogpt-independent-review.v1",
+  "created_at": "2026-10-30T05:04:19.985335+00:00",
+  "run_id": "3d805a25b68943caac2f5b64b14bb6a6",
+  "disposition": "CLI functional path passed with needs_human; factual narrative quality not fully accepted",
+  "checks": {
+    "status": "needs_human",
+    "provenance": "live_model",
+    "validation_issues": [],
+    "patch_diff_absent": true,
+    "verification": "not_run",
+    "cleanup_verified": true,
+    "cost_usd_reported": 0.0449542,
+    "attempt_count": 2,
+    "cost_settlement": "parent confirmed; this review did not reopen financial ledger",
+    "all_input_and_derivation_shas_match": true,
+    "needs_more_info_preserved": true,
+    "missing_model_source_preserved": true,
+    "public_reference_count": 4
+  },
+  "quantity": {
+    "references": [
+      "stk_ee3398ab2018961e",
+      "stk_2cdfd6ce1f07cfad",
+      "stk_564d328712dc3563",
+      "stk_68f87215d2be70b3"
+    ],
+    "cited_peak_bytes": 17202937856,
+    "published_decimal_GB": 17.202937856,
+    "error_bytes": 0,
+    "all_activation_category_bytes": 23286259712,
+    "uncited_activation_bytes": 6083321856,
+    "reconstructed_peak_bytes": 24705183744,
+    "peak_is_exact": false
+  },
+  "findings": [
+    {
+      "severity": "P2",
+      "path": "diagnosis.notes[0]",
+      "claim": "Four cited stacks sum to the activation category total",
+      "result": "false",
+      "cited_bytes": 17202937856,
+      "category_bytes": 23286259712,
+      "explanation": "The structured host number is correctly the cited subset. The model incorrectly expands it to the whole category in prose."
+    },
+    {
+      "severity": "P2",
+      "path": "diagnosis.notes[5]",
+      "claim": "GradScaler enabled for float16/bfloat16",
+      "result": "contradicts visible source line 196",
+      "actual_source": "scaler = torch.cuda.amp.GradScaler(enabled=(dtype == 'float16'))",
+      "explanation": "Only float16 enables the scaler. Runtime dtype is not authenticated by this uploaded snapshot. Zero optimizer/grads heuristic categories do not establish a scaler-based causal explanation."
+    }
+  ],
+  "quality_boundaries": [
+    "Activation dominance is supported by the reconstructed category totals, but categories are heuristics and original counter cross-checks are missing.",
+    "The 3 GB expected saving and minor throughput impact are unverified model estimates, not GPU measurements. Checkpointing cannot be declared to meet the zero-throughput-regression policy before verification.",
+    "Missing model.py genuinely blocks concrete insertion points and the proposed current plan; needs_human and no patch are appropriate.",
+    "The phrase considerable cached free memory is imprecise: cached free is 47501312 bytes, below the 536870912-byte OOM request. Low/unconfirmed fragmentation is correctly retained."
+  ],
+  "truth": {
+    "source": "eval/mvp_phase1_v2.yaml",
+    "ground_truth": null,
+    "truth_status": "unverified",
+    "no_independent_accuracy_hit_claimed": true
+  },
+  "original_outputs_unchanged": true,
+  "input_sha256": {
+    "public-report.json": "cc039ae18467f1683000a8d26de48b6d66d6171d60bca90af68e1f5e83094211",
+    "evidence.json": "2440afc46969900c3e0fc10ceb21039ceda9cca5fd0882cf77d253c56facc622",
+    "source/train.py": "413bd97b40bb400a2a0d01230e2946f056c263ebac1b7281c2367d964a123085",
+    "private/snapshot-intent.json": "447a2746941890b2b64280d670872e108645a88ed7fa59f956ea9d5e666e65d5",
+    "private/snapshot-quantity-provenance.json": "306e92d4b1e795b3cf2f41b75086b07746a12cb5165869c80683ed38e274b642",
+    "private/diagnosis-correction.json": "da3a55e3839d70164f3a9d95b8045dbf85a1f57717a006d6f406e0307a4d056b"
+  }
+}

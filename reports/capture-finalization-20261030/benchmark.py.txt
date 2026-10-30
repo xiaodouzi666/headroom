@@ -1,0 +1,99 @@
+"""Read-only bounded capture benchmark. No Lab, provider, GPU or source execution."""
+import hashlib
+import importlib.util
+import json
+import os
+from pathlib import Path
+import resource
+import socket
+import sys
+import time
+
+ROOT = Path(__file__).resolve().parents[2]
+REPORT = Path(__file__).resolve().parent
+CAPTURE = ROOT / "runs/final48-f3-retry/execution-r8-20261030/jobs/e5d4a541c34b49b09d2477efc1200348/lab/43834c0473d7494f86951152fd2c3a96/artifacts/snapshot.pickle"
+resource.setrlimit(resource.RLIMIT_AS, (2 * 1024**3, 2 * 1024**3))
+resource.setrlimit(resource.RLIMIT_CPU, (75, 76))
+resource.setrlimit(resource.RLIMIT_FSIZE, (128 * 1024**2, 128 * 1024**2))
+resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+os.nice(19)
+
+def forbidden(*args, **kwargs):
+    raise RuntimeError("network forbidden by benchmark")
+
+socket.getaddrinfo = socket.create_connection = forbidden
+socket.socket.connect = socket.socket.connect_ex = forbidden
+
+def emit(**value):
+    print(json.dumps(value, sort_keys=True), flush=True)
+
+def load(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+mode = sys.argv[1]
+if mode not in {"inspect", "before", "after"}:
+    raise ValueError("invalid mode")
+start = time.perf_counter()
+reader = load("snapshot_input_benchmark", ROOT / "headroom/snapshot_input.py")
+fd = reader._open_input(CAPTURE, 50 * 1024**2)
+with os.fdopen(fd, "rb") as handle:
+    data = handle.read(50 * 1024**2 + 1)
+if len(data) > 50 * 1024**2:
+    raise ValueError("input size exceeded")
+emit(stage="input", mode=mode, bytes=len(data), sha256=hashlib.sha256(data).hexdigest(), limits={"as_bytes":2*1024**3,"cpu_seconds":75,"fsize_bytes":128*1024**2}, source_sha256=hashlib.sha256((ROOT / "headroom/lab/snapshot_codec.py").read_bytes()).hexdigest())
+# Existing primitive opcode allowlist and no-global/no-reducer Unpickler.
+native = reader._decode_pickle(data)
+del data
+emit(stage="loaded", elapsed=time.perf_counter()-start, rss_kib=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+if mode == "inspect":
+    pending=[native]; seen=set(); stacks={}; frames={}; refs=expanded=0
+    while pending:
+        value=pending.pop()
+        if type(value) not in (dict,list,tuple) or id(value) in seen:
+            continue
+        seen.add(id(value))
+        if len(seen)>2_000_000:
+            raise ValueError("object bound")
+        if type(value) is dict:
+            for key, child in value.items():
+                if key == "frames" and type(child) in (list,tuple):
+                    refs+=1; expanded+=len(child);stacks[id(child)]=child
+                    for frame in child: frames[id(frame)]=frame
+                pending.append(child)
+        else:
+            pending.extend(value)
+    emit(stage="inspect_done", frame_field_references=refs, expanded_frames=expanded, unique_stack_objects=len(stacks), unique_frame_objects=len(frames), graph_objects=len(seen), elapsed=time.perf_counter()-start, rss_kib=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+else:
+    path=ROOT / "headroom/lab/snapshot_codec.py" if mode=="before" else REPORT / "snapshot_codec_candidate.py"
+    codec=load("codec_benchmark",path)
+    encode_start=time.perf_counter();cpu_start=time.process_time()
+    document=codec.encode_snapshot(native)
+    elapsed=time.perf_counter()-encode_start
+    emit(stage="encoded", encode_seconds=elapsed, encode_cpu_seconds=time.process_time()-cpu_start, stats=document["stats"], rss_kib=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss, codec_sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+    serialize_start=time.perf_counter()
+    serialized=json.dumps(document,allow_nan=False,indent=None)+"\n"
+    wire=serialized.encode()
+    emit(stage="serialized", serialize_seconds=time.perf_counter()-serialize_start, bytes=len(wire), envelope_sha256=hashlib.sha256(wire).hexdigest(), rss_kib=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    # The decoder stays unchanged. Compare DAGs without exponential expansion.
+    restored=codec.decode_snapshot(document)
+    todo=[(native,restored)]; pairs=set();compared=0
+    while todo:
+        left,right=todo.pop();compared+=1
+        if compared>8_000_000: raise ValueError("equality bound")
+        if isinstance(left,dict):
+            assert isinstance(right,dict) and list(left)==list(right)
+            pair=(id(left),id(right))
+            if pair in pairs: continue
+            pairs.add(pair);todo.extend((left[key],right[key]) for key in left)
+        elif isinstance(left,(list,tuple)):
+            assert isinstance(right,(list,tuple)) and len(left)==len(right)
+            pair=(id(left),id(right))
+            if pair in pairs: continue
+            pairs.add(pair);todo.extend(zip(left,right))
+        else:
+            assert type(left) is type(right) and left==right
+    emit(stage="complete", decoded_native_equal=True, compared_values=compared, elapsed=time.perf_counter()-start, rss_kib=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)

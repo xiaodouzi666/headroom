@@ -1,0 +1,150 @@
+{
+  "schema": "headroom.public-snapshot-independent-review.v1",
+  "created_at": "2026-10-30T05:15:58.396419+00:00",
+  "run_id": "a223e730214d48a2b3ba0065339fd1b1",
+  "disposition": "Public upload -> real model -> valid diagnosis -> cited stack data path passed; narrative quality qualified; no repair/GPU success",
+  "status": "completed",
+  "error": null,
+  "validation_issues": [],
+  "needs_more_info": false,
+  "patch": {
+    "status": "unavailable",
+    "diff": null
+  },
+  "verification": {
+    "status": "not_run",
+    "message": "Not run — bring the patch to your GPU"
+  },
+  "cleanup": {
+    "schema": "headroom.snapshot-cleanup.v1",
+    "run_id": "a223e730214d48a2b3ba0065339fd1b1",
+    "cleanup_verified": true
+  },
+  "calls": [
+    {
+      "sequence": 1,
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "role": "diagnose",
+      "input_tokens": 27892,
+      "output_tokens": 628,
+      "cost_usd": "0.0106272",
+      "outcome": "response",
+      "http_status": 200,
+      "settled": true,
+      "billing_status": "known",
+      "output_cap_field": "max_completion_tokens",
+      "output_cap_tokens": 2000,
+      "response_model": "nvidia/Nemotron-3-Ultra-550b-a55b"
+    },
+    {
+      "sequence": 2,
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "role": "diagnose",
+      "input_tokens": 29084,
+      "output_tokens": 708,
+      "cost_usd": "0.0120592",
+      "outcome": "response",
+      "http_status": 200,
+      "settled": true,
+      "billing_status": "known",
+      "output_cap_field": "max_completion_tokens",
+      "output_cap_tokens": 2000,
+      "response_model": "nvidia/Nemotron-3-Ultra-550b-a55b"
+    }
+  ],
+  "known_settled_model_cost_usd": "0.0226864",
+  "patch_generation_calls": 0,
+  "patch_preflight": {
+    "status": "rejected",
+    "reason": "NETWORK_OR_PROCESS_FORBIDDEN",
+    "issues": [
+      {
+        "code": "NETWORK_OR_PROCESS_FORBIDDEN",
+        "message": "Patch adds dynamic execution, process or network access.",
+        "path": "train.py",
+        "line": 77
+      },
+      {
+        "code": "FILESYSTEM_ACCESS_UNVERIFIED",
+        "message": "New dynamic file access needs review.",
+        "path": "train.py",
+        "line": 141
+      }
+    ],
+    "attempts": [],
+    "runtime_verified": false,
+    "interpretation": "Original uploaded source rejected by PatchEngine source preflight before any patch model call: existing exec(configurator.py) and dynamic file access. No generated patch or Super response exists."
+  },
+  "quantity": {
+    "references": [
+      "stk_ee3398ab2018961e",
+      "stk_2cdfd6ce1f07cfad",
+      "stk_564d328712dc3563",
+      "stk_68f87215d2be70b3"
+    ],
+    "exact_cited_peak_bytes": 17202937856,
+    "decimal_GB": 17.202937856,
+    "display_rounded_GB": "17.20",
+    "all_refs_public": true,
+    "quantity_error_bytes": 0,
+    "activation_category_total_bytes": 23286259712,
+    "not_claimed_entire_category": true,
+    "native_peak_counter_verified": false,
+    "peak_is_exact": false
+  },
+  "findings": [
+    {
+      "severity": "P2",
+      "path": "diagnosis.notes[1], diagnosis.notes[3]",
+      "problem": "Source defaults narrated as runtime configuration despite configurator overrides and unknown invocation context.",
+      "override_point": "source/train.py:77",
+      "actual_original_capture_startup_args": [
+        "--batch_size=32",
+        "--n_layer=24",
+        "--n_head=16",
+        "--n_embd=1024",
+        "--gradient_accumulation_steps=1",
+        "--compile=False",
+        "--dtype=float32"
+      ],
+      "original_runtime_entrypoint_complete": true,
+      "snapshot_prompt_did_not_include_original_runtime_args": true,
+      "explanation": "The response should say source defaults or runtime unknown. These historical runtime arguments were reviewed independently and not injected into the model prompt."
+    },
+    {
+      "severity": "P2",
+      "path": "diagnosis.notes[0]",
+      "problem": "Flash attention naming is more specific than the evidence supports.",
+      "evidence": "stk_68f87215d2be70b3 includes efficient_attention / PyTorchMemEffAttention float kernels; equivalence to FlashAttention is not established."
+    }
+  ],
+  "quality_limits": [
+    "Activation dominance supported by reconstructed categories; no verified causality, numerical repair or native-counter cross-check.",
+    "No model.py contents supplied. needs_more_info=false does not establish a checked block-level patch location.",
+    "The 3 GB expected saving, numerics none and minor throughput impact are model hypotheses, not proof of the zero-throughput-regression policy.",
+    "nanoGPT truth remains null/unverified in the fixed-nine manifest; this Web path is not an accuracy-rate increment."
+  ],
+  "input_integrity": {
+    "snapshot_sha256": "7731ac65c4c6635715e680e549daca2c187056ee4d36eaed7d41c3a7ee9d47b7",
+    "original_capture_path": "runs/evaluation/live/20261027T022818939585Z-151818b1/jobs/9445bf3c9fa040738f23a78ee582b724/lab/a71a8224483b48d2af346130506e4d5f/artifacts/snapshot.pickle",
+    "original_capture_date": "2026-10-27",
+    "original_capture_hash_match": true,
+    "not_r7_capture": true,
+    "source_upload_and_copy_sha256": "413bd97b40bb400a2a0d01230e2946f056c263ebac1b7281c2367d964a123085",
+    "traceback_sha256": "ec19d8b9edd9e2629614429b9efa439ddba496f78c70e6485915bb6dfbb1d1fe",
+    "all_three_original_preparation_inputs_match": true,
+    "evidence_sha256": "2440afc46969900c3e0fc10ceb21039ceda9cca5fd0882cf77d253c56facc622",
+    "public_report_sha256": "3c9966ec829c8b21b11dff62e6b18ed73c7e4d3ca65b93a5535bf0f53ac7e82f",
+    "patch_result_sha256": "766c4cd18a907ba89e827669fcf4312e887fe9195acb63418eb9f4549243e04b"
+  },
+  "acceptance": {
+    "server_side_valid_diagnosis_card_data": true,
+    "browser_ref_expansion_mobile_layout": "parent browser evidence separately",
+    "download_browser": "not reattempted; Chrome blocked parent download action",
+    "automatic_repair": false,
+    "gpu_verification": false,
+    "fixed_nine_score_changed": false
+  },
+  "original_code_results_and_ledger_unchanged": true,
+  "new_model_gpu_calls_by_review": 0
+}

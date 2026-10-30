@@ -354,7 +354,7 @@ it("keeps completed-without-result distinct from a verified GPU repair", async (
     await screen.findByText("No diagnosis result available"),
   ).toBeInTheDocument();
   expect(
-    screen.getByText("Not run — bring the patch to your GPU."),
+    screen.getByText("Hardware verification was not run."),
   ).toBeInTheDocument();
 });
 it("removes result downloads when the server reports the upload unavailable or expired", async () => {
@@ -487,4 +487,75 @@ it("retains the estimate label for older results", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" }));
   expect(await screen.findByText("Estimated size")).toBeInTheDocument();
   expect(screen.queryByText("Cited peak allocation")).not.toBeInTheDocument();
+});
+
+
+it("distinguishes a rejected model response from missing information and does not suggest a nonexistent patch", async () => {
+  const document = completed();
+  Object.assign(document, { status: "needs_human" });
+  Object.assign(document.result, {
+    provenance: "live_model",
+    diagnosis: null,
+    error: "diagnosis_unavailable",
+    patch: { status: "unavailable", diff: null },
+  });
+  mockJob(document);
+  render(<SnapshotDiagnosisPanel enabled />);
+  selectSnapshot();
+  fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" }));
+  expect(await screen.findByText("Model response rejected")).toBeInTheDocument();
+  expect(screen.getByText(/No reliable diagnosis is available for this upload/)).toBeInTheDocument();
+  expect(screen.getByText("No validated diagnosis available")).toBeInTheDocument();
+  expect(screen.queryByText("More information needed")).not.toBeInTheDocument();
+  expect(screen.queryByText(/bring the patch to your GPU/)).not.toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: "Download unverified patch" })).not.toBeInTheDocument();
+  expect(screen.getByText("No patch draft was generated because the model response did not pass validation.")).toBeInTheDocument();
+  expect(screen.getByRole("table", { name: "Snapshot peak composition" })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Download diagnosis JSON" })).toBeInTheDocument();
+});
+
+it("keeps a valid needs-human diagnosis distinct from validation rejection without claiming a patch exists", async () => {
+  const document = completed();
+  Object.assign(document, { status: "needs_human" });
+  Object.assign(document.result.diagnosis, { needs_more_info: true });
+  Object.assign(document.result, { patch: { status: "unavailable", diff: null } });
+  mockJob(document);
+  render(<SnapshotDiagnosisPanel enabled />);
+  selectSnapshot();
+  fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" }));
+  expect(await screen.findByText("More information needed")).toBeInTheDocument();
+  expect(screen.getByText("Offline UI fixture — activation hypothesis")).toBeInTheDocument();
+  expect(screen.queryByText("Model response rejected")).not.toBeInTheDocument();
+  expect(screen.queryByText(/bring the patch to your GPU/)).not.toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: "Download unverified patch" })).not.toBeInTheDocument();
+});
+
+it("does not label unrelated unavailable results as model validation rejection", async () => {
+  const document = completed();
+  Object.assign(document, { status: "failed" });
+  Object.assign(document.result, {
+    diagnosis: null,
+    error: "runtime_unavailable",
+    patch: { status: "unavailable", diff: null },
+  });
+  mockJob(document);
+  render(<SnapshotDiagnosisPanel enabled />);
+  selectSnapshot();
+  fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" }));
+  expect(await screen.findByText("Analysis failed")).toBeInTheDocument();
+  expect(screen.queryByText("Model response rejected")).not.toBeInTheDocument();
+  expect(screen.queryByText(/bring the patch to your GPU/)).not.toBeInTheDocument();
+});
+
+
+it("explains an upload timeout without suggesting that a model diagnosis ran", async () => {
+  vi.stubGlobal("fetch", vi.fn(() => reply({ detail: "Snapshot upload deadline exceeded" }, 408)));
+  render(<SnapshotDiagnosisPanel enabled />);
+  selectSnapshot();
+  fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "The snapshot upload exceeded its time limit. Analysis did not start.",
+  );
+  expect(screen.queryByText("Analysis complete")).not.toBeInTheDocument();
+  expect(vi.mocked(fetch).mock.calls).toHaveLength(1);
 });

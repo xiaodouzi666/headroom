@@ -35,6 +35,7 @@ FILENAMES = {"snapshot": "snapshot.pickle", "traceback": "traceback.txt", "sourc
 MAX_BODY_BYTES = sum(LIMITS.values()) + 64 * 1024
 MAX_REPORT_BYTES = 2 * 1024 * 1024
 UPLOAD_TIMEOUT_SECONDS = 30.0
+AUTHENTICATED_UPLOAD_TIMEOUT_SECONDS = 120.0
 VERIFICATION = {"status": "not_run", "message": "Not run — bring the patch to your GPU"}
 DOWNLOADS = {
     "diagnosis_json": ("diagnosis.json", "application/json"),
@@ -539,7 +540,10 @@ def register_snapshot_routes(
                 manager.root / identifier, request.headers.get("content-type", "")
             )
             total = 0
-            remaining = min(UPLOAD_TIMEOUT_SECONDS, created + manager.deadline - manager.clock())
+            upload_timeout = (
+                AUTHENTICATED_UPLOAD_TIMEOUT_SECONDS if judge else UPLOAD_TIMEOUT_SECONDS
+            )
+            remaining = min(upload_timeout, created + manager.deadline - manager.clock())
             async with asyncio.timeout(max(0, remaining)):
                 async for chunk in request.stream():
                     total += len(chunk)

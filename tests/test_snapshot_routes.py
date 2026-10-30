@@ -677,3 +677,44 @@ def test_quantity_source_metadata_is_optional_exact_and_markdown_does_not_relabe
     value["evidence"]["diagnosis_binding"]["quantity_source"] = "arbitrary_or_legacy_model_number"
     with pytest.raises(ValueError, match="evidence binding"):
         public_result(json.dumps(value))
+
+
+@pytest.mark.parametrize(
+    ("judge", "total_deadline", "minimum", "maximum"),
+    [(True, 480.0, 119.0, 120.0), (False, 480.0, 29.0, 30.0), (True, 0.5, 0.0, 0.5)],
+)
+def test_snapshot_upload_window_depends_on_auth_and_remaining_total_deadline(
+    tmp_path, monkeypatch, judge, total_deadline, minimum, maximum
+):
+    import asyncio
+
+    from headroom.api import snapshot_routes
+
+    observed = []
+    real_timeout = asyncio.timeout
+
+    @asynccontextmanager
+    async def short_recorded_timeout(delay):
+        observed.append(delay)
+        # Exercise timeout cleanup promptly; do not wait 30/120 real seconds.
+        async with real_timeout(0.01):
+            yield
+
+    async def slow(_request):
+        await asyncio.sleep(0.05)
+        yield b""
+
+    app = application(settings(tmp_path, deadline_seconds=total_deadline), worker=failed_worker)
+    with TestClient(app) as client:
+        monkeypatch.setattr(snapshot_routes.asyncio, "timeout", short_recorded_timeout)
+        monkeypatch.setattr(Request, "stream", slow)
+        headers = {"Content-Type": "multipart/form-data; boundary=z"}
+        if judge:
+            headers["Authorization"] = f"Bearer {TOKEN}"
+        response = client.post("/api/snapshots", content=b"x", headers=headers)
+        assert response.status_code == 408
+        assert len(observed) == 1
+        assert minimum < observed[0] <= maximum
+        with sqlite3.connect(app.state.snapshots.registry) as db:
+            assert db.execute("select status from snapshots").fetchall() == [("timeout",)]
+        assert not any(app.state.snapshots.root.glob("*/worker.log"))
