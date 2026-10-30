@@ -1,0 +1,580 @@
+{
+  "schema": "headroom.f3-retry.summary.v1",
+  "prepared_only": true,
+  "published": false,
+  "source_campaign": {
+    "path": "campaign.json",
+    "bytes": 69372,
+    "sha256": "39459b2cac6a68dc7666afc947bb4b949f116432da4fcdbd0434e1439c61de86"
+  },
+  "revision": "r10",
+  "source_preparation_sha256": "c7ae9756097d0b096c0ee1f537ff45a81fae69e439443e147867bc937ad39613",
+  "metrics": {
+    "fixed_denominator": 9,
+    "minimum_memory_targets": 6,
+    "threshold_scope": "memory_targets_only",
+    "overall_acceptance": "not_assessed",
+    "attempted_rows": 9,
+    "not_run_rows": 0,
+    "memory_targets": 0,
+    "raw_category_matches": 5,
+    "valid_correct_first_causes": 4,
+    "valid_ready_diagnoses": 0,
+    "ready_valid_correct_first_causes": 0,
+    "unverified_truth_cases": [
+      "s5_fragmentation_varlen",
+      "nanogpt"
+    ],
+    "cost": {
+      "scope": "this_revision_attempted_rows_only",
+      "actual_total_usd": null,
+      "known_actual_subtotal_usd": "0.635661296",
+      "charged_total_usd": "0.648017156",
+      "known_charged_subtotal_usd": "0.648017156",
+      "unknown_actual_runs": 4,
+      "unresolved_charge_runs": 0
+    },
+    "memory_threshold_met": false
+  },
+  "rows": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "cell_id": "fixed9-s1_batch_too_big",
+      "run_id": "13b73ffc28a34bdbb9070b22582f43f9",
+      "status": "needs_human",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": "activations",
+        "truth_status": "authored",
+        "ground_truth": "activations",
+        "raw_category_matches": true,
+        "valid": true,
+        "ready_for_patch": false,
+        "needs_more_info": true,
+        "valid_and_correct": true,
+        "ready_valid_and_correct": false,
+        "source": {
+          "path": "jobs/13b73ffc28a34bdbb9070b22582f43f9/rounds/01/diagnosis.json",
+          "bytes": 7167,
+          "sha256": "d993eb0cc50081518df0129a79f48449600d118f55c548bbc6a3fff6bf318a40"
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": []
+      },
+      "cost": {
+        "actual_usd": null,
+        "known_actual_subtotal_usd": "0.045312",
+        "charged_usd": "0.0477972",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/13b73ffc28a34bdbb9070b22582f43f9/report.json",
+        "bytes": 673708,
+        "sha256": "be6063f0710625172b30ce4dd25a04deb63758065dcd3b2e930a39415bc50565"
+      },
+      "campaign_row_pointer": "/rows/0"
+    },
+    {
+      "scenario_id": "s2_capacity_v2",
+      "cell_id": "fixed9-s2_capacity_v2",
+      "run_id": "a3ca53ac352649aa8d49488761d5d933",
+      "status": "needs_human",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": "optimizer_state",
+        "truth_status": "authored",
+        "ground_truth": "optimizer_state",
+        "raw_category_matches": true,
+        "valid": false,
+        "ready_for_patch": false,
+        "needs_more_info": true,
+        "valid_and_correct": false,
+        "ready_valid_and_correct": false,
+        "source": {
+          "path": "jobs/a3ca53ac352649aa8d49488761d5d933/rounds/01/diagnosis.json",
+          "bytes": 9786,
+          "sha256": "f3e7f83fc38019bcdac6f71c6c735e8091dea21c9898d68d07e5590496fab6a7"
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": [
+          "INVALID_EVIDENCE_RANGE"
+        ]
+      },
+      "cost": {
+        "actual_usd": null,
+        "known_actual_subtotal_usd": "0.07688264",
+        "charged_usd": "0.07971056",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/a3ca53ac352649aa8d49488761d5d933/report.json",
+        "bytes": 800106,
+        "sha256": "3dba512b1dc52138d4e9573568f7a66164e101ec480ef2682bb145c2b8d36379"
+      },
+      "campaign_row_pointer": "/rows/1"
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "cell_id": "fixed9-s3_eval_no_grad_missing",
+      "run_id": "f3962d0c96ff43f48b2409fe1deff19d",
+      "status": "needs_human",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": "activations",
+        "truth_status": "authored",
+        "ground_truth": "activations",
+        "raw_category_matches": true,
+        "valid": true,
+        "ready_for_patch": false,
+        "needs_more_info": true,
+        "valid_and_correct": true,
+        "ready_valid_and_correct": false,
+        "source": {
+          "path": "jobs/f3962d0c96ff43f48b2409fe1deff19d/rounds/01/diagnosis.json",
+          "bytes": 8669,
+          "sha256": "9b7c6a354f3acf042949a582f5bcd91f26107225439f0a572e102949ef4be031"
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": []
+      },
+      "cost": {
+        "actual_usd": null,
+        "known_actual_subtotal_usd": "0.08201588",
+        "charged_usd": "0.08584826",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/f3962d0c96ff43f48b2409fe1deff19d/report.json",
+        "bytes": 894364,
+        "sha256": "abced108653ad879ad0710d8b4f51555e782d573361b8e3e47dfd2fbc76cf76b"
+      },
+      "campaign_row_pointer": "/rows/2"
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "cell_id": "fixed9-s4_loss_accumulation_graph",
+      "run_id": "4758c91756394e31908588898e8f5eca",
+      "status": "needs_human",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": "activations",
+        "truth_status": "authored",
+        "ground_truth": "retained_graph",
+        "raw_category_matches": false,
+        "valid": true,
+        "ready_for_patch": false,
+        "needs_more_info": true,
+        "valid_and_correct": false,
+        "ready_valid_and_correct": false,
+        "source": {
+          "path": "jobs/4758c91756394e31908588898e8f5eca/rounds/01/diagnosis.json",
+          "bytes": 7874,
+          "sha256": "7f904a7ef3e8d477cd576ed3435e7217e2ed8b60a6d3c8db00dd4d50633f9e26"
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": []
+      },
+      "cost": {
+        "actual_usd": null,
+        "known_actual_subtotal_usd": "0.0782594",
+        "charged_usd": "0.08146976",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/4758c91756394e31908588898e8f5eca/report.json",
+        "bytes": 724777,
+        "sha256": "2695c7549a5ce2af9509200ab2cc90a14864faf68e3cfd63b7a3ba2113f92828"
+      },
+      "campaign_row_pointer": "/rows/3"
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "cell_id": "fixed9-s5_fragmentation_varlen",
+      "run_id": "484a012babba400ab1ff89fe914878b8",
+      "status": "needs_human",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": "activations",
+        "truth_status": "unverified",
+        "ground_truth": "fragmentation_candidate",
+        "raw_category_matches": null,
+        "valid": true,
+        "ready_for_patch": false,
+        "needs_more_info": true,
+        "valid_and_correct": false,
+        "ready_valid_and_correct": false,
+        "source": {
+          "path": "jobs/484a012babba400ab1ff89fe914878b8/rounds/01/diagnosis.json",
+          "bytes": 7972,
+          "sha256": "5e952d0fe7baf827a6fb35cd6584a21bce1064c789fa0b454945842caaa8ed15"
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": []
+      },
+      "cost": {
+        "actual_usd": "0.06761702",
+        "known_actual_subtotal_usd": "0.06761702",
+        "charged_usd": "0.06761702",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/484a012babba400ab1ff89fe914878b8/report.json",
+        "bytes": 590551,
+        "sha256": "24e40b7eaa4b2d1228113595b32aec13eca27defa0c052ffb0824db1c1642633"
+      },
+      "campaign_row_pointer": "/rows/4"
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "cell_id": "fixed9-s6_full_vocab_logits_fp32",
+      "run_id": "f319c4d260664d3d9092fa860b3d8db9",
+      "status": "needs_human",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": "temporaries",
+        "truth_status": "authored",
+        "ground_truth": "temporaries",
+        "raw_category_matches": true,
+        "valid": true,
+        "ready_for_patch": false,
+        "needs_more_info": true,
+        "valid_and_correct": true,
+        "ready_valid_and_correct": false,
+        "source": {
+          "path": "jobs/f319c4d260664d3d9092fa860b3d8db9/rounds/01/diagnosis.json",
+          "bytes": 7786,
+          "sha256": "0e149a191d1b60d92a5363ba2361a076716cf46ef04e1be509f531df68eb4c77"
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": []
+      },
+      "cost": {
+        "actual_usd": "0.059522268",
+        "known_actual_subtotal_usd": "0.059522268",
+        "charged_usd": "0.059522268",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/f319c4d260664d3d9092fa860b3d8db9/report.json",
+        "bytes": 553051,
+        "sha256": "7a214dd04dc3d1f22351063fa9d488af7d01b6deec48fff3649714aa2d2801f7"
+      },
+      "campaign_row_pointer": "/rows/5"
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "cell_id": "fixed9-s7_frozen_params_optimizer_state",
+      "run_id": "b27e24cfdb3d4ca78b82404b2ccc3230",
+      "status": "needs_human",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": "optimizer_state",
+        "truth_status": "authored",
+        "ground_truth": "optimizer_state",
+        "raw_category_matches": true,
+        "valid": true,
+        "ready_for_patch": false,
+        "needs_more_info": true,
+        "valid_and_correct": true,
+        "ready_valid_and_correct": false,
+        "source": {
+          "path": "jobs/b27e24cfdb3d4ca78b82404b2ccc3230/rounds/01/diagnosis.json",
+          "bytes": 7494,
+          "sha256": "87efe50a60c03091ddd251b536318328e5cf0cb6abd2a0168f66463f7666099f"
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": []
+      },
+      "cost": {
+        "actual_usd": "0.05162768",
+        "known_actual_subtotal_usd": "0.05162768",
+        "charged_usd": "0.05162768",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/b27e24cfdb3d4ca78b82404b2ccc3230/report.json",
+        "bytes": 638190,
+        "sha256": "a29bcb1936173fa91ea6b8a9f5cd931d0e271af5f8794733ed9a7438a76e7630"
+      },
+      "campaign_row_pointer": "/rows/6"
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "cell_id": "fixed9-s8_two_models_resident",
+      "run_id": "784b5765eae849f6ac3f2d47857618b1",
+      "status": "failed",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": null,
+        "truth_status": "authored",
+        "ground_truth": "params",
+        "raw_category_matches": null,
+        "valid": null,
+        "ready_for_patch": null,
+        "needs_more_info": null,
+        "valid_and_correct": false,
+        "ready_valid_and_correct": false,
+        "source": {
+          "path": "jobs/784b5765eae849f6ac3f2d47857618b1/rounds/01/diagnosis.json",
+          "missing": true
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": []
+      },
+      "cost": {
+        "actual_usd": "0.0779073",
+        "known_actual_subtotal_usd": "0.0779073",
+        "charged_usd": "0.0779073",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/784b5765eae849f6ac3f2d47857618b1/report.json",
+        "bytes": 613059,
+        "sha256": "b35fbaebd4f18ebfb895f5d6c037b8e585209309a2ec74be4c2750f647744bb3"
+      },
+      "campaign_row_pointer": "/rows/7"
+    },
+    {
+      "scenario_id": "nanogpt",
+      "cell_id": "fixed9-nanogpt",
+      "run_id": "1b4dcf35dff341509ecaebb67905e373",
+      "status": "failed",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": null,
+        "truth_status": "unverified",
+        "ground_truth": null,
+        "raw_category_matches": null,
+        "valid": null,
+        "ready_for_patch": null,
+        "needs_more_info": null,
+        "valid_and_correct": false,
+        "ready_valid_and_correct": false,
+        "source": {
+          "path": "jobs/1b4dcf35dff341509ecaebb67905e373/rounds/01/diagnosis.json",
+          "missing": true
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": []
+      },
+      "cost": {
+        "actual_usd": "0.096517108",
+        "known_actual_subtotal_usd": "0.096517108",
+        "charged_usd": "0.096517108",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/1b4dcf35dff341509ecaebb67905e373/report.json",
+        "bytes": 1176643,
+        "sha256": "f865a3b256e763d635c16e99f7dd0e1b3b23123628207788f226f87071eda3b0"
+      },
+      "campaign_row_pointer": "/rows/8"
+    }
+  ],
+  "existing_summary_attempted_rows_only": {
+    "status": "measured",
+    "attempted_live_runs": 9,
+    "offline_fixture_rows_excluded": 0,
+    "target_met_count": 0,
+    "target_measured_denominator": 9,
+    "target_met_rate": 0.0,
+    "target_unknown_runs": 0,
+    "target_success_lower_bound": 0.0,
+    "first_cause_correct": 5,
+    "first_cause_scored_denominator": 6,
+    "first_cause_accuracy": null,
+    "first_cause_accuracy_among_scored": 0.8333333333333334,
+    "first_cause_unknown_runs": 3,
+    "first_cause_success_lower_bound": 0.5555555555555556,
+    "known_cost_usd": "0.635661296",
+    "total_cost_usd": null,
+    "unknown_cost_runs": 4,
+    "billing_complete": true,
+    "bounded_cost_runs": 4,
+    "unresolved_cost_runs": 0,
+    "conservative_total_usd": "0.648017156",
+    "failed_or_partial_runs": 9,
+    "measured_metrics": {
+      "peak_reduction_pct": {
+        "mean": null,
+        "measured_count": 0,
+        "unknown_count": 9,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "step_time_change_pct": {
+        "mean": null,
+        "measured_count": 0,
+        "unknown_count": 9,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "throughput_change_pct": {
+        "mean": null,
+        "measured_count": 0,
+        "unknown_count": 9,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "rounds": {
+        "mean": "1",
+        "measured_count": 9,
+        "unknown_count": 0,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "wall_seconds": {
+        "mean": "39.24318424076773311111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+        "measured_count": 9,
+        "unknown_count": 0,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "cost_usd": {
+        "mean": "0.0706382752",
+        "measured_count": 5,
+        "unknown_count": 4,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "numerical_equivalence": {
+        "equivalent": 0,
+        "comparable_count": 0,
+        "rate_among_comparable": null,
+        "not_comparable_or_unknown": 9
+      },
+      "failure_modes": {
+        "needs_human": 7,
+        "failed": 2
+      }
+    },
+    "outcomes": {
+      "patch_applied": {
+        "true_count": 0,
+        "false_count": 0,
+        "unknown_count": 9,
+        "known_count": 0
+      },
+      "selected_patch_applied": {
+        "true_count": 0,
+        "false_count": 9,
+        "unknown_count": 0,
+        "known_count": 9
+      },
+      "selected_completed": {
+        "true_count": 0,
+        "false_count": 0,
+        "unknown_count": 9,
+        "known_count": 0
+      }
+    },
+    "by_policy": {
+      "strict": {
+        "attempted": 9,
+        "target_met": 0,
+        "target_rate": 0.0,
+        "target_unknown": 0,
+        "first_cause_correct": 5,
+        "first_cause_scored": 6,
+        "first_cause_accuracy": null,
+        "first_cause_accuracy_among_scored": 0.8333333333333334,
+        "first_cause_unknown": 3,
+        "known_cost_usd": "0.635661296",
+        "total_cost_usd": null,
+        "unknown_cost_runs": 4,
+        "metrics": {
+          "peak_reduction_pct": {
+            "mean": null,
+            "measured_count": 0,
+            "unknown_count": 9,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "step_time_change_pct": {
+            "mean": null,
+            "measured_count": 0,
+            "unknown_count": 9,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "throughput_change_pct": {
+            "mean": null,
+            "measured_count": 0,
+            "unknown_count": 9,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "rounds": {
+            "mean": "1",
+            "measured_count": 9,
+            "unknown_count": 0,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "wall_seconds": {
+            "mean": "39.24318424076773311111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+            "measured_count": 9,
+            "unknown_count": 0,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "cost_usd": {
+            "mean": "0.0706382752",
+            "measured_count": 5,
+            "unknown_count": 4,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "numerical_equivalence": {
+            "equivalent": 0,
+            "comparable_count": 0,
+            "rate_among_comparable": null,
+            "not_comparable_or_unknown": 9
+          },
+          "failure_modes": {
+            "needs_human": 7,
+            "failed": 2
+          }
+        },
+        "billing_complete": true,
+        "bounded_cost_runs": 4,
+        "unresolved_cost_runs": 0,
+        "conservative_total_usd": "0.648017156"
+      }
+    },
+    "by_condition": {
+      "full_ultra": {
+        "attempted": 9,
+        "target_met": 0,
+        "first_cause_scored": 6,
+        "first_cause_correct": 5
+      },
+      "traceback_ultra": {
+        "attempted": 0,
+        "target_met": 0,
+        "first_cause_scored": 0,
+        "first_cause_correct": 0
+      },
+      "full_super": {
+        "attempted": 0,
+        "target_met": 0,
+        "first_cause_scored": 0,
+        "first_cause_correct": 0
+      }
+    }
+  },
+  "limitations": [
+    "Saved round 01 may follow same-round bounded supplements; it is not necessarily the first HTTP response.",
+    "Unknown/unverified truth is neither correct nor incorrect; every headline denominator stays nine.",
+    "Memory threshold is not valid-first-cause or overall acceptance.",
+    "Public rows retain historical raw category matching; validity and readiness are separate in this summary.",
+    "Staging registry is a proposed single entry to review and merge, never replace the live registry.",
+    "No ledger/invoice or service/process re-audit; fees derive only from saved usage and final settlement metadata."
+  ]
+}

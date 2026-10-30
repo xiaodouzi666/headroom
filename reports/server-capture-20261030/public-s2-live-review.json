@@ -1,0 +1,64 @@
+{
+  "schema": "headroom.server-capture-live-review.v1",
+  "at": "2026-10-30T05:59:27.663904+00:00",
+  "job_id": "8db19d724c3747f89e50a8f3e708b339",
+  "example_id": "s2-capacity",
+  "status": "needs_human",
+  "provenance": "live_model",
+  "cost_usd": 0.04492144,
+  "calls": [
+    {
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "role": "diagnose",
+      "input_tokens": 29755,
+      "output_tokens": 1039,
+      "cost_usd": "0.032872"
+    },
+    {
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "role": "diagnose",
+      "input_tokens": 31674,
+      "output_tokens": 1118,
+      "cost_usd": "0.01204944"
+    }
+  ],
+  "files": [
+    {
+      "target": "snapshot.pickle",
+      "bytes": 10651527,
+      "sha256": "1a0f098618849cb774f6919104117956696862b8535e4cd00a3bccf4f800f2ca",
+      "source_matches_pin": true,
+      "job_copy_matches": true
+    },
+    {
+      "target": "traceback.txt",
+      "bytes": 878,
+      "sha256": "70055c88e2a3e3d5e7043740e50fec1fa07c48e123ea626f5bd8e87a5087c68c",
+      "source_matches_pin": true,
+      "job_copy_matches": true
+    },
+    {
+      "target": "source.py",
+      "bytes": 6274,
+      "sha256": "9565acfbcfc2f1eefd982c80be7ce943e09828578b9b44c3d70342bc82bf7f4c",
+      "source_matches_pin": true,
+      "job_copy_matches": true
+    }
+  ],
+  "diagnosis_available": true,
+  "patch_status": "unavailable",
+  "hardware_verification": "not_run",
+  "cleanup": {
+    "schema": "headroom.snapshot-cleanup.v1",
+    "run_id": "8db19d724c3747f89e50a8f3e708b339",
+    "cleanup_verified": true
+  },
+  "public_report_sha256": "759e1b9a95d84d75dbfc8c44e2d1bb84bc644e2d3d6031b9236bf64641549e4f",
+  "quality_observations": [
+    "Structural diagnosis is valid but needs_human; no repair was executed.",
+    "The first cause says optimizer_state is largest, but captured temporaries=9164259328 exceeds optimizer_state=9130704896. Host-derived cited sums do not prove that narrative.",
+    "The plan proposes foreach optimizer behavior despite source/context already indicating foreach=True; this is a model hypothesis needing review, not a verified optimization."
+  ],
+  "no_new_calls_by_review": true,
+  "new_gpu_jobs_by_review": 0
+}

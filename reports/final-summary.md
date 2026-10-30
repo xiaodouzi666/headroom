@@ -1,3 +1,23 @@
+# Latest post-submission status — 2026-10-30
+
+The project is **Submitted, 5/5** on Devpost: https://devpost.com/software/headroom-8vfuwj . Video unchanged: https://www.youtube.com/watch?v=aaXF60LryWI . Public demo: https://headroom.tail45186b.ts.net/ .
+
+## Completed in this update
+
+Server-stored snapshot analysis is deployed: choose a curated capture on Home and start a new real Nebius analysis. Browser sends an ID, capture bytes stay on server. Original remains unchanged, private analysis copies expire after 24h. The public s2 test made two real Ultra requests ($0.04492144 net), displayed reconstructed composition and cited stacks, then returned valid needs-human with no patch and verified cleanup. This path starts no GPU workload. Model prose still contains errors; workflow success does not imply correct diagnosis or repair.
+
+Backend 84 focused checks, frontend 35 checks, TypeScript/build and independent safety review passed. The mode selector now visibly marks the selection. Desktop and 390px mobile views checked; no mobile horizontal overflow. Devpost story, output-quality feedback and private v5 instructions were saved/read back, preserving the existing token and Submitted state. Source and reports are on GitHub main. Detailed receipts: reports/server-capture-20261030/.
+
+## Acceptance still incomplete
+
+R10 executed all nine: **0/9 memory targets, 5/9 raw first categories, 4/9 valid correct first causes, 0/9 ready diagnoses**. The fixed **6/9 memory-target threshold remains unmet**. R8/R9/R10 are separate public Results records, with all older records preserved. Nano R10 had complete IDs in 8/8 cases but 0/8 met 80% heuristic agreement; this is not independent accuracy. No thresholds, expected causes or failed history were rewritten.
+
+R10 conservatively charged $0.648017156, actual total remains unknown; all costs resolved under the original bounded accounting. F3 remaining $0.740368840 / original $4 scope. Entire FINAL48 development pool remaining $1.868002728 / original $6.43 net. Judge s2 test uses the separate existing judge gift pool. No recharge or new funding. Prior fresh account balance $43.54 was an earlier observation, not reverified here; budget/reserve authorization remains unchanged.
+
+Outstanding plan evidence: fixed-nine repairs below6/9; Nano80%; full20-cell75% matrix and unverified truth; successful s2 precision tiers/HF repair; real human alert channel/delivery. F8 is scheduled for Beijing16:00 and has not yet happened. Future judging uptime cannot be pre-certified. The site is usable, but the whole original acceptance plan is not complete.
+
+## Earlier report retained below
+
 # Headroom delivery status — updated 2026-10-30
 
 ## October 30, 11:51 Beijing — formally submitted

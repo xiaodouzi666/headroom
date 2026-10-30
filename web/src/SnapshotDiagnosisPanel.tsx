@@ -535,17 +535,9 @@ export default function SnapshotDiagnosisPanel({
             disabled={active}
             style={{ border: 0, padding: 0, minWidth: 0 }}
           >
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 16,
-                marginBottom: 20,
-              }}
-            >
+            <div className="segmented" style={{ flexWrap: "wrap" }}>
               <button
                 type="button"
-                className="text-link"
                 aria-pressed={mode === "server"}
                 onClick={() => {
                   setMode("server");
@@ -556,7 +548,6 @@ export default function SnapshotDiagnosisPanel({
               </button>
               <button
                 type="button"
-                className="text-link"
                 aria-pressed={mode === "upload"}
                 onClick={() => {
                   setMode("upload");
