@@ -1,0 +1,95 @@
+{
+  "schema": "headroom.timeout-full-retention.v1",
+  "reason": "transport_timeout_missing_usage_full_reservation",
+  "ledger_path": "/home/xiaodouzi/workspace/headroom/.cache/repair-followup-20261030-v3/budget.db",
+  "store_path": "/home/xiaodouzi/workspace/headroom/runs/repair-followup/execution-r12-20261030/headroom.db",
+  "profile_path": "/home/xiaodouzi/workspace/headroom/.cache/repair-followup-20261030-v3/runtime-profile.json",
+  "pricing_path": "/home/xiaodouzi/workspace/headroom/reports/live-campaign-20261025/pricing-reviewed.json",
+  "profile_sha256": "27f9c3aea75cf684e012ebbf005d5b6a241b5929d72884e3a501a6ff0b9caf02",
+  "pricing_sha256": "635c6b90216acfe0505e4f53f0685c8183bc3bc632fff376c3bfcefd7e7eb829",
+  "run_id": "8f6874405d9a423ea51856e938213007",
+  "attempt_id": "d682009978a047849a1e8ad9e3eac4c4",
+  "expected_run": {
+    "id": "8f6874405d9a423ea51856e938213007",
+    "day": "2026-10-30",
+    "limit_usd": "0.6",
+    "status": "closed",
+    "halt_reason": "provider_charge_unknown",
+    "budget_mode": "strict_reservation"
+  },
+  "expected_attempt": {
+    "id": "d682009978a047849a1e8ad9e3eac4c4",
+    "run_id": "8f6874405d9a423ea51856e938213007",
+    "upper_usd": "0.01644864",
+    "charged_usd": "0.01644864",
+    "actual_usd": null,
+    "settled": 1,
+    "admission_kind": "verified_provider_bound",
+    "dispatched": 1
+  },
+  "expected_attempts": [
+    {
+      "id": "d682009978a047849a1e8ad9e3eac4c4",
+      "run_id": "8f6874405d9a423ea51856e938213007",
+      "upper_usd": "0.01644864",
+      "charged_usd": "0.01644864",
+      "actual_usd": null,
+      "settled": 1,
+      "admission_kind": "verified_provider_bound",
+      "dispatched": 1,
+      "charge_status": "unknown",
+      "charge_basis": null,
+      "review_sha256": null
+    }
+  ],
+  "expected_calls": [
+    {
+      "id": 1,
+      "run_id": "8f6874405d9a423ea51856e938213007",
+      "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "role": "annotate",
+      "input_tokens": null,
+      "output_tokens": null,
+      "cost_usd": null,
+      "created_at": "2026-10-30T10:21:48.567057+00:00",
+      "data_sha256": "558725d7a0a1298358b8fb373d916405d6eec77a8656b0c13a5fcb15f5076857"
+    }
+  ],
+  "run_mapping_sha256": "9e106f2cb753802da24719a8e596f5a49e94890c30c53d32aa3aef2cc42b6e99",
+  "call_id": 1,
+  "request": {
+    "capture_point": "httpx_pre_transport",
+    "wire_body_sha256": "100afe43cef2bd940f1accd5134c1907691db98e57cbaf44fc08269a7e54a000",
+    "wire_body_utf8_bytes": 131239,
+    "stored_payload_sha256": "8bc4e8050723a755e8fb8e054a2126688c3d74a77c6394667e69d48a71aeb9cc",
+    "payload_status": "captured",
+    "delivery_confirmed": false
+  },
+  "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+  "outcome": "timeout",
+  "http_status": null,
+  "usage": null,
+  "output_cap_field": "max_completion_tokens",
+  "output_cap_tokens": 3000,
+  "provider_prompt_token_ceiling": 262144,
+  "tariff": {
+    "input_usd_per_million": "0.06",
+    "output_usd_per_million": "0.24",
+    "cached_input_usd_per_million": "0.012",
+    "prompt_token_ceiling": 262144,
+    "output_cap_field": "max_completion_tokens",
+    "input_ceiling_basis": "Full advertised provider context; no local tokenizer bound",
+    "fee_components_per_request": {
+      "image": "0",
+      "price_per_video_second": "0",
+      "request": "0",
+      "price_per_minute": "0"
+    },
+    "allow_catalogue_cache_price_missing": true,
+    "reviewed_cache_price_evidence": "reports/live-campaign-20261025/account-prices.json; https://tokenfactory.nebius.com/organization/prices"
+  },
+  "retained_full_upper_usd": "0.01644864",
+  "actual_usd": null,
+  "historical_result_reassessment": false,
+  "authorized_total_usd": "4.890504400"
+}

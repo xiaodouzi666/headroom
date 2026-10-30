@@ -626,9 +626,11 @@ class BudgetLedger:
         if not isinstance(evidence, dict) or evidence.get("reason") not in {
             "missing_cached_token_usage",
             "http_529_missing_usage_full_reservation",
+            "transport_timeout_missing_usage_full_reservation",
         }:
             raise ValueError("Only narrowly verified retained-charge cases can be reviewed")
         http_review = evidence["reason"] == "http_529_missing_usage_full_reservation"
+        timeout_review = evidence["reason"] == "transport_timeout_missing_usage_full_reservation"
         required = {
             "id",
             "run_id",
@@ -666,6 +668,35 @@ class BudgetLedger:
                 expected_run, sort_keys=True
             ):
                 raise ValueError("Reviewed run changed")
+            if timeout_review:
+                # This narrow manual exception is prepared and revalidated under
+                # the ledger lock. It never changes actual/charged amounts or
+                # weakens the ordinary unknown-charge dispatch gate.
+                from headroom.billing_timeout_review import prepare_retention
+
+                kwargs = {
+                    key: evidence[key]
+                    for key in (
+                        "ledger_path",
+                        "store_path",
+                        "profile_path",
+                        "pricing_path",
+                        "run_id",
+                        "attempt_id",
+                    )
+                }
+                if Path(kwargs["ledger_path"]).resolve() != self.path.resolve() or (
+                    kwargs["run_id"] != run_id or kwargs["attempt_id"] != attempt_id
+                ):
+                    raise ValueError("Timeout receipt belongs to another ledger or attempt")
+                prepared = prepare_retention(**kwargs)
+                supplied = {key: value for key, value in evidence.items() if key != "reviewed_by"}
+                if (
+                    not isinstance(evidence.get("reviewed_by"), str)
+                    or not evidence["reviewed_by"].strip()
+                    or json.dumps(prepared, sort_keys=True) != json.dumps(supplied, sort_keys=True)
+                ):
+                    raise ValueError("Timeout retention evidence changed or was not reviewed")
             if http_review:
                 # Recheck every sibling and every immutable call while holding the
                 # ledger write lock. Legitimate dispatch cannot append another call:

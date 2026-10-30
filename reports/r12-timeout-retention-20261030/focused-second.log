@@ -1,0 +1,33 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+.................................F...................................... [ 61%]
+..............................................                           [100%]
+=================================== FAILURES ===================================
+___________ test_changed_receipt_or_inputs_refuse_execution[attempt] ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-496/test_changed_receipt_or_inputs4')
+mutation = 'attempt'
+
+    @pytest.mark.parametrize("mutation", ["receipt", "profile", "pricing", "call", "attempt"])
+    def test_changed_receipt_or_inputs_refuse_execution(tmp_path, mutation):
+        budget, kwargs, call_id = history(tmp_path)
+        path, sha, _ = receipt(tmp_path, kwargs)
+        if mutation == "receipt":
+            path.write_text(path.read_text() + " ")
+        elif mutation in {"profile", "pricing"}:
+            file = kwargs[mutation + "_path"]
+            file.write_text(file.read_text() + " ")
+        elif mutation == "call":
+            edit_call(kwargs, call_id, lambda data: data.update(elapsed_seconds=123))
+        else:
+            with sqlite3.connect(kwargs["ledger_path"]) as conn:
+                conn.execute(
+                    "UPDATE budget_attempts SET charged_usd='0.000021' WHERE id != ?",
+                    (kwargs["attempt_id"],),
+                )
+>       with pytest.raises((ValueError, TypeError, RuntimeNotReady)):
+E       Failed: DID NOT RAISE any of (ValueError, TypeError, RuntimeNotReady)
+
+tests/test_timeout_billing_review.py:298: Failed
+=========================== short test summary info ============================
+FAILED tests/test_timeout_billing_review.py::test_changed_receipt_or_inputs_refuse_execution[attempt]
+1 failed, 117 passed in 5.97s
