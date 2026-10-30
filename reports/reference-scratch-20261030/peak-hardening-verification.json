@@ -1,0 +1,65 @@
+{
+  "scope": "one typed hostpeak/clientpeak guard and negative fixture after read-only review",
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/python",
+        "reports/final48h-closing-regression-20261029/closing_guarded_v4.py",
+        "tests/test_reference_scratch.py::test_target_cleanup_claim_alone_never_proves_host_service_quota",
+        "tests/test_verify_offload_reference.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.8440441370476037
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/lab/reference_scratch.py",
+        "headroom/verify/offload.py",
+        "headroom/verify/offload_disk.py",
+        "tests/test_reference_scratch.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.005680338013917208
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/lab/reference_scratch.py",
+        "headroom/verify/offload.py",
+        "headroom/verify/offload_disk.py",
+        "tests/test_reference_scratch.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.005402851849794388
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "--",
+        "headroom/lab/reference_scratch.py",
+        "headroom/verify/offload.py",
+        "headroom/verify/offload_disk.py",
+        "tests/test_reference_scratch.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.002464971039444208
+    }
+  ],
+  "source_hashes": {
+    "headroom/lab/reference_scratch.py": "7d22d88fe5a245f1b2b17b3d94be8b91efaf97b77ead4a66f537e724706cc6a2",
+    "headroom/verify/offload.py": "76ca5935fd04deceac8ec3904f9d23cd10cb8833025a81271ce92d0dbb1ae899",
+    "headroom/verify/offload_disk.py": "66a273b23fdb2fb04ba2a065fc8b0a3e6a1e4616acfb30ea42eaade1028ed000",
+    "tests/test_reference_scratch.py": "03f258911c4aa5239b5303e51536620ca319c7435d38cb5bf91620cd86f0ce24"
+  },
+  "gpu_repeated": false,
+  "docker_repeated": false,
+  "provider_calls": 0,
+  "prior_integration_receipt_preserved": true,
+  "guarded_result": "74 passed in 0.42s"
+}

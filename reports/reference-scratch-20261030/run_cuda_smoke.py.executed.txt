@@ -1,0 +1,106 @@
+"""One explicitly authorized tiny CUDA infrastructure smoke, never acceptance."""
+
+import hashlib
+import json
+import sqlite3
+import subprocess
+from datetime import UTC, datetime
+from pathlib import Path
+
+from headroom.lab.runner import run_script
+
+ROOT = Path("/home/xiaodouzi/workspace/headroom")
+DIRECTORY = ROOT / "reports/reference-scratch-20261030"
+FILES = [
+    "headroom/lab/reference_scratch.py",
+    "headroom/lab/reference_scratch_lifecycle.py",
+    "headroom/lab/runner.py",
+    "headroom/lab/docker.py",
+    "headroom/lab/run_target.py",
+    "headroom/lab/artifact_volume.py",
+    "headroom/verify/offload.py",
+    "headroom/verify/offload_disk.py",
+]
+
+
+def hashes():
+    return {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest() for name in FILES}
+
+
+def main():
+    gpu = subprocess.run(
+        [
+            "nvidia-smi",
+            "--query-compute-apps=pid,process_name,used_memory",
+            "--format=csv,noheader",
+        ],
+        capture_output=True, text=True, check=False, timeout=15,
+    )
+    if gpu.returncode or gpu.stdout.strip():
+        raise RuntimeError("Tiny CUDA smoke refused: GPU process inventory not empty/available")
+    database = ROOT / "runs/headroom.db"
+    connection = sqlite3.connect(f"file:{database}?mode=ro", uri=True)
+    try:
+        active = connection.execute(
+            "select status,count(*) from runs where status in ('queued','running','pending','cancelling') group by status"
+        ).fetchall()
+    finally:
+        connection.close()
+    if active:
+        raise RuntimeError("Tiny CUDA smoke refused: public queue is active")
+    before = hashes()
+    script = ROOT / "scenarios/s4_loss_accumulation_graph/train.py"
+    arguments = ["--tiny", "--steps", "3", "--device", "cuda", "--seed", "1337"]
+    record = {
+        "scope": "explicitly_authorized_tiny_CUDA_infrastructure_only_not_fixed_nine_acceptance",
+        "utc": datetime.now(UTC).isoformat(),
+        "script": str(script),
+        "source_sha256": hashlib.sha256(script.read_bytes()).hexdigest(),
+        "arguments": arguments,
+        "gpu_preflight_empty": True,
+        "public_queue_preflight_empty": True,
+        "source_hashes_before": before,
+        "provider_calls": 0,
+        "fixed_nine_score_changed": False,
+    }
+    result = run_script(
+        script, script_args=arguments,
+        run_root=ROOT / "runs/research/reference-scratch-smoke-20261030",
+        max_steps=3, max_seconds=45, seed=1337, device="cuda",
+        reference_offload_bytes=8 * 1024**2,
+        reference_offload_disk_bytes=16 * 1024**2,
+    )
+    record["result"] = result
+    record["source_hashes_after"] = hashes()
+    record["source_unchanged"] = before == record["source_hashes_after"]
+    (DIRECTORY / "cuda-docker-smoke.json").write_text(json.dumps(record, indent=2) + "\n")
+    assert record["source_unchanged"]
+    assert result["status"] == "completed", result
+    assert result["steps"] == 3
+    assert result["reference_offload"]["request_verified"] is True
+    assert result["reference_offload"]["cuda_copies"] > 0
+    assert result["reference_offload"]["disk"]["storage_backend"] == "host_broker"
+    assert result["reference_offload"]["disk"]["disk_tensors_created"] > 0
+    assert result["reference_offload"]["disk"]["disk_tensors_unpacked"] > 0
+    assert result["reference_offload"]["disk"]["failure"] is None
+    host = result["reference_scratch"]
+    assert host["cleanup_verified"] and host["request_verified"]
+    assert 0 < host["peak_reserved_bytes"] <= host["max_bytes"] == 16 * 1024**2
+    assert host["live_reserved_bytes"] == host["live_objects"] == 0
+    assert result["reference_spill_cleanup"]["verified"]
+    assert result["execution"]["artifact_quota_bytes"] == 512 * 1024**2
+    assert result["execution"]["artifact_export"]["export_verified"]
+    assert result["execution"]["cleanup_verified"]
+    assert result["execution"]["artifact_cleanup"]["cleanup_verified"]
+    assert not Path(host["socket_path"]).exists()
+    print(json.dumps({
+        "run_id": result["run_id"], "status": result["status"], "steps": result["steps"],
+        "host_peak_bytes": host["peak_reserved_bytes"],
+        "serialized_tensors": result["reference_offload"]["disk"]["disk_tensors_created"],
+        "unpacks": result["reference_offload"]["disk"]["disk_tensors_unpacked"],
+        "cleanup_verified": host["cleanup_verified"],
+    }))
+
+
+if __name__ == "__main__":
+    main()

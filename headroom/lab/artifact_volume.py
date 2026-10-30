@@ -34,6 +34,7 @@ FILES = frozenset(
         "env.json",
         "snapshot.pickle",
         "snapshot.json",
+        "reference-offload.json",
     }
 )
 
@@ -407,6 +408,8 @@ def _export_tar(stream, output, *, max_bytes, max_inodes):
                 0 <= member.size <= max_bytes and total + member.size <= max_bytes,
                 "ARTIFACT_ARCHIVE_TOO_LARGE",
             )
+            if path.name == "reference-offload.json":
+                _require(member.size <= 64 * 1024, "REFERENCE_METADATA_TOO_LARGE")
             destination.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
             descriptor = os.open(
                 destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600

@@ -1,0 +1,113 @@
+--- reports/r13-20261030-review/project-r13.py.txt
++++ reports/r14-20261030-review/project-r14.py.txt
+@@ -1,4 +1,4 @@
+-"""Read completed/partial R13 records and create a new review-only projection.
++"""Read completed/partial R14 records and create a new review-only projection.
+ 
+ No ledger, credentials, provider, GPU, service or publication mutation.
+ """
+@@ -37,7 +37,7 @@
+     "headroom/api/presentation.py",
+     "headroom/api/security.py",
+     "headroom/evaluation.py",
+-    "reports/r13-20261030-review/project-r13.py.txt",
++    "reports/r14-20261030-review/project-r14.py.txt",
+     "reports/repair-followup-20261030/execute-fixed9-v2.py.txt",
+ )
+ 
+@@ -180,9 +180,9 @@
+     campaign_path = Path(campaign_path)
+     if (
+         campaign_path.name != "campaign.json"
+-        or campaign_path.parent.name != "execution-r13-20261030"
++        or campaign_path.parent.name != "execution-r14-20261030"
+     ):
+-        raise ValueError("Only the distinct R13 campaign path may receive this label")
++        raise ValueError("Only the distinct R14 campaign path may receive this label")
+     sources = Sources(campaign_path.parent)
+     controller = sources.read(campaign_path.name)
+     rows = fixed_rows(controller)
+@@ -465,7 +465,7 @@
+     if any(item.get("run_id") in attempted_run_ids for item in prior.values()):
+         raise ValueError("An old pool run cannot be relabelled as a new campaign run")
+     result = {
+-        "scope": "whole_authorized_development_pool_including_prior_R12_retained_bound",
++        "scope": "whole_authorized_development_pool_including_prior_campaign_charges",
+         "starting_pool_accounting": starting,
+         "latest_pool_accounting": latest,
+         "latest_is_unavailable": latest.get("status") == "unavailable",
+@@ -522,8 +522,8 @@
+ 
+ 
+ def stage_campaign(campaign_path, output_dir, identifier, *, terminal_reviewed=False):
+-    if not re.fullmatch(r"r13-[a-z0-9][a-z0-9_-]{0,60}", identifier):
+-        raise ValueError("Use a distinct R13 staging identifier")
++    if not re.fullmatch(r"r14-[a-z0-9][a-z0-9_-]{0,60}", identifier):
++        raise ValueError("Use a distinct R14 staging identifier")
+     output_dir = Path(output_dir)
+     if output_dir.exists():
+         raise ValueError("Projection output must be a new directory; never replace a publication")
+@@ -535,10 +535,10 @@
+         raise ValueError("Terminal review confirmation must be boolean")
+     if not terminal_reviewed:
+         metrics["memory_threshold_met"] = None
+-    state_label = "terminal review" if terminal_reviewed else "provisional snapshot"
+     title = (
+-        f"R13 development repair ({state_label}) - observed {metrics['memory_targets']}/9 "
+-        f"memory targets; {metrics['attempted_rows']}/9 attempted"
++        f"October 30 evaluation — {metrics['memory_targets']} of 9 memory targets met"
++        if terminal_reviewed
++        else f"October 30 evaluation — interim results ({metrics['attempted_rows']} of 9 attempted)"
+     )
+     entry = {"id": identifier, "title": title}
+     public = {
+@@ -565,7 +565,7 @@
+         "published": False,
+         "source_campaign": sources.records[Path(campaign_path).name],
+         "source_campaign_path": str(Path(campaign_path)),
+-        "campaign_label": "R13",
++        "campaign_label": "R14",
+         "scope": controller["scope"],
+         "source_revision": controller["revision"],
+         "provisional": not terminal_reviewed,
+@@ -576,14 +576,14 @@
+         "metrics": metrics,
+         "rows": rows,
+         "whole_pool_accounting": pool,
+-        "campaign_cost_scope": "R13 attempted rows only; excludes starting-pool R12 retained bound",
++        "campaign_cost_scope": "R14 attempted rows only; excludes all starting-pool charges from earlier campaigns",
+         "currency_basis": "saved model-ledger USD; no invoice or tax inference",
+         "existing_summary_attempted_rows_only": summarize(
+             [r for r in public_rows if r["provenance"] == "live"]
+         ),
+         "limitations": [
+-            "R13 is DEVELOPMENT_REPAIR_FOLLOWUP, not a rerun or alias of FINAL48 F3.",
+-            "Whole-pool snapshots preserve prior R12 retention. R13 own costs are never inferred by subtracting unknown actual totals.",
++            "R14 is DEVELOPMENT_REPAIR_FOLLOWUP, not a rerun or alias of FINAL48 F3.",
++            "Whole-pool snapshots preserve all starting-pool charges, including prior R12 and R13. R14 own costs are never inferred by subtracting unknown actual totals.",
+             "An unavailable terminal accounting read stays unavailable; last_known_accounting is not promoted to current truth.",
+             "Without caller-confirmed terminal review this is a provisional snapshot; no final threshold conclusion is emitted.",
+             "Retained reservations or charges are not exact provider spending; unresolved actuals remain null.",
+@@ -613,7 +613,7 @@
+         "provider_calls": 0,
+         "gpu_jobs": 0,
+         "scope": controller["scope"],
+-        "campaign_label": "R13",
++        "campaign_label": "R14",
+         "provisional": not terminal_reviewed,
+         "terminal_reviewed_by_caller": terminal_reviewed,
+         "inputs": list(sources.records.values()),
+@@ -661,11 +661,11 @@
+         if ".." in path.parts or any(p.is_symlink() for p in (path, *path.parents)):
+             raise ValueError("Unsafe/symlink path")
+     if (
+-        campaign != ROOT / "runs/repair-followup/execution-r13-20261030/campaign.json"
++        campaign != ROOT / "runs/repair-followup/execution-r14-20261030/campaign.json"
+         or not output.is_relative_to(ROOT / "reports")
+     ):
+         raise ValueError(
+-            "Read only the R13 run campaign and create a new reports staging directory"
++            "Read only the R14 run campaign and create a new reports staging directory"
+         )
+     result = stage_campaign(campaign, output, args.id, terminal_reviewed=args.terminal_reviewed)
+     print(json.dumps({"output": str(output), "published": False, "metrics": result["metrics"]}))

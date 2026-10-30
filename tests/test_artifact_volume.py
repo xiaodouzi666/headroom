@@ -285,3 +285,22 @@ def test_safe_stream_is_published_atomically_and_bad_stream_is_not(store, monkey
         volume.export_store(metadata, output)
     assert list(output.iterdir()) == []
     assert not list(output.parent.glob(".artifact-export-*"))
+
+
+@pytest.mark.parametrize("size", [2, 65536])
+def test_reference_provenance_exports_only_bounded_fixed_metadata(tmp_path, size):
+    data = b" " * size
+    raw = archive([("reference-offload.json", tarfile.REGTYPE, data)])
+    result = volume._export_tar(io.BytesIO(raw), tmp_path, max_bytes=1024 * 1024, max_inodes=16)
+    assert result["export_verified"]
+    assert (tmp_path / "reference-offload.json").read_bytes() == data
+
+
+@pytest.mark.parametrize(
+    "kind,size", [(tarfile.REGTYPE, 65537), (tarfile.SYMTYPE, 2), (tarfile.LNKTYPE, 2)]
+)
+def test_reference_metadata_cannot_expand_archive_policy(tmp_path, kind, size):
+    raw = archive([("reference-offload.json", kind, b" " * size)])
+    with pytest.raises(volume.ArtifactStoreError):
+        volume._export_tar(io.BytesIO(raw), tmp_path, max_bytes=1024 * 1024, max_inodes=16)
+    assert not (tmp_path / "reference-offload.json").exists()

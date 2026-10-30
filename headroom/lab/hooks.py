@@ -19,6 +19,7 @@ import threading
 import time
 import traceback
 import weakref
+from functools import wraps
 from pathlib import Path
 from typing import Any
 
@@ -202,6 +203,10 @@ class CaptureSession:
         self._snapshot_attempted = False
         self._step_handle: Any = None
         self._step_pre_handle: Any = None
+        self._original_optimizer_init: Any = None
+        self._optimizer_init_wrapper: Any = None
+        self._optimizer_base_constructions_observed = 0
+        self._optimizer_initial_catalog_complete = True
         self._optimizer_pending: dict[tuple[int, int], dict[str, Any]] = {}
         self._backward_groups: dict[int, dict[str, Any]] = {}
         self._optimizer_step_calls = 0
@@ -418,6 +423,21 @@ class CaptureSession:
         self._checkpoint_precision.install()
         self._backward_wrapper = recorded_backward
         torch.Tensor.backward = recorded_backward
+        self._original_optimizer_init = torch.optim.Optimizer.__init__
+
+        @wraps(self._original_optimizer_init)
+        def recorded_optimizer_init(optimizer, *args, **kwargs):
+            returned = session._original_optimizer_init(optimizer, *args, **kwargs)
+            if os.getpid() == session.pid and not session.finished:
+                session._optimizer_base_constructions_observed += 1
+                try:
+                    session._observe_optimizer_initial_parameters(optimizer)
+                except Exception:  # noqa: BLE001 - optional metadata cannot replace native behavior
+                    session._optimizer_initial_catalog_complete = False
+            return returned
+
+        self._optimizer_init_wrapper = recorded_optimizer_init
+        torch.optim.Optimizer.__init__ = recorded_optimizer_init
         self._step_pre_handle = register_optimizer_step_pre_hook(self._optimizer_step_start)
         self._step_handle = register_optimizer_step_post_hook(self._optimizer_step)
         self._parameter_handles = [
@@ -603,6 +623,21 @@ class CaptureSession:
     def _group_problem(group, reason):
         if reason not in group["reasons"] and len(group["reasons"]) < 16:
             group["reasons"].append(reason)
+
+    def _observe_optimizer_initial_parameters(self, optimizer):
+        """Observe existing groups after base construction, without reading tensor values.
+
+        This does not certify completion of a custom subclass constructor. Metadata
+        failures must not replace the optimizer's return value or ordinary error;
+        capture-control BaseExceptions (for example the deadline) still propagate.
+        """
+        members = 0
+        for parameter_group in optimizer.param_groups:
+            for parameter in parameter_group["params"]:
+                members += 1
+                if members > 8192:
+                    raise ValueError("optimizer initial parameter observation limit")
+                self._update_identity(parameter)
 
     def _update_identity(self, parameter):
         if not isinstance(parameter, torch.nn.Parameter):
@@ -871,6 +906,14 @@ class CaptureSession:
             "successful_optimizer_step_calls": self._optimizer_successful_step_calls,
             "logical_updates": len(self.step_records),
             "parameter_catalog": self._update_catalog,
+            "parameter_catalog_initialization": {
+                "successful_base_constructor_returns": self._optimizer_base_constructions_observed,
+                "complete": bool(self._optimizer_base_constructions_observed)
+                and self._optimizer_initial_catalog_complete,
+                "scope": "Metadata from groups after successful torch.optim.Optimizer.__init__; "
+                "not custom-subclass completion or an optimizer update. Later step/graph "
+                "observations may also add identities. No tensor values are read or copied.",
+            },
             "failed_backward_groups": self._backward_update_failures,
             "coverage": "Process-local Parameter identities and optimizer pre/post hooks; "
             "version-counter changes are observations, not numerical equivalence. A grouped update "
@@ -907,6 +950,8 @@ class CaptureSession:
         self._cancel_timer()
         if self.pairing_capture is not None:
             self.pairing_capture.close()
+        if torch.optim.Optimizer.__init__ is self._optimizer_init_wrapper:
+            torch.optim.Optimizer.__init__ = self._original_optimizer_init
         if self._step_pre_handle is not None:
             self._step_pre_handle.remove()
             self._step_pre_handle = None

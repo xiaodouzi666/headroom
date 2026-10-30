@@ -264,6 +264,11 @@ def cleanup_owned_lab(run_root, run_id):
                 "cleanup_verified"
             ):
                 return False
+            if manifest.get("owned_reference_scratch") is not None:
+                from headroom.lab.reference_scratch_lifecycle import recover_reference_scratch
+
+                if not recover_reference_scratch(item, manifest):
+                    return False
         return True
     except (OSError, ValueError, KeyError, IndexError, RuntimeError, subprocess.SubprocessError):
         return False

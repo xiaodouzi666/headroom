@@ -23,9 +23,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
     parser.add_argument("--reference-offload-bytes", type=int)
     parser.add_argument("--reference-offload-disk-bytes", type=int, default=0)
+    parser.add_argument("--reference-offload-socket", type=Path)
     parser.add_argument("script_args", nargs=argparse.REMAINDER)
     args = parser.parse_args(argv)
     target_args = args.script_args[1:] if args.script_args[:1] == ["--"] else args.script_args
+    if args.reference_offload_socket is not None and not args.reference_offload_disk_bytes:
+        parser.error("A scratch socket requires the explicit bounded disk reference")
     session = active_session() or CaptureSession(
         args.output, args.max_steps, args.max_seconds, args.seed, args.device
     )
@@ -58,6 +61,11 @@ def main(argv: list[str] | None = None) -> int:
                 session.output_dir,
                 args.reference_offload_bytes,
                 args.reference_offload_disk_bytes,
+                **(
+                    {"scratch_socket": args.reference_offload_socket}
+                    if args.reference_offload_socket is not None
+                    else {}
+                ),
             )
         with context:
             runpy.run_path(str(script), run_name="__main__")

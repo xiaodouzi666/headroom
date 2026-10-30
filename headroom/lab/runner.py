@@ -520,6 +520,7 @@ def _run(
     allocator_conf: str | None,
     target_argv_override: dict | None = None,
     capture_target: dict | None = None,
+    reference_scratch_bytes: int = 0,
 ) -> dict:
     validate_options(device, max_steps, max_seconds, seed)
     environment = container_environment(
@@ -556,6 +557,7 @@ def _run(
     }
     result = {"status": "error", "reason": "PREPARATION_FAILED", **metadata}
     captured_shared = None
+    scratch_state = {}
     try:
         with storage_admission(root) as admission:
             source = copy_source(source_root, directory / "source", (root, directory))
@@ -589,113 +591,133 @@ def _run(
                     gpu_before=before,
                 )
             else:
-                args = docker.create_arguments(
-                    name=name,
-                    project_root=PROJECT_ROOT,
-                    source=directory / "source",
-                    output=artifacts,
-                    environment=environment,
-                    command=command,
-                    device=device,
-                    control=control,
-                )
-                execution = docker.execute(
-                    create_args=args,
-                    name=name,
-                    run_dir=directory,
-                    max_seconds=max_seconds,
-                    control_dir=control,
-                )
-                manifest = read_artifact_json(directory / "manifest.json")
-                records, inventory = _read_capture_roster(directory, manifest)
-                selected, inventory = _select_capture(
-                    records, inventory, capture_target, script_mode=script_relative is not None
-                )
-                inventory["observed_timeout_captures"] = [
-                    row["capture_relative"]
-                    for row in records
-                    if (row["capture"] or {}).get("status") == "timeout"
-                    and (row["capture"] or {}).get("termination_reason") == "timeout"
-                ]
-                primary = next(
-                    (row["capture"] for row in records if row["capture_relative"] == "artifacts"),
-                    None,
-                )
-                capture = dict(
-                    (selected or {}).get("capture")
-                    or primary
-                    or {
-                        "status": "error",
-                        "reason": "CAPTURE_RESULT_MISSING_OR_INVALID",
-                    }
-                )
-                selected_relative = selected["capture_relative"] if selected else "artifacts"
-                capture.update(
-                    execution_capture=inventory,
-                    selected_capture_relative=selected_relative,
-                )
-                manifest.update(
-                    image_id=execution.get("image_id"),
-                    execution_entrypoint=capture.get("execution_entrypoint"),
-                    execution_capture=inventory,
-                    selected_capture_relative=selected_relative,
-                )
-                _write_json(directory / "manifest.json", manifest)
-                captured_shared = capture.get("shared_gpu")
-                result = {
-                    **capture,
-                    **metadata,
-                    "execution": execution,
-                    "cleanup_verified": execution["cleanup_verified"],
-                    "gpu_before": before,
-                    "target_artifact_dir": str(
-                        capture_artifact_directory(directory, selected_relative)
-                    ),
-                }
-                if selected is None and (capture_target is not None or len(records) > 1):
-                    result.update(status="error", reason=inventory["reason"])
-                elif not inventory["complete"]:
-                    result.update(status="error", reason="CAPTURE_ROSTER_INCOMPLETE")
-                state = execution.get("state", {})
-                actual_exit = state.get("ExitCode")
-                controlled_limit = (
-                    script_relative is None
-                    and capture.get("termination_reason") == "step_limit"
-                    and actual_exit == 1
-                )
-                if (
-                    state.get("OOMKilled")
-                    or not state
-                    or state.get("Running")
-                    or (
-                        capture.get("status") == "completed"
-                        and actual_exit != 0
-                        and not controlled_limit
+                from headroom.lab.reference_scratch_lifecycle import managed_reference_scratch
+
+                with managed_reference_scratch(
+                    directory, reference_scratch_bytes, scratch_state
+                ) as scratch_socket:
+                    args = docker.create_arguments(
+                        name=name,
+                        project_root=PROJECT_ROOT,
+                        source=directory / "source",
+                        output=artifacts,
+                        environment=environment,
+                        command=command,
+                        device=device,
+                        control=control,
+                        **(
+                            {"reference_scratch_socket": scratch_socket}
+                            if scratch_socket is not None
+                            else {}
+                        ),
                     )
-                    or (capture.get("status") == "oom" and actual_exit not in {1, 42})
-                ):
-                    result.update(status="error", reason="CAPTURE_CONTAINER_STATE_MISMATCH")
-                if (
-                    capture.get("status") in {"completed", "oom"}
-                    and capture.get("capture_complete") is not True
-                ):
-                    result.update(status="error", reason="CAPTURE_INCOMPLETE")
-                result["image_id"] = execution.get("image_id")
-                roster_timeout = (
-                    inventory["complete"]
-                    and bool(inventory["observed_timeout_captures"])
-                    and all(row["capture"]["status"] in {"completed", "timeout"} for row in records)
-                    and actual_exit in {1, 124}
-                    and state.get("OOMKilled") is False
-                    and state.get("Running") is False
-                    and not execution.get("error")
-                )
-                if execution["timed_out"] or capture.get("status") == "timeout" or roster_timeout:
-                    result.update(status="timeout", reason="TIMEOUT")
-                elif execution.get("error"):
-                    result.update(status="error", reason=execution["error"])
-                if not execution["cleanup_verified"]:
-                    result.update(status="error", reason="CONTAINER_CLEANUP_UNVERIFIED")
+                    execution = docker.execute(
+                        create_args=args,
+                        name=name,
+                        run_dir=directory,
+                        max_seconds=max_seconds,
+                        control_dir=control,
+                    )
+                    manifest = read_artifact_json(directory / "manifest.json")
+                    records, inventory = _read_capture_roster(directory, manifest)
+                    selected, inventory = _select_capture(
+                        records, inventory, capture_target, script_mode=script_relative is not None
+                    )
+                    inventory["observed_timeout_captures"] = [
+                        row["capture_relative"]
+                        for row in records
+                        if (row["capture"] or {}).get("status") == "timeout"
+                        and (row["capture"] or {}).get("termination_reason") == "timeout"
+                    ]
+                    primary = next(
+                        (
+                            row["capture"]
+                            for row in records
+                            if row["capture_relative"] == "artifacts"
+                        ),
+                        None,
+                    )
+                    capture = dict(
+                        (selected or {}).get("capture")
+                        or primary
+                        or {
+                            "status": "error",
+                            "reason": "CAPTURE_RESULT_MISSING_OR_INVALID",
+                        }
+                    )
+                    selected_relative = selected["capture_relative"] if selected else "artifacts"
+                    capture.update(
+                        execution_capture=inventory,
+                        selected_capture_relative=selected_relative,
+                    )
+                    manifest.update(
+                        image_id=execution.get("image_id"),
+                        execution_entrypoint=capture.get("execution_entrypoint"),
+                        execution_capture=inventory,
+                        selected_capture_relative=selected_relative,
+                    )
+                    _write_json(directory / "manifest.json", manifest)
+                    captured_shared = capture.get("shared_gpu")
+                    result = {
+                        **capture,
+                        **metadata,
+                        "execution": execution,
+                        "cleanup_verified": execution["cleanup_verified"],
+                        "gpu_before": before,
+                        "target_artifact_dir": str(
+                            capture_artifact_directory(directory, selected_relative)
+                        ),
+                    }
+                    if selected is None and (capture_target is not None or len(records) > 1):
+                        result.update(status="error", reason=inventory["reason"])
+                    elif not inventory["complete"]:
+                        result.update(status="error", reason="CAPTURE_ROSTER_INCOMPLETE")
+                    state = execution.get("state", {})
+                    actual_exit = state.get("ExitCode")
+                    controlled_limit = (
+                        script_relative is None
+                        and capture.get("termination_reason") == "step_limit"
+                        and actual_exit == 1
+                    )
+                    if (
+                        state.get("OOMKilled")
+                        or not state
+                        or state.get("Running")
+                        or (
+                            capture.get("status") == "completed"
+                            and actual_exit != 0
+                            and not controlled_limit
+                        )
+                        or (capture.get("status") == "oom" and actual_exit not in {1, 42})
+                    ):
+                        result.update(status="error", reason="CAPTURE_CONTAINER_STATE_MISMATCH")
+                    if (
+                        capture.get("status") in {"completed", "oom"}
+                        and capture.get("capture_complete") is not True
+                    ):
+                        result.update(status="error", reason="CAPTURE_INCOMPLETE")
+                    result["image_id"] = execution.get("image_id")
+                    roster_timeout = (
+                        inventory["complete"]
+                        and bool(inventory["observed_timeout_captures"])
+                        and all(
+                            row["capture"]["status"] in {"completed", "timeout"} for row in records
+                        )
+                        and actual_exit in {1, 124}
+                        and state.get("OOMKilled") is False
+                        and state.get("Running") is False
+                        and not execution.get("error")
+                    )
+                    if (
+                        execution["timed_out"]
+                        or capture.get("status") == "timeout"
+                        or roster_timeout
+                    ):
+                        result.update(status="timeout", reason="TIMEOUT")
+                    elif execution.get("error"):
+                        result.update(status="error", reason=execution["error"])
+                    if not execution["cleanup_verified"]:
+                        result.update(status="error", reason="CONTAINER_CLEANUP_UNVERIFIED")
             after = gpu_state() if device == "cuda" else {"queried": False, "processes": []}
             _write_json(directory / "gpu-after.json", after)
             result["gpu_after"] = after
@@ -706,6 +728,14 @@ def _run(
             reason="GPU_BUSY" if str(error).startswith("GPU_BUSY") else "PREPARATION_FAILED",
             error=str(error),
         )
+    if reference_scratch_bytes:
+        result["reference_scratch"] = scratch_state
+        if scratch_state.get("cleanup_verified") is not True:
+            result.update(
+                status="error",
+                reason="REFERENCE_SCRATCH_CLEANUP_UNVERIFIED",
+                cleanup_verified=False,
+            )
     result["finished_at"] = datetime.now(UTC).isoformat()
     _write_json(directory / "result.json", result)
     return result
@@ -839,6 +869,9 @@ def run_script(
         command.extend(["--reference-offload-bytes", str(reference_offload_bytes)])
     if reference_offload_disk_bytes:
         command.extend(["--reference-offload-disk-bytes", str(reference_offload_disk_bytes)])
+        from headroom.lab.reference_scratch_lifecycle import SOCKET_DESTINATION
+
+        command.extend(["--reference-offload-socket", SOCKET_DESTINATION])
     if script_args:
         command.extend(["--", *script_args])
     result = _run(
@@ -851,6 +884,7 @@ def run_script(
         seed=seed,
         device=device,
         allocator_conf=allocator_conf,
+        reference_scratch_bytes=reference_offload_disk_bytes,
     )
     if reference_offload_bytes is not None:
         import hashlib
@@ -859,7 +893,16 @@ def run_script(
         from headroom.verify.offload_disk import cleanup_spill
 
         if reference_offload_disk_bytes:
-            if result.get("cleanup_verified") is True:
+            if result.get("reference_scratch") is not None:
+                host = result["reference_scratch"]
+                result["reference_spill_cleanup"] = {
+                    "verified": result.get("cleanup_verified") is True
+                    and host.get("cleanup_verified") is True,
+                    "backend": "host_broker",
+                    "live_reserved_bytes": host.get("live_reserved_bytes"),
+                    "live_objects": host.get("live_objects"),
+                }
+            elif result.get("cleanup_verified") is True:
                 directory = Path(
                     result.get("target_artifact_dir") or Path(result["run_dir"]) / "artifacts"
                 )
@@ -886,6 +929,19 @@ def run_script(
                 and evidence.get("max_saved_bytes") == reference_offload_bytes
                 and evidence.get("max_disk_bytes", 0) == reference_offload_disk_bytes
             )
+            if reference_offload_disk_bytes:
+                host = result.get("reference_scratch", {})
+                verified = verified and (
+                    isinstance(host, dict)
+                    and host.get("schema") == "headroom.reference-scratch.v1"
+                    and host.get("request_verified") is True
+                    and host.get("max_bytes") == reference_offload_disk_bytes
+                    and host.get("cleanup_verified") is True
+                    and host.get("live_reserved_bytes") == 0
+                    and host.get("live_objects") == 0
+                    and evidence.get("backend") == "disk"
+                    and evidence.get("disk", {}).get("storage_backend") == "host_broker"
+                )
             result["reference_offload"] = {**evidence, "request_verified": verified}
         except (OSError, ValueError, TypeError, KeyError) as error:
             result["reference_offload"] = {

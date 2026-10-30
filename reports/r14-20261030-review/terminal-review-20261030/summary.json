@@ -1,0 +1,1858 @@
+{
+  "schema": "headroom.development-repair.summary.v2",
+  "prepared_only": true,
+  "published": false,
+  "source_campaign": {
+    "path": "campaign.json",
+    "bytes": 109119,
+    "sha256": "e0c353eeef387f8ff8580daf8d773a5884c3d2b3a02b989ecddb5c0ef56e0705"
+  },
+  "source_campaign_path": "/home/xiaodouzi/workspace/headroom/runs/repair-followup/execution-r14-20261030/campaign.json",
+  "campaign_label": "R14",
+  "scope": "DEVELOPMENT_REPAIR_FOLLOWUP",
+  "source_revision": "436f7ec9c1aac56376007aa1a5ae9ed8febd7e0c",
+  "provisional": false,
+  "terminal_reviewed_by_caller": true,
+  "threshold_scope_source": "fixed memory-target denominator and minimum_targets, not overall acceptance",
+  "source_preparation_sha256": "a2c1fcf6fbc77ba196c2b559c16f99ed19a6346d902608f76bce43516ba49898",
+  "source_funding_receipt_sha256": "3b5f9e2573fda21f34c4858a4af64b27a5952e5c1c6bb944dcdb3d01a67bf889",
+  "metrics": {
+    "fixed_denominator": 9,
+    "minimum_memory_targets": 6,
+    "threshold_scope": "memory_targets_only",
+    "overall_acceptance": "not_assessed",
+    "attempted_rows": 9,
+    "not_run_rows": 0,
+    "memory_targets": 0,
+    "raw_category_matches": 6,
+    "valid_correct_first_causes": 5,
+    "valid_ready_diagnoses": 4,
+    "ready_valid_correct_first_causes": 3,
+    "unverified_truth_cases": [
+      "s5_fragmentation_varlen",
+      "nanogpt"
+    ],
+    "cost": {
+      "scope": "this_revision_attempted_rows_only",
+      "actual_total_usd": null,
+      "known_actual_subtotal_usd": "0.91055144",
+      "charged_total_usd": "0.93850838",
+      "known_charged_subtotal_usd": "0.93850838",
+      "retained_reservations_or_charges_subtotal_usd": "0.93850838",
+      "unknown_actual_runs": 9,
+      "unresolved_charge_runs": 0
+    },
+    "memory_threshold_met": false
+  },
+  "rows": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "cell_id": "fixed9-s1_batch_too_big",
+      "run_id": "2868965cd88743308f3624dfa36112a5",
+      "status": "needs_human",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": "activations",
+        "truth_status": "authored",
+        "ground_truth": "activations",
+        "raw_category_matches": true,
+        "valid": true,
+        "ready_for_patch": false,
+        "needs_more_info": true,
+        "valid_and_correct": true,
+        "ready_valid_and_correct": false,
+        "source": {
+          "path": "jobs/2868965cd88743308f3624dfa36112a5/rounds/01/diagnosis.json",
+          "bytes": 4890,
+          "sha256": "49b82c71203e302d2bdd67bc2b09ab074a981cab355f98cb67f94cf23fa59740"
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": []
+      },
+      "cost": {
+        "actual_usd": null,
+        "known_actual_subtotal_usd": "0.06151992",
+        "charged_usd": "0.06400392",
+        "retained_reservation_or_charge_usd": "0.06400392",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/2868965cd88743308f3624dfa36112a5/report.json",
+        "bytes": 639175,
+        "sha256": "ea2d4d9c95967add1c6f7028c84e7fbcb99c0b524981df91876c5576b04231da"
+      },
+      "campaign_row_pointer": "/rows/0"
+    },
+    {
+      "scenario_id": "s2_capacity_v2",
+      "cell_id": "fixed9-s2_capacity_v2",
+      "run_id": "eb45be0a25f54ff1a946715890670e4a",
+      "status": "needs_human",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": "optimizer_state",
+        "truth_status": "authored",
+        "ground_truth": "optimizer_state",
+        "raw_category_matches": true,
+        "valid": false,
+        "ready_for_patch": false,
+        "needs_more_info": true,
+        "valid_and_correct": false,
+        "ready_valid_and_correct": false,
+        "source": {
+          "path": "jobs/eb45be0a25f54ff1a946715890670e4a/rounds/01/diagnosis.json",
+          "bytes": 6688,
+          "sha256": "25923eb3cd8182b6e4e3cca6ee8bbe714f954a7e9cbcb6be4531467e1c2b7bc5"
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": [
+          "ALTERNATIVE_EVIDENCE_BLOCKS_CURRENT_PLAN"
+        ]
+      },
+      "cost": {
+        "actual_usd": null,
+        "known_actual_subtotal_usd": "0.07497564",
+        "charged_usd": "0.07772412",
+        "retained_reservation_or_charge_usd": "0.07772412",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/eb45be0a25f54ff1a946715890670e4a/report.json",
+        "bytes": 763897,
+        "sha256": "5b36fc67bf9d925a2dd8ab5c2611d9f56bdc810d1becfd47ffc8b81ddf773c7d"
+      },
+      "campaign_row_pointer": "/rows/1"
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "cell_id": "fixed9-s3_eval_no_grad_missing",
+      "run_id": "5f2b4b6416b24811ba2795ef922706c5",
+      "status": "needs_human",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": "activations",
+        "truth_status": "authored",
+        "ground_truth": "activations",
+        "raw_category_matches": true,
+        "valid": true,
+        "ready_for_patch": false,
+        "needs_more_info": true,
+        "valid_and_correct": true,
+        "ready_valid_and_correct": false,
+        "source": {
+          "path": "jobs/5f2b4b6416b24811ba2795ef922706c5/rounds/01/diagnosis.json",
+          "bytes": 4806,
+          "sha256": "577579e014fb713a67a3fb54eb9d5524833c312877db11bcf4ec1e0d81a78430"
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": []
+      },
+      "cost": {
+        "actual_usd": null,
+        "known_actual_subtotal_usd": "0.07894288",
+        "charged_usd": "0.08277670",
+        "retained_reservation_or_charge_usd": "0.08277670",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/5f2b4b6416b24811ba2795ef922706c5/report.json",
+        "bytes": 858873,
+        "sha256": "876e04d842430ee1be31184be10898b481950d078bfd65f44e023adb554df822"
+      },
+      "campaign_row_pointer": "/rows/2"
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "cell_id": "fixed9-s4_loss_accumulation_graph",
+      "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+      "status": "needs_human",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": "activations",
+        "truth_status": "authored",
+        "ground_truth": "retained_graph",
+        "raw_category_matches": false,
+        "valid": true,
+        "ready_for_patch": true,
+        "needs_more_info": false,
+        "valid_and_correct": false,
+        "ready_valid_and_correct": false,
+        "source": {
+          "path": "jobs/68f09d2e33f9474ea44e476abc2c98ac/rounds/01/diagnosis.json",
+          "bytes": 3327,
+          "sha256": "456e6e515ce96a6a64e680068f77fc10df39627efdadb1a09c5936fb658d1873"
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": []
+      },
+      "cost": {
+        "actual_usd": null,
+        "known_actual_subtotal_usd": "0.13634008",
+        "charged_usd": "0.13952308",
+        "retained_reservation_or_charge_usd": "0.13952308",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/68f09d2e33f9474ea44e476abc2c98ac/report.json",
+        "bytes": 743887,
+        "sha256": "cd1f029b05d9dbefbedff5e526a9fc26eb77ef9f00f3e6a8dba5aee1dfe0360b"
+      },
+      "campaign_row_pointer": "/rows/3"
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "cell_id": "fixed9-s5_fragmentation_varlen",
+      "run_id": "d24caaa6352c4f98ac80e98aac56bf8f",
+      "status": "needs_human",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": "activations",
+        "truth_status": "unverified",
+        "ground_truth": "fragmentation_candidate",
+        "raw_category_matches": null,
+        "valid": true,
+        "ready_for_patch": false,
+        "needs_more_info": true,
+        "valid_and_correct": false,
+        "ready_valid_and_correct": false,
+        "source": {
+          "path": "jobs/d24caaa6352c4f98ac80e98aac56bf8f/rounds/01/diagnosis.json",
+          "bytes": 4052,
+          "sha256": "318df8a14f6039120f7a97ec02cc92c619de39727020b5c921108c69120154ce"
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": []
+      },
+      "cost": {
+        "actual_usd": null,
+        "known_actual_subtotal_usd": "0.06516716",
+        "charged_usd": "0.06810962",
+        "retained_reservation_or_charge_usd": "0.06810962",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/d24caaa6352c4f98ac80e98aac56bf8f/report.json",
+        "bytes": 557164,
+        "sha256": "29353d46ac790e7c5452f4737f489cb8dfd8cda7a4a0184d7004bb472b920757"
+      },
+      "campaign_row_pointer": "/rows/4"
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "cell_id": "fixed9-s6_full_vocab_logits_fp32",
+      "run_id": "831a56da4f3145c3bc53e586b491204e",
+      "status": "needs_human",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": "temporaries",
+        "truth_status": "authored",
+        "ground_truth": "temporaries",
+        "raw_category_matches": true,
+        "valid": true,
+        "ready_for_patch": true,
+        "needs_more_info": false,
+        "valid_and_correct": true,
+        "ready_valid_and_correct": true,
+        "source": {
+          "path": "jobs/831a56da4f3145c3bc53e586b491204e/rounds/01/diagnosis.json",
+          "bytes": 3444,
+          "sha256": "aad8e085a97bbd9e63e12b0a3e3140cbc2e48e16d66e282e7b7f426c146f75ef"
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": []
+      },
+      "cost": {
+        "actual_usd": null,
+        "known_actual_subtotal_usd": "0.11809278",
+        "charged_usd": "0.12102900",
+        "retained_reservation_or_charge_usd": "0.12102900",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/831a56da4f3145c3bc53e586b491204e/report.json",
+        "bytes": 550251,
+        "sha256": "3c57d291375f27f452f93d87b6190dd1fdc1ce88d458e0a6754b82650ea17a4b"
+      },
+      "campaign_row_pointer": "/rows/5"
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "cell_id": "fixed9-s7_frozen_params_optimizer_state",
+      "run_id": "0fba6eeccc18411590b036557f7f9526",
+      "status": "needs_human",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": "optimizer_state",
+        "truth_status": "authored",
+        "ground_truth": "optimizer_state",
+        "raw_category_matches": true,
+        "valid": true,
+        "ready_for_patch": true,
+        "needs_more_info": false,
+        "valid_and_correct": true,
+        "ready_valid_and_correct": true,
+        "source": {
+          "path": "jobs/0fba6eeccc18411590b036557f7f9526/rounds/01/diagnosis.json",
+          "bytes": 3447,
+          "sha256": "120f262e99a0a3c2cb948976b82e356800704e12362a18700612df914cedc1ad"
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": []
+      },
+      "cost": {
+        "actual_usd": null,
+        "known_actual_subtotal_usd": "0.12409716",
+        "charged_usd": "0.12690840",
+        "retained_reservation_or_charge_usd": "0.12690840",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/0fba6eeccc18411590b036557f7f9526/report.json",
+        "bytes": 646528,
+        "sha256": "b8407176dab7ed90729845d7c96e6558dcf8a873229d2e95d7e1c26d31b22a90"
+      },
+      "campaign_row_pointer": "/rows/6"
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "cell_id": "fixed9-s8_two_models_resident",
+      "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+      "status": "needs_human",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": "params",
+        "truth_status": "authored",
+        "ground_truth": "params",
+        "raw_category_matches": true,
+        "valid": true,
+        "ready_for_patch": true,
+        "needs_more_info": false,
+        "valid_and_correct": true,
+        "ready_valid_and_correct": true,
+        "source": {
+          "path": "jobs/ac41502667bd4c3ca9a0ac4f32217e6a/rounds/01/diagnosis.json",
+          "bytes": 3516,
+          "sha256": "e6f982fa2e52f8109ec69acfe87a7e944694f77659c397c5d5eae65ffbea8d06"
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": []
+      },
+      "cost": {
+        "actual_usd": null,
+        "known_actual_subtotal_usd": "0.15671022",
+        "charged_usd": "0.15951168",
+        "retained_reservation_or_charge_usd": "0.15951168",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/ac41502667bd4c3ca9a0ac4f32217e6a/report.json",
+        "bytes": 592449,
+        "sha256": "9da0ee97dd794f44d9ee13a3a884004c954e5072ad5d35e964e83edc92a9686d"
+      },
+      "campaign_row_pointer": "/rows/7"
+    },
+    {
+      "scenario_id": "nanogpt",
+      "cell_id": "fixed9-nanogpt",
+      "run_id": "29e3fae102274f1ca1b53b80fb6e7588",
+      "status": "needs_human",
+      "target_met": false,
+      "first_round_diagnosis": {
+        "category": "activations",
+        "truth_status": "unverified",
+        "ground_truth": null,
+        "raw_category_matches": null,
+        "valid": false,
+        "ready_for_patch": false,
+        "needs_more_info": true,
+        "valid_and_correct": false,
+        "ready_valid_and_correct": false,
+        "source": {
+          "path": "jobs/29e3fae102274f1ca1b53b80fb6e7588/rounds/01/diagnosis.json",
+          "bytes": 9580,
+          "sha256": "b2d442743258d2dd2a02e2135ca6522fd3ec8376a1e8ca11b60121afcc0c1c9a"
+        },
+        "category_pointer": "/diagnosis/root_causes/0/category",
+        "valid_pointer": "/valid",
+        "ready_pointer": "/ready_for_patch",
+        "issue_codes": [
+          "INVALID_EVIDENCE_RANGE",
+          "INVALID_EVIDENCE_RANGE"
+        ]
+      },
+      "cost": {
+        "actual_usd": null,
+        "known_actual_subtotal_usd": "0.0947056",
+        "charged_usd": "0.09892186",
+        "retained_reservation_or_charge_usd": "0.09892186",
+        "cost_resolved": true
+      },
+      "source_report": {
+        "path": "jobs/29e3fae102274f1ca1b53b80fb6e7588/report.json",
+        "bytes": 1171783,
+        "sha256": "2836854ab60fd4c77a233137598170f52a89adb9cd5bbfb7386fe8154637a4a5"
+      },
+      "campaign_row_pointer": "/rows/8"
+    }
+  ],
+  "whole_pool_accounting": {
+    "scope": "whole_authorized_development_pool_including_prior_campaign_charges",
+    "starting_pool_accounting": {
+      "scope_cap_usd": "4.890504400",
+      "scope_charged_usd": "0.66586280",
+      "scope_actual_usd": null,
+      "scope_encumbered_usd": "0",
+      "scope_remaining_usd": "4.224641600",
+      "all_costs_known": false,
+      "all_costs_resolved": true,
+      "run_states": [
+        {
+          "run_id": "06473a9d74f44d92a49edf565b008d11",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "19e7d7dbd8184a3c8154ce4802cb007a",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "49a74229bf4e43948db0eaabfeddf14a",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "78fc3b8b1a1742e4bc24b0890e7470c1",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "8f6874405d9a423ea51856e938213007",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "a8e54a09a32e42ec94c0dacfd7a31108",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "c6064b7f94db492db8a75626665d8824",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "d2a1601ccea94ec989459eeba1a423b6",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "e950e9a296bc44509c5fcfba381ee478",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "fe313c1f33e749feb609ba915e0eabe6",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        }
+      ],
+      "attempts": [
+        {
+          "attempt_id": "05761fd13a1640d0a4b8e7e03b2b394e",
+          "run_id": "49a74229bf4e43948db0eaabfeddf14a",
+          "charged_usd": "0.054775",
+          "actual_usd": "0.054775",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "0700bb2ae6a54858b2ee01c3f287df09",
+          "run_id": "e950e9a296bc44509c5fcfba381ee478",
+          "charged_usd": "0.00385062",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "08d6f15007a746c39a7bfe89f4fee2d4",
+          "run_id": "06473a9d74f44d92a49edf565b008d11",
+          "charged_usd": "0.00323556",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "1d07894324ba482ebb35dd0b0c730bc1",
+          "run_id": "d2a1601ccea94ec989459eeba1a423b6",
+          "charged_usd": "0.057943",
+          "actual_usd": "0.057943",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "27d4eff3c69341f7b5379fa190e31f14",
+          "run_id": "a8e54a09a32e42ec94c0dacfd7a31108",
+          "charged_usd": "0.048903",
+          "actual_usd": "0.048903",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "3a9160cb94ba46e189e6db2efd36a93c",
+          "run_id": "06473a9d74f44d92a49edf565b008d11",
+          "charged_usd": "0.055076",
+          "actual_usd": "0.055076",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "3b0a9780113e4c9a9df8981682b8d08f",
+          "run_id": "fe313c1f33e749feb609ba915e0eabe6",
+          "charged_usd": "0.04893",
+          "actual_usd": "0.04893",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "3b4a519e410f4197b3d566b02340b622",
+          "run_id": "fe313c1f33e749feb609ba915e0eabe6",
+          "charged_usd": "0.00287598",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "3da10716a79c464394f7dffd52d88ace",
+          "run_id": "a8e54a09a32e42ec94c0dacfd7a31108",
+          "charged_usd": "0.01525616",
+          "actual_usd": "0.01525616",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "3fa08cacba964803aa493958c15d54e6",
+          "run_id": "19e7d7dbd8184a3c8154ce4802cb007a",
+          "charged_usd": "0.042215",
+          "actual_usd": "0.042215",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "48885dffcc9e427182da30f36c4aa423",
+          "run_id": "19e7d7dbd8184a3c8154ce4802cb007a",
+          "charged_usd": "0.01632868",
+          "actual_usd": "0.01632868",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "5ee67a88387449b8a95a8a4e00e57112",
+          "run_id": "fe313c1f33e749feb609ba915e0eabe6",
+          "charged_usd": "0.01524516",
+          "actual_usd": "0.01524516",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "71365a19b64d474c995313f8d2f33030",
+          "run_id": "d2a1601ccea94ec989459eeba1a423b6",
+          "charged_usd": "0.01582464",
+          "actual_usd": "0.01582464",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "774b3e38b45048cab7b66989142d8fc2",
+          "run_id": "78fc3b8b1a1742e4bc24b0890e7470c1",
+          "charged_usd": "0.00251568",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "88d17b0b196a400e9e75013b7f53251d",
+          "run_id": "06473a9d74f44d92a49edf565b008d11",
+          "charged_usd": "0.01377964",
+          "actual_usd": "0.01377964",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "89131a654dbf44138a612e2e6e085ee2",
+          "run_id": "49a74229bf4e43948db0eaabfeddf14a",
+          "charged_usd": "0.00281202",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "ac1e54a05e2045ab96748943ad95798f",
+          "run_id": "c6064b7f94db492db8a75626665d8824",
+          "charged_usd": "0.075019",
+          "actual_usd": "0.075019",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "acef1c314a80459ba447d01a66cb5f7f",
+          "run_id": "c6064b7f94db492db8a75626665d8824",
+          "charged_usd": "0.0042861",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "ae95c69729c24647824530b27a5e6a1b",
+          "run_id": "d2a1601ccea94ec989459eeba1a423b6",
+          "charged_usd": "0.00275136",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "af1fd79301b3408a9b52bf1e0fa8a001",
+          "run_id": "78fc3b8b1a1742e4bc24b0890e7470c1",
+          "charged_usd": "0.01458392",
+          "actual_usd": "0.01458392",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "b1b0089126d245d8b85fefe6489ea9e0",
+          "run_id": "e950e9a296bc44509c5fcfba381ee478",
+          "charged_usd": "0.061193",
+          "actual_usd": "0.061193",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "c97efca650764f84801107f0be4e6015",
+          "run_id": "c6064b7f94db492db8a75626665d8824",
+          "charged_usd": "0.0183656",
+          "actual_usd": "0.0183656",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "c9f95f86fe0b4bc587ec83aac4f86e20",
+          "run_id": "e950e9a296bc44509c5fcfba381ee478",
+          "charged_usd": "0.01748888",
+          "actual_usd": "0.01748888",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "cc39e52b3f714b51b1f736d84af53fdc",
+          "run_id": "78fc3b8b1a1742e4bc24b0890e7470c1",
+          "charged_usd": "0.045184",
+          "actual_usd": "0.045184",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "d3278dc4d506495487b975b634f4722e",
+          "run_id": "49a74229bf4e43948db0eaabfeddf14a",
+          "charged_usd": "0.0050871",
+          "actual_usd": "0.0050871",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "d682009978a047849a1e8ad9e3eac4c4",
+          "run_id": "8f6874405d9a423ea51856e938213007",
+          "charged_usd": "0.01644864",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "reviewed_retained",
+          "resolved": true
+        },
+        {
+          "attempt_id": "d956cc9335e0423fad0872f2a2ae2d75",
+          "run_id": "a8e54a09a32e42ec94c0dacfd7a31108",
+          "charged_usd": "0.0028422",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "f0948dd6fb9f41099d22c70f5114f835",
+          "run_id": "19e7d7dbd8184a3c8154ce4802cb007a",
+          "charged_usd": "0.00304686",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        }
+      ],
+      "open_runs": [],
+      "halted_runs": [],
+      "unresolved_attempts": []
+    },
+    "latest_pool_accounting": {
+      "scope_cap_usd": "4.890504400",
+      "scope_charged_usd": "1.60437118",
+      "scope_actual_usd": null,
+      "scope_encumbered_usd": "0",
+      "scope_remaining_usd": "3.286133220",
+      "all_costs_known": false,
+      "all_costs_resolved": true,
+      "run_states": [
+        {
+          "run_id": "06473a9d74f44d92a49edf565b008d11",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "0fba6eeccc18411590b036557f7f9526",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "19e7d7dbd8184a3c8154ce4802cb007a",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "2868965cd88743308f3624dfa36112a5",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "29e3fae102274f1ca1b53b80fb6e7588",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "49a74229bf4e43948db0eaabfeddf14a",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "5f2b4b6416b24811ba2795ef922706c5",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "78fc3b8b1a1742e4bc24b0890e7470c1",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "831a56da4f3145c3bc53e586b491204e",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "8f6874405d9a423ea51856e938213007",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "a8e54a09a32e42ec94c0dacfd7a31108",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "c6064b7f94db492db8a75626665d8824",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "d24caaa6352c4f98ac80e98aac56bf8f",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "d2a1601ccea94ec989459eeba1a423b6",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "e950e9a296bc44509c5fcfba381ee478",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "eb45be0a25f54ff1a946715890670e4a",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        },
+        {
+          "run_id": "fe313c1f33e749feb609ba915e0eabe6",
+          "status": "closed",
+          "halt_reason": null,
+          "limit_usd": "0.6",
+          "budget_mode": "strict_reservation",
+          "day": "2026-10-30"
+        }
+      ],
+      "attempts": [
+        {
+          "attempt_id": "03e266d7350b4f4292d0795751f00710",
+          "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+          "charged_usd": "0.004152",
+          "actual_usd": "0.004152",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "05761fd13a1640d0a4b8e7e03b2b394e",
+          "run_id": "49a74229bf4e43948db0eaabfeddf14a",
+          "charged_usd": "0.054775",
+          "actual_usd": "0.054775",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "0700bb2ae6a54858b2ee01c3f287df09",
+          "run_id": "e950e9a296bc44509c5fcfba381ee478",
+          "charged_usd": "0.00385062",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "08a4d9b926e84f11ab0a22fb78f4a5dc",
+          "run_id": "2868965cd88743308f3624dfa36112a5",
+          "charged_usd": "0.045506",
+          "actual_usd": "0.045506",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "08d6f15007a746c39a7bfe89f4fee2d4",
+          "run_id": "06473a9d74f44d92a49edf565b008d11",
+          "charged_usd": "0.00323556",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "0bc7498b5f124beaba5e62acbe08d383",
+          "run_id": "0fba6eeccc18411590b036557f7f9526",
+          "charged_usd": "0.04986",
+          "actual_usd": "0.04986",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "0e57a3466bb9417aa50e710742bd7302",
+          "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+          "charged_usd": "0.05501424",
+          "actual_usd": "0.05501424",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "15174036b07240cea3f7881ce0419f0e",
+          "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+          "charged_usd": "0.05342124",
+          "actual_usd": "0.05342124",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "1d07894324ba482ebb35dd0b0c730bc1",
+          "run_id": "d2a1601ccea94ec989459eeba1a423b6",
+          "charged_usd": "0.057943",
+          "actual_usd": "0.057943",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "2132ef1762b34eeeb4e59301bde0cfe0",
+          "run_id": "d24caaa6352c4f98ac80e98aac56bf8f",
+          "charged_usd": "0.00294246",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "213611c7a238444c89dfd44c133d4ed9",
+          "run_id": "5f2b4b6416b24811ba2795ef922706c5",
+          "charged_usd": "0.00383382",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "255b6a8727204e64821386fc9f613715",
+          "run_id": "29e3fae102274f1ca1b53b80fb6e7588",
+          "charged_usd": "0.0193546",
+          "actual_usd": "0.0193546",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "272caf41966b42d6bb9e31c9a79cf9ff",
+          "run_id": "0fba6eeccc18411590b036557f7f9526",
+          "charged_usd": "0.00281124",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "27d4eff3c69341f7b5379fa190e31f14",
+          "run_id": "a8e54a09a32e42ec94c0dacfd7a31108",
+          "charged_usd": "0.048903",
+          "actual_usd": "0.048903",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "296e90b81e244fa790b3b3cc0214c5ab",
+          "run_id": "eb45be0a25f54ff1a946715890670e4a",
+          "charged_usd": "0.00274848",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "2a4c77401b2748e8a1b395b2914e99d7",
+          "run_id": "831a56da4f3145c3bc53e586b491204e",
+          "charged_usd": "0.0044634",
+          "actual_usd": "0.0044634",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "2ef2ee84e70d4887b9730797066161d6",
+          "run_id": "0fba6eeccc18411590b036557f7f9526",
+          "charged_usd": "0.0003978",
+          "actual_usd": "0.0003978",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "32618d9a075e4687a1d3b65ed8ecac3e",
+          "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+          "charged_usd": "0.0045798",
+          "actual_usd": "0.0045798",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "34ad18d2fe5d4561add00fa2bae33704",
+          "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+          "charged_usd": "0.0042759",
+          "actual_usd": "0.0042759",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "366a3500924d4bca96fa55b6238838a0",
+          "run_id": "5f2b4b6416b24811ba2795ef922706c5",
+          "charged_usd": "0.062034",
+          "actual_usd": "0.062034",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "36eafa99818e453b8d5742c6e1577bed",
+          "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+          "charged_usd": "0.055287",
+          "actual_usd": "0.055287",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "3a9160cb94ba46e189e6db2efd36a93c",
+          "run_id": "06473a9d74f44d92a49edf565b008d11",
+          "charged_usd": "0.055076",
+          "actual_usd": "0.055076",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "3b0a9780113e4c9a9df8981682b8d08f",
+          "run_id": "fe313c1f33e749feb609ba915e0eabe6",
+          "charged_usd": "0.04893",
+          "actual_usd": "0.04893",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "3b4a519e410f4197b3d566b02340b622",
+          "run_id": "fe313c1f33e749feb609ba915e0eabe6",
+          "charged_usd": "0.00287598",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "3da10716a79c464394f7dffd52d88ace",
+          "run_id": "a8e54a09a32e42ec94c0dacfd7a31108",
+          "charged_usd": "0.01525616",
+          "actual_usd": "0.01525616",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "3fa08cacba964803aa493958c15d54e6",
+          "run_id": "19e7d7dbd8184a3c8154ce4802cb007a",
+          "charged_usd": "0.042215",
+          "actual_usd": "0.042215",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "41c0344acc1a40b6bd92594b31828c68",
+          "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+          "charged_usd": "0.055511",
+          "actual_usd": "0.055511",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "4250860fa8a7456bb6dfa10aee9b9232",
+          "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+          "charged_usd": "0.01576964",
+          "actual_usd": "0.01576964",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "43e877aa9aa44f12b5848a5ad6c76592",
+          "run_id": "831a56da4f3145c3bc53e586b491204e",
+          "charged_usd": "0.01177392",
+          "actual_usd": "0.01177392",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "48885dffcc9e427182da30f36c4aa423",
+          "run_id": "19e7d7dbd8184a3c8154ce4802cb007a",
+          "charged_usd": "0.01632868",
+          "actual_usd": "0.01632868",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "49ad5c1fec9c46468cf1692ab1ce8d49",
+          "run_id": "831a56da4f3145c3bc53e586b491204e",
+          "charged_usd": "0.00293622",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "49b048f1784a47fe84a1cdb059cbff48",
+          "run_id": "2868965cd88743308f3624dfa36112a5",
+          "charged_usd": "0.01601392",
+          "actual_usd": "0.01601392",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "4dba6ac63f37433f8b914b77ddbb9fe8",
+          "run_id": "0fba6eeccc18411590b036557f7f9526",
+          "charged_usd": "0.0159034",
+          "actual_usd": "0.0159034",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "51524d607a584a86b4077188be2e8d30",
+          "run_id": "831a56da4f3145c3bc53e586b491204e",
+          "charged_usd": "0.01486592",
+          "actual_usd": "0.01486592",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "5a9a2ee73df943b99b60df22c3c0babc",
+          "run_id": "d24caaa6352c4f98ac80e98aac56bf8f",
+          "charged_usd": "0.01574416",
+          "actual_usd": "0.01574416",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "5bbe9fc9012744dc90c5b81bf5f2b595",
+          "run_id": "29e3fae102274f1ca1b53b80fb6e7588",
+          "charged_usd": "0.075351",
+          "actual_usd": "0.075351",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "5ee67a88387449b8a95a8a4e00e57112",
+          "run_id": "fe313c1f33e749feb609ba915e0eabe6",
+          "charged_usd": "0.01524516",
+          "actual_usd": "0.01524516",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "64cd87c80a2448eab448106da6191688",
+          "run_id": "5f2b4b6416b24811ba2795ef922706c5",
+          "charged_usd": "0.01690888",
+          "actual_usd": "0.01690888",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "654eef9eac4e4728a8c452f89b625123",
+          "run_id": "831a56da4f3145c3bc53e586b491204e",
+          "charged_usd": "0.042123",
+          "actual_usd": "0.042123",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "6f829019dace434198fbf952e5003f03",
+          "run_id": "eb45be0a25f54ff1a946715890670e4a",
+          "charged_usd": "0.057724",
+          "actual_usd": "0.057724",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "70e46ddbc4e24407b12d6bec1f1957fc",
+          "run_id": "29e3fae102274f1ca1b53b80fb6e7588",
+          "charged_usd": "0.00421626",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "71365a19b64d474c995313f8d2f33030",
+          "run_id": "d2a1601ccea94ec989459eeba1a423b6",
+          "charged_usd": "0.01582464",
+          "actual_usd": "0.01582464",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "774b3e38b45048cab7b66989142d8fc2",
+          "run_id": "78fc3b8b1a1742e4bc24b0890e7470c1",
+          "charged_usd": "0.00251568",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "79561aee48d9408a96a96eab6715eb34",
+          "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+          "charged_usd": "0.00280146",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "79a7f187ad8c409c910ef861585a9d1e",
+          "run_id": "0fba6eeccc18411590b036557f7f9526",
+          "charged_usd": "0.0063957",
+          "actual_usd": "0.0063957",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "7f10124200bc404f8639c07730fa7350",
+          "run_id": "d24caaa6352c4f98ac80e98aac56bf8f",
+          "charged_usd": "0.049423",
+          "actual_usd": "0.049423",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "851e6dd7349d4009ba62f6bcee4f4ca3",
+          "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+          "charged_usd": "0.0046062",
+          "actual_usd": "0.0046062",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "88bc8e31ff6847b5aecfc27282b872c1",
+          "run_id": "0fba6eeccc18411590b036557f7f9526",
+          "charged_usd": "0.0005718",
+          "actual_usd": "0.0005718",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "88d17b0b196a400e9e75013b7f53251d",
+          "run_id": "06473a9d74f44d92a49edf565b008d11",
+          "charged_usd": "0.01377964",
+          "actual_usd": "0.01377964",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "89131a654dbf44138a612e2e6e085ee2",
+          "run_id": "49a74229bf4e43948db0eaabfeddf14a",
+          "charged_usd": "0.00281202",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "93558239bfcc4384b3f668a61216da7f",
+          "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+          "charged_usd": "0.0047658",
+          "actual_usd": "0.0047658",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "a40af89f263040228a8d33457cf6cac0",
+          "run_id": "2868965cd88743308f3624dfa36112a5",
+          "charged_usd": "0.002484",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "ac1e54a05e2045ab96748943ad95798f",
+          "run_id": "c6064b7f94db492db8a75626665d8824",
+          "charged_usd": "0.075019",
+          "actual_usd": "0.075019",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "acef1c314a80459ba447d01a66cb5f7f",
+          "run_id": "c6064b7f94db492db8a75626665d8824",
+          "charged_usd": "0.0042861",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "ae95c69729c24647824530b27a5e6a1b",
+          "run_id": "d2a1601ccea94ec989459eeba1a423b6",
+          "charged_usd": "0.00275136",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "af1fd79301b3408a9b52bf1e0fa8a001",
+          "run_id": "78fc3b8b1a1742e4bc24b0890e7470c1",
+          "charged_usd": "0.01458392",
+          "actual_usd": "0.01458392",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "b1b0089126d245d8b85fefe6489ea9e0",
+          "run_id": "e950e9a296bc44509c5fcfba381ee478",
+          "charged_usd": "0.061193",
+          "actual_usd": "0.061193",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "ba8091fbfc14428a846725aaa71bdba4",
+          "run_id": "eb45be0a25f54ff1a946715890670e4a",
+          "charged_usd": "0.01725164",
+          "actual_usd": "0.01725164",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "bcb95cce4c054aa9b3a6adaddef399d4",
+          "run_id": "0fba6eeccc18411590b036557f7f9526",
+          "charged_usd": "0.04906424",
+          "actual_usd": "0.04906424",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "c97efca650764f84801107f0be4e6015",
+          "run_id": "c6064b7f94db492db8a75626665d8824",
+          "charged_usd": "0.0183656",
+          "actual_usd": "0.0183656",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "c9f95f86fe0b4bc587ec83aac4f86e20",
+          "run_id": "e950e9a296bc44509c5fcfba381ee478",
+          "charged_usd": "0.01748888",
+          "actual_usd": "0.01748888",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "cc08797ef6544404adc13d0ce1c4eb3b",
+          "run_id": "831a56da4f3145c3bc53e586b491204e",
+          "charged_usd": "0.0047613",
+          "actual_usd": "0.0047613",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "cc39e52b3f714b51b1f736d84af53fdc",
+          "run_id": "78fc3b8b1a1742e4bc24b0890e7470c1",
+          "charged_usd": "0.045184",
+          "actual_usd": "0.045184",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "cc719408974c42bfbf9279bbb2486e39",
+          "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+          "charged_usd": "0.0040962",
+          "actual_usd": "0.0040962",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "d3278dc4d506495487b975b634f4722e",
+          "run_id": "49a74229bf4e43948db0eaabfeddf14a",
+          "charged_usd": "0.0050871",
+          "actual_usd": "0.0050871",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "d682009978a047849a1e8ad9e3eac4c4",
+          "run_id": "8f6874405d9a423ea51856e938213007",
+          "charged_usd": "0.01644864",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "reviewed_retained",
+          "resolved": true
+        },
+        {
+          "attempt_id": "d956cc9335e0423fad0872f2a2ae2d75",
+          "run_id": "a8e54a09a32e42ec94c0dacfd7a31108",
+          "charged_usd": "0.0028422",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "dbf54350b4bf49cc827562fda4196d0e",
+          "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+          "charged_usd": "0.01779064",
+          "actual_usd": "0.01779064",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "f0948dd6fb9f41099d22c70f5114f835",
+          "run_id": "19e7d7dbd8184a3c8154ce4802cb007a",
+          "charged_usd": "0.00304686",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "f21df2c6614142e990916d95216915df",
+          "run_id": "0fba6eeccc18411590b036557f7f9526",
+          "charged_usd": "0.00101844",
+          "actual_usd": "0.00101844",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "f5e1b69164f64fb3839ebe7bf1f816c7",
+          "run_id": "0fba6eeccc18411590b036557f7f9526",
+          "charged_usd": "0.00088578",
+          "actual_usd": "0.00088578",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "f798955de51140a188b39462046b727c",
+          "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+          "charged_usd": "0.01378064",
+          "actual_usd": "0.01378064",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        },
+        {
+          "attempt_id": "f9dca9e0e4b944ec8c1656d7151340cc",
+          "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+          "charged_usd": "0.003183",
+          "actual_usd": null,
+          "settled": true,
+          "charge_status": "upper_bound",
+          "resolved": true
+        },
+        {
+          "attempt_id": "fd94af29ea27413ca3ab5815a1d28dc6",
+          "run_id": "831a56da4f3145c3bc53e586b491204e",
+          "charged_usd": "0.04010524",
+          "actual_usd": "0.04010524",
+          "settled": true,
+          "charge_status": "exact",
+          "resolved": true
+        }
+      ],
+      "open_runs": [],
+      "halted_runs": [],
+      "unresolved_attempts": []
+    },
+    "latest_is_unavailable": false,
+    "prior_actuals_still_unknown": [
+      {
+        "attempt_id": "0700bb2ae6a54858b2ee01c3f287df09",
+        "run_id": "e950e9a296bc44509c5fcfba381ee478",
+        "charged_usd": "0.00385062",
+        "actual_usd": null
+      },
+      {
+        "attempt_id": "08d6f15007a746c39a7bfe89f4fee2d4",
+        "run_id": "06473a9d74f44d92a49edf565b008d11",
+        "charged_usd": "0.00323556",
+        "actual_usd": null
+      },
+      {
+        "attempt_id": "3b4a519e410f4197b3d566b02340b622",
+        "run_id": "fe313c1f33e749feb609ba915e0eabe6",
+        "charged_usd": "0.00287598",
+        "actual_usd": null
+      },
+      {
+        "attempt_id": "774b3e38b45048cab7b66989142d8fc2",
+        "run_id": "78fc3b8b1a1742e4bc24b0890e7470c1",
+        "charged_usd": "0.00251568",
+        "actual_usd": null
+      },
+      {
+        "attempt_id": "89131a654dbf44138a612e2e6e085ee2",
+        "run_id": "49a74229bf4e43948db0eaabfeddf14a",
+        "charged_usd": "0.00281202",
+        "actual_usd": null
+      },
+      {
+        "attempt_id": "acef1c314a80459ba447d01a66cb5f7f",
+        "run_id": "c6064b7f94db492db8a75626665d8824",
+        "charged_usd": "0.0042861",
+        "actual_usd": null
+      },
+      {
+        "attempt_id": "ae95c69729c24647824530b27a5e6a1b",
+        "run_id": "d2a1601ccea94ec989459eeba1a423b6",
+        "charged_usd": "0.00275136",
+        "actual_usd": null
+      },
+      {
+        "attempt_id": "d682009978a047849a1e8ad9e3eac4c4",
+        "run_id": "8f6874405d9a423ea51856e938213007",
+        "charged_usd": "0.01644864",
+        "actual_usd": null
+      },
+      {
+        "attempt_id": "d956cc9335e0423fad0872f2a2ae2d75",
+        "run_id": "a8e54a09a32e42ec94c0dacfd7a31108",
+        "charged_usd": "0.0028422",
+        "actual_usd": null
+      },
+      {
+        "attempt_id": "f0948dd6fb9f41099d22c70f5114f835",
+        "run_id": "19e7d7dbd8184a3c8154ce4802cb007a",
+        "charged_usd": "0.00304686",
+        "actual_usd": null
+      }
+    ],
+    "campaign_charge_delta_usd": "0.93850838",
+    "campaign_charge_reconciled_to_saved_rows": true,
+    "actual_delta_is_not_inferred": true
+  },
+  "campaign_cost_scope": "R14 attempted rows only; excludes all starting-pool charges from earlier campaigns",
+  "currency_basis": "saved model-ledger USD; no invoice or tax inference",
+  "existing_summary_attempted_rows_only": {
+    "status": "measured",
+    "attempted_live_runs": 9,
+    "offline_fixture_rows_excluded": 0,
+    "target_met_count": 0,
+    "target_measured_denominator": 9,
+    "target_met_rate": 0.0,
+    "target_unknown_runs": 0,
+    "target_success_lower_bound": 0.0,
+    "first_cause_correct": 6,
+    "first_cause_scored_denominator": 7,
+    "first_cause_accuracy": null,
+    "first_cause_accuracy_among_scored": 0.8571428571428571,
+    "first_cause_unknown_runs": 2,
+    "first_cause_success_lower_bound": 0.6666666666666666,
+    "known_cost_usd": "0.91055144",
+    "total_cost_usd": null,
+    "unknown_cost_runs": 9,
+    "billing_complete": true,
+    "bounded_cost_runs": 9,
+    "unresolved_cost_runs": 0,
+    "conservative_total_usd": "0.93850838",
+    "failed_or_partial_runs": 9,
+    "measured_metrics": {
+      "peak_reduction_pct": {
+        "mean": null,
+        "measured_count": 0,
+        "unknown_count": 9,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "step_time_change_pct": {
+        "mean": null,
+        "measured_count": 0,
+        "unknown_count": 9,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "throughput_change_pct": {
+        "mean": null,
+        "measured_count": 0,
+        "unknown_count": 9,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "rounds": {
+        "mean": "1.444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444",
+        "measured_count": 9,
+        "unknown_count": 0,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "wall_seconds": {
+        "mean": "48.34797849914886877777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777778",
+        "measured_count": 9,
+        "unknown_count": 0,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "cost_usd": {
+        "mean": null,
+        "measured_count": 0,
+        "unknown_count": 9,
+        "basis": "available measured values only; missing values are not zero"
+      },
+      "numerical_equivalence": {
+        "equivalent": 0,
+        "comparable_count": 0,
+        "rate_among_comparable": null,
+        "not_comparable_or_unknown": 9
+      },
+      "failure_modes": {
+        "needs_human": 9
+      }
+    },
+    "outcomes": {
+      "patch_applied": {
+        "true_count": 3,
+        "false_count": 0,
+        "unknown_count": 6,
+        "known_count": 3
+      },
+      "selected_patch_applied": {
+        "true_count": 0,
+        "false_count": 9,
+        "unknown_count": 0,
+        "known_count": 9
+      },
+      "selected_completed": {
+        "true_count": 0,
+        "false_count": 0,
+        "unknown_count": 9,
+        "known_count": 0
+      }
+    },
+    "by_policy": {
+      "strict": {
+        "attempted": 9,
+        "target_met": 0,
+        "target_rate": 0.0,
+        "target_unknown": 0,
+        "first_cause_correct": 6,
+        "first_cause_scored": 7,
+        "first_cause_accuracy": null,
+        "first_cause_accuracy_among_scored": 0.8571428571428571,
+        "first_cause_unknown": 2,
+        "known_cost_usd": "0.91055144",
+        "total_cost_usd": null,
+        "unknown_cost_runs": 9,
+        "metrics": {
+          "peak_reduction_pct": {
+            "mean": null,
+            "measured_count": 0,
+            "unknown_count": 9,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "step_time_change_pct": {
+            "mean": null,
+            "measured_count": 0,
+            "unknown_count": 9,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "throughput_change_pct": {
+            "mean": null,
+            "measured_count": 0,
+            "unknown_count": 9,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "rounds": {
+            "mean": "1.444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444",
+            "measured_count": 9,
+            "unknown_count": 0,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "wall_seconds": {
+            "mean": "48.34797849914886877777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777778",
+            "measured_count": 9,
+            "unknown_count": 0,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "cost_usd": {
+            "mean": null,
+            "measured_count": 0,
+            "unknown_count": 9,
+            "basis": "available measured values only; missing values are not zero"
+          },
+          "numerical_equivalence": {
+            "equivalent": 0,
+            "comparable_count": 0,
+            "rate_among_comparable": null,
+            "not_comparable_or_unknown": 9
+          },
+          "failure_modes": {
+            "needs_human": 9
+          }
+        },
+        "billing_complete": true,
+        "bounded_cost_runs": 9,
+        "unresolved_cost_runs": 0,
+        "conservative_total_usd": "0.93850838"
+      }
+    },
+    "by_condition": {
+      "full_ultra": {
+        "attempted": 9,
+        "target_met": 0,
+        "first_cause_scored": 7,
+        "first_cause_correct": 6
+      },
+      "traceback_ultra": {
+        "attempted": 0,
+        "target_met": 0,
+        "first_cause_scored": 0,
+        "first_cause_correct": 0
+      },
+      "full_super": {
+        "attempted": 0,
+        "target_met": 0,
+        "first_cause_scored": 0,
+        "first_cause_correct": 0
+      }
+    }
+  },
+  "limitations": [
+    "R14 is DEVELOPMENT_REPAIR_FOLLOWUP, not a rerun or alias of FINAL48 F3.",
+    "Whole-pool snapshots preserve all starting-pool charges, including prior R12 and R13. R14 own costs are never inferred by subtracting unknown actual totals.",
+    "An unavailable terminal accounting read stays unavailable; last_known_accounting is not promoted to current truth.",
+    "Without caller-confirmed terminal review this is a provisional snapshot; no final threshold conclusion is emitted.",
+    "Retained reservations or charges are not exact provider spending; unresolved actuals remain null.",
+    "Saved round 01 may follow same-round bounded supplements; it is not necessarily the first HTTP response.",
+    "Unknown/unverified truth is neither correct nor incorrect; every headline denominator stays nine.",
+    "Memory threshold is not valid-first-cause or overall acceptance.",
+    "Public rows retain historical raw category matching; validity and readiness are separate in this summary.",
+    "Staging registry is a proposed single entry to review and merge, never replace the live registry.",
+    "No ledger/invoice or service/process re-audit; fees derive only from saved usage and final settlement metadata."
+  ]
+}

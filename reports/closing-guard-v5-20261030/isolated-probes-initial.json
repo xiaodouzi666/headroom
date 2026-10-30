@@ -1,0 +1,353 @@
+{
+  "scope": "isolated_parser_and_audit_function_probes_only_no_subprocess_or_docker_dispatch",
+  "v4_sha256": "eb54c81fac699d94f3b48d5f6802404220e41fc7b24a9a0da58a4be4733464cb",
+  "v5_sha256": "4386e0b53854c4fbd96378dfccabdb9ebfd267a2e4d0250b37a287d939fa70d0",
+  "cases": [
+    {
+      "expected_allowed": true,
+      "allowed": true,
+      "argv": [
+        "docker",
+        "create",
+        "--pull",
+        "never",
+        "--network",
+        "none",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "create",
+        "--network",
+        "none",
+        "--pull",
+        "always",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "create",
+        "--network",
+        "none",
+        "--pull",
+        "missing",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "create",
+        "--network",
+        "none",
+        "--pull",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "create",
+        "--network",
+        "none",
+        "--pull=never",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "create",
+        "--network",
+        "none",
+        "--pull",
+        "NEVER",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "create",
+        "--network",
+        "none",
+        "--pull",
+        "",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "create",
+        "--network",
+        "none",
+        "--pull",
+        "never",
+        "--gpus",
+        "all",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "create",
+        "--network",
+        "none",
+        "--pull",
+        "never",
+        "--device",
+        "/dev/nvidia0",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "create",
+        "--network",
+        "none",
+        "--pull",
+        "never",
+        "--runtime=nvidia",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "create",
+        "--network",
+        "none",
+        "--pull",
+        "never",
+        "--unknown-host-flag",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "create",
+        "--pull",
+        "never",
+        "--network",
+        "host",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": true,
+      "allowed": true,
+      "argv": [
+        "docker",
+        "run",
+        "--pull",
+        "never",
+        "--network",
+        "none",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "run",
+        "--network",
+        "none",
+        "--pull",
+        "always",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "run",
+        "--network",
+        "none",
+        "--pull",
+        "missing",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "run",
+        "--network",
+        "none",
+        "--pull",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "run",
+        "--network",
+        "none",
+        "--pull=never",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "run",
+        "--network",
+        "none",
+        "--pull",
+        "NEVER",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "run",
+        "--network",
+        "none",
+        "--pull",
+        "",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "run",
+        "--network",
+        "none",
+        "--pull",
+        "never",
+        "--gpus",
+        "all",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "run",
+        "--network",
+        "none",
+        "--pull",
+        "never",
+        "--device",
+        "/dev/nvidia0",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "run",
+        "--network",
+        "none",
+        "--pull",
+        "never",
+        "--runtime=nvidia",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "run",
+        "--network",
+        "none",
+        "--pull",
+        "never",
+        "--unknown-host-flag",
+        "sha256:fixture",
+        "python"
+      ]
+    },
+    {
+      "expected_allowed": false,
+      "allowed": false,
+      "argv": [
+        "docker",
+        "run",
+        "--pull",
+        "never",
+        "--network",
+        "host",
+        "sha256:fixture",
+        "python"
+      ]
+    }
+  ],
+  "all_passed": true,
+  "v4_unchanged": true
+}

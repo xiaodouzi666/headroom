@@ -1,0 +1,246 @@
+{
+  "scope": "four_existing_CPU_Docker_tests_only_after_root_independent_v5_review_no_GPU_models_or_production_DB",
+  "v4_sha256": "eb54c81fac699d94f3b48d5f6802404220e41fc7b24a9a0da58a4be4733464cb",
+  "v5_sha256": "7fbbde0fe3942a2ea6675dcd3ede9141a45f57814208bce3b130a9e143539cc5",
+  "hooks_sha256": "0781d54b5c34b7edddb5502f6d78d5c91be995bca53b91ceb5f7ab5877e22686",
+  "isolated_parser_probes": 32,
+  "junit": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "4",
+    "time": "62.671",
+    "timestamp": "2026-10-30T12:51:24.870391+01:00",
+    "hostname": "ubuntu"
+  },
+  "pytest_exit_code": 0,
+  "driver_transport_note": "SSH returned255 after durable exit0/JUnit/log were written; reconnected read-only, no pytest process remained, no test rerun",
+  "subruns": [
+    {
+      "path": "/tmp/headroom-constructor-v5-cpu-20261030/test_real_cpu_hard_stop_during0/runs/f76acab803464426aa844db43abdc4f7/result.json",
+      "result_sha256": "9137a08e8e84956f954cadbdb881ffd9acb3c607670384611bd0de7c95ee235d",
+      "status": "timeout",
+      "classification_scope": "CPU capture; existing test may synthesize OOM label, not a GPU measurement",
+      "steps": 0,
+      "capture_pid": 1,
+      "capture_complete": false,
+      "image_id": "sha256:5703e9edc41be02a69ba7bdf4eb9e5126a5f8915e1dd235ab9fe94b9a412afe5",
+      "execution_returncode": -9,
+      "timed_out": true,
+      "cleanup_verified": true,
+      "artifact_export": {
+        "files": 8,
+        "bytes": 6281,
+        "export_verified": true
+      },
+      "capture_record_pids": [
+        1
+      ],
+      "source_entrypoint": null,
+      "constructor_observation": {
+        "successful_base_constructor_returns": 0,
+        "complete": false,
+        "scope": "Metadata from groups after successful torch.optim.Optimizer.__init__; not custom-subclass completion or an optimizer update. Later step/graph observations may also add identities. No tensor values are read or copied."
+      }
+    },
+    {
+      "path": "/tmp/headroom-constructor-v5-cpu-20261030/test_real_cpu_helper_and_train0/runs/7ca95d4435dc488c8e742bae6991dc59/result.json",
+      "result_sha256": "c6ed5a7c258623fdac47f1d03fb4cf415216d45827b707c690ef66e98ff109cb",
+      "status": "completed",
+      "classification_scope": "CPU capture; existing test may synthesize OOM label, not a GPU measurement",
+      "steps": 20,
+      "capture_pid": 7,
+      "capture_complete": true,
+      "image_id": "sha256:5703e9edc41be02a69ba7bdf4eb9e5126a5f8915e1dd235ab9fe94b9a412afe5",
+      "execution_returncode": 1,
+      "timed_out": false,
+      "cleanup_verified": true,
+      "artifact_export": {
+        "files": 19,
+        "bytes": 33551,
+        "export_verified": true
+      },
+      "capture_record_pids": [
+        7,
+        11
+      ],
+      "source_entrypoint": "/source/train.py",
+      "constructor_observation": {
+        "successful_base_constructor_returns": 1,
+        "complete": true,
+        "scope": "Metadata from groups after successful torch.optim.Optimizer.__init__; not custom-subclass completion or an optimizer update. Later step/graph observations may also add identities. No tensor values are read or copied."
+      }
+    },
+    {
+      "path": "/tmp/headroom-constructor-v5-cpu-20261030/test_real_cpu_helper_and_train0/runs/d4a8980bf8544706a0c3f20c7cbe45ea/result.json",
+      "result_sha256": "2d9716bd57645773c2008fcf95fc0f28d7a31486e75accc6b65b834df63043da",
+      "status": "completed",
+      "classification_scope": "CPU capture; existing test may synthesize OOM label, not a GPU measurement",
+      "steps": 20,
+      "capture_pid": 7,
+      "capture_complete": true,
+      "image_id": "sha256:5703e9edc41be02a69ba7bdf4eb9e5126a5f8915e1dd235ab9fe94b9a412afe5",
+      "execution_returncode": 1,
+      "timed_out": false,
+      "cleanup_verified": true,
+      "artifact_export": {
+        "files": 19,
+        "bytes": 33558,
+        "export_verified": true
+      },
+      "capture_record_pids": [
+        7,
+        11
+      ],
+      "source_entrypoint": "/source/train.py",
+      "constructor_observation": {
+        "successful_base_constructor_returns": 1,
+        "complete": true,
+        "scope": "Metadata from groups after successful torch.optim.Optimizer.__init__; not custom-subclass completion or an optimizer update. Later step/graph observations may also add identities. No tensor values are read or copied."
+      }
+    },
+    {
+      "path": "/tmp/headroom-constructor-v5-cpu-20261030/test_real_cpu_helper_and_train0/runs/f47ae63504f44c1c81006b431ddce1fc/result.json",
+      "result_sha256": "dcbe23a90e90e8de16a595439fc964ca773c254d8d95059f08438697887eb765",
+      "status": "oom",
+      "classification_scope": "CPU capture; existing test may synthesize OOM label, not a GPU measurement",
+      "steps": 0,
+      "capture_pid": 7,
+      "capture_complete": true,
+      "image_id": "sha256:5703e9edc41be02a69ba7bdf4eb9e5126a5f8915e1dd235ab9fe94b9a412afe5",
+      "execution_returncode": 1,
+      "timed_out": false,
+      "cleanup_verified": true,
+      "artifact_export": {
+        "files": 19,
+        "bytes": 21351,
+        "export_verified": true
+      },
+      "capture_record_pids": [
+        7,
+        11
+      ],
+      "source_entrypoint": "/source/train.py",
+      "constructor_observation": {
+        "successful_base_constructor_returns": 0,
+        "complete": false,
+        "scope": "Metadata from groups after successful torch.optim.Optimizer.__init__; not custom-subclass completion or an optimizer update. Later step/graph observations may also add identities. No tensor values are read or copied."
+      }
+    },
+    {
+      "path": "/tmp/headroom-constructor-v5-cpu-20261030/test_real_cpu_helper_and_train1/runs/05491c96a3384820ba460320f0c683e7/result.json",
+      "result_sha256": "aeefe13cca65ea845acb7e8f38c5c4775303f7134f4ca620dd1c7c776f9cc321",
+      "status": "completed",
+      "classification_scope": "CPU capture; existing test may synthesize OOM label, not a GPU measurement",
+      "steps": 20,
+      "capture_pid": 11,
+      "capture_complete": true,
+      "image_id": "sha256:5703e9edc41be02a69ba7bdf4eb9e5126a5f8915e1dd235ab9fe94b9a412afe5",
+      "execution_returncode": 1,
+      "timed_out": false,
+      "cleanup_verified": true,
+      "artifact_export": {
+        "files": 19,
+        "bytes": 33549,
+        "export_verified": true
+      },
+      "capture_record_pids": [
+        7,
+        11
+      ],
+      "source_entrypoint": "/source/train.py",
+      "constructor_observation": {
+        "successful_base_constructor_returns": 1,
+        "complete": true,
+        "scope": "Metadata from groups after successful torch.optim.Optimizer.__init__; not custom-subclass completion or an optimizer update. Later step/graph observations may also add identities. No tensor values are read or copied."
+      }
+    },
+    {
+      "path": "/tmp/headroom-constructor-v5-cpu-20261030/test_real_cpu_helper_and_train1/runs/0f596eb8d72442e0ad7055d3c4d4fd88/result.json",
+      "result_sha256": "ff62203aa79f220b26fb3ac1e83bd23fd10c06f84409e7d81cd04531da7a9aa4",
+      "status": "completed",
+      "classification_scope": "CPU capture; existing test may synthesize OOM label, not a GPU measurement",
+      "steps": 20,
+      "capture_pid": 11,
+      "capture_complete": true,
+      "image_id": "sha256:5703e9edc41be02a69ba7bdf4eb9e5126a5f8915e1dd235ab9fe94b9a412afe5",
+      "execution_returncode": 1,
+      "timed_out": false,
+      "cleanup_verified": true,
+      "artifact_export": {
+        "files": 19,
+        "bytes": 33548,
+        "export_verified": true
+      },
+      "capture_record_pids": [
+        7,
+        11
+      ],
+      "source_entrypoint": "/source/train.py",
+      "constructor_observation": {
+        "successful_base_constructor_returns": 1,
+        "complete": true,
+        "scope": "Metadata from groups after successful torch.optim.Optimizer.__init__; not custom-subclass completion or an optimizer update. Later step/graph observations may also add identities. No tensor values are read or copied."
+      }
+    },
+    {
+      "path": "/tmp/headroom-constructor-v5-cpu-20261030/test_real_cpu_helper_and_train1/runs/6d1b9de04e5c47edbb0a37fa843318ee/result.json",
+      "result_sha256": "9048751afd17700dd2ec82f15d0a22a182aecef219536b00f338ae12f4563e9a",
+      "status": "oom",
+      "classification_scope": "CPU capture; existing test may synthesize OOM label, not a GPU measurement",
+      "steps": 0,
+      "capture_pid": 11,
+      "capture_complete": true,
+      "image_id": "sha256:5703e9edc41be02a69ba7bdf4eb9e5126a5f8915e1dd235ab9fe94b9a412afe5",
+      "execution_returncode": 1,
+      "timed_out": false,
+      "cleanup_verified": true,
+      "artifact_export": {
+        "files": 19,
+        "bytes": 21353,
+        "export_verified": true
+      },
+      "capture_record_pids": [
+        7,
+        11
+      ],
+      "source_entrypoint": "/source/train.py",
+      "constructor_observation": {
+        "successful_base_constructor_returns": 0,
+        "complete": false,
+        "scope": "Metadata from groups after successful torch.optim.Optimizer.__init__; not custom-subclass completion or an optimizer update. Later step/graph observations may also add identities. No tensor values are read or copied."
+      }
+    },
+    {
+      "path": "/tmp/headroom-constructor-v5-cpu-20261030/test_real_cpu_python_parent_wa0/watch/9441b39180c54e4aa2b710d823f69328/lab/b2b15dc96ae74ae3a195858c397dda70/result.json",
+      "result_sha256": "432a70b6057113a2cf80b4c61e0a94ea3e52f253a268203f8fd72e8946b89ab3",
+      "status": "oom",
+      "classification_scope": "CPU capture; existing test may synthesize OOM label, not a GPU measurement",
+      "steps": 0,
+      "capture_pid": 10,
+      "capture_complete": true,
+      "image_id": "sha256:5703e9edc41be02a69ba7bdf4eb9e5126a5f8915e1dd235ab9fe94b9a412afe5",
+      "execution_returncode": 1,
+      "timed_out": false,
+      "cleanup_verified": true,
+      "artifact_export": {
+        "files": 19,
+        "bytes": 21368,
+        "export_verified": true
+      },
+      "capture_record_pids": [
+        1,
+        10
+      ],
+      "source_entrypoint": "/source/train.py",
+      "constructor_observation": {
+        "successful_base_constructor_returns": 0,
+        "complete": false,
+        "scope": "Metadata from groups after successful torch.optim.Optimizer.__init__; not custom-subclass completion or an optimizer update. Later step/graph observations may also add identities. No tensor values are read or copied."
+      }
+    }
+  ],
+  "all_subrun_export_and_cleanup_verified": true,
+  "real_gpu_acceptance_success_claimed": false
+}

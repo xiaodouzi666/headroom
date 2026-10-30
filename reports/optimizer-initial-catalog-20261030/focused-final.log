@@ -1,0 +1,199 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+...........................................................F............ [ 80%]
+..............FFF.                                                       [100%]
+=================================== FAILURES ===================================
+______ test_real_cpu_hard_stop_during_serialization_keeps_partial_timeout ______
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-509/test_real_cpu_hard_stop_during0')
+
+    def test_real_cpu_hard_stop_during_serialization_keeps_partial_timeout(tmp_path):
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "slow_serialization.py"
+        script.write_text(
+            "import time\n"
+            "from headroom.lab import hooks\n"
+            "def blocked_conversion(value):\n"
+            "    time.sleep(60)\n"
+            "hooks.encode_snapshot = blocked_conversion\n"
+            "while True:\n"
+            "    time.sleep(0.02)\n"
+        )
+        result = run_script(script, device="cpu", max_seconds=6, run_root=tmp_path / "runs")
+>       assert result["status"] == "timeout" and result["execution"]["timed_out"], result
+E       AssertionError: {'status': 'error', 'reason': 'ARTIFACT_EXPORT_FAILED', 'execution_capture': {'captured_process_count': 1, 'single_pyt...rypoint': False, 'complete': False, 'invocations_complete': False, ...}, 'selected_capture_relative': 'artifacts', ...}
+E       assert ('error' == 'timeout'
+E         
+E         - timeout
+E         + error)
+
+tests/test_lab_finalize.py:161: AssertionError
+__ test_real_cpu_helper_and_training_replay_target_args_and_reference[False] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-509/test_real_cpu_helper_and_train0')
+helper_first = False
+
+    @pytest.mark.parametrize("helper_first", [False, True])
+    def test_real_cpu_helper_and_training_replay_target_args_and_reference(tmp_path, helper_first):
+        from headroom.verify.runner import verify_script
+    
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "train.py"
+        script.write_text(
+            "import argparse, torch\np=argparse.ArgumentParser()\n"
+            "p.add_argument('--batch', type=int, default=8)\na=p.parse_args()\n"
+            "if a.batch == 8:\n    raise RuntimeError('synthetic CPU initial failure')\n"
+            "m=torch.nn.Linear(1,1)\no=torch.optim.SGD(m.parameters(),lr=0.01)\n"
+            "x=torch.ones(a.batch,1)\nfor _ in range(30):\n"
+            "    o.zero_grad()\n    loss=m(x).square().mean()\n    loss.backward()\n    o.step()\n"
+        )
+        helper = "python -c \"print('helper-complete')\"\n"
+        training = 'python train.py "$@"\nresult=$?\n'
+        (source / "launch.sh").write_text(
+            (helper + training if helper_first else training + helper) + 'exit "$result"\n'
+        )
+        command = ["/bin/sh", "launch.sh", "--batch", "8"]
+        raw = runner.run_argv(source, command, run_root=tmp_path / "runs", device="cpu")
+>       baseline = synthesize_unique_target_oom(raw)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_multicapture.py:351: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = {'status': 'error', 'reason': 'ARTIFACT_EXPORT_FAILED', 'execution_capture': {'captured_process_count': 1, 'single_pyt...rypoint': False, 'complete': False, 'invocations_complete': False, ...}, 'selected_capture_relative': 'artifacts', ...}
+
+    def synthesize_unique_target_oom(result):
+        """Relabel only a copied test capture; preserve original CPU evidence beside it."""
+        run = Path(result["run_dir"])
+        manifest = json.loads((run / "manifest.json").read_text())
+        records, _ = runner._read_capture_roster(run, manifest)
+>       target = next(
+            row
+            for row in records
+            if (
+                (row["capture"] or {}).get("execution_entrypoint", {}).get("main_file")
+                == "/source/train.py"
+            )
+        )
+E       StopIteration
+
+tests/test_multicapture.py:125: StopIteration
+___ test_real_cpu_helper_and_training_replay_target_args_and_reference[True] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-509/test_real_cpu_helper_and_train1')
+helper_first = True
+
+    @pytest.mark.parametrize("helper_first", [False, True])
+    def test_real_cpu_helper_and_training_replay_target_args_and_reference(tmp_path, helper_first):
+        from headroom.verify.runner import verify_script
+    
+        source = tmp_path / "source"
+        source.mkdir()
+        script = source / "train.py"
+        script.write_text(
+            "import argparse, torch\np=argparse.ArgumentParser()\n"
+            "p.add_argument('--batch', type=int, default=8)\na=p.parse_args()\n"
+            "if a.batch == 8:\n    raise RuntimeError('synthetic CPU initial failure')\n"
+            "m=torch.nn.Linear(1,1)\no=torch.optim.SGD(m.parameters(),lr=0.01)\n"
+            "x=torch.ones(a.batch,1)\nfor _ in range(30):\n"
+            "    o.zero_grad()\n    loss=m(x).square().mean()\n    loss.backward()\n    o.step()\n"
+        )
+        helper = "python -c \"print('helper-complete')\"\n"
+        training = 'python train.py "$@"\nresult=$?\n'
+        (source / "launch.sh").write_text(
+            (helper + training if helper_first else training + helper) + 'exit "$result"\n'
+        )
+        command = ["/bin/sh", "launch.sh", "--batch", "8"]
+        raw = runner.run_argv(source, command, run_root=tmp_path / "runs", device="cpu")
+>       baseline = synthesize_unique_target_oom(raw)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_multicapture.py:351: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = {'status': 'error', 'reason': 'ARTIFACT_EXPORT_FAILED', 'execution_capture': {'captured_process_count': 1, 'single_pyt...rypoint': False, 'complete': False, 'invocations_complete': False, ...}, 'selected_capture_relative': 'artifacts', ...}
+
+    def synthesize_unique_target_oom(result):
+        """Relabel only a copied test capture; preserve original CPU evidence beside it."""
+        run = Path(result["run_dir"])
+        manifest = json.loads((run / "manifest.json").read_text())
+        records, _ = runner._read_capture_roster(run, manifest)
+>       target = next(
+            row
+            for row in records
+            if (
+                (row["capture"] or {}).get("execution_entrypoint", {}).get("main_file")
+                == "/source/train.py"
+            )
+        )
+E       StopIteration
+
+tests/test_multicapture.py:125: StopIteration
+___________ test_real_cpu_python_parent_watch_hands_off_child_source ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-509/test_real_cpu_python_parent_wa0')
+
+    def test_real_cpu_python_parent_watch_hands_off_child_source(tmp_path):
+        from headroom.watch import watch_command
+    
+        source = tmp_path / "parent-source"
+        source.mkdir()
+        (source / "train.py").write_text("raise RuntimeError('synthetic CPU failure')\n")
+        (source / "launcher.py").write_text(
+            "import subprocess, sys\n"
+            "child = subprocess.call([sys.executable, 'train.py', '--batch', '8'])\n"
+            "raise SystemExit(child)\n"
+        )
+        command = ["python", "launcher.py"]
+        requests = []
+    
+        def lab(root, argv, **options):
+            options["device"] = "cpu"
+            return synthesize_unique_target_oom(runner.run_argv(root, argv, **options))
+    
+        def repair(request, **kwargs):
+            requests.append(request)
+            return {"status": "needs_human", "target_met": False}
+    
+>       result = watch_command(
+            command,
+            source_root=source,
+            run_root=tmp_path / "watch",
+            device="cuda",
+            lab_runner=lab,
+            fix_runner=repair,
+        )
+
+tests/test_multicapture.py:406: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+headroom/watch.py:122: in watch_command
+    result = (lab_runner or run_argv)(
+tests/test_multicapture.py:400: in lab
+    return synthesize_unique_target_oom(runner.run_argv(root, argv, **options))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = {'status': 'error', 'reason': 'ARTIFACT_EXPORT_FAILED', 'execution_capture': {'captured_process_count': 1, 'single_pyt...rypoint': False, 'complete': False, 'invocations_complete': False, ...}, 'selected_capture_relative': 'artifacts', ...}
+
+    def synthesize_unique_target_oom(result):
+        """Relabel only a copied test capture; preserve original CPU evidence beside it."""
+        run = Path(result["run_dir"])
+        manifest = json.loads((run / "manifest.json").read_text())
+        records, _ = runner._read_capture_roster(run, manifest)
+>       target = next(
+            row
+            for row in records
+            if (
+                (row["capture"] or {}).get("execution_entrypoint", {}).get("main_file")
+                == "/source/train.py"
+            )
+        )
+E       StopIteration
+
+tests/test_multicapture.py:125: StopIteration
+=========================== short test summary info ============================
+FAILED tests/test_lab_finalize.py::test_real_cpu_hard_stop_during_serialization_keeps_partial_timeout
+FAILED tests/test_multicapture.py::test_real_cpu_helper_and_training_replay_target_args_and_reference[False]
+FAILED tests/test_multicapture.py::test_real_cpu_helper_and_training_replay_target_args_and_reference[True]
+FAILED tests/test_multicapture.py::test_real_cpu_python_parent_watch_hands_off_child_source

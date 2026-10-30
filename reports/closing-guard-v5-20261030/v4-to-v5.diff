@@ -1,0 +1,50 @@
+--- reports/final48h-closing-regression-20261029/closing_guarded_v4.py
++++ reports/final48h-closing-regression-20261029/closing_guarded_v5.py
+@@ -185,7 +185,12 @@
+         if name in {"--gpus", "--device", "--device-cgroup-rule", "--device-read-bps",
+                     "--device-write-bps", "--privileged", "--runtime"}:
+             raise PermissionError("Closing regression denies privileged/device Docker")
+-        if name in flags:
++        if name == "--pull":
++            if word != "--pull" or index + 1 >= len(words) or words[index + 1] != "never":
++                raise PermissionError("Closing regression permits exact --pull never only")
++            options.append(("--pull", "never"))
++            index += 2
++        elif name in flags:
+             options.append((name, None))
+             index += 1
+         elif name in takes_value:
+@@ -236,7 +241,7 @@
+                 raise PermissionError("Closing regression denies Docker network/build/exec")
+             if words[1] in {"create","run"}:
+                 options=docker_options(words)
+-                if ("--network","none") not in options:
++                if [value for name, value in options if name == "--network"] != ["none"]:
+                     raise PermissionError("Closing regression requires CPU Docker network none")
+ sys.addaudithook(closing_audit)
+ 
+@@ -295,6 +300,24 @@
+         os.close(descriptor)
+     closing_audit("subprocess.Popen",(None,["docker","create","--network","none","sha256:fixture","python","train.py","--device","cpu"],None,None))
+     checks["cpu_workload_device_argument"]="allowed"
++    for verb in ("create", "run"):
++        closing_audit("subprocess.Popen",(None,["docker",verb,"--pull","never","--network","none","sha256:fixture","python"],None,None))
++    checks["cpu_docker_exact_pull_never"]="allowed"
++    for options in (
++        ["--pull","always"], ["--pull","missing"], ["--pull"],
++        ["--pull=never"], ["--pull","NEVER"],
++    ):
++        for verb in ("create", "run"):
++            try: closing_audit("subprocess.Popen",(None,["docker",verb,"--network","none",*options,"sha256:fixture","python"],None,None))
++            except PermissionError: pass
++            else: raise AssertionError("Closing exact pull-never guard missing")
++    checks["cpu_docker_other_pull_modes"]="denied"
++    for networks in (["--network","none","--network","host"], ["--network","none","--network","none"]):
++        for verb in ("create", "run"):
++            try: closing_audit("subprocess.Popen",(None,["docker",verb,"--pull","never",*networks,"sha256:fixture","python"],None,None))
++            except PermissionError: pass
++            else: raise AssertionError("Closing exact single-network-none guard missing")
++    checks["duplicate_docker_network_options"]="denied"
+     for words in (
+         ["docker","create","--network","none","--device","/dev/nvidia0","sha256:fixture","python"],
+         ["docker","create","--network","none","--runtime=nvidia","sha256:fixture","python"],

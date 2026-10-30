@@ -1,0 +1,47 @@
+{
+  "schema": "headroom.reference-scratch.integration-verification.v1",
+  "utc": "2026-10-30T12:01:53.862797+00:00",
+  "scope": "one CPU Docker plumbing smoke and one separately authorized tiny CUDA RPC-spill smoke; not fixed-nine acceptance",
+  "cpu": {
+    "run_id": "e07190a86b4948978a2797812a2568cc",
+    "steps": 3,
+    "status": "completed",
+    "request_verified": true,
+    "expected_cuda_spill": false,
+    "host_peak_bytes": 0,
+    "cleanup_verified": true,
+    "receipt_sha256": "58b18cee4200b26c9888dd0e8f4a2a2ce250256a81f36ac1c7fcc4abf1594d4d",
+    "guarded_result": "1 passed in 5.69s"
+  },
+  "cuda": {
+    "run_id": "b430d596fb6647a2b6117d37fafa1ef5",
+    "steps": 3,
+    "status": "completed",
+    "request_verified": true,
+    "cuda_copies": 63,
+    "unpacks": 63,
+    "disk_cap_bytes": 16777216,
+    "host_peak_bytes": 396900,
+    "host_bytes_written": 396900,
+    "rpc_requests": 3087,
+    "capture_wall_seconds": 3.29043255886063,
+    "cleanup_verified": true,
+    "gpu_after_processes": [],
+    "source_unchanged": true,
+    "receipt_sha256": "b975331c2434bcf09db691a8f1d08c31d7f50d1788a3eb89300e22cdcf835479"
+  },
+  "public_artifact_cap_bytes": 536870912,
+  "provider_calls": 0,
+  "fixed_nine_score_changed": false,
+  "limitation": "Tiny tensors establish real CUDA RPC plumbing and cleanup; they do not establish full-size 24+ GiB throughput or twenty-update numerical acceptance.",
+  "implementation_hashes": {
+    "headroom/lab/reference_scratch.py": "7d22d88fe5a245f1b2b17b3d94be8b91efaf97b77ead4a66f537e724706cc6a2",
+    "headroom/lab/reference_scratch_lifecycle.py": "c7059fda2012a047f6f2a6b9bbd0ed62e73ebbed6902d173afee0ebd4cb85011",
+    "headroom/lab/runner.py": "246f573e357833b52cfb2dcd10080de8cb2f4dd1ee6d312f512096f782155b6b",
+    "headroom/lab/docker.py": "5b2f98e43a7d8e510ee84decb84a0ce02429e85aef9d3dd6c87d198f8d7e7b3b",
+    "headroom/lab/run_target.py": "35c82f961990c6899ae3aa4dce349acd435fee8a2ca8d7ef57559399e615dcb7",
+    "headroom/lab/artifact_volume.py": "b15ae950ff98b5dd5884faa1010b851aaa04a07552874b4a8e9798d172cacdcd",
+    "headroom/verify/offload.py": "0c712f04a6e03562909d9ff08a1ac09afeb015a85f34c8ee215337547c32cc5b",
+    "headroom/verify/offload_disk.py": "66a273b23fdb2fb04ba2a065fc8b0a3e6a1e4616acfb30ea42eaade1028ed000"
+  }
+}

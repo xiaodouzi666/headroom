@@ -1,0 +1,16 @@
+{
+  "command": [
+    ".venv/bin/python",
+    "reports/final48h-closing-regression-20261029/closing_guarded_v5.py",
+    "-q",
+    "tests/test_lab_finalize.py::test_real_cpu_hard_stop_during_serialization_keeps_partial_timeout",
+    "tests/test_multicapture.py::test_real_cpu_helper_and_training_replay_target_args_and_reference[False]",
+    "tests/test_multicapture.py::test_real_cpu_helper_and_training_replay_target_args_and_reference[True]",
+    "tests/test_multicapture.py::test_real_cpu_python_parent_watch_hands_off_child_source",
+    "--basetemp=/tmp/headroom-constructor-v5-cpu-20261030",
+    "--junitxml=reports/closing-guard-v5-20261030/real-cpu.xml"
+  ],
+  "v5_sha256": "7fbbde0fe3942a2ea6675dcd3ede9141a45f57814208bce3b130a9e143539cc5",
+  "hooks_sha256": "0781d54b5c34b7edddb5502f6d78d5c91be995bca53b91ceb5f7ab5877e22686",
+  "scope": "only_previously_guard_blocked_four_CPU_Docker_nodes_after_root_independent_review_no_GPU_models_or_production_DB"
+}

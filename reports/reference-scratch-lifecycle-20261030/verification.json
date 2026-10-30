@@ -1,0 +1,70 @@
+{
+  "status": "PASS",
+  "scope": "independent read-only source audit and new CPU-only lifecycle/Docker/queue tests",
+  "source_files_modified_by_reviewer": [],
+  "new_test_file": "tests/test_reference_scratch_lifecycle.py",
+  "initial": {
+    "tests": 24,
+    "passed": 23,
+    "failed": 1,
+    "cause": "duplicate manifest intent was incorrectly marked request_verified; root fixed publication ordering",
+    "artifact": "initial.xml",
+    "historical_artifact_preserved": true
+  },
+  "final": {
+    "tests": 66,
+    "passed": 66,
+    "failed": 0,
+    "seconds": 9.71,
+    "exit_code": 0,
+    "counts_by_suite": {
+      "tests.test_reference_scratch_lifecycle": 24,
+      "tests.test_reference_scratch": 27,
+      "tests.test_reference_runner_provenance": 8,
+      "tests.test_reference_storage_capacity": 7
+    },
+    "guard": "v5",
+    "models": false,
+    "gpu": false,
+    "production_database": false,
+    "docker_dispatched": false,
+    "artifacts": [
+      "final.log",
+      "final.xml",
+      "final.exit"
+    ]
+  },
+  "read_only_checks": [
+    "Host scratch directory is private and never mounted into target; only an owned mode-0600 AF_UNIX socket is bound readonly.",
+    "Opaque identifiers and exact operation fields prevent arbitrary host paths; host never deserializes tensor bytes.",
+    "Aggregate live bytes reserved under lock before append; failed partial writes/unlink keep reservations until verified deletion.",
+    "Target process performs lossless tensor serialization/deserialization; original numerical and runtime gates unchanged.",
+    "Request binding requires successfully published manifest intent; duplicate/write/start failure never authenticates the new request.",
+    "Normal and exceptional lifecycle exit delete actual live objects and verify zero live bytes/objects; cleanup failure remains unverified.",
+    "Supervisor calls owned scratch recovery only after worker termination, target absence/cleanup and artifact cleanup; active owner/foreign paths rejected.",
+    "Docker ownership recheck rejects changed source, writable socket or unexpected socket; ordinary captures create no broker.",
+    "Positive disk requests require host-broker evidence with matching cap and verified cleanup; local-backend downgrade fails.",
+    "Host reserved peak must cover positive integer target serialized peak; reviewed final offload guard includes the new consistency condition.",
+    "Existing target memory32g/networknone/no-new-privileges/cap-drop and fixed bounded artifact export remain intact; reference metadata capped64KiB."
+  ],
+  "remaining_notes": [
+    "Core accept/close interleaving remains bounded by worker socket deadline and fail-closed cleanup status; no directory exposure found.",
+    "Invalid host-only constructor may leave empty endpoint metadata; this review found no target access or tensor-data leak from that condition.",
+    "Actual CPU/tiny CUDA plumbing receipts belong to positive agent and are not rerun or counted as fixed-nine acceptance here."
+  ],
+  "hashes": {
+    "headroom/lab/reference_scratch.py": "7d22d88fe5a245f1b2b17b3d94be8b91efaf97b77ead4a66f537e724706cc6a2",
+    "headroom/verify/offload.py": "76ca5935fd04deceac8ec3904f9d23cd10cb8833025a81271ce92d0dbb1ae899",
+    "headroom/verify/offload_disk.py": "66a273b23fdb2fb04ba2a065fc8b0a3e6a1e4616acfb30ea42eaade1028ed000",
+    "headroom/lab/reference_scratch_lifecycle.py": "f5b9a08563bae64601481938f62e51aa8005d79571a00521037dd92d1460929d",
+    "headroom/lab/docker.py": "5b2f98e43a7d8e510ee84decb84a0ce02429e85aef9d3dd6c87d198f8d7e7b3b",
+    "headroom/lab/runner.py": "246f573e357833b52cfb2dcd10080de8cb2f4dd1ee6d312f512096f782155b6b",
+    "headroom/lab/run_target.py": "35c82f961990c6899ae3aa4dce349acd435fee8a2ca8d7ef57559399e615dcb7",
+    "headroom/api/queue.py": "85098f26ebb167518e636b846f6e2c9824d80c990383cac7f7bad11c7aad538e",
+    "headroom/lab/artifact_volume.py": "b15ae950ff98b5dd5884faa1010b851aaa04a07552874b4a8e9798d172cacdcd",
+    "tests/test_reference_scratch_lifecycle.py": "409d611535cbfddea367c8ac6902420c100610220d90c744023bb41b66f568a1",
+    "tests/test_reference_scratch.py": "03f258911c4aa5239b5303e51536620ca319c7435d38cb5bf91620cd86f0ce24",
+    "tests/test_reference_runner_provenance.py": "a2be640fba12f8f83315eab9d55450051a4d4a7336072b2ba4c8f8853874fdb0",
+    "reports/final48h-closing-regression-20261029/closing_guarded_v5.py": "7fbbde0fe3942a2ea6675dcd3ede9141a45f57814208bce3b130a9e143539cc5"
+  }
+}

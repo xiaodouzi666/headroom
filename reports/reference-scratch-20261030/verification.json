@@ -1,0 +1,66 @@
+{
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/python",
+        "reports/final48h-closing-regression-20261029/closing_guarded_v4.py",
+        "tests/test_reference_scratch.py",
+        "tests/test_verify_offload_reference.py",
+        "tests/test_reference_storage_capacity.py"
+      ],
+      "exit_code": 0,
+      "seconds": 8.20200817193836
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/lab/reference_scratch.py",
+        "headroom/verify/offload.py",
+        "headroom/verify/offload_disk.py",
+        "tests/test_reference_scratch.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.0074758040718734264
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/lab/reference_scratch.py",
+        "headroom/verify/offload.py",
+        "headroom/verify/offload_disk.py",
+        "tests/test_reference_scratch.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.006914322962984443
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "--",
+        "headroom/lab/reference_scratch.py",
+        "headroom/verify/offload.py",
+        "headroom/verify/offload_disk.py",
+        "tests/test_reference_scratch.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.0023985111620277166
+    }
+  ],
+  "source_hashes": {
+    "headroom/lab/reference_scratch.py": "7d22d88fe5a245f1b2b17b3d94be8b91efaf97b77ead4a66f537e724706cc6a2",
+    "headroom/verify/offload.py": "0c712f04a6e03562909d9ff08a1ac09afeb015a85f34c8ee215337547c32cc5b",
+    "headroom/verify/offload_disk.py": "66a273b23fdb2fb04ba2a065fc8b0a3e6a1e4616acfb30ea42eaade1028ed000",
+    "tests/test_reference_scratch.py": "206a9c996e82343f18f703ddf576ff47f212228d6cb58826dc5a74ab3d30b275"
+  },
+  "provider_calls": 0,
+  "gpu_jobs": 0,
+  "docker_jobs": 0,
+  "maximum_object_bytes_in_tests": 16384,
+  "new_target_success": false,
+  "guarded_result": "107 passed in 7.50s"
+}

@@ -1,0 +1,79 @@
+{
+  "scope": "CPU_unit_and_synthetic_boundary_tests_only_no_GPU_model_deployment_or_historical_change",
+  "junit": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "86",
+    "time": "4.435",
+    "timestamp": "2026-10-30T12:43:45.921282+01:00",
+    "hostname": "ubuntu"
+  },
+  "files": {
+    "headroom/lab/hooks.py": "0781d54b5c34b7edddb5502f6d78d5c91be995bca53b91ceb5f7ab5877e22686",
+    "tests/test_optimizer_initial_catalog.py": "abd1993fe95bfd82978aab892223f2eecfe7223610cbab95d8f1f6aba8389a41"
+  },
+  "unchanged_summary_builder_sha256": "586978258d26914f72f8f5c76a1dee24ab16ce4260f53ea66af48682d862ae77",
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/lab/hooks.py",
+        "tests/test_optimizer_initial_catalog.py"
+      ],
+      "exit_code": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/lab/hooks.py",
+        "tests/test_optimizer_initial_catalog.py"
+      ],
+      "exit_code": 0,
+      "stdout": "2 files already formatted\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "expanded_docker_boundary_result": {
+    "total": 90,
+    "passed": 86,
+    "failed": 4,
+    "reason": "old closing_guard docker_options rejects artifact-keeper docker create --pull never before a target is started; source hook is not exercised",
+    "evidence": "focused-final.log; isolated guard-parser call reproduces PermissionError for --pull never",
+    "exceptions_not_relaxed": true
+  },
+  "first_three_group_result": "51 passed before adding final same-Parameter/native-and-owned constructor test; all source behavior remained passing in86 final unit cases",
+  "followup_real_cpu_v5": {
+    "guard_sha256": "7fbbde0fe3942a2ea6675dcd3ede9141a45f57814208bce3b130a9e143539cc5",
+    "junit": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "4",
+      "time": "62.671",
+      "timestamp": "2026-10-30T12:51:24.870391+01:00",
+      "hostname": "ubuntu"
+    },
+    "all_eight_subrun_export_cleanup_verified": true,
+    "report": "reports/closing-guard-v5-20261030/verification.json",
+    "old_v4_failures_preserved": true,
+    "no_gpu_model_or_acceptance_run": true
+  }
+}

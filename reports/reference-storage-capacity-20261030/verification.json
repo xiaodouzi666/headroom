@@ -1,0 +1,53 @@
+{
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/python",
+        "reports/final48h-closing-regression-20261029/closing_guarded_v4.py",
+        "tests/test_reference_storage_capacity.py",
+        "tests/test_verify_offload_reference.py",
+        "tests/test_artifact_volume.py"
+      ],
+      "exit_code": 0,
+      "seconds": 1.287340623093769
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "tests/test_reference_storage_capacity.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.0066012858878821135
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "tests/test_reference_storage_capacity.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.00546898297034204
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "--",
+        "tests/test_reference_storage_capacity.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.0018284651450812817
+    }
+  ],
+  "source_hashes": {
+    "tests/test_reference_storage_capacity.py": "6be93f4e94a7d8a7894ff4dcc337826b3ef5056a69e2ee3bee0beaa08ee7d6c2"
+  },
+  "production_code_changed": false,
+  "model_calls": 0,
+  "gpu_jobs": 0,
+  "disk_scratch_backend_implemented": false,
+  "guarded_result": "107 passed in 0.85s"
+}

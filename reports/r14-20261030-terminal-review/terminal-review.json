@@ -1,0 +1,3603 @@
+{
+  "schema": "headroom.r14-terminal-readonly-review.v1",
+  "utc": "2026-10-30T11:31:04.760800+00:00",
+  "campaign_path": "runs/repair-followup/execution-r14-20261030/campaign.json",
+  "campaign_sha256": "e0c353eeef387f8ff8580daf8d773a5884c3d2b3a02b989ecddb5c0ef56e0705",
+  "preparation_sha256": "b0bb0c9dedc15b22a8a8902ad8cc6fd8ffe226fba24bcaf41d6a7856b89da90b",
+  "source_revision": "436f7ec9c1aac56376007aa1a5ae9ed8febd7e0c",
+  "fixed_denominator": 9,
+  "minimum_targets": 6,
+  "executed_cases": 9,
+  "target_met_count": 0,
+  "final_valid_diagnoses": 5,
+  "final_ready_diagnoses": 0,
+  "ever_ready_cases": 4,
+  "source_pins": {
+    "implementation_pins": {
+      "count": 177,
+      "mismatches": []
+    },
+    "input_pins": {
+      "count": 30,
+      "mismatches": []
+    }
+  },
+  "cases": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "run_id": "2868965cd88743308f3624dfa36112a5",
+      "status": "needs_human",
+      "target_met": false,
+      "charged_usd": "0.06400392",
+      "known_cost_usd": "0.06151992",
+      "report_sha256": "ea2d4d9c95967add1c6f7028c84e7fbcb99c0b524981df91876c5576b04231da",
+      "diagnoses": [
+        {
+          "path": "runs/repair-followup/execution-r14-20261030/jobs/2868965cd88743308f3624dfa36112a5/rounds/01/diagnosis.json",
+          "sha256": "49b82c71203e302d2bdd67bc2b09ab074a981cab355f98cb67f94cf23fa59740",
+          "valid": true,
+          "ready_for_patch": false,
+          "needs_more_info": true,
+          "plan": [
+            {
+              "fix_id": "p1",
+              "title": "Activation checkpointing on residual blocks",
+              "description": "Wrap each ResidualBlock forward with torch.utils.checkpoint.checkpoint to recompute activations during backward instead of retaining the full depth's activation tensors. Preserves original forward/backward mathematics, loss, optimizer step cadence (SGD, 20 updates), and FP32 precision. Source: train.py lines 21-30 (ResidualBlock.forward) and 99 (model(inputs)).",
+              "numerics_impact": "none"
+            }
+          ],
+          "issues": [],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_input_observations.logical_updates",
+              "reason": "missing",
+              "detail": "Zero optimizer updates observed before OOM; cannot verify optimizer step cadence, parameter update sets, or effective batch per update for equivalence checking.",
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "p1"
+              ]
+            },
+            {
+              "field": "execution_context.runtime_optimizer_observations.parameters.catalog_numel_matches_registered_count",
+              "reason": "ambiguous",
+              "detail": "Catalog shows 101M registered parameters but catalog_numel_matches_registered_count=false; actual optimizer parameter set and state initialization unobserved.",
+              "evidence_ref": "execution_context.runtime_optimizer_observations.parameters",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "p1"
+              ]
+            }
+          ]
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "revert",
+          "reason": "diagnosis_needs_more_info",
+          "patch": null,
+          "verification": null
+        }
+      ]
+    },
+    {
+      "scenario_id": "s2_capacity_v2",
+      "run_id": "eb45be0a25f54ff1a946715890670e4a",
+      "status": "needs_human",
+      "target_met": false,
+      "charged_usd": "0.07772412",
+      "known_cost_usd": "0.07497564",
+      "report_sha256": "5b36fc67bf9d925a2dd8ab5c2611d9f56bdc810d1becfd47ffc8b81ddf773c7d",
+      "diagnoses": [
+        {
+          "path": "runs/repair-followup/execution-r14-20261030/jobs/eb45be0a25f54ff1a946715890670e4a/rounds/01/diagnosis.json",
+          "sha256": "25923eb3cd8182b6e4e3cca6ee8bbe714f954a7e9cbcb6be4531467e1c2b7bc5",
+          "valid": false,
+          "ready_for_patch": false,
+          "needs_more_info": true,
+          "plan": [
+            {
+              "fix_id": "p1",
+              "title": "Switch AdamW to foreach=False",
+              "description": "Disable foreach=True in torch.optim.AdamW (line 119) to avoid per-parameter temporary buffers during the fused update; preserves optimizer class, hyperparameters, parameter groups, state layout, and update cadence.",
+              "numerics_impact": "none"
+            }
+          ],
+          "issues": [
+            {
+              "code": "ALTERNATIVE_EVIDENCE_BLOCKS_CURRENT_PLAN",
+              "path": "/evidence_requests/0",
+              "message": "Only alternative-plan evidence was requested; state a genuine current-plan or overall blocker instead."
+            }
+          ],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_input_observations.logical_updates.effective_batch_per_optimizer_update",
+              "reason": "ambiguous",
+              "detail": "Need confirmed effective batch per optimizer update and per-sample loss weighting to evaluate microbatch/accumulation equivalence.",
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates.effective_batch_per_optimizer_update",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "alternative_plan",
+              "blocked_plan_ids": []
+            }
+          ]
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "revert",
+          "reason": "diagnosis_validation_failed",
+          "patch": null,
+          "verification": null
+        }
+      ]
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "run_id": "5f2b4b6416b24811ba2795ef922706c5",
+      "status": "needs_human",
+      "target_met": false,
+      "charged_usd": "0.08277670",
+      "known_cost_usd": "0.07894288",
+      "report_sha256": "876e04d842430ee1be31184be10898b481950d078bfd65f44e023adb554df822",
+      "diagnoses": [
+        {
+          "path": "runs/repair-followup/execution-r14-20261030/jobs/5f2b4b6416b24811ba2795ef922706c5/rounds/01/diagnosis.json",
+          "sha256": "577579e014fb713a67a3fb54eb9d5524833c312877db11bcf4ec1e0d81a78430",
+          "valid": true,
+          "ready_for_patch": false,
+          "needs_more_info": true,
+          "plan": [
+            {
+              "fix_id": "fp1",
+              "title": "Activation checkpointing in ResidualBlock",
+              "description": "Wrap each ResidualBlock forward with torch.utils.checkpoint.checkpoint to discard per-block activations after backward. The model forward at train.py:28-30 applies blocks sequentially and returns hidden.mean(dim=1); checkpointing preserves the identical computation graph and loss objective. The training path uses train_inputs [1,512,768] with effective_batch_per_optimizer_update=1 and backwards_per_optimizer_update=1 (runtime_input_observations.logical_updates).",
+              "numerics_impact": "none"
+            }
+          ],
+          "issues": [],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_input_observations.logical_updates.backwards_per_optimizer_update",
+              "reason": "ambiguous",
+              "detail": "Need confirmed loss denominator (mean over N elements) and per-chunk weighting to guarantee gradient equivalence under checkpoint recomputation.",
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates.backwards_per_optimizer_update",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fp1"
+              ]
+            },
+            {
+              "field": "execution_context.runtime_optimizer_observations.updates.updated_numel_per_complete_record_range",
+              "reason": "ambiguous",
+              "detail": "Need exact updated parameter set per step to confirm optimizer cadence and state preservation unchanged.",
+              "evidence_ref": "execution_context.runtime_optimizer_observations.updates",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fp1"
+              ]
+            }
+          ]
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "revert",
+          "reason": "diagnosis_needs_more_info",
+          "patch": null,
+          "verification": null
+        }
+      ]
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+      "status": "needs_human",
+      "target_met": false,
+      "charged_usd": "0.13952308",
+      "known_cost_usd": "0.13634008",
+      "report_sha256": "cd1f029b05d9dbefbedff5e526a9fc26eb77ef9f00f3e6a8dba5aee1dfe0360b",
+      "diagnoses": [
+        {
+          "path": "runs/repair-followup/execution-r14-20261030/jobs/68f09d2e33f9474ea44e476abc2c98ac/rounds/01/diagnosis.json",
+          "sha256": "456e6e515ce96a6a64e680068f77fc10df39627efdadb1a09c5936fb658d1873",
+          "valid": true,
+          "ready_for_patch": true,
+          "needs_more_info": false,
+          "plan": [
+            {
+              "fix_id": "f1",
+              "title": "Remove retain_graph=True from backward()",
+              "description": "Change loss.backward(retain_graph=True) to loss.backward() in train.py line 104. The source shows each iteration does a fresh forward pass (line 100), so the autograd graph is not reused across iterations. Removing this flag allows immediate graph and activation buffer release after each backward, eliminating the cumulative activations peak.",
+              "numerics_impact": "none"
+            }
+          ],
+          "issues": [],
+          "evidence_requests": []
+        },
+        {
+          "path": "runs/repair-followup/execution-r14-20261030/jobs/68f09d2e33f9474ea44e476abc2c98ac/rounds/02/diagnosis.json",
+          "sha256": "63655641932cf60ee1e0abd16dbe543463952b1a187ddf6c248fb09fa68eb3b8",
+          "valid": true,
+          "ready_for_patch": false,
+          "needs_more_info": true,
+          "plan": [
+            {
+              "fix_id": "f2",
+              "title": "Remove retain_graph=True from backward()",
+              "description": "Change loss.backward(retain_graph=True) to loss.backward() at train.py:104. Each backward traverses the graph once; retaining the graph is unnecessary and causes forward activations to accumulate across steps.",
+              "numerics_impact": "none"
+            }
+          ],
+          "issues": [],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_input_observations.logical_updates",
+              "reason": "missing",
+              "detail": "Complete optimizer update association unavailable; cannot confirm effective batch, update cadence, or that all 20 required updates are preserved.",
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "f2"
+              ]
+            },
+            {
+              "field": "execution_context.runtime_optimizer_observations.optimizer_group_hyperparameters",
+              "reason": "missing",
+              "detail": "Optimizer hyperparameters not captured; cannot verify weight decay, momentum, or scheduler semantics preservation.",
+              "evidence_ref": "execution_context.runtime_optimizer_observations.parameters",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "f2"
+              ]
+            }
+          ]
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "revert",
+          "reason": "verification_hard_constraints_unmet",
+          "patch": "rounds/01/patches/patch-engine-fba8afcc9a214fbea951b4434b6f856a/attempt-2/patch-19ca35757e6e4064839c656479574489/patch.diff",
+          "verification": {
+            "completed": true,
+            "target_met": false,
+            "peak_before": 24.768717824,
+            "peak_after": 2.533996544,
+            "reduction_pct": 89.76936730433155,
+            "throughput_regression_pct": 0.3798644259985773,
+            "max_loss_delta": null,
+            "loss_equivalence": "n/a",
+            "run_ids": {
+              "baseline": "9224f309fc8a4ffbb5b5be26a7b84037",
+              "candidate": "4f5df44ae3ed4c00a476af09971700d3"
+            },
+            "reference_run": "/home/xiaodouzi/workspace/headroom/runs/repair-followup/execution-r14-20261030/jobs/68f09d2e33f9474ea44e476abc2c98ac/lab/cba3a88ffbdf419dbd6e87e5ceea2ca9",
+            "checks": {
+              "baseline_capture": true,
+              "target_mode_valid": true,
+              "candidate_completed_required_steps": true,
+              "finite_candidate_losses": true,
+              "parameter_count_unchanged": true,
+              "numerics_policy": true,
+              "same_seed": true,
+              "same_inputs": null,
+              "same_effective_batch": null,
+              "same_objective": null,
+              "small_batch_reference_completed": false,
+              "small_batch_reference_same_seed": true,
+              "loss_decreases": true,
+              "loss_series_aligned_to_updates": false,
+              "loss_series_comparison_available": false,
+              "original_workload_offload_reference": false,
+              "loss_comparable": false,
+              "repository_no_reference_exception": false,
+              "loss_tolerance": false,
+              "numerical_acceptance": false,
+              "parameter_policy": true,
+              "measured_cuda_peaks": true,
+              "same_gpu_hardware": true,
+              "gpu_observation_clear": true,
+              "throughput_limit": null,
+              "memory_target": true
+            }
+          }
+        },
+        {
+          "number": 2,
+          "decision": "revert",
+          "reason": "diagnosis_needs_more_info",
+          "patch": null,
+          "verification": null
+        }
+      ]
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "run_id": "d24caaa6352c4f98ac80e98aac56bf8f",
+      "status": "needs_human",
+      "target_met": false,
+      "charged_usd": "0.06810962",
+      "known_cost_usd": "0.06516716",
+      "report_sha256": "29353d46ac790e7c5452f4737f489cb8dfd8cda7a4a0184d7004bb472b920757",
+      "diagnoses": [
+        {
+          "path": "runs/repair-followup/execution-r14-20261030/jobs/d24caaa6352c4f98ac80e98aac56bf8f/rounds/01/diagnosis.json",
+          "sha256": "318df8a14f6039120f7a97ec02cc92c619de39727020b5c921108c69120154ce",
+          "valid": true,
+          "ready_for_patch": false,
+          "needs_more_info": true,
+          "plan": [
+            {
+              "fix_id": "f1",
+              "title": "Checkpoint GELU + addmm residual add",
+              "description": "Wrap each layer's GELU + addmm + residual add with torch.utils.checkpoint.checkpoint to recompute activations during backward, avoiding retention of per-layer forward outputs. Preserves all samples, order, loss (MSE mean over batch*seq*width), optimizer step cadence (20 updates), and SGD semantics. Requires allow_batch_grad_accum=false (no accumulation change).",
+              "numerics_impact": "none"
+            }
+          ],
+          "issues": [],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_optimizer_observations.updates",
+              "reason": "ambiguous",
+              "detail": "Loss reduction semantics (MSE mean over batch*seq*width) and per-update effective batch are not confirmed; required to validate gradient accumulation or microbatch strategies without changing the objective.",
+              "evidence_ref": "execution_context.runtime_optimizer_observations.updates",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "f1"
+              ]
+            }
+          ]
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "revert",
+          "reason": "diagnosis_needs_more_info",
+          "patch": null,
+          "verification": null
+        }
+      ]
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "run_id": "831a56da4f3145c3bc53e586b491204e",
+      "status": "needs_human",
+      "target_met": false,
+      "charged_usd": "0.12102900",
+      "known_cost_usd": "0.11809278",
+      "report_sha256": "3c57d291375f27f452f93d87b6190dd1fdc1ce88d458e0a6754b82650ea17a4b",
+      "diagnoses": [
+        {
+          "path": "runs/repair-followup/execution-r14-20261030/jobs/831a56da4f3145c3bc53e586b491204e/rounds/01/diagnosis.json",
+          "sha256": "aad8e085a97bbd9e63e12b0a3e3140cbc2e48e16d66e282e7b7f426c146f75ef",
+          "valid": true,
+          "ready_for_patch": true,
+          "needs_more_info": false,
+          "plan": [
+            {
+              "fix_id": "fix1",
+              "title": "Stream cross-entropy over vocabulary chunks (fp32, mean reduction)",
+              "description": "Replace full-vocabulary logits materialization and its fp32 copy with token-streamed NLL: for each vocab chunk compute log_softmax in fp32, gather target log-probs, accumulate mean NLL over all tokens, backward once per step. Preserves original mean reduction denominator (batch*length), masks, ignore_index, label_smoothing, and fp32 logits for CE. No precision change.",
+              "numerics_impact": "none"
+            }
+          ],
+          "issues": [],
+          "evidence_requests": []
+        },
+        {
+          "path": "runs/repair-followup/execution-r14-20261030/jobs/831a56da4f3145c3bc53e586b491204e/rounds/02/diagnosis.json",
+          "sha256": "87ef2d553e65e8f1fff46f1f669e9d26aef718729fce5f53bc53df4e663eec67",
+          "valid": false,
+          "ready_for_patch": false,
+          "needs_more_info": true,
+          "plan": [
+            {
+              "fix_id": "fix1",
+              "title": "Stream cross-entropy over vocabulary chunks (fp32, mean reduction)",
+              "description": "Replace full [batch*length, vocabulary] logits.float() + cross_entropy with token-wise log_softmax on vocabulary chunks of size 256. Accumulate loss_sum over chunks, divide by total valid tokens (N) to preserve mean reduction. Keep fp32 for numerics. Backward once after full loss. No change to optimizer step cadence, model, or precision.",
+              "numerics_impact": "none"
+            }
+          ],
+          "issues": [
+            {
+              "code": "EVIDENCE_AVAILABILITY_CONTRADICTED",
+              "path": "/evidence_requests/0",
+              "message": "The exact declared source range or field is visible in this request; semantics may remain ambiguous."
+            }
+          ],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_optimizer_observations.updates",
+              "reason": "missing",
+              "detail": "Zero recorded optimizer updates in baseline; need completed reference run with same seed/inputs to establish loss series and equivalence for verification.",
+              "evidence_ref": "execution_context.runtime_optimizer_observations.updates",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix1"
+              ]
+            },
+            {
+              "field": "source_files[0].text lines 104-111",
+              "reason": "ambiguous",
+              "detail": "Loss reduction semantics (mean over tokens vs batch) and any label masking/ignore_index/label_smoothing must be confirmed from source to weight chunked log_softmax correctly.",
+              "evidence_ref": "source[0]",
+              "source_line_start": 104,
+              "source_line_end": 111,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix1"
+              ]
+            }
+          ]
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "revert",
+          "reason": "verification_hard_constraints_unmet",
+          "patch": "rounds/01/patches/patch-engine-3e22c5e0800f41d4b1c6a129d87c5152/attempt-2/patch-25a265cda676458e9a25298fca509ba3/patch.diff",
+          "verification": {
+            "completed": false,
+            "target_met": false,
+            "peak_before": 21.588379648,
+            "peak_after": 13.033112576,
+            "reduction_pct": 39.62903752617942,
+            "throughput_regression_pct": null,
+            "max_loss_delta": null,
+            "loss_equivalence": "n/a",
+            "run_ids": {
+              "baseline": "7b3544efe8954d6384ace0b78038ccb5",
+              "candidate": "d190a1ef634d48a285f993db0d8a535e"
+            },
+            "reference_run": null,
+            "checks": {
+              "baseline_capture": true,
+              "target_mode_valid": true,
+              "candidate_completed_required_steps": false,
+              "finite_candidate_losses": false,
+              "parameter_count_unchanged": true,
+              "numerics_policy": true,
+              "same_seed": true,
+              "same_inputs": null,
+              "same_effective_batch": null,
+              "same_objective": null,
+              "small_batch_reference_completed": false,
+              "small_batch_reference_same_seed": false,
+              "loss_decreases": false,
+              "loss_series_aligned_to_updates": false,
+              "loss_series_comparison_available": false,
+              "loss_comparable": false,
+              "repository_no_reference_exception": false,
+              "loss_tolerance": false,
+              "numerical_acceptance": false,
+              "parameter_policy": true,
+              "measured_cuda_peaks": true,
+              "same_gpu_hardware": true,
+              "gpu_observation_clear": true,
+              "throughput_limit": null,
+              "memory_target": false
+            }
+          }
+        },
+        {
+          "number": 2,
+          "decision": "revert",
+          "reason": "diagnosis_validation_failed",
+          "patch": null,
+          "verification": null
+        }
+      ]
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "run_id": "0fba6eeccc18411590b036557f7f9526",
+      "status": "needs_human",
+      "target_met": false,
+      "charged_usd": "0.12690840",
+      "known_cost_usd": "0.12409716",
+      "report_sha256": "b8407176dab7ed90729845d7c96e6558dcf8a873229d2e95d7e1c26d31b22a90",
+      "diagnoses": [
+        {
+          "path": "runs/repair-followup/execution-r14-20261030/jobs/0fba6eeccc18411590b036557f7f9526/rounds/01/diagnosis.json",
+          "sha256": "120f262e99a0a3c2cb948976b82e356800704e12362a18700612df914cedc1ad",
+          "valid": true,
+          "ready_for_patch": true,
+          "needs_more_info": false,
+          "plan": [
+            {
+              "fix_id": "f1",
+              "title": "Freeze backbone params and pass only head params to optimizer",
+              "description": "Disable requires_grad on backbone.parameters() before constructing AdamW, and pass model.head.parameters() (or filter requires_grad=True) to optimizer. This removes backbone params from optimizer_state (moments) and from grads, preserving the intended head-only fine-tune objective and original update cadence (20 steps).",
+              "numerics_impact": "none"
+            }
+          ],
+          "issues": [],
+          "evidence_requests": []
+        },
+        {
+          "path": "runs/repair-followup/execution-r14-20261030/jobs/0fba6eeccc18411590b036557f7f9526/rounds/02/diagnosis.json",
+          "sha256": "0638b54786432f5905ec3255adeb7b2201c11af16adbae71634506bfdd742b65",
+          "valid": true,
+          "ready_for_patch": false,
+          "needs_more_info": true,
+          "plan": [
+            {
+              "fix_id": "f2",
+              "title": "Exclude backbone from optimizer and disable its gradients",
+              "description": "Set requires_grad=False on model.backbone parameters before constructing optimizer; pass only model.head.parameters() to AdamW. This removes optimizer state (moments) for ~1.076B backbone elements and avoids gradient buffers for them, while preserving the exact same forward computation and loss (cross_entropy on head output). The head remains trainable with identical lr, foreach=False, weight decay, and scheduler semantics. Optimizer step count, update cadence, and effective batch are unchanged.",
+              "numerics_impact": "none"
+            }
+          ],
+          "issues": [],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_optimizer_observations.loss_comparable",
+              "reason": "ambiguous",
+              "detail": "Prior verification reported loss_comparable=false and loss_tolerance=false for candidate f1; the exact objective and effective batch equivalence under the freeze-head-only change is unresolved. Need host decision or additional reference evidence on whether the same mathematical objective is preserved.",
+              "evidence_ref": "execution_context.runtime_optimizer_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "f2"
+              ]
+            },
+            {
+              "field": "execution_context.runtime_optimizer_observations.same_objective",
+              "reason": "ambiguous",
+              "detail": "The verifier unknown_checks included same_objective=null; without confirmation that the training objective (loss reduction axes, masks, weights) is identical, numerical equivalence cannot be assumed.",
+              "evidence_ref": "execution_context.runtime_optimizer_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "f2"
+              ]
+            }
+          ]
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "revert",
+          "reason": "verification_hard_constraints_unmet",
+          "patch": "rounds/01/patches/patch-engine-848ba4778bb54f2f8ca9329551d9a184/attempt-1/patch-9a4cc7962a2d42cdae63b21b795bf300/patch.diff",
+          "verification": {
+            "completed": true,
+            "target_met": false,
+            "peak_before": 17.819808768,
+            "peak_after": 4.413207552,
+            "reduction_pct": 75.234259752972,
+            "throughput_regression_pct": -93.34545368844518,
+            "max_loss_delta": 3.3520333766937256,
+            "loss_equivalence": "changed",
+            "run_ids": {
+              "baseline": "e0280b91ce614893a1207e3ccc185726",
+              "candidate": "71a577d707ef40fdb0dbb10659d44a49"
+            },
+            "reference_run": null,
+            "checks": {
+              "baseline_capture": true,
+              "target_mode_valid": true,
+              "candidate_completed_required_steps": true,
+              "finite_candidate_losses": true,
+              "parameter_count_unchanged": true,
+              "numerics_policy": true,
+              "same_seed": true,
+              "same_inputs": null,
+              "same_effective_batch": null,
+              "same_objective": null,
+              "loss_series_aligned_to_updates": true,
+              "loss_series_comparison_available": true,
+              "loss_comparable": false,
+              "repository_no_reference_exception": false,
+              "loss_tolerance": false,
+              "numerical_acceptance": false,
+              "parameter_policy": true,
+              "measured_cuda_peaks": true,
+              "same_gpu_hardware": true,
+              "gpu_observation_clear": true,
+              "throughput_limit": true,
+              "memory_target": true
+            }
+          }
+        },
+        {
+          "number": 2,
+          "decision": "revert",
+          "reason": "diagnosis_needs_more_info",
+          "patch": null,
+          "verification": null
+        }
+      ]
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+      "status": "needs_human",
+      "target_met": false,
+      "charged_usd": "0.15951168",
+      "known_cost_usd": "0.15671022",
+      "report_sha256": "9da0ee97dd794f44d9ee13a3a884004c954e5072ad5d35e964e83edc92a9686d",
+      "diagnoses": [
+        {
+          "path": "runs/repair-followup/execution-r14-20261030/jobs/ac41502667bd4c3ca9a0ac4f32217e6a/rounds/01/diagnosis.json",
+          "sha256": "e6f982fa2e52f8109ec69acfe87a7e944694f77659c397c5d5eae65ffbea8d06",
+          "valid": true,
+          "ready_for_patch": true,
+          "needs_more_info": false,
+          "plan": [
+            {
+              "fix_id": "fix1",
+              "title": "Remove unused teacher model creation",
+              "description": "The train.py script creates a teacher model (lines 96-99) that is never used because distillation_weight=0.0 (line 100). The teacher model parameters (2.99 GB) remain resident on GPU for the entire run. Delete the teacher model instantiation and its parameter counting from the workload emission to eliminate this allocation entirely.",
+              "numerics_impact": "none"
+            }
+          ],
+          "issues": [],
+          "evidence_requests": []
+        },
+        {
+          "path": "runs/repair-followup/execution-r14-20261030/jobs/ac41502667bd4c3ca9a0ac4f32217e6a/rounds/02/diagnosis.json",
+          "sha256": "6822ff7d8c4f3c7202a006dbad1b94a04cafe49352f5b59358a0a67dd8e04a61",
+          "valid": false,
+          "ready_for_patch": false,
+          "needs_more_info": true,
+          "plan": [
+            {
+              "fix_id": "fix2",
+              "title": "Lazy-create teacher model only when distillation_weight > 0",
+              "description": "Move teacher instantiation inside the distillation_weight > 0 guard so the teacher model (2.98 GB params) is never created when distillation_weight=0.0 as in the supplied scenario. This avoids the resident teacher parameters entirely.",
+              "numerics_impact": "none"
+            }
+          ],
+          "issues": [
+            {
+              "code": "EVIDENCE_AVAILABILITY_CONTRADICTED",
+              "path": "/evidence_requests/0",
+              "message": "The exact declared source range or field is visible in this request; semantics may remain ambiguous."
+            }
+          ],
+          "evidence_requests": [
+            {
+              "field": "execution_context.runtime_optimizer_observations.updates",
+              "reason": "missing",
+              "detail": "No completed candidate capture available to confirm optimizer step count, updated parameter sets, and loss scalar series for the proposed change.",
+              "evidence_ref": "execution_context.runtime_optimizer_observations.updates",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "fix2"
+              ]
+            }
+          ]
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "revert",
+          "reason": "SOURCE_SYNTAX_INVALID",
+          "patch": "rounds/01/patches/patch-engine-b16d2bcf589442e8982a4bd07c7460de/attempt-4/patch-231ec82825094e339112d2819c9aad6b/patch.diff",
+          "verification": null
+        },
+        {
+          "number": 2,
+          "decision": "revert",
+          "reason": "diagnosis_validation_failed",
+          "patch": null,
+          "verification": null
+        }
+      ]
+    },
+    {
+      "scenario_id": "nanogpt",
+      "run_id": "29e3fae102274f1ca1b53b80fb6e7588",
+      "status": "needs_human",
+      "target_met": false,
+      "charged_usd": "0.09892186",
+      "known_cost_usd": "0.0947056",
+      "report_sha256": "2836854ab60fd4c77a233137598170f52a89adb9cd5bbfb7386fe8154637a4a5",
+      "diagnoses": [
+        {
+          "path": "runs/repair-followup/execution-r14-20261030/jobs/29e3fae102274f1ca1b53b80fb6e7588/rounds/01/diagnosis.json",
+          "sha256": "b2d442743258d2dd2a02e2135ca6522fd3ec8376a1e8ca11b60121afcc0c1c9a",
+          "valid": false,
+          "ready_for_patch": false,
+          "needs_more_info": true,
+          "plan": [
+            {
+              "fix_id": "s1",
+              "title": "Gradient accumulation to reduce microbatch peak",
+              "description": "Increase gradient_accumulation_steps from 1 to 4, lowering effective microbatch_size from 32 to 8 per optimizer update while preserving the same total batch (32), loss weighting (loss / gradient_accumulation_steps), and update boundary (one optimizer.step per 32 samples). Requires allow_batch_grad_accum policy permission.",
+              "numerics_impact": "none"
+            }
+          ],
+          "issues": [
+            {
+              "code": "INVALID_EVIDENCE_RANGE",
+              "path": "/evidence_requests/0",
+              "message": "Use both ordered source line bounds only with a source reference."
+            },
+            {
+              "code": "INVALID_EVIDENCE_RANGE",
+              "path": "/evidence_requests/1",
+              "message": "Use both ordered source line bounds only with a source reference."
+            }
+          ],
+          "evidence_requests": [
+            {
+              "field": "model.forward input tensor shapes and loss reduction semantics",
+              "reason": "ambiguous",
+              "detail": "Need confirmed runtime input shapes (batch, seq_len) and exact loss reduction (mean over batch*seq_len or other) to validate gradient accumulation preserves loss weighting. Source shows loss = loss / gradient_accumulation_steps but denominator basis unclear.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": 1,
+              "source_line_end": 1,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "s1"
+              ]
+            },
+            {
+              "field": "effective microbatch size and gradient accumulation product",
+              "reason": "missing",
+              "detail": "Runtime confirmation that gradient_accumulation_steps * microbatch_size equals original batch_size (32) under all code paths, including DDP sync condition at last micro step. Without this, accumulation may change effective batch or update count.",
+              "evidence_ref": "execution_context.runtime_input_observations",
+              "source_line_start": 1,
+              "source_line_end": 1,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "s1"
+              ]
+            }
+          ]
+        }
+      ],
+      "rounds": [
+        {
+          "number": 1,
+          "decision": "revert",
+          "reason": "diagnosis_validation_failed",
+          "patch": null,
+          "verification": null
+        }
+      ]
+    }
+  ],
+  "calls": [
+    {
+      "id": 1,
+      "run_id": "2868965cd88743308f3624dfa36112a5",
+      "role": "annotate",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": null,
+      "wire_body_sha256": "100afe43cef2bd940f1accd5134c1907691db98e57cbaf44fc08269a7e54a000",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 3000,
+      "optimizer_summary": null
+    },
+    {
+      "id": 2,
+      "run_id": "2868965cd88743308f3624dfa36112a5",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.045506",
+      "wire_body_sha256": "271129f1df768f861f90c5dedc2bc2d4aaeb330747eda698cb5f440aad1420e1",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "partial",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "d1f63968daeb4d85b4b6e6231f493d61",
+        "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": false,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": false,
+        "optimizer_step_calls": 0,
+        "successful_optimizer_step_calls": 0,
+        "logical_updates": 0,
+        "parameters": {
+          "catalog_entries": 0,
+          "catalog_numel": 0,
+          "requires_grad_true_entries": 0,
+          "requires_grad_true_numel": 0,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 101007360,
+          "catalog_numel_matches_registered_count": false,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 0,
+          "complete_update_set_records": 0,
+          "all_catalog_updated_records": 0,
+          "all_catalog_parameters_updated_each_record": null,
+          "updated_entries_per_complete_record_range": null,
+          "updated_numel_per_complete_record_range": null,
+          "optimizer_classes": [],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "no observed optimizer update"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 3,
+      "run_id": "2868965cd88743308f3624dfa36112a5",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.01601392",
+      "wire_body_sha256": "d0ab99a74b3c4426766b7add33682548a738586a7f98a89ab056966f0f02c2f0",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "partial",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "d1f63968daeb4d85b4b6e6231f493d61",
+        "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": false,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": false,
+        "optimizer_step_calls": 0,
+        "successful_optimizer_step_calls": 0,
+        "logical_updates": 0,
+        "parameters": {
+          "catalog_entries": 0,
+          "catalog_numel": 0,
+          "requires_grad_true_entries": 0,
+          "requires_grad_true_numel": 0,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 101007360,
+          "catalog_numel_matches_registered_count": false,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 0,
+          "complete_update_set_records": 0,
+          "all_catalog_updated_records": 0,
+          "all_catalog_parameters_updated_each_record": null,
+          "updated_entries_per_complete_record_range": null,
+          "updated_numel_per_complete_record_range": null,
+          "optimizer_classes": [],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "no observed optimizer update"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 4,
+      "run_id": "eb45be0a25f54ff1a946715890670e4a",
+      "role": "annotate",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": null,
+      "wire_body_sha256": "e3fe2adc9a0834bdffd13ab84320b2ea58222a1c4c2c0f4c40fe320392e5bc10",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 3000,
+      "optimizer_summary": null
+    },
+    {
+      "id": 5,
+      "run_id": "eb45be0a25f54ff1a946715890670e4a",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.057724",
+      "wire_body_sha256": "4e5ea0a4aa4f2658fae4ae06905bf4d71822e3fb4790281ae6701dbf1a4e2d7b",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "c38c6737a10042e9b74dec1cbe83a7b3",
+        "source_sha256": "9565acfbcfc2f1eefd982c80be7ce943e09828578b9b44c3d70342bc82bf7f4c",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 204,
+          "catalog_numel": 1141338112,
+          "requires_grad_true_entries": 204,
+          "requires_grad_true_numel": 1141338112,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 1141338112,
+          "catalog_numel_matches_registered_count": true,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            204,
+            204
+          ],
+          "updated_numel_per_complete_record_range": [
+            1141338112,
+            1141338112
+          ],
+          "optimizer_classes": [
+            "torch.optim.adamw.AdamW"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 6,
+      "run_id": "eb45be0a25f54ff1a946715890670e4a",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.01725164",
+      "wire_body_sha256": "546c73e3cd75a3ade662aa80f1d5fc0eedbda73e49c03c00d485391f2275ede2",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "c38c6737a10042e9b74dec1cbe83a7b3",
+        "source_sha256": "9565acfbcfc2f1eefd982c80be7ce943e09828578b9b44c3d70342bc82bf7f4c",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 204,
+          "catalog_numel": 1141338112,
+          "requires_grad_true_entries": 204,
+          "requires_grad_true_numel": 1141338112,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 1141338112,
+          "catalog_numel_matches_registered_count": true,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            204,
+            204
+          ],
+          "updated_numel_per_complete_record_range": [
+            1141338112,
+            1141338112
+          ],
+          "optimizer_classes": [
+            "torch.optim.adamw.AdamW"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 7,
+      "run_id": "5f2b4b6416b24811ba2795ef922706c5",
+      "role": "annotate",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": null,
+      "wire_body_sha256": "3b8f52b6046c26b3c292c05490a7eb6973a244c632ed22a68cdc3abb7fb6f17c",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 3000,
+      "optimizer_summary": null
+    },
+    {
+      "id": 8,
+      "run_id": "5f2b4b6416b24811ba2795ef922706c5",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.062034",
+      "wire_body_sha256": "1f98d15bd10550b30c09f6293606722364cba5678463d033faace2da64e49cc8",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "57e4a567bd1d4262a06395b0a80c7931",
+        "source_sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 48,
+          "catalog_numel": 37791744,
+          "requires_grad_true_entries": 48,
+          "requires_grad_true_numel": 37791744,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 37791744,
+          "catalog_numel_matches_registered_count": true,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            48,
+            48
+          ],
+          "updated_numel_per_complete_record_range": [
+            37791744,
+            37791744
+          ],
+          "optimizer_classes": [
+            "torch.optim.sgd.SGD"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 9,
+      "run_id": "5f2b4b6416b24811ba2795ef922706c5",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.01690888",
+      "wire_body_sha256": "655aa812fd8fb4996386936e362b3be85a1bccb9aa6a3ae150a9b59baa0dd648",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "57e4a567bd1d4262a06395b0a80c7931",
+        "source_sha256": "7fedcae13989b309cc5a034e62284094829057654aebb2e716c3413dfb0fea67",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 48,
+          "catalog_numel": 37791744,
+          "requires_grad_true_entries": 48,
+          "requires_grad_true_numel": 37791744,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 37791744,
+          "catalog_numel_matches_registered_count": true,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            48,
+            48
+          ],
+          "updated_numel_per_complete_record_range": [
+            37791744,
+            37791744
+          ],
+          "optimizer_classes": [
+            "torch.optim.sgd.SGD"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 10,
+      "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+      "role": "annotate",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": null,
+      "wire_body_sha256": "34eec61972b45f4f992a1b37258b8b31d8d2e50dfe731adb4c046ad333ec4701",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 3000,
+      "optimizer_summary": null
+    },
+    {
+      "id": 11,
+      "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.055287",
+      "wire_body_sha256": "a7b2cf152bc21bf4f32544244c3d1426ed9db240ed95a08901e6aed36137b9d6",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "9224f309fc8a4ffbb5b5be26a7b84037",
+        "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 12,
+        "successful_optimizer_step_calls": 12,
+        "logical_updates": 12,
+        "parameters": {
+          "catalog_entries": 36,
+          "catalog_numel": 50374656,
+          "requires_grad_true_entries": 36,
+          "requires_grad_true_numel": 50374656,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 50374656,
+          "catalog_numel_matches_registered_count": true,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 12,
+          "complete_update_set_records": 12,
+          "all_catalog_updated_records": 12,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            36,
+            36
+          ],
+          "updated_numel_per_complete_record_range": [
+            50374656,
+            50374656
+          ],
+          "optimizer_classes": [
+            "torch.optim.sgd.SGD"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 12,
+      "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+      "role": "patcher",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.0040962",
+      "wire_body_sha256": "e1ba0353df2b726b2054d8a902e5324d373af0052cb77b26774df24a051cbcd7",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 4000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "9224f309fc8a4ffbb5b5be26a7b84037",
+        "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 12,
+        "successful_optimizer_step_calls": 12,
+        "logical_updates": 12,
+        "parameters": {
+          "catalog_entries": 36,
+          "catalog_numel": 50374656,
+          "requires_grad_true_entries": 36,
+          "requires_grad_true_numel": 50374656,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 50374656,
+          "catalog_numel_matches_registered_count": true,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 12,
+          "complete_update_set_records": 12,
+          "all_catalog_updated_records": 12,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            36,
+            36
+          ],
+          "updated_numel_per_complete_record_range": [
+            50374656,
+            50374656
+          ],
+          "optimizer_classes": [
+            "torch.optim.sgd.SGD"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 13,
+      "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+      "role": "patcher",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.004152",
+      "wire_body_sha256": "041306eecd8ce0ae3bd9dfa6587243bce074079bc8e0c77b11120ff6ddb1e597",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 4000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "9224f309fc8a4ffbb5b5be26a7b84037",
+        "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 12,
+        "successful_optimizer_step_calls": 12,
+        "logical_updates": 12,
+        "parameters": {
+          "catalog_entries": 36,
+          "catalog_numel": 50374656,
+          "requires_grad_true_entries": 36,
+          "requires_grad_true_numel": 50374656,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 50374656,
+          "catalog_numel_matches_registered_count": true,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 12,
+          "complete_update_set_records": 12,
+          "all_catalog_updated_records": 12,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            36,
+            36
+          ],
+          "updated_numel_per_complete_record_range": [
+            50374656,
+            50374656
+          ],
+          "optimizer_classes": [
+            "torch.optim.sgd.SGD"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 14,
+      "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.05501424",
+      "wire_body_sha256": "8de48cd2aac6441e415d589d7fb2900ab5b78c6d78d34f71cf89a4c3cb07703c",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "9224f309fc8a4ffbb5b5be26a7b84037",
+        "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 12,
+        "successful_optimizer_step_calls": 12,
+        "logical_updates": 12,
+        "parameters": {
+          "catalog_entries": 36,
+          "catalog_numel": 50374656,
+          "requires_grad_true_entries": 36,
+          "requires_grad_true_numel": 50374656,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 50374656,
+          "catalog_numel_matches_registered_count": true,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 12,
+          "complete_update_set_records": 12,
+          "all_catalog_updated_records": 12,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            36,
+            36
+          ],
+          "updated_numel_per_complete_record_range": [
+            50374656,
+            50374656
+          ],
+          "optimizer_classes": [
+            "torch.optim.sgd.SGD"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 15,
+      "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.01779064",
+      "wire_body_sha256": "681c0f8397ba85350fc5aac3abc0d93bd6711411f7f89fb1a71a1f417c3dd4b4",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "9224f309fc8a4ffbb5b5be26a7b84037",
+        "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 12,
+        "successful_optimizer_step_calls": 12,
+        "logical_updates": 12,
+        "parameters": {
+          "catalog_entries": 36,
+          "catalog_numel": 50374656,
+          "requires_grad_true_entries": 36,
+          "requires_grad_true_numel": 50374656,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 50374656,
+          "catalog_numel_matches_registered_count": true,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 12,
+          "complete_update_set_records": 12,
+          "all_catalog_updated_records": 12,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            36,
+            36
+          ],
+          "updated_numel_per_complete_record_range": [
+            50374656,
+            50374656
+          ],
+          "optimizer_classes": [
+            "torch.optim.sgd.SGD"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 16,
+      "run_id": "d24caaa6352c4f98ac80e98aac56bf8f",
+      "role": "annotate",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": null,
+      "wire_body_sha256": "eb0eaf63a55768dfd2a06e3ecedac401744799bd6c003c5d4be53fad74c4b23e",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 3000,
+      "optimizer_summary": null
+    },
+    {
+      "id": 17,
+      "run_id": "d24caaa6352c4f98ac80e98aac56bf8f",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.049423",
+      "wire_body_sha256": "924fda6e97e42f30a93454414ba95a742a275e0ebb6e206f19d1777bc2ed92c8",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "6525eaf5d155410f8c50c92ed3c0e906",
+        "source_sha256": "627d24ee9e62601455e37f29166df8abe73a43b9e82382a293feec3a6b558169",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 24,
+          "catalog_numel": 50362368,
+          "requires_grad_true_entries": 24,
+          "requires_grad_true_numel": 50362368,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 50362368,
+          "catalog_numel_matches_registered_count": true,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            24,
+            24
+          ],
+          "updated_numel_per_complete_record_range": [
+            50362368,
+            50362368
+          ],
+          "optimizer_classes": [
+            "torch.optim.sgd.SGD"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 18,
+      "run_id": "d24caaa6352c4f98ac80e98aac56bf8f",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.01574416",
+      "wire_body_sha256": "341a76b9d7b875bdafc8a68aa27a9399ab32a0c9239f2225c884305f0b141274",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "6525eaf5d155410f8c50c92ed3c0e906",
+        "source_sha256": "627d24ee9e62601455e37f29166df8abe73a43b9e82382a293feec3a6b558169",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 24,
+          "catalog_numel": 50362368,
+          "requires_grad_true_entries": 24,
+          "requires_grad_true_numel": 50362368,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 50362368,
+          "catalog_numel_matches_registered_count": true,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            24,
+            24
+          ],
+          "updated_numel_per_complete_record_range": [
+            50362368,
+            50362368
+          ],
+          "optimizer_classes": [
+            "torch.optim.sgd.SGD"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 19,
+      "run_id": "831a56da4f3145c3bc53e586b491204e",
+      "role": "annotate",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": null,
+      "wire_body_sha256": "aaf2a92539465ad51703a08c3feb1ac9371b3d0120f859183fcdaf2963ffa530",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 3000,
+      "optimizer_summary": null
+    },
+    {
+      "id": 20,
+      "run_id": "831a56da4f3145c3bc53e586b491204e",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.042123",
+      "wire_body_sha256": "73427e32388ae7b55c394cfe2d4bf553d0727275931132db4dd2bc10f4686506",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "partial",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "7b3544efe8954d6384ace0b78038ccb5",
+        "source_sha256": "4f5d7e0f4331a4efcda2039c8ac8a421b2a1923778379896e2658553619b1bba",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": false,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": false,
+        "optimizer_step_calls": 0,
+        "successful_optimizer_step_calls": 0,
+        "logical_updates": 0,
+        "parameters": {
+          "catalog_entries": 0,
+          "catalog_numel": 0,
+          "requires_grad_true_entries": 0,
+          "requires_grad_true_numel": 0,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 33570944,
+          "catalog_numel_matches_registered_count": false,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 0,
+          "complete_update_set_records": 0,
+          "all_catalog_updated_records": 0,
+          "all_catalog_parameters_updated_each_record": null,
+          "updated_entries_per_complete_record_range": null,
+          "updated_numel_per_complete_record_range": null,
+          "optimizer_classes": [],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "no observed optimizer update"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 21,
+      "run_id": "831a56da4f3145c3bc53e586b491204e",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.01177392",
+      "wire_body_sha256": "8854ddc8abd8aa48264ed6a168621135c14c52b302dcfa7d0509cfb70e255ad4",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "partial",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "7b3544efe8954d6384ace0b78038ccb5",
+        "source_sha256": "4f5d7e0f4331a4efcda2039c8ac8a421b2a1923778379896e2658553619b1bba",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": false,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": false,
+        "optimizer_step_calls": 0,
+        "successful_optimizer_step_calls": 0,
+        "logical_updates": 0,
+        "parameters": {
+          "catalog_entries": 0,
+          "catalog_numel": 0,
+          "requires_grad_true_entries": 0,
+          "requires_grad_true_numel": 0,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 33570944,
+          "catalog_numel_matches_registered_count": false,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 0,
+          "complete_update_set_records": 0,
+          "all_catalog_updated_records": 0,
+          "all_catalog_parameters_updated_each_record": null,
+          "updated_entries_per_complete_record_range": null,
+          "updated_numel_per_complete_record_range": null,
+          "optimizer_classes": [],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "no observed optimizer update"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 22,
+      "run_id": "831a56da4f3145c3bc53e586b491204e",
+      "role": "patcher",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.0047613",
+      "wire_body_sha256": "cde3ae8a6e5bdb82e7799f24e2c274d62beed7d7b92815e83a78eabfe7006af2",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 4000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "partial",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "7b3544efe8954d6384ace0b78038ccb5",
+        "source_sha256": "4f5d7e0f4331a4efcda2039c8ac8a421b2a1923778379896e2658553619b1bba",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": false,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": false,
+        "optimizer_step_calls": 0,
+        "successful_optimizer_step_calls": 0,
+        "logical_updates": 0,
+        "parameters": {
+          "catalog_entries": 0,
+          "catalog_numel": 0,
+          "requires_grad_true_entries": 0,
+          "requires_grad_true_numel": 0,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 33570944,
+          "catalog_numel_matches_registered_count": false,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 0,
+          "complete_update_set_records": 0,
+          "all_catalog_updated_records": 0,
+          "all_catalog_parameters_updated_each_record": null,
+          "updated_entries_per_complete_record_range": null,
+          "updated_numel_per_complete_record_range": null,
+          "optimizer_classes": [],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "no observed optimizer update"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 23,
+      "run_id": "831a56da4f3145c3bc53e586b491204e",
+      "role": "patcher",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.0044634",
+      "wire_body_sha256": "729ac716c379ddcb04f2250adc8f915f7f736f4bf30e3a118c3cbbdce6259f67",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 4000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "partial",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "7b3544efe8954d6384ace0b78038ccb5",
+        "source_sha256": "4f5d7e0f4331a4efcda2039c8ac8a421b2a1923778379896e2658553619b1bba",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": false,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": false,
+        "optimizer_step_calls": 0,
+        "successful_optimizer_step_calls": 0,
+        "logical_updates": 0,
+        "parameters": {
+          "catalog_entries": 0,
+          "catalog_numel": 0,
+          "requires_grad_true_entries": 0,
+          "requires_grad_true_numel": 0,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 33570944,
+          "catalog_numel_matches_registered_count": false,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 0,
+          "complete_update_set_records": 0,
+          "all_catalog_updated_records": 0,
+          "all_catalog_parameters_updated_each_record": null,
+          "updated_entries_per_complete_record_range": null,
+          "updated_numel_per_complete_record_range": null,
+          "optimizer_classes": [],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "no observed optimizer update"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 24,
+      "run_id": "831a56da4f3145c3bc53e586b491204e",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.04010524",
+      "wire_body_sha256": "0153f6be93b8fe6e2bc27e18c18ee004d94b7546b9a2aa8916a83dd4d33fdae2",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "partial",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "7b3544efe8954d6384ace0b78038ccb5",
+        "source_sha256": "4f5d7e0f4331a4efcda2039c8ac8a421b2a1923778379896e2658553619b1bba",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": false,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": false,
+        "optimizer_step_calls": 0,
+        "successful_optimizer_step_calls": 0,
+        "logical_updates": 0,
+        "parameters": {
+          "catalog_entries": 0,
+          "catalog_numel": 0,
+          "requires_grad_true_entries": 0,
+          "requires_grad_true_numel": 0,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 33570944,
+          "catalog_numel_matches_registered_count": false,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 0,
+          "complete_update_set_records": 0,
+          "all_catalog_updated_records": 0,
+          "all_catalog_parameters_updated_each_record": null,
+          "updated_entries_per_complete_record_range": null,
+          "updated_numel_per_complete_record_range": null,
+          "optimizer_classes": [],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "no observed optimizer update"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 25,
+      "run_id": "831a56da4f3145c3bc53e586b491204e",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.01486592",
+      "wire_body_sha256": "5815474198721152cc985fd2d7fb2cbccfca65e80325d37fc77da8bc99cbfd5a",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "partial",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "7b3544efe8954d6384ace0b78038ccb5",
+        "source_sha256": "4f5d7e0f4331a4efcda2039c8ac8a421b2a1923778379896e2658553619b1bba",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": false,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": false,
+        "optimizer_step_calls": 0,
+        "successful_optimizer_step_calls": 0,
+        "logical_updates": 0,
+        "parameters": {
+          "catalog_entries": 0,
+          "catalog_numel": 0,
+          "requires_grad_true_entries": 0,
+          "requires_grad_true_numel": 0,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 33570944,
+          "catalog_numel_matches_registered_count": false,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 0,
+          "complete_update_set_records": 0,
+          "all_catalog_updated_records": 0,
+          "all_catalog_parameters_updated_each_record": null,
+          "updated_entries_per_complete_record_range": null,
+          "updated_numel_per_complete_record_range": null,
+          "optimizer_classes": [],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "no observed optimizer update"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 26,
+      "run_id": "0fba6eeccc18411590b036557f7f9526",
+      "role": "annotate",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": null,
+      "wire_body_sha256": "08450554a295ba1b068029057a5382472c8e35a6af3b0129f4a99dd7bd0d5d7c",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 3000,
+      "optimizer_summary": null
+    },
+    {
+      "id": 27,
+      "run_id": "0fba6eeccc18411590b036557f7f9526",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.04986",
+      "wire_body_sha256": "2185e59e15cf07684036df49a02d59c7768d51ef90a9fb6f90487926617e2dd7",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "e0280b91ce614893a1207e3ccc185726",
+        "source_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 34,
+          "catalog_numel": 1075970304,
+          "requires_grad_true_entries": 34,
+          "requires_grad_true_numel": 1075970304,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 1075970304,
+          "catalog_numel_matches_registered_count": true,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            34,
+            34
+          ],
+          "updated_numel_per_complete_record_range": [
+            1075970304,
+            1075970304
+          ],
+          "optimizer_classes": [
+            "torch.optim.adamw.AdamW"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 28,
+      "run_id": "0fba6eeccc18411590b036557f7f9526",
+      "role": "super",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.0003978",
+      "wire_body_sha256": "607cedcf6255bed10281b7d9aeeb09c6d91832d59599718d30300103e9f8d776",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": null
+    },
+    {
+      "id": 29,
+      "run_id": "0fba6eeccc18411590b036557f7f9526",
+      "role": "super",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.0005718",
+      "wire_body_sha256": "1269212fa5c3dd343408055d56e512f7e9994febf0f959c9a9c1f5208509dc6a",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": null
+    },
+    {
+      "id": 30,
+      "run_id": "0fba6eeccc18411590b036557f7f9526",
+      "role": "super",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.00088578",
+      "wire_body_sha256": "9fa7c6b08074cc05975c8c58f6f9fceccc4e590e3c6470c2a6308729f1357464",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": null
+    },
+    {
+      "id": 31,
+      "run_id": "0fba6eeccc18411590b036557f7f9526",
+      "role": "super",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.00101844",
+      "wire_body_sha256": "af233d951d5dde9e14914d0890383def813bfff59f3511d82ffe0cd61541e994",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": null
+    },
+    {
+      "id": 32,
+      "run_id": "0fba6eeccc18411590b036557f7f9526",
+      "role": "patcher",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.0063957",
+      "wire_body_sha256": "ec167ae8b259a4aa53fc44ba7408b077adb73412b965b2f1c0764c8ed1d8337a",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 4000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "e0280b91ce614893a1207e3ccc185726",
+        "source_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 34,
+          "catalog_numel": 1075970304,
+          "requires_grad_true_entries": 34,
+          "requires_grad_true_numel": 1075970304,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 1075970304,
+          "catalog_numel_matches_registered_count": true,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            34,
+            34
+          ],
+          "updated_numel_per_complete_record_range": [
+            1075970304,
+            1075970304
+          ],
+          "optimizer_classes": [
+            "torch.optim.adamw.AdamW"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 33,
+      "run_id": "0fba6eeccc18411590b036557f7f9526",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.04906424",
+      "wire_body_sha256": "8e87610a6d561cf7920e5092603f74bded5add9d7f5eafb9bf8b1495d51275e7",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "e0280b91ce614893a1207e3ccc185726",
+        "source_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 34,
+          "catalog_numel": 1075970304,
+          "requires_grad_true_entries": 34,
+          "requires_grad_true_numel": 1075970304,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 1075970304,
+          "catalog_numel_matches_registered_count": true,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            34,
+            34
+          ],
+          "updated_numel_per_complete_record_range": [
+            1075970304,
+            1075970304
+          ],
+          "optimizer_classes": [
+            "torch.optim.adamw.AdamW"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 34,
+      "run_id": "0fba6eeccc18411590b036557f7f9526",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.0159034",
+      "wire_body_sha256": "9189cd1d8eeec26e886f6a46eba605545225a635e9dec4d10d7218738eb791a5",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "e0280b91ce614893a1207e3ccc185726",
+        "source_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 34,
+          "catalog_numel": 1075970304,
+          "requires_grad_true_entries": 34,
+          "requires_grad_true_numel": 1075970304,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 1075970304,
+          "catalog_numel_matches_registered_count": true,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            34,
+            34
+          ],
+          "updated_numel_per_complete_record_range": [
+            1075970304,
+            1075970304
+          ],
+          "optimizer_classes": [
+            "torch.optim.adamw.AdamW"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 35,
+      "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+      "role": "annotate",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": null,
+      "wire_body_sha256": "d308301371791ad95904cbb3efdf5f137e4b28ba29247533942b71fcc22bc3d1",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 3000,
+      "optimizer_summary": null
+    },
+    {
+      "id": 36,
+      "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.055511",
+      "wire_body_sha256": "66a0f3c2bf096f34a23d5fa413bbe3fd999e6cf285e9c584d81278efc0c4b998",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "4bec5e57dd5845d7883a35498dd15afa",
+        "source_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 8,
+          "catalog_numel": 2886912,
+          "requires_grad_true_entries": 8,
+          "requires_grad_true_numel": 2886912,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 747474432,
+          "catalog_numel_matches_registered_count": false,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            8,
+            8
+          ],
+          "updated_numel_per_complete_record_range": [
+            2886912,
+            2886912
+          ],
+          "optimizer_classes": [
+            "torch.optim.adamw.AdamW"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 37,
+      "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.01378064",
+      "wire_body_sha256": "ba648fdb7705844566ea1415839e5fcddbdbb4b08f307f54ad38682baaf5e056",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "4bec5e57dd5845d7883a35498dd15afa",
+        "source_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 8,
+          "catalog_numel": 2886912,
+          "requires_grad_true_entries": 8,
+          "requires_grad_true_numel": 2886912,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 747474432,
+          "catalog_numel_matches_registered_count": false,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            8,
+            8
+          ],
+          "updated_numel_per_complete_record_range": [
+            2886912,
+            2886912
+          ],
+          "optimizer_classes": [
+            "torch.optim.adamw.AdamW"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 38,
+      "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+      "role": "patcher",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.0047658",
+      "wire_body_sha256": "839633125822d379402c2bb5c39f6df28e6daf1ec1c5e4fdcbf495b931f8d6af",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 4000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "4bec5e57dd5845d7883a35498dd15afa",
+        "source_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 8,
+          "catalog_numel": 2886912,
+          "requires_grad_true_entries": 8,
+          "requires_grad_true_numel": 2886912,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 747474432,
+          "catalog_numel_matches_registered_count": false,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            8,
+            8
+          ],
+          "updated_numel_per_complete_record_range": [
+            2886912,
+            2886912
+          ],
+          "optimizer_classes": [
+            "torch.optim.adamw.AdamW"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 39,
+      "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+      "role": "patcher",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.0046062",
+      "wire_body_sha256": "b5abfd3cb13c0414c1f7a0a044b57ac4b4bae6ca63a5d5b8c2c9864ec165353e",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 4000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "4bec5e57dd5845d7883a35498dd15afa",
+        "source_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 8,
+          "catalog_numel": 2886912,
+          "requires_grad_true_entries": 8,
+          "requires_grad_true_numel": 2886912,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 747474432,
+          "catalog_numel_matches_registered_count": false,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            8,
+            8
+          ],
+          "updated_numel_per_complete_record_range": [
+            2886912,
+            2886912
+          ],
+          "optimizer_classes": [
+            "torch.optim.adamw.AdamW"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 40,
+      "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+      "role": "patcher",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.0042759",
+      "wire_body_sha256": "53ad9685ac3e0ea921e945f7a6629432be2ef184032a1b047c9d564eae8bb63e",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 4000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "4bec5e57dd5845d7883a35498dd15afa",
+        "source_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 8,
+          "catalog_numel": 2886912,
+          "requires_grad_true_entries": 8,
+          "requires_grad_true_numel": 2886912,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 747474432,
+          "catalog_numel_matches_registered_count": false,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            8,
+            8
+          ],
+          "updated_numel_per_complete_record_range": [
+            2886912,
+            2886912
+          ],
+          "optimizer_classes": [
+            "torch.optim.adamw.AdamW"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 41,
+      "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+      "role": "patcher",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.0045798",
+      "wire_body_sha256": "e168de76d2696cf29601f4c5ee706260eff9fa19c38deb25a4dc9028ceba9ce1",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 4000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "4bec5e57dd5845d7883a35498dd15afa",
+        "source_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 8,
+          "catalog_numel": 2886912,
+          "requires_grad_true_entries": 8,
+          "requires_grad_true_numel": 2886912,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 747474432,
+          "catalog_numel_matches_registered_count": false,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            8,
+            8
+          ],
+          "updated_numel_per_complete_record_range": [
+            2886912,
+            2886912
+          ],
+          "optimizer_classes": [
+            "torch.optim.adamw.AdamW"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 42,
+      "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.05342124",
+      "wire_body_sha256": "d1626c5d5e6f9ac384d59e22852e0902fdd866ac279ce77fdf9a507ab62477df",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "4bec5e57dd5845d7883a35498dd15afa",
+        "source_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 8,
+          "catalog_numel": 2886912,
+          "requires_grad_true_entries": 8,
+          "requires_grad_true_numel": 2886912,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 747474432,
+          "catalog_numel_matches_registered_count": false,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            8,
+            8
+          ],
+          "updated_numel_per_complete_record_range": [
+            2886912,
+            2886912
+          ],
+          "optimizer_classes": [
+            "torch.optim.adamw.AdamW"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 43,
+      "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.01576964",
+      "wire_body_sha256": "611c8ec3055e4d189e77927efccc61ae1ced3d4b251c7c28c3406eb8c17f3dfd",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "observed",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "selected_run_id": "4bec5e57dd5845d7883a35498dd15afa",
+        "source_sha256": "5a64c4300c2a3bc1b6005d2102f13c86c0afe348a0799b9541adddded6ad6b59",
+        "source_binding": "capture source digest matches retained entrypoint source",
+        "capture_complete": true,
+        "reported_complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20,
+        "parameters": {
+          "catalog_entries": 8,
+          "catalog_numel": 2886912,
+          "requires_grad_true_entries": 8,
+          "requires_grad_true_numel": 2886912,
+          "requires_grad_false_entries": 0,
+          "requires_grad_false_numel": 0,
+          "registered_parameter_numel": 747474432,
+          "catalog_numel_matches_registered_count": false,
+          "scope": "catalogued optimizer parameters at observation, not named model layers"
+        },
+        "updates": {
+          "recorded_logical_updates": 20,
+          "complete_update_set_records": 20,
+          "all_catalog_updated_records": 20,
+          "all_catalog_parameters_updated_each_record": true,
+          "updated_entries_per_complete_record_range": [
+            8,
+            8
+          ],
+          "updated_numel_per_complete_record_range": [
+            2886912,
+            2886912
+          ],
+          "optimizer_classes": [
+            "torch.optim.adamw.AdamW"
+          ],
+          "unrecognized_optimizer_class_records": 0,
+          "scope": "completed observed updates"
+        },
+        "optimizer_call_counts_consistent": true
+      }
+    },
+    {
+      "id": 44,
+      "run_id": "29e3fae102274f1ca1b53b80fb6e7588",
+      "role": "annotate",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": null,
+      "wire_body_sha256": "8ff0c7a276181b13cd4bcfe8e20bf1979a1e6be5cd3df3bf4661a9e62bb4b719",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 3000,
+      "optimizer_summary": null
+    },
+    {
+      "id": 45,
+      "run_id": "29e3fae102274f1ca1b53b80fb6e7588",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.075351",
+      "wire_body_sha256": "47fd262a14f70cff505c645f28d3c5b958fa34ddbebc387643f2aa2c8175f564",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "unverified",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "reason": "selected run or retained entrypoint source binding unavailable"
+      }
+    },
+    {
+      "id": 46,
+      "run_id": "29e3fae102274f1ca1b53b80fb6e7588",
+      "role": "diagnose",
+      "outcome": "response",
+      "settled": true,
+      "actual_cost_usd": "0.0193546",
+      "wire_body_sha256": "28aa204d9629216f0ce1f4bd5ef7ea611e13c47766a9d7cd7d8f93cd451206a0",
+      "prepared_request_present": true,
+      "delivery_confirmed": false,
+      "output_cap": 2000,
+      "optimizer_summary": {
+        "schema": "headroom.runtime_optimizer_observations.v1",
+        "status": "unverified",
+        "scope": "selected_run_cooperative_optimizer_capture_only",
+        "selected_round": null,
+        "numerical_equivalence_proven": false,
+        "input_coverage_proven": false,
+        "optimizer_group_hyperparameters": "not_captured",
+        "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+        "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+        "reason": "selected run or retained entrypoint source binding unavailable"
+      }
+    }
+  ],
+  "call_counts_by_role": {
+    "annotate": 9,
+    "diagnose": 24,
+    "patcher": 9,
+    "super": 4
+  },
+  "call_outcomes": {
+    "response": 46
+  },
+  "billing": {
+    "campaign_charged_usd": "0.93850838",
+    "known_actual_subtotal_usd": "0.91055144",
+    "unknown_actual_call_count": 9,
+    "actual_total_usd": null,
+    "pool_charged_usd": "1.60437118",
+    "pool_remaining_usd": "3.286133220",
+    "all_costs_resolved": true,
+    "all_costs_known": false,
+    "selected_attempt_count": 46,
+    "attempts": [
+      {
+        "attempt_id": "03e266d7350b4f4292d0795751f00710",
+        "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+        "charged_usd": "0.004152",
+        "actual_usd": "0.004152",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "08a4d9b926e84f11ab0a22fb78f4a5dc",
+        "run_id": "2868965cd88743308f3624dfa36112a5",
+        "charged_usd": "0.045506",
+        "actual_usd": "0.045506",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "0bc7498b5f124beaba5e62acbe08d383",
+        "run_id": "0fba6eeccc18411590b036557f7f9526",
+        "charged_usd": "0.04986",
+        "actual_usd": "0.04986",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "0e57a3466bb9417aa50e710742bd7302",
+        "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+        "charged_usd": "0.05501424",
+        "actual_usd": "0.05501424",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "15174036b07240cea3f7881ce0419f0e",
+        "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+        "charged_usd": "0.05342124",
+        "actual_usd": "0.05342124",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "2132ef1762b34eeeb4e59301bde0cfe0",
+        "run_id": "d24caaa6352c4f98ac80e98aac56bf8f",
+        "charged_usd": "0.00294246",
+        "actual_usd": null,
+        "settled": true,
+        "charge_status": "upper_bound",
+        "resolved": true
+      },
+      {
+        "attempt_id": "213611c7a238444c89dfd44c133d4ed9",
+        "run_id": "5f2b4b6416b24811ba2795ef922706c5",
+        "charged_usd": "0.00383382",
+        "actual_usd": null,
+        "settled": true,
+        "charge_status": "upper_bound",
+        "resolved": true
+      },
+      {
+        "attempt_id": "255b6a8727204e64821386fc9f613715",
+        "run_id": "29e3fae102274f1ca1b53b80fb6e7588",
+        "charged_usd": "0.0193546",
+        "actual_usd": "0.0193546",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "272caf41966b42d6bb9e31c9a79cf9ff",
+        "run_id": "0fba6eeccc18411590b036557f7f9526",
+        "charged_usd": "0.00281124",
+        "actual_usd": null,
+        "settled": true,
+        "charge_status": "upper_bound",
+        "resolved": true
+      },
+      {
+        "attempt_id": "296e90b81e244fa790b3b3cc0214c5ab",
+        "run_id": "eb45be0a25f54ff1a946715890670e4a",
+        "charged_usd": "0.00274848",
+        "actual_usd": null,
+        "settled": true,
+        "charge_status": "upper_bound",
+        "resolved": true
+      },
+      {
+        "attempt_id": "2a4c77401b2748e8a1b395b2914e99d7",
+        "run_id": "831a56da4f3145c3bc53e586b491204e",
+        "charged_usd": "0.0044634",
+        "actual_usd": "0.0044634",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "2ef2ee84e70d4887b9730797066161d6",
+        "run_id": "0fba6eeccc18411590b036557f7f9526",
+        "charged_usd": "0.0003978",
+        "actual_usd": "0.0003978",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "32618d9a075e4687a1d3b65ed8ecac3e",
+        "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+        "charged_usd": "0.0045798",
+        "actual_usd": "0.0045798",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "34ad18d2fe5d4561add00fa2bae33704",
+        "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+        "charged_usd": "0.0042759",
+        "actual_usd": "0.0042759",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "366a3500924d4bca96fa55b6238838a0",
+        "run_id": "5f2b4b6416b24811ba2795ef922706c5",
+        "charged_usd": "0.062034",
+        "actual_usd": "0.062034",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "36eafa99818e453b8d5742c6e1577bed",
+        "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+        "charged_usd": "0.055287",
+        "actual_usd": "0.055287",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "41c0344acc1a40b6bd92594b31828c68",
+        "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+        "charged_usd": "0.055511",
+        "actual_usd": "0.055511",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "4250860fa8a7456bb6dfa10aee9b9232",
+        "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+        "charged_usd": "0.01576964",
+        "actual_usd": "0.01576964",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "43e877aa9aa44f12b5848a5ad6c76592",
+        "run_id": "831a56da4f3145c3bc53e586b491204e",
+        "charged_usd": "0.01177392",
+        "actual_usd": "0.01177392",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "49ad5c1fec9c46468cf1692ab1ce8d49",
+        "run_id": "831a56da4f3145c3bc53e586b491204e",
+        "charged_usd": "0.00293622",
+        "actual_usd": null,
+        "settled": true,
+        "charge_status": "upper_bound",
+        "resolved": true
+      },
+      {
+        "attempt_id": "49b048f1784a47fe84a1cdb059cbff48",
+        "run_id": "2868965cd88743308f3624dfa36112a5",
+        "charged_usd": "0.01601392",
+        "actual_usd": "0.01601392",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "4dba6ac63f37433f8b914b77ddbb9fe8",
+        "run_id": "0fba6eeccc18411590b036557f7f9526",
+        "charged_usd": "0.0159034",
+        "actual_usd": "0.0159034",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "51524d607a584a86b4077188be2e8d30",
+        "run_id": "831a56da4f3145c3bc53e586b491204e",
+        "charged_usd": "0.01486592",
+        "actual_usd": "0.01486592",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "5a9a2ee73df943b99b60df22c3c0babc",
+        "run_id": "d24caaa6352c4f98ac80e98aac56bf8f",
+        "charged_usd": "0.01574416",
+        "actual_usd": "0.01574416",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "5bbe9fc9012744dc90c5b81bf5f2b595",
+        "run_id": "29e3fae102274f1ca1b53b80fb6e7588",
+        "charged_usd": "0.075351",
+        "actual_usd": "0.075351",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "64cd87c80a2448eab448106da6191688",
+        "run_id": "5f2b4b6416b24811ba2795ef922706c5",
+        "charged_usd": "0.01690888",
+        "actual_usd": "0.01690888",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "654eef9eac4e4728a8c452f89b625123",
+        "run_id": "831a56da4f3145c3bc53e586b491204e",
+        "charged_usd": "0.042123",
+        "actual_usd": "0.042123",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "6f829019dace434198fbf952e5003f03",
+        "run_id": "eb45be0a25f54ff1a946715890670e4a",
+        "charged_usd": "0.057724",
+        "actual_usd": "0.057724",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "70e46ddbc4e24407b12d6bec1f1957fc",
+        "run_id": "29e3fae102274f1ca1b53b80fb6e7588",
+        "charged_usd": "0.00421626",
+        "actual_usd": null,
+        "settled": true,
+        "charge_status": "upper_bound",
+        "resolved": true
+      },
+      {
+        "attempt_id": "79561aee48d9408a96a96eab6715eb34",
+        "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+        "charged_usd": "0.00280146",
+        "actual_usd": null,
+        "settled": true,
+        "charge_status": "upper_bound",
+        "resolved": true
+      },
+      {
+        "attempt_id": "79a7f187ad8c409c910ef861585a9d1e",
+        "run_id": "0fba6eeccc18411590b036557f7f9526",
+        "charged_usd": "0.0063957",
+        "actual_usd": "0.0063957",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "7f10124200bc404f8639c07730fa7350",
+        "run_id": "d24caaa6352c4f98ac80e98aac56bf8f",
+        "charged_usd": "0.049423",
+        "actual_usd": "0.049423",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "851e6dd7349d4009ba62f6bcee4f4ca3",
+        "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+        "charged_usd": "0.0046062",
+        "actual_usd": "0.0046062",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "88bc8e31ff6847b5aecfc27282b872c1",
+        "run_id": "0fba6eeccc18411590b036557f7f9526",
+        "charged_usd": "0.0005718",
+        "actual_usd": "0.0005718",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "93558239bfcc4384b3f668a61216da7f",
+        "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+        "charged_usd": "0.0047658",
+        "actual_usd": "0.0047658",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "a40af89f263040228a8d33457cf6cac0",
+        "run_id": "2868965cd88743308f3624dfa36112a5",
+        "charged_usd": "0.002484",
+        "actual_usd": null,
+        "settled": true,
+        "charge_status": "upper_bound",
+        "resolved": true
+      },
+      {
+        "attempt_id": "ba8091fbfc14428a846725aaa71bdba4",
+        "run_id": "eb45be0a25f54ff1a946715890670e4a",
+        "charged_usd": "0.01725164",
+        "actual_usd": "0.01725164",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "bcb95cce4c054aa9b3a6adaddef399d4",
+        "run_id": "0fba6eeccc18411590b036557f7f9526",
+        "charged_usd": "0.04906424",
+        "actual_usd": "0.04906424",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "cc08797ef6544404adc13d0ce1c4eb3b",
+        "run_id": "831a56da4f3145c3bc53e586b491204e",
+        "charged_usd": "0.0047613",
+        "actual_usd": "0.0047613",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "cc719408974c42bfbf9279bbb2486e39",
+        "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+        "charged_usd": "0.0040962",
+        "actual_usd": "0.0040962",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "dbf54350b4bf49cc827562fda4196d0e",
+        "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+        "charged_usd": "0.01779064",
+        "actual_usd": "0.01779064",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "f21df2c6614142e990916d95216915df",
+        "run_id": "0fba6eeccc18411590b036557f7f9526",
+        "charged_usd": "0.00101844",
+        "actual_usd": "0.00101844",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "f5e1b69164f64fb3839ebe7bf1f816c7",
+        "run_id": "0fba6eeccc18411590b036557f7f9526",
+        "charged_usd": "0.00088578",
+        "actual_usd": "0.00088578",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "f798955de51140a188b39462046b727c",
+        "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+        "charged_usd": "0.01378064",
+        "actual_usd": "0.01378064",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      },
+      {
+        "attempt_id": "f9dca9e0e4b944ec8c1656d7151340cc",
+        "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+        "charged_usd": "0.003183",
+        "actual_usd": null,
+        "settled": true,
+        "charge_status": "upper_bound",
+        "resolved": true
+      },
+      {
+        "attempt_id": "fd94af29ea27413ca3ab5815a1d28dc6",
+        "run_id": "831a56da4f3145c3bc53e586b491204e",
+        "charged_usd": "0.04010524",
+        "actual_usd": "0.04010524",
+        "settled": true,
+        "charge_status": "exact",
+        "resolved": true
+      }
+    ]
+  },
+  "lab_captures": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "path": "runs/repair-followup/execution-r14-20261030/jobs/2868965cd88743308f3624dfa36112a5/lab/d1f63968daeb4d85b4b6e6231f493d61/result.json",
+      "run_id": "d1f63968daeb4d85b4b6e6231f493d61",
+      "status": "oom",
+      "steps": 0,
+      "capture_complete": true,
+      "exception": {
+        "type": "OutOfMemoryError",
+        "message": "CUDA out of memory. Tried to allocate 256.00 MiB. GPU 0 has a total capacity of 23.55 GiB of which 103.19 MiB is free. Including non-PyTorch memory, this process has 23.38 GiB memory in use. Of the allocated memory 23.05 GiB is allocated by PyTorch, and 160.00 KiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)"
+      },
+      "cleanup_verified": true,
+      "artifact_cleanup_verified": true
+    },
+    {
+      "scenario_id": "s2_capacity_v2",
+      "path": "runs/repair-followup/execution-r14-20261030/jobs/eb45be0a25f54ff1a946715890670e4a/lab/c38c6737a10042e9b74dec1cbe83a7b3/result.json",
+      "run_id": "c38c6737a10042e9b74dec1cbe83a7b3",
+      "status": "completed",
+      "steps": 20,
+      "capture_complete": true,
+      "exception": {
+        "type": "StepLimitReached",
+        "message": "Reached 20 optimizer updates"
+      },
+      "cleanup_verified": true,
+      "artifact_cleanup_verified": true
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "path": "runs/repair-followup/execution-r14-20261030/jobs/5f2b4b6416b24811ba2795ef922706c5/lab/57e4a567bd1d4262a06395b0a80c7931/result.json",
+      "run_id": "57e4a567bd1d4262a06395b0a80c7931",
+      "status": "completed",
+      "steps": 20,
+      "capture_complete": true,
+      "exception": {
+        "type": "StepLimitReached",
+        "message": "Reached 20 optimizer updates"
+      },
+      "cleanup_verified": true,
+      "artifact_cleanup_verified": true
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "path": "runs/repair-followup/execution-r14-20261030/jobs/68f09d2e33f9474ea44e476abc2c98ac/lab/4f5df44ae3ed4c00a476af09971700d3/result.json",
+      "run_id": "4f5df44ae3ed4c00a476af09971700d3",
+      "status": "completed",
+      "steps": 20,
+      "capture_complete": true,
+      "exception": {
+        "type": "StepLimitReached",
+        "message": "Reached 20 optimizer updates"
+      },
+      "cleanup_verified": true,
+      "artifact_cleanup_verified": true
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "path": "runs/repair-followup/execution-r14-20261030/jobs/68f09d2e33f9474ea44e476abc2c98ac/lab/9224f309fc8a4ffbb5b5be26a7b84037/result.json",
+      "run_id": "9224f309fc8a4ffbb5b5be26a7b84037",
+      "status": "oom",
+      "steps": 12,
+      "capture_complete": true,
+      "exception": {
+        "type": "OutOfMemoryError",
+        "message": "CUDA out of memory. Tried to allocate 128.00 MiB. GPU 0 has a total capacity of 23.55 GiB of which 53.19 MiB is free. Including non-PyTorch memory, this process has 23.43 GiB memory in use. Of the allocated memory 23.07 GiB is allocated by PyTorch, and 727.00 KiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)"
+      },
+      "cleanup_verified": true,
+      "artifact_cleanup_verified": true
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "path": "runs/repair-followup/execution-r14-20261030/jobs/68f09d2e33f9474ea44e476abc2c98ac/lab/cba3a88ffbdf419dbd6e87e5ceea2ca9/result.json",
+      "run_id": "cba3a88ffbdf419dbd6e87e5ceea2ca9",
+      "status": "error",
+      "steps": 0,
+      "capture_complete": true,
+      "exception": {
+        "type": "RuntimeError",
+        "message": "Insufficient free disk for the bounded reference plus 1 GiB reserve"
+      },
+      "cleanup_verified": true,
+      "artifact_cleanup_verified": true
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "path": "runs/repair-followup/execution-r14-20261030/jobs/d24caaa6352c4f98ac80e98aac56bf8f/lab/6525eaf5d155410f8c50c92ed3c0e906/result.json",
+      "run_id": "6525eaf5d155410f8c50c92ed3c0e906",
+      "status": "completed",
+      "steps": 20,
+      "capture_complete": true,
+      "exception": {
+        "type": "StepLimitReached",
+        "message": "Reached 20 optimizer updates"
+      },
+      "cleanup_verified": true,
+      "artifact_cleanup_verified": true
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "path": "runs/repair-followup/execution-r14-20261030/jobs/831a56da4f3145c3bc53e586b491204e/lab/7b3544efe8954d6384ace0b78038ccb5/result.json",
+      "run_id": "7b3544efe8954d6384ace0b78038ccb5",
+      "status": "oom",
+      "steps": 0,
+      "capture_complete": true,
+      "exception": {
+        "type": "OutOfMemoryError",
+        "message": "CUDA out of memory. Tried to allocate 8.00 GiB. GPU 0 has a total capacity of 23.55 GiB of which 3.03 GiB is free. Including non-PyTorch memory, this process has 20.45 GiB memory in use. Of the allocated memory 20.11 GiB is allocated by PyTorch, and 9.72 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)"
+      },
+      "cleanup_verified": true,
+      "artifact_cleanup_verified": true
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "path": "runs/repair-followup/execution-r14-20261030/jobs/831a56da4f3145c3bc53e586b491204e/lab/d190a1ef634d48a285f993db0d8a535e/result.json",
+      "run_id": "d190a1ef634d48a285f993db0d8a535e",
+      "status": "error",
+      "steps": 0,
+      "capture_complete": true,
+      "exception": {
+        "type": "RuntimeError",
+        "message": "CUDA error: device-side assert triggered\nCUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.\nFor debugging consider passing CUDA_LAUNCH_BLOCKING=1\nCompile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.\n"
+      },
+      "cleanup_verified": true,
+      "artifact_cleanup_verified": true
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "path": "runs/repair-followup/execution-r14-20261030/jobs/0fba6eeccc18411590b036557f7f9526/lab/71a577d707ef40fdb0dbb10659d44a49/result.json",
+      "run_id": "71a577d707ef40fdb0dbb10659d44a49",
+      "status": "completed",
+      "steps": 20,
+      "capture_complete": true,
+      "exception": {
+        "type": "StepLimitReached",
+        "message": "Reached 20 optimizer updates"
+      },
+      "cleanup_verified": true,
+      "artifact_cleanup_verified": true
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "path": "runs/repair-followup/execution-r14-20261030/jobs/0fba6eeccc18411590b036557f7f9526/lab/e0280b91ce614893a1207e3ccc185726/result.json",
+      "run_id": "e0280b91ce614893a1207e3ccc185726",
+      "status": "completed",
+      "steps": 20,
+      "capture_complete": true,
+      "exception": {
+        "type": "StepLimitReached",
+        "message": "Reached 20 optimizer updates"
+      },
+      "cleanup_verified": true,
+      "artifact_cleanup_verified": true
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "path": "runs/repair-followup/execution-r14-20261030/jobs/ac41502667bd4c3ca9a0ac4f32217e6a/lab/4bec5e57dd5845d7883a35498dd15afa/result.json",
+      "run_id": "4bec5e57dd5845d7883a35498dd15afa",
+      "status": "completed",
+      "steps": 20,
+      "capture_complete": true,
+      "exception": {
+        "type": "StepLimitReached",
+        "message": "Reached 20 optimizer updates"
+      },
+      "cleanup_verified": true,
+      "artifact_cleanup_verified": true
+    },
+    {
+      "scenario_id": "nanogpt",
+      "path": "runs/repair-followup/execution-r14-20261030/jobs/29e3fae102274f1ca1b53b80fb6e7588/lab/fe5a3e677564473e9a20f110cb2b93f9/result.json",
+      "run_id": "fe5a3e677564473e9a20f110cb2b93f9",
+      "status": "oom",
+      "steps": 0,
+      "capture_complete": true,
+      "exception": {
+        "type": "OutOfMemoryError",
+        "message": "CUDA out of memory. Tried to allocate 512.00 MiB. GPU 0 has a total capacity of 23.55 GiB of which 101.19 MiB is free. Including non-PyTorch memory, this process has 23.38 GiB memory in use. Of the allocated memory 23.01 GiB is allocated by PyTorch, and 45.30 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)"
+      },
+      "cleanup_verified": true,
+      "artifact_cleanup_verified": true
+    }
+  ],
+  "workers": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "pid": 2533992,
+      "process_present": false
+    },
+    {
+      "scenario_id": "s2_capacity_v2",
+      "pid": 2534869,
+      "process_present": false
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "pid": 2535867,
+      "process_present": false
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "pid": 2536641,
+      "process_present": false
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "pid": 2538881,
+      "process_present": false
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "pid": 2539658,
+      "process_present": false
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "pid": 2541323,
+      "process_present": false
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "pid": 2542951,
+      "process_present": false
+    },
+    {
+      "scenario_id": "nanogpt",
+      "pid": 2543835,
+      "process_present": false
+    }
+  ],
+  "service": "Result=success\nExecMainStatus=0\nActiveState=inactive\nSubState=dead",
+  "review_executed_model_or_gpu_calls": 0,
+  "new_dispatch_or_retry": false,
+  "historical_results_modified": false
+}

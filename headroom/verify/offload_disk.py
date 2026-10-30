@@ -193,3 +193,127 @@ class DiskTensorStore:
             "storage": "exclusive temporary directory under disk-backed /out",
             "lifetime": "packed object lifetime; never delete on first unpack",
         }
+
+
+class RemoteDiskTensor(DiskTensor):
+    """Only a broker-owned opaque identity is retained in the target process."""
+
+    def __init__(self, identity, size, device, dtype, shape):
+        self.identity, self.size = identity, size
+        self.device, self.dtype, self.shape = device, dtype, shape
+
+
+class _RemoteWriter:
+    def __init__(self, store, identity):
+        self.store, self.identity = store, identity
+
+    def write(self, data):
+        count = self.store.client.append(self.identity, data)
+        self.store.files[self.identity] += count
+        self.store.live_bytes += count
+        self.store.peak_bytes = max(self.store.peak_bytes, self.store.live_bytes)
+        return count
+
+    def flush(self):
+        return None
+
+
+class RemoteDiskTensorStore:
+    """Lossless tensor bytes sent to a host-owned service, never a host mount."""
+
+    def __init__(self, socket_path, limit, cpu_limit):
+        from headroom.lab.reference_scratch import ReferenceScratchClient
+
+        self.limit = validate_disk_limit(limit)
+        if not self.limit:
+            raise ValueError("Remote disk tensor store requires a positive byte budget")
+        if type(cpu_limit) is not int or not 1 <= cpu_limit <= 16 * 1024**3:
+            raise ValueError("Remote tensor CPU staging limit must be 1..16 GiB")
+        self.cpu_limit = cpu_limit
+        self.client = ReferenceScratchClient(socket_path, self.limit)
+        self.files = {}
+        self.live_bytes = self.peak_bytes = self.created = self.unpacked = 0
+        self.peak_staging_bytes = 0
+        self.failure = None
+        self.cleanup_verified = False
+
+    def release(self, identity):
+        if identity not in self.files:
+            return
+        try:
+            self.client.delete(identity)
+        except (OSError, RuntimeError, ValueError):
+            self.failure = "broker_tensor_release_failed"
+            return
+        self.live_bytes -= self.files.pop(identity)
+
+    def pack(self, tensor):
+        import torch
+
+        size = tensor.numel() * tensor.element_size()
+        if size > self.cpu_limit // 2:
+            self.failure = "single_tensor_staging_budget_exceeded"
+            raise RuntimeError("Reference tensor exceeds half the CPU staging budget")
+        identity = self.client.create()
+        self.files[identity] = 0
+        try:
+            cpu = tensor.detach().cpu()
+            self.peak_staging_bytes = max(self.peak_staging_bytes, size)
+            torch.save(cpu, _RemoteWriter(self, identity))
+            serialized_size = self.client.finalize(identity)
+            if serialized_size != self.files[identity]:
+                raise RuntimeError("Reference broker serialized byte count differs")
+            self.created += 1
+            packed = RemoteDiskTensor(
+                identity, serialized_size, tensor.device, tensor.dtype, tuple(tensor.shape)
+            )
+            weakref.finalize(packed, self.release, identity)
+            return packed
+        except BaseException:
+            self.release(identity)
+            if self.failure is None:
+                self.failure = "broker_tensor_save_failed"
+            raise
+
+    def unpack(self, packed):
+        import torch
+
+        from headroom.lab.reference_scratch import ScratchReader
+
+        if not isinstance(packed, RemoteDiskTensor) or packed.identity not in self.files:
+            self.failure = "broker_tensor_identity_unavailable"
+            raise RuntimeError("Reference broker tensor identity unavailable")
+        with ScratchReader(self.client, packed.identity, packed.size) as handle:
+            tensor = torch.load(handle, map_location="cpu", weights_only=True)
+        if (
+            not isinstance(tensor, torch.Tensor)
+            or tensor.dtype != packed.dtype
+            or tuple(tensor.shape) != packed.shape
+        ):
+            self.failure = "disk_tensor_metadata_mismatch"
+            raise RuntimeError("Reference saved tensor dtype or shape mismatch")
+        self.unpacked += 1
+        return tensor.to(packed.device)
+
+    def close(self):
+        for identity in tuple(self.files):
+            self.release(identity)
+        self.cleanup_verified = not self.files and self.live_bytes == 0
+        return {"verified": self.cleanup_verified, "storage_backend": "host_broker"}
+
+    def evidence(self):
+        return {
+            "protocol": DISK_PROTOCOL,
+            "storage_backend": "host_broker",
+            "max_disk_bytes": self.limit,
+            "peak_disk_bytes": self.peak_bytes,
+            "live_disk_bytes": self.live_bytes,
+            "disk_tensors_created": self.created,
+            "disk_tensors_unpacked": self.unpacked,
+            "peak_staging_tensor_bytes": self.peak_staging_bytes,
+            "cleanup_verified": self.cleanup_verified,
+            "failure": self.failure,
+            "storage": "host-owned bounded service; target receives only opaque IDs",
+            "lifetime": "packed object lifetime; never delete on first unpack",
+            "host_cleanup_proven": False,
+        }

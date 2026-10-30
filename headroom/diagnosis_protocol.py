@@ -6,6 +6,7 @@ The named study is the original independent end-to-end three-arm comparison.
 
 from copy import deepcopy
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal
 
 StudyProtocol = Literal["common-diagnosis-4000-v1"]
@@ -14,6 +15,8 @@ DEFAULT_DIAGNOSIS_CAP = 16384
 STUDY_DIAGNOSIS_CAP = 4000
 PATCH_CAP = 4000
 PROMPT_CAP_MARKER = "{{HEADROOM_DIAGNOSIS_COMPLETION_CAP}}"
+COMPACT_PROMPT_PATH = Path(__file__).with_name("prompts") / "diagnose_compact.md"
+STANDARD_PROMPT_PATH = Path(__file__).with_name("prompts") / "diagnose.md"
 STUDY_CONDITIONS = ("full_ultra", "traceback_ultra", "full_super")
 STUDY_SCENARIOS = (
     "s1_batch_too_big",
@@ -174,10 +177,17 @@ def diagnosis_prompt(template, study_protocol=None, *, request_policy=None):
     cap = diagnosis_cap(study_protocol, request_policy=request_policy)
     if template.count(PROMPT_CAP_MARKER) != 1:
         raise ValueError("Diagnosis prompt requires exactly one completion-cap marker")
-    prompt = template.replace(PROMPT_CAP_MARKER, str(cap))
     if request_policy is not None:
-        return COMPACT_DIAGNOSIS_INSTRUCTIONS + "\n" + prompt
-    return prompt
+        # Snapshot analysis and custom callers have different task contracts.
+        # Only the exact owned standard planner template selects this lean body.
+        if template == STANDARD_PROMPT_PATH.read_text(encoding="utf-8"):
+            template = COMPACT_PROMPT_PATH.read_text(encoding="utf-8")
+            if template.count(PROMPT_CAP_MARKER) != 1:
+                raise ValueError(
+                    "Compact diagnosis prompt requires exactly one completion-cap marker"
+                )
+        return COMPACT_DIAGNOSIS_INSTRUCTIONS + "\n" + template.replace(PROMPT_CAP_MARKER, str(cap))
+    return template.replace(PROMPT_CAP_MARKER, str(cap))
 
 
 def study_metadata(study_protocol=None):

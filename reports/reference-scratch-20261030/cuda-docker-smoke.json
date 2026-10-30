@@ -1,0 +1,833 @@
+{
+  "scope": "explicitly_authorized_tiny_CUDA_infrastructure_only_not_fixed_nine_acceptance",
+  "utc": "2026-10-30T12:00:27.910141+00:00",
+  "script": "/home/xiaodouzi/workspace/headroom/scenarios/s4_loss_accumulation_graph/train.py",
+  "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+  "arguments": [
+    "--tiny",
+    "--steps",
+    "3",
+    "--device",
+    "cuda",
+    "--seed",
+    "1337"
+  ],
+  "gpu_preflight_empty": true,
+  "public_queue_preflight_empty": true,
+  "source_hashes_before": {
+    "headroom/lab/reference_scratch.py": "7d22d88fe5a245f1b2b17b3d94be8b91efaf97b77ead4a66f537e724706cc6a2",
+    "headroom/lab/reference_scratch_lifecycle.py": "c7059fda2012a047f6f2a6b9bbd0ed62e73ebbed6902d173afee0ebd4cb85011",
+    "headroom/lab/runner.py": "246f573e357833b52cfb2dcd10080de8cb2f4dd1ee6d312f512096f782155b6b",
+    "headroom/lab/docker.py": "5b2f98e43a7d8e510ee84decb84a0ce02429e85aef9d3dd6c87d198f8d7e7b3b",
+    "headroom/lab/run_target.py": "35c82f961990c6899ae3aa4dce349acd435fee8a2ca8d7ef57559399e615dcb7",
+    "headroom/lab/artifact_volume.py": "b15ae950ff98b5dd5884faa1010b851aaa04a07552874b4a8e9798d172cacdcd",
+    "headroom/verify/offload.py": "0c712f04a6e03562909d9ff08a1ac09afeb015a85f34c8ee215337547c32cc5b",
+    "headroom/verify/offload_disk.py": "66a273b23fdb2fb04ba2a065fc8b0a3e6a1e4616acfb30ea42eaade1028ed000"
+  },
+  "provider_calls": 0,
+  "fixed_nine_score_changed": false,
+  "result": {
+    "protocol": "headroom.lab.v1",
+    "parameter_count": 16832,
+    "parameter_count_complete": true,
+    "parameter_count_source": "lab_module_parameter_hooks",
+    "parameter_count_observations": [
+      16832,
+      16832,
+      16832,
+      16832,
+      16832,
+      16832
+    ],
+    "root_forward_parameter_counts": [
+      16832,
+      16832,
+      16832
+    ],
+    "parameter_count_coverage": "Unique live Parameters registered on nn.Module during capture, plus Parameters seen via root forward module.parameters(); sampled at root forwards and optimizer updates. Tied parameters count once; no tensor is retained. Standalone tensors, pre-capture unused modules, and no-root-forward construction failures are not covered. Changing observed counts are incomplete. This is runtime evidence, not authentication against a target that deliberately tampers with hooks.",
+    "precision_observation": {
+      "protocol": "headroom.precision.v1",
+      "source": "lab_runtime_precision_observer_v1",
+      "device": "cuda",
+      "precision": "fp32",
+      "complete": true,
+      "root_modes": {
+        "fp32": 3,
+        "bf16": 0,
+        "unknown": 0
+      },
+      "counts": {
+        "module_pre": 39,
+        "module_post": 39,
+        "root_forwards": 3,
+        "operation_calls": 33,
+        "tensor_metadata": 222,
+        "ignored_device_tensors": 0
+      },
+      "autocast": {
+        "disabled": 111,
+        "bfloat16": 0,
+        "unsupported": 0,
+        "unknown": 0
+      },
+      "dtypes": {
+        "parameter": {
+          "float32": 36,
+          "bfloat16": 0,
+          "float16": 0,
+          "float64": 0,
+          "complex": 0,
+          "other_floating": 0,
+          "non_floating": 0
+        },
+        "input": {
+          "float32": 39,
+          "bfloat16": 0,
+          "float16": 0,
+          "float64": 0,
+          "complex": 0,
+          "other_floating": 0,
+          "non_floating": 0
+        },
+        "output": {
+          "float32": 39,
+          "bfloat16": 0,
+          "float16": 0,
+          "float64": 0,
+          "complex": 0,
+          "other_floating": 0,
+          "non_floating": 0
+        },
+        "operation_input": {
+          "float32": 75,
+          "bfloat16": 0,
+          "float16": 0,
+          "float64": 0,
+          "complex": 0,
+          "other_floating": 0,
+          "non_floating": 0
+        },
+        "operation_output": {
+          "float32": 33,
+          "bfloat16": 0,
+          "float16": 0,
+          "float64": 0,
+          "complex": 0,
+          "other_floating": 0,
+          "non_floating": 0
+        }
+      },
+      "errors": {},
+      "checkpoint_recompute": {
+        "entered": 0,
+        "exited": 0,
+        "early_stops": 0,
+        "failed": 0
+      },
+      "operation_mode_lifecycle": {
+        "entered": 3,
+        "exited": 3
+      },
+      "recognized_graph_metadata_outputs": 0,
+      "coverage": {
+        "module_hooks": "Every observed module pre/post forward; direct registered parameters",
+        "internal_autocast": "TorchFunctionMode samples autocast and tensor argument/output metadata during forwards",
+        "root_summary": "Mixed root forward modes, unknown/unsupported dtypes, errors or limits are unknown",
+        "tensor_data_access": false,
+        "gpu_synchronization": false,
+        "tensor_references_retained": false,
+        "all_operator_dtypes_proven": false,
+        "limitations": [
+          "TorchFunctionMode observes Python-dispatched torch functions; C++/compiled/custom operators may not expose internal autocast or every intermediate dtype.",
+          "Metadata records observed precision, not tensor values or full numerical equivalence.",
+          "Known compiled wrappers and unregistered or unobserved worker forwards remain unknown.",
+          "Metadata observation adds Python overhead; no tensor data or GPU synchronization is added.",
+          "Runtime hooks are not authentication against deliberate target tampering."
+        ]
+      },
+      "worker_observers": {
+        "registered": 0,
+        "basis": "explicit checkpoint function boundary with actual thread-local operation mode",
+        "snapshots": []
+      }
+    },
+    "execution_entrypoint": null,
+    "deadline_observation": {
+      "basis": "verified_host_monotonic_deadline",
+      "clock_verified": true,
+      "observed_clock_identity": {
+        "clock": "CLOCK_MONOTONIC",
+        "boot_id": "a4458013-9ffc-488c-916d-639030ea9fa4",
+        "monotonic_offset": {
+          "seconds": 0,
+          "nanoseconds": 0
+        },
+        "time_namespace_device": 5,
+        "time_namespace_inode": 4026534260
+      },
+      "protocol": "headroom.deadline.v1",
+      "clock_identity": {
+        "clock": "CLOCK_MONOTONIC",
+        "boot_id": "a4458013-9ffc-488c-916d-639030ea9fa4",
+        "monotonic_offset": {
+          "seconds": 0,
+          "nanoseconds": 0
+        },
+        "time_namespace_device": 5,
+        "time_namespace_inode": 4026531834
+      },
+      "started_monotonic_ns": 1917387016808387,
+      "hard_deadline_monotonic_ns": 1917432016808387,
+      "capture_deadline_monotonic_ns": 1917427516808387,
+      "max_seconds": 45,
+      "capture_reserve_seconds": 4.5,
+      "observed_monotonic_ns": 1917389884224489,
+      "remaining_capture_seconds": 37.632583898,
+      "expired_before_target": false
+    },
+    "deadline_reached": false,
+    "pairing_capture": {
+      "protocol": "headroom.pairing.v1",
+      "complete": true,
+      "reason": "captured initialized tensors before training loop",
+      "source_contract": {
+        "supported": true,
+        "profile": "s4",
+        "contract_sha256": "1c188d7ee917a9ca4d536033d43c3d3aa9cd5ad3ba1005dda2ecd6fd8167f1a0",
+        "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+        "capture_line": 96,
+        "checkpointed": false,
+        "optimizer_foreach_disabled": false,
+        "tensor_names": [
+          "inputs",
+          "targets"
+        ],
+        "objective": "fixed_tensors_residual_mlp_sgd_mse_mean_v1"
+      },
+      "tensors": {
+        "inputs": {
+          "sha256": "122680a94d2625a9985212a259d918388c00b573497409003ee87198d0580060",
+          "shape": [
+            2,
+            8,
+            32
+          ],
+          "dtype": "torch.float32"
+        },
+        "targets": {
+          "sha256": "751b8051cdb758f8d0ae52c3286e45d5221263432a491fc425f6798bba73381f",
+          "shape": [
+            2,
+            32
+          ],
+          "dtype": "torch.float32"
+        }
+      },
+      "initial_parameters": [
+        {
+          "name": "blocks.0.norm.weight",
+          "sha256": "b638277a8690e175a9137feff1e43c067f9faf4e2f600caf468fb05b0403b717",
+          "shape": [
+            32
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.0.norm.bias",
+          "sha256": "38723a2e5e8a17aa7950dc008209944e898f69a7bd10a23c839d341e935fd5ca",
+          "shape": [
+            32
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.0.ff.0.weight",
+          "sha256": "5655393010fe01b4bbe8e572b1dc501e3711c6e96d61dec39468ed55a9451764",
+          "shape": [
+            128,
+            32
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.0.ff.0.bias",
+          "sha256": "4a2d89b2b00f5d94b87ff93491a4528eecf90762820a21dfb87ae56e5d8c4b5e",
+          "shape": [
+            128
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.0.ff.2.weight",
+          "sha256": "920f9161a21496cc45eef3fb836487a5eec1b3e2f3c375a5cf6899323e16f977",
+          "shape": [
+            32,
+            128
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.0.ff.2.bias",
+          "sha256": "33c11a1bf7adda5760e40d4d84a4e0c99f807d19440931c36d1cf471c38fc971",
+          "shape": [
+            32
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.1.norm.weight",
+          "sha256": "b638277a8690e175a9137feff1e43c067f9faf4e2f600caf468fb05b0403b717",
+          "shape": [
+            32
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.1.norm.bias",
+          "sha256": "38723a2e5e8a17aa7950dc008209944e898f69a7bd10a23c839d341e935fd5ca",
+          "shape": [
+            32
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.1.ff.0.weight",
+          "sha256": "e09632794a04d0ff452bf99f6f11c70e20b9bde26d3be4ff38d836c62a29461b",
+          "shape": [
+            128,
+            32
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.1.ff.0.bias",
+          "sha256": "4dd56154eca869ef486e219b9e542a428884c95d99750c282fe838e2f8a391c6",
+          "shape": [
+            128
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.1.ff.2.weight",
+          "sha256": "fb62e5d92bdb36aa3a4fc70f36d60972ec9938bdff9d492b890ed64fc3942b38",
+          "shape": [
+            32,
+            128
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.1.ff.2.bias",
+          "sha256": "d13fef958898b187ff746b0d719c0de3a7bc99e166a5adf54efa639d7e0bb506",
+          "shape": [
+            32
+          ],
+          "dtype": "torch.float32"
+        }
+      ],
+      "updates": [
+        {
+          "step": 1,
+          "effective_batch": 2,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 2,
+          "effective_batch": 2,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 3,
+          "effective_batch": 2,
+          "training_forwards": 1,
+          "backwards": 1
+        }
+      ],
+      "hash_seconds": 0.0010397019796073437,
+      "checkpoint_recomputation_root_forwards": 0,
+      "bytes_hashed": 69632,
+      "timing": "one initialization hash, excluded from Lab optimizer intervals",
+      "coverage": "pinned standalone AST + actual tensors and per-update hooks; cooperative target only; command mode and arbitrary scripts unsupported"
+    },
+    "schema_version": 1,
+    "capture_complete": true,
+    "finalization_incomplete": false,
+    "finalization_stage": "finished",
+    "artifact_writes": {
+      "memory_stats.json": "complete",
+      "memory_summary.txt": "complete",
+      "traceback.txt": "complete",
+      "env.json": "complete",
+      "snapshot.pickle": "complete",
+      "snapshot.json": "complete"
+    },
+    "execution_status": "completed",
+    "status": "completed",
+    "termination_reason": "step_limit",
+    "pid": 1,
+    "is_primary": true,
+    "optimizer_update_observation": {
+      "protocol": "headroom.optimizer_updates.v1",
+      "complete": true,
+      "logical_boundary_complete": true,
+      "parameter_update_sets_complete": true,
+      "optimizer_step_calls": 3,
+      "successful_optimizer_step_calls": 3,
+      "logical_updates": 3,
+      "parameter_catalog": [
+        {
+          "id": "p00001",
+          "numel": 32,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00002",
+          "numel": 32,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00003",
+          "numel": 4096,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00004",
+          "numel": 128,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00005",
+          "numel": 4096,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00006",
+          "numel": 32,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00007",
+          "numel": 32,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00008",
+          "numel": 32,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00009",
+          "numel": 4096,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00010",
+          "numel": 128,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00011",
+          "numel": 4096,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00012",
+          "numel": 32,
+          "requires_grad_at_observation": true
+        }
+      ],
+      "parameter_catalog_initialization": {
+        "successful_base_constructor_returns": 1,
+        "complete": true,
+        "scope": "Metadata from groups after successful torch.optim.Optimizer.__init__; not custom-subclass completion or an optimizer update. Later step/graph observations may also add identities. No tensor values are read or copied."
+      },
+      "failed_backward_groups": [],
+      "coverage": "Process-local Parameter identities and optimizer pre/post hooks; version-counter changes are observations, not numerical equivalence. A grouped update requires one successful complete Tensor.backward and exactly-once coverage of its observable leaf Parameters. Restricted/nested/concurrent graphs are unsupported. Ordinary outer optimizer calls retain the legacy counting contract. This is cooperative instrumentation, not authentication against target tampering."
+    },
+    "steps": 3,
+    "loss_series": [
+      1.430390477180481,
+      1.4293406009674072,
+      1.428291916847229
+    ],
+    "step_records": [
+      {
+        "step": 1,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 2088.4574230294675,
+        "elapsed_ms": 2089.497125009075,
+        "wall_time_us": 1793361633334367,
+        "peak_allocated_bytes": 67279360,
+        "peak_reserved_bytes": 69206016
+      },
+      {
+        "step": 2,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 202.03313091769814,
+        "elapsed_ms": 2291.530255926773,
+        "wall_time_us": 1793361633536396,
+        "peak_allocated_bytes": 68245504,
+        "peak_reserved_bytes": 69206016
+      },
+      {
+        "step": 3,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 201.11189712770283,
+        "elapsed_ms": 2492.642153054476,
+        "wall_time_us": 1793361633737501,
+        "peak_allocated_bytes": 68245504,
+        "peak_reserved_bytes": 69206016
+      }
+    ],
+    "peak_allocated_bytes": 68245504,
+    "peak_reserved_bytes": 69206016,
+    "peak_alloc_gb": 0.068245504,
+    "peak_reserved_gb": 0.069206016,
+    "peak_observation": "capture_end",
+    "step_ms_median": 202.03313091769814,
+    "timing_note": "Intervals between completed optimizer updates; first includes target setup; pairing initialization hash time excluded, total wall time retains it; module/precision observation overhead remains in measured intervals",
+    "wall_seconds": 3.29043255886063,
+    "snapshot": {
+      "available": true,
+      "trace_count": 604
+    },
+    "snapshot_trace_count": 604,
+    "oom": null,
+    "shared_gpu": false,
+    "gpu": {
+      "before_cuda_initialization": {
+        "returncode": 0,
+        "stdout": "",
+        "stderr": "",
+        "processes": []
+      },
+      "device_query": {
+        "returncode": 0,
+        "stdout": "0, NVIDIA GeForce RTX 3090 Ti, 595.99.02, 24564, 24056\n",
+        "stderr": ""
+      },
+      "at_capture_end": {
+        "returncode": 0,
+        "stdout": "1, /opt/venv/bin/python, 438\n",
+        "stderr": "",
+        "processes": [
+          {
+            "pid": "1",
+            "process_name": "/opt/venv/bin/python",
+            "used_memory_mib": "438"
+          }
+        ]
+      },
+      "shared_gpu_basis": "compute processes before capture CUDA initialization"
+    },
+    "env": {
+      "pid": 1,
+      "is_primary": true,
+      "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+      "torch": "2.5.1+cu124",
+      "cuda": "12.4",
+      "device": "cuda",
+      "seed": 1337,
+      "max_steps": 3,
+      "max_seconds": 45.0,
+      "PYTORCH_CUDA_ALLOC_CONF": null,
+      "CUDA_VISIBLE_DEVICES": "0",
+      "seeded": {
+        "python": true,
+        "torch": true,
+        "numpy": true
+      },
+      "driver_query": {
+        "returncode": 0,
+        "stdout": "0, NVIDIA GeForce RTX 3090 Ti, 595.99.02, 24564, 24056\n",
+        "stderr": ""
+      },
+      "deterministic_algorithms": true,
+      "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+      "gpu_name": "NVIDIA GeForce RTX 3090 Ti",
+      "gpu_total_memory_bytes": 25283526656,
+      "cudnn": 90100
+    },
+    "errors": [],
+    "exception": {
+      "type": "StepLimitReached",
+      "message": "Reached 3 optimizer updates"
+    },
+    "execution_capture": {
+      "captured_process_count": 1,
+      "single_python_entrypoint": false,
+      "complete": true,
+      "invocations_complete": false,
+      "errors": [],
+      "records": [
+        {
+          "capture_relative": "artifacts",
+          "pid": 1,
+          "status": "completed",
+          "termination_reason": "step_limit",
+          "source_relative": null,
+          "startup_cwd": null,
+          "orig_argv": null,
+          "error": null,
+          "mapping_reason": "CAPTURE_ENTRYPOINT_INCOMPLETE"
+        }
+      ],
+      "basis": "instrumented capture owners; not proof of absent uninstrumented processes",
+      "selection": {
+        "status": "primary_script",
+        "matching_target_count": 1,
+        "selected_capture_relative": "artifacts",
+        "reason": null
+      },
+      "reason": null,
+      "observed_timeout_captures": []
+    },
+    "selected_capture_relative": "artifacts",
+    "run_id": "b430d596fb6647a2b6117d37fafa1ef5",
+    "run_dir": "/home/xiaodouzi/workspace/headroom/runs/research/reference-scratch-smoke-20261030/b430d596fb6647a2b6117d37fafa1ef5",
+    "artifact_dir": "/home/xiaodouzi/workspace/headroom/runs/research/reference-scratch-smoke-20261030/b430d596fb6647a2b6117d37fafa1ef5/artifacts",
+    "container_name": "headroom-lab-b430d596fb6647a2b6117d37fafa1ef5",
+    "cleanup_verified": true,
+    "gpu_observation_complete": true,
+    "started_at": "2026-10-30T12:00:27.920226+00:00",
+    "storage_admission": {
+      "scope": "/home/xiaodouzi/workspace/headroom/runs/research/reference-scratch-smoke-20261030",
+      "retained_bytes": null,
+      "storage_limit_bytes": null,
+      "public_aggregate": false,
+      "reserved_bytes": 1073741824,
+      "minimum_free_bytes": 8589934592
+    },
+    "execution": {
+      "timed_out": false,
+      "returncode": 0,
+      "artifact_quota_bytes": 536870912,
+      "artifact_quota_inodes": 4096,
+      "deadline_control": {
+        "protocol": "headroom.deadline.v1",
+        "clock_identity": {
+          "clock": "CLOCK_MONOTONIC",
+          "boot_id": "a4458013-9ffc-488c-916d-639030ea9fa4",
+          "monotonic_offset": {
+            "seconds": 0,
+            "nanoseconds": 0
+          },
+          "time_namespace_device": 5,
+          "time_namespace_inode": 4026531834
+        },
+        "started_monotonic_ns": 1917387016808387,
+        "hard_deadline_monotonic_ns": 1917432016808387,
+        "capture_deadline_monotonic_ns": 1917427516808387,
+        "max_seconds": 45,
+        "capture_reserve_seconds": 4.5
+      },
+      "log_limit_bytes_per_stream": 8388608,
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Paused": false,
+        "Restarting": false,
+        "OOMKilled": false,
+        "Dead": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "2026-10-30T12:00:28.392012397Z",
+        "FinishedAt": "2026-10-30T12:00:35.052335542Z"
+      },
+      "image_id": "sha256:5703e9edc41be02a69ba7bdf4eb9e5126a5f8915e1dd235ab9fe94b9a412afe5",
+      "cleanup_verified": true,
+      "cleanup_attempts": [
+        {
+          "operation": "stop",
+          "returncode": 0,
+          "stderr": ""
+        },
+        {
+          "operation": "kill",
+          "returncode": 1,
+          "stderr": "Error response from daemon: cannot kill container: eaaffada3d64a5534527bd8572c5c1a0a300e957d61e36b367822b1376e5934c: container eaaffada3d64a5534527bd8572c5c1a0a300e957d61e36b367822b1376e5934c is not running\n"
+        },
+        {
+          "operation": "rm",
+          "returncode": 0,
+          "stderr": ""
+        }
+      ],
+      "cleanup_inspect": {
+        "returncode": 1,
+        "stdout": "[]\n",
+        "stderr": "Error response from daemon: No such container: eaaffada3d64a5534527bd8572c5c1a0a300e957d61e36b367822b1376e5934c\n"
+      },
+      "artifact_export": {
+        "files": 10,
+        "bytes": 376800,
+        "export_verified": true
+      },
+      "artifact_cleanup": {
+        "cleanup_verified": true
+      }
+    },
+    "gpu_before": {
+      "available": true,
+      "processes": [],
+      "devices_csv": "0, NVIDIA GeForce RTX 3090 Ti, 24564, 24056",
+      "error": ""
+    },
+    "target_artifact_dir": "/home/xiaodouzi/workspace/headroom/runs/research/reference-scratch-smoke-20261030/b430d596fb6647a2b6117d37fafa1ef5/artifacts",
+    "image_id": "sha256:5703e9edc41be02a69ba7bdf4eb9e5126a5f8915e1dd235ab9fe94b9a412afe5",
+    "gpu_after": {
+      "available": true,
+      "processes": [],
+      "devices_csv": "0, NVIDIA GeForce RTX 3090 Ti, 24564, 24056",
+      "error": ""
+    },
+    "gpu_observation_note": "Host before/after samples and the capture's sharing observation are combined; these samples do not establish continuous GPU exclusivity.",
+    "reference_scratch": {
+      "schema": "headroom.reference-scratch.v1",
+      "nonce": "790cc950a7305e2cd7a6db7f140f1269",
+      "root": "/home/xiaodouzi/workspace/headroom/runs/research/reference-scratch-smoke-20261030/b430d596fb6647a2b6117d37fafa1ef5/reference-scratch",
+      "socket_path": "/tmp/headroom-ref-px63r4oc/rpc.sock",
+      "owner_pid": 2566586,
+      "owner_process_identity": "191738648",
+      "max_bytes": 16777216,
+      "max_objects": 4096,
+      "live_reserved_bytes": 0,
+      "peak_reserved_bytes": 396900,
+      "bytes_written": 396900,
+      "live_objects": 0,
+      "created_objects": 63,
+      "deleted_objects": 63,
+      "requests": 3087,
+      "failed_operations": 0,
+      "cleanup_verified": true,
+      "quota_enforcement": "host broker reserves bytes before every append",
+      "target_host_directory_access": false,
+      "request_verified": true
+    },
+    "finished_at": "2026-10-30T12:00:35.389872+00:00",
+    "reference_spill_cleanup": {
+      "verified": true,
+      "backend": "host_broker",
+      "live_reserved_bytes": 0,
+      "live_objects": 0
+    },
+    "reference_offload": {
+      "protocol": "headroom.reference_saved_tensor_offload.v1",
+      "mode": "original_saved_tensor_offload",
+      "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+      "script_args": [
+        "--tiny",
+        "--steps",
+        "3",
+        "--device",
+        "cuda",
+        "--seed",
+        "1337"
+      ],
+      "torch": "2.5.1+cu124",
+      "pin_memory": false,
+      "max_saved_bytes": 8388608,
+      "entered": true,
+      "exited": true,
+      "failure": null,
+      "packed_tensors": 63,
+      "unpacked_tensors": 63,
+      "cuda_copies": 63,
+      "live_saved_bytes": 0,
+      "peak_saved_bytes": 0,
+      "performance_comparable": false,
+      "backend": "disk",
+      "max_disk_bytes": 16777216,
+      "disk": {
+        "protocol": "headroom.reference_tensor_disk.v1",
+        "storage_backend": "host_broker",
+        "max_disk_bytes": 16777216,
+        "peak_disk_bytes": 396900,
+        "live_disk_bytes": 0,
+        "disk_tensors_created": 63,
+        "disk_tensors_unpacked": 63,
+        "peak_staging_tensor_bytes": 16384,
+        "cleanup_verified": true,
+        "failure": null,
+        "storage": "host-owned bounded service; target receives only opaque IDs",
+        "lifetime": "packed object lifetime; never delete on first unpack",
+        "host_cleanup_proven": false
+      },
+      "request_verified": true
+    }
+  },
+  "source_hashes_after": {
+    "headroom/lab/reference_scratch.py": "7d22d88fe5a245f1b2b17b3d94be8b91efaf97b77ead4a66f537e724706cc6a2",
+    "headroom/lab/reference_scratch_lifecycle.py": "c7059fda2012a047f6f2a6b9bbd0ed62e73ebbed6902d173afee0ebd4cb85011",
+    "headroom/lab/runner.py": "246f573e357833b52cfb2dcd10080de8cb2f4dd1ee6d312f512096f782155b6b",
+    "headroom/lab/docker.py": "5b2f98e43a7d8e510ee84decb84a0ce02429e85aef9d3dd6c87d198f8d7e7b3b",
+    "headroom/lab/run_target.py": "35c82f961990c6899ae3aa4dce349acd435fee8a2ca8d7ef57559399e615dcb7",
+    "headroom/lab/artifact_volume.py": "b15ae950ff98b5dd5884faa1010b851aaa04a07552874b4a8e9798d172cacdcd",
+    "headroom/verify/offload.py": "0c712f04a6e03562909d9ff08a1ac09afeb015a85f34c8ee215337547c32cc5b",
+    "headroom/verify/offload_disk.py": "66a273b23fdb2fb04ba2a065fc8b0a3e6a1e4616acfb30ea42eaade1028ed000"
+  },
+  "source_unchanged": true
+}

@@ -16,6 +16,7 @@ from headroom.verify.offload_disk import (
     MAX_DISK_BYTES,
     DiskTensor,
     DiskTensorStore,
+    RemoteDiskTensorStore,
     validate_disk_limit,
 )
 from headroom.verify.pairing import derive_pairing, source_contract
@@ -41,7 +42,14 @@ class SavedTensorOffload:
     """Delegate lossless copies to the pinned torch API and bound live CPU copies."""
 
     def __init__(
-        self, script, script_args, output, max_saved_bytes=MAX_SAVED_BYTES, max_disk_bytes=0
+        self,
+        script,
+        script_args,
+        output,
+        max_saved_bytes=MAX_SAVED_BYTES,
+        max_disk_bytes=0,
+        *,
+        scratch_socket=None,
     ):
         import torch
 
@@ -49,6 +57,8 @@ class SavedTensorOffload:
         self.script = Path(script)
         self.output = Path(output)
         validate_disk_limit(max_disk_bytes)
+        if scratch_socket is not None and not max_disk_bytes:
+            raise ValueError("Reference scratch socket requires positive disk spill budget")
         contract = source_contract(self.script)
         if not contract.get("supported"):
             raise ValueError("reference offload requires a reviewed standalone source contract")
@@ -81,7 +91,13 @@ class SavedTensorOffload:
         self._pack = delegate.pack_hook
         self._unpack = delegate.unpack_hook
         self.disk = (
-            DiskTensorStore(self.output, max_disk_bytes, self.limit) if max_disk_bytes else None
+            (
+                RemoteDiskTensorStore(scratch_socket, max_disk_bytes, self.limit)
+                if scratch_socket is not None
+                else DiskTensorStore(self.output, max_disk_bytes, self.limit)
+            )
+            if max_disk_bytes
+            else None
         )
         self.context = torch.autograd.graph.saved_tensors_hooks(self.pack, self.unpack)
 
@@ -192,6 +208,31 @@ def reference_proof(reference, candidate, required_steps=20, *, baseline=None):
     reference_precision = observed_precision(reference)
     disk = evidence.get("disk", {})
     disk_enabled = evidence.get("backend") == "disk"
+    storage_backend = disk.get("storage_backend", "local")
+    host_scratch = reference.get("reference_scratch", {})
+    nonce = host_scratch.get("nonce") if isinstance(host_scratch, dict) else None
+    host_scratch_valid = storage_backend == "local" or (
+        storage_backend == "host_broker"
+        and isinstance(host_scratch, dict)
+        and type(evidence.get("max_disk_bytes")) is int
+        and 0 < evidence["max_disk_bytes"] <= MAX_DISK_BYTES
+        and host_scratch.get("schema") == "headroom.reference-scratch.v1"
+        and host_scratch.get("request_verified") is True
+        and isinstance(nonce, str)
+        and len(nonce) == 32
+        and all(character in "0123456789abcdef" for character in nonce)
+        and host_scratch.get("max_bytes") == evidence.get("max_disk_bytes")
+        and host_scratch.get("cleanup_verified") is True
+        and host_scratch.get("live_reserved_bytes") == 0
+        and type(host_scratch.get("live_reserved_bytes")) is int
+        and host_scratch.get("live_objects") == 0
+        and type(host_scratch.get("live_objects")) is int
+        and type(host_scratch.get("peak_reserved_bytes")) is int
+        and 0 < host_scratch["peak_reserved_bytes"] <= evidence.get("max_disk_bytes", 0)
+        and type(disk.get("peak_disk_bytes")) is int
+        and 0 < disk["peak_disk_bytes"] <= host_scratch["peak_reserved_bytes"]
+        and host_scratch.get("target_host_directory_access") is False
+    )
     checks = {
         "original_reference_precision": (
             before_precision in {"fp32", "bf16"} and reference_precision == before_precision
@@ -200,6 +241,7 @@ def reference_proof(reference, candidate, required_steps=20, *, baseline=None):
             (evidence.get("backend", "cpu") == "cpu" and evidence.get("max_disk_bytes", 0) == 0)
             or (
                 disk_enabled
+                and host_scratch_valid
                 and type(evidence.get("max_disk_bytes")) is int
                 and 0 < evidence["max_disk_bytes"] <= MAX_DISK_BYTES
                 and disk.get("max_disk_bytes") == evidence["max_disk_bytes"]

@@ -13,6 +13,7 @@ from headroom.diagnose import PROMPT_PATH, build_diagnosis_messages, diagnose_wi
 from headroom.diagnosis_protocol import (
     COMMON_4000,
     COMPACT_DIAGNOSIS_INSTRUCTIONS,
+    COMPACT_PROMPT_PATH,
     FINAL48_DIAGNOSIS_ONLY,
     PROMPT_CAP_MARKER,
     DiagnosisRequestPolicy,
@@ -101,7 +102,9 @@ def test_explicit_policy_changes_prompt_cap_without_changing_old_requests():
     assert ordinary[0]["content"] == template.replace(PROMPT_CAP_MARKER, "16384")
     assert study[0]["content"] == template.replace(PROMPT_CAP_MARKER, "4000")
     assert final48[0]["content"] == (
-        COMPACT_DIAGNOSIS_INSTRUCTIONS + "\n" + template.replace(PROMPT_CAP_MARKER, "2000")
+        COMPACT_DIAGNOSIS_INSTRUCTIONS
+        + "\n"
+        + COMPACT_PROMPT_PATH.read_text().replace(PROMPT_CAP_MARKER, "2000")
     )
     assert ordinary[1] == study[1] == final48[1]
     assert diagnosis_cap() == 16384
@@ -170,7 +173,11 @@ def test_wire_prompt_recorded_mode_and_selected_schema_agree(kwargs, cap, reason
     assert body["response_format"]["type"] == "json_schema"
     expected_prompt = PROMPT_PATH.read_text().replace(PROMPT_CAP_MARKER, str(cap))
     if kwargs.get("request_policy") is FINAL48_DIAGNOSIS_ONLY:
-        expected_prompt = COMPACT_DIAGNOSIS_INSTRUCTIONS + "\n" + expected_prompt
+        expected_prompt = (
+            COMPACT_DIAGNOSIS_INSTRUCTIONS
+            + "\n"
+            + COMPACT_PROMPT_PATH.read_text().replace(PROMPT_CAP_MARKER, str(cap))
+        )
     assert body["messages"][1]["content"] == expected_prompt
     schema = body["response_format"]["json_schema"]["schema"]
     assert schema["properties"]["plan"].get("maxItems") == (1 if cap == 2000 else None)

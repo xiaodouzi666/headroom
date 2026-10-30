@@ -5,6 +5,7 @@ import os
 import re
 import selectors
 import shutil
+import stat
 import subprocess
 import time
 from pathlib import Path
@@ -39,6 +40,7 @@ def create_arguments(
     command: list[str],
     device: str,
     control: Path | None = None,
+    reference_scratch_socket: Path | None = None,
 ) -> list[str]:
     runtime = require_runtime_image(project_root, executable=docker_binary(), environment=HOST_ENV)
     args = [
@@ -94,6 +96,24 @@ def create_arguments(
         if "," in str(control) or "\n" in str(control):
             raise ValueError("Deadline control mount path is invalid")
         args.extend(["--mount", f"type=bind,source={control},destination=/control,readonly"])
+    if reference_scratch_socket is not None:
+        from headroom.lab.reference_scratch_lifecycle import SOCKET_DESTINATION
+
+        socket_path = Path(reference_scratch_socket)
+        info = socket_path.lstat()
+        if (
+            not socket_path.is_absolute()
+            or socket_path != socket_path.resolve()
+            or not stat.S_ISSOCK(info.st_mode)
+            or info.st_uid != os.getuid()
+            or stat.S_IMODE(info.st_mode) != 0o600
+            or "," in str(socket_path)
+            or "\n" in str(socket_path)
+        ):
+            raise ValueError("Reference scratch must be an owned private Unix socket")
+        args.extend(
+            ["--mount", f"type=bind,source={socket_path},destination={SOCKET_DESTINATION},readonly"]
+        )
     cache = validated_hf_cache(project_root)
     if cache is not None:
         if "," in str(cache) or "\n" in str(cache):
@@ -182,6 +202,9 @@ def _owned_target(name, target_id, store, create_args):
     if details is None:
         return None
     source = None
+    scratch_source = None
+    from headroom.lab.reference_scratch_lifecycle import SOCKET_DESTINATION
+
     for index, argument in enumerate(create_args[:-1]):
         if argument == "--mount":
             fields = dict(
@@ -189,6 +212,8 @@ def _owned_target(name, target_id, store, create_args):
             )
             if fields.get("destination") == "/source":
                 source = fields.get("source")
+            if fields.get("destination") == SOCKET_DESTINATION:
+                scratch_source = fields.get("source")
     mounts = {entry.get("Destination"): entry for entry in details.get("Mounts", [])}
     if not (
         source is not None
@@ -200,6 +225,15 @@ def _owned_target(name, target_id, store, create_args):
         and mounts.get("/out", {}).get("Type") == "volume"
         and mounts.get("/out", {}).get("Name") == store["volume"]
         and mounts.get("/out", {}).get("RW") is True
+        and (
+            SOCKET_DESTINATION not in mounts
+            if scratch_source is None
+            else (
+                mounts.get(SOCKET_DESTINATION, {}).get("Type") == "bind"
+                and mounts.get(SOCKET_DESTINATION, {}).get("Source") == scratch_source
+                and mounts.get(SOCKET_DESTINATION, {}).get("RW") is False
+            )
+        )
     ):
         raise ValueError("Target ownership changed; automatic cleanup refused")
     return details
