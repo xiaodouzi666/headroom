@@ -134,7 +134,7 @@ function StackCitation({
           <p className="caption">Uploaded snapshot · cited allocation stack</p>
           <dl className="key-values">
             <div>
-              <dt>Live at recorded peak</dt>
+              <dt>Live at reconstructed peak</dt>
               <dd>{bytes(stack.peak_live_bytes)}</dd>
             </div>
             <div>
@@ -162,6 +162,9 @@ function SnapshotResult({ job }: { job: SnapshotJob }) {
   const analysis = record(evidence.analysis),
     patch = record(result.patch);
   const stacks = boundStacks(evidence);
+  const derivedQuantities =
+    stacks !== null &&
+    record(evidence.diagnosis_binding).quantity_source === "cited_peak_stack_sum_v1";
   const peak = numeric(analysis.peak_allocated_bytes);
   const categories = Object.entries(record(analysis.category_bytes));
   const downloads: [SnapshotArtifactKind, string][] = [
@@ -185,7 +188,7 @@ function SnapshotResult({ job }: { job: SnapshotJob }) {
       <Section title="Uploaded snapshot" kicker="Captured evidence">
         <div className="metric-grid three">
           <div className="metric">
-            <span>Recorded allocated peak</span>
+            <span>Reconstructed allocated peak</span>
             <strong>
               {peak === null
                 ? "Unknown"
@@ -212,7 +215,7 @@ function SnapshotResult({ job }: { job: SnapshotJob }) {
               <thead>
                 <tr>
                   <th>Allocation origin</th>
-                  <th>Live bytes at recorded peak</th>
+                  <th>Live bytes at reconstructed peak</th>
                 </tr>
               </thead>
               <tbody>
@@ -241,6 +244,12 @@ function SnapshotResult({ job }: { job: SnapshotJob }) {
         )}
       </Section>
       <Section title="Snapshot diagnosis" kicker="Model hypotheses">
+        {derivedQuantities && (
+          <p className="caption">
+            Sizes are calculated from the cited stacks in the reconstructed snapshot.
+            They do not establish causal contribution or savings. Groups can overlap.
+          </p>
+        )}
         <div className="diagnosis-cards">
           {rows(diagnosis.root_causes).length ? (
             rows(diagnosis.root_causes).map((cause, index) => (
@@ -251,7 +260,9 @@ function SnapshotResult({ job }: { job: SnapshotJob }) {
                 <h3>{text(cause.title)}</h3>
                 <p>{human(cause.category)}</p>
                 <div className="diagnosis-stat">
-                  <span>Estimated size</span>
+                  <span>
+                    {derivedQuantities ? "Cited peak allocation" : "Estimated size"}
+                  </span>
                   <strong>
                     {numeric(cause.bytes_gb) === null
                       ? "Unknown"

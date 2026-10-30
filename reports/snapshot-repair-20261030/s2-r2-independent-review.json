@@ -1,0 +1,204 @@
+{
+  "schema": "headroom.snapshot-independent-semantic-review.v1",
+  "reviewed_utc": "2026-10-30T04:24:59.168441+00:00",
+  "run_id": "cd565dc58c9e4d668b48621532dfbe2b",
+  "review_method": "Read-only analysis of preserved reports and exact source inputs; no parser rerun, tests, model calls, GPU jobs, ledger reads or source edits.",
+  "conclusion": "AUTHORED_PRIMARY_CATEGORY_MATCHES_WITH_MATERIAL_NARRATIVE_ERROR; needs_human is not an automatic repair or fully correct diagnosis.",
+  "execution_observation": {
+    "status": "needs_human",
+    "provenance": "live_model",
+    "patch_present": true,
+    "hardware_verification": "not_run",
+    "cost_usd_from_public_report": 0.03282,
+    "settlement_from_controller": "settled",
+    "cleanup_from_controller": true,
+    "peak_rss_kib_from_controller": 432668,
+    "independent_ledger_audit": false,
+    "validation_issues": []
+  },
+  "passes": {
+    "same_capture_inputs": {
+      "snapshot": {
+        "path": "runs/evaluation/live/20261027T022818939585Z-151818b1/jobs/05ab015193c1458392b4082629dd5050/lab/efb0c5d0821540c191068761266618c2/artifacts/snapshot.pickle",
+        "sha256": "f2dfd579f8f922933011a5f685f91b4d332cda0e6d166f97dc86404de528c92d",
+        "matches_preparation": true,
+        "matches_evidence": true
+      },
+      "traceback": {
+        "path": "runs/evaluation/live/20261027T022818939585Z-151818b1/jobs/05ab015193c1458392b4082629dd5050/lab/efb0c5d0821540c191068761266618c2/artifacts/traceback.txt",
+        "sha256": "70055c88e2a3e3d5e7043740e50fec1fa07c48e123ea626f5bd8e87a5087c68c",
+        "matches_preparation": true,
+        "matches_evidence": true
+      },
+      "source": {
+        "path": "runs/evaluation/live/20261027T022818939585Z-151818b1/jobs/05ab015193c1458392b4082629dd5050/lab/efb0c5d0821540c191068761266618c2/source/train.py",
+        "sha256": "9565acfbcfc2f1eefd982c80be7ce943e09828578b9b44c3d70342bc82bf7f4c",
+        "matches_preparation": true,
+        "matches_evidence": true
+      }
+    },
+    "authored_primary_category": {
+      "manifest": "eval/mvp_phase1_v2.yaml",
+      "scenario_id": "s2_capacity_v2",
+      "ground_truth": "optimizer_state",
+      "truth_status": "authored",
+      "predicted_first_category": "optimizer_state",
+      "matches": true,
+      "warning": "Authored scenario label, not independent causal proof or optimizer state being numerically the largest category."
+    },
+    "binding": {
+      "snapshot_sha_matches": true,
+      "evidence_json_sha_matches": true,
+      "canonical_diagnosis_sha_matches": true,
+      "values": {
+        "snapshot_sha256": "f2dfd579f8f922933011a5f685f91b4d332cda0e6d166f97dc86404de528c92d",
+        "evidence_json_sha256": "ff6181be2fa2019df56165bc28b71fcfbb90313594d6cb6ebdc0a876fb169a0a",
+        "diagnosis_sha256": "521d6a89033f28aa4d5d6f40492a157889db79e83e048604762aab82cd6e3536"
+      }
+    },
+    "aggregate_measurements": {
+      "peak_allocated_bytes": 22919430656,
+      "category_bytes": {
+        "params": 4565352448,
+        "grads": 0,
+        "optimizer_state": 9130704896,
+        "activations": 33751040,
+        "temporaries": 9164259328,
+        "cache": 0,
+        "unknown": 25362944
+      },
+      "optimizer_moment_stacks": [
+        {
+          "stack_id": "stk_1dab89f1edc7e581",
+          "bytes": 4565352448
+        },
+        {
+          "stack_id": "stk_8cd9860b135702e0",
+          "bytes": 4565352448
+        }
+      ],
+      "lifetime_bytes_not_substituted_for_category_peak": true,
+      "cache_gap_at_allocated_peak_bytes": 1753562624,
+      "cache_gap_context": "At event 3164 allocated=22919430656 and reserved=24672993280. Although maxima occur first at different event indices, reserved is still maximal at allocated peak; the 1.753562624 GB gap is valid. Terminal cached_free=6318915072 B is separately scoped."
+    },
+    "unknown_and_hardware_labels": {
+      "peak_is_exact": false,
+      "recorded_peak_allocated_bytes": null,
+      "fragmentation_confirmed": false,
+      "hardware_verification": "not_run",
+      "notes": "Public evidence labels unauthenticated uploaded content, heuristic categories, unknown source/capture correspondence, unavailable native peak counters and no after-run/loss equivalence. Original capture completed 20 steps with StepLimitReached, not an OOM. This review compared the historical capture; it does not make the upload runtime-authenticated."
+    }
+  },
+  "material_findings": [
+    {
+      "severity": "P2",
+      "id": "stack_numeric_overstatement",
+      "location": "public-report.json /diagnosis/notes/5",
+      "claim": "stk_8740c7ed9227569b 3.36 GB live",
+      "actual_peak_live_bytes": 33554432,
+      "actual_lifetime_allocated_bytes": 33554432,
+      "actual_decimal_GB": 0.033554432,
+      "assessment": "Approximately 100x overstatement. Neither the stack live value nor its lifetime value supports 3.36 GB; not evidence of a cumulative-to-peak substitution, but a numeric error surviving schema validation."
+    },
+    {
+      "severity": "P2",
+      "id": "quantitative_refs_incomplete",
+      "location": "public-report.json /diagnosis/root_causes/0 and /2",
+      "assessment": "Optimizer total 9.130704896 GB is correct, but rc1 cites only one 4.565352448 GB moment stack. Temporary total 9.164259328 GB is correct, but rc3 cites 4.596957184 GB and omits stk_b15b5a2937d60e6e (4.565352448 GB, AdamW _multi_tensor_adamw). The title matmul/linear intermediates does not describe the substantial uncited foreach optimizer temporary. Ref IDs exist and hashes bind, but quantitative attribution is incomplete."
+    },
+    {
+      "severity": "limitation",
+      "id": "unsupported_exclusivity_and_saving",
+      "location": "public-report.json /diagnosis/notes/8 and /plan/0",
+      "assessment": "Allocator tuning being the only policy-compliant lever is not established by this snapshot. Authored s2 guidance includes foreach=False with unchanged precision; its effect and throughput under the zero-regression policy remain unmeasured. The proposed 0.5 GB saving is explicitly speculative and cannot be reported as an achieved reduction."
+    }
+  ],
+  "reference_checks": {
+    "rc1": {
+      "refs": [
+        "stk_8cd9860b135702e0"
+      ],
+      "all_present_in_public_evidence": true,
+      "cited_peak_live_bytes": 4565352448,
+      "claimed_bytes_gb": 9.130704
+    },
+    "rc2": {
+      "refs": [
+        "stk_16e860e7dcc3e54d"
+      ],
+      "all_present_in_public_evidence": true,
+      "cited_peak_live_bytes": 4564795392,
+      "claimed_bytes_gb": 4.564795
+    },
+    "rc3": {
+      "refs": [
+        "stk_47a33c87f8ad78dd",
+        "stk_8740c7ed9227569b"
+      ],
+      "all_present_in_public_evidence": true,
+      "cited_peak_live_bytes": 4596957184,
+      "claimed_bytes_gb": 9.164259
+    },
+    "rc4": {
+      "refs": [
+        "stk_8cd9860b135702e0"
+      ],
+      "all_present_in_public_evidence": true,
+      "cited_peak_live_bytes": 4565352448,
+      "claimed_bytes_gb": 1.753562
+    }
+  },
+  "acceptance_boundaries": [
+    "No patch generated; no automatic repair success.",
+    "No fresh training/GPU run or before-after numerical validation.",
+    "No change to fixed-nine scores, denominators, historical failures or acceptance thresholds.",
+    "No claim that schema issues=[] proves semantic accuracy."
+  ],
+  "evidence_files": [
+    {
+      "path": "runs/uploads/cd565dc58c9e4d668b48621532dfbe2b/public-report.json",
+      "sha256": "1c9511d68a6751e89a28f66d3e8300a546b5ef333d02ec10dafd65f0a48fbbff",
+      "bytes": 175475
+    },
+    {
+      "path": "runs/uploads/cd565dc58c9e4d668b48621532dfbe2b/evidence.json",
+      "sha256": "ff6181be2fa2019df56165bc28b71fcfbb90313594d6cb6ebdc0a876fb169a0a",
+      "bytes": 838461
+    },
+    {
+      "path": "runs/uploads/cd565dc58c9e4d668b48621532dfbe2b/private/diagnosis-validation.json",
+      "sha256": "534e75d629a00a086ea36d06a2908bb6f94e97ae6df1b1920540a1bb605dfa29",
+      "bytes": 4705
+    },
+    {
+      "path": "runs/uploads/cd565dc58c9e4d668b48621532dfbe2b/private/cleanup.json",
+      "sha256": "27a70c624daa4f85df6c33f50a984446478d9cd06b8978f7badd7a1002535a56",
+      "bytes": 123
+    },
+    {
+      "path": "reports/snapshot-repair-20261030/cd565dc58c9e4d668b48621532dfbe2b-controller-summary.json",
+      "sha256": "e5185b6a98ba9af9fe1f52070fe3ecc0f1d25474678eb6376cc85fc6c10f4915",
+      "bytes": 967
+    },
+    {
+      "path": "reports/final48h-feature-scope-20261029/preparation-inputs.json",
+      "sha256": "c7191ddcecd84dfb4172f41ea18d4d29906ab8b67a39229178677842ebacc70d",
+      "bytes": 9767
+    },
+    {
+      "path": "eval/mvp_phase1_v2.yaml",
+      "sha256": "2b5d669700c68737abaa258a7e8eb26a683baaa4e39d378a9d98a88bda2f1c20",
+      "bytes": 7417
+    },
+    {
+      "path": "scenarios/s2_capacity_v2/train.py",
+      "sha256": "9565acfbcfc2f1eefd982c80be7ce943e09828578b9b44c3d70342bc82bf7f4c",
+      "bytes": 6274
+    },
+    {
+      "path": "scenarios/s2_fp32_adamw_1b/README.md",
+      "sha256": "50b2414af268694f1792f32198c1e3c1ab5a4d684ade3df893e37b66d0f28e43",
+      "bytes": 4739
+    }
+  ]
+}

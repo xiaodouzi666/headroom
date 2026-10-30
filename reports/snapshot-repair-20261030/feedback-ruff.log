@@ -1,0 +1,56 @@
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/test_snapshot_feedback.py:3:1
+   |
+ 1 |   """Bounded application-level correction with real SDK/router and isolated budgets."""
+ 2 |
+ 3 | / import copy
+ 4 | | import dataclasses
+ 5 | | import json
+ 6 | | import pickle
+ 7 | | import socket
+ 8 | | from decimal import Decimal
+ 9 | | from types import SimpleNamespace
+10 | | from uuid import uuid4
+11 | |
+12 | | import httpx
+13 | | import pytest
+14 | |
+15 | | import headroom.snapshot_diagnosis as core
+16 | | from headroom.budget import BudgetLedger
+17 | | from headroom.config import (
+18 | |     Pricing,
+19 | |     RuntimeConfig,
+20 | |     ULTRA_MODEL,
+21 | |     VerifiedCapabilities,
+22 | |     candidate_models,
+23 | | )
+24 | | from headroom.llm.client import TokenFactoryClient
+25 | | from headroom.llm.router import LLMRouter
+26 | | from headroom.snapshot_diagnosis import (
+27 | |     SnapshotDiagnosisRequest,
+28 | |     SnapshotServices,
+29 | |     run_snapshot_diagnosis,
+30 | | )
+31 | | from test_snapshot_diagnosis import diagnosis, native_snapshot
+   | |______________________________________________________________^
+help: Organize imports
+   |
+13 | import pytest
+14 + from test_snapshot_diagnosis import diagnosis, native_snapshot
+15 |
+16 | import headroom.snapshot_diagnosis as core
+17 | from headroom.budget import BudgetLedger
+18 | from headroom.config import (
+19 +     ULTRA_MODEL,
+20 |     Pricing,
+21 |     RuntimeConfig,
+   -     ULTRA_MODEL,
+22 |     VerifiedCapabilities,
+--------------------------------------------------------------------------------
+31 | )
+   - from test_snapshot_diagnosis import diagnosis, native_snapshot
+32 |
+   |
+
+Found 1 error.
+[*] 1 fixable with `--fix`.

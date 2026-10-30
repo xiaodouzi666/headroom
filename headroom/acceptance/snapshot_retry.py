@@ -41,7 +41,11 @@ PREFIX = "F3b-retry:"
 CODE_FILES = (
     "headroom/snapshot_diagnosis.py",
     "headroom/api/snapshot_queue.py",
+    "headroom/api/snapshot_routes.py",
     "headroom/snapshot_evidence.py",
+    "headroom/snapshot_grounding.py",
+    "headroom/snapshot_intent.py",
+    "headroom/snapshot_feedback.py",
     "headroom/prompts/snapshot_diagnose.md",
     "headroom/acceptance/snapshot_retry.py",
     "headroom/evidence_blockers.py",

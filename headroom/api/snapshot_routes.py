@@ -28,6 +28,7 @@ from headroom.api.snapshot_queue import (
     directory_fd,
 )
 from headroom.schemas import Diagnosis
+from headroom.snapshot_intent import QUANTITY_PROVENANCE, QUANTITY_SOURCE
 
 LIMITS = {"snapshot": 50 * 1024 * 1024, "traceback": 256 * 1024, "source": 1024 * 1024}
 FILENAMES = {"snapshot": "snapshot.pickle", "traceback": "traceback.txt", "source": "source.py"}
@@ -265,8 +266,16 @@ def _evidence(value, diagnosis):
     else:
         if (
             not isinstance(binding, dict)
-            or set(binding) != {"snapshot_sha256", "evidence_json_sha256", "diagnosis_sha256"}
-            or any(not isinstance(v, str) or not DIGEST.fullmatch(v) for v in binding.values())
+            or set(binding)
+            not in (
+                {"snapshot_sha256", "evidence_json_sha256", "diagnosis_sha256"},
+                {"snapshot_sha256", "evidence_json_sha256", "diagnosis_sha256", "quantity_source"},
+            )
+            or any(
+                not isinstance(binding.get(key), str) or not DIGEST.fullmatch(binding[key])
+                for key in ("snapshot_sha256", "evidence_json_sha256", "diagnosis_sha256")
+            )
+            or ("quantity_source" in binding and binding["quantity_source"] != QUANTITY_SOURCE)
             or binding["snapshot_sha256"] != sha
         ):
             raise ValueError("Invalid evidence binding")
@@ -409,6 +418,9 @@ def _markdown(result):
     lines = ["# Snapshot diagnosis", "", VERIFICATION["message"], ""]
     diagnosis = result["diagnosis"]
     if diagnosis:
+        binding = (result.get("evidence") or {}).get("diagnosis_binding") or {}
+        if binding.get("quantity_source") == QUANTITY_SOURCE:
+            lines += [QUANTITY_PROVENANCE, ""]
         lines += ["## Root causes", ""]
         for cause in diagnosis["root_causes"]:
             lines += [

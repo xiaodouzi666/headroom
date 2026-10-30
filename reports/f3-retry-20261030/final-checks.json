@@ -1,0 +1,68 @@
+{
+  "utc": "2026-10-30T04:30:52.420136+00:00",
+  "source_sha256": {
+    "headroom/acceptance/f3_retry.py": "293931d4a9cb70f4b77ef920e0e52c1e23e4dd45e73faa1dd405a4b7a96eb2ae",
+    "headroom/cli_execution.py": "261884432b8c91495c61d6d69b0d5fa892b1f59e747ca04019a43d68aa3a21b2",
+    "tests/test_f3_retry.py": "11fcd4947233abc7626822c5b0d4f2eeed7d734689872d4686781107d5820d5f",
+    "reports/f3-retry-20261030/prepare-fixed9-retry.py.txt": "0c72c18babf3af7752b38342813641f40fdfa1a3b87595ca9399c718cf28931d",
+    "reports/f3-retry-20261030/execute-fixed9-retry.py.txt": "8190603ba34a1a84e6b8f187f1a4faed35361365c05339fab56b44f9097e46a8"
+  },
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/acceptance/f3_retry.py",
+        "headroom/cli_execution.py",
+        "tests/test_f3_retry.py"
+      ],
+      "exit_code": 0,
+      "output": "All checks passed!\n"
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/acceptance/f3_retry.py",
+        "headroom/cli_execution.py",
+        "tests/test_f3_retry.py"
+      ],
+      "exit_code": 0,
+      "output": "3 files already formatted\n"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output": ""
+    }
+  ],
+  "focused": "60 passed in 24.10s",
+  "f5_compatibility": "5 passed in 3.45s",
+  "production_prepare": false,
+  "production_claims": 0,
+  "provider_calls": 0,
+  "gpu_runs": 0,
+  "scripts_syntax_checked_only": true,
+  "independent_review": {
+    "reviewer": "headroom_plan_audit",
+    "status": "passed_no_specific_blocker",
+    "reviewed_source_sha256": {
+      "headroom/acceptance/f3_retry.py": "293931d4a9cb70f4b77ef920e0e52c1e23e4dd45e73faa1dd405a4b7a96eb2ae",
+      "headroom/cli_execution.py": "261884432b8c91495c61d6d69b0d5fa892b1f59e747ca04019a43d68aa3a21b2",
+      "tests/test_f3_retry.py": "11fcd4947233abc7626822c5b0d4f2eeed7d734689872d4686781107d5820d5f"
+    },
+    "tests_rerun_by_reviewer": false,
+    "production_reads_by_reviewer": false,
+    "scope": "full retry module, CLI diff, prepare/execute templates, existing registry/quiet/cost paths and targeted tests"
+  },
+  "controller_final_root_review_fixes": [
+    "os.umask(0o077) before any new files",
+    "threshold_scope=memory_targets_only; valid first-cause and overall acceptance remain separate"
+  ],
+  "controller_compiled_not_executed": true
+}

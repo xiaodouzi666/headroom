@@ -1,0 +1,215 @@
+{
+  "source_run_id": "cd565dc58c9e4d668b48621532dfbe2b",
+  "source_report_sha256": "1c9511d68a6751e89a28f66d3e8300a546b5ef333d02ec10dafd65f0a48fbbff",
+  "projection_note": "Unmodified saved diagnosis; only numeric evidence projection retained. This is a negative regression fixture, not a new model result.",
+  "diagnosis": {
+    "root_causes": [
+      {
+        "id": "rc1",
+        "title": "Optimizer state (AdamW exp_avg/exp_avg_sq) dominant at peak",
+        "category": "optimizer_state",
+        "bytes_gb": 9.130704,
+        "evidence_refs": [
+          "stk_8cd9860b135702e0"
+        ],
+        "confidence": 0.9
+      },
+      {
+        "id": "rc2",
+        "title": "Model parameters (FP32) persistent allocation",
+        "category": "params",
+        "bytes_gb": 4.564795,
+        "evidence_refs": [
+          "stk_16e860e7dcc3e54d"
+        ],
+        "confidence": 0.95
+      },
+      {
+        "id": "rc3",
+        "title": "Large temporary tensors (matmul/linear intermediates) at peak",
+        "category": "temporaries",
+        "bytes_gb": 9.164259,
+        "evidence_refs": [
+          "stk_47a33c87f8ad78dd",
+          "stk_8740c7ed9227569b"
+        ],
+        "confidence": 0.85
+      },
+      {
+        "id": "rc4",
+        "title": "High cache gap (reserved - allocated ~1.75 GB) suggesting allocator caching pressure",
+        "category": "cache",
+        "bytes_gb": 1.753562,
+        "evidence_refs": [
+          "stk_8cd9860b135702e0"
+        ],
+        "confidence": 0.6
+      }
+    ],
+    "plan": [
+      {
+        "fix_id": "f1",
+        "type": "config",
+        "title": "Reduce allocator cache pressure via PYTORCH_CUDA_ALLOC_CONF",
+        "description": "Set PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:64,roundup_power2_divisions:16,garbage_collection_threshold:0.8 to encourage earlier cache release and reduce reserved-allocated gap. This is an allocator tuning knob, not a model/numerics change.",
+        "expected_saving_gb": 0.5,
+        "numerics_impact": "none",
+        "throughput_impact": "minor",
+        "risk": "Allocator behavior varies by GPU/driver; may not shrink peak if live blocks dominate reserved.",
+        "requires_policy": []
+      }
+    ],
+    "verification": {
+      "max_steps": 20,
+      "compare_loss": true,
+      "tolerance": 0.001
+    },
+    "needs_more_info": true,
+    "notes": [
+      "Peak allocated 22.92 GB; optimizer_state ~9.13 GB (40%), params ~4.56 GB (20%), temporaries ~9.16 GB (40%).",
+      "Reserved 24.67 GB, cached_free 6.32 GB, largest_free_block 2.69 GB; fragmentation_indicator=high but not confirmed.",
+      "Recorded peak counters unavailable; peak_is_exact=false. No OOM events recorded.",
+      "Source train.py shows AdamW with foreach=True, width=2048, depth=34, batch=24, seq_len=128; param count ~1.14B (4.56 GB FP32).",
+      "Optimizer state 2x params (exp_avg + exp_avg_sq) matches ~9.13 GB observed.",
+      "Temporary peaks align with matmul/linear intermediates (stk_47a33c87f8ad78dd 4.56 GB live, stk_8740c7ed9227569b 3.36 GB live).",
+      "Policy forbids numerics/model/batch/grad_accum changes; max_throughput_regression_pct=0.0.",
+      "No compliant plan can directly shrink optimizer_state or params without policy violation.",
+      "Allocator config tuning (f1) is the only policy-compliant lever; expected saving is speculative.",
+      "Hardware verification not run; no measured repair or loss equivalence."
+    ],
+    "invocation_claims": [],
+    "invocation_refs": [],
+    "evidence_requests": [
+      {
+        "field": "peak_composition_breakdown_per_optimizer_step",
+        "reason": "missing",
+        "detail": "Need per-step peak composition to confirm optimizer_state/temporaries phasing and whether cache pressure coincides with temporary spikes.",
+        "evidence_ref": "execution_context.runtime_input_observations",
+        "source_line_start": null,
+        "source_line_end": null,
+        "blocking_scope": "current_plan",
+        "blocked_plan_ids": [
+          "f1"
+        ]
+      },
+      {
+        "field": "allocator_settings_native",
+        "reason": "missing",
+        "detail": "Native allocator configuration (max_split_size_mb, roundup_power2_divisions, gc_threshold) not supplied; required to validate f1 applicability.",
+        "evidence_ref": "execution_context.runtime_input_observations",
+        "source_line_start": null,
+        "source_line_end": null,
+        "blocking_scope": "current_plan",
+        "blocked_plan_ids": [
+          "f1"
+        ]
+      },
+      {
+        "field": "recorded_peak_counters",
+        "reason": "missing",
+        "detail": "Exact recorded peak allocated/reserved counters unavailable; replay cross-check impossible. Needed to confirm peak_is_exact=false impact.",
+        "evidence_ref": "execution_context.runtime_input_observations",
+        "source_line_start": null,
+        "source_line_end": null,
+        "blocking_scope": "overall_feasibility",
+        "blocked_plan_ids": []
+      }
+    ]
+  },
+  "evidence": {
+    "analysis": {
+      "peak_composition": [
+        {
+          "stack_id": "stk_1dab89f1edc7e581",
+          "category": "optimizer_state",
+          "bytes": 4565352448
+        },
+        {
+          "stack_id": "stk_8cd9860b135702e0",
+          "category": "optimizer_state",
+          "bytes": 4565352448
+        },
+        {
+          "stack_id": "stk_b15b5a2937d60e6e",
+          "category": "temporaries",
+          "bytes": 4565352448
+        },
+        {
+          "stack_id": "stk_16e860e7dcc3e54d",
+          "category": "params",
+          "bytes": 4564795392
+        },
+        {
+          "stack_id": "stk_47a33c87f8ad78dd",
+          "category": "temporaries",
+          "bytes": 4563402752
+        },
+        {
+          "stack_id": "stk_74abca1986ce4bc8",
+          "category": "activations",
+          "bytes": 33554432
+        },
+        {
+          "stack_id": "stk_8740c7ed9227569b",
+          "category": "temporaries",
+          "bytes": 33554432
+        },
+        {
+          "stack_id": "stk_3fb65d790bb5bf66",
+          "category": "unknown",
+          "bytes": 25165824
+        },
+        {
+          "stack_id": "stk_6b2659d9a2fa87d7",
+          "category": "temporaries",
+          "bytes": 1392640
+        },
+        {
+          "stack_id": "stk_ea1a74c4b22529ae",
+          "category": "temporaries",
+          "bytes": 557056
+        },
+        {
+          "stack_id": "stk_ee860f0cd4ac1c9f",
+          "category": "params",
+          "bytes": 557056
+        },
+        {
+          "stack_id": "stk_6ea8acffb89202ad",
+          "category": "unknown",
+          "bytes": 196608
+        },
+        {
+          "stack_id": "stk_70f128ca1c295b13",
+          "category": "activations",
+          "bytes": 196608
+        },
+        {
+          "stack_id": "stk_ef16be86287aecf6",
+          "category": "unknown",
+          "bytes": 512
+        }
+      ],
+      "category_bytes": {
+        "params": 4565352448,
+        "grads": 0,
+        "optimizer_state": 9130704896,
+        "activations": 33751040,
+        "temporaries": 9164259328,
+        "cache": 0,
+        "unknown": 25362944
+      }
+    },
+    "presentation": {
+      "peak_stack_ids": [
+        "stk_1dab89f1edc7e581",
+        "stk_8cd9860b135702e0",
+        "stk_b15b5a2937d60e6e",
+        "stk_16e860e7dcc3e54d",
+        "stk_47a33c87f8ad78dd",
+        "stk_74abca1986ce4bc8",
+        "stk_8740c7ed9227569b"
+      ]
+    }
+  }
+}

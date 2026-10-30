@@ -1,0 +1,47 @@
+{
+  "utc": "2026-10-30T04:44:06.624289+00:00",
+  "source_sha256": {
+    "tests/test_snapshot_allocation_binding.py": "00355d0d3a21726af76af7afa4d31cead7e238cdbfd8d4060289ddfdf5c02000",
+    "tests/test_snapshot_retry.py": "6f077e27143f262164c9be9748803ac099dcbd0e570caea568d1b01dbc944a25"
+  },
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "tests/test_snapshot_allocation_binding.py",
+        "tests/test_snapshot_retry.py"
+      ],
+      "exit_code": 0,
+      "output": "All checks passed!\n"
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "tests/test_snapshot_allocation_binding.py",
+        "tests/test_snapshot_retry.py"
+      ],
+      "exit_code": 0,
+      "output": "2 files already formatted\n"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "--",
+        "tests/test_snapshot_allocation_binding.py",
+        "tests/test_snapshot_retry.py"
+      ],
+      "exit_code": 0,
+      "output": ""
+    }
+  ],
+  "focused_result": "60 passed in 7.85s",
+  "production_source_changed": false,
+  "provider_calls": 0,
+  "gpu_jobs": 0,
+  "production_claims": 0
+}

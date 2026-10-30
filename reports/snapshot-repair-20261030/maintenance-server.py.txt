@@ -1,0 +1,26 @@
+"""Temporary Headroom-only 503 responder; no files, upstream, credentials or tasks."""
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+BODY = b"<!doctype html><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Headroom - updating</title><main style='max-width:40rem;margin:12vh auto;padding:1.5rem;font:20px/1.6 system-ui'><h1>Headroom is updating</h1><p>We are finishing existing tasks before updating the service. Please try again shortly.</p><p>Your existing results are preserved.</p></main>"
+class Maintenance(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+    def respond(self, body=True):
+        self.send_response(503)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(BODY)))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Retry-After", "60")
+        self.send_header("Connection", "close")
+        self.end_headers()
+        if body:
+            self.wfile.write(BODY)
+        self.close_connection = True
+    def do_GET(self): self.respond()
+    def do_HEAD(self): self.respond(False)
+    def do_POST(self): self.respond()
+    def do_PUT(self): self.respond()
+    def do_DELETE(self): self.respond()
+    def log_message(self, *args): pass
+
+if __name__ == "__main__":
+    HTTPServer(("127.0.0.1", 8767), Maintenance).serve_forever()

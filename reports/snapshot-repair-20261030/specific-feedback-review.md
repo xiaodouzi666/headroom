@@ -1,0 +1,11 @@
+# Snapshot correction feedback, specific-field revision
+
+The real s2 r5 run (96f402f56d28418195393d008c0e5d2e) kept two identical parsed intent objects. Its second SDK request did include the saved validation feedback and the original first intent. This is not evidence that feedback was dropped. Raw response wire bytes were not separately retained, so byte-identical transport responses are not claimed.
+
+The correction now includes the exact validation message, a bounded excerpt of the offending field, and actual memory-unit matches. Availability feedback uses only the supplied evidence catalog: visible source text remains visible while its execution values can remain unknown. The response must retain genuine unknowns and policy blockers. Intent-schema descriptions repeat these requirements for constrained JSON output. No validator threshold, amount, retry count or historical response was changed.
+
+The new fixture is copied from that invalid historical intent and compact real evidence. Its successful second response is deliberately synthetic for an offline SDK transmission test, not a new Nebius result or automatic repair. The first incorrect intent remains unchanged in the test's attempt history. Unknown runtime information and needs_more_info remain present. A separate negative test confirms feedback does not invent source visibility when the catalog says unknown.
+
+Validation: 120 passed in 6.94 seconds across feedback, intent, grounding and core modules under closing_guarded_v4. This includes the existing one-call success, two-call correction, two-failure stop, budget refusal before second dispatch, and no correction after HTTP/transport/unknown-cost cases. Counts are one run, not a sum with earlier overlapping checks. Ruff, format, scoped diff check and scoped secret scan passed.
+
+The bounded policy remains at most one application correction, HTTP retries 0, 2000 completion tokens, reasoning disabled, unchanged financial limits and independent admission per actual call. No model, GPU, private ledger or service write occurred during this offline verification. Fresh source pins and a fresh approved proposal are required before live use; pending old nano proposals must be retained as superseded.

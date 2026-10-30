@@ -323,7 +323,7 @@ def test_factory_checks_complete_profile_not_only_total(finished):
 
 
 def test_normal_runtime_and_sdk_use_retry_ledger_without_runtime_injection(finished, monkeypatch):
-    from test_snapshot_allocation_binding import sdk_runtime
+    from test_snapshot_allocation_binding import assert_intent_provenance, sdk_runtime
 
     from headroom import snapshot_diagnosis as core
     from headroom.acceptance.snapshot_binding import snapshot_cleanup_verified
@@ -338,6 +338,7 @@ def test_normal_runtime_and_sdk_use_retry_ledger_without_runtime_injection(finis
         services=core.SnapshotServices(budget_factory=retry.snapshot_retry_budget_factory(binding)),
     )
     assert result["status"] == "completed" and len(calls) == 1
+    assert_intent_provenance(root / "runs/uploads" / binding["run_id"])
     assert result["provenance"] == "live_model"  # normal branch, synthetic SDK transport
     assert result["cost_usd"] == 0.0004
     cleanup = snapshot_cleanup_verified(root / "runs/uploads", binding["run_id"])

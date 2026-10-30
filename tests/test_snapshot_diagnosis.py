@@ -124,6 +124,9 @@ class OfflineRuntimeFactory:
         evidence = json.loads((directory / "evidence.json").read_text())
         reference = next(iter(evidence["analysis"]["stack_catalog"]))
         payload = diagnosis(reference)
+        # The production protocol now asks for intent, never model-authored bytes.
+        for cause in payload["root_causes"]:
+            cause.pop("bytes_gb")
         if self.mutate:
             payload = self.mutate(payload)
 
@@ -494,6 +497,13 @@ def test_schema_only_advertises_visible_stack_references(upload, tmp_path):
     result = execute(upload, tmp_path, factory)
     assert result["status"] in {"failed", "needs_human"}
     assert result["diagnosis"] is None
+    saved_evidence = json.loads(
+        (tmp_path / "jobs" / result["run_id"] / "evidence.json").read_text()
+    )
+    peak_ids = set(saved_evidence["presentation"]["peak_stack_ids"])
+    public_ids = {stack["id"] for stack in result["evidence"]["stacks"]}
+    assert peak_ids and len(peak_ids) <= 40
+    assert peak_ids <= public_ids
     schema_message = factory.requests[0]["messages"][0]["content"]
     schema = json.loads(schema_message.splitlines()[1])
     allowed = schema["$defs"]["RootCause"]["properties"]["evidence_refs"]["items"]["enum"]
@@ -905,3 +915,98 @@ def test_snapshot_valid_diagnosis_can_keep_genuine_unknown_without_patch(upload,
     assert result["patch"]["status"] == "unavailable"
     assert result["verification"]["status"] == "not_run"
     assert len(factory.requests) == 1
+
+
+@pytest.mark.parametrize("corruption", ["amount", "prose"])
+def test_snapshot_grounding_rejects_without_rewrite_patch_or_model_retry(
+    upload, tmp_path, corruption
+):
+    def mutate(payload):
+        if corruption == "amount":
+            payload["root_causes"][0]["bytes_gb"] = 3.36
+        else:
+            payload["notes"].append("3.36 GB live")
+        return payload
+
+    factory = OfflineRuntimeFactory(mutate)
+    result = execute(upload, tmp_path, factory)
+    assert result["status"] == ("failed" if corruption == "amount" else "needs_human")
+    assert result["diagnosis"] is None and result["patch"]["diff"] is None
+    assert result["verification"]["status"] == "not_run"
+    assert len(factory.requests) == 1
+    job = tmp_path / "jobs" / result["run_id"]
+    if corruption == "amount":
+        error = json.loads((job / "private/model-error.json").read_text())
+        assert error["error_reason"] == "schema_mismatch"
+        assert not (job / "private/snapshot-quantity-provenance.json").exists()
+        return
+    saved = json.loads((job / "private/diagnosis-validation.json").read_text())
+    expected = (
+        "SNAPSHOT_PEAK_BYTES_MISMATCH"
+        if corruption == "amount"
+        else "SNAPSHOT_MEMORY_QUANTITY_IN_PROSE"
+    )
+    assert expected in {issue["code"] for issue in saved["issues"]}
+    if corruption == "amount":
+        assert saved["diagnosis"]["root_causes"][0]["bytes_gb"] == 3.36
+    else:
+        assert "3.36 GB live" in saved["diagnosis"]["notes"]
+    user = json.loads(
+        next(m["content"] for m in factory.requests[0]["messages"] if m["role"] == "user")
+    )
+    text = user["evidence_markdown"]
+    assert text.index("Canonical visible peak quantities") < text.index("## Peak composition")
+    assert '"decimal_GB":"0.000000512"' in text
+
+
+def test_snapshot_intent_and_measurement_provenance_are_private_bound_and_auditable(
+    upload, tmp_path
+):
+    from headroom.snapshot_intent import QUANTITY_SOURCE, SNAPSHOT_INTENT_PROTOCOL
+
+    factory = OfflineRuntimeFactory()
+    result = execute(upload, tmp_path, factory)
+    job = tmp_path / "jobs" / result["run_id"]
+    raw_path = job / "private/snapshot-intent.json"
+    source_path = job / "private/snapshot-quantity-provenance.json"
+    raw = json.loads(raw_path.read_text())
+    provenance = json.loads(source_path.read_text())
+    assert raw_path.stat().st_mode & 0o777 == 0o600
+    assert source_path.stat().st_mode & 0o777 == 0o600
+    assert raw["protocol"] == SNAPSHOT_INTENT_PROTOCOL
+    assert "bytes_gb" not in raw["intent"]["root_causes"][0]
+    assert provenance["intent_sha256"] == canonical_hash(raw["intent"])
+    assert (
+        provenance["snapshot_sha256"]
+        == hashlib.sha256(upload.read_bytes()).hexdigest()
+        == result["evidence"]["diagnosis_binding"]["snapshot_sha256"]
+    )
+    assert (
+        provenance["evidence_json_sha256"]
+        == hashlib.sha256((job / "evidence.json").read_bytes()).hexdigest()
+    )
+    assert provenance["derivations"][0]["cited_peak_bytes"] == 512
+    assert result["diagnosis"]["root_causes"][0]["bytes_gb"] == 0.000000512
+    assert result["evidence"]["diagnosis_binding"]["quantity_source"] == QUANTITY_SOURCE
+    assert provenance["derived_diagnosis_sha256"] == canonical_hash(
+        raw["intent"]
+        | {"root_causes": [raw["intent"]["root_causes"][0] | {"bytes_gb": 0.000000512}]}
+    )
+    assert len(factory.requests) == 1
+    assert "Do NOT output bytes_gb" in core.SNAPSHOT_PROMPT.read_text()
+    assert "do not prove the cause, savings" in (job / "diagnosis.md").read_text()
+
+
+def test_legacy_markdown_is_not_relabelled_as_host_computed():
+    from headroom.snapshot_intent import QUANTITY_PROVENANCE
+
+    result = {
+        "status": "needs_human",
+        "provenance": "live_model",
+        "diagnosis": diagnosis("stk_" + "0" * 16),
+        "evidence": None,
+        "cost_usd": 0,
+        "error": None,
+        "patch": {"status": "unavailable", "diff": None},
+    }
+    assert QUANTITY_PROVENANCE not in core.render_diagnosis_markdown(result)

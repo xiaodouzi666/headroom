@@ -296,6 +296,10 @@ def verify_invocation_allocation(
             raise ValueError("CLI feature route requires F5 clean-s3")
         if feature_intent["payload"]["checkout"]["path"] == binding["project_root"]:
             raise ValueError("F5 must use a separate clean checkout")
+    elif binding.get("schema") == "headroom.final48.f3-retry.v1":
+        from headroom.acceptance.f3_retry import verify_f3_retry
+
+        verified = verify_f3_retry(binding, request, run_id=run_id)
     else:
         verified = verify_child_binding(binding, request=request, run_id=run_id)
     selected = os.environ.get(BUDGET_DB_ENV)
@@ -307,6 +311,21 @@ def verify_invocation_allocation(
 def allocation_budget_factory(spec):
     """Retain run_fix accounting while applying the independently bound F3 ceiling."""
     from headroom.budget import BudgetLedger, money
+
+    if spec.allocation_child_binding.get("schema") == "headroom.final48.f3-retry.v1":
+        from headroom.acceptance.f3_retry import f3_retry_budget_factory
+        from headroom.orchestrator import FixRequest
+
+        verify_invocation_allocation(
+            spec.allocation_child_binding,
+            spec.queued_request,
+            spec.run_id,
+            require_selected=True,
+            feature_intent=getattr(spec, "feature_intent", None),
+        )
+        return f3_retry_budget_factory(
+            spec.allocation_child_binding, FixRequest.model_validate(spec.queued_request)
+        )
 
     class BoundLedger(BudgetLedger):
         def reserve(self, *args, **kwargs):

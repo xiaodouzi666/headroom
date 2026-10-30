@@ -1,0 +1,33 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+..................................................F..................... [ 97%]
+..                                                                       [100%]
+=================================== FAILURES ===================================
+_ test_private_error_write_failure_preserves_public_failure_and_cleanup_evidence _
+
+upload = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-453/test_private_error_write_failu0/upload.pickle')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-453/test_private_error_write_failu0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e7252b5d7c0>
+
+    def test_private_error_write_failure_preserves_public_failure_and_cleanup_evidence(
+        upload, tmp_path, monkeypatch
+    ):
+        write_json = core._write_json
+    
+        def failing_write(path, value):
+            if path.name == "model-error.json":
+                raise OSError("private-offline-write-error")
+            return write_json(path, value)
+    
+        monkeypatch.setattr(core, "_write_json", failing_write)
+        factory = OfflineRuntimeFactory(lambda payload: "{invalid")
+        result = execute(upload, tmp_path, factory)
+        job = tmp_path / "jobs" / result["run_id"]
+        assert factory.closed and len(factory.requests) == 1
+        assert result["status"] == "failed" and result["error"] == "worker_error"
+>       assert not json.loads((job / "private/cleanup.json").read_text())["cleanup_verified"]
+E       assert not True
+
+tests/test_snapshot_diagnosis.py:798: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_snapshot_diagnosis.py::test_private_error_write_failure_preserves_public_failure_and_cleanup_evidence
+1 failed, 73 passed in 6.88s

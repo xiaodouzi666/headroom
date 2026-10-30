@@ -1,0 +1,104 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+........................................................................ [ 55%]
+................FF........................................               [100%]
+=================================== FAILURES ===================================
+_ test_snapshot_grounding_rejects_without_rewrite_patch_or_model_retry[amount] _
+
+upload = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-443/test_snapshot_grounding_reject0/upload.pickle')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-443/test_snapshot_grounding_reject0')
+corruption = 'amount'
+
+    @pytest.mark.parametrize("corruption", ["amount", "prose"])
+    def test_snapshot_grounding_rejects_without_rewrite_patch_or_model_retry(
+        upload, tmp_path, corruption
+    ):
+        def mutate(payload):
+            if corruption == "amount":
+                payload["root_causes"][0]["bytes_gb"] = 3.36
+            else:
+                payload["notes"].append("3.36 GB live")
+            return payload
+    
+        factory = OfflineRuntimeFactory(mutate)
+        result = execute(upload, tmp_path, factory)
+        assert result["status"] == "needs_human"
+        assert result["diagnosis"] is None and result["patch"]["diff"] is None
+        assert result["verification"]["status"] == "not_run"
+        assert len(factory.requests) == 1
+        saved = json.loads(
+            (tmp_path / "jobs" / result["run_id"] / "private/diagnosis-validation.json").read_text()
+        )
+        expected = (
+            "SNAPSHOT_PEAK_BYTES_MISMATCH"
+            if corruption == "amount"
+            else "SNAPSHOT_MEMORY_QUANTITY_IN_PROSE"
+        )
+        assert expected in {issue["code"] for issue in saved["issues"]}
+        if corruption == "amount":
+            assert saved["diagnosis"]["root_causes"][0]["bytes_gb"] == 3.36
+        else:
+            assert "3.36 GB live" in saved["diagnosis"]["notes"]
+        user = json.loads(
+            next(m["content"] for m in factory.requests[0]["messages"] if m["role"] == "user")
+        )
+        text = user["evidence_markdown"]
+>       assert text.index("Canonical visible peak quantities") < text.index("Peak composition")
+E       AssertionError: assert 660 < 311
+E        +  where 660 = <built-in method index of str object at 0x136303f0>('Canonical visible peak quantities')
+E        +    where <built-in method index of str object at 0x136303f0> = '# Uploaded snapshot diagnosis input\n\ninput_kind: uploaded_snapshot\nhardware_verification: not_run\nSnapshot SHA-25...\n## Static source observations\n\nNo selected static patterns found.\n\n## User-provided traceback\n\nNot supplied.\n'.index
+E        +  and   311 = <built-in method index of str object at 0x136303f0>('Peak composition')
+E        +    where <built-in method index of str object at 0x136303f0> = '# Uploaded snapshot diagnosis input\n\ninput_kind: uploaded_snapshot\nhardware_verification: not_run\nSnapshot SHA-25...\n## Static source observations\n\nNo selected static patterns found.\n\n## User-provided traceback\n\nNot supplied.\n'.index
+
+tests/test_snapshot_diagnosis.py:944: AssertionError
+_ test_snapshot_grounding_rejects_without_rewrite_patch_or_model_retry[prose] __
+
+upload = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-443/test_snapshot_grounding_reject1/upload.pickle')
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-443/test_snapshot_grounding_reject1')
+corruption = 'prose'
+
+    @pytest.mark.parametrize("corruption", ["amount", "prose"])
+    def test_snapshot_grounding_rejects_without_rewrite_patch_or_model_retry(
+        upload, tmp_path, corruption
+    ):
+        def mutate(payload):
+            if corruption == "amount":
+                payload["root_causes"][0]["bytes_gb"] = 3.36
+            else:
+                payload["notes"].append("3.36 GB live")
+            return payload
+    
+        factory = OfflineRuntimeFactory(mutate)
+        result = execute(upload, tmp_path, factory)
+        assert result["status"] == "needs_human"
+        assert result["diagnosis"] is None and result["patch"]["diff"] is None
+        assert result["verification"]["status"] == "not_run"
+        assert len(factory.requests) == 1
+        saved = json.loads(
+            (tmp_path / "jobs" / result["run_id"] / "private/diagnosis-validation.json").read_text()
+        )
+        expected = (
+            "SNAPSHOT_PEAK_BYTES_MISMATCH"
+            if corruption == "amount"
+            else "SNAPSHOT_MEMORY_QUANTITY_IN_PROSE"
+        )
+        assert expected in {issue["code"] for issue in saved["issues"]}
+        if corruption == "amount":
+            assert saved["diagnosis"]["root_causes"][0]["bytes_gb"] == 3.36
+        else:
+            assert "3.36 GB live" in saved["diagnosis"]["notes"]
+        user = json.loads(
+            next(m["content"] for m in factory.requests[0]["messages"] if m["role"] == "user")
+        )
+        text = user["evidence_markdown"]
+>       assert text.index("Canonical visible peak quantities") < text.index("Peak composition")
+E       AssertionError: assert 660 < 311
+E        +  where 660 = <built-in method index of str object at 0x13538bd0>('Canonical visible peak quantities')
+E        +    where <built-in method index of str object at 0x13538bd0> = '# Uploaded snapshot diagnosis input\n\ninput_kind: uploaded_snapshot\nhardware_verification: not_run\nSnapshot SHA-25...\n## Static source observations\n\nNo selected static patterns found.\n\n## User-provided traceback\n\nNot supplied.\n'.index
+E        +  and   311 = <built-in method index of str object at 0x13538bd0>('Peak composition')
+E        +    where <built-in method index of str object at 0x13538bd0> = '# Uploaded snapshot diagnosis input\n\ninput_kind: uploaded_snapshot\nhardware_verification: not_run\nSnapshot SHA-25...\n## Static source observations\n\nNo selected static patterns found.\n\n## User-provided traceback\n\nNot supplied.\n'.index
+
+tests/test_snapshot_diagnosis.py:944: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_snapshot_diagnosis.py::test_snapshot_grounding_rejects_without_rewrite_patch_or_model_retry[amount]
+FAILED tests/test_snapshot_diagnosis.py::test_snapshot_grounding_rejects_without_rewrite_patch_or_model_retry[prose]
+2 failed, 128 passed in 6.16s

@@ -16,7 +16,6 @@ from pydantic import BaseModel, ConfigDict, field_validator
 from headroom.budget import BudgetExceeded, BudgetLedger, money
 from headroom.diagnose import build_diagnosis_messages, validate_diagnosis
 from headroom.diagnosis_protocol import FINAL48_DIAGNOSIS_ONLY, diagnosis_prompt
-from headroom.diagnosis_schema import build_diagnosis_schema
 from headroom.evidence_blockers import build_evidence_availability_catalog
 from headroom.ledger_path import require_initialized_ledger, select_budget_database
 from headroom.llm.client import LLMError
@@ -24,7 +23,22 @@ from headroom.llm.router import ResponseValidationError, response_validation_met
 from headroom.patch import PatchEngine
 from headroom.runtime import PROJECT_ROOT, RuntimeNotReady, build_live_runtime, read_live_profile
 from headroom.snapshot_evidence import prepare_snapshot_evidence
+from headroom.snapshot_feedback import (
+    MAX_CORRECTIONS,
+    correction_messages,
+    response_cost_is_known,
+    schema_issues,
+)
+from headroom.snapshot_grounding import validate_snapshot_grounding
 from headroom.snapshot_input import SnapshotInputError
+from headroom.snapshot_intent import (
+    QUANTITY_PROVENANCE,
+    QUANTITY_SOURCE,
+    SNAPSHOT_INTENT_PROTOCOL,
+    SnapshotIntentError,
+    build_snapshot_intent_schema,
+    derive_snapshot_diagnosis,
+)
 from headroom.store.db import Store
 
 SNAPSHOT_PROMPT = Path(__file__).with_name("prompts") / "snapshot_diagnose.md"
@@ -191,6 +205,9 @@ def render_diagnosis_markdown(result):
     ]
     diagnosis = result.get("diagnosis")
     if diagnosis:
+        binding = (result.get("evidence") or {}).get("diagnosis_binding") or {}
+        if binding.get("quantity_source") == QUANTITY_SOURCE:
+            lines.extend([QUANTITY_PROVENANCE, ""])
         lines.extend(["## Root causes", ""])
         for cause in diagnosis["root_causes"]:
             refs = ", ".join(cause["evidence_refs"])
@@ -283,6 +300,7 @@ def _bind_evidence(prepared, diagnosis):
     projected = _public_text(prepared["public_evidence"])
     projected["diagnosis_binding"] = None
     if diagnosis is not None:
+        projected["analysis"]["warnings"].append(QUANTITY_PROVENANCE)
         visible = {stack["id"] for stack in projected["stacks"]}
         references = {ref for cause in diagnosis["root_causes"] for ref in cause["evidence_refs"]}
         if not references <= visible:
@@ -293,8 +311,132 @@ def _bind_evidence(prepared, diagnosis):
                 Path(prepared["evidence_json"]).read_bytes()
             ).hexdigest(),
             "diagnosis_sha256": canonical_hash(diagnosis),
+            "quantity_source": QUANTITY_SOURCE,
         }
     return projected
+
+
+def _diagnose_with_correction(runtime, messages, intent_schema, evidence, prepared, private):
+    """At most two normal SDK calls, only after a known-cost invalid response."""
+    attempts_root = private / "diagnosis-attempts"
+    attempts_root.mkdir(mode=0o700)
+    history = []
+    current_messages = messages
+    for number in range(1, MAX_CORRECTIONS + 2):
+        attempt = attempts_root / str(number)
+        attempt.mkdir(mode=0o700)
+        response_error = None
+        validation = None
+        grounding_issues = ()
+        try:
+            response = runtime.router.chat(
+                "diagnose",
+                current_messages,
+                intent_schema,
+                max_tokens=FINAL48_DIAGNOSIS_ONLY.max_completion_tokens,
+                reasoning=FINAL48_DIAGNOSIS_ONLY.reasoning,
+            )
+        except ResponseValidationError as error:
+            response_error = error
+            response = error.response
+            issues = schema_issues(error, intent_schema)
+            try:
+                _write_json(
+                    attempt / "model-error.json", _model_error_evidence(error, phase="diagnose")
+                )
+            except (OSError, ValueError, TypeError, UnicodeError):
+                # Stop correction; the outer error-evidence handler records a failed
+                # cleanup if even its compatible final receipt cannot be persisted.
+                raise error from None
+            _write_json(
+                attempt / "diagnosis-validation.json", {"diagnosis": None, "issues": issues}
+            )
+        except (BudgetExceeded, LLMError) as error:
+            history.append(
+                {
+                    "attempt": number,
+                    "outcome": "stopped_before_valid_response",
+                    "error_type": type(error).__name__,
+                    "correction_requested": number > 1,
+                }
+            )
+            _write_json(attempt / "stopped.json", history[-1])
+            _write_json(
+                private / "diagnosis-correction.json",
+                {"maximum_corrections": MAX_CORRECTIONS, "attempts": history},
+            )
+            raise
+        else:
+            _write_json(
+                attempt / "snapshot-intent.json",
+                {"protocol": SNAPSHOT_INTENT_PROTOCOL, "intent": response.parsed},
+            )
+            derived, provenance = derive_snapshot_diagnosis(
+                response.parsed, evidence=evidence, policy=prepared["policy"]
+            )
+            provenance["evidence_json_sha256"] = hashlib.sha256(
+                Path(prepared["evidence_json"]).read_bytes()
+            ).hexdigest()
+            _write_json(attempt / "snapshot-quantity-provenance.json", provenance)
+            validation = validate_diagnosis(derived, evidence=evidence, policy=prepared["policy"])
+            grounding_issues = (
+                validate_snapshot_grounding(validation.diagnosis.model_dump(), evidence)
+                if validation.diagnosis is not None
+                else ()
+            )
+            issues = [
+                {"code": item.code, "path": item.path, "message": item.message}
+                for item in (*validation.issues, *grounding_issues)
+            ]
+            _write_json(
+                attempt / "diagnosis-validation.json",
+                {
+                    "diagnosis": validation.diagnosis.model_dump()
+                    if validation.diagnosis
+                    else None,
+                    "issues": issues,
+                },
+            )
+        valid = validation is not None and validation.valid and not grounding_issues
+        known_cost = response_cost_is_known(runtime, response)
+        retry_messages = feedback = None
+        if not valid and number == 1 and known_cost:
+            retry_messages, feedback = correction_messages(
+                messages, response, issues, prepared["policy"], evidence=evidence
+            )
+        history.append(
+            {
+                "attempt": number,
+                "outcome": "valid" if valid else "validation_failed",
+                "issues": issues,
+                "cost_known": known_cost,
+                "correction_scheduled": retry_messages is not None,
+            }
+        )
+        _write_json(
+            private / "diagnosis-correction.json",
+            {
+                "maximum_corrections": MAX_CORRECTIONS,
+                "attempts": history,
+            },
+        )
+        if retry_messages is not None:
+            _write_json(attempt / "correction-feedback.json", feedback)
+            current_messages = retry_messages
+            continue
+        # Existing final filenames refer only to the final received/selected attempt.
+        for name in (
+            "snapshot-intent.json",
+            "snapshot-quantity-provenance.json",
+            "diagnosis-validation.json",
+        ):
+            path = attempt / name
+            if path.exists():
+                _write_json(private / name, json.loads(path.read_text()))
+        if response_error is not None:
+            raise response_error
+        return validation, grounding_issues
+    raise AssertionError("Bounded diagnosis loop must return or raise")
 
 
 def run_snapshot_diagnosis(
@@ -383,24 +525,11 @@ def run_snapshot_diagnosis(
         messages[0]["content"] = diagnosis_prompt(
             SNAPSHOT_PROMPT.read_text(), request_policy=FINAL48_DIAGNOSIS_ONLY
         )
-        response = runtime.router.chat(
-            "diagnose",
-            messages,
-            build_diagnosis_schema(evidence=evidence, policy=prepared["policy"]),
-            max_tokens=FINAL48_DIAGNOSIS_ONLY.max_completion_tokens,
-            reasoning=FINAL48_DIAGNOSIS_ONLY.reasoning,
+        intent_schema = build_snapshot_intent_schema(evidence=evidence, policy=prepared["policy"])
+        validation, grounding_issues = _diagnose_with_correction(
+            runtime, messages, intent_schema, evidence, prepared, private
         )
-        validation = validate_diagnosis(
-            response.parsed, evidence=evidence, policy=prepared["policy"]
-        )
-        _write_json(
-            private / "diagnosis-validation.json",
-            {
-                "diagnosis": validation.diagnosis.model_dump() if validation.diagnosis else None,
-                "issues": [{"code": item.code, "path": item.path} for item in validation.issues],
-            },
-        )
-        if not validation.valid:
+        if not validation.valid or grounding_issues:
             result.update(status="needs_human", error="diagnosis_unavailable")
         else:
             public_diagnosis = _public_text(validation.diagnosis.model_dump())
@@ -436,6 +565,12 @@ def run_snapshot_diagnosis(
                         raise ValueError("Invalid patch artifact")
                     result["patch"] = {"status": "unverified", "diff": diff}
                     (directory / "patch.diff").write_text(diff)
+    except SnapshotIntentError as error:
+        result.update(status="needs_human", error="diagnosis_unavailable")
+        try:
+            _write_json(private / "snapshot-intent-validation.json", {"code": error.code})
+        except (OSError, ValueError, TypeError, UnicodeError):
+            private_error_write_failed = True
     except SnapshotEvidenceUnavailable:
         result.update(status="needs_human", error="diagnosis_unavailable")
     except (SnapshotInputError, ValueError, OSError, UnicodeError):

@@ -1,0 +1,146 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+F...........F......FFFF..................................                [100%]
+=================================== FAILURES ===================================
+______ test_independent_fixed9_keeps_all_original12_costs_and_same_ledger ______
+
+finished = namespace(root=PosixPath('/tmp/pytest-of-xiaodouzi/pytest-441/test_independent_fixed9_keeps_0/project'), original_path...llocation/runtime-profile.json', max_rounds=6, search_mode='until_target', source_profile=None, research_enabled=True))
+
+    def test_independent_fixed9_keeps_all_original12_costs_and_same_ledger(finished):
+        f = finished
+        doc = proposal(f)
+        assert doc["cell_ids"] == list(retry.CELL_IDS)
+        assert doc["planned_cells"] == doc["fixed_denominator"] == 9
+        assert doc["minimum_targets"] == 6 and not doc["additional_funding"]
+        before = doc["original_registry"]
+        assert retry.f3_retry_accounting(doc)["scope_charged_usd"] == "0.60"
+        binding = claim(f)
+        assert ledger(f, binding).path == Path(f.receipt["ledger_path"])
+        assert binding["total_limit_usd"] == "4.00"
+        result = spend(f, binding)
+        assert result["scope_charged_usd"] == "0.70" and result["status"] == "settled"
+        assert proposal(f)["original_registry"] == before
+>       with pytest.raises(alloc.AllocationRefused, match="ALREADY_CLAIMED"):
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'ALREADY_CLAIMED'
+E         Actual message: 'F3_RETRY_RUN_EXISTS'
+
+tests/test_f3_retry.py:177: AssertionError
+___________ test_pending_claim_blocks_demo_and_reverse_gap_is_closed ___________
+
+finished = namespace(root=PosixPath('/tmp/pytest-of-xiaodouzi/pytest-441/test_pending_claim_blocks_demo0/project'), original_path...llocation/runtime-profile.json', max_rounds=6, search_mode='until_target', source_profile=None, research_enabled=True))
+
+    def test_pending_claim_blocks_demo_and_reverse_gap_is_closed(finished):
+        f = finished
+        binding = claim(f)
+        assert not f.demo.available
+>       with pytest.raises(alloc.AllocationRefused, match="OTHER_RUN_UNSETTLED"):
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'OTHER_RUN_UNSETTLED'
+E         Actual message: 'DEMO_RUN_INVALID'
+
+tests/test_f3_retry.py:278: AssertionError
+_______________ test_existing_ledger_tamper_fails_closed[limit] ________________
+
+finished = namespace(root=PosixPath('/tmp/pytest-of-xiaodouzi/pytest-441/test_existing_ledger_tamper_fa0/project'), original_path...llocation/runtime-profile.json', max_rounds=6, search_mode='until_target', source_profile=None, research_enabled=True))
+mutation = 'limit'
+
+    @pytest.mark.parametrize("mutation", ["limit", "day", "mode"])
+    def test_existing_ledger_tamper_fails_closed(finished, mutation):
+        binding = claim(finished)
+        budget = ledger(finished, binding)
+        budget.open_run(binding["run_id"], ".60")
+        column, value = {
+            "limit": ("limit_usd", ".59"),
+            "day": ("day", "1900-01-01"),
+            "mode": ("budget_mode", "actual_usage"),
+        }[mutation]
+        with sqlite3.connect(finished.receipt["ledger_path"]) as conn:
+>           conn.execute(
+                f"UPDATE budget_runs SET {column}=? WHERE run_id=?", (value, binding["run_id"])
+            )
+E           sqlite3.OperationalError: no such column: run_id
+
+tests/test_f3_retry.py:345: OperationalError
+________________ test_existing_ledger_tamper_fails_closed[day] _________________
+
+finished = namespace(root=PosixPath('/tmp/pytest-of-xiaodouzi/pytest-441/test_existing_ledger_tamper_fa1/project'), original_path...llocation/runtime-profile.json', max_rounds=6, search_mode='until_target', source_profile=None, research_enabled=True))
+mutation = 'day'
+
+    @pytest.mark.parametrize("mutation", ["limit", "day", "mode"])
+    def test_existing_ledger_tamper_fails_closed(finished, mutation):
+        binding = claim(finished)
+        budget = ledger(finished, binding)
+        budget.open_run(binding["run_id"], ".60")
+        column, value = {
+            "limit": ("limit_usd", ".59"),
+            "day": ("day", "1900-01-01"),
+            "mode": ("budget_mode", "actual_usage"),
+        }[mutation]
+        with sqlite3.connect(finished.receipt["ledger_path"]) as conn:
+>           conn.execute(
+                f"UPDATE budget_runs SET {column}=? WHERE run_id=?", (value, binding["run_id"])
+            )
+E           sqlite3.OperationalError: no such column: run_id
+
+tests/test_f3_retry.py:345: OperationalError
+________________ test_existing_ledger_tamper_fails_closed[mode] ________________
+
+finished = namespace(root=PosixPath('/tmp/pytest-of-xiaodouzi/pytest-441/test_existing_ledger_tamper_fa2/project'), original_path...llocation/runtime-profile.json', max_rounds=6, search_mode='until_target', source_profile=None, research_enabled=True))
+mutation = 'mode'
+
+    @pytest.mark.parametrize("mutation", ["limit", "day", "mode"])
+    def test_existing_ledger_tamper_fails_closed(finished, mutation):
+        binding = claim(finished)
+        budget = ledger(finished, binding)
+        budget.open_run(binding["run_id"], ".60")
+        column, value = {
+            "limit": ("limit_usd", ".59"),
+            "day": ("day", "1900-01-01"),
+            "mode": ("budget_mode", "actual_usage"),
+        }[mutation]
+        with sqlite3.connect(finished.receipt["ledger_path"]) as conn:
+>           conn.execute(
+                f"UPDATE budget_runs SET {column}=? WHERE run_id=?", (value, binding["run_id"])
+            )
+E           sqlite3.OperationalError: no such column: run_id
+
+tests/test_f3_retry.py:345: OperationalError
+_____ test_cli_routes_schema_and_checks_selected_database_and_full_profile _____
+
+finished = namespace(root=PosixPath('/tmp/pytest-of-xiaodouzi/pytest-441/test_cli_routes_schema_and_che0/project'), original_path...llocation/runtime-profile.json', max_rounds=6, search_mode='until_target', source_profile=None, research_enabled=True))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7945d31f1c40>
+
+    def test_cli_routes_schema_and_checks_selected_database_and_full_profile(finished, monkeypatch):
+        binding = claim(finished)
+        request = finished.requests[binding["cell_id"]]
+        spec = SimpleNamespace(
+            allocation_child_binding=binding,
+            queued_request=request.model_dump(),
+            run_id=binding["run_id"],
+            feature_intent=None,
+        )
+        monkeypatch.setenv(BUDGET_DB_ENV, finished.receipt["ledger_path"])
+        verified = verify_invocation_allocation(
+            binding, spec.queued_request, spec.run_id, require_selected=True
+        )
+        assert verified.database.path == Path(finished.receipt["ledger_path"])
+        factory = allocation_budget_factory(spec)
+        profile = read_live_profile(finished.receipt["profile_path"])
+        with pytest.raises(alloc.AllocationRefused, match="PROFILE_CHANGED"):
+            factory(spec.run_id, request, profile.model_copy(update={"live_enabled": False}))
+        assert factory(spec.run_id, request, profile).path == verified.database.path
+        monkeypatch.setenv(BUDGET_DB_ENV, "/tmp/not-this-pool.db")
+>       with pytest.raises(ValueError, match="database selection"):
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'database selection'
+E         Actual message: 'ENVIRONMENT_LEDGER_CONFLICT'
+
+tests/test_f3_retry.py:374: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_f3_retry.py::test_independent_fixed9_keeps_all_original12_costs_and_same_ledger
+FAILED tests/test_f3_retry.py::test_pending_claim_blocks_demo_and_reverse_gap_is_closed
+FAILED tests/test_f3_retry.py::test_existing_ledger_tamper_fails_closed[limit]
+FAILED tests/test_f3_retry.py::test_existing_ledger_tamper_fails_closed[day]
+FAILED tests/test_f3_retry.py::test_existing_ledger_tamper_fails_closed[mode]
+FAILED tests/test_f3_retry.py::test_cli_routes_schema_and_checks_selected_database_and_full_profile
+6 failed, 51 passed in 22.60s

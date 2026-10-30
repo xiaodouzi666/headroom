@@ -419,6 +419,10 @@ def annotate_stacks(router, evidence: dict) -> dict:
             "input_transport": {"complete": False},
         }
     base["input_transport"] = transport
+    # Request identities are known from the transported input, never from labels.
+    schema = StackLabels.model_json_schema()
+    schema["$defs"]["StackLabel"]["properties"]["stack_id"]["enum"] = list(selected)
+    schema["properties"]["annotations"].update(minItems=len(selected), maxItems=len(selected))
     try:
         result = router.chat(
             "annotate",
@@ -430,7 +434,7 @@ def annotate_stacks(router, evidence: dict) -> dict:
                 {"role": "user", "content": _annotation_call_view(content)},
                 {"role": "user", "content": content},
             ],
-            json_schema=StackLabels,
+            json_schema=schema,
             reasoning=False,
             max_tokens=3000,
         )

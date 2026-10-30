@@ -656,3 +656,24 @@ def test_worker_crash_stops_only_its_owned_descendant_session(tmp_path):
         if statfile.exists():
             assert statfile.read_text().rsplit(")", 1)[1].split()[0] == "Z"
         assert not app.state.snapshots._stop.is_set()
+
+
+def test_quantity_source_metadata_is_optional_exact_and_markdown_does_not_relabel_legacy():
+    from headroom.api.snapshot_routes import _markdown
+    from headroom.snapshot_intent import QUANTITY_PROVENANCE, QUANTITY_SOURCE
+
+    value = bundle()
+    assert (
+        public_result(json.dumps(value))["evidence"]["diagnosis_binding"].get("quantity_source")
+        is None
+    )
+    assert QUANTITY_PROVENANCE.encode() not in _markdown(value)
+    value["evidence"]["diagnosis_binding"]["quantity_source"] = QUANTITY_SOURCE
+    assert (
+        public_result(json.dumps(value))["evidence"]["diagnosis_binding"]["quantity_source"]
+        == QUANTITY_SOURCE
+    )
+    assert QUANTITY_PROVENANCE.encode() in _markdown(value)
+    value["evidence"]["diagnosis_binding"]["quantity_source"] = "arbitrary_or_legacy_model_number"
+    with pytest.raises(ValueError, match="evidence binding"):
+        public_result(json.dumps(value))

@@ -1,0 +1,33 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+...................F                                                     [100%]
+=================================== FAILURES ===================================
+____ test_normal_runtime_and_sdk_use_retry_ledger_without_runtime_injection ____
+
+finished = (PosixPath('/tmp/pytest-of-xiaodouzi/pytest-449/test_normal_runtime_and_sdk_us0/project'), SnapshotDiagnosisRequest(sn...tion/runtime-profile.json', max_rounds=6, search_mode='until_target', source_profile=None, research_enabled=True), ...)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79c8544f2990>
+
+    def test_normal_runtime_and_sdk_use_retry_ledger_without_runtime_injection(finished, monkeypatch):
+        from test_snapshot_allocation_binding import sdk_runtime
+    
+        from headroom import snapshot_diagnosis as core
+        from headroom.acceptance.snapshot_binding import snapshot_cleanup_verified
+    
+        root, request = finished[:2]
+        binding = claim(finished, run_id="a" * 32)
+        calls = sdk_runtime(monkeypatch, root, finished[6])
+        result = core.run_snapshot_diagnosis(
+            request,
+            run_root=root / "runs/uploads",
+            run_id=binding["run_id"],
+            services=core.SnapshotServices(budget_factory=retry.snapshot_retry_budget_factory(binding)),
+        )
+>       assert result["status"] == "completed" and len(calls) == 1
+E       AssertionError: assert ('failed' == 'completed'
+E         
+E         - completed
+E         + failed)
+
+tests/test_snapshot_retry.py:340: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_snapshot_retry.py::test_normal_runtime_and_sdk_use_retry_ledger_without_runtime_injection
+1 failed, 19 passed in 6.50s

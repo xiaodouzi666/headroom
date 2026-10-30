@@ -19,6 +19,7 @@ from headroom.evidence import (
 )
 from headroom.evidence_analysis import analyze_snapshot
 from headroom.evidence_blockers import build_evidence_availability_catalog
+from headroom.snapshot_grounding import render_peak_grounding
 from headroom.snapshot_input import MAX_INPUT_BYTES, read_snapshot_input
 from headroom.verify.policy import _CREDENTIAL_PATTERN
 
@@ -400,7 +401,17 @@ def prepare_snapshot_evidence(
                 selected_source=selected,
                 timeline_n=timeline_n,
             )
-            return prefix + body + "\n" + trace_section, trace_trimmed
+            return (
+                prefix
+                + render_peak_grounding(
+                    analysis,
+                    [row["stack_id"] for row in analysis.get("peak_composition", [])[:peak_n]],
+                )
+                + body
+                + "\n"
+                + trace_section,
+                trace_trimmed,
+            )
 
         markdown, trace_trimmed = render()
         while (

@@ -1,0 +1,63 @@
+"""Prepare one reviewed nanoGPT retry; never claims, dispatches, reads credentials or runs GPU."""
+import hashlib
+import json
+import os
+import sqlite3
+import sys
+from pathlib import Path
+from uuid import uuid4
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+from headroom.acceptance.allocation import digest
+from headroom.acceptance.snapshot_retry import prepare_snapshot_retry
+from headroom.snapshot_diagnosis import SnapshotDiagnosisRequest
+
+AUTHORIZATION = (
+    "2026-10-30 user: 先提交然后继续修快照和剩下所有没做完功能。"
+    "Only existing gift credit; no recharge, no overspend, retain at least USD 8. "
+    "Retry remains inside original FINAL48 receipt and original F3b USD 1 cap; "
+    "all original charges count; no transfer from the judge pool."
+)
+registry = ROOT / ".cache/final48-allocation-registry.sqlite3"
+with sqlite3.connect(registry.as_uri() + "?mode=ro", uri=True) as connection:
+    connection.execute("PRAGMA query_only=ON")
+    row = connection.execute(
+        "SELECT c.payload FROM feature_children c JOIN feature_parents p "
+        "ON c.parent_id=p.parent_id WHERE p.scope='F3b' AND c.slot_id='snapshot-nanogpt'"
+    ).fetchone()
+    if row is None:
+        raise SystemExit("Original nanoGPT child not found; no state changed")
+    original = json.loads(row[0])
+receipt = json.loads(Path(original["receipt_path"]).read_text())
+inputs = json.loads(
+    (ROOT / "reports/final48h-feature-scope-20261029/preparation-inputs.json").read_text()
+)["snapshots"]["nanogpt"]["inputs"]
+request = SnapshotDiagnosisRequest(
+    **{key: ROOT / value["path"] for key, value in inputs.items()},
+    runtime_profile=Path(receipt["profile_path"]),
+    budget_usd=original["run_limit_usd"],
+)
+run_id = uuid4().hex
+proposal = prepare_snapshot_retry(
+    original, request, revision="snapshot-repair-20261030-nanogpt-r3", run_id=run_id,
+    approval_ref="user-20261030-post-submission-continue-snapshot-gift-only-reserve8",
+    approval_sha256=hashlib.sha256(AUTHORIZATION.encode()).hexdigest(),
+)
+destination = ROOT / ".cache/snapshot-repair-20261030"
+destination.mkdir(mode=0o700, parents=True, exist_ok=True)
+path = destination / (run_id + "-proposal.json")
+descriptor = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
+with os.fdopen(descriptor, "w") as handle:
+    json.dump({
+        "request": request.model_dump(mode="json"),
+        "proposal": proposal,
+        "authorization": AUTHORIZATION,
+    }, handle, ensure_ascii=False, indent=2)
+    handle.write("\n")
+print(json.dumps({
+    "prepared_only": True, "proposal_path": str(path), "proposal_sha256": digest(proposal),
+    "run_id": run_id, "run_limit_usd": proposal["run_limit_usd"],
+    "scope_cap_usd": proposal["scope_cap_usd"], "scope_charged_usd": proposal["scope_charged_usd"],
+    "total_limit_usd": proposal["total_limit_usd"], "real_claims": 0, "model_calls": 0, "gpu_jobs": 0,
+}, indent=2))

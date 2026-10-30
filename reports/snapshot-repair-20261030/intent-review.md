@@ -1,0 +1,19 @@
+# Snapshot intent protocol and host-derived quantities
+
+The model now returns **headroom.snapshot-intent.v1**: up to three cause explanations, categories, visible peak-stack references and confidence, together with the existing plans, verification proposal and genuine unknowns. RootCause.bytes_gb is absent from the request schema and explicitly forbidden as an extra field. Even a model-provided value that happens to be correct is rejected; it is never silently replaced.
+
+The host validates the intent locally against the same dynamic schema and derives each bytes_gb from the sum of that cause's unique referenced reconstructed peak-live byte counts. Traffic-only, missing and hidden-peak references are unavailable. The generated value remains the size of the **cited stacks**, not proof that they caused the problem or that their memory can be saved. Cross-cause overlaps are recorded and must not be added together.
+
+The derived document then passes through the unchanged complete Diagnosis validator and the existing Snapshot quantitative/prose guard. Numeric memory prose is still rejected, policy restrictions still apply, genuine needs_more_info remains unchanged, and no model retry is added. Expected savings remain explicit unverified predictions. The real model client/router path is unchanged; offline MockTransport appears only in tests.
+
+Each accepted parsed intent is saved privately with mode 600, alongside a mode-600 provenance record containing its canonical hash, snapshot and evidence hashes, every unique reference and byte count, each derived value, cross-cause overlaps and the derived diagnosis hash. Schema-invalid provider output continues to use the existing private model-error receipt; it cannot reach quantity derivation.
+
+New public bindings add exactly quantity_source=cited_peak_stack_sum_v1. Their existing three hashes retain their meanings. Legacy bindings without this field remain readable and are not relabelled. Both Markdown renderers label the measurement source only when the new field is present. The source text says these are reconstructed quantities, not proven causal contributions, achieved savings, native-counter validation or a fresh GPU run. The frontend is handled separately by root.
+
+The dynamic intent schema is bounded by the existing 16 KiB schema limit and the canonical visible peak table remains under the existing evidence budget. No token cap, monetary allowance, retry count, precision permission or acceptance threshold was raised. Source pins must include the new intent module before any newly prepared live run.
+
+Validation: **182 focused offline tests passed in 19.35 seconds** across intent, quantitative grounding, Snapshot core, evidence and routes. Tests cover forbidden extra bytes_gb (including a numerically correct value), missing/hot-only refs, duplicate refs, cross-cause overlap, exact derivation provenance, 600 permissions, shared Diagnosis compatibility, genuine unknowns, remaining narrative and policy rejection, a schema with 40 references, legacy/new metadata and single-call real-router behavior using test-only transport. Existing parent/spawn guards denied real credentials, profiles, ledgers, network, GPU and service commands. Ruff, format, diff checks and an eight-file secret scan also passed.
+
+The independent code review by headroom_plan_audit found no remaining blocking issue. This agent made no real model/GPU call, new charge, service restart or public-enable change. Previous s2 outputs, failures and costs remain historical evidence; none were rewritten as successful results.
+
+A follow-up assertion on the real native-pickle preparation fixture confirms that private derivation provenance, the uploaded file hash and the public binding share the same snapshot SHA. The targeted test passed; it overlaps the existing 182 tests and is not a new independent case. No business code changed.

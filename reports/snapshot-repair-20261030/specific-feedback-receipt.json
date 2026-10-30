@@ -1,0 +1,61 @@
+{
+  "schema": "headroom.snapshot.specific-feedback-review.v1",
+  "created_at": "2026-10-30T04:58:45.403767+00:00",
+  "source_hashes": {
+    "headroom/snapshot_feedback.py": "016f4d39a6bc353358173ddfe502fd9f265aa9cd1e9ed981022e50e4b638df79",
+    "headroom/snapshot_grounding.py": "1eb3f7c340b0a3630fdb6752241ad465bd99aa5d024cb9794b67d3a5ecd09a19",
+    "headroom/snapshot_intent.py": "c20b1ce136004a3d265001351652e10a4749963fa47f518fdcba4594141977af",
+    "headroom/snapshot_diagnosis.py": "8e27d9a31629e172848b6bddaa6506058760e6b8ed9da9ef51d0f43f8d16e32d",
+    "tests/test_snapshot_feedback.py": "46f8cd4af2c5a7465a35c7284f4490fa5a50ffce3cc1a3ca9b42c4d500167850",
+    "tests/fixtures/snapshot_s2_feedback_error.json": "e723a323530c53f926954e2eb022ddddf3a4a0d7e301cc03f60cfb9694d4030d"
+  },
+  "historical_source_run": "96f402f56d28418195393d008c0e5d2e",
+  "finding": {
+    "parsed_intents_identical": true,
+    "second_sdk_messages_contains_saved_feedback": true,
+    "pretransport_bodies_distinct": true,
+    "raw_response_wire_equality": "not separately recorded",
+    "delivery_capture_marker": "pretransport only; actual settled HTTP200 calls establish responses separately"
+  },
+  "changes": [
+    "Exact validation messages and bounded offending fields included in feedback",
+    "Numeric memory mentions copied from exact prose fields, with qualitative rewrite instructions",
+    "Reference availability and unresolved runtime-value observations copied only from actual evidence catalog",
+    "Relevant intent schema text descriptions strengthened without changing validation rules"
+  ],
+  "limits": {
+    "max_corrections": 1,
+    "max_model_requests": 2,
+    "max_http_retries": 0,
+    "max_completion_tokens": 2000,
+    "reasoning": false,
+    "budget_changed": false,
+    "genuine_unknowns_preserved": true,
+    "historical_outputs_modified": false
+  },
+  "verification": {
+    "command": ".venv/bin/python reports/final48h-closing-regression-20261029/closing_guarded_v4.py tests/test_snapshot_feedback.py tests/test_snapshot_intent.py tests/test_snapshot_grounding.py tests/test_snapshot_diagnosis.py",
+    "log": "reports/snapshot-repair-20261030/specific-feedback-focused-initial.log",
+    "exit_code": 0,
+    "passed": 120,
+    "elapsed_seconds": 6.94,
+    "kind": "offline guarded; actual SDK with MockTransport; synthetic corrected response is not a model outcome",
+    "secrets_network_gpu_provider": "guard denies real environment/profile/ledger/network/GPU",
+    "new_live_model_calls": 0
+  },
+  "static_checks": {
+    "ruff": {
+      "exit_code": 0
+    },
+    "format": {
+      "exit_code": 0
+    },
+    "diff": {
+      "exit_code": 0
+    },
+    "gitleaks": {
+      "exit_code": 0
+    }
+  },
+  "pre_live_requirement": "Fresh proposal and source hashes required; prior s2/nano proposals are not valid for these changed sources."
+}

@@ -1,5 +1,6 @@
 """Temporary allocation + normal snapshot runtime; SDK transport is always mocked."""
 
+import hashlib
 import json
 import pickle
 import shutil
@@ -7,6 +8,7 @@ from pathlib import Path
 
 import httpx
 import pytest
+from jsonschema import Draft202012Validator
 from test_diagnosis_acceptance import profile
 from test_final48_ablation import offline as offline  # noqa: PLC0414
 from test_snapshot_diagnosis import diagnosis, native_snapshot
@@ -102,6 +104,59 @@ def claim(pool, *, source=False, slot="snapshot-s2"):
     return root, request, parent, env, child
 
 
+def snapshot_provider_intent(body, evidence):
+    """Synthetic provider reply conforms to the actual request, never legacy quantities."""
+    prefix = "Return only valid JSON matching this schema, without markdown or commentary.\n"
+    messages = [
+        m["content"]
+        for m in body["messages"]
+        if isinstance(m.get("content"), str) and m["content"].startswith(prefix)
+    ]
+    assert len(messages) == 1
+    schema = json.loads(messages[0][len(prefix) :])
+    assert schema["title"] == "SnapshotDiagnosisIntent"
+    cause = schema["$defs"]["RootCause"]
+    assert "bytes_gb" not in cause["properties"] and "bytes_gb" not in cause["required"]
+    assert cause["additionalProperties"] is False
+    native = body.get("response_format", {}).get("json_schema")
+    if native is not None:
+        assert native["schema"] == schema
+    visible = set(evidence["presentation"]["peak_stack_ids"])
+    peak_rows = {row["stack_id"]: row["bytes"] for row in evidence["analysis"]["peak_composition"]}
+    refs = cause["properties"]["evidence_refs"]["items"]["enum"]
+    assert refs and all(ref in visible and ref in peak_rows for ref in refs)
+    reply = diagnosis(refs[0])
+    for item in reply["root_causes"]:
+        item.pop("bytes_gb")
+    Draft202012Validator(schema).validate(reply)
+    return reply
+
+
+def assert_intent_provenance(job):
+    """The saved provider intent is the private source; quantities come from evidence."""
+    private = job / "private"
+    source = json.loads((private / "snapshot-intent.json").read_text())
+    assert source["protocol"] == "headroom.snapshot-intent.v1"
+    intent = source["intent"]
+    assert all("bytes_gb" not in cause for cause in intent["root_causes"])
+    record = json.loads((private / "snapshot-quantity-provenance.json").read_text())
+    raw_intent = json.dumps(
+        intent, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False
+    ).encode()
+    assert record["intent_sha256"] == hashlib.sha256(raw_intent).hexdigest()
+    assert (
+        record["evidence_json_sha256"]
+        == hashlib.sha256((job / "evidence.json").read_bytes()).hexdigest()
+    )
+    assert record["derivations"][0]["cited_peak_bytes"] == 512
+    assert record["derivations"][0]["decimal_GB"] == "0.000000512"
+    assert record["causal_contribution_verified"] is False
+    assert record["hardware_verification"] == "not_run"
+    output = json.loads((job / "diagnosis.json").read_text())
+    assert output["diagnosis"]["root_causes"][0]["bytes_gb"] == 0.000000512
+    return record
+
+
 def sdk_runtime(monkeypatch, root, env, *, on_wire=None):
     calls = []
     real = core.build_live_runtime
@@ -112,7 +167,7 @@ def sdk_runtime(monkeypatch, root, env, *, on_wire=None):
         if on_wire:
             on_wire(body)
         evidence = json.loads((root / "runs/uploads" / ("a" * 32) / "evidence.json").read_text())
-        ref = next(iter(evidence["analysis"]["stack_catalog"]))
+        intent = snapshot_provider_intent(body, evidence)
         return httpx.Response(
             200,
             json={
@@ -124,7 +179,7 @@ def sdk_runtime(monkeypatch, root, env, *, on_wire=None):
                     {
                         "index": 0,
                         "finish_reason": "stop",
-                        "message": {"role": "assistant", "content": json.dumps(diagnosis(ref))},
+                        "message": {"role": "assistant", "content": json.dumps(intent)},
                     }
                 ],
                 "usage": {"prompt_tokens": 200, "completion_tokens": 100, "total_tokens": 300},
@@ -146,6 +201,7 @@ def test_normal_live_runtime_uses_bound_ledger_and_closes_actual_sdk_usage(pool,
             request, run_root=root / "runs/uploads", run_id=child["run_id"]
         )
     assert result["status"] == "completed" and len(calls) == 1
+    assert_intent_provenance(root / "runs/uploads" / child["run_id"])
     # This checks the normal runtime branch; the test transport/cost are synthetic.
     assert result["provenance"] == "live_model"
     assert result["cost_usd"] == 0.0004
@@ -231,7 +287,7 @@ def bound_sdk_worker(request, *, run_root, run_id):
     def respond(http_request):
         body = json.loads(http_request.content)
         evidence = json.loads((Path(run_root) / run_id / "evidence.json").read_text())
-        ref = next(iter(evidence["analysis"]["stack_catalog"]))
+        intent = snapshot_provider_intent(body, evidence)
         return httpx.Response(
             200,
             json={
@@ -243,7 +299,7 @@ def bound_sdk_worker(request, *, run_root, run_id):
                     {
                         "index": 0,
                         "finish_reason": "stop",
-                        "message": {"role": "assistant", "content": json.dumps(diagnosis(ref))},
+                        "message": {"role": "assistant", "content": json.dumps(intent)},
                     }
                 ],
                 "usage": {"prompt_tokens": 200, "completion_tokens": 100, "total_tokens": 300},
@@ -308,6 +364,7 @@ def test_private_web_slot_runs_normal_worker_and_remains_owner_scoped(pool):
         identifier = accepted.json()["run_id"]
         result = existing.wait_status(owner, identifier)
         assert result["status"] == "completed", result
+        assert_intent_provenance(root / "runs/uploads" / identifier)
         assert result["result"]["provenance"] == "live_model"
         assert result["result"]["cost_usd"] == 0.0004
         assert result["result"]["verification"]["status"] == "not_run"
@@ -375,6 +432,7 @@ def test_cli_private_context_uses_normal_runtime_and_settles_real_mock_transport
     summary = json.loads(outcome.stdout)
     assert summary["run_id"] == child["run_id"] and summary["provenance"] == "live_model"
     assert summary["status"] == "completed" and len(calls) == 1
+    assert_intent_provenance(root / "runs/uploads" / child["run_id"])
     clean = snapshot_cleanup_verified(root / "runs/uploads", child["run_id"])
     assert clean is True
     settled = feature.finish_feature_child(child, execution_terminal=True, cleanup_verified=clean)

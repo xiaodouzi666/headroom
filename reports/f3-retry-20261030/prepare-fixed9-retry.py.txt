@@ -1,0 +1,71 @@
+"""Prepare a new fixed-nine revision; never claim/dispatch. Run only after code freeze."""
+import argparse
+import hashlib
+import json
+import os
+import sqlite3
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from headroom.acceptance import allocation as alloc
+from headroom.acceptance import f3_retry as retry
+from headroom.acceptance import final48_repair as repair
+
+
+def private_json(path, document):
+    path.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(fd, "w") as handle:
+        json.dump(document, handle, indent=2)
+        handle.write("\n")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--revision", required=True)
+    parser.add_argument("--original-preparation", required=True)
+    args = parser.parse_args()
+    registry_path = ROOT / ".cache/final48-allocation-registry.sqlite3"
+    with sqlite3.connect(registry_path.as_uri() + "?mode=ro", uri=True) as conn:
+        conn.execute("PRAGMA query_only=ON")
+        rows = conn.execute(
+            "SELECT p.payload FROM f3_parents p JOIN claims c ON c.run_id=p.parent_id "
+            "WHERE c.task_scope='F3' AND c.execution_key='once'"
+        ).fetchall()
+    if len(rows) != 1:
+        raise ValueError("Exactly one original fixed campaign is required")
+    original = json.loads(rows[0][0])
+    pack = repair.prepare_f3(project_root=ROOT)
+    prepared_path = ROOT / "runs" / ("final48-repair-preparation-20261030-" + args.revision) / "preparation.json"
+    # Refuse unsafe revision/path before creating a file.
+    if not __import__("re").fullmatch(r"[a-z0-9][a-z0-9-]{0,63}", args.revision):
+        raise ValueError("Invalid revision")
+    private_json(prepared_path, pack)
+    statement = (
+        "User authorized continuing the remaining snapshot and repair work after submission; "
+        "existing gifts only, no recharge or overspend, keep USD 8 account reserve. "
+        "This revision keeps original F3 cumulative USD 4, same F48 ledger, "
+        "USD .60 per child, unchanged fixed nine and 6/9 threshold."
+    )
+    proposal = retry.prepare_f3_retry(
+        original, prepared_path, original_prepared_path=args.original_preparation,
+        expected_preparation_sha256=pack["preparation_sha256"], revision=args.revision,
+        approval_ref="user-20261030-post-submission-continue-existing-gift-reserve8",
+        approval_sha256=hashlib.sha256(statement.encode()).hexdigest(),
+    )
+    proposal_path = ROOT / ".cache/f3-retry-20261030" / (args.revision + "-proposal.json")
+    private_json(proposal_path, proposal)
+    print(json.dumps({
+        "proposal_path": str(proposal_path),
+        "proposal_sha256": alloc.digest(proposal),
+        "preparation_sha256": pack["preparation_sha256"],
+        "accounting": retry.f3_retry_accounting(proposal),
+        "claims_created": 0, "model_calls": 0, "gpu_jobs": 0,
+    }))
+
+
+if __name__ == "__main__":
+    main()

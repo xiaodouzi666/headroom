@@ -1,0 +1,87 @@
+{
+  "schema": "headroom.snapshot-grounding-review.v1",
+  "created_utc": "2026-10-30T04:31:26.494578+00:00",
+  "source_files": {
+    "headroom/snapshot_grounding.py": "40a1ec7d6d09be8edd34af60cec2431a3392f87da3dc2f809cb02e114db82a94",
+    "headroom/snapshot_diagnosis.py": "e2abef8c00368ade6ee5259bccbb221ad0736aa578e61b45c011469b2f163c2b",
+    "headroom/snapshot_evidence.py": "736ff5fe7bcf632d5532c9bdf9c7b3ce555fb61dea6d2d869d5c7b2567f4e28b",
+    "headroom/prompts/snapshot_diagnose.md": "2a71f465bf3bc91733067cd6babe7eae8e9684080192a1a5b24886e9743ed590",
+    "tests/test_snapshot_grounding.py": "2da2db6075e52c9f6a0b2d3d6abb676e9e6b21604e6fe2c8bb5e2ea81222f2dd",
+    "tests/test_snapshot_diagnosis.py": "c2570cb5b772b7b8a6102299b00e94e278fa64fefc12b484fc004fc326a3e4d5",
+    "tests/fixtures/snapshot_s2_grounding_error.json": "60611dbc1f6f5a6844f90ac9a0d0aebf74cba3004657375cd9b0a1d4ec7808ff"
+  },
+  "focused_command": ".venv/bin/python reports/final48h-closing-regression-20261029/closing_guarded_v4.py tests/test_snapshot_grounding.py tests/test_snapshot_diagnosis.py tests/test_snapshot_evidence.py",
+  "final_result": "132 passed in 6.15s",
+  "focused_log": "reports/snapshot-repair-20261030/grounding-focused-final.log",
+  "prior_logs_retained": [
+    "grounding-focused-initial.log",
+    "grounding-focused.log"
+  ],
+  "prior_failure_explanation": "Two new assertion failures compared the introductory phrase Peak composition instead of the actual ## Peak composition section heading; guard behavior checks had already passed. Production behavior was not relaxed.",
+  "static_checks": {
+    "ruff": {
+      "exit_code": 0
+    },
+    "format": {
+      "exit_code": 0
+    },
+    "diff": {
+      "exit_code": 0
+    },
+    "gitleaks": {
+      "exit_code": 0
+    }
+  },
+  "historical_snapshot_files_unchanged": {
+    "runs/uploads/cd565dc58c9e4d668b48621532dfbe2b/public-report.json": true,
+    "runs/uploads/cd565dc58c9e4d668b48621532dfbe2b/evidence.json": true,
+    "runs/uploads/cd565dc58c9e4d668b48621532dfbe2b/private/diagnosis-validation.json": true,
+    "runs/uploads/cd565dc58c9e4d668b48621532dfbe2b/private/cleanup.json": true
+  },
+  "scope": {
+    "snapshot_only": true,
+    "shared_validator_modified": false,
+    "training_run_logic_modified": false,
+    "automatic_retry_added": false,
+    "outputs_rewritten": false,
+    "new_real_model_calls": 0,
+    "new_gpu_jobs": 0,
+    "new_charges_usd": "0",
+    "deployed": false
+  },
+  "bounds": {
+    "canonical_peak_rows": 40,
+    "decimal_GB_places": 9,
+    "root_cause_match_tolerance_bytes": 1,
+    "missing_or_ambiguous_measurement_never_zero": true,
+    "category_sum_requires_complete_refs": true,
+    "canonical_uses_existing_evidence_token_byte_budget": true
+  },
+  "new_issue_codes": [
+    "SNAPSHOT_PEAK_REFERENCE_UNAVAILABLE",
+    "SNAPSHOT_PEAK_BYTES_MISMATCH",
+    "SNAPSHOT_MEMORY_QUANTITY_IN_PROSE"
+  ],
+  "public_error_behavior": {
+    "status": "needs_human",
+    "diagnosis": null,
+    "patch_diff": null,
+    "private_original_preserved": true,
+    "model_retry": false
+  },
+  "public_stack_visibility": "prepare orders at most 40 peak IDs before at most 20 hot-path IDs; public projection retains the first 60 including all peak rows even when frames are excerpted. Existing 70-stack fixture now checks subset explicitly.",
+  "limitations": [
+    "Numeric attribution is not causal proof.",
+    "Prose guard is a narrow numeric-unit screen, not a general semantic verifier.",
+    "Predicted savings remain unverified; no new live success or hardware evidence.",
+    "No fixed-nine score or acceptance threshold changed.",
+    "Add helper to retry source pins and prepare a new proposal before live use."
+  ],
+  "audit_erratum": {
+    "receipt": "reports/snapshot-repair-20261030/s2-r2-independent-review.json",
+    "field": "execution_observation.patch_present",
+    "recorded": true,
+    "correct_value": false,
+    "reason": "Original patch object exists but status=unavailable and diff=null. Written no-patch conclusion was correct."
+  }
+}

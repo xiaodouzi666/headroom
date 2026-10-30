@@ -1,0 +1,154 @@
+"""Explicitly reviewed fixed-nine controller; no retries, mock injection or funding creation."""
+import argparse
+import json
+import os
+import sys
+import time
+from pathlib import Path
+from uuid import uuid4
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from headroom.acceptance import allocation as alloc
+from headroom.acceptance import f3_retry as retry
+from headroom.acceptance import final48_repair as repair
+from headroom.budget import money
+from headroom.evaluation import Scenario, result_row
+from headroom.evaluation_worker import supervise_evaluation_run
+from headroom.orchestrator import FixRequest
+from headroom.store.db import Store
+
+
+def main():
+    os.umask(0o077)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--proposal", required=True)
+    parser.add_argument("--expected-sha256", required=True)
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--execute-reviewed", action="store_true")
+    args = parser.parse_args()
+    if not args.execute_reviewed:
+        raise ValueError("Execution must be explicitly selected after review")
+    proposal = repair.read_json(repair.inside(ROOT, args.proposal), max_bytes=2 * 1024 * 1024)
+    if proposal["project_root"] != str(ROOT) or alloc.digest(proposal) != args.expected_sha256:
+        raise ValueError("Reviewed proposal changed")
+    prepared = repair.verify_preparation(
+        proposal["prepared_path"], expected_sha256=proposal["preparation_sha256"]
+    )
+    cells = [c for c in prepared["cells"] if c["result_group"] == "fixed_nine"]
+    if tuple(c["cell_id"] for c in cells) != retry.CELL_IDS:
+        raise ValueError("Fixed nine changed")
+    output = repair.inside(ROOT, args.output)
+    if not output.is_relative_to(ROOT / "runs") or output.exists():
+        raise ValueError("A new private runs directory is required")
+    retry.f3_retry_accounting(proposal)
+    output.mkdir(parents=True, mode=0o700, exist_ok=False)
+    document = {
+        "schema": "headroom.final48.f3-retry-campaign.v1",
+        "provenance": "live", "revision": proposal["revision"],
+        "proposal_sha256": args.expected_sha256,
+        "preparation_sha256": proposal["preparation_sha256"],
+        "scope_cap_usd": proposal["scope_cap_usd"],
+        "fixed_denominator": 9, "minimum_targets": 6, "planned_cells": 9,
+        "threshold_scope": "memory_targets_only",
+        "new_funding_created": False, "historical_scores_modified": False,
+        "status": "running", "stop_reason": None,
+        "rows": [repair._empty_row(c, "live") for c in cells],
+    }
+
+    def persist():
+        rows = document["rows"]
+        document["executed_cells"] = sum(r["status"] not in {"not_run", "running"} for r in rows)
+        document["remaining_unrun_cells"] = sum(r["status"] == "not_run" for r in rows)
+        document["target_met_count"] = sum(r.get("target_met") is True for r in rows)
+        document["threshold_met"] = document["target_met_count"] >= 6
+        repair.write_json(output / "campaign.json", document)
+
+    persist()
+    store = Store(ROOT / "runs/headroom.db")
+    try:
+        for index, cell in enumerate(cells):
+            account = retry.f3_retry_accounting(proposal)
+            document["accounting"] = account
+            if not account["all_costs_resolved"]:
+                document["stop_reason"] = "unresolved_cost"
+                break
+            if min(money(account["scope_remaining_usd"]), money(account["pool_remaining_usd"])) < money(".60"):
+                document["stop_reason"] = "insufficient_full_run_allowance"
+                break
+            run_id = uuid4().hex
+            request = FixRequest.model_validate(proposal["requests"][cell["cell_id"]])
+            binding = retry.claim_f3_retry(
+                proposal, cell_id=cell["cell_id"], run_id=run_id,
+                expected_sha256=args.expected_sha256,
+            )
+            repair.write_json(output / ("binding-" + run_id + ".json"), binding)
+            document["rows"][index].update(status="running", run_id=run_id)
+            persist()
+            result, failure = {}, None
+            started = time.monotonic()
+            try:
+                result = supervise_evaluation_run(
+                    request, store=store, run_root=output / "jobs", run_id=run_id,
+                    condition="full_ultra", audit_dir=output / ("condition-" + run_id),
+                    started=started,
+                    preparation={
+                        "case": cell["case"], "study_protocol": None,
+                        "project_root": str(ROOT), "input_dir": str(output / ("input-" + run_id)),
+                    },
+                    wall_limit_seconds=480, allocation_child_binding=binding,
+                )
+            except Exception as error:
+                failure = type(error).__name__
+            timing = result.get("evaluation_timing", {})
+            terminal = failure is None and result.get("status") in {
+                "completed", "done", "failed", "needs_human", "budget_exceeded",
+                "timeout", "cancelled", "rejected",
+            }
+            settlement = retry.finish_f3_retry(
+                binding, execution_terminal=terminal,
+                cleanup_verified=timing.get("cleanup_verified") is True,
+            )
+            usage = store.usage(run_id) if store.get_run(run_id) is not None else None
+            row = result_row(Scenario.model_validate(cell["case"]), "full_ultra",
+                             result, usage, provenance="live")
+            safe = (
+                terminal and timing.get("cleanup_verified") is True
+                and timing.get("within_wall_limit") is True
+                and timing.get("cli", {}).get("verified") is True
+                and settlement["status"] == "settled" and settlement["cost_resolved"]
+                and 0 <= money(settlement["charged_usd"]) <= money(".60")
+            )
+            row.update(
+                cell_id=cell["cell_id"], result_group="fixed_nine", policy_name=cell["policy_name"],
+                run_id=run_id, wall_seconds=time.monotonic() - started,
+                run_wall_limit_seconds=480, evaluation_timing=timing,
+                settlement=settlement, cost_usd=settlement["actual_usd"],
+                charged_usd=settlement["charged_usd"], cost_resolved=settlement["cost_resolved"],
+                execution_certified=safe, error_type=failure,
+            )
+            if failure:
+                row["status"] = "error"
+            if not safe:
+                row["target_met"] = False
+            document["rows"][index] = row
+            persist()
+            if not safe:
+                document["stop_reason"] = "child_execution_or_cost_unverified"
+                break
+        document["status"] = "finished" if document["stop_reason"] is None else "partial"
+    except BaseException as error:
+        document["status"] = "partial"
+        document["stop_reason"] = "interrupted_or_admission_refused:" + type(error).__name__
+        raise
+    finally:
+        store.close()
+        try:
+            document["accounting"] = retry.f3_retry_accounting(proposal)
+        finally:
+            persist()
+
+
+if __name__ == "__main__":
+    main()

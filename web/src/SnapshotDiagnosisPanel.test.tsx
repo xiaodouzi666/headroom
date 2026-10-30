@@ -277,7 +277,7 @@ it("shows diagnosis, measured evidence and unverified status without inventing r
     .getByText("Uploaded snapshot · cited allocation stack")
     .closest<HTMLElement>(".stack-block")!;
   expect(
-    within(stack).getByText("Live at recorded peak").closest("div"),
+    within(stack).getByText("Live at reconstructed peak").closest("div"),
   ).toHaveTextContent("Unknown");
   expect(
     within(stack).getByText("Allocated during capture").closest("div"),
@@ -460,4 +460,31 @@ it("uses the server's private snapshot flag on Home", async () => {
   expect(
     screen.queryByText(/Leave blank for anonymous access/),
   ).not.toBeInTheDocument();
+});
+
+it("labels host-derived quantities without claiming causal savings", async () => {
+  const document = completed();
+  Object.assign(document.result.evidence.diagnosis_binding, {
+    quantity_source: "cited_peak_stack_sum_v1",
+  });
+  Object.assign(document.result.evidence.stacks[0], {
+    peak_live_bytes: 2_500_000_000,
+  });
+  mockJob(document);
+  render(<SnapshotDiagnosisPanel enabled />);
+  selectSnapshot();
+  fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" }));
+  expect(await screen.findByText("Cited peak allocation")).toBeInTheDocument();
+  expect(screen.queryByText("Estimated size")).not.toBeInTheDocument();
+  expect(screen.getByText(/They do not establish causal contribution or savings/)).toBeInTheDocument();
+  expect(screen.getByText("Reconstructed allocated peak")).toBeInTheDocument();
+});
+
+it("retains the estimate label for older results", async () => {
+  mockJob();
+  render(<SnapshotDiagnosisPanel enabled />);
+  selectSnapshot();
+  fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" }));
+  expect(await screen.findByText("Estimated size")).toBeInTheDocument();
+  expect(screen.queryByText("Cited peak allocation")).not.toBeInTheDocument();
 });

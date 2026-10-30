@@ -1,0 +1,209 @@
+"""Synthetic fixtures only: review-only R8 score and publication boundary checks."""
+import copy
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+from pathlib import Path
+
+import pytest
+
+SCRIPT = Path("/home/xiaodouzi/workspace/headroom/reports/f3-retry-20261030/summarize-r8.py.txt")
+loader = importlib.machinery.SourceFileLoader("r8_review_projection", str(SCRIPT))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+projection = importlib.util.module_from_spec(spec)
+loader.exec_module(projection)
+
+
+def write(path, value):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value))
+    return path
+
+
+@pytest.fixture
+def campaign(tmp_path):
+    root = tmp_path / "synthetic-controller"
+    rows = []
+    policy = {
+        "allow_numerics_change": False, "allow_model_change": False,
+        "allow_batch_grad_accum": True, "max_throughput_regression_pct": 20,
+        "numerical_requirement": "legacy",
+    }
+    for index, scenario in enumerate(projection.SCENARIOS):
+        row = {
+            "cell_id": "fixed9-" + scenario, "scenario_id": scenario,
+            "condition": "full_ultra", "policy_name": "strict", "policy": policy,
+            "group": "synthetic", "status": "not_run", "provenance": "live",
+            "truth_status": "unverified" if index == 2 else "authored",
+            "ground_truth": "activations", "target_met": None,
+            "run_id": None, "cost_usd": None, "known_cost_usd": None,
+        }
+        rows.append(row)
+        if index >= 5:
+            continue
+        run_id = f"{index + 1:032x}"
+        actual = [".1", None, ".03", ".04", ".05"][index]
+        charged = [".1", ".08", ".03", ".04", ".05"][index]
+        known = [".1", ".02", ".03", ".04", ".05"][index]
+        row.update(
+            run_id=run_id, status="completed", target_met=index == 1,
+            cost_usd=actual, charged_usd=charged, cost_resolved=True,
+            execution_certified=True,
+            settlement={"status": "settled", "actual_usd": actual,
+                        "charged_usd": charged, "cost_resolved": True},
+        )
+        job = root / "jobs" / run_id
+        report = {
+            "run": {"run_id": run_id, "request": {"policy": policy},
+                    "kept": {"round": 1} if index == 1 else None},
+            "summary": {"target_met": index == 1, "peak_reduction_pct": "30"},
+            "usage": {"known_cost_usd": known, "complete": actual is not None,
+                      "total_cost_usd": actual, "unknown_cost_calls": int(actual is None)},
+            "measurements": {"before": {"peak_allocated_bytes": 1000},
+                             "after": {"peak_allocated_bytes": 700}},
+            "rounds": [{"number": 1, "decision": "keep"}] if index == 1 else [],
+            "diagnosis": {"root_causes": [{"category": "activations"}]},
+            "verification": {"completed": True} if index == 1 else {},
+        }
+        write(job / "report.json", report)
+        write(job / "rounds/01/diagnosis.json", {
+            "valid": index in {1, 2, 3}, "ready_for_patch": index in {1, 2},
+            "diagnosis": {"root_causes": [{"category": "optimizer_state" if index == 4 else "activations"}],
+                          "needs_more_info": False},
+            "issues": [] if index in {1, 2, 3} else [{"code": "synthetic_validation_failure"}],
+        })
+        if index == 1:
+            write(job / "rounds/01/patch-result.json", {"status": "applied"})
+            write(job / "rounds/01/verification.json", {"completed": True})
+    document = {
+        "schema": "headroom.final48.f3-retry-campaign.v1",
+        "status": "partial", "provenance": "live", "revision": "r8",
+        "proposal_sha256": "a" * 64, "preparation_sha256": "b" * 64,
+        "fixed_denominator": 9, "minimum_targets": 6,
+        "threshold_scope": "memory_targets_only", "rows": rows,
+    }
+    return write(root / "campaign.json", document)
+
+
+def test_partial_fixed_nine_actual_unknown_and_three_distinct_diagnosis_counts(campaign, tmp_path):
+    original = {str(p): p.read_bytes() for p in campaign.parent.rglob("*") if p.is_file()}
+    summary = projection.stage_campaign(campaign, tmp_path / "review-only", "r8-fixture")
+    metrics = summary["metrics"]
+    assert len(summary["rows"]) == metrics["fixed_denominator"] == 9
+    assert (metrics["attempted_rows"], metrics["not_run_rows"]) == (5, 4)
+    assert metrics["raw_category_matches"] == 3
+    assert metrics["valid_correct_first_causes"] == 2
+    assert metrics["valid_ready_diagnoses"] == 2
+    assert metrics["ready_valid_correct_first_causes"] == 1
+    assert metrics["memory_targets"] == 1
+    assert metrics["threshold_scope"] == "memory_targets_only"
+    assert metrics["overall_acceptance"] == "not_assessed"
+    assert summary["rows"][2]["first_round_diagnosis"]["raw_category_matches"] is None
+    assert summary["rows"][4]["first_round_diagnosis"]["category"] == "optimizer_state"
+    assert metrics["cost"]["actual_total_usd"] is None
+    assert projection.amount(metrics["cost"]["known_actual_subtotal_usd"]) == projection.amount(".24")
+    assert projection.amount(metrics["cost"]["charged_total_usd"]) == projection.amount(".30")
+    assert metrics["cost"]["unknown_actual_runs"] == 1
+    public = json.loads((tmp_path / "review-only/staging/published-evaluations/r8-fixture.json").read_text())
+    assert len(public["rows"]) == 9 and "acceptance" not in public
+    assert public["rows"][0]["peak_after_bytes"] is None
+    assert public["rows"][1]["peak_after_bytes"] == 700
+    assert public["rows"][1]["selected_patch_applied"] is True
+    assert public["rows"][2]["first_cause_matches"] is None
+    assert public["rows"][-1]["status"] == "not_run"
+    assert public["rows"][-1]["provenance"] == "unknown"
+    assert not any("private" in json.dumps(row) or "usage" in row for row in public["rows"])
+    receipt = json.loads((tmp_path / "review-only/projection-receipt.json").read_text())
+    assert receipt["script_sha256"] == hashlib.sha256(SCRIPT.read_bytes()).hexdigest()
+    assert receipt["helper_source_sha256"] == projection.helper_hashes()
+    assert receipt["published"] is False and receipt["provider_calls"] == receipt["gpu_jobs"] == 0
+    assert original == {str(p): p.read_bytes() for p in campaign.parent.rglob("*") if p.is_file()}
+
+
+def test_all_not_run_stays_nine_and_not_zero_cost_certification(campaign, tmp_path):
+    document = json.loads(campaign.read_text())
+    for row in document["rows"]:
+        row.update(status="not_run", run_id=None)
+    write(campaign, document)
+    summary = projection.stage_campaign(campaign, tmp_path / "unrun-review", "r8-unrun")
+    assert len(summary["rows"]) == 9
+    assert summary["metrics"]["attempted_rows"] == 0
+    assert summary["metrics"]["not_run_rows"] == 9
+    assert summary["metrics"]["cost"]["actual_total_usd"] is None
+    assert summary["metrics"]["cost"]["charged_total_usd"] is None
+
+
+@pytest.mark.parametrize("change", ["old_schema", "eight_rows", "duplicate_row", "wrong_revision", "other_scope"])
+def test_old_results_changed_denominator_and_scope_refused(campaign, change):
+    document = json.loads(campaign.read_text())
+    if change == "old_schema":
+        document["schema"] = "headroom.final48.repair.v1"
+    elif change == "eight_rows":
+        document["rows"].pop()
+    elif change == "duplicate_row":
+        document["rows"][1] = copy.deepcopy(document["rows"][0])
+    elif change == "wrong_revision":
+        document["revision"] = "r7"
+    else:
+        document["threshold_scope"] = "overall"
+    write(campaign, document)
+    with pytest.raises(ValueError):
+        projection.collect(campaign)
+
+
+@pytest.mark.parametrize("change", ["uncertified_target", "missing_report", "wrong_run", "inconsistent_charge"])
+def test_claimed_target_identity_and_cost_conflicts_refused(campaign, change):
+    document = json.loads(campaign.read_text())
+    row = document["rows"][1]
+    if change == "uncertified_target":
+        row["execution_certified"] = False
+    elif change == "missing_report":
+        (campaign.parent / "jobs" / row["run_id"] / "report.json").unlink()
+    elif change == "wrong_run":
+        path = campaign.parent / "jobs" / row["run_id"] / "report.json"
+        report = json.loads(path.read_text())
+        report["run"]["run_id"] = "f" * 32
+        write(path, report)
+    else:
+        row["charged_usd"] = ".07"
+    write(campaign, document)
+    with pytest.raises(ValueError):
+        projection.collect(campaign)
+
+
+def test_source_changed_after_read_and_symlink_are_refused(campaign):
+    sources = projection.Sources(campaign.parent)
+    sources.read("campaign.json")
+    data = json.loads(campaign.read_text())
+    data["revision"] = "r9"
+    write(campaign, data)
+    with pytest.raises(ValueError):
+        sources.recheck()
+    linked = campaign.parent / "linked.json"
+    linked.symlink_to(campaign)
+    with pytest.raises(OSError):
+        sources.read("linked.json")
+
+
+def test_existing_output_is_never_replaced(campaign, tmp_path):
+    output = tmp_path / "existing-live-sentinel"
+    output.mkdir()
+    sentinel = write(output / "public-evaluations.json", {"do_not_overwrite": True})
+    with pytest.raises(ValueError, match="new directory"):
+        projection.stage_campaign(campaign, output, "r8-fixture")
+    assert json.loads(sentinel.read_text()) == {"do_not_overwrite": True}
+
+
+def test_helper_change_aborts_without_success_receipt(campaign, tmp_path, monkeypatch):
+    calls = 0
+    original = projection.helper_hashes()
+    def changing_hashes():
+        nonlocal calls
+        calls += 1
+        return original if calls == 1 else {**original, "changed": "yes"}
+    monkeypatch.setattr(projection, "helper_hashes", changing_hashes)
+    output = tmp_path / "incomplete-review"
+    with pytest.raises(ValueError, match="helper source changed"):
+        projection.stage_campaign(campaign, output, "r8-fixture")
+    assert not (output / "projection-receipt.json").exists()
