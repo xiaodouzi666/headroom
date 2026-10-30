@@ -1,0 +1,273 @@
+"""Prepare R15 only after a reviewed final commit; never fund, dispatch or run workloads.
+
+Nothing is written without --write-reviewed plus the exact revision and script SHA.
+All output names are new; existing R14/R15 artifacts are never overwritten.
+"""
+
+import argparse
+import copy
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import os
+import re
+import socket
+import subprocess
+import sys
+from pathlib import Path
+
+if sys.flags.optimize:
+    raise RuntimeError("Reviewed preparation requires non-optimized Python")
+sys.dont_write_bytecode = True
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+from headroom.acceptance import final48_repair as repair
+from headroom.acceptance.f3_retry import CELL_IDS
+from headroom.budget import money
+
+CACHE = ROOT / ".cache/repair-followup-20261030-v3"
+BASE_PROPOSAL = CACHE / "r14-proposal.json"
+BASE_PROPOSAL_SHA = "f3a8041e026e535a338fa283959929b7bc6f31ba181b1844719d66ff2b734026"
+BASE_PREPARATION_SHA = "a2c1fcf6fbc77ba196c2b559c16f99ed19a6346d902608f76bce43516ba49898"
+CONTROLLER = ROOT / "reports/repair-followup-20261030/execute-fixed9-v2.py.txt"
+CONTROLLER_SHA = "590189eb3b23f1f932c62a849afd1aee26edb9968822964e65a8c3b7f04ed426"
+FUNDING_SHA = "3b5f9e2573fda21f34c4858a4af64b27a5952e5c1c6bb944dcdb3d01a67bf889"
+PREPARATION = ROOT / "runs/final48-repair-preparation-20261030-r15/preparation.json"
+PROPOSAL = CACHE / "r15-proposal.json"
+PREFLIGHT = ROOT / "reports/repair-followup-20261030/r15-preflight.json"
+EXECUTION = ROOT / "runs/repair-followup/execution-r15-20261030"
+SEMANTIC_FIELDS = (
+    "controls",
+    "cells",
+    "input_pins",
+    "source_files",
+    "calibration",
+    "repository_identities",
+)
+NEW_REVIEWED_SOURCE = {
+    "headroom/diagnosis_protocol.py": "d05aba96f52bb918949ee55a1173850c3b9cec1a38ffd27237b27709dc5e42a1",
+    "headroom/prompts/diagnose_compact.md": "879da448b0f9110a9e344bda485633c61ce6e7f128cec21d3337652d87f3796c",
+    "headroom/lab/hooks.py": "0781d54b5c34b7edddb5502f6d78d5c91be995bca53b91ceb5f7ab5877e22686",
+}
+
+
+def require(condition, code):
+    if not condition:
+        raise ValueError(code)
+
+
+def no_network(*args, **kwargs):
+    raise RuntimeError("Preparation cannot contact a network service")
+
+
+def git(*args):
+    result = subprocess.run(
+        ["git", "--no-optional-locks", "-C", str(ROOT), *args],
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=20,
+    )
+    require(result.returncode == 0, "READ_ONLY_GIT_CHECK_FAILED")
+    return result.stdout.strip()
+
+
+def check_revision(expected, pins):
+    require(bool(re.fullmatch(r"[a-f0-9]{40}", expected)), "EXACT_SOURCE_REVISION_REQUIRED")
+    require(git("rev-parse", "HEAD") == expected, "HEAD_DIFFERS_FROM_REVIEWED_COMMIT")
+    # All implementation bytes must belong to that commit, including the new md.
+    tracked = set(git("ls-tree", "-r", "--name-only", "HEAD").splitlines())
+    require(set(pins) <= tracked, "UNCOMMITTED_IMPLEMENTATION_FILE")
+    git("diff", "--quiet", "HEAD", "--", "headroom", "scripts", "pyproject.toml", "uv.lock")
+    for name, sha in NEW_REVIEWED_SOURCE.items():
+        require(name in pins and pins[name]["sha256"] == sha, "REVIEWED_NEW_SOURCE_CHANGED")
+
+
+def immutable_preparation(base, fresh):
+    for field in SEMANTIC_FIELDS:
+        require(base[field] == fresh[field], "SEMANTIC_INPUT_CHANGED:" + field)
+    old = {
+        key: value
+        for key, value in base.items()
+        if key not in {"implementation_pins", "preparation_sha256"}
+    }
+    new = {
+        key: value
+        for key, value in fresh.items()
+        if key not in {"implementation_pins", "preparation_sha256"}
+    }
+    require(old == new, "NON_IMPLEMENTATION_PREPARATION_CONTENT_CHANGED")
+    require(
+        base["implementation_pins"] != fresh["implementation_pins"],
+        "NEW_IMPLEMENTATION_PINS_REQUIRED",
+    )
+    require(fresh["controls"]["fixed_denominator"] == 9, "FIXED_NINE_CHANGED")
+    require(fresh["controls"]["minimum_targets"] == 6, "TARGET_THRESHOLD_CHANGED")
+    return dict.fromkeys(SEMANTIC_FIELDS, True)
+
+
+def fixed_requests(requests, previous):
+    require(tuple(requests) == CELL_IDS and len(requests) == 9, "FIXED_REQUEST_SET_CHANGED")
+    require(requests == previous, "BOUND_REQUESTS_CHANGED_FROM_R14")
+    for request in requests.values():
+        require(money(request["budget_usd"]) == money("0.60"), "RUN_ALLOWANCE_CHANGED")
+        require(
+            request["max_rounds"] == 6 and request["max_steps"] == 20, "ROUNDS_OR_UPDATES_CHANGED"
+        )
+        require(
+            request["seed"] == 1337 and request["max_seconds"] == 120, "SEED_OR_LAB_TIME_CHANGED"
+        )
+        require(request["search_mode"] == "until_target", "SEARCH_MODE_CHANGED")
+    return True
+
+
+def load_controller():
+    require(
+        repair.file_record(CONTROLLER, 512000)["sha256"] == CONTROLLER_SHA,
+        "CONTROLLER_SOURCE_CHANGED",
+    )
+    loader = importlib.machinery.SourceFileLoader(
+        "reviewed_r15_controller_preparation", str(CONTROLLER)
+    )
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+def create_json(path, document):
+    path = repair.inside(ROOT, path)
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    raw = json.dumps(document, indent=2, ensure_ascii=False, allow_nan=False) + "\n"
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as handle:
+        handle.write(raw)
+
+
+def prepare(expected_revision, expected_script_sha):
+    require(repair.ROOT == ROOT, "PREPARATION_IMPORTED_FROM_ANOTHER_PROJECT")
+    require(
+        bool(re.fullmatch(r"[a-f0-9]{64}", expected_script_sha)), "REVIEWED_SCRIPT_SHA_REQUIRED"
+    )
+    require(
+        hashlib.sha256(Path(__file__).read_bytes()).hexdigest() == expected_script_sha,
+        "PREPARATION_SCRIPT_CHANGED",
+    )
+    for path in (PREPARATION.parent, PROPOSAL, PREFLIGHT, EXECUTION):
+        repair.inside(ROOT, path)
+        require(not path.exists(), "NEW_R15_OUTPUT_REQUIRED")
+    base_proposal = repair.read_json(BASE_PROPOSAL, max_bytes=2 * 1024 * 1024)
+    require(repair.digest(base_proposal) == BASE_PROPOSAL_SHA, "R14_PROPOSAL_CHANGED")
+    base_path = repair.inside(ROOT, base_proposal["prepared_path"])
+    base = repair.read_json(base_path, max_bytes=repair.MAX_BYTES)
+    old_body = copy.deepcopy(base)
+    stored = old_body.pop("preparation_sha256")
+    require(
+        stored
+        == BASE_PREPARATION_SHA
+        == base_proposal["preparation_sha256"]
+        == repair.digest(old_body),
+        "R14_PREPARATION_CHANGED",
+    )
+    # Do not verify the old pack with current implementation pins: its code is historical.
+    controller = load_controller()
+    receipt = controller.funding(base_proposal["funding_receipt_path"], FUNDING_SHA)
+    require(base_proposal["funding_receipt_sha256"] == FUNDING_SHA, "FUNDING_IDENTITY_CHANGED")
+    initial_state, initial = controller.accounting(receipt)
+    controller.require_admission(initial_state, receipt)
+    require(money(initial["scope_remaining_usd"]) >= money("0.60"), "NO_FULL_RUN_ALLOWANCE_REMAINS")
+    profile = repair.read_json(Path(receipt["profile_path"]))
+    require(
+        profile["diagnosis_request_policy"] == "final48-diagnosis-only-2000-v1",
+        "DIAGNOSIS_POLICY_CHANGED",
+    )
+    require(profile["run_budget_mode"] == "strict_reservation", "RUN_BUDGET_MODE_CHANGED")
+    fresh = repair.prepare_f3(calibration_path=base["calibration"]["receipt"])
+    unchanged = immutable_preparation(base, fresh)
+    check_revision(expected_revision, fresh["implementation_pins"])
+    cells = [cell for cell in fresh["cells"] if cell["result_group"] == "fixed_nine"]
+    bound = repair.bound_requests(
+        fresh, profile_path=receipt["profile_path"], daily_limit_usd=receipt["target_net_usd"]
+    )
+    requests = {cell["cell_id"]: bound[cell["cell_id"]].model_dump(mode="json") for cell in cells}
+    fixed_requests(requests, base_proposal["requests"])
+    proposal = {
+        "scope": "DEVELOPMENT_REPAIR_FOLLOWUP",
+        "revision": expected_revision,
+        "controller_sha256": CONTROLLER_SHA,
+        "prepared_path": str(PREPARATION),
+        "preparation_sha256": fresh["preparation_sha256"],
+        "funding_receipt_path": base_proposal["funding_receipt_path"],
+        "funding_receipt_sha256": FUNDING_SHA,
+        "starting_pool_accounting": initial,
+        "requests": requests,
+    }
+    # Re-read real funding, every charge and all source pins before writing.
+    receipt2 = controller.funding(base_proposal["funding_receipt_path"], FUNDING_SHA)
+    state2, observed2 = controller.accounting(receipt2)
+    controller.require_admission(state2, receipt2)
+    require(
+        receipt2 == receipt and observed2 == initial,
+        "FUNDING_OR_ACCOUNTING_CHANGED_DURING_PREPARATION",
+    )
+    require(
+        repair.prepare_f3(calibration_path=base["calibration"]["receipt"]) == fresh,
+        "SOURCE_PINS_CHANGED_DURING_PREPARATION",
+    )
+    check_revision(expected_revision, fresh["implementation_pins"])
+    # Preparation/proposal only: no run directory, ledger mutation or dispatch.
+    create_json(PREPARATION, fresh)
+    verified = repair.verify_preparation(PREPARATION, expected_sha256=fresh["preparation_sha256"])
+    require(verified == fresh, "NEW_PREPARATION_SELF_CHECK_FAILED")
+    require(controller.accounting(receipt)[1] == initial, "ACCOUNTING_CHANGED_BEFORE_PROPOSAL")
+    create_json(PROPOSAL, proposal)
+    reread = repair.read_json(PROPOSAL, max_bytes=2 * 1024 * 1024)
+    require(reread == proposal, "PROPOSAL_WRITE_CHECK_FAILED")
+    preflight = {
+        "scope": "R15_PREPARED_ONLY_NO_LIVE_EXECUTION",
+        "revision": expected_revision,
+        "preparation_script_sha256": expected_script_sha,
+        "controller_sha256": CONTROLLER_SHA,
+        "base_R14_proposal_sha256": BASE_PROPOSAL_SHA,
+        "proposal_canonical_sha256": repair.digest(proposal),
+        "proposal_file_sha256": repair.file_record(PROPOSAL, 2 * 1024 * 1024)["sha256"],
+        "preparation_sha256": fresh["preparation_sha256"],
+        "preparation_file_sha256": repair.file_record(PREPARATION, repair.MAX_BYTES)["sha256"],
+        "original_semantic_inputs_identical": unchanged,
+        "implementation_pins": len(fresh["implementation_pins"]),
+        "input_pins": len(fresh["input_pins"]),
+        "starting_charged_usd": initial["scope_charged_usd"],
+        "starting_actual_usd": initial["scope_actual_usd"],
+        "starting_remaining_usd": initial["scope_remaining_usd"],
+        "all_costs_resolved": initial["all_costs_resolved"],
+        "fixed_denominator": 9,
+        "minimum_targets": 6,
+        "fixed_requests": 9,
+        "execution_started": False,
+        "funding_changed": False,
+        "model_calls": 0,
+        "GPU_jobs": 0,
+    }
+    require(controller.accounting(receipt)[1] == initial, "ACCOUNTING_CHANGED_AT_FINAL_CHECK")
+    create_json(PREFLIGHT, preflight)
+    print(json.dumps(preflight, indent=2))
+
+
+def main():
+    os.umask(0o077)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--write-reviewed", action="store_true")
+    parser.add_argument("--expected-revision", required=True)
+    parser.add_argument("--expected-script-sha256", required=True)
+    args = parser.parse_args()
+    if not args.write_reviewed:
+        parser.error("No outputs created: --write-reviewed is required for preparation files only")
+    socket.getaddrinfo = no_network
+    socket.socket.connect = no_network
+    socket.socket.connect_ex = no_network
+    prepare(args.expected_revision, args.expected_script_sha256)
+
+
+if __name__ == "__main__":
+    main()
