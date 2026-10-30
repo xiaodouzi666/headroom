@@ -1,0 +1,23 @@
+# R13 Results publication plan v2 — prepared, not applied
+
+The new proposed public title is **October 30 evaluation — 1 of 9 memory targets met**. Only that one new catalog title differs from publication-plan v1; the R13 identity, raw campaign, terminal staging and every campaign document byte remain unchanged. The previous candidate and receipt remain untouched.
+
+The source registry and active runtime registry each contain eight identical entries, with SHA256 7ac20bc25ca3e23bd7174519111d631bbe0e91d65929884a7919f2430ac652ec. Every existing campaign file has identical source/runtime bytes. The isolated `candidate` directory contains a nine-entry version-1 manifest, R13 first followed by all eight current entries in their original order with their original titles. All eight existing campaign files are copied byte-for-byte; the new R13 file is copied exactly from the reviewed terminal staging. No existing raw run, Verified runs manifest, asset, upload or frontend source needs changing.
+
+The candidate passes the existing `_registry`, `_campaign` and `product_evaluation` readers for all nine entries. The manifest remains below 64 KiB/20 entries, the new file below 2 MiB/1000 rows, and its ID/title meet the existing 64/120 limits. It contains the complete new R13 1/9 outcome, with no overall acceptance banner, no best/union rewrite and no claim that six targets were reached. Full details and exact bytes/hashes are in receipt.json.
+
+## Reuse the existing publication mechanism
+
+No standalone R10 merge script was found. R10's publication.json records eight entries, prior-history preservation, public verification and service_restart=false. The earlier R9 publication-plan.md documents the same document-first, manifest-last workflow. `scripts/serve_public.py` is the existing startup loader: it validates all curated files, copies campaign documents into the runtime submissions root and installs its manifest last. Do not run that server script as a merge command or start a second service.
+
+The API reader loads registry and campaign files on every GET. It does not cache this catalog at startup. Therefore installing only these curated result files in source and runtime does not require a service restart. A separate source/config deployment may have its own restart requirements; it is outside this plan. The frontend already selects the first returned catalog entry, so putting R13 first makes it the default without a frontend edit.
+
+## Publishing operator steps after review
+
+1. Immediately recheck live source/runtime manifest SHA, all eight old file hashes, the reviewed R13 staging/summary/audit hashes, candidate receipt, active service and queue. The recorded observation was health ok, running=false, pending=0, preparing=0 and active service PID 2521559; it is a timestamped observation, not a future guarantee. Stop/review if any source publication changed. Never modify or cancel a job to publish Results.
+2. Install only `published-evaluations/r13-terminal-20261030.json` in both `public-evidence` and `runs/public-api/submissions`. Use a temporary regular file on each destination filesystem, preserve private file permissions, verify its reviewed hash, then atomically rename. Neither destination R13 file should already exist; otherwise review rather than overwrite.
+3. After both new documents are safely present, atomically install the reviewed merged `candidate/public-evaluations.json` into source and runtime, manifest LAST for each root. Do not install the single-entry staging manifest. Do not delete, replace, regenerate or retitle any historical campaign file or entry. Do not touch verified-runs.json, verified-runs-history-v1.json, verified-assets, raw runs, admissions or uploads.
+4. Validate each installed root using the same `_registry`/`_campaign` readers. Compare all old hashes before/after and require exactly nine entries, R13 first, historical relative order unchanged, all nine R13 rows and exactly one target. Compare source and runtime registries plus the new document byte-for-byte.
+5. Read-only GET `/api/evaluations`, `/api/evaluations/r13-terminal-20261030` and `/results`; verify nine catalog choices, R13 default, complete 1/9 and historical choices still load. Recheck no service restart/PID change caused by this result-only publication. No task submission or new model/GPU call is needed. Persist an R10-style applied publication receipt only after these checks pass.
+
+This task prepared only reports/candidate files and read service/storage state. It did not install, publish, change budget or restart any service. Root owns the actual reviewed publication step.

@@ -2,9 +2,9 @@
 
 ## Summary
 
-These results cover the historical evaluations and two further fixed-nine campaigns completed on 2026-10-30.
+These results cover the historical evaluations and the completed nine-scenario evaluations on October 30. Partial attempts and separate demonstrations are identified separately.
 
-The latest completed campaign, R10, met **0/9 memory targets** and produced **4/9 valid correct first-cause diagnoses**. Its raw first-category match count was **5/9**; **0/9** diagnoses were ready for patching. The unchanged internal memory-target threshold is **6/9**, which was not met. Across the separate evaluations, **5 distinct scenarios have a recorded automatic memory-target success**: s1, s2, s3, s4, and s8. The best single evaluation remains **3/9**. <!-- numbers: summary -->
+The latest October 30 evaluation (R13) met **1/9 memory targets** and produced **2/9 valid correct first-cause diagnoses**. Its raw first-category match count was **5/9**; **1/9** diagnoses were ready for patching. The memory-target threshold remains **6/9**, which was not met. Across the separate evaluations, **5 distinct scenarios have a recorded automatic memory-target success**: s1, s2, s3, s4, and s8. The best single evaluation remains **3/9**. <!-- numbers: summary -->
 
 First-cause counts for repair campaigns use the first saved diagnosis round, which can follow correction or supplementary requests within that round. They do not count successful repairs and are not necessarily scores of the first raw API response.
 
@@ -15,8 +15,11 @@ First-cause counts for repair campaigns use the first saved diagnosis round, whi
 | [R8](../reports/r8-20261030-review/README.md) | 0/9 | 7/9 | 5/9 | 2/9 | 1.02829080 |
 | [R9](../reports/r9-20261030-review/README.md) | 0/9 | 7/9 | 6/9 | 0/9 | 0.571730364 |
 | [R10](../reports/r10-20261030-review/README.md) | 0/9 | 5/9 | 4/9 | 0/9 | 0.648017156 |
+| [R13](../reports/r13-20261030-review/terminal-review-20261030/review.md) | 1/9 | 5/9 | 2/9 | 1/9 | 0.64941416 |
 
-All three completed all nine scenarios. Fully known actual totals remain unavailable; the charged amounts include conservative bounds and are not presented as exact provider billing. Historical successes remain separate. Nano label coverage was 8/8 in R8 and 7/8 in R9; neither reached 80% heuristic agreement on any of those eight cases. Identifier coverage is not label accuracy.
+All four completed all nine scenarios. Fully known actual totals remain unavailable; the amounts include conservative bounds and are not presented as exact provider billing. The R13 amount covers only its new runs; it excludes the earlier R12 retained amount. Historical successes remain separate. Nano label coverage was 8/8 in R8 and 7/8 in R9; neither reached 80% heuristic agreement on any of those eight cases. Identifier coverage is not label accuracy.
+
+R11 stopped after two scenarios, and R12 stopped after one annotation timeout. Their unrun scenarios remain unknown; neither is presented here as a completed nine-scenario result. [R11 partial record](../reports/r11-20261030-review/summary.json) and [R12 original campaign](../runs/repair-followup/execution-r12-20261030/campaign.json) are preserved.
 
 ### Historical results
 
@@ -28,11 +31,13 @@ Each successful row selects the lowest recorded peak after repair, using the lat
 | s2: AdamW capacity | Optimizer state | Correct / target met | 22.919 → 18.639 (−18.67%) | 20 scalars within tolerance, not identical; input/batch/objective pairing unknown. | [2026-10-27 / a42fb7c](../reports/acceptance-v2-r5-20261027/README.md) |
 | s3: evaluation autograd | Activations | Correct / target met | 2.436 → 0.648 (−73.38%) | 20 identical scalars; input/batch/objective/seed pairing matched. | [2026-10-27 / 4f4e67d](../reports/acceptance-v2-r6-20261027/README.md) |
 | s4: retained graphs | Retained graph | Correct / target met | 24.769 (OOM) → 2.534 (−89.77%) | Identical first 5 scalars vs. original-workload offload reference; pairing matched; candidate completed 20 updates. | [2026-10-29 / 6c7cde2](../reports/r7-20261029/README.md) |
-| s5: variable lengths | Fragmentation candidate; unverified | Reference cause unconfirmed / no selected repair | 5.022 → — | Not established | [2026-10-29 / 6c7cde2](../reports/r7-20261029/README.md) |
-| s6: full-vocabulary logits | Temporaries | Correct / no selected repair | 21.588 (OOM) → — | Not established | [2026-10-29 / 6c7cde2](../reports/r7-20261029/README.md) |
-| s7: frozen optimizer parameters | Optimizer state | Matching category, invalid diagnosis / no selected repair | 17.820 → — | Not established | [2026-10-29 / 6c7cde2](../reports/r7-20261029/README.md) |
-| s8: unused teacher model | Parameters | Correct / target met | 3.100 → 0.122 (−96.07%) | 20 identical recorded scalars; input/batch/objective pairing unknown. | [2026-10-27 / cfeb67f](../reports/acceptance-v2-r4-20261027/README.md) |
-| pinned nanoGPT | Unverified | Response validation failed / no selected repair | 24.705 (OOM) → — | Not established | [2026-10-29 / 6c7cde2](../reports/r7-20261029/README.md) |
+| s5: variable lengths | Fragmentation candidate; unverified | Reference cause unconfirmed / no selected repair | 5.022 → — | Not established | [2026-10-30 / 2329205](../reports/r13-20261030-review/terminal-review-20261030/review.md) |
+| s6: full-vocabulary logits | Temporaries | Matching category, invalid diagnosis / no selected repair | 21.588 (OOM) → — | Not established | [2026-10-30 / 2329205](../reports/r13-20261030-review/terminal-review-20261030/review.md) |
+| s7: frozen optimizer parameters | Optimizer state | Correct, requests more information / no selected repair | 17.820 → — | Not established | [2026-10-30 / 2329205](../reports/r13-20261030-review/terminal-review-20261030/review.md) |
+| s8: unused teacher model | Parameters | Correct / target met | 3.100 → 0.122 (−96.07%) | 20 identical recorded scalars; input/batch/objective pairing unknown. | [2026-10-30 / 2329205](../reports/r13-20261030-review/terminal-review-20261030/review.md) |
+| pinned nanoGPT | Unverified | Valid diagnosis, requests more information / no selected repair | 24.705 (OOM) → — | Not established | [2026-10-30 / 2329205](../reports/r13-20261030-review/terminal-review-20261030/review.md) |
+
+The new s8 run has exactly the same lowest successful after-peak byte count (121,791,488) as the previous selected run. The documented latest-on-tie rule therefore selects the October 30 run; this does not add a distinct historical success or establish complete workload pairing.
 
 Selected successful runs:
 
@@ -42,7 +47,7 @@ Selected successful runs:
 | s2: AdamW capacity | 2942b1e3d8e34ead80baef0cdc468753 | 20 → 20 | 20 | 1,141,338,112 |
 | s3: evaluation autograd | 84f929ba8ace49b3829df6455419641d | 20 → 20 | 20 | 37,791,744 |
 | s4: retained graphs | e8213706570e478f9845e49e24c2b54b | 12 → 20 | 5 | 50,374,656 |
-| s8: unused teacher model | d10adf0ffac74dcf8d874a460a2a3628 | 20 → 20 | 20 | 747,474,432 |
+| s8: unused teacher model | 49a74229bf4e43948db0eaabfeddf14a | 20 → 20 | 20 | 747,474,432 |
 
 ### R7 evaluation — 2026-10-29 (historical)
 
@@ -100,7 +105,7 @@ Watch also detected a real CUDA OOM and automatically entered diagnosis and repa
 
 ### Cost and time
 
-The following table lists only the known partial subtotal of actual API costs for each nine-scenario evaluation, plus the sum of recorded end-to-end run times.
+The following historical table lists known partial actual-cost subtotals and recorded end-to-end run times through October 29. The October 30 evaluations are reported separately above; this table is not a complete project bill.
 
 | Date / source commit | Memory targets met | Valid correct first causes | Known partial actual-cost subtotal (USD) | Sum of run wall time (s) |
 | --- | ---: | ---: | ---: | ---: |
@@ -117,13 +122,13 @@ The known partial subtotals in this table sum to **$8.34721172**. The three addi
 
 ### Limitations
 
-Historical coverage combines successes from different evaluations; it is not a single-run success rate. The successful s4 peak ties its earlier best, so the selection rule chooses the latest run. The public gallery contains four successful cases and two failures. Its s3 card now uses the separate browser demonstration, and its s4 card uses the latest campaign run; this does not change the campaign-only historical table. The latest tests added no successful precision-policy or HF cards.
+Historical coverage combines successes from different evaluations; it is not a single-run success rate. The successful s4 peak ties its earlier best, so the selection rule chooses the latest run. The public gallery contains four successful cases and two failures. Its s3 card now uses the separate browser demonstration, and its s4 card uses the selected October 29 run; this does not change the campaign-only historical table. The latest tests added no successful precision-policy or HF cards.
 
 Only the selected s3 result has 20 identical compared loss scalars with every recorded input, effective-batch, objective and seed check matched. These are empirical comparisons. The s2 result is fp32 and tolerance-based, with a maximum recorded loss difference of 4.76837158203125e-7; its input, effective-batch and objective pairing is unknown. The same pairing information is incomplete for s8 despite its identical recorded scalars.
 
 The s1 and s4 repairs each completed 20 optimizer updates, but their numerical comparisons cover only the first 5 backward-loss scalars. Their reference methods are identified in the table. The s1 repaired peak is reconstructed and is not marked exact. OOM baseline peaks are the largest observed allocations before failure; the memory needed to finish and completed-run throughput remain unknown.
 
-In R10, all nine scenarios ran and none met its repair target. Four valid first causes matched the authored reference, while no diagnosis became ready for patching. s5 and nanoGPT retain unverified reference causes and stay in the denominator. R7, where s4 met its target, is retained as historical evidence. A valid cause or a statically accepted edit does not establish a usable repair. The two extra s2 precision-policy tests and HF Trainer repair did not pass, and no successful memory-versus-speed comparison was produced.
+The latest October 30 evaluation met one memory target, below the requirement of six. Two valid first causes matched the authored reference, and one diagnosis became ready for patching. In the earlier R10 evaluation, all nine ran and none met its repair target; that historical row is retained above. s5 and nanoGPT retain unverified reference causes and stay in the denominator. R7, where s4 met its target, is retained as historical evidence. A valid cause or a statically accepted edit does not establish a usable repair. The two extra s2 precision-policy tests and HF Trainer repair did not pass, and no successful memory-versus-speed comparison was produced.
 
 The variable-length workload's fragmentation cause remains unverified: a large gap between reserved and allocated memory is insufficient evidence. The full-vocabulary-logit and frozen-parameter workloads still lack a verified repair. nanoGPT also remains unsolved; its earlier configuration change still ran out of memory.
 
@@ -133,7 +138,7 @@ The matched three-condition diagnosis comparison is reported above. The first sa
 
 ### Run details
 
-The R10 review above is current. The [R7 measurement notes](../reports/final48h-docs-20261029/r7-update-notes-v1.md) and [versioned number update](../reports/final48h-docs-20261029/numbers-r7-v1.json) bind the latest results and historical selection. The [earlier number manifest](../reports/final48h-docs-20261029/numbers.json) remains unchanged. The previous latest-evaluation table and the full earlier document below are retained.
+The [October 30 complete evaluation](../reports/r13-20261030-review/terminal-review-20261030/review.md) and [versioned number update](../reports/docs-r13-20261030/numbers-r13-v1.json) bind the latest results and selected s8 provenance. The [R7 measurement notes](../reports/final48h-docs-20261029/r7-update-notes-v1.md) and [earlier versioned update](../reports/final48h-docs-20261029/numbers-r7-v1.json) remain historical evidence. The [earlier number manifest](../reports/final48h-docs-20261029/numbers.json) remains unchanged. The previous latest-evaluation table and the full earlier document below are retained.
 
 ### Previous evaluation — 2026-10-27
 

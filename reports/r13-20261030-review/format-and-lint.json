@@ -1,0 +1,14 @@
+[
+  {
+    "file": "reports/r13-20261030-review/project-r13.py.txt",
+    "ruff_exit": 1,
+    "output": "TRY004 Prefer `TypeError` exception for invalid type\n  --> project-r13.py:53:9\n   |\n51 |         return None\n52 |     if isinstance(value, bool):\n53 |         raise ValueError(\"Boolean monetary value\")\n   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n54 |     result = Decimal(str(value))\n55 |     if not result.is_finite() or result < 0:\n   |\n\nTRY004 Prefer `TypeError` exception for invalid type\n  --> project-r13.py:88:13\n   |\n86 |         data = json.loads(raw)\n87 |         if not isinstance(data, dict):\n88 |             raise ValueError(\"Expected source object: \" + name)\n   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n89 |         return data\n   |\n\nTRY004 Prefer `TypeError` exception for invalid type\n   --> project-r13.py:134:9\n    |\n132 |         raise ValueError(\"Fixed cell identity changed\")\n133 |     if not isinstance(document.get(\"starting_pool_accounting\"), dict):\n134 |         raise ValueError(\"The exact starting whole-pool snapshot is required\")\n    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n135 |     return rows\n    |\n\nFound 3 errors.\n",
+    "error": ""
+  },
+  {
+    "file": "reports/r13-20261030-review/verify-projector.py.txt",
+    "ruff_exit": 0,
+    "output": "All checks passed!\n",
+    "error": ""
+  }
+]

@@ -9,6 +9,7 @@ from pathlib import PurePosixPath
 
 from headroom.api.security import open_regular
 from headroom.operator_capabilities import MAX_CATALOG_BYTES, runtime_operator_catalog
+from headroom.optimizer_observations import runtime_optimizer_observations
 from headroom.retained_state import retained_state_reading_aid
 from headroom.verify.candidate_preflight import SCHEMA as PREFLIGHT_SCHEMA
 from headroom.verify.candidate_preflight import reference_family_reading_aid
@@ -440,6 +441,9 @@ def execution_context(
         "repository_mode": repository_mode is True,
         "runtime_input_observations": runtime_input_observations(
             runtime_result, source_files, selected_round=selected_round, required_steps=max_steps
+        ),
+        "runtime_optimizer_observations": runtime_optimizer_observations(
+            runtime_result, source_files, script=str(script), selected_round=selected_round
         ),
         "seed": seed if type(seed) is int else None,
         "required_optimizer_updates": max_steps if type(max_steps) is int else None,

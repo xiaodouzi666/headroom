@@ -1,0 +1,58 @@
+{
+  "schema": "headroom.optimizer-observations-independent-review.v1",
+  "verdict": "PASS",
+  "scope": "read_only_source_and_existing_R13_artifact_metadata_reconstruction_no_GPU_model_or_test_execution",
+  "source_hashes": {
+    "headroom/optimizer_observations.py": "586978258d26914f72f8f5c76a1dee24ab16ce4260f53ea66af48682d862ae77",
+    "headroom/solver_context.py": "88ea2cec74aadbf51da6358ceb90c337c9ea769e40c504dd80fe5cfc8691dba0",
+    "headroom/evidence_blockers.py": "be19ff5b56da52e1db6df30a7375194420c37cf4605031049ccb21b63b8dba5a",
+    "tests/test_optimizer_observations.py": "ab02eea33b3581b5d6dfed33ff10b3fdd8f268d267054eebb1bfc846be32a22a"
+  },
+  "verification_receipt_sha256": "0c7641342ca9f8bb3182425b346e2d681a89e2152799356cb9b8312e06a03dbf",
+  "retained_wire_sha256": "9537f95065476bee8f05148a9efa46386114bb01ba69bbdf417256da0e21212e",
+  "r13_s7_readonly_reconstruction": {
+    "report_sha_matches": true,
+    "evidence_sha_matches": true,
+    "summary_equals_retained_wire": true,
+    "entrypoint": "train.py",
+    "selected_run_id": "42ca546f8432409f85d6d26cf339b14e",
+    "source_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+    "named_input_contract_supported": false,
+    "requires_grad_true_entries": 34,
+    "catalog_numel": 1075970304,
+    "recorded_logical_updates": 20,
+    "input_coverage_proven": false,
+    "numerical_equivalence_proven": false
+  },
+  "all_nine_r13_initial_capture_metadata_reconstruction": {
+    "all_constructed_without_error": true,
+    "max_optimizer_bytes": 1898,
+    "max_execution_bytes": 5236,
+    "max_availability_catalog_bytes": 4584,
+    "max_shared_bytes_without_histories_or_reference_context": 14439,
+    "scope": "existing initial captures only, not new execution or an acceptance result; full combined bound remains authoritative"
+  },
+  "bounds_unchanged": {
+    "optimizer_summary_bytes": 3072,
+    "execution_bytes": 16384,
+    "solver_shared_bytes": 65536,
+    "availability_bytes": 8192
+  },
+  "new_availability_refs_only": [
+    "execution_context.runtime_optimizer_observations",
+    "execution_context.runtime_optimizer_observations.parameters",
+    "execution_context.runtime_optimizer_observations.updates"
+  ],
+  "max_field_entries_change": "17 to20 for exactly the3 added field refs",
+  "observations_not_proofs": [
+    "Parameter identity/version and requires_grad observations do not establish numeric value delta, input coverage, full workload coverage, equivalence or success",
+    "Optimizer class names are whitelist-filtered reported tags, not authenticated implementations",
+    "Hyperparameters are not captured or inferred",
+    "Partial/OOM captures expose only recorded update prefixes; zero steps do not become success",
+    "Named-input unsupported status is not modified by the independent optimizer facts"
+  ],
+  "no_raw_weights_names_custom_tags_environment_or_hyperparameters_forwarded": true,
+  "model_calls_GPU_execution_algorithm_policy_reference_or_acceptance_changes": false,
+  "recorded_guarded_tests": "121 passed in4.94s with matching final hashes; not rerun by independent reviewer",
+  "nonblocking_edge_note": "An empty optimizer_classes list yields an empty recognized class list and zero non-whitelisted records; it must be read as no class reported, not native authentication. Current R13s7 class list is nonempty."
+}

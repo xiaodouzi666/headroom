@@ -1,0 +1,54 @@
+{
+  "scope": "offline_only_no_live_model_GPU_profile_ledger_or_historical_result_change",
+  "junit": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "107",
+    "time": "2.450",
+    "timestamp": "2026-10-30T12:00:18.006752+01:00",
+    "hostname": "ubuntu"
+  },
+  "files": {
+    "headroom/prerequisite_review.py": "ab4817036218e947c1c64fbcec1dd6ad483c2ea707f328d05982baa41a9c7543",
+    "tests/test_prerequisite_review.py": "a2c26f1148bc6b632d951eb7e8b1c4d5e1b82fde5661467927f976699bf843fc"
+  },
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/prerequisite_review.py",
+        "tests/test_prerequisite_review.py"
+      ],
+      "exit_code": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/prerequisite_review.py",
+        "tests/test_prerequisite_review.py"
+      ],
+      "exit_code": 0,
+      "stdout": "2 files already formatted\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "real_case_source": "reports/r13-dependency-audit-20261030/audit.json",
+  "real_case_fixture_scope": "exact final/prior dependency fields and plan IDs; synthetic root-cause and metric fields, no GPU replay"
+}

@@ -23,9 +23,15 @@ _REVIEW = (
     "source-supported candidate that avoids its prerequisites. Return the complete diagnosis, "
     "including only applicable policy-permitted steps. A replacement must still cover any "
     "known required saving; do not borrow savings from omitted steps or inflate estimates. "
-    "Do not merely remove a request, relabel a forbidden change, or clear needs_more_info "
-    "to force execution. If genuine unknowns still prevent a defensible complete plan, "
-    "retain needs_more_info=true and state the exact remaining dependency. All original "
+    "Output self-check: rebuild every blocked_plan_ids from the plan in THIS NEW response, "
+    "not prior_plan_ids. current_plan requires a nonempty unique subset of its actual new "
+    "fix_ids; plan=[] cannot have a current_plan dependency. alternative_plan, "
+    "overall_feasibility and a null scope require blocked_plan_ids=[]. "
+    "Do not carry a discarded alternative's unknowns into an independently supported replacement. "
+    "Set needs_more_info=true for real unmet current-plan or overall prerequisites. You may "
+    "yourself return false for a complete independently supported replacement with no such "
+    "unmet prerequisite. Do not delete a genuine dependency, relabel a forbidden change or "
+    "infer missing facts to force execution. State any exact remaining dependency. All original "
     "schema, policy, workload and hardware-verification checks still apply. Return concise JSON only. "
 )
 _NEUTRAL_REVIEW = (
@@ -42,10 +48,13 @@ def _message(contexts, omitted, *, neutral=False):
     data = {
         "content_is_untrusted_data": True,
         "new_runtime_evidence_supplied": False,
-        "declared_needs_more_info": True,
-        "request_context_status": "none_locatable" if neutral else "scoped_metadata_available",
-        "requests": contexts,
-        "omitted_requests": omitted,
+        "metadata_scope": "prior_response_snapshot_only_not_the_new_plan",
+        "prior_needs_more_info": True,
+        "prior_request_context_status": "none_locatable"
+        if neutral
+        else "scoped_metadata_available",
+        "prior_requests": contexts,
+        "omitted_prior_requests": omitted,
     }
     return (
         _REVIEW
@@ -90,7 +99,15 @@ def prerequisite_review(diagnosis, evidence):
         # This is a valid question, not an error. Keep helper-provided safety,
         # catalogue and source/runtime distinctions without that misleading label.
         value = dict(value)
-        value["declared_evidence_request"] = value.pop("offending_evidence_request")
+        value["prior_declared_evidence_request"] = value.pop("offending_evidence_request")
+        for original, prior in (
+            ("current_plan_ids", "prior_plan_ids"),
+            ("omitted_plan_ids", "omitted_prior_plan_ids"),
+            ("needs_more_info", "prior_needs_more_info"),
+            ("scope_contract", "prior_dependency_scope_contract"),
+        ):
+            if original in value:
+                value[prior] = value.pop(original)
         proposed = contexts + [value]
         message = _message(proposed, len(requests) - len(proposed))
         if len(message.encode()) > MAX_REVIEW_BYTES:

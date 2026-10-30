@@ -1,0 +1,127 @@
+{
+  "schema": "headroom.s7-training-contract-readonly-audit.v1",
+  "audited_at_utc": "2026-10-30T11:02:49.140385+00:00",
+  "r13_run_id": "a8e54a09a32e42ec94c0dacfd7a31108",
+  "sources": [
+    {
+      "path": "runs/repair-followup/execution-r13-20261030/jobs/a8e54a09a32e42ec94c0dacfd7a31108/report.json",
+      "sha256": "5ad6be460f0b6573e3ba6b180cd8d0cb2fd6b9127f4cdbc7dc03636fc42c1c44"
+    },
+    {
+      "path": "runs/repair-followup/execution-r13-20261030/jobs/a8e54a09a32e42ec94c0dacfd7a31108/rounds/01/diagnosis.json",
+      "sha256": "aaa7278082649a0c8aca61383067126c76aeedc64e4c6045d48fde66c599db1d"
+    },
+    {
+      "path": "scenarios/s7_frozen_params_optimizer_state/train.py",
+      "sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191"
+    },
+    {
+      "path": "runs/evaluation/live/20261027T012645781689Z-c664cedf/jobs/e41010b22b264f5fa13c44ca80e053ed/rounds/01/patches/patch-engine-b21e2634fe56467fa6637a2617f6275b/attempt-1/patch-6e90b7f6f8ea4698be1814b79641e854/candidate/train.py",
+      "sha256": "eec15eb3ab8ef7df14806b01929aab1f42c45bcbbffed4e8271cefbb2d071f1f"
+    },
+    {
+      "path": "headroom/verify/policy.py",
+      "sha256": "91994da2c2f1198b3230195a477a971998e66717d5d43edeb6978ba7fe89c892"
+    }
+  ],
+  "actual_saved_runtime_update_facts": {
+    "protocol": "headroom.optimizer_updates.v1",
+    "observation_complete": true,
+    "logical_boundary_complete": true,
+    "parameter_update_sets_complete": true,
+    "catalogued_parameter_tensors": 34,
+    "catalogued_parameter_numel": 1075970304,
+    "all_catalogued_parameters_require_grad": true,
+    "registered_parameter_count": 1075970304,
+    "registered_parameter_count_complete": true,
+    "catalogued_numel_matches_registered_count": true,
+    "logical_updates": 20,
+    "each_update_covers_entire_catalog": true,
+    "optimizer_classes": [
+      "torch.optim.adamw.AdamW"
+    ],
+    "scope": "Observed registered Parameter identities, requires_grad and version-counter update coverage; not numerical equivalence or proof against target tampering."
+  },
+  "actual_request_delivery": [
+    {
+      "store_call_id": 20,
+      "wire_body_sha256": "c693cc570e99532b0be908982db1aa358332aaef37154b54ec1f83d41d34b64c",
+      "owned_catalog_supplied": "owned_source_verified",
+      "runtime_input_observations": {
+        "status": "unsupported",
+        "scope": "captured_named_tensors_and_optimizer_updates_only",
+        "target_effective_configuration": "unverified",
+        "selected_round": null,
+        "reason": "runtime source contract unsupported"
+      },
+      "host_update_observation_supplied": false,
+      "requires_grad_observation_supplied": false,
+      "observed_parameter_total_supplied": false,
+      "complete_source_contains_optimizer_param_expression": true,
+      "complete_source_contains_actual_trainable_formula": true,
+      "first_response_body_preserved_in_second_request": false
+    },
+    {
+      "store_call_id": 21,
+      "wire_body_sha256": "3751f027711cb938288b194cd74ef6de0295ed1e36335c5d3e1b471dc31f2972",
+      "owned_catalog_supplied": "owned_source_verified",
+      "runtime_input_observations": {
+        "status": "unsupported",
+        "scope": "captured_named_tensors_and_optimizer_updates_only",
+        "target_effective_configuration": "unverified",
+        "selected_round": null,
+        "reason": "runtime source contract unsupported"
+      },
+      "host_update_observation_supplied": false,
+      "requires_grad_observation_supplied": false,
+      "observed_parameter_total_supplied": false,
+      "complete_source_contains_optimizer_param_expression": true,
+      "complete_source_contains_actual_trainable_formula": true,
+      "first_response_body_preserved_in_second_request": false
+    }
+  ],
+  "final_model_plan": [
+    {
+      "fix_id": "f1",
+      "type": "code",
+      "title": "Freeze backbone parameters to exclude them from optimizer state",
+      "description": "Set requires_grad=False on all backbone parameters before constructing the optimizer, so AdamW only tracks head parameters. This removes the persistent optimizer state (moments) for ~30B backbone parameters, eliminating the dominant optimizer_state peak. The forward pass still runs through the backbone in eval mode, preserving the frozen feature extraction. The loss, optimizer step, scheduler, and gradient reset cadence remain unchanged because only the head parameters are updated.",
+      "expected_saving_gb": 8.0,
+      "numerics_impact": "none",
+      "throughput_impact": "minor",
+      "risk": "Backbone must not be needed for gradient-dependent operations (e.g., frozen batch-norm statistics). Source shows backbone.eval() but requires_grad was never disabled.",
+      "requires_policy": []
+    }
+  ],
+  "final_model_evidence_requests": [
+    {
+      "field": "execution_context.runtime_input_observations",
+      "reason": "missing",
+      "detail": "Observed tensor shapes, optimizer_input_name, and effective_batch_per_optimizer_update from the retained baseline run are needed to confirm the exact training-update contract and input path before patching.",
+      "evidence_ref": "execution_context.runtime_input_observations",
+      "source_line_start": null,
+      "source_line_end": null,
+      "blocking_scope": "current_plan",
+      "blocked_plan_ids": [
+        "f1"
+      ]
+    }
+  ],
+  "final_model_needs_more_info": true,
+  "final_model_mentions_owned_helper": false,
+  "current_static_policy_recheck_of_existing_head_only_model_candidate": {
+    "allowed": true,
+    "issues": [],
+    "requires_runtime_verification": true,
+    "new_patch_created": false
+  },
+  "audit_model_calls": 0,
+  "audit_gpu_jobs": 0,
+  "audit_source_or_historical_changes": false,
+  "conclusion": "The final diagnosis follows the intended-head label rather than the executed full-parameter update set. Real positive update-set facts were already captured but not forwarded; the catalog was forwarded but not selected. Current static shape/count guards do not prevent changing the optimizer parameter set or disabling gradients without shrinking the model.",
+  "limitations": [
+    "The first Ultra response body is not retained in the second request; only the saved final diagnosis is available. Do not assert the first plan selected or ignored a particular operator.",
+    "Opaque Parameter IDs are process-local and not a semantic proof of objective equivalence; the original full scalar comparison and all existing gates remain.",
+    "This is a read-only analysis of old artifacts and the current static checker, not a new repair or GPU acceptance result."
+  ]
+}

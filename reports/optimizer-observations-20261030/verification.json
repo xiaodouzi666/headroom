@@ -1,0 +1,70 @@
+{
+  "schema": "headroom.optimizer-observations.verification.v1",
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/python",
+        "reports/final48h-closing-regression-20261029/closing_guarded_v4.py",
+        "tests/test_optimizer_observations.py",
+        "tests/test_runtime_input_observations.py",
+        "tests/test_solver_context.py",
+        "tests/test_operator_capabilities.py",
+        "tests/test_evidence_blockers.py"
+      ],
+      "exit_code": 0,
+      "seconds": 5.5914654929656535
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/optimizer_observations.py",
+        "headroom/solver_context.py",
+        "headroom/evidence_blockers.py",
+        "tests/test_optimizer_observations.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.007074281806126237
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom/optimizer_observations.py",
+        "headroom/solver_context.py",
+        "headroom/evidence_blockers.py",
+        "tests/test_optimizer_observations.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.005499848164618015
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "--",
+        "headroom/optimizer_observations.py",
+        "headroom/solver_context.py",
+        "headroom/evidence_blockers.py",
+        "tests/test_optimizer_observations.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.002713477937504649
+    }
+  ],
+  "source_hashes": {
+    "headroom/optimizer_observations.py": "586978258d26914f72f8f5c76a1dee24ab16ce4260f53ea66af48682d862ae77",
+    "headroom/solver_context.py": "88ea2cec74aadbf51da6358ceb90c337c9ea769e40c504dd80fe5cfc8691dba0",
+    "headroom/evidence_blockers.py": "be19ff5b56da52e1db6df30a7375194420c37cf4605031049ccb21b63b8dba5a",
+    "tests/test_optimizer_observations.py": "ab02eea33b3581b5d6dfed33ff10b3fdd8f268d267054eebb1bfc846be32a22a"
+  },
+  "provider_calls": 0,
+  "gpu_executions": 0,
+  "deployed": false,
+  "new_acceptance_success": false,
+  "guarded_result": "121 passed in 4.94s",
+  "initial_fixture_failure_preserved": "focused-initial.log: 78 passed, 1 failed; integration fixture lacked source digest, corrected only in test fixture",
+  "source_unchanged_since_focused_check": true
+}

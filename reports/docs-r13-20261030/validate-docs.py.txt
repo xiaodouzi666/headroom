@@ -1,0 +1,165 @@
+"""Focused document-only raw hash/pointer validation; no models/GPU/accounts."""
+import copy
+import hashlib
+import importlib.util
+import json
+import re
+import socket
+import subprocess
+import sys
+from decimal import Decimal, localcontext
+from pathlib import Path
+
+sys.dont_write_bytecode = True
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+
+def denied(*args, **kwargs):
+    raise AssertionError("No network or workload subprocess in documentation validation")
+
+
+socket.getaddrinfo = denied
+socket.socket.connect = denied
+subprocess.Popen = denied
+spec = importlib.util.spec_from_file_location("existing_numbers", ROOT / "scripts/verify_public_numbers.py")
+v = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(v)
+folder = ROOT / "reports/docs-r13-20261030"
+manifest_path = folder / "numbers-r13-v1.json"
+m = json.loads(manifest_path.read_text())
+assert m["version"] == "r13-v1"
+for name, record in m["claims"].items():
+    if "source" in record:
+        ref = record["source"]; raw = (ROOT / ref["path"]).read_bytes()
+        assert len(raw) == ref["bytes"] and v.digest(raw) == ref["sha256"], name
+        assert v.equal(v.pointer(v.parse_json(raw), ref["json_pointer"]), record["value"]), name
+base_raw = (ROOT / m["base_manifest"]["path"]).read_bytes()
+assert v.digest(base_raw) == m["base_manifest"]["sha256"] == v.REVIEWED_SHA256
+base = v.Evidence(ROOT, v.parse_json(base_raw), allow_excerpts=True).verify()
+assert v.digest((ROOT / m["previous_update"]["path"]).read_bytes()) == v.SUPPLEMENT_SHA256
+prev = v.SupplementEvidence(base, v.parse_json((ROOT / m["previous_update"]["path"]).read_bytes()),
+                            manifest_path=m["base_manifest"]["path"], manifest_raw=base_raw)
+claims = {name: record["value"] for name, record in m["claims"].items()}
+rows = claims["R13.rows"]
+assert len(rows) == 9 and sum(row["target_met"] is True for row in rows) == claims["R13.targets"] == 1
+assert sum(row["first_round_diagnosis"]["valid_and_correct"] for row in rows) == claims["R13.valid_correct_first_causes"] == 2
+assert sum(row["first_round_diagnosis"]["raw_category_matches"] is True for row in rows) == claims["R13.raw_category_matches"] == 5
+assert sum(row["first_round_diagnosis"]["ready_for_patch"] is True for row in rows) == claims["R13.ready_for_patching"] == 1
+assert claims["R13.execution_status"] == "finished"
+assert claims["summary.fixed_denominator"] == 9 and claims["summary.minimum_targets"] == 6
+assert claims["summary.historical_target_scenario_count"] == len(set(prev.supplement_value("summary.historical_scenario_ids")) | {r["scenario_id"] for r in rows if r["target_met"]}) == 5
+assert claims["summary.best_single_campaign_targets"] == max(claims["previous.best_single_campaign_targets"], claims["R13.targets"]) == 3
+assert claims["previous.recorded_campaigns"] == 8 and len(claims["publication.entries"]) == 9
+assert claims["R13.actual_total_usd"] is None and Decimal(claims["R13.charged_upper_usd"]) == Decimal("0.64941416")
+assert claims["previous.s8"]["scenario_id"] == "s8_two_models_resident"
+assert claims["previous.s8.after_bytes"] == claims["R13.s8.after_bytes"] == 121791488
+with localcontext() as context:
+    context.prec = 40
+    before_bytes = Decimal(claims["R13.s8.before_bytes"])
+    after_bytes = Decimal(claims["R13.s8.after_bytes"])
+    assert Decimal(claims["R13.s8_two_models_resident.before.GB"]) == before_bytes / 10**9
+    assert Decimal(claims["R13.s8_two_models_resident.after.GB"]) == after_bytes / 10**9
+    assert Decimal(claims["best.s8_two_models_resident.reduction_pct"]) == (before_bytes-after_bytes)*100/before_bytes
+selections = {row["scenario_id"]: row for row in m["historical_best_selection"]}
+assert len(selections) == len(m["historical_best_selection"]) == 5
+for row in claims["previous.selections"]:
+    selected = selections[row["scenario_id"]]
+    if row["scenario_id"] == "s8_two_models_resident":
+        assert selected["run_id"] == "49a74229bf4e43948db0eaabfeddf14a"
+        assert selected["previous_run_id"] == row["run_id"]
+        assert selected["source_commit"] == claims["R13.source_commit"]
+    else:
+        assert selected == row
+
+assert claims["R13.s8.public_row"]["target_met"] is True
+assert claims["R13.s8.public_row"]["run_id"] == "49a74229bf4e43948db0eaabfeddf14a"
+assert claims["R13.s8.before_updates"] == claims["R13.s8.after_updates"] == 20
+assert claims["R13.s8.before_losses"] == claims["R13.s8.after_losses"] and len(claims["R13.s8.before_losses"]) == 20
+assert claims["R13.s8.params_before"] == claims["R13.s8.params_after"] == 747474432
+assert all(claims["R13.s8.checks"][key] is None for key in ("same_inputs", "same_effective_batch", "same_objective"))
+assert claims["R11.partial_status"] == claims["R12.partial_status"] == "partial"
+assert sum(r["status"] != "not_run" for r in claims["R11.rows"]) == 2
+assert sum(r["status"] != "not_run" for r in claims["R12.rows"]) == 1
+for rev in ["R8", "R9", "R10"]:
+    assert claims[rev + ".attempted_rows"] == 9 and claims[rev + ".memory_targets"] == 0
+
+
+class Latest(v.SupplementEvidence):
+    def __init__(self):
+        self.root = ROOT
+        self.document = {**prev.document, "summary": {**prev.document["summary"], "latest_campaign": "R13"}}
+        self.levels = copy.deepcopy(prev.levels)
+
+    def selected(self, scenario):
+        return {"scenario_id": scenario, "campaign": "R13"} if scenario == "s8_two_models_resident" else prev.selected(scenario)
+
+    def value(self, name):
+        return claims[name] if name in claims else prev.value(name)
+
+
+evidence = Latest()
+checked = []
+errors = []
+for name in ["README.md", "docs/DEVPOST.md", "docs/RESULTS.md"]:
+    text = (ROOT / name).read_text()
+    # RESULTS contains verbatim historical archives and unscoped historical tables.
+    # Validate edited scoped lines here; explicit table/provenance checks follow.
+    for number, line in enumerate(text.splitlines(), 1):
+        if "<!-- numbers:" not in line:
+            continue
+        original = line
+        normalized = re.sub(r"latest October 30 evaluation(?: \(R13\))?", "latest campaign", line)
+        normalized = normalized.replace("best single evaluation", "best single campaign")
+        if "numbers: summary" in line:
+            rendered = v.rendered_line(line)
+            bound = []
+            for fraction in v.FRACTION.finditer(rendered):
+                context = v.clause(rendered, fraction.start(), fraction.end())
+                if "ready for patching" in context:
+                    key = "R13.ready_for_patching"
+                elif "threshold" in context:
+                    key = "summary.minimum_targets"
+                elif "raw first-category" in context:
+                    key = "R13.raw_category_matches"
+                elif "first-cause" in context:
+                    assert "valid" in context and "correct" in context
+                    key = "R13.valid_correct_first_causes"
+                elif "best single evaluation" in context:
+                    key = "summary.best_single_campaign_targets"
+                elif "distinct scenario" in context and "histor" in context:
+                    key = "summary.historical_target_scenario_count"
+                elif "latest october 30 evaluation" in context:
+                    key = "R13.targets"
+                else:
+                    raise AssertionError((name, number, context))
+                assert int(fraction[1]) == claims[key] and int(fraction[2]) == 9
+                bound.append({"claim": key, "value": claims[key], "denominator": 9})
+            checked.append({"document": name, "line": number, "claims": bound, "text": original})
+            continue
+        try:
+            result = v.verify_line(evidence, normalized)
+            checked.append({"document": name, "line": number, "claims": result, "text": original})
+        except Exception as error:
+            errors.append({"document": name, "line": number, "error": str(error)})
+results = (ROOT / "docs/RESULTS.md").read_text()
+for rev in ["R8", "R9", "R10", "R13"]:
+    row = next(line for line in results.splitlines() if line.startswith("| [" + rev + "]"))
+    values = [cell.strip() for cell in row.split("|")[2:-1]]
+    prefix = rev + "."
+    target = claims[prefix + ("targets" if rev == "R13" else "memory_targets")]
+    expected = [f"{target}/9", f"{claims[prefix + 'raw_category_matches']}/9", f"{claims[prefix + 'valid_correct_first_causes']}/9",
+                f"{1 if rev == 'R13' else claims[prefix + 'ready_valid_correct_first_causes']}/9", claims[prefix + ("charged_upper_usd" if rev == "R13" else "cost")]]
+    assert values == expected, (rev, values, expected)
+assert "[2026-10-30 / 2329205]" in next(line for line in results.splitlines() if line.startswith("| s8: unused teacher model | Parameters"))
+assert "| s8: unused teacher model | 49a74229bf4e43948db0eaabfeddf14a | 20 → 20 | 20 | 747,474,432 |" in results
+before = (folder / "before/docs__RESULTS.md").read_text()
+assert results[results.index("## Full campaign history"):] == before[before.index("## Full campaign history"):]
+for name in ["README.md", "docs/DEVPOST.md"]:
+    text = (ROOT / name).read_text()
+    assert "latest completed campaign, R10" not in text and "latest completed repair campaign, R10" not in text
+    assert "latest October 30 evaluation" in text
+assert not errors, errors
+report = {"schema": "headroom.public-number-check.v1", "passed": True, "scope": "R13 raw-hash/JSON-pointer bindings, inherited historical/ablation scopes, edited scoped prose, campaign table and s8 provenance; no historical archive reinterpretation", "legacy_source_levels": {**base.levels, **prev.levels}, "manifest": {"path": str(manifest_path.relative_to(ROOT)), "sha256": v.digest(manifest_path.read_bytes())}, "direct_claims_checked": sum("source" in x for x in m["claims"].values()), "derived_and_row_counts_checked": True, "scoped_lines_checked": len(checked), "documents": [{"path": n, "sha256": v.digest((ROOT / n).read_bytes())} for n in ["README.md", "docs/RESULTS.md", "docs/DEVPOST.md"]], "checked_lines": checked, "historical_archive_preserved": True, "R10_historical_row_preserved": True, "s8_exact_byte_tie_latest_selected": True, "pairing_remains_incomplete": True, "public_catalog_count_is_not_full_campaign_count": True, "models_GPU_provider_calls": 0, "limitations": ["Existing production checker remains R7-pinned; this reports-only adapter explicitly extends the source bindings rather than modifying that checker.", "Automatic prose validation covers marked lines and the explicitly checked campaign/provenance tables. Archived narrative is preserved, not re-scored.", "Publication catalog includes demonstrations and is not a complete fixed-nine campaign count."]}
+(folder / "validation.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + chr(10))
+print(json.dumps({key: report[key] for key in ("passed", "direct_claims_checked", "scoped_lines_checked", "s8_exact_byte_tie_latest_selected")}, indent=2))

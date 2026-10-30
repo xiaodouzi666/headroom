@@ -1,0 +1,170 @@
+--- reports/f3-retry-20261030/summarize-r11.py.txt
++++ reports/r12-20261030-review/project-r12.py.txt
+@@ -1,4 +1,4 @@
+-"""Read completed/partial R11 records and create a new review-only projection.
++"""Read completed/partial R12 records and create a new review-only projection.
+ 
+ No ledger, credentials, provider, GPU, service or publication mutation.
+ """
+@@ -8,6 +8,8 @@
+ import os
+ import re
+ import sys
++
++sys.dont_write_bytecode = True
+ from datetime import UTC, datetime
+ from decimal import Decimal
+ from pathlib import Path
+@@ -32,8 +34,7 @@
+     "headroom/api/presentation.py",
+     "headroom/api/security.py",
+     "headroom/evaluation.py",
+-    "reports/f3-retry-20261030/execute-fixed9-retry.py.txt",
+-    "reports/f3-retry-20261030/summarize-r11.py.txt",
++    "reports/r12-20261030-review/project-r12.py.txt",
+ )
+ 
+ 
+@@ -91,17 +92,25 @@
+ 
+ 
+ def fixed_rows(document):
+-    if document.get("schema") != "headroom.final48.f3-retry-campaign.v1":
+-        raise ValueError("Only a new F3 retry campaign is accepted; old R7 is not an input")
++    if document.get("schema") != "headroom.development-repair-campaign.v1":
++        raise ValueError("Only a development-repair campaign is accepted")
++    if document.get("scope") != "DEVELOPMENT_REPAIR_FOLLOWUP":
++        raise ValueError("Development repair followup must not be aliased to another campaign")
++    if document.get("historical_scores_modified") is not False:
++        raise ValueError("Historical scores must remain unchanged")
++    if document.get("planned_cells") != 9:
++        raise ValueError("Exactly nine fixed cells must be planned")
+     if document.get("status") not in {"finished", "partial"} or document.get("provenance") != "live":
+         raise ValueError("Controller must be terminal or partial, not still running")
+     if (document.get("fixed_denominator"), document.get("minimum_targets")) != (9, 6):
+         raise ValueError("Fixed denominator/threshold changed")
+-    if document.get("threshold_scope") != "memory_targets_only":
+-        raise ValueError("An explicit memory-only threshold scope is required")
+-    if document.get("revision") != "r11":
+-        raise ValueError("Only revision r11 is labelled R11")
+-    for key in ("proposal_sha256", "preparation_sha256"):
++    if document.get("threshold_scope") not in (None, "memory_targets_only"):
++        raise ValueError("Only memory targets may determine the fixed six-of-nine threshold")
++    if not isinstance(document.get("revision"), str) or not re.fullmatch(
++        "[a-f0-9]{40}", document["revision"]
++    ):
++        raise ValueError("A source commit, rather than a campaign alias, is required")
++    for key in ("proposal_sha256", "preparation_sha256", "funding_receipt_sha256"):
+         if not isinstance(document.get(key), str) or not re.fullmatch("[a-f0-9]{64}", document[key]):
+             raise ValueError("Missing reviewed controller source hash")
+     rows = document.get("rows")
+@@ -117,7 +126,8 @@
+ def cost_row(row, report, attempted):
+     if not attempted:
+         return {"actual_usd": None, "known_actual_subtotal_usd": None,
+-                "charged_usd": None, "cost_resolved": None, "usage": {}}
++                "charged_usd": None, "retained_reservation_or_charge_usd": None,
++                "cost_resolved": None, "usage": {}}
+     settlement = row.get("settlement") or {}
+     usage = (report or {}).get("usage") or row.get("usage") or {}
+     actual = amount(settlement.get("actual_usd"))
+@@ -143,6 +153,7 @@
+         "actual_usd": str(actual) if actual is not None else None,
+         "known_actual_subtotal_usd": str(known) if known is not None else None,
+         "charged_usd": str(charged) if resolved and charged is not None else None,
++        "retained_reservation_or_charge_usd": str(charged) if charged is not None else None,
+         "cost_resolved": resolved and charged is not None,
+         "usage": usage,
+     }
+@@ -278,6 +289,9 @@
+             "known_actual_subtotal_usd": str(sum_known),
+             "charged_total_usd": str(sum(charges, Decimal(0))) if charges and all(v is not None for v in charges) else None,
+             "known_charged_subtotal_usd": str(sum((v for v in charges if v is not None), Decimal(0))),
++            "retained_reservations_or_charges_subtotal_usd": str(sum(
++                (amount(row["retained_reservation_or_charge_usd"]) for row in costs
++                 if row["retained_reservation_or_charge_usd"] is not None), Decimal(0))),
+             "unknown_actual_runs": sum(v is None for v in exact),
+             "unresolved_charge_runs": sum(v is None for v in charges),
+         },
+@@ -294,17 +308,22 @@
+         handle.write("\n")
+ 
+ 
+-def stage_campaign(campaign_path, output_dir, identifier):
+-    if not re.fullmatch(r"r11-[a-z0-9][a-z0-9_-]{0,60}", identifier):
+-        raise ValueError("Use a distinct R11 staging identifier")
++def stage_campaign(campaign_path, output_dir, identifier, *, terminal_reviewed=False):
++    if not re.fullmatch(r"r12-[a-z0-9][a-z0-9_-]{0,60}", identifier):
++        raise ValueError("Use a distinct R12 staging identifier")
+     output_dir = Path(output_dir)
+     if output_dir.exists():
+         raise ValueError("Projection output must be a new directory; never replace a publication")
+     source_hashes = helper_hashes()
+     controller, public_rows, rows, metrics, notes, sources = collect(campaign_path)
+     output_dir.mkdir(parents=True, mode=0o700, exist_ok=False)
+-    title = (f"R11 - {metrics['memory_targets']}/9 memory targets; first categories "
+-             f"{metrics['raw_category_matches']}/9 ({metrics['valid_correct_first_causes']} valid)")
++    if type(terminal_reviewed) is not bool:
++        raise ValueError("Terminal review confirmation must be boolean")
++    if not terminal_reviewed:
++        metrics["memory_threshold_met"] = None
++    state_label = "terminal review" if terminal_reviewed else "provisional snapshot"
++    title = (f"R12 development repair ({state_label}) - observed {metrics['memory_targets']}/9 "
++             f"memory targets; {metrics['attempted_rows']}/9 attempted")
+     entry = {"id": identifier, "title": title}
+     public = {"mode": "campaign", "provenance": "live", "status": controller["status"],
+               "search_mode": "until_target", "rows": public_rows}
+@@ -320,12 +339,21 @@
+     if interpreted["summary"]["attempted_live_runs"] != metrics["attempted_rows"]:
+         raise ValueError("not_run rows were counted as executed")
+     summary = {
+-        "schema": "headroom.f3-retry.summary.v1", "prepared_only": True, "published": False,
++        "schema": "headroom.development-repair.summary.v1", "prepared_only": True, "published": False,
+         "source_campaign": sources.records[Path(campaign_path).name],
+-        "revision": controller.get("revision"), "source_preparation_sha256": controller.get("preparation_sha256"),
++        "campaign_label": "R12", "scope": controller["scope"],
++        "source_revision": controller["revision"],
++        "provisional": not terminal_reviewed,
++        "terminal_reviewed_by_caller": terminal_reviewed,
++        "threshold_scope_source": "fixed memory-target denominator and minimum_targets, not overall acceptance",
++        "source_preparation_sha256": controller.get("preparation_sha256"),
++        "source_funding_receipt_sha256": controller.get("funding_receipt_sha256"),
+         "metrics": metrics, "rows": rows,
+         "existing_summary_attempted_rows_only": summarize([r for r in public_rows if r["provenance"] == "live"]),
+         "limitations": [
++            "R12 is DEVELOPMENT_REPAIR_FOLLOWUP, not a rerun or alias of FINAL48 F3.",
++            "Without caller-confirmed terminal review this is a provisional snapshot; no final threshold conclusion is emitted.",
++            "Retained reservations or charges are not exact provider spending; unresolved actuals remain null.",
+             "Saved round 01 may follow same-round bounded supplements; it is not necessarily the first HTTP response.",
+             "Unknown/unverified truth is neither correct nor incorrect; every headline denominator stays nine.",
+             "Memory threshold is not valid-first-cause or overall acceptance.",
+@@ -341,8 +369,10 @@
+     if helper_hashes() != source_hashes:
+         raise ValueError("Projection helper source changed; review-only output is incomplete")
+     receipt = {
+-        "schema": "headroom.f3-retry.projection-receipt.v1", "generated_at_utc": datetime.now(UTC).isoformat(),
++        "schema": "headroom.development-repair.projection-receipt.v1", "generated_at_utc": datetime.now(UTC).isoformat(),
+         "prepared_only": True, "published": False, "provider_calls": 0, "gpu_jobs": 0,
++        "scope": controller["scope"], "campaign_label": "R12",
++        "provisional": not terminal_reviewed, "terminal_reviewed_by_caller": terminal_reviewed,
+         "inputs": list(sources.records.values()),
+         "script_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+         "helper_source_sha256": source_hashes,
+@@ -364,6 +394,8 @@
+     parser.add_argument("--campaign", required=True)
+     parser.add_argument("--output", required=True)
+     parser.add_argument("--id", required=True)
++    parser.add_argument("--terminal-reviewed", action="store_true",
++                        help="Use only after independently confirming the controller is terminal")
+     args = parser.parse_args()
+     campaign = Path(args.campaign).absolute()
+     output = Path(args.output).absolute()
+@@ -372,7 +404,7 @@
+             raise ValueError("Unsafe/symlink path")
+     if not campaign.is_relative_to(ROOT / "runs") or not output.is_relative_to(ROOT / "reports"):
+         raise ValueError("Read runs and create only a new reports staging directory")
+-    result = stage_campaign(campaign, output, args.id)
++    result = stage_campaign(campaign, output, args.id, terminal_reviewed=args.terminal_reviewed)
+     print(json.dumps({"output": str(output), "published": False, "metrics": result["metrics"]}))
+ 
+ 

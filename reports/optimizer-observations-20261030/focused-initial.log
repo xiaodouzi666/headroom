@@ -1,0 +1,49 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+.........................F.............................................. [ 91%]
+.......                                                                  [100%]
+=================================== FAILURES ===================================
+_ test_both_fresh_real_sdk_request_paths_receive_same_selected_optimizer_facts _
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-505/test_both_fresh_real_sdk_reque0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x720a758eb3e0>
+
+    def test_both_fresh_real_sdk_request_paths_receive_same_selected_optimizer_facts(
+        tmp_path, monkeypatch
+    ):
+        real_context = orchestrator.execution_context
+    
+        def with_offline_capture(**kwargs):
+            value = captured()
+            value["pairing_capture"]["source_contract"]["source_sha256"] = next(
+                item["sha256"] for item in kwargs["source_files"] if item["path"] == kwargs["script"]
+            )
+            kwargs["runtime_result"] = value
+            return real_context(**kwargs)
+    
+        monkeypatch.setattr(orchestrator, "execution_context", with_offline_capture)
+>       result, store, calls, _, _ = search_run(
+            tmp_path, [{"before": "VALUE = 1\n", "after": "VALUE = 2\n", "peak": 20, "target": True}]
+        )
+
+tests/test_optimizer_observations.py:286: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_orchestrator.py:613: in search_run
+    result = run_fix(
+headroom/orchestrator.py:604: in run_fix
+    invocation = execution_context(
+tests/test_optimizer_observations.py:279: in with_offline_capture
+    value["pairing_capture"]["source_contract"]["source_sha256"] = next(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <list_iterator object at 0x720a7575a080>
+
+    value["pairing_capture"]["source_contract"]["source_sha256"] = next(
+>       item["sha256"] for item in kwargs["source_files"] if item["path"] == kwargs["script"]
+        ^^^^^^^^^^^^^^
+    )
+E   KeyError: 'sha256'
+
+tests/test_optimizer_observations.py:280: KeyError
+=========================== short test summary info ============================
+FAILED tests/test_optimizer_observations.py::test_both_fresh_real_sdk_request_paths_receive_same_selected_optimizer_facts
+1 failed, 78 passed in 4.66s

@@ -125,6 +125,12 @@ requires a different objective instead of asking to confirm the source means
 something else. Evidence-request reasons describe cited text availability, not
 whether a helper or semantic answer exists within visible text. Unknown meaning
 or implementation availability may remain ambiguous; do not invent it.
+For an unchanged-semantics candidate, preserve the executed program, not an intention
+suggested by a file name or comment. Preserve the original updated parameters, parameter eligibility,
+optimizer groups and hyperparameters; do not freeze or omit updates merely to
+implement a stated intention. Read the supplied policy before requesting it as
+missing. Permission to use a strategy is not an obligation to use it, and that
+strategy's prerequisites do not block an independent candidate that omits it.
 Keep EVERY genuine unresolved prerequisite explicit. At most two evidence-request
 entries may group related preconditions in their detail; grouping never resolves a
 precondition. If any required premise is unresolved, retain needs_more_info=true.

@@ -50,7 +50,7 @@ The recorded suite contains eight synthetic PyTorch training cases and pinned na
 | [s5 variable-length allocations](docs/RESULTS.md) | Not met | — | No qualifying historical target result |
 | [nanoGPT pinned workload](docs/RESULTS.md) | Not met | — | No qualifying historical target result |
 
-Across eight recorded campaigns, **5 of 9** distinct scenarios have a run that met its configured memory target. The best single campaign reached **3 of 9**. The latest completed campaign, R10, reached **0 of 9**, with **4 of 9** valid correct first-cause diagnoses and **0 of 9** ready for patching; raw first-category matches were **5 of 9**. <!-- numbers: summary -->
+Historically, **5 of 9** distinct scenarios have a run that met its configured memory target. The best single evaluation reached **3 of 9**. The latest October 30 evaluation reached **1 of 9**, with **2 of 9** valid correct first-cause diagnoses and **1 of 9** ready for patching; raw first-category matches were **5 of 9**. <!-- numbers: summary -->
 
 ### Does the snapshot matter?
 
@@ -103,7 +103,7 @@ All model calls use Token Factory's OpenAI-compatible API (`us-central1`). Headr
 
 The historical table combines separate runs and workload versions. s3 has a paired, identical full loss series; s1 and s4 compare the first five backward-loss values against documented references. s2 uses a tolerance-based comparison, and s2/s8 lack complete input, effective-batch and objective pairing. An OOM baseline only shows the peak reached before failure; s1's candidate peak is reconstructed. Verification covers short training runs, not full training quality. Distributed training and compiled extensions are outside the current repair workflow.
 
-Four scenarios have no recorded target success in this history. In the latest completed campaign, R10, no repair met its target; matching a cause was often insufficient to produce a usable patch. The first-cause counts use the first saved diagnosis round, which can include correction requests within that round; raw category matches and validated diagnoses are separate measures. The two additional s2 precision-policy tests did not pass, and HF Trainer repair failed after a configuration edit passed its static check. They produced no successful memory-versus-speed comparison or new successful gallery cases.
+Four scenarios have no recorded target success in this history. The latest October 30 evaluation met one of nine memory targets, below the target of six; matching a cause was often insufficient to produce a usable patch. The first-cause counts use the first saved diagnosis round, which can include correction requests within that round; raw category matches and validated diagnoses are separate measures. The two additional s2 precision-policy tests did not pass, and HF Trainer repair failed after a configuration edit passed its static check. They produced no successful memory-versus-speed comparison or new successful gallery cases.
 
 The diagnosis comparison is one fixed-order pass without repeats; s5 and nanoGPT have unconfirmed reference causes and remain in its denominator. Two full-evidence Ultra replies were truncated. Long-input probes establish request handling, not diagnosis quality or the maximum context size. The saved-snapshot path now has real valid CLI and public-web diagnoses, but some model explanations still misstate category totals or inferred runtime settings. A large-file public upload timed out before analysis. Server-stored capture analysis is the default webpage flow; external-file upload is optional. Both use real Nebius inference and require the judge token on the public deployment. Preset live examples and the historical Verified runs gallery are available.
 
@@ -113,7 +113,7 @@ Headroom builds on existing memory-analysis and optimization tools. PyTorch's [m
 
 ## Repository
 
-`headroom/` (Lab, evidence, LLM routing, verify, search, API) · `scenarios/` (synthetic cases) · `repos/` (pinned repository fixtures) · `web/` (React app) · `docs/` (architecture, CLI, evaluation, feedback) · `reports/` (campaign records). [Current document evidence](reports/final48h-docs-20261029/r7-update-notes-v1.md) and [earlier verification notes](reports/final48h-docs-20261029/README.md).
+`headroom/` (Lab, evidence, LLM routing, verify, search, API) · `scenarios/` (synthetic cases) · `repos/` (pinned repository fixtures) · `web/` (React app) · `docs/` (architecture, CLI, evaluation, feedback) · `reports/` (campaign records). [Current document evidence](reports/docs-r13-20261030/README.md) and [earlier verification notes](reports/final48h-docs-20261029/README.md).
 
 Development checks: `uv run pytest -q`, `uv run ruff check .`, `gitleaks detect`.
 

@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/home/xiaodouzi/workspace/headroom/reports/docs-r13-20261030/validate-docs.py.txt", line 51, in <module>
+    assert claims["summary.historical_target_scenario_count"] == len(set(prev.value("summary.historical_scenario_ids")) | {r["scenario_id"] for r in rows if r["target_met"]}) == 5
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/scripts/verify_public_numbers.py", line 764, in value
+    return self.base.value(name)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/scripts/verify_public_numbers.py", line 162, in value
+    require(name in self.claims, f"Unknown claim: {name}")
+  File "/home/xiaodouzi/workspace/headroom/scripts/verify_public_numbers.py", line 48, in require
+    raise VerificationError(message)
+existing_numbers.VerificationError: Unknown claim: summary.historical_scenario_ids

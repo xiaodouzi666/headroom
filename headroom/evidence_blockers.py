@@ -10,7 +10,7 @@ from headroom.solver_context import invocation_observation
 
 MAX_CATALOG_BYTES = 8 * 1024
 MAX_SOURCE_FILES = 64
-MAX_FIELD_ENTRIES = 17
+MAX_FIELD_ENTRIES = 20
 MAX_SOURCE_LINES = 8192
 MAX_LINE_NUMBER = 1_000_000
 MAX_MARKDOWN_BYTES = 1024 * 1024
@@ -204,6 +204,30 @@ def build_evidence_availability_catalog(evidence, evidence_markdown):
                         "runtime_values_verified": False,
                     }
                 )
+    optimizer = (
+        context.get("runtime_optimizer_observations") if isinstance(context, Mapping) else None
+    )
+    optimizer_summary = (
+        isinstance(optimizer, Mapping)
+        and optimizer.get("schema") == "headroom.runtime_optimizer_observations.v1"
+    )
+    for suffix in ("", ".parameters", ".updates"):
+        visible = optimizer_summary and optimizer.get("status") in {"observed", "partial"}
+        if suffix:
+            visible = visible and isinstance(optimizer.get(suffix[1:]), Mapping)
+        entries.append(
+            {
+                "evidence_ref": "execution_context.runtime_optimizer_observations" + suffix,
+                "kind": "field",
+                "availability": "visible"
+                if visible
+                else "unsupported"
+                if optimizer_summary and optimizer.get("status") == "unsupported"
+                else "unknown",
+                "text_availability_only": True,
+                "runtime_values_verified": False,
+            }
+        )
     sources = evidence.get("sources") if isinstance(evidence, Mapping) else None
     if isinstance(sources, list):
         result["omitted_entries"] += max(0, len(sources) - MAX_SOURCE_FILES)

@@ -1,0 +1,230 @@
+"""Offline temporary fixtures only; never read or project the real R13 campaign."""
+
+import copy
+import importlib.machinery
+import importlib.util
+import json
+import socket
+import subprocess
+import sys
+import tempfile
+from decimal import Decimal
+from pathlib import Path
+
+sys.dont_write_bytecode = True
+BASE = Path(__file__).resolve().parent
+
+
+def denied(*args, **kwargs):
+    raise AssertionError("Network/subprocess forbidden in report verification")
+
+
+socket.getaddrinfo = denied
+socket.socket.connect = denied
+socket.socket.connect_ex = denied
+subprocess.Popen = denied
+loader = importlib.machinery.SourceFileLoader(
+    "r13_report_offline", str(BASE / "project-r13.py.txt")
+)
+spec = importlib.util.spec_from_loader(loader.name, loader)
+m = importlib.util.module_from_spec(spec)
+loader.exec_module(m)
+checks = []
+
+
+def check(name, action):
+    action()
+    checks.append(name)
+
+
+def refused(action):
+    try:
+        action()
+    except ValueError:
+        return
+    raise AssertionError("Malformed source was admitted")
+
+
+def pool():
+    return {
+        "scope_cap_usd": "4.890504400",
+        "scope_charged_usd": "0.01644864",
+        "scope_actual_usd": None,
+        "scope_encumbered_usd": "0",
+        "scope_remaining_usd": "4.874055760",
+        "all_costs_known": False,
+        "all_costs_resolved": True,
+        "run_states": [{"run_id": "c" * 32, "status": "closed"}],
+        "attempts": [
+            {
+                "attempt_id": "a" * 32,
+                "run_id": "c" * 32,
+                "charged_usd": "0.01644864",
+                "actual_usd": None,
+                "settled": True,
+                "resolved": True,
+                "charge_status": "reviewed_retained",
+            }
+        ],
+        "open_runs": [],
+        "halted_runs": [],
+        "unresolved_attempts": [],
+    }
+
+
+def campaign():
+    return {
+        "schema": "headroom.development-repair-campaign.v2",
+        "scope": "DEVELOPMENT_REPAIR_FOLLOWUP",
+        "provenance": "live",
+        "revision": "e" * 40,
+        "proposal_sha256": "1" * 64,
+        "preparation_sha256": "2" * 64,
+        "funding_receipt_sha256": "3" * 64,
+        "historical_scores_modified": False,
+        "planned_cells": 9,
+        "fixed_denominator": 9,
+        "minimum_targets": 6,
+        "status": "partial",
+        "rows": [
+            {
+                "scenario_id": name,
+                "cell_id": "fixed9-" + name,
+                "status": "not_run",
+                "run_id": None,
+                "target_met": None,
+                "cost_usd": None,
+                "charged_usd": None,
+                "condition": "full_ultra",
+                "group": "synthetic",
+                "cost_resolved": False,
+                "policy": {},
+            }
+            for name in m.SCENARIOS
+        ],
+        "starting_pool_accounting": pool(),
+        "accounting": pool(),
+    }
+
+
+check("valid_v2_fixed_nine", lambda: m.fixed_rows(campaign()))
+for key, bad in [
+    ("schema", "headroom.development-repair-campaign.v1"),
+    ("scope", "FINAL48_F3"),
+    ("revision", "r13"),
+    ("minimum_targets", 5),
+    ("fixed_denominator", 8),
+    ("starting_pool_accounting", None),
+    ("historical_scores_modified", True),
+]:
+    doc = campaign()
+    doc[key] = bad
+    check("reject_" + key, lambda doc=doc: refused(lambda: m.fixed_rows(doc)))
+
+initial = m.pool_projection(campaign(), [])
+assert initial["starting_pool_accounting"]["scope_charged_usd"] == "0.01644864"
+assert initial["latest_pool_accounting"]["scope_actual_usd"] is None
+assert initial["campaign_charge_delta_usd"] == "0E-8"
+checks.append("prior_R12_full_retention_is_not_own_R13_spend")
+
+doc = campaign()
+latest = doc["accounting"]
+latest["scope_charged_usd"] = "0.11644864"
+latest["scope_remaining_usd"] = "4.774055760"
+latest["attempts"].append(
+    {"attempt_id": "b" * 32, "run_id": "d" * 32, "charged_usd": "0.10", "actual_usd": "0.10"}
+)
+rows = [{"run_id": "d" * 32, "cost": {"retained_reservation_or_charge_usd": "0.10"}}]
+projection = m.pool_projection(doc, rows)
+assert Decimal(projection["campaign_charge_delta_usd"]) == Decimal("0.10")
+assert projection["latest_pool_accounting"]["scope_actual_usd"] is None
+assert projection["campaign_charge_reconciled_to_saved_rows"] is True
+checks.append("own_cost_delta_separate_from_unknown_whole_pool_actual")
+for kind in (
+    "lost_prior",
+    "released_prior",
+    "invented_prior_actual",
+    "wrong_own_cost",
+    "old_run_relabel",
+):
+    bad = copy.deepcopy(doc)
+    saved = copy.deepcopy(rows)
+    if kind == "lost_prior":
+        bad["accounting"]["attempts"].pop(0)
+    elif kind == "released_prior":
+        bad["accounting"]["attempts"][0]["charged_usd"] = "0"
+    elif kind == "invented_prior_actual":
+        bad["accounting"]["attempts"][0]["actual_usd"] = "0"
+    elif kind == "wrong_own_cost":
+        saved[0]["cost"]["retained_reservation_or_charge_usd"] = "0"
+    else:
+        saved[0]["run_id"] = "c" * 32
+    check(
+        "reject_" + kind,
+        lambda bad=bad, saved=saved: refused(lambda: m.pool_projection(bad, saved)),
+    )
+
+unavailable = campaign()
+unavailable["accounting"] = {key: None for key in pool()}
+unavailable["accounting"].update(
+    status="unavailable", read_error_type="OSError", scope_cap_usd="4.890504400"
+)
+projection = m.pool_projection(unavailable, [])
+assert projection["latest_is_unavailable"] is True
+assert projection["latest_pool_accounting"]["scope_actual_usd"] is None
+assert projection["campaign_charge_delta_usd"] is None
+checks.append("unavailable_final_read_is_not_stale_zero")
+
+billing = m.cost_row(campaign()["rows"][0], None, False)
+assert all(
+    billing[key] is None
+    for key in (
+        "actual_usd",
+        "charged_usd",
+        "known_actual_subtotal_usd",
+        "retained_reservation_or_charge_usd",
+    )
+)
+checks.append("not_run_has_no_new_cost_or_target")
+
+with tempfile.TemporaryDirectory(prefix="offline-fixture-", dir=BASE) as temp:
+    root = Path(temp)
+    source = root / "execution-r13-20261030" / "campaign.json"
+    source.parent.mkdir()
+    source.write_text(json.dumps(campaign()))
+    output = root / "provisional"
+    summary = m.stage_campaign(source, output, "r13-offline-provisional")
+    assert summary["provisional"] is True
+    assert summary["metrics"]["memory_threshold_met"] is None
+    assert summary["metrics"]["fixed_denominator"] == 9
+    assert summary["metrics"]["minimum_memory_targets"] == 6
+    assert summary["metrics"]["attempted_rows"] == 0
+    assert len(summary["rows"]) == 9
+    assert summary["whole_pool_accounting"]["latest_pool_accounting"]["scope_actual_usd"] is None
+    assert all(row["run_id"] is row["target_met"] is None for row in summary["rows"])
+    check(
+        "output_cannot_overwrite_existing_staging",
+        lambda: refused(lambda: m.stage_campaign(source, output, "r13-offline-provisional")),
+    )
+    checks.append("provisional_API_and_product_projection_keeps_nine_null_rows")
+    refused(
+        lambda: m.stage_campaign(
+            source.with_name("old-campaign.json"), root / "bad-path", "r13-bad-path"
+        )
+    )
+    checks.append("different_campaign_path_cannot_be_relabelled_R13")
+
+print(
+    json.dumps(
+        {
+            "schema": "headroom.r13-projector-offline-verification.v1",
+            "checks_passed": checks,
+            "checks_count": len(checks),
+            "real_campaign_read_or_projected": False,
+            "provider_calls": 0,
+            "gpu_jobs": 0,
+            "publications": 0,
+        },
+        indent=2,
+    )
+)

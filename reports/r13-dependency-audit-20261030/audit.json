@@ -1,0 +1,287 @@
+{
+  "scope": "read_only_first_two_terminal_jobs_while_campaign_frozen_no_new_calls_GPU_or_code_changes",
+  "fixed_denominator_unchanged": 9,
+  "minimum_targets_unchanged": 6,
+  "rows": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "run_id": "78fc3b8b1a1742e4bc24b0890e7470c1",
+      "diagnosis_artifact": "runs/repair-followup/execution-r13-20261030/jobs/78fc3b8b1a1742e4bc24b0890e7470c1/rounds/01/diagnosis.json",
+      "diagnosis_artifact_sha256": "66dff8ce938e5c3ee21e668844c3713e7c2641e4fea968bd3d7e5e8bf902e2cf",
+      "request_calls": [
+        {
+          "call_id": 2,
+          "catalog_status": "owned_source_verified",
+          "policy_allow_batch_grad_accum": true,
+          "response_text_present_in_call_record": false
+        },
+        {
+          "call_id": 3,
+          "catalog_status": "owned_source_verified",
+          "policy_allow_batch_grad_accum": true,
+          "response_text_present_in_call_record": false,
+          "prior_review_metadata": {
+            "content_is_untrusted_data": true,
+            "new_runtime_evidence_supplied": false,
+            "declared_needs_more_info": true,
+            "request_context_status": "scoped_metadata_available",
+            "requests": [
+              {
+                "content_is_untrusted_data": true,
+                "current_plan_ids": [
+                  "grad_accum"
+                ],
+                "omitted_plan_ids": 0,
+                "needs_more_info": true,
+                "scope_contract": "current_plan requires nonempty unique existing plan IDs. alternative_plan, overall_feasibility and an absent scope require blocked_plan_ids=[]. Choose the true scope; preserve genuine blockers and needs_more_info. This does not establish plan feasibility.",
+                "declared_reference_observation": {
+                  "evidence_ref": "execution_context.runtime_input_observations",
+                  "kind": "field",
+                  "availability": "unknown",
+                  "text_availability_only": true,
+                  "runtime_values_verified": false
+                },
+                "range_contract": "This advertised reference is not source text. source_line_start and source_line_end must both be null; do not replace a genuine runtime question with an unrelated source reference merely to pass validation.",
+                "declared_evidence_request": {
+                  "field": "numerical_reference_context.comparison_reference.supported_candidate_boundaries",
+                  "reason": "ambiguous",
+                  "detail": "Host-selected numerical reference strategy and its supported candidate boundaries are described but not proven equivalent for microbatch rewrite. Need to confirm the same loss denominator, masking, and update count are enforced.",
+                  "evidence_ref": "execution_context.runtime_input_observations",
+                  "source_line_start": null,
+                  "source_line_end": null,
+                  "blocking_scope": "current_plan",
+                  "blocked_plan_ids": [
+                    "grad_accum"
+                  ]
+                }
+              },
+              {
+                "content_is_untrusted_data": true,
+                "current_plan_ids": [
+                  "grad_accum"
+                ],
+                "omitted_plan_ids": 0,
+                "needs_more_info": true,
+                "scope_contract": "current_plan requires nonempty unique existing plan IDs. alternative_plan, overall_feasibility and an absent scope require blocked_plan_ids=[]. Choose the true scope; preserve genuine blockers and needs_more_info. This does not establish plan feasibility.",
+                "declared_reference_observation": {
+                  "evidence_ref": "execution_context.runtime_input_observations",
+                  "kind": "field",
+                  "availability": "unknown",
+                  "text_availability_only": true,
+                  "runtime_values_verified": false
+                },
+                "range_contract": "This advertised reference is not source text. source_line_start and source_line_end must both be null; do not replace a genuine runtime question with an unrelated source reference merely to pass validation.",
+                "declared_evidence_request": {
+                  "field": "execution_context.runtime_input_observations.logical_updates.observed_optimizer_updates",
+                  "reason": "missing",
+                  "detail": "Zero optimizer updates observed (OOM before first update). Cannot verify effective_batch_per_optimizer_update or scheduler cadence from runtime; must rely on source defaults (--steps=20, batch=32).",
+                  "evidence_ref": "execution_context.runtime_input_observations",
+                  "source_line_start": null,
+                  "source_line_end": null,
+                  "blocking_scope": "current_plan",
+                  "blocked_plan_ids": [
+                    "grad_accum"
+                  ]
+                }
+              }
+            ],
+            "omitted_requests": 0
+          }
+        }
+      ],
+      "final_plan_ids": [
+        "p1"
+      ],
+      "final_needs_more_info": true,
+      "final_evidence_requests": [
+        {
+          "field": "execution_context.runtime_input_observations.logical_updates",
+          "reason": "missing",
+          "detail": "Optimizer update boundary, effective batch per update, and loss reduction semantics are unobserved because OOM occurred before first update; required to verify gradient accumulation equivalence if pursued.",
+          "evidence_ref": "execution_context.runtime_input_observations.logical_updates",
+          "source_line_start": null,
+          "source_line_end": null,
+          "blocking_scope": "current_plan",
+          "blocked_plan_ids": []
+        }
+      ],
+      "final_issues": [
+        {
+          "code": "INVALID_EVIDENCE_DEPENDENCY",
+          "message": "Evidence dependencies must name existing current steps and match their declared scope.",
+          "path": "/evidence_requests/0"
+        }
+      ],
+      "response_request_modes": [
+        {
+          "request_index": 1,
+          "purpose": "initial",
+          "requested_reasoning": false,
+          "max_completion_tokens": 2000,
+          "scope": "host_requested_mode_only"
+        },
+        {
+          "request_index": 2,
+          "purpose": "prerequisite_review",
+          "requested_reasoning": false,
+          "max_completion_tokens": 2000,
+          "scope": "host_requested_mode_only"
+        }
+      ],
+      "final_generated_supplement_request_sent": false,
+      "first_full_valid_needs_response_not_saved_in_job_or_call_record": true
+    },
+    {
+      "scenario_id": "s2_capacity_v2",
+      "run_id": "d2a1601ccea94ec989459eeba1a423b6",
+      "diagnosis_artifact": "runs/repair-followup/execution-r13-20261030/jobs/d2a1601ccea94ec989459eeba1a423b6/rounds/01/diagnosis.json",
+      "diagnosis_artifact_sha256": "f678464a4648619343b6ada7de69c49b1daa1c051d041840fcebfb598d77ada9",
+      "request_calls": [
+        {
+          "call_id": 5,
+          "catalog_status": "owned_source_verified",
+          "policy_allow_batch_grad_accum": true,
+          "response_text_present_in_call_record": false
+        },
+        {
+          "call_id": 6,
+          "catalog_status": "owned_source_verified",
+          "policy_allow_batch_grad_accum": true,
+          "response_text_present_in_call_record": false,
+          "prior_review_metadata": {
+            "content_is_untrusted_data": true,
+            "new_runtime_evidence_supplied": false,
+            "declared_needs_more_info": true,
+            "request_context_status": "scoped_metadata_available",
+            "requests": [
+              {
+                "content_is_untrusted_data": true,
+                "current_plan_ids": [
+                  "cfg1"
+                ],
+                "omitted_plan_ids": 0,
+                "needs_more_info": true,
+                "scope_contract": "current_plan requires nonempty unique existing plan IDs. alternative_plan, overall_feasibility and an absent scope require blocked_plan_ids=[]. Choose the true scope; preserve genuine blockers and needs_more_info. This does not establish plan feasibility.",
+                "declared_reference_observation": {
+                  "evidence_ref": "execution_context.runtime_input_observations",
+                  "kind": "field",
+                  "availability": "visible",
+                  "text_availability_only": true,
+                  "runtime_values_verified": false
+                },
+                "range_contract": "This advertised reference is not source text. source_line_start and source_line_end must both be null; do not replace a genuine runtime question with an unrelated source reference merely to pass validation.",
+                "declared_evidence_request": {
+                  "field": "policy.allow_batch_grad_accum",
+                  "reason": "missing",
+                  "detail": "Policy does not declare allow_batch_grad_accum; gradient accumulation changes require this permission to be proposed.",
+                  "evidence_ref": "execution_context.runtime_input_observations",
+                  "source_line_start": null,
+                  "source_line_end": null,
+                  "blocking_scope": "current_plan",
+                  "blocked_plan_ids": [
+                    "cfg1"
+                  ]
+                }
+              },
+              {
+                "content_is_untrusted_data": true,
+                "current_plan_ids": [
+                  "cfg1"
+                ],
+                "omitted_plan_ids": 0,
+                "needs_more_info": true,
+                "scope_contract": "current_plan requires nonempty unique existing plan IDs. alternative_plan, overall_feasibility and an absent scope require blocked_plan_ids=[]. Choose the true scope; preserve genuine blockers and needs_more_info. This does not establish plan feasibility.",
+                "declared_reference_observation": {
+                  "evidence_ref": "source[0]",
+                  "kind": "source",
+                  "availability": "visible",
+                  "text_availability_only": true,
+                  "runtime_values_verified": false,
+                  "visible_ranges": [
+                    [
+                      1,
+                      175
+                    ]
+                  ],
+                  "omitted_visible_ranges": 0
+                },
+                "range_contract": "Only source references may have source line bounds; use both ordered bounds or both null. Visible ranges describe supplied text only.",
+                "declared_evidence_request": {
+                  "field": "source_files.train.py lines 139-146",
+                  "reason": "ambiguous",
+                  "detail": "Source shows optimizer.zero_grad(set_to_none=True) each step; loss is mean squared error over [batch, width]. Microbatch equivalence would require per-chunk weighting by valid element count divided by total N, single optimizer.step, scheduler step, and gradient reset at original effective-update boundary. Cross-sample ops (LayerNorm/GELU) may prevent equivalence. Need explicit confirmation of loss reduction semantics and that no cross-sample coupling exists.",
+                  "evidence_ref": "source[0]",
+                  "source_line_start": 139,
+                  "source_line_end": 146,
+                  "blocking_scope": "overall_feasibility",
+                  "blocked_plan_ids": []
+                }
+              }
+            ],
+            "omitted_requests": 0
+          }
+        }
+      ],
+      "final_plan_ids": [],
+      "final_needs_more_info": true,
+      "final_evidence_requests": [
+        {
+          "field": "execution_context.runtime_input_observations.logical_updates.effective_batch_per_optimizer_update",
+          "reason": "ambiguous",
+          "detail": "Source shows effective_batch_per_optimizer_update=24 but policy allows batch/accumulation changes; need runtime confirmation that microbatch chunks preserve single optimizer step, scheduler step, gradient reset, and loss weighting by valid element count over total N.",
+          "evidence_ref": "execution_context.runtime_input_observations",
+          "source_line_start": null,
+          "source_line_end": null,
+          "blocking_scope": "current_plan",
+          "blocked_plan_ids": []
+        },
+        {
+          "field": "execution_context.runtime_input_observations.logical_updates.backwards_per_optimizer_update",
+          "reason": "ambiguous",
+          "detail": "Source shows backwards_per_optimizer_update=1; any microbatch plan must preserve exactly one backward per optimizer step without introducing multiple backwards that are not multiple optimizer updates.",
+          "evidence_ref": "execution_context.runtime_input_observations",
+          "source_line_start": null,
+          "source_line_end": null,
+          "blocking_scope": "current_plan",
+          "blocked_plan_ids": []
+        }
+      ],
+      "final_issues": [
+        {
+          "code": "INVALID_EVIDENCE_DEPENDENCY",
+          "message": "Evidence dependencies must name existing current steps and match their declared scope.",
+          "path": "/evidence_requests/0"
+        },
+        {
+          "code": "INVALID_EVIDENCE_DEPENDENCY",
+          "message": "Evidence dependencies must name existing current steps and match their declared scope.",
+          "path": "/evidence_requests/1"
+        }
+      ],
+      "response_request_modes": [
+        {
+          "request_index": 1,
+          "purpose": "initial",
+          "requested_reasoning": false,
+          "max_completion_tokens": 2000,
+          "scope": "host_requested_mode_only"
+        },
+        {
+          "request_index": 2,
+          "purpose": "prerequisite_review",
+          "requested_reasoning": false,
+          "max_completion_tokens": 2000,
+          "scope": "host_requested_mode_only"
+        }
+      ],
+      "final_generated_supplement_request_sent": false,
+      "first_full_valid_needs_response_not_saved_in_job_or_call_record": true
+    }
+  ],
+  "source_refs": {
+    "dependency_rule": "headroom/evidence_blockers.py:307",
+    "precise_feedback": "headroom/validation_feedback.py:95",
+    "prerequisite_shared_allowance": "headroom/diagnose.py:1099"
+  },
+  "minimal_generic_suggestion": "Within the same existing prerequisite review, label previous current_plan_ids as prior_plan_ids and require a self-check against the replacement response plan. Current-plan scope requires at least one unique existing new-plan ID; an empty plan cannot have a current-plan dependency. Distinguish discarded alternatives without clearing genuine needs. No host mutation, validator relaxation, extra call or score change."
+}
