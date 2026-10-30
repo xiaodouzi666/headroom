@@ -38,10 +38,16 @@ from headroom.runtime import LiveProfile, read_live_profile
 
 SCHEMA = "headroom.judge-access.run.v1"
 CREDIT_SCHEMA = "headroom.judge-access.run.v2"
-SCHEMAS = frozenset({SCHEMA, CREDIT_SCHEMA})
+PERIOD_SCHEMA = "headroom.judge-access.run.v3"
+SCHEMAS = frozenset({SCHEMA, CREDIT_SCHEMA, PERIOD_SCHEMA})
 PLAN_SCHEMA = "headroom.judge-access.plan.v1"
 RECEIPT_SCHEMA = "headroom.judge-access.receipt.v1"
+# Keep the original value: immutable receipts and credit plans hash this field.
 EXPIRES_AT = "2026-12-15T20:00:00Z"
+# Official rules and dates, reviewed 2026-10-30, moved judging to December 23.
+# This fixed access-only policy does not authorize money or rewrite old records.
+JUDGING_PERIOD_POLICY = "official-judging-end-2026-12-23-v1"
+EFFECTIVE_EXPIRES_AT = "2026-12-23T20:00:00Z"
 ADMISSION_BASIS = "existing_reviewed_local_estimate_with_margin"
 AMOUNTS = {
     "gross_cap_usd": "8.00",
@@ -63,8 +69,8 @@ def _paths(root):
 
 
 def _active(expires_at):
-    require(expires_at == EXPIRES_AT, "JUDGE_EXPIRY_CHANGED")
-    require(_now() < datetime.fromisoformat(EXPIRES_AT), "JUDGE_EXPIRED")
+    require(expires_at in {EXPIRES_AT, EFFECTIVE_EXPIRES_AT}, "JUDGE_EXPIRY_CHANGED")
+    require(_now() < datetime.fromisoformat(expires_at), "JUDGE_EXPIRED")
 
 
 def _authorization(value):
@@ -213,7 +219,7 @@ def verify_judge_receipt(receipt_path, *, project_root, active=True):
     )
     _authorization(receipt.get("authorization"))
     if active:
-        _active(receipt["expires_at"])
+        _active(EFFECTIVE_EXPIRES_AT)
     require(
         receipt.get("profile_path") == str(directory / "runtime-profile.json"),
         "JUDGE_PROFILE_PATH_CHANGED",
@@ -319,6 +325,12 @@ class JudgeAllocation:
         return self.funding_limits["daily_limit_usd"]
 
     @property
+    def effective_expires_at(self):
+        """Reviewed official access period; the base receipt remains historical."""
+        self._receipt(active=False)
+        return EFFECTIVE_EXPIRES_AT
+
+    @property
     def available(self):
         try:
             receipt = self._receipt()
@@ -352,7 +364,7 @@ class JudgeAllocation:
             require(limit > 0, "JUDGE_EXHAUSTED")
             request = request.model_copy(update={"budget_usd": str(limit)})
             binding = {
-                "schema": CREDIT_SCHEMA if limits["credit_extension_sha256"] else SCHEMA,
+                "schema": PERIOD_SCHEMA,
                 "project_root": str(self.root),
                 "receipt_path": str(self.receipt_path),
                 "receipt_sha256": receipt["receipt_sha256"],
@@ -362,7 +374,8 @@ class JudgeAllocation:
                 "run_limit_usd": str(limit),
                 "daily_limit_usd": limits["daily_limit_usd"],
                 "total_limit_usd": limits["total_limit_usd"],
-                "expires_at": EXPIRES_AT,
+                "expires_at": EFFECTIVE_EXPIRES_AT,
+                "judging_period_policy": JUDGING_PERIOD_POLICY,
             }
             if limits["credit_extension_sha256"]:
                 binding["credit_extension_sha256"] = limits["credit_extension_sha256"]
@@ -429,7 +442,17 @@ def _validate_binding(binding, receipt, run_id):
         == digest({k: v for k, v in binding.items() if k != "binding_sha256"}),
         "JUDGE_BINDING_CHANGED",
     )
-    if binding["schema"] == CREDIT_SCHEMA:
+    revised_period = binding["schema"] == PERIOD_SCHEMA
+    require(
+        (revised_period and binding.get("judging_period_policy") == JUDGING_PERIOD_POLICY)
+        or (not revised_period and "judging_period_policy" not in binding),
+        "JUDGE_PERIOD_POLICY_CHANGED",
+    )
+    expires_at = EFFECTIVE_EXPIRES_AT if revised_period else EXPIRES_AT
+    uses_credit = binding["schema"] == CREDIT_SCHEMA or (
+        revised_period and "credit_extension_sha256" in binding
+    )
+    if uses_credit:
         limits = _funding_limits(receipt)
         require(
             limits["credit_extension_sha256"] is not None
@@ -444,7 +467,7 @@ def _validate_binding(binding, receipt, run_id):
         }
     require(
         binding["receipt_sha256"] == receipt["receipt_sha256"]
-        and binding["expires_at"] == EXPIRES_AT
+        and binding["expires_at"] == expires_at
         and binding["project_root"] == receipt["project_root"]
         and 0 < money(binding["run_limit_usd"]) <= money(AMOUNTS["run_limit_usd"])
         and money(binding["daily_limit_usd"]) == money(limits["daily_limit_usd"])
@@ -466,6 +489,7 @@ def _active_claim(connection, binding):
 def verify_judge_binding(binding, request, run_id, *, pending_attempt_id=None):
     receipt = verify_judge_receipt(binding["receipt_path"], project_root=binding["project_root"])
     _validate_binding(binding, receipt, run_id)
+    _active(binding["expires_at"])
     require(
         request_sha256(request) == binding["request_sha256"]
         and _source_record(request) == binding["source"]

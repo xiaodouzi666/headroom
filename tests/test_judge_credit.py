@@ -123,7 +123,7 @@ def test_one_extension_preserves_old_history_and_uses_cumulative_cap(pool):
     assert owner.receipt["amounts"]["approved_net_usd"] == "6.61"
     assert Decimal(owner.effective_daily_limit_usd) == Decimal("28.93")
     owner, _, binding, ledger = extended_begin(pool)
-    assert binding["schema"] == judge.CREDIT_SCHEMA
+    assert binding["schema"] == judge.PERIOD_SCHEMA
     assert binding["credit_extension_sha256"] == plan["extension_sha256"]
     assert ledger.total_limit == ledger.daily_limit == Decimal("28.93")
     charge(binding, ledger)
@@ -320,7 +320,7 @@ def test_dispatch_rechecks_extension_and_expiry_but_settlement_after_expiry_is_a
     activate(pool)
     owner, _, binding, ledger = extended_begin(pool)
     ledger.reserve(binding["run_id"], "pending", ".01", dispatched=False)
-    monkeypatch.setattr(judge, "_now", lambda: datetime(2026, 12, 15, 20, tzinfo=UTC))
+    monkeypatch.setattr(judge, "_now", lambda: datetime(2026, 12, 23, 20, tzinfo=UTC))
     with pytest.raises(AllocationRefused, match="EXPIRED"):
         ledger.mark_dispatched(binding["run_id"], "pending")
     ledger.cancel_undispatched(binding["run_id"], "pending")

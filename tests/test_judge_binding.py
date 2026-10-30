@@ -231,7 +231,7 @@ def test_every_reserve_revalidates_binding(pool, monkeypatch, change):
         replacement.chmod(0o600)
         replacement.replace(path)
     else:
-        monkeypatch.setattr(judge, "_now", lambda: datetime(2026, 12, 15, 20, tzinfo=UTC))
+        monkeypatch.setattr(judge, "_now", lambda: datetime(2026, 12, 23, 20, tzinfo=UTC))
     with pytest.raises((ValueError, OSError, sqlite3.Error)):
         ledger.reserve(binding["run_id"], "second", ".01")
 
@@ -262,7 +262,7 @@ def test_rehashed_binding_and_claim_cannot_exceed_receipt(pool, field, value):
 def test_expiry_refuses_new_dispatch_but_allows_honest_final_settlement(pool, monkeypatch):
     owner, _, binding, ledger = begin(pool)
     charge(binding, ledger)
-    monkeypatch.setattr(judge, "_now", lambda: datetime(2026, 12, 15, 20, tzinfo=UTC))
+    monkeypatch.setattr(judge, "_now", lambda: datetime(2026, 12, 23, 20, tzinfo=UTC))
     assert not owner.available
     with pytest.raises(AllocationRefused, match="EXPIRED"):
         ledger.reserve(binding["run_id"], "late", ".01")
@@ -449,7 +449,7 @@ def test_dispatch_rechecks_after_reservation(pool, monkeypatch, change):
     _, _, binding, ledger = begin(pool)
     ledger.reserve(binding["run_id"], "unsent", ".01", dispatched=False)
     if change == "expiry":
-        monkeypatch.setattr(judge, "_now", lambda: datetime(2026, 12, 15, 20, tzinfo=UTC))
+        monkeypatch.setattr(judge, "_now", lambda: datetime(2026, 12, 23, 20, tzinfo=UTC))
     elif change == "source":
         pool["source"].write_text("changed = True\n")
     elif change == "profile":
