@@ -1,3 +1,11 @@
+# F8 completed — 2026-10-30 after 16:00 Beijing
+
+The scheduled closing check finished. Public website, Funnel, user services, displayed credit reserve of at least$8, Submitted5/5 and static checks were confirmed. One new public s3 smoke used real GPU/Nebius inference and **failed diagnosis with ResponseValidationError**. No patch/candidate was executed. Resolved conservative charge **$0.08019350 net** within the original$0.30 cap; no retry/recharge. Queue idle and cleanup verified. Remaining FINAL48 shared pool **$1.787809228 net**. Total exact API cost remains unknown; the known subtotal is$0.07639712.
+
+Ruff/format/gitleaks passed; the unique earlier full suite was not rerun. README R10 numbers were verified. Devpost final save preserved Submitted5/5 and v5 instructions. See [F8 report](f8-20261030/README.md). The 6/9 fixed-nine target remains unmet; this smoke does not replace earlier results. The one-time closing automation was deleted after this check.
+
+## Prior delivery report retained
+
 # Latest post-submission status — 2026-10-30
 
 The project is **Submitted, 5/5** on Devpost: https://devpost.com/software/headroom-8vfuwj . Video unchanged: https://www.youtube.com/watch?v=aaXF60LryWI . Public demo: https://headroom.tail45186b.ts.net/ .

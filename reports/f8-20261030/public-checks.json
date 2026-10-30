@@ -1,0 +1,209 @@
+{
+  "observed_utc": "2026-10-30T08:02:14.711168+00:00",
+  "source_commit": "bfb66f3c0216bd4591c5ce2d45f077f587c63c4c",
+  "public_checks": [
+    {
+      "url": "https://headroom.tail45186b.ts.net/",
+      "status": 200,
+      "bytes": 695,
+      "sha256": "dd8dcf118b29dcd01380f35e6d0cff25546db1e298d49ace01069d0133175c52"
+    },
+    {
+      "url": "https://headroom.tail45186b.ts.net/verified",
+      "status": 200,
+      "bytes": 695,
+      "sha256": "dd8dcf118b29dcd01380f35e6d0cff25546db1e298d49ace01069d0133175c52"
+    },
+    {
+      "url": "https://headroom.tail45186b.ts.net/results",
+      "status": 200,
+      "bytes": 695,
+      "sha256": "dd8dcf118b29dcd01380f35e6d0cff25546db1e298d49ace01069d0133175c52"
+    },
+    {
+      "url": "https://headroom.tail45186b.ts.net/about",
+      "status": 200,
+      "bytes": 695,
+      "sha256": "dd8dcf118b29dcd01380f35e6d0cff25546db1e298d49ace01069d0133175c52"
+    },
+    {
+      "url": "https://headroom.tail45186b.ts.net/api/health",
+      "status": 200,
+      "bytes": 615,
+      "sha256": "00117bedc2a1636f1f561af8fd6520ba3a586862434feac1dbd8947f9d1d5fcb",
+      "body": {
+        "status": "ok",
+        "db": "ok",
+        "queue": {
+          "running": false,
+          "pending": 0,
+          "preparing": 0,
+          "capacity": 3,
+          "halted": false,
+          "closing": false
+        },
+        "run_submissions": {
+          "enabled": true,
+          "reason": null
+        },
+        "limits": {
+          "runs_per_ip_per_hour": 1,
+          "hourly_limit_applies": true,
+          "max_waiting_runs": 2,
+          "deadline_seconds": 480
+        },
+        "gpu": {
+          "status": "available",
+          "busy": false,
+          "available": true,
+          "stale": false
+        },
+        "token_factory": {
+          "status": "reachable",
+          "configured": true,
+          "reachable": true,
+          "authentication_checked": false,
+          "stale": false
+        },
+        "local_budget": {
+          "scope": "service_availability",
+          "status": "available"
+        },
+        "deployment": "public_host_configured",
+        "authentication": "local_session_only"
+      }
+    },
+    {
+      "url": "https://headroom.tail45186b.ts.net/api/config",
+      "status": 200,
+      "bytes": 389,
+      "sha256": "bfe4b053406115c6951e2325f54d71e5fa4d7cca838446b431cc60e74d01f9b8",
+      "body": {
+        "run_submissions": {
+          "enabled": true,
+          "reason": null
+        },
+        "public_demo": true,
+        "verified_runs_enabled": true,
+        "snapshot_submissions": {
+          "enabled": true,
+          "reason": null,
+          "max_bytes": 52428800,
+          "runs_per_ip_per_hour": null,
+          "retention_hours": 24,
+          "requires_judge_token": true
+        },
+        "judge_scripts_available": true,
+        "limits": {
+          "runs_per_ip_per_hour": 1,
+          "hourly_limit_applies": true,
+          "max_waiting_runs": 2,
+          "deadline_seconds": 480
+        }
+      }
+    },
+    {
+      "url": "https://headroom.tail45186b.ts.net/api/snapshot-examples",
+      "status": 200,
+      "bytes": 458,
+      "sha256": "2699d70a83ef5e1e41aada7ee55ac4d68e24e0465f4df7d68e3d749e337c9721",
+      "examples": [
+        {
+          "id": "s2-capacity",
+          "label": "s2 — training memory capture",
+          "description": "Analyze a stored s2 capture with a new Nebius model request. No GPU workload is run.",
+          "snapshot_bytes": 10651527,
+          "available": true,
+          "reason": null
+        },
+        {
+          "id": "nanogpt",
+          "label": "nanoGPT — training memory capture",
+          "description": "Analyze a stored nanoGPT capture with a new Nebius model request. No GPU workload is run.",
+          "snapshot_bytes": 590852,
+          "available": true,
+          "reason": null
+        }
+      ]
+    },
+    {
+      "url": "https://headroom.tail45186b.ts.net/api/evaluations",
+      "status": 200,
+      "bytes": 35989,
+      "sha256": "aad9a87f1c19d772bf7328651db9b3584a61923e8260cb39c5c11ab5890e4317",
+      "entries": 8,
+      "ids": [
+        "r10-20261030",
+        "r9-20261030",
+        "r8-20261030",
+        "r7-20261029",
+        "r6-20261027",
+        "r5-20261027",
+        "watch-20261029",
+        "live-demo-20261029"
+      ],
+      "latest": "r10-20261030"
+    }
+  ],
+  "services": {
+    "headroom-public.service": {
+      "exit_code": 0,
+      "properties": {
+        "MainPID": "2394473",
+        "ExecMainStatus": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      }
+    },
+    "headroom-tailscaled.service": {
+      "exit_code": 0,
+      "properties": {
+        "MainPID": "1504576",
+        "ExecMainStatus": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      }
+    }
+  },
+  "funnel": {
+    "exit_code": 0,
+    "config": {
+      "TCP": {
+        "443": {
+          "HTTPS": true
+        }
+      },
+      "Web": {
+        "headroom.tail45186b.ts.net:443": {
+          "Handlers": {
+            "/": {
+              "Proxy": "http://127.0.0.1:8766"
+            }
+          }
+        }
+      },
+      "AllowFunnel": {
+        "headroom.tail45186b.ts.net:443": true
+      }
+    }
+  },
+  "submission_links": [
+    {
+      "url": "https://www.youtube.com/watch?v=aaXF60LryWI",
+      "scope": "HTTP reachability only; not playback or submission verification",
+      "status": 200,
+      "bytes_read": 1268166,
+      "final_url": "https://www.youtube.com/watch?v=aaXF60LryWI"
+    },
+    {
+      "url": "https://devpost.com/software/headroom-8vfuwj",
+      "scope": "HTTP reachability only; not playback or submission verification",
+      "error": "HTTPError",
+      "message": "HTTP Error 403: Forbidden"
+    }
+  ],
+  "new_model_calls": 0,
+  "new_gpu_jobs": 0,
+  "service_mutations": 0,
+  "full_regression_runs": 0
+}

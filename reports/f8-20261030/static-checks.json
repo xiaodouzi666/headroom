@@ -1,0 +1,82 @@
+{
+  "at": "2026-10-30T08:03:10.694960+00:00",
+  "scope": "F8 final static/read-only evidence audit; no new provider/GPU/full suite",
+  "source_head": "bfb66f3c0216bd4591c5ce2d45f077f587c63c4c",
+  "readme_numbers_match_r10": true,
+  "historical_and_current_results_separate": true,
+  "r10_metrics": {
+    "memory_targets": 0,
+    "raw_category_matches": 5,
+    "valid_correct_first_causes": 4,
+    "valid_ready_diagnoses": 0,
+    "fixed_denominator": 9,
+    "minimum_memory_targets": 6
+  },
+  "public_links_present": true,
+  "original_full_result": {
+    "passed": 4182,
+    "failed": 185,
+    "errors": 18,
+    "unique_failed_error_nodes": 203
+  },
+  "original_result_artifact_hashes_match": true,
+  "followup_203_unique_nodes_covered": true,
+  "new_full_suite_run": false,
+  "full_suite_green_claim": false,
+  "commands": [
+    {
+      "name": "ruff-check",
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom",
+        "scripts",
+        "tests"
+      ],
+      "exit_code": 0,
+      "log": "reports/f8-20261030/ruff-check.log",
+      "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "tail": "All checks passed!\n"
+    },
+    {
+      "name": "ruff-format",
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "headroom",
+        "scripts",
+        "tests"
+      ],
+      "exit_code": 0,
+      "log": "reports/f8-20261030/ruff-format.log",
+      "log_sha256": "36cf8af8d105b4a260074246b932f4daff21638d0552a8d54fc9d92076312dfd",
+      "tail": "356 files already formatted\n"
+    },
+    {
+      "name": "gitleaks-history",
+      "command": [
+        ".tools/bin/gitleaks",
+        "detect",
+        "--source",
+        ".",
+        "--redact",
+        "--no-banner",
+        "--report-format",
+        "json",
+        "--report-path",
+        ".cache/f8-gitleaks-history.json"
+      ],
+      "exit_code": 0,
+      "log": "reports/f8-20261030/gitleaks-history.log",
+      "log_sha256": "6731567cb04fec447558c809ac022d1d2a7fd8ab0f8a15601ee8a7b20549cf2f",
+      "tail": "\u001b[90m9:02AM\u001b[0m \u001b[32mINF\u001b[0m \u001b[1m102 commits scanned.\u001b[0m\n\u001b[90m9:02AM\u001b[0m \u001b[32mINF\u001b[0m \u001b[1mscanned ~41036524 bytes (41.04 MB) in 1.77s\u001b[0m\n\u001b[90m9:02AM\u001b[0m \u001b[32mINF\u001b[0m \u001b[1mno leaks found\u001b[0m\n"
+    }
+  ],
+  "all_commands_passed": true,
+  "gitleaks_scope": "102 commits, approximately 41.04 MB, no leaks found",
+  "detailed_evidence": "reports/f8-20261030/static-evidence-review.json",
+  "new_model_calls": 0,
+  "new_gpu_jobs": 0,
+  "source_edits": 0
+}

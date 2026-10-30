@@ -88,6 +88,10 @@ This was one fixed-order pass without repeated trials. The two workloads with un
 
 All 27 requests completed. Total model cost was $0.69374342 before tax. [Experiment details and measured data](../reports/ablation-20261028/README.md).
 
+### Closing smoke — 2026-10-30
+
+A separate, single public-browser s3 closing smoke completed its 20-update GPU baseline (2.435717632 GB exact peak), then failed diagnosis with ResponseValidationError after three real model requests. No patch/candidate was executed; cleanup passed. Conservative resolved cost was $0.08019350 before tax, with exact total unknown. It was not retried and does not change R10 or the earlier successful browser demonstration. [F8 evidence](../reports/f8-20261030/README.md).
+
 ### Browser demonstration and Watch
 
 A separate public-browser run repaired the s3 evaluation loop in 49.70 seconds: peak allocated memory fell from 2.4357 GB to 0.6484 GB (73.38%). Both captures completed 20 optimizer updates, all 20 recorded loss values matched exactly, and parameter count, inputs, effective batch, objective and seed matched. This is a separate demonstration and does not change the nine-scenario evaluation. [Run and measurements](../reports/final48h-live-demo-20261029/README.md).
