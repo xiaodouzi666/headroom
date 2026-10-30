@@ -47,4 +47,4 @@ Historical memory-target successes come from separate runs and do not establish 
 Nebius Token Factory · NVIDIA Nemotron 3 Ultra · NVIDIA Nemotron 3 Super · NVIDIA Nemotron 3 Nano · Tavily · PyTorch · CUDA · Docker · FastAPI · React
 
 ## Try it
-Demo: https://headroom.tail45186b.ts.net/ — open Verified runs to inspect actual repairs and download their patches, or Results for the evaluations and diagnosis comparison, without logging in. Repo: https://github.com/xiaodouzi666/headroom . Video: {{VIDEO_URL}}
+Demo: https://headroom.tail45186b.ts.net/ — open Verified runs to inspect actual repairs and download their patches, or Results for the evaluations and diagnosis comparison, without logging in. Repo: https://github.com/xiaodouzi666/headroom . Video: https://www.youtube.com/watch?v=aaXF60LryWI

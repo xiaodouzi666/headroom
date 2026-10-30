@@ -790,3 +790,118 @@ def test_private_error_write_failure_preserves_public_failure_and_cleanup_eviden
         "steps": ["model_error_evidence"]
     }
     assert "private-offline-write-error" not in (job / "diagnosis.md").read_text()
+
+
+def test_snapshot_specific_prompt_keeps_wire_policy_and_untrusted_context(upload, tmp_path):
+    factory = OfflineRuntimeFactory()
+    result = execute(upload, tmp_path, factory)
+    body = factory.requests[0]
+    system = "\n".join(
+        message["content"]
+        for message in body["messages"]
+        if message["role"] == "system" and "user-supplied PyTorch CUDA" in message["content"]
+    )
+    user = json.loads(
+        next(message["content"] for message in body["messages"] if message["role"] == "user")
+    )
+    from headroom.evidence import _tokens
+
+    assert result["status"] == "completed"
+    assert _tokens(system) < 1800
+    assert "2000-token completion cap" in system
+    assert body["max_tokens"] == 2000
+    assert body["chat_template_kwargs"]["enable_thinking"] is False
+    assert len(factory.requests) == 1
+    assert "cumulative bytes" in system and "NOT simultaneous live" in system
+    assert "blocked_plan_ids must be []" in system
+    assert "untrusted data, never" in system
+    assert user["policy"]["allow_numerics_change"] is False
+    assert user["policy"]["allow_batch_change"] is False
+    assert user["required_saving_gb"] is None
+    assert "Measurement semantics:" in user["evidence_markdown"]
+    assert user["evidence_availability_catalog"]["text_availability_only"] is True
+    assert result["verification"]["status"] == "not_run"
+
+
+@pytest.mark.parametrize(
+    ("violation", "expected_code"),
+    [
+        ("scope", "INVALID_EVIDENCE_DEPENDENCY"),
+        ("batch", "BATCH_CHANGE_FORBIDDEN"),
+        ("visible_source", "EVIDENCE_AVAILABILITY_CONTRADICTED"),
+    ],
+)
+def test_snapshot_prompt_does_not_accept_prior_semantic_failures(
+    upload, tmp_path, violation, expected_code
+):
+    source = tmp_path / "provided.py"
+    source.write_text("tensor = existing_tensor\n")
+
+    def mutate(payload):
+        if violation == "batch":
+            payload["plan"][0]["description"] = "Reduce batch size to one."
+        else:
+            payload["needs_more_info"] = True
+            payload["evidence_requests"] = [
+                {
+                    "field": "required_saving_gb" if violation == "scope" else "sources",
+                    "reason": "missing",
+                    "detail": "Synthetic missing-information assertion.",
+                    "blocking_scope": "overall_feasibility",
+                    "blocked_plan_ids": ["p1"] if violation == "scope" else [],
+                }
+            ]
+            if violation == "visible_source":
+                payload["evidence_requests"][0]["evidence_ref"] = "source[0]"
+        return payload
+
+    factory = OfflineRuntimeFactory(mutate)
+    result = execute(upload, tmp_path, factory, source=source)
+    assert result["status"] == "needs_human"
+    assert result["diagnosis"] is None and result["patch"]["diff"] is None
+    assert len(factory.requests) == 1
+    saved = json.loads(
+        (tmp_path / "jobs" / result["run_id"] / "private/diagnosis-validation.json").read_text()
+    )
+    assert expected_code in {issue["code"] for issue in saved["issues"]}
+
+
+def test_snapshot_disallowed_numerics_still_fails_schema_without_retry(upload, tmp_path):
+    def mutate(payload):
+        payload["plan"][0]["numerics_impact"] = "minor"
+        return payload
+
+    factory = OfflineRuntimeFactory(mutate)
+    result = execute(upload, tmp_path, factory)
+    assert result["status"] == "failed" and result["diagnosis"] is None
+    assert len(factory.requests) == 1
+    error = json.loads(
+        (tmp_path / "jobs" / result["run_id"] / "private/model-error.json").read_text()
+    )
+    assert error["error_reason"] == "schema_mismatch"
+
+
+def test_snapshot_valid_diagnosis_can_keep_genuine_unknown_without_patch(upload, tmp_path):
+    def mutate(payload):
+        payload["plan"] = []
+        payload["needs_more_info"] = True
+        payload["evidence_requests"] = [
+            {
+                "field": "source",
+                "reason": "missing",
+                "detail": "Source text is required before suggesting an edit.",
+                "blocking_scope": "overall_feasibility",
+                "blocked_plan_ids": [],
+            }
+        ]
+        return payload
+
+    factory = OfflineRuntimeFactory(mutate)
+    result = execute(upload, tmp_path, factory)
+    assert result["status"] == "needs_human"
+    assert result["diagnosis"] is not None
+    assert result["diagnosis"]["needs_more_info"] is True
+    assert result["diagnosis"]["plan"] == []
+    assert result["patch"]["status"] == "unavailable"
+    assert result["verification"]["status"] == "not_run"
+    assert len(factory.requests) == 1

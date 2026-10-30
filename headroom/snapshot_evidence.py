@@ -380,6 +380,10 @@ def prepare_snapshot_evidence(
             "hardware_verification: not_run\n"
             "Snapshot SHA-256: " + hashes["snapshot"] + "\n\n"
             "This is an offline reconstruction from supplied allocator data, not a Lab baseline or a verified repair.\n\n"
+            "Measurement semantics: Peak composition bytes are live allocations at the reconstructed peak. "
+            "Allocation hot paths cumulative bytes are allocation traffic across the capture, including freed/reused memory; "
+            "they are not simultaneous live bytes, peak size or reclaimable savings. "
+            "Decimal GB = bytes / 1,000,000,000. Missing peak rows do not establish zero contribution.\n\n"
         )
 
         def render():

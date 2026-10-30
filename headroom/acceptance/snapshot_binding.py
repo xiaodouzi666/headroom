@@ -101,7 +101,14 @@ def snapshot_feature_context(binding, *, project_root=None):
 
 def current_snapshot_budget_factory():
     context = _CONTEXT.get()
-    return snapshot_budget_factory(context[0], project_root=context[1]) if context else None
+    if not context:
+        return None
+    binding, project_root = context
+    if binding.get("snapshot_protocol") == "headroom.public-snapshot.judge.v1":
+        from headroom.acceptance.snapshot_public_binding import snapshot_public_budget_factory
+
+        return snapshot_public_budget_factory(binding, project_root=project_root)
+    return snapshot_budget_factory(binding, project_root=project_root)
 
 
 class SnapshotWebAllocation:

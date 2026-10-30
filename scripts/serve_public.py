@@ -20,6 +20,9 @@ def main():
     requested = os.environ.get("HEADROOM_RUN_SUBMISSIONS_ENABLED", "false")
     if requested not in {"true", "false"}:
         raise SystemExit("Use explicit true or false; the default public mode is read-only")
+    snapshot_requested = os.environ.get("HEADROOM_SNAPSHOT_SUBMISSIONS_ENABLED", "false")
+    if snapshot_requested not in {"true", "false"}:
+        raise SystemExit("Use explicit true or false for snapshot submissions")
     demo = None
     judge = None
     if requested == "true":
@@ -43,6 +46,13 @@ def main():
                 judge = JudgeAllocation(judge_receipt_path, project_root=root)
             except (OSError, ValueError):
                 raise SystemExit("The judge allocation could not be verified") from None
+    snapshot_allocation = None
+    if snapshot_requested == "true":
+        if requested != "true" or judge is None:
+            raise SystemExit("Public snapshot uploads require the verified judge allocation")
+        from headroom.acceptance.snapshot_public_binding import SnapshotPublicAllocation
+
+        snapshot_allocation = SnapshotPublicAllocation(judge, project_root=root)
     state = root / "runs/public-api"
     data = state / "submissions"
     source_root = root / "public-evidence"
@@ -72,11 +82,16 @@ def main():
         public_host=hostname,
         trust_tailscale_funnel=True,
         run_submissions_enabled=demo is not None,
-        snapshot_submissions_enabled=False,
+        snapshot_submissions_enabled=snapshot_allocation is not None,
         run_submission_disabled_reason="Live analysis is temporarily paused.",
     )
     application = (
-        create_app(settings, demo_allocation=demo, judge_allocation=judge)
+        create_app(
+            settings,
+            demo_allocation=demo,
+            judge_allocation=judge,
+            snapshot_public_allocation=snapshot_allocation,
+        )
         if judge is not None
         else create_app(settings, demo_allocation=demo)
         if demo is not None

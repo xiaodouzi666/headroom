@@ -365,7 +365,7 @@ def test_cli_native_snapshot_and_source_use_offline_core_without_hardware(tmp_pa
     assert (job / "private/offline-wire.json").is_file()
 
 
-def test_public_launcher_ignores_snapshot_enable_environment(tmp_path, monkeypatch):
+def test_public_launcher_keeps_snapshot_disabled_by_default(tmp_path, monkeypatch):
     source = Path(__file__).resolve().parents[1] / "scripts/serve_public.py"
     spec = importlib.util.spec_from_file_location("snapshot_public_launcher_integration", source)
     launcher = importlib.util.module_from_spec(spec)
@@ -391,7 +391,7 @@ def test_public_launcher_ignores_snapshot_enable_environment(tmp_path, monkeypat
     (project / "scenarios").mkdir()
     (project / "scenarios/INDEX.yaml").write_text('{"scenarios":[]}')
     monkeypatch.setenv("HEADROOM_PUBLIC_HOST", "headroom.example")
-    monkeypatch.setenv("HEADROOM_SNAPSHOT_SUBMISSIONS_ENABLED", "true")
+    monkeypatch.delenv("HEADROOM_SNAPSHOT_SUBMISSIONS_ENABLED", raising=False)
     observed = {}
 
     def build(config):
@@ -399,7 +399,14 @@ def test_public_launcher_ignores_snapshot_enable_environment(tmp_path, monkeypat
         return integrated_app(config)
 
     def inspect(app, **options):
-        assert options == {"host": "127.0.0.1", "port": 8766, "proxy_headers": False}
+        assert options == {
+            "host": "127.0.0.1",
+            "port": 8766,
+            "proxy_headers": False,
+            "limit_concurrency": 64,
+            "backlog": 64,
+            "timeout_keep_alive": 5,
+        }
         with TestClient(app) as client:
             config = client.get("/api/config").json()
             assert config["snapshot_submissions"]["enabled"] is False

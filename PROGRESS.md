@@ -1,5 +1,9 @@
 # Headroom Progress
 
+## October 30, 11:51 Beijing — formally submitted
+
+[Headroom](https://devpost.com/software/headroom-8vfuwj) is **Submitted, 5/5**, with the [public final demo](https://www.youtube.com/watch?v=aaXF60LryWI). [Submission receipt and scope](reports/submission-final-review-20261030/README.md) records actual UI confirmation; the video source is 166.92 seconds. The judge access period was extended to December 23 20:00 UTC without changing funding or credentials, and the updated private attachment was saved. Snapshot upload remains paused pending real validation; the latest fixed-nine result remains 1/9 against 6/9. The user's next instruction is to finish snapshot and remaining work, then update Devpost based on verified outcomes. Dated Draft/video-pending statements below describe previous states, not current submission status.
+
 ## 2026-10-30 公网安全加固与评委次数限制更新（当前状态）
 
 - 公网服务于 **北京时间 2026-10-30 04:21** 恢复新任务，运行代码 **3d8112f**。有效评委令牌请求不再受每小时次数限制；匿名仍 1 次/IP/小时。单 active、最多两项等待/准备、480 秒 deadline、GPU 忙检查、单次费用与沙箱保护继续生效。令牌证明持有而非评委身份。只读页面不发起新模型/GPU任务。

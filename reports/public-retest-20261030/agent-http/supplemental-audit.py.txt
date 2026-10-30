@@ -1,0 +1,27 @@
+from pathlib import Path
+import json,urllib.request,hashlib,concurrent.futures,datetime,re
+p=Path('reports/public-retest-20261030/agent-http');d=json.loads((p/'details.json').read_text());req=json.loads((p/'requests.json').read_text())
+origin='https://headroom.tail45186b.ts.net'
+def get(path):
+ with urllib.request.urlopen(origin+path,timeout=20) as response:
+  raw=response.read(8*1024*1024+1)
+  return {'path':path,'status':response.status,'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()},raw
+patches=[]
+for old in d['downloads']:
+ if old['kind']=='patch':
+  row,raw=get(old['url']);txt=raw.decode('utf-8');lines=txt.splitlines()
+  row.update({'format':'git unified diff' if txt.startswith('diff --git ') else 'unified diff','old_file_header':any(x.startswith('--- ') for x in lines),'new_file_header':any(x.startswith('+++ ') for x in lines),'hunk_header':any(re.match(r'^@@ -[0-9]',x) for x in lines),'published_hash_matches':row['sha256']==old['sha256']})
+  patches.append(row)
+views=[]
+for old in d['evaluations']:
+ eid=old.get('id')
+ if eid is None: continue
+ if any(x['id']==eid for x in views): continue
+ row,raw=get('/api/evaluations/'+eid+'?view=product-v1');val=json.loads(raw)
+ row.update({'id':eid,'view':val.get('view'),'row_count':len(val.get('rows',[])),'is_product_projection':val.get('view')=='product-v1'})
+ views.append(row)
+home=next(x for x in req if x['path']=='/')
+env=next(x for x in req if x['path']=='/.env')
+receipt={'checked_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'script_expectation_corrections':{'env_route':{'initial_expected_status':404,'actual_status':env['status'],'same_sha256_as_home':env['sha256']==home['sha256'],'same_bytes_as_home':env['bytes']==home['bytes'],'content_type':env['headers']['Content-Type'],'credential_value_present':False,'interpretation':'Unknown SPA path serves the index HTML; this GET did not expose an env file. Original status expectation retained in summary.json.'},'patch_format':'Original startswith("--- ") check rejects legitimate diff --git prefixes. Supplemental check verifies file and hunk headers without modifying downloads.','product_view':'First requests used view=product (not a recognized selector); repeated below with documented product-v1.'},'patch_content_checks':patches,'product_view_checks':views,'extra_get_requests':len(patches)+len(views),'all_patches_structurally_readable':all(x['old_file_header'] and x['new_file_header'] and x['hunk_header'] and x['published_hash_matches'] for x in patches),'all_product_views_ok':all(x['status']==200 and x['is_product_projection'] for x in views),'production_changes':False}
+(p/'supplemental-checks.json').write_text(json.dumps(receipt,indent=2)+'\n')
+print(json.dumps(receipt,indent=2))

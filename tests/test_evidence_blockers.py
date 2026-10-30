@@ -355,3 +355,66 @@ def test_visible_parent_never_disproves_missing_runtime_child_or_semantics():
     assert result.valid and result.diagnosis.needs_more_info and not result.requires_supplement
     reply["evidence_requests"][0]["field"] = "execution_context.runtime_input_observations"
     assert checked(reply, evidence).requires_supplement
+
+
+def test_exact_observed_input_fields_reject_false_missing_claim_but_not_semantics():
+    evidence, markdown = source()
+    fields = {
+        "status": "observed",
+        "optimizer_input_name": "train_inputs",
+        "effective_batch_per_optimizer_update": 1,
+        "observed_optimizer_updates": 20,
+    }
+    evidence["execution_context"]["runtime_input_observations"] = {
+        **fields,
+        "logical_updates": dict(fields),
+    }
+    evidence["evidence_availability_catalog"] = build_evidence_availability_catalog(
+        evidence, markdown
+    )
+    catalog = evidence_reference_catalog(evidence)
+    ref = "execution_context.runtime_input_observations.logical_updates.optimizer_input_name"
+    assert catalog[ref]["availability"] == "visible"
+    assert catalog[ref]["runtime_values_verified"] is False
+    data = payload()
+    data["evidence_requests"] = [
+        request(field=ref, evidence_ref=ref, source_line_start=None, source_line_end=None)
+    ]
+    from headroom.evidence_blockers import validate_evidence_requests
+
+    issues, _, _ = validate_evidence_requests(Diagnosis.model_validate(data), evidence)
+    assert "EVIDENCE_AVAILABILITY_CONTRADICTED" in {x["code"] for x in issues}
+    data["evidence_requests"][0]["reason"] = "ambiguous"
+    issues, _, _ = validate_evidence_requests(Diagnosis.model_validate(data), evidence)
+    assert "EVIDENCE_AVAILABILITY_CONTRADICTED" not in {x["code"] for x in issues}
+
+
+@pytest.mark.parametrize(
+    "observed",
+    [
+        {"status": "unsupported", "optimizer_input_name": "inputs"},
+        {"status": "observed", "optimizer_input_name": None},
+        {"status": "observed", "effective_batch_per_optimizer_update": True},
+        {"status": "observed", "effective_batch_per_optimizer_update": -1},
+        {
+            "status": "observed",
+            "logical_updates": {"status": "not_reached", "observed_optimizer_updates": 0},
+        },
+    ],
+)
+def test_exact_input_catalog_does_not_invent_unobserved_fields(observed):
+    evidence, markdown = source()
+    evidence["execution_context"]["runtime_input_observations"] = observed
+    catalog = build_evidence_availability_catalog(evidence, markdown)
+    refs = {entry["evidence_ref"] for entry in catalog["entries"]}
+    assert not any(
+        ref.endswith(
+            (
+                ".optimizer_input_name",
+                ".effective_batch_per_optimizer_update",
+                ".observed_optimizer_updates",
+            )
+        )
+        for ref in refs
+    )
+    assert len(json.dumps(catalog).encode()) <= MAX_CATALOG_BYTES

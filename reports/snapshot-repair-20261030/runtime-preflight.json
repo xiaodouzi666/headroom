@@ -1,0 +1,53 @@
+{
+  "schema": "headroom.snapshot-runtime-preflight.v1",
+  "run_id": "afa13b5096eb4194a805df299d7d7f93",
+  "original_preserved_error": "runtime_unavailable",
+  "original_exception_detail_preserved": false,
+  "existing_run": {
+    "status": "closed",
+    "budget_mode": "strict_reservation",
+    "budget_attempts": 0,
+    "store_llm_calls": 0
+  },
+  "reproduction": {
+    "rlimit_as_bytes": 2147483648,
+    "rlimit_cpu_seconds": 60,
+    "profile_parse": "passed",
+    "baseline": {
+      "load_auditor_error": "RuntimeNotReady",
+      "message": "Reviewed local tokenizer assets or dependencies unavailable",
+      "underlying_error": "ImportError",
+      "underlying_message": "libcusparseLt-294d6944.so.0: failed to map segment from shared object"
+    },
+    "framework_disabled": {
+      "USE_TORCH": "0",
+      "USE_TF": "0",
+      "USE_FLAX": "0",
+      "load_auditor": "passed",
+      "torch_imported": false
+    }
+  },
+  "reconstructed_request": {
+    "sha256": "7ecee1f57a48a56157100301f0363e3df1a0e25aa652a74d7c5e414fa3dfda67",
+    "compact_json_bytes": 82513,
+    "response_format_bytes": 4839,
+    "response_format_limit_bytes": 16384,
+    "response_format_sha256": "e6dabca66f41bb8614004a38ca4a772df603af3e9858478b135dcfa2b40387a1",
+    "local_template_tokens": 28812,
+    "native_response_format_local_tokens": 1514,
+    "estimated_prompt_tokens_with_margin": 34383,
+    "max_completion_tokens": 2000,
+    "enable_thinking": false,
+    "admission": "accepted_offline",
+    "wire_request_observed": false
+  },
+  "investigation": {
+    "provider_calls": 0,
+    "gpu_calls": 0,
+    "production_writes": false,
+    "claims_created": 0,
+    "credentials_read": false,
+    "raw_prompt_exported": false,
+    "network_guard": "DNS and socket connect refused"
+  }
+}

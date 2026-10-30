@@ -344,6 +344,7 @@ def create_app(
     availability_monitor=None,
     snapshot_worker=None,
     snapshot_allocation_parent=None,
+    snapshot_public_allocation=None,
     demo_allocation=None,
     judge_allocation=None,
 ):
@@ -418,7 +419,11 @@ def create_app(
     from headroom.api.snapshot_routes import register_snapshot_routes
 
     snapshots = register_snapshot_routes(
-        app, settings, worker=snapshot_worker, allocation_parent=snapshot_allocation_parent
+        app,
+        settings,
+        worker=snapshot_worker,
+        allocation_parent=snapshot_allocation_parent,
+        public_allocation=snapshot_public_allocation,
     )
     app.state.snapshots = snapshots
 
@@ -542,6 +547,7 @@ def create_app(
         snapshot_requested = bool(
             settings.snapshot_submissions_enabled and settings.run_submissions_enabled
         )
+        snapshot_requires_token = bool(settings.public_host)
         snapshot_available = snapshot_requested and snapshots.submissions_available
         return {
             "run_submissions": submission_config(request),
@@ -557,8 +563,9 @@ def create_app(
                     else "Snapshot analysis is temporarily paused."
                 ),
                 "max_bytes": 50 * 1024 * 1024,
-                "runs_per_ip_per_hour": 2,
+                "runs_per_ip_per_hour": None if snapshot_requires_token else 2,
                 "retention_hours": 24,
+                **({"requires_judge_token": True} if snapshot_requires_token else {}),
             },
             "judge_scripts_available": bool(
                 settings.public_host

@@ -1,0 +1,328 @@
+{
+  "schema": "headroom.s2-pairing.offline-cpu.v1",
+  "source_sha256": {
+    "headroom/verify/pairing.py": "05bf89c512f1d486e2fe7be6ce1ddb4080426ed3cd7cc825ec29d5c50388c301",
+    "tests/test_pairing_s2.py": "43dc3d7c8ba08158256bbc82321944116851f55d714ac234b7274a4339a086a8",
+    "scenarios/s2_capacity_v2/train.py": "9565acfbcfc2f1eefd982c80be7ce943e09828578b9b44c3d70342bc82bf7f4c",
+    "scenarios/s2_fp32_adamw_1b/train.py": "bb1d12c69ce5525e6eab67e709740cb2d578c070afa8b094b5f4b6906648bc5b"
+  },
+  "tests": [
+    {
+      "command": ".venv/bin/pytest -q tests/test_pairing_s2.py tests/test_pairing.py -k \"not real_cpu\"",
+      "passed": 55,
+      "deselected": 9,
+      "seconds": 2.49,
+      "log": "reports/s2-pairing-20261030/offline-tests.log"
+    },
+    {
+      "command": ".venv/bin/pytest -q tests/test_pairing_s2.py -k real_cpu --basetemp reports/runs/s2-pairing-20261030-v1",
+      "passed": 5,
+      "deselected": 30,
+      "seconds": 42.84,
+      "log": "reports/s2-pairing-20261030/cpu-tests-v1.log"
+    }
+  ],
+  "real_cpu_container_captures": [
+    {
+      "path": "reports/runs/s2-pairing-20261030-v1/test_real_cpu_s2_observed_twen0/runs/3dc840369a234d0c83bec7391423c330/result.json",
+      "sha256": "4d13d9d0316ff672ce81624b704d731176bac33176bab98a24633c7efa7dd4de",
+      "run_id": "3dc840369a234d0c83bec7391423c330",
+      "status": "completed",
+      "steps": 20,
+      "loss_count": 20,
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "device": "cpu",
+      "profile": "s2_capacity_v2",
+      "source_sha256": "ff2d25c8401e26fcd8c6470350dcc51197939b2e322ca1f68138b40224e0c64d",
+      "contract_sha256": "f19dac2f060cc5abd05470028ae7f9386a33c349e5b35be224540b3c40bd518e",
+      "foreach_disabled": true,
+      "checkpointed": false,
+      "pairing_complete": true,
+      "bytes_hashed": 94976,
+      "hash_seconds": 0.0007299960125237703,
+      "optimizer_updates": {
+        "complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20
+      }
+    },
+    {
+      "path": "reports/runs/s2-pairing-20261030-v1/test_real_cpu_s2_observed_twen0/runs/487bf7374ace4b07995b9325ff0782c3/result.json",
+      "sha256": "be0ba6c4e2e67fbc8d02e45e633dc867d6a249cdf309f485bc8c6150fd6f6d14",
+      "run_id": "487bf7374ace4b07995b9325ff0782c3",
+      "status": "completed",
+      "steps": 20,
+      "loss_count": 20,
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "device": "cpu",
+      "profile": "s2_capacity_v2",
+      "source_sha256": "9565acfbcfc2f1eefd982c80be7ce943e09828578b9b44c3d70342bc82bf7f4c",
+      "contract_sha256": "f19dac2f060cc5abd05470028ae7f9386a33c349e5b35be224540b3c40bd518e",
+      "foreach_disabled": false,
+      "checkpointed": false,
+      "pairing_complete": true,
+      "bytes_hashed": 94976,
+      "hash_seconds": 0.0007886039093136787,
+      "optimizer_updates": {
+        "complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20
+      }
+    },
+    {
+      "path": "reports/runs/s2-pairing-20261030-v1/test_real_cpu_s2_observed_twen1/runs/2fe686091cd54f93ae83cfd851d62349/result.json",
+      "sha256": "d7f308e369e25fa946e4aab676a37797b39201a754765beb5e241949ab9e83f8",
+      "run_id": "2fe686091cd54f93ae83cfd851d62349",
+      "status": "completed",
+      "steps": 20,
+      "loss_count": 20,
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "device": "cpu",
+      "profile": "s2_fp32_adamw_1b",
+      "source_sha256": "2c6d4fbf67d08874cc57c4fb8cf15959b75f3111685c53137b178d07e61f21e6",
+      "contract_sha256": "0aeb6986a6f443b6f173a97e30aaeeb0d1db9192f467f2c7592d8a476fb1003c",
+      "foreach_disabled": true,
+      "checkpointed": false,
+      "pairing_complete": true,
+      "bytes_hashed": 69632,
+      "hash_seconds": 0.0006683501414954662,
+      "optimizer_updates": {
+        "complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20
+      }
+    },
+    {
+      "path": "reports/runs/s2-pairing-20261030-v1/test_real_cpu_s2_observed_twen1/runs/d1fb1ae06c754666a0918b153c01da3a/result.json",
+      "sha256": "9fb678f67d2db3969a6cd3f0a8f30cd416e668429ef5ba2e513d80aa007801a7",
+      "run_id": "d1fb1ae06c754666a0918b153c01da3a",
+      "status": "completed",
+      "steps": 20,
+      "loss_count": 20,
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "device": "cpu",
+      "profile": "s2_fp32_adamw_1b",
+      "source_sha256": "bb1d12c69ce5525e6eab67e709740cb2d578c070afa8b094b5f4b6906648bc5b",
+      "contract_sha256": "0aeb6986a6f443b6f173a97e30aaeeb0d1db9192f467f2c7592d8a476fb1003c",
+      "foreach_disabled": false,
+      "checkpointed": false,
+      "pairing_complete": true,
+      "bytes_hashed": 69632,
+      "hash_seconds": 0.0007095781620591879,
+      "optimizer_updates": {
+        "complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20
+      }
+    },
+    {
+      "path": "reports/runs/s2-pairing-20261030-v1/test_real_cpu_s2_observed_twen2/runs/b83f4409e8154ccbbe74c01231304ee8/result.json",
+      "sha256": "6a6d7b440a0c4a8ca6899153b40ec9246d77d39dfe38d6df6b99d6030135c70f",
+      "run_id": "b83f4409e8154ccbbe74c01231304ee8",
+      "status": "completed",
+      "steps": 20,
+      "loss_count": 20,
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "device": "cpu",
+      "profile": "s2_capacity_v2",
+      "source_sha256": "fb2215510f1de09d7563e405f85a37c8fcc317aa368258aa321b7aab2442a092",
+      "contract_sha256": "f19dac2f060cc5abd05470028ae7f9386a33c349e5b35be224540b3c40bd518e",
+      "foreach_disabled": true,
+      "checkpointed": true,
+      "pairing_complete": true,
+      "bytes_hashed": 94976,
+      "hash_seconds": 0.000772134168073535,
+      "optimizer_updates": {
+        "complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20
+      }
+    },
+    {
+      "path": "reports/runs/s2-pairing-20261030-v1/test_real_cpu_s2_observed_twen2/runs/eca7917c5619452bbf0b926e306d2a67/result.json",
+      "sha256": "ea26363f5db63b4a14aa3507cc0ccf5c9529022e4611a42611834a12b73bb19a",
+      "run_id": "eca7917c5619452bbf0b926e306d2a67",
+      "status": "completed",
+      "steps": 20,
+      "loss_count": 20,
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "device": "cpu",
+      "profile": "s2_capacity_v2",
+      "source_sha256": "9565acfbcfc2f1eefd982c80be7ce943e09828578b9b44c3d70342bc82bf7f4c",
+      "contract_sha256": "f19dac2f060cc5abd05470028ae7f9386a33c349e5b35be224540b3c40bd518e",
+      "foreach_disabled": false,
+      "checkpointed": false,
+      "pairing_complete": true,
+      "bytes_hashed": 94976,
+      "hash_seconds": 0.0007134529296308756,
+      "optimizer_updates": {
+        "complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20
+      }
+    },
+    {
+      "path": "reports/runs/s2-pairing-20261030-v1/test_real_cpu_s2_observed_twencurrent/runs/7c26a0becf91478297dd737265457d2e/result.json",
+      "sha256": "e5570f53bf1f94602a5e6d53b689b7adf8fda1bdfd2bb02f46bf018b02ae94a2",
+      "run_id": "7c26a0becf91478297dd737265457d2e",
+      "status": "completed",
+      "steps": 20,
+      "loss_count": 20,
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "device": "cpu",
+      "profile": "s2_fp32_adamw_1b",
+      "source_sha256": "bb1d12c69ce5525e6eab67e709740cb2d578c070afa8b094b5f4b6906648bc5b",
+      "contract_sha256": "0aeb6986a6f443b6f173a97e30aaeeb0d1db9192f467f2c7592d8a476fb1003c",
+      "foreach_disabled": false,
+      "checkpointed": false,
+      "pairing_complete": true,
+      "bytes_hashed": 69632,
+      "hash_seconds": 0.0007635029032826424,
+      "optimizer_updates": {
+        "complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20
+      }
+    },
+    {
+      "path": "reports/runs/s2-pairing-20261030-v1/test_real_cpu_s2_observed_twencurrent/runs/8fa0d48af7ab44268e95fc92d2a32fb5/result.json",
+      "sha256": "6db04ca0be5114e77accbf73ae0572fe0bfb102a00f7a6e8957c515bb00834da",
+      "run_id": "8fa0d48af7ab44268e95fc92d2a32fb5",
+      "status": "completed",
+      "steps": 20,
+      "loss_count": 20,
+      "capture_complete": true,
+      "cleanup_verified": true,
+      "device": "cpu",
+      "profile": "s2_fp32_adamw_1b",
+      "source_sha256": "cb2034214c8360960210d1c7e0a25510f1af432d4b1bd120007d0bd0e91b72bb",
+      "contract_sha256": "0aeb6986a6f443b6f173a97e30aaeeb0d1db9192f467f2c7592d8a476fb1003c",
+      "foreach_disabled": true,
+      "checkpointed": true,
+      "pairing_complete": true,
+      "bytes_hashed": 69632,
+      "hash_seconds": 0.0006927130743861198,
+      "optimizer_updates": {
+        "complete": true,
+        "logical_boundary_complete": true,
+        "parameter_update_sets_complete": true,
+        "optimizer_step_calls": 20,
+        "successful_optimizer_step_calls": 20,
+        "logical_updates": 20
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "baseline_run": "487bf7374ace4b07995b9325ff0782c3",
+      "candidate_run": "3dc840369a234d0c83bec7391423c330",
+      "profile": "s2_capacity_v2",
+      "candidate_checkpointed": false,
+      "pairing_checks": {
+        "same_inputs": true,
+        "same_effective_batch": true,
+        "same_objective": true
+      },
+      "finite_20_loss_scalars_each": true,
+      "all20_recorded_loss_scalar_bits_equal": true,
+      "gpu_memory_acceptance": false
+    },
+    {
+      "baseline_run": "d1fb1ae06c754666a0918b153c01da3a",
+      "candidate_run": "2fe686091cd54f93ae83cfd851d62349",
+      "profile": "s2_fp32_adamw_1b",
+      "candidate_checkpointed": false,
+      "pairing_checks": {
+        "same_inputs": true,
+        "same_effective_batch": true,
+        "same_objective": true
+      },
+      "finite_20_loss_scalars_each": true,
+      "all20_recorded_loss_scalar_bits_equal": true,
+      "gpu_memory_acceptance": false
+    },
+    {
+      "baseline_run": "eca7917c5619452bbf0b926e306d2a67",
+      "candidate_run": "b83f4409e8154ccbbe74c01231304ee8",
+      "profile": "s2_capacity_v2",
+      "candidate_checkpointed": true,
+      "pairing_checks": {
+        "same_inputs": true,
+        "same_effective_batch": true,
+        "same_objective": true
+      },
+      "finite_20_loss_scalars_each": true,
+      "all20_recorded_loss_scalar_bits_equal": true,
+      "gpu_memory_acceptance": false
+    },
+    {
+      "baseline_run": "7c26a0becf91478297dd737265457d2e",
+      "candidate_run": "8fa0d48af7ab44268e95fc92d2a32fb5",
+      "profile": "s2_fp32_adamw_1b",
+      "candidate_checkpointed": true,
+      "pairing_checks": {
+        "same_inputs": true,
+        "same_effective_batch": true,
+        "same_objective": true
+      },
+      "finite_20_loss_scalars_each": true,
+      "all20_recorded_loss_scalar_bits_equal": true,
+      "gpu_memory_acceptance": false
+    }
+  ],
+  "hash_measurement": {
+    "bytes_hashed": 8388612,
+    "copy_sizes": [
+      4194304,
+      4194304,
+      4
+    ],
+    "elapsed_seconds": 0.01713601197116077,
+    "python_tracemalloc_peak_bytes": 4195089,
+    "sha256": "571898cd7e936a9ab66980a9e5292ebbab2556ada31d4b69420f68aa90e8fbba",
+    "scope": "CPU 8MiB+4B fixture; traced Python allocations are not total process RSS"
+  },
+  "hash_measurement_source": {
+    "path": "reports/runs/s2-pairing-20261030-v1/test_real_cpu_hash_memory_and_current/hash-observation.json",
+    "sha256": "cdbbd646e1cae0d0348bde45b1cfae0dd308505de79d80b31ad9f1c4dbe49a7f"
+  },
+  "real_model_calls": 0,
+  "gpu_runs": 0,
+  "historical_records_modified": false,
+  "scenario_source_modified": false,
+  "full_suite_rerun": false,
+  "independent_review": {
+    "reviewer": "frontend_browser_checks",
+    "kind": "read_only_source_review",
+    "status": "passed",
+    "source_sha256": "05bf89c512f1d486e2fe7be6ce1ddb4080426ed3cd7cc825ec29d5c50388c301"
+  }
+}

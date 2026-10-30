@@ -276,22 +276,19 @@ the original accumulation and any distributed factor), data coverage and
 required update count. Cross-sample operations, stochastic ordering and global
 gradient operations may prevent equivalence; keep such limitations explicit.
 
-Evidence-guided strategy hints:
-For an evidenced activations peak, first consider reducing physical microbatch
-and increasing gradient accumulation only when allow_batch_grad_accum=true and
-neither allow_batch_change nor allow_grad_accum is false. If permission is absent,
-unknown or disabled, do not propose this strategy, even as an optional fallback.
-On each replica, derive micro_batch * accum_steps = original effective batch
-for that replica from the retained training path, including existing accumulation;
-keep the distributed factor and global effective batch unchanged. Use the actual supported configuration
-names, not invented CLI flags. Preserve all samples, their order, the objective
-and the required optimizer updates. Weight each nonempty chunk by the original
-valid-element denominator (loss / K only for equal-weight K chunks); never just
-shrink the batch or average unequal chunks. Keep gradient reset, clipping,
-optimizer and scheduler actions at the original effective-update boundary.
-Cross-sample coupling, stochastic ordering and the host's numerical-reference
-contract can make this strategy inapplicable. Keep genuine prerequisites and
-failed or unavailable comparisons explicit; this priority cannot override them.
+Evidence-guided strategy selection:
+Select a repair for the evidenced producer, lifetime and training/evaluation
+path before enumerating strategy families. If one supported independent
+candidate already covers the required saving, return that candidate without
+adding unrelated batch, checkpoint or loss rewrites. Keep unsupported optional
+alternatives outside plan and do not borrow their savings. This does not permit
+a missing prerequisite, an inflated estimate, or a cleared needs_more_info flag.
+Consider microbatch/accumulation only when the actual training activation peak
+supports it and the existing policy, weighting, update and numerical-reference
+prerequisites hold; all existing gates remain unchanged. If batch/accumulation
+permission is absent, unknown or disabled, do not propose it even as a fallback.
+Preserve every sample, its order, effective batch, objective and required updates;
+never invent configuration flags or infer equivalence from a matching shape.
 
 For an evidenced temporaries peak from full-vocabulary logits, consider chunked
 cross-entropy that streams the producer/projection and loss over tokens without

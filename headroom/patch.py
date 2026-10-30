@@ -665,7 +665,10 @@ class PatchEngine:
         prompt_policy = asdict(policy)
         if policy.numerical_requirement == "legacy":
             prompt_policy.pop("numerical_requirement")
+        from headroom.patch_structure import step_call_enclosures
+
         requested = {
+            "step_call_enclosures": step_call_enclosures(source_context["sources"]),
             "plan_step": step,
             "policy": prompt_policy,
             "cli_override_contract": cli_override_contract(),

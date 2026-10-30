@@ -1,0 +1,291 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+...................................................................FFFFF [ 94%]
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+____ test_normal_live_runtime_uses_bound_ledger_and_closes_actual_sdk_usage ____
+
+pool = <function pool.<locals>.create at 0x77a5556d6480>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x77a593632390>
+
+    def test_normal_live_runtime_uses_bound_ledger_and_closes_actual_sdk_usage(pool, monkeypatch):
+>       root, request, parent, env, child = claim(pool)
+                                            ^^^^^^^^^^^
+
+tests/test_snapshot_allocation_binding.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_snapshot_allocation_binding.py:97: in claim
+    root, request, parent, env = pool(with_source=source)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_snapshot_allocation_binding.py:84: in create
+    parent = feature.claim_feature_parent(
+headroom/acceptance/feature_allocation.py:181: in claim_feature_parent
+    receipt = verify_receipt(receipt_path, project_root=project_root)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/acceptance/allocation.py:364: in verify_receipt
+    require(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, code = 'ENVIRONMENT_LEDGER_CONFLICT'
+
+    def require(condition, code):
+        if not condition:
+>           raise AllocationRefused(code)
+E           headroom.acceptance.allocation.AllocationRefused: ENVIRONMENT_LEDGER_CONFLICT
+
+headroom/acceptance/allocation.py:47: AllocationRefused
+___ test_web_copy_has_same_content_intent_and_unapproved_input_cannot_claim ____
+
+pool = <function pool.<locals>.create at 0x77a5556d68e0>
+
+    def test_web_copy_has_same_content_intent_and_unapproved_input_cannot_claim(pool):
+>       root, request, parent, _ = pool(with_source=True)
+                                   ^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_snapshot_allocation_binding.py:160: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_snapshot_allocation_binding.py:84: in create
+    parent = feature.claim_feature_parent(
+headroom/acceptance/feature_allocation.py:181: in claim_feature_parent
+    receipt = verify_receipt(receipt_path, project_root=project_root)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/acceptance/allocation.py:364: in verify_receipt
+    require(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, code = 'ENVIRONMENT_LEDGER_CONFLICT'
+
+    def require(condition, code):
+        if not condition:
+>           raise AllocationRefused(code)
+E           headroom.acceptance.allocation.AllocationRefused: ENVIRONMENT_LEDGER_CONFLICT
+
+headroom/acceptance/allocation.py:47: AllocationRefused
+____ test_upload_replacement_is_rechecked_before_each_reservation[snapshot] ____
+
+pool = <function pool.<locals>.create at 0x77a59374e160>, field = 'snapshot'
+
+    @pytest.mark.parametrize("field", ["snapshot", "source"])
+    def test_upload_replacement_is_rechecked_before_each_reservation(pool, field):
+>       root, request, _, _, child = claim(pool, source=True)
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_snapshot_allocation_binding.py:186: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_snapshot_allocation_binding.py:97: in claim
+    root, request, parent, env = pool(with_source=source)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_snapshot_allocation_binding.py:84: in create
+    parent = feature.claim_feature_parent(
+headroom/acceptance/feature_allocation.py:181: in claim_feature_parent
+    receipt = verify_receipt(receipt_path, project_root=project_root)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/acceptance/allocation.py:364: in verify_receipt
+    require(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, code = 'ENVIRONMENT_LEDGER_CONFLICT'
+
+    def require(condition, code):
+        if not condition:
+>           raise AllocationRefused(code)
+E           headroom.acceptance.allocation.AllocationRefused: ENVIRONMENT_LEDGER_CONFLICT
+
+headroom/acceptance/allocation.py:47: AllocationRefused
+_____ test_upload_replacement_is_rechecked_before_each_reservation[source] _____
+
+pool = <function pool.<locals>.create at 0x77a5936507c0>, field = 'source'
+
+    @pytest.mark.parametrize("field", ["snapshot", "source"])
+    def test_upload_replacement_is_rechecked_before_each_reservation(pool, field):
+>       root, request, _, _, child = claim(pool, source=True)
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_snapshot_allocation_binding.py:186: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_snapshot_allocation_binding.py:97: in claim
+    root, request, parent, env = pool(with_source=source)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_snapshot_allocation_binding.py:84: in create
+    parent = feature.claim_feature_parent(
+headroom/acceptance/feature_allocation.py:181: in claim_feature_parent
+    receipt = verify_receipt(receipt_path, project_root=project_root)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/acceptance/allocation.py:364: in verify_receipt
+    require(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, code = 'ENVIRONMENT_LEDGER_CONFLICT'
+
+    def require(condition, code):
+        if not condition:
+>           raise AllocationRefused(code)
+E           headroom.acceptance.allocation.AllocationRefused: ENVIRONMENT_LEDGER_CONFLICT
+
+headroom/acceptance/allocation.py:47: AllocationRefused
+_______ test_context_rejects_offline_runtime_substitution_before_any_job _______
+
+pool = <function pool.<locals>.create at 0x77a5936539c0>
+
+    def test_context_rejects_offline_runtime_substitution_before_any_job(pool):
+>       root, request, _, _, child = claim(pool)
+                                     ^^^^^^^^^^^
+
+tests/test_snapshot_allocation_binding.py:204: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_snapshot_allocation_binding.py:97: in claim
+    root, request, parent, env = pool(with_source=source)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_snapshot_allocation_binding.py:84: in create
+    parent = feature.claim_feature_parent(
+headroom/acceptance/feature_allocation.py:181: in claim_feature_parent
+    receipt = verify_receipt(receipt_path, project_root=project_root)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/acceptance/allocation.py:364: in verify_receipt
+    require(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, code = 'ENVIRONMENT_LEDGER_CONFLICT'
+
+    def require(condition, code):
+        if not condition:
+>           raise AllocationRefused(code)
+E           headroom.acceptance.allocation.AllocationRefused: ENVIRONMENT_LEDGER_CONFLICT
+
+headroom/acceptance/allocation.py:47: AllocationRefused
+_____________________ test_bound_input_symlink_is_rejected _____________________
+
+pool = <function pool.<locals>.create at 0x77a593653600>
+
+    def test_bound_input_symlink_is_rejected(pool):
+>       root, request, _, _ = pool()
+                              ^^^^^^
+
+tests/test_snapshot_allocation_binding.py:219: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_snapshot_allocation_binding.py:84: in create
+    parent = feature.claim_feature_parent(
+headroom/acceptance/feature_allocation.py:181: in claim_feature_parent
+    receipt = verify_receipt(receipt_path, project_root=project_root)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/acceptance/allocation.py:364: in verify_receipt
+    require(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, code = 'ENVIRONMENT_LEDGER_CONFLICT'
+
+    def require(condition, code):
+        if not condition:
+>           raise AllocationRefused(code)
+E           headroom.acceptance.allocation.AllocationRefused: ENVIRONMENT_LEDGER_CONFLICT
+
+headroom/acceptance/allocation.py:47: AllocationRefused
+______ test_private_web_slot_runs_normal_worker_and_remains_owner_scoped _______
+
+pool = <function pool.<locals>.create at 0x77a593650860>
+
+    def test_private_web_slot_runs_normal_worker_and_remains_owner_scoped(pool):
+        import test_snapshot_routes as existing
+        from fastapi.testclient import TestClient
+        from test_snapshot_integration import OfflineAvailability, ordinary_worker
+    
+        from headroom.api.app import COOKIE, ApiSettings, create_app
+    
+>       root, request, parent, _ = pool()
+                                   ^^^^^^
+
+tests/test_snapshot_allocation_binding.py:277: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_snapshot_allocation_binding.py:84: in create
+    parent = feature.claim_feature_parent(
+headroom/acceptance/feature_allocation.py:181: in claim_feature_parent
+    receipt = verify_receipt(receipt_path, project_root=project_root)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/acceptance/allocation.py:364: in verify_receipt
+    require(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, code = 'ENVIRONMENT_LEDGER_CONFLICT'
+
+    def require(condition, code):
+        if not condition:
+>           raise AllocationRefused(code)
+E           headroom.acceptance.allocation.AllocationRefused: ENVIRONMENT_LEDGER_CONFLICT
+
+headroom/acceptance/allocation.py:47: AllocationRefused
+_____ test_private_cli_binding_requires_permissions_and_actual_input_match _____
+
+pool = <function pool.<locals>.create at 0x77a593653240>
+
+    def test_private_cli_binding_requires_permissions_and_actual_input_match(pool):
+>       root, request, _, _, child = claim(pool)
+                                     ^^^^^^^^^^^
+
+tests/test_snapshot_allocation_binding.py:332: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_snapshot_allocation_binding.py:97: in claim
+    root, request, parent, env = pool(with_source=source)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_snapshot_allocation_binding.py:84: in create
+    parent = feature.claim_feature_parent(
+headroom/acceptance/feature_allocation.py:181: in claim_feature_parent
+    receipt = verify_receipt(receipt_path, project_root=project_root)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/acceptance/allocation.py:364: in verify_receipt
+    require(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, code = 'ENVIRONMENT_LEDGER_CONFLICT'
+
+    def require(condition, code):
+        if not condition:
+>           raise AllocationRefused(code)
+E           headroom.acceptance.allocation.AllocationRefused: ENVIRONMENT_LEDGER_CONFLICT
+
+headroom/acceptance/allocation.py:47: AllocationRefused
+_ test_cli_private_context_uses_normal_runtime_and_settles_real_mock_transport _
+
+pool = <function pool.<locals>.create at 0x77a593653060>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x77a59365fa10>
+
+    def test_cli_private_context_uses_normal_runtime_and_settles_real_mock_transport(pool, monkeypatch):
+        from typer.testing import CliRunner
+    
+        from headroom.cli import app as cli_app
+        from headroom.lab import runner
+    
+>       root, request, _, env, child = claim(pool)
+                                       ^^^^^^^^^^^
+
+tests/test_snapshot_allocation_binding.py:353: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_snapshot_allocation_binding.py:97: in claim
+    root, request, parent, env = pool(with_source=source)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_snapshot_allocation_binding.py:84: in create
+    parent = feature.claim_feature_parent(
+headroom/acceptance/feature_allocation.py:181: in claim_feature_parent
+    receipt = verify_receipt(receipt_path, project_root=project_root)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+headroom/acceptance/allocation.py:364: in verify_receipt
+    require(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, code = 'ENVIRONMENT_LEDGER_CONFLICT'
+
+    def require(condition, code):
+        if not condition:
+>           raise AllocationRefused(code)
+E           headroom.acceptance.allocation.AllocationRefused: ENVIRONMENT_LEDGER_CONFLICT
+
+headroom/acceptance/allocation.py:47: AllocationRefused
+=========================== short test summary info ============================
+FAILED tests/test_snapshot_allocation_binding.py::test_normal_live_runtime_uses_bound_ledger_and_closes_actual_sdk_usage
+FAILED tests/test_snapshot_allocation_binding.py::test_web_copy_has_same_content_intent_and_unapproved_input_cannot_claim
+FAILED tests/test_snapshot_allocation_binding.py::test_upload_replacement_is_rechecked_before_each_reservation[snapshot]
+FAILED tests/test_snapshot_allocation_binding.py::test_upload_replacement_is_rechecked_before_each_reservation[source]
+FAILED tests/test_snapshot_allocation_binding.py::test_context_rejects_offline_runtime_substitution_before_any_job
+FAILED tests/test_snapshot_allocation_binding.py::test_bound_input_symlink_is_rejected
+FAILED tests/test_snapshot_allocation_binding.py::test_private_web_slot_runs_normal_worker_and_remains_owner_scoped
+FAILED tests/test_snapshot_allocation_binding.py::test_private_cli_binding_requires_permissions_and_actual_input_match
+FAILED tests/test_snapshot_allocation_binding.py::test_cli_private_context_uses_normal_runtime_and_settles_real_mock_transport
+9 failed, 67 passed in 17.86s

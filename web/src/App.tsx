@@ -123,7 +123,15 @@ function ProviderBadge() {
   );
 }
 
-function Home({ config }: { config: Dict }) {
+function Home({
+  config,
+  loading,
+  error,
+}: {
+  config: Dict;
+  loading: boolean;
+  error: string;
+}) {
   return (
     <main className="page home-page">
       <div className="hero">
@@ -173,9 +181,19 @@ function Home({ config }: { config: Dict }) {
           <button
             className="button button-primary"
             disabled
-            title="Not open yet"
+            title={
+              loading
+                ? "Checking availability"
+                : error
+                  ? "Availability unavailable"
+                  : "Not open yet"
+            }
           >
-            Verified runs · Coming soon
+            {loading
+              ? "Verified runs · Loading…"
+              : error
+                ? "Verified runs · Unavailable"
+                : "Verified runs · Coming soon"}
           </button>
         )}
         <a className="button button-secondary" href="/run">
@@ -193,9 +211,18 @@ function Home({ config }: { config: Dict }) {
       )}
       <details className="panel" style={{ padding: 24, marginBottom: 28 }}>
         <summary>Diagnose my snapshot</summary>
-        <SnapshotDiagnosisPanel
-          enabled={record(config.snapshot_submissions).enabled === true}
-        />
+        {loading ? (
+          <Loading>Checking snapshot availability…</Loading>
+        ) : error ? (
+          <Notice tone="red">{error}</Notice>
+        ) : (
+          <SnapshotDiagnosisPanel
+            enabled={record(config.snapshot_submissions).enabled === true}
+            requiresJudgeToken={
+              record(config.snapshot_submissions).requires_judge_token === true
+            }
+          />
+        )}
       </details>
       <section className="how-strip">
         <div>
@@ -1066,7 +1093,7 @@ export default function App() {
       <Navigation config={config} />
       <div id="main-content">
         {path === "/" ? (
-          <Home config={config} />
+          <Home config={config} loading={configLoading} error={configError} />
         ) : path === "/run" ? (
           configLoading ? (
             <main className="page">

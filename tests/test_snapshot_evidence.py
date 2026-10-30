@@ -422,3 +422,26 @@ def test_first_nonempty_device_trace_is_selected_without_inventing_environment(t
     assert "Selected snapshot device index 1" in result["markdown"]
     assert "env" not in result["evidence"]
     assert result["evidence"]["overview"]["seed"] is None
+
+
+def test_repeated_allocation_traffic_is_not_presented_as_live_peak(tmp_path):
+    value = snapshot()
+    trace = value["device_traces"][0]
+    frames = trace[-1]["frames"]
+    for _ in range(3):
+        trace.extend(
+            [
+                {"action": "free_requested", "addr": 4096, "size": 512, "stream": 0},
+                {"action": "free_completed", "addr": 4096, "size": 512, "stream": 0},
+                {"action": "alloc", "addr": 4096, "size": 512, "stream": 0, "frames": frames},
+            ]
+        )
+    result = prepare_snapshot_evidence(fixture(tmp_path, value), output_dir=tmp_path / "out")
+    stack = result["public_evidence"]["stacks"][0]
+    assert stack["peak_live_bytes"] == 512
+    assert stack["lifetime_allocated_bytes"] == 2048
+    assert result["public_evidence"]["analysis"]["peak_allocated_bytes"] == 512
+    markdown = result["markdown"]
+    assert "Bytes: 512;" in markdown and "Cumulative bytes: 2048;" in markdown
+    assert "they are not simultaneous live bytes, peak size or reclaimable savings" in markdown
+    assert result["evidence"]["token_count"] <= result["evidence"]["budget"]

@@ -309,14 +309,20 @@ def test_funnel_client_address_is_validated_before_admission(tmp_path):
     config = settings(tmp_path, public_host="demo.example", trust_tailscale_funnel=True)
     app = application(config)
     with TestClient(app, base_url="https://demo.example", client=("127.0.0.1", 50000)) as client:
-        assert upload(client).status_code == 400
-        response = upload(client, headers=FUNNEL_HEADERS)
-        assert response.status_code == 202
-        wait_status(client, response.json()["run_id"])
+        auth = {"Authorization": f"Bearer {TOKEN}"}
+        assert upload(client, headers=auth).status_code == 400
+        response = upload(client, headers={**FUNNEL_HEADERS, **auth})
+        # Valid Funnel metadata is accepted, but an unbound public pool fails closed.
+        assert response.status_code == 503
     with TestClient(
         application(config), base_url="https://demo.example", client=("203.0.113.4", 50000)
     ) as client:
-        assert upload(client, headers=FUNNEL_HEADERS).status_code == 403
+        assert (
+            upload(
+                client, headers={**FUNNEL_HEADERS, "Authorization": f"Bearer {TOKEN}"}
+            ).status_code
+            == 403
+        )
 
 
 def test_queue_has_one_active_two_waiting_and_rejects_more(tmp_path):

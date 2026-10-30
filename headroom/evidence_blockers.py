@@ -10,7 +10,7 @@ from headroom.solver_context import invocation_observation
 
 MAX_CATALOG_BYTES = 8 * 1024
 MAX_SOURCE_FILES = 64
-MAX_FIELD_ENTRIES = 5
+MAX_FIELD_ENTRIES = 17
 MAX_SOURCE_LINES = 8192
 MAX_LINE_NUMBER = 1_000_000
 MAX_MARKDOWN_BYTES = 1024 * 1024
@@ -167,6 +167,43 @@ def build_evidence_availability_catalog(evidence, evidence_markdown):
                 "runtime_values_verified": False,
             }
         )
+    # Advertise exact observed leaves, not only a parent object. A model asking
+    # for a supplied optimizer-input name receives literal contradiction feedback;
+    # missing leaves and semantic uncertainty remain genuine unknowns.
+    input_prefix = "execution_context.runtime_input_observations"
+    for suffix, component in (
+        ("", observed),
+        (
+            ".logical_updates",
+            observed.get("logical_updates") if isinstance(observed, Mapping) else None,
+        ),
+    ):
+        if not isinstance(component, Mapping) or component.get("status") != "observed":
+            continue
+        for name in (
+            "optimizer_input_name",
+            "effective_batch_per_optimizer_update",
+            "required_optimizer_updates",
+            "observed_optimizer_updates",
+            "training_forwards_per_optimizer_update",
+            "backwards_per_optimizer_update",
+        ):
+            value = component.get(name)
+            present = (
+                isinstance(value, str) and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,63}", value)
+                if name == "optimizer_input_name"
+                else type(value) is int and 0 <= value <= 1_000_000
+            )
+            if present:
+                entries.append(
+                    {
+                        "evidence_ref": input_prefix + suffix + "." + name,
+                        "kind": "field",
+                        "availability": "visible",
+                        "text_availability_only": True,
+                        "runtime_values_verified": False,
+                    }
+                )
     sources = evidence.get("sources") if isinstance(evidence, Mapping) else None
     if isinstance(sources, list):
         result["omitted_entries"] += max(0, len(sources) - MAX_SOURCE_FILES)

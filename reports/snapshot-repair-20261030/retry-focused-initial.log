@@ -1,0 +1,95 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+.F..........                                                             [100%]
+=================================== FAILURES ===================================
+__________________ test_all_revisions_share_original_f3b_cap ___________________
+
+finished = (PosixPath('/tmp/pytest-of-xiaodouzi/pytest-425/test_all_revisions_share_origi0/project'), SnapshotDiagnosisRequest(sn...llocation/runtime-profile.json', max_rounds=6, search_mode='until_target', source_profile=None, research_enabled=True))
+
+    def test_all_revisions_share_original_f3b_cap(finished):
+        assert spend(finished, claim(finished), ".30")["status"] == "settled"
+        assert (
+>           spend(finished, claim(finished, revision="r2", run_id="c" * 32), ".30")["status"]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            == "settled"
+        )
+
+tests/test_snapshot_retry.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_snapshot_retry.py:100: in spend
+    budget.reserve(run_id, "retry-attempt", amount, dispatched=False)
+headroom/acceptance/snapshot_retry.py:340: in reserve
+    return super().reserve(actual_run_id, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <headroom.acceptance.snapshot_retry.snapshot_retry_budget_factory.<locals>.factory.<locals>.RetryLedger object at 0x78f8a543ab10>
+run_id = 'cccccccccccccccccccccccccccccccc', attempt_id = 'retry-attempt'
+upper_usd = '.30', admission_kind = 'verified_provider_bound'
+dispatched = False
+
+    def reserve(
+        self,
+        run_id,
+        attempt_id,
+        upper_usd,
+        *,
+        admission_kind="verified_provider_bound",
+        dispatched=True,
+    ):
+        # upper_usd is the legacy storage/argument name; estimates are not upper bounds.
+        upper = money(upper_usd)
+        if admission_kind not in {"verified_provider_bound", "local_estimate"}:
+            raise ValueError("Unsupported admission kind")
+        if type(dispatched) is not bool:
+            raise TypeError("Dispatch state must be boolean")
+        with self._transaction() as conn:
+            run = conn.execute("SELECT * FROM budget_runs WHERE id=?", (run_id,)).fetchone()
+            if run is None:
+                raise ValueError("Run budget was not opened")
+            if run["status"] != "open" or run["halt_reason"]:
+                raise BudgetExceeded("Run budget is closed or halted")
+            self._require_dispatch_day(run)
+            self._require_clear(conn)
+            if self._strict_pool(conn):
+                self.require_actual_pool()
+                if admission_kind != "verified_provider_bound":
+                    raise BudgetExceeded("Shared strict pool does not permit local estimates")
+            charged = self._charged(conn, run_id)
+            limit = money(run["limit_usd"])
+            if run["budget_mode"] == "actual_usage":
+                self.require_actual_pool()
+                if admission_kind != "verified_provider_bound":
+                    raise BudgetExceeded("Actual-usage mode requires a verified provider bound")
+                # _require_clear established that every existing charge is settled and known.
+                if charged >= limit:
+                    bounded = (
+                        conn.execute(
+                            "SELECT 1 FROM budget_attempts WHERE run_id=? AND actual_usd IS NULL LIMIT 1",
+                            (run_id,),
+                        ).fetchone()
+                        is not None
+                    )
+                    raise RunBudgetReached(
+                        exceeded=charged > limit,
+                        basis="conservative_bound" if bounded else "actual_usage",
+                    )
+            elif charged + upper > limit:
+                raise BudgetExceeded("Run budget cannot reserve the next model attempt")
+            if (
+                self.total_limit is not None
+                and self._committed(conn, run_id=run_id, additional=upper) > self.total_limit
+            ):
+                raise BudgetExceeded("Total authorized pool cannot reserve the next model attempt")
+            if (
+                self._committed(conn, day=run["day"], run_id=run_id, additional=upper)
+                > self.daily_limit
+            ):
+                raise BudgetExceeded("Daily pool cannot reserve the next model attempt")
+            if conn.execute("SELECT 1 FROM budget_attempts WHERE id=?", (attempt_id,)).fetchone():
+>               raise ValueError("Attempt reservation already exists")
+E               ValueError: Attempt reservation already exists
+
+headroom/budget.py:402: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_snapshot_retry.py::test_all_revisions_share_original_f3b_cap
+1 failed, 11 passed in 3.50s

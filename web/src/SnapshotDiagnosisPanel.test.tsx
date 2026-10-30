@@ -419,3 +419,45 @@ it("enables Home snapshot uploads only from the nested server submission flag", 
     screen.getByRole("button", { name: "Analyze snapshot" }),
   ).toBeEnabled();
 });
+
+it("requires the server-declared judge token before a private upload", async () => {
+  mockJob();
+  render(<SnapshotDiagnosisPanel enabled requiresJudgeToken />);
+  selectSnapshot();
+  fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" }));
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Enter your judge access token",
+  );
+  expect(fetch).not.toHaveBeenCalled();
+  fireEvent.change(screen.getByLabelText("Judge access token"), {
+    target: { value: "offline-ui-token" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" }));
+  expect(await screen.findByText("Analysis complete")).toBeInTheDocument();
+  const post = vi
+    .mocked(fetch)
+    .mock.calls.find(([path]) => path === "/api/snapshots")!;
+  expect(post[1]?.headers).toEqual({
+    Authorization: "Bearer offline-ui-token",
+  });
+  expect(screen.getByLabelText("Judge access token")).toHaveValue("");
+});
+
+it("uses the server's private snapshot flag on Home", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() =>
+      reply({
+        snapshot_submissions: { enabled: true, requires_judge_token: true },
+      }),
+    ),
+  );
+  render(<App />);
+  fireEvent.click(screen.getByText("Diagnose my snapshot"));
+  expect(
+    await screen.findByLabelText("Judge access token"),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByText(/Leave blank for anonymous access/),
+  ).not.toBeInTheDocument();
+});

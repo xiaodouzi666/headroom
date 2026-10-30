@@ -174,3 +174,13 @@ dtype and training path. This is a relevance-based preference, not a fixed
 optimization order or a guarantee that recomputation saves memory. If such a
 repair is unsupported or insufficient, preserve that limitation and the real
 prerequisites of alternatives; do not invent an edit or change acceptance rules.
+
+
+The host's step_call_enclosures lists exact source line IDs for syntactic .step()
+calls and their enclosing loops. It is not proof of optimizer identity or runtime
+update counts: inspect the receiver and source. When introducing a microbatch or
+accumulation loop, preserve the existing outer training-update loop and its
+original required iteration count. Place the inner memory-saving work within each
+original update; retain gradient reset, optimizer and scheduler boundaries. Do not
+replace the whole training loop with one optimizer update. Use the original line
+IDs and ensure references such as the outer step index remain defined.

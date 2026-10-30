@@ -345,8 +345,10 @@ function SnapshotResult({ job }: { job: SnapshotJob }) {
 }
 export default function SnapshotDiagnosisPanel({
   enabled,
+  requiresJudgeToken = false,
 }: {
   enabled: boolean;
+  requiresJudgeToken?: boolean;
 }) {
   const [files, setFiles] = useState<SnapshotFiles>({
     snapshot: null,
@@ -407,6 +409,10 @@ export default function SnapshotDiagnosisPanel({
     const invalid = validateSnapshotFiles(files);
     if (invalid) {
       setError(invalid);
+      return;
+    }
+    if (requiresJudgeToken && !token.trim()) {
+      setError("Enter your judge access token to upload a snapshot.");
       return;
     }
     const controller = new AbortController();
@@ -496,7 +502,11 @@ export default function SnapshotDiagnosisPanel({
               />
             </div>
             <div className="field">
-              <label htmlFor="snapshot-token">Judge token (optional)</label>
+              <label htmlFor="snapshot-token">
+                {requiresJudgeToken
+                  ? "Judge access token"
+                  : "Judge token (optional)"}
+              </label>
               <input
                 id="snapshot-token"
                 type="password"
@@ -505,8 +515,10 @@ export default function SnapshotDiagnosisPanel({
                 onChange={(event) => setToken(event.target.value)}
               />
               <small>
-                Leave blank for anonymous access: up to two uploads per IP per
-                hour. The token is used only for this upload and is not saved.
+                {requiresJudgeToken
+                  ? "An access token is required for private snapshot uploads. No hourly upload limit applies to authenticated judges."
+                  : "Leave blank for anonymous access: up to two uploads per IP per hour."}{" "}
+                The token is used only for this upload and is not saved.
               </small>
             </div>
             <button className="button button-primary" type="submit">

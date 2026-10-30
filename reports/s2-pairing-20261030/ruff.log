@@ -1,0 +1,36 @@
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/test_pairing_s2.py:3:1
+   |
+ 1 |   """Pinned s2 scope plus small actual CPU captures; no model/GPU calls."""
+ 2 |
+ 3 | / import copy
+ 4 | | import hashlib
+ 5 | | import json
+ 6 | | import time
+ 7 | | import tracemalloc
+ 8 | | import socket
+ 9 | | from pathlib import Path
+10 | |
+11 | | import pytest
+12 | | import torch
+13 | |
+14 | | from headroom.lab import runner
+15 | | from headroom.solver_context import runtime_input_observations
+16 | | from headroom.verify import pairing
+17 | | from headroom.verify.pairing import CONTRACTS, PairingCapture, derive_pairing, source_contract
+   | |______________________________________________________________________________________________^
+18 |
+19 |   ROOT = Path(__file__).resolve().parents[1]
+   |
+help: Organize imports
+  |
+5 | import json
+6 + import socket
+7 | import time
+8 | import tracemalloc
+  - import socket
+9 | from pathlib import Path
+  |
+
+Found 1 error.
+[*] 1 fixable with `--fix`.

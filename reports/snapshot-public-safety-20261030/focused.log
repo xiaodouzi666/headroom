@@ -1,0 +1,77 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+............................................................F            [100%]
+=================================== FAILURES ===================================
+___________ test_public_launcher_keeps_snapshot_disabled_by_default ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-420/test_public_launcher_keeps_sna0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x743b0d6156d0>
+
+    def test_public_launcher_keeps_snapshot_disabled_by_default(tmp_path, monkeypatch):
+        source = Path(__file__).resolve().parents[1] / "scripts/serve_public.py"
+        spec = importlib.util.spec_from_file_location("snapshot_public_launcher_integration", source)
+        launcher = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(launcher)
+        project = tmp_path / "public-project"
+        monkeypatch.setattr(launcher, "__file__", str(project / "scripts/serve_public.py"))
+        publications = {
+            "public-evaluations.json": {
+                "version": 1,
+                "campaigns": [{"id": "offline-fixture", "title": "Offline launcher fixture"}],
+            },
+            "published-evaluations/offline-fixture.json": {
+                "mode": "campaign",
+                "provenance": "offline_fixture",
+                "status": "finished",
+                "rows": [],
+            },
+        }
+        for name, document in publications.items():
+            path = project / "public-evidence" / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(document))
+        (project / "scenarios").mkdir()
+        (project / "scenarios/INDEX.yaml").write_text('{"scenarios":[]}')
+        monkeypatch.setenv("HEADROOM_PUBLIC_HOST", "headroom.example")
+        monkeypatch.delenv("HEADROOM_SNAPSHOT_SUBMISSIONS_ENABLED", raising=False)
+        observed = {}
+    
+        def build(config):
+            observed["settings"] = config
+            return integrated_app(config)
+    
+        def inspect(app, **options):
+            assert options == {"host": "127.0.0.1", "port": 8766, "proxy_headers": False}
+            with TestClient(app) as client:
+                config = client.get("/api/config").json()
+                assert config["snapshot_submissions"]["enabled"] is False
+                assert client.post("/api/snapshots", content=b"invalid").status_code == 503
+                assert app.state.snapshots.thread is None
+                assert app.state.snapshots.expiry_thread.is_alive()
+            observed["inspected"] = True
+    
+        monkeypatch.setattr(launcher, "create_app", build)
+        monkeypatch.setattr(launcher.uvicorn, "run", inspect)
+>       launcher.main()
+
+tests/test_snapshot_integration.py:413: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/serve_public.py:100: in main
+    uvicorn.run(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+app = <fastapi.applications.FastAPI object at 0x743b0c2cc7a0>
+options = {'host': '127.0.0.1', 'port': 8766, 'proxy_headers': False, 'limit_concurrency': 64, ...}
+
+    def inspect(app, **options):
+>       assert options == {"host": "127.0.0.1", "port": 8766, "proxy_headers": False}
+E       AssertionError: assert {'host': '127...ncy': 64, ...} == {'host': '127...aders': False}
+E         
+E         Omitting 3 identical items, use -vv to show
+E         Left contains 3 more items:
+E         {'backlog': 64, 'limit_concurrency': 64, 'timeout_keep_alive': 5}
+E         Use -v to get more diff
+
+tests/test_snapshot_integration.py:402: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_snapshot_integration.py::test_public_launcher_keeps_snapshot_disabled_by_default
+1 failed, 60 passed in 12.45s

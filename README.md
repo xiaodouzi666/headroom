@@ -5,7 +5,7 @@
 **Built with NVIDIA Nemotron 3 (Ultra / Super / Nano) on Nebius Token Factory.** Web research powered by Tavily.
 
 - **Live demo:** [Headroom](https://headroom.tail45186b.ts.net/) — open Verified runs to inspect real repairs, diagnoses, cited stacks and downloadable patches.
-- **Video (3 min):** {{VIDEO_URL}}
+- **Video (3 min):** https://www.youtube.com/watch?v=aaXF60LryWI
 - **License:** [Apache-2.0](LICENSE)
 - GPU measurements below use a single RTX 3090 Ti. [Results and source runs](docs/RESULTS.md) record the workload and comparison behind each outcome.
 

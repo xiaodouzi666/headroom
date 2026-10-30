@@ -1,0 +1,51 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+....F..................                                                  [100%]
+=================================== FAILURES ===================================
+___________________ test_profile_rechecked_before_new_budget ___________________
+
+finished = (PosixPath('/tmp/pytest-of-xiaodouzi/pytest-431/test_profile_rechecked_before_0/project'), SnapshotDiagnosisRequest(sn...tion/runtime-profile.json', max_rounds=6, search_mode='until_target', source_profile=None, research_enabled=True), ...)
+
+    def test_profile_rechecked_before_new_budget(finished):
+        binding = claim(finished)
+        Path(finished[3]["profile_path"]).write_text("{}")
+        with pytest.raises(alloc.AllocationRefused, match="PROFILE_CHANGED"):
+>           ledger(finished, binding)
+
+tests/test_snapshot_retry.py:169: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_snapshot_retry.py:94: in ledger
+    read_live_profile(finished[3]["profile_path"]).model_copy(
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-xiaodouzi/pytest-431/test_profile_rechecked_before_0/project/.cache/final48-allocation/runtime-profile.json')
+
+    def read_live_profile(path=PROJECT_ROOT / ".cache/tokenfactory-runtime.json"):
+        path = Path(path)
+        if not path.exists():
+            raise RuntimeNotReady(
+                "Token Factory reviewed runtime profile is missing; complete T0.4 first"
+            )
+        if path.is_symlink() or not path.is_file() or path.stat().st_size > 256 * 1024:
+            raise RuntimeNotReady("Runtime profile must be a bounded regular local JSON file")
+        try:
+            profile = LiveProfile.model_validate_json(path.read_text())
+            if not profile.live_enabled or not profile.credit_confirmed:
+                raise RuntimeNotReady("Token Factory live use and credits have not been confirmed")
+            if not 0 < money(profile.authorized_total_usd) <= money(profile.available_credit_usd):
+                raise RuntimeNotReady("Authorized budget exceeds confirmed available credit")
+            profile.runtime_config()
+            _verify_low_effort_evidence(profile)
+            return profile
+        except RuntimeNotReady:
+            raise
+        except (OSError, ValueError, TypeError, ArithmeticError):
+>           raise RuntimeNotReady(
+                "Reviewed runtime profile is invalid; values are not echoed"
+            ) from None
+E           headroom.llm.admission.RuntimeNotReady: Reviewed runtime profile is invalid; values are not echoed
+
+headroom/runtime.py:220: RuntimeNotReady
+=========================== short test summary info ============================
+FAILED tests/test_snapshot_retry.py::test_profile_rechecked_before_new_budget
+1 failed, 22 passed in 5.63s

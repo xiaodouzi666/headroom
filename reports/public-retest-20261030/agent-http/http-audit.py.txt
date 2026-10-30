@@ -1,0 +1,154 @@
+import ast,concurrent.futures,datetime,hashlib,http.client,json,os,re,shlex,shutil,subprocess,time,urllib.error,urllib.request
+from pathlib import Path
+BASE="https://headroom.tail45186b.ts.net"
+ROOT=Path.cwd()
+OUT=ROOT/"reports/public-retest-20261030/agent-http"
+OUT.mkdir(parents=True,exist_ok=True)
+START=datetime.datetime.now(datetime.UTC).isoformat()
+TOKEN=None
+for line in (ROOT/".cache/final48-public.env").read_text().splitlines():
+ line=line.strip()
+ if line.startswith("HEADROOM_JUDGE_TOKEN="):
+  values=shlex.split(line.split("=",1)[1],comments=True)
+  TOKEN=values[0] if len(values)==1 else None
+if TOKEN is not None and not re.fullmatch(r"[A-Za-z0-9_-]{32,256}",TOKEN):
+ raise RuntimeError("Configured credential format unavailable")
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+def fetch(path,auth="anonymous",headers=None):
+ assert path.startswith("/") and not path.startswith("//")
+ h={"User-Agent":"Headroom-own-site-readonly-audit/20261030",**(headers or {})}
+ if auth=="token":h["Authorization"]="Bearer "+TOKEN
+ elif auth=="invalid":h["Authorization"]="Bearer invalid-audit-credential-not-real"
+ elif auth=="empty":h["Authorization"]=""
+ began=time.monotonic(); raw=b""
+ try:
+  try:response=urllib.request.urlopen(urllib.request.Request(BASE+path,headers=h),timeout=20)
+  except urllib.error.HTTPError as error:response=error
+  with response:
+   status=response.status; rh=dict(response.headers);raw=response.read(8*1024*1024+1)
+  if len(raw)>8*1024*1024:raise RuntimeError("Response exceeds audit size limit")
+  leaked=bool(TOKEN and TOKEN.encode() in raw)
+  if leaked:raw=b"";raise RuntimeError("Credential unexpectedly present in response; raw body not saved")
+  record={"path":path,"access":auth,"status":status,"bytes":len(raw),"sha256":sha(raw),"elapsed_seconds":round(time.monotonic()-began,3),
+   "headers":{k:rh.get(k) for k in ("Content-Type","Content-Disposition","Cache-Control","X-Content-Type-Options","Content-Security-Policy","Vary")},
+   "credential_value_present":False}
+  return record,raw
+ except Exception as error:
+  return {"path":path,"access":auth,"error":type(error).__name__,"elapsed_seconds":round(time.monotonic()-began,3)},b""
+records=[];payloads={}
+initial=["/","/run","/results","/verified","/about","/api/config","/api/health","/api/examples","/api/evaluations","/api/verified","/api/runs","/api/usage"]
+with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+ for record,raw in executor.map(fetch,initial):
+  records.append(record)
+  if record.get("status")==200 and record["path"].startswith("/api/"):
+   payloads[record["path"]]=json.loads(raw)
+  elif record.get("status")==200:
+   record["html_root_mount"]=b'id="root"' in raw
+   record["matches_local_index"]=sha(raw)==sha((ROOT/"web/dist/index.html").read_bytes())
+(OUT/"public-json.json").write_text(json.dumps(payloads,indent=2)+"\n")
+evaluations=payloads.get("/api/evaluations",{}).get("evaluations",[])
+evaluation_checks=[]
+with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+ paths=[f"/api/evaluations/{row['id']}" for row in evaluations]+[f"/api/evaluations/{row['id']}?view=product" for row in evaluations]
+ for record,raw in executor.map(fetch,paths):
+  records.append(record)
+  if record.get("status")==200:
+   document=json.loads(raw)
+   evaluation_checks.append({"path":record["path"],"id":document.get("id"),"status":document.get("status"),"provenance":document.get("provenance"),"row_count":len(document.get("rows",[])),"acceptance":document.get("acceptance")})
+verified=payloads.get("/api/verified",{})
+assets={}
+gallery=[]
+for row in verified.get("runs",[]):
+ references=[ref for cause in (row.get("diagnosis") or {}).get("root_causes",[]) for ref in cause.get("evidence_refs",[])]
+ stack_ids={stack["id"] for stack in row.get("stacks",[])}
+ gallery.append({"run_id":row["run_id"],"scenario_id":row["scenario_id"],"outcome":row.get("outcome"),"downloads":list(row["downloads"]),"stack_count":len(stack_ids),"all_diagnosis_refs_resolve":all(ref in stack_ids for ref in references)})
+ for kind,asset in row["downloads"].items():
+  assets[asset["url"]]={**asset,"kind":kind,"run_id":row["run_id"],"catalog":"current"}
+history_path=ROOT/"public-evidence/verified-runs-history-v1.json"
+historical=json.loads(history_path.read_text()) if history_path.exists() else {"runs":[]}
+for row in historical["runs"]:
+ for kind,asset in row["downloads"].items():
+  url=f"/api/verified/{row['run_id']}/download/{kind}"
+  assets.setdefault(url,{**asset,"kind":kind,"run_id":row["run_id"],"catalog":"historical_only"})
+download_checks=[]
+with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+ for record,raw in executor.map(fetch,assets):
+  record["expected_status"]=200;records.append(record);expected=assets[record["path"]]
+  check={"url":record["path"],"catalog":expected["catalog"],"run_id":expected["run_id"],"kind":expected["kind"],"status":record.get("status"),"bytes":len(raw),"sha256":sha(raw),"matches_published_bytes":len(raw)==expected["bytes"],"matches_published_sha256":sha(raw)==expected["sha256"],"attachment":bool(record.get("headers",{}).get("Content-Disposition","") and "attachment;" in record["headers"]["Content-Disposition"])}
+  try:
+   text=raw.decode("utf-8")
+   if expected["kind"]=="report_json":
+    data=json.loads(text);check["parsed_json"]=True;check["report_run_id_matches"]=data.get("run_id",data.get("run",{}).get("run_id"))==expected["run_id"]
+   elif expected["kind"]=="patch":
+    check["diff_content"]=text.startswith("--- ") and "\n+++ " in text
+   else:check["markdown_content"]=text.startswith("#") and len(text)>20
+  except (ValueError,UnicodeError):check["content_parse_error"]=True
+  download_checks.append(check)
+static_checks=[]
+static_files=sorted(p for p in (ROOT/"web/dist").rglob("*") if p.is_file() and p.name!="index.html")
+with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+ paths=["/"+str(p.relative_to(ROOT/"web/dist")) for p in static_files]
+ for record,raw in executor.map(fetch,paths):
+  records.append(record)
+  static_checks.append({"path":record["path"],"status":record.get("status"),"bytes":len(raw),"sha256":sha(raw),"matches_local_dist":sha(raw)==sha((ROOT/"web/dist"/record["path"].lstrip("/")).read_bytes())})
+auth_checks=[]
+for auth in (["token"] if TOKEN else [])+["invalid","empty"]:
+ for path in ("/api/config","/api/health"):
+  record,raw=fetch(path,auth=auth);records.append(record)
+  document=json.loads(raw) if raw else {}
+  auth_checks.append({"path":path,"access":auth,"status":record.get("status"),"limits":document.get("limits"),"run_submissions":document.get("run_submissions"),"snapshot_submissions":document.get("snapshot_submissions"),"private_token_leak":record.get("credential_value_present",False)})
+negative=[
+("/api/config?funding_kind=judge",200,{}),
+("/api/config",200,{"X-Headroom-Funding":"judge"}),
+("/api/verified/not-a-run/download/report_json",404,{}),
+("/api/verified/d9926ee7bb624e7fb22540bbc4c92cdc/download/not-a-kind",404,{}),
+("/api/evaluations/not-a-campaign",404,{}),
+("/api/runs/d9926ee7bb624e7fb22540bbc4c92cdc",404,{}),
+("/api/runs/d9926ee7bb624e7fb22540bbc4c92cdc/report.json",404,{}),
+("/api/runs/d9926ee7bb624e7fb22540bbc4c92cdc/events",404,{}),
+("/.env",404,{}),
+("/api/verified/%2e%2e%2f.env/download/report_json",404,{}),
+("/api/config",400,{"Host":"invalid-headroom-audit.invalid"})]
+negative_checks=[]
+for path,expected,headers in negative:
+ record,raw=fetch(path,headers=headers);record["expected_status"]=expected;records.append(record)
+ check={"path":path,"variant":"invalid-host" if "Host" in headers else "spoof-funding-header" if headers else "default","expected_status":expected,"actual_status":record.get("status"),"passed":record.get("status")==expected}
+ if expected==200:
+  document=json.loads(raw)
+  check["anonymous_hourly_preserved"]=document.get("limits",{}).get("runs_per_ip_per_hour")==1 and document.get("limits",{}).get("hourly_limit_applies") is True
+ negative_checks.append(check)
+connection=http.client.HTTPSConnection("headroom.tail45186b.ts.net",timeout=20)
+try:
+ connection.putrequest("GET","/api/config")
+ connection.putheader("Authorization","Bearer invalid-audit-one")
+ connection.putheader("Authorization","Bearer invalid-audit-two")
+ connection.endheaders()
+ response=connection.getresponse();response.read(65536)
+ negative_checks.append({"path":"/api/config","variant":"duplicate-authorization","expected_status":401,"actual_status":response.status,"passed":response.status==401})
+finally:connection.close()
+# Check only safe process metadata and source selection; do not read process credentials.
+def command(*args):return subprocess.check_output(args,text=True).strip()
+pid=command("systemctl","--user","show","headroom-public.service","-p","MainPID","--value")
+process_command=(Path("/proc")/pid/"cmdline").read_bytes().replace(b"\0",b" ").decode()
+launcher=ast.parse((ROOT/"scripts/serve_public.py").read_text())
+factory_calls=[sorted(keyword.arg for keyword in node.keywords) for node in ast.walk(launcher) if isinstance(node,ast.Call) and isinstance(node.func,ast.Name) and node.func.id=="create_app"]
+deployment=json.loads((ROOT/"reports/public-security-20261030/deployment.json").read_text())
+from headroom.lab.storage_budget import stored_bytes,MAX_STORAGE_BYTES,MIN_FREE_BYTES,LAB_RESERVATION_BYTES
+storage=ROOT/"runs/public-api";retained=stored_bytes(storage);free=shutil.disk_usage(storage).free
+runtime={"checked_at_utc":datetime.datetime.now(datetime.UTC).isoformat(),"head":command("git","rev-parse","HEAD"),"cached_origin_main":command("git","rev-parse","origin/main"),"deployment_commit":deployment["code_commit"],
+ "business_diff_from_deployment":command("git","diff","--name-only",deployment["code_commit"],"HEAD","--","headroom","scripts","web"),
+ "business_worktree_changes":command("git","status","--short","--","headroom","scripts","web"),
+ "public_service":command("systemctl","--user","show","headroom-public.service","-p","ActiveState","-p","SubState","-p","ExecMainStartTimestamp"),
+ "main_pid":int(pid),"process_command":process_command,"process_cwd":os.readlink(Path("/proc")/pid/"cwd"),"launcher_factory_keyword_sets":factory_calls,
+ "launcher_injects_test_worker":any("worker" in keywords or "worker_mode" in keywords for keywords in factory_calls),
+ "frontend_matches_deployment":{path:sha((ROOT/"web/dist"/path).read_bytes())==digest for path,digest in deployment["frontend_artifacts"].items()},
+ "gpu_observation":command("nvidia-smi","--query-gpu=name,memory.total,memory.used,utilization.gpu","--format=csv,noheader,nounits"),
+ "storage_stat_only":{"retained_logical_bytes":retained,"limit_bytes":MAX_STORAGE_BYTES,"reservation_bytes":LAB_RESERVATION_BYTES,"free_bytes":free,"minimum_free_after_reservation_bytes":MIN_FREE_BYTES,"would_admit_by_bytes":retained+LAB_RESERVATION_BYTES<=MAX_STORAGE_BYTES and free-LAB_RESERVATION_BYTES>=MIN_FREE_BYTES},
+ "credential_read_in_memory_only":bool(TOKEN),"post_requests":0,"model_calls_started_by_agent":0,"gpu_jobs_started_by_agent":0}
+(OUT/"requests.json").write_text(json.dumps(records,indent=2)+"\n")
+(OUT/"details.json").write_text(json.dumps({"evaluations":evaluation_checks,"gallery":gallery,"downloads":download_checks,"static_assets":static_checks,"auth":auth_checks,"negative":negative_checks},indent=2)+"\n")
+(OUT/"runtime.json").write_text(json.dumps(runtime,indent=2)+"\n")
+summary={"started_at_utc":START,"finished_at_utc":datetime.datetime.now(datetime.UTC).isoformat(),"requests":len(records)+1,"http_errors":sum("error" in r for r in records),"five_pages_ok":all(r.get("status")==200 and r.get("matches_local_index") is True for r in records if r["path"] in initial[:5]),"evaluation_count":len(evaluations),"evaluation_detail_requests":len(evaluation_checks),"current_gallery_count":len(gallery),"historical_catalog_count":len(historical["runs"]),"downloads_count":len(download_checks),"current_downloads":sum(v["catalog"]=="current" for v in download_checks),"historical_only_downloads":sum(v["catalog"]=="historical_only" for v in download_checks),"downloads_status_hash_ok":all(v["status"]==200 and v["matches_published_bytes"] and v["matches_published_sha256"] for v in download_checks),"static_assets_count":len(static_checks),"static_assets_ok":all(v["status"]==200 and v["matches_local_dist"] for v in static_checks),"negative_checks_ok":all(v["passed"] and v.get("anonymous_hourly_preserved",True) for v in negative_checks),"post_requests":0,"new_task_success_claimed":False}
+(OUT/"summary.json").write_text(json.dumps(summary,indent=2)+"\n")
+print(json.dumps(summary))
+print(json.dumps({"auth_checks":auth_checks,"negative_failures":[v for v in negative_checks if not v["passed"]],"download_content_flags":[v for v in download_checks if any(k in v and not v[k] for k in ("report_run_id_matches","diff_content","markdown_content"))],"runtime":runtime}))

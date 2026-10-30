@@ -15,7 +15,7 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 from headroom.budget import BudgetExceeded, BudgetLedger, money
 from headroom.diagnose import build_diagnosis_messages, validate_diagnosis
-from headroom.diagnosis_protocol import FINAL48_DIAGNOSIS_ONLY
+from headroom.diagnosis_protocol import FINAL48_DIAGNOSIS_ONLY, diagnosis_prompt
 from headroom.diagnosis_schema import build_diagnosis_schema
 from headroom.evidence_blockers import build_evidence_availability_catalog
 from headroom.ledger_path import require_initialized_ledger, select_budget_database
@@ -26,6 +26,8 @@ from headroom.runtime import PROJECT_ROOT, RuntimeNotReady, build_live_runtime, 
 from headroom.snapshot_evidence import prepare_snapshot_evidence
 from headroom.snapshot_input import SnapshotInputError
 from headroom.store.db import Store
+
+SNAPSHOT_PROMPT = Path(__file__).with_name("prompts") / "snapshot_diagnose.md"
 
 VERIFICATION = {"status": "not_run", "message": "Not run — bring the patch to your GPU"}
 GOAL = (
@@ -375,6 +377,11 @@ def run_snapshot_diagnosis(
             execution_context=evidence.get("execution_context"),
             evidence_availability_catalog=evidence["evidence_availability_catalog"],
             request_policy=FINAL48_DIAGNOSIS_ONLY,
+        )
+        # Saved captures need no multi-round execution instructions. Keep the
+        # shared request context/schema and strict validator, with a focused prompt.
+        messages[0]["content"] = diagnosis_prompt(
+            SNAPSHOT_PROMPT.read_text(), request_policy=FINAL48_DIAGNOSIS_ONLY
         )
         response = runtime.router.chat(
             "diagnose",

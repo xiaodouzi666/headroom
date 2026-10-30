@@ -1,6 +1,6 @@
 """Bounded source contracts and actual runtime observations for numerical pairing.
 
-Only the pinned standalone s1/s3/s4 programs and listed memory-only AST edits
+Only the pinned standalone s1/s2/s3/s4 programs and listed memory-only AST edits
 are supported. This is evidence for cooperative targets, not an authentication
 boundary against deliberate hook tampering.
 """
@@ -16,11 +16,28 @@ from pathlib import Path
 from typing import Any
 
 PROTOCOL = "headroom.pairing.v1"
+HASH_CHUNK_BYTES = 4 * 1024 * 1024
+DEFAULT_HASH_LIMIT_BYTES = 512 * 1024 * 1024
+S2_PROFILES = {"s2_capacity_v2", "s2_fp32_adamw_1b"}
 # Normalized full-program AST hashes, pinned to the reviewed scenario sources.
 CONTRACTS = {
     "s1": {
         "digest": "f3fedffd6687879dcd7c0b452a49dac26d119dd8898dad9b3ef650af478c1c6e",
         "inputs": ("inputs", "targets"),
+    },
+    "s2_capacity_v2": {
+        "digest": "f19dac2f060cc5abd05470028ae7f9386a33c349e5b35be224540b3c40bd518e",
+        "inputs": ("inputs", "targets"),
+        "objective": "fixed_tensors_residual_mlp_adamw_mse_mean_v1",
+        "max_fingerprint_bytes": 6 * 1024**3,
+        "max_hash_seconds": 60.0,
+    },
+    "s2_fp32_adamw_1b": {
+        "digest": "0aeb6986a6f443b6f173a97e30aaeeb0d1db9192f467f2c7592d8a476fb1003c",
+        "inputs": ("inputs", "targets"),
+        "objective": "fixed_tensors_residual_mlp_adamw_mse_mean_v1",
+        "max_fingerprint_bytes": 6 * 1024**3,
+        "max_hash_seconds": 60.0,
     },
     "s3": {
         "digest": "0cf09407bc09810ccd15da2c71e73c8ddc2d17827f3498dda5c9bf86bd6d066e",
@@ -184,6 +201,34 @@ class _CheckpointEdits(ast.NodeTransformer):
         return tree
 
 
+class _AdamWMemoryEdits(ast.NodeTransformer):
+    """Normalize only the reviewed single AdamW foreach toggle.
+
+    The optimizer object, parameters, defaults and step boundary remain pinned.
+    This does not normalize optimizer-in-backward, precision or accumulation.
+    """
+
+    def __init__(self):
+        self.changed = False
+
+    def visit_Call(self, node):
+        keywords = {item.arg: item.value for item in node.keywords}
+        if (
+            _call(node.func, "torch.optim.AdamW")
+            and len(node.args) == 1
+            and _call(node.args[0], "model.parameters()")
+            and len(keywords) == len(node.keywords)
+            and set(keywords) == {"lr", "foreach"}
+            and _call(keywords["lr"], "1e-4")
+            and _call(keywords["foreach"], "False")
+        ):
+            self.changed = True
+            for keyword in node.keywords:
+                if keyword.arg == "foreach":
+                    keyword.value = ast.Constant(True)
+        return self.generic_visit(node)
+
+
 def source_contract(script: Path) -> dict[str, Any]:
     try:
         with script.open("rb") as handle:
@@ -194,12 +239,18 @@ def source_contract(script: Path) -> dict[str, Any]:
         normalized = _MemoryEdits().visit(tree)
         checkpoint_edits = _CheckpointEdits(normalized)
         normalized = checkpoint_edits.normalize(normalized)
+        optimizer_edits = _AdamWMemoryEdits()
+        normalized = optimizer_edits.visit(normalized)
         digest = hashlib.sha256(ast.dump(normalized, include_attributes=False).encode()).hexdigest()
         profile = next((name for name, item in CONTRACTS.items() if item["digest"] == digest), None)
-        if profile is None or (checkpoint_edits.changed and profile != "s1"):
+        if (
+            profile is None
+            or (checkpoint_edits.changed and profile not in {"s1", *S2_PROFILES})
+            or (optimizer_edits.changed and profile not in S2_PROFILES)
+        ):
             return {
                 "supported": False,
-                "reason": "source outside pinned s1/s3/s4 AST contracts",
+                "reason": "source outside pinned s1/s2/s3/s4 AST contracts",
                 "source_sha256": hashlib.sha256(source).hexdigest(),
             }
         main = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "main")
@@ -211,8 +262,11 @@ def source_contract(script: Path) -> dict[str, Any]:
             "source_sha256": hashlib.sha256(source).hexdigest(),
             "capture_line": loop.lineno,
             "checkpointed": checkpoint_edits.changed,
+            "optimizer_foreach_disabled": optimizer_edits.changed,
             "tensor_names": list(CONTRACTS[profile]["inputs"]),
-            "objective": "fixed_tensors_residual_mlp_sgd_mse_mean_v1",
+            "objective": CONTRACTS[profile].get(
+                "objective", "fixed_tensors_residual_mlp_sgd_mse_mean_v1"
+            ),
         }
     except (OSError, SyntaxError, ValueError, StopIteration) as exc:
         return {"supported": False, "reason": f"source contract unavailable: {type(exc).__name__}"}
@@ -234,6 +288,7 @@ class PairingCapture:
         self.backwards = 0
         self.hash_seconds = 0.0
         self.bytes_hashed = 0
+        self.hash_deadline = None
         self.captured = False
         self.valid = True
         self.previous_trace = None
@@ -258,11 +313,33 @@ class PairingCapture:
             raise ValueError("unsupported tensor layout/type")
         size = tensor.numel() * tensor.element_size()
         self.bytes_hashed += size
-        if self.bytes_hashed > 512 * 1024 * 1024:
-            raise ValueError("initial fingerprints exceed 512 MiB limit")
-        raw = tensor.detach().contiguous().view(torch.uint8).cpu().numpy().tobytes()
+        limit = CONTRACTS.get(self.contract.get("profile"), {}).get(
+            "max_fingerprint_bytes", DEFAULT_HASH_LIMIT_BYTES
+        )
+        if self.bytes_hashed > limit:
+            raise ValueError("initial fingerprints exceed reviewed byte limit")
+        # All reviewed inputs/parameters are contiguous. Never materialize a full
+        # multi-GiB host copy merely to hash s2's initial parameter values.
+        if not tensor.is_contiguous():
+            raise ValueError("unsupported non-contiguous initial tensor")
+        seconds = CONTRACTS.get(self.contract.get("profile"), {}).get("max_hash_seconds")
+        if seconds is not None and self.hash_deadline is None:
+            self.hash_deadline = time.monotonic() + seconds
+
+        def within_deadline():
+            if self.hash_deadline is not None and time.monotonic() >= self.hash_deadline:
+                raise ValueError("initial fingerprints exceed reviewed hash time limit")
+
+        raw = tensor.detach().reshape(-1).view(torch.uint8)
+        digest = hashlib.sha256()
+        for start in range(0, raw.numel(), HASH_CHUNK_BYTES):
+            within_deadline()
+            chunk = raw[start : start + HASH_CHUNK_BYTES].cpu().numpy().tobytes()
+            digest.update(chunk)
+            del chunk
+            within_deadline()
         return {
-            "sha256": hashlib.sha256(raw).hexdigest(),
+            "sha256": digest.hexdigest(),
             "shape": list(tensor.shape),
             "dtype": str(tensor.dtype),
         }

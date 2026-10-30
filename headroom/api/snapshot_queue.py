@@ -6,6 +6,7 @@ import ctypes
 import fcntl
 import multiprocessing
 import os
+import resource
 import shutil
 import signal
 import sqlite3
@@ -20,10 +21,66 @@ from types import SimpleNamespace
 from uuid import uuid4
 
 from headroom.api.security import RUN_ID, open_regular
+from headroom.lab.storage_budget import storage_admission, storage_scope
 
 RETENTION_SECONDS = 24 * 60 * 60
 ACTIVE = ("receiving", "queued", "running")
 TERMINAL = {"completed", "failed", "timeout", "cancelled", "budget_exceeded", "needs_human"}
+WORKER_FILE_BYTES = 128 * 1024 * 1024
+WORKER_OUTPUT_BYTES = 512 * 1024 * 1024
+WORKER_ENTRIES = 4096
+WORKER_MEMORY_BYTES = 2 * 1024**3
+WORKER_CPU_SECONDS = 60
+
+
+def _worker_limits():
+    """Kernel per-process limits; no uploaded code is executed in this worker."""
+    for kind, maximum in (
+        (resource.RLIMIT_FSIZE, WORKER_FILE_BYTES),
+        (resource.RLIMIT_AS, WORKER_MEMORY_BYTES),
+        (resource.RLIMIT_CPU, WORKER_CPU_SECONDS),
+        (resource.RLIMIT_CORE, 0),
+    ):
+        _soft, hard = resource.getrlimit(kind)
+        cap = maximum if hard == resource.RLIM_INFINITY else min(maximum, hard)
+        resource.setrlimit(kind, (cap, cap))
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
+    os.environ["NVIDIA_VISIBLE_DEVICES"] = "void"
+    # This worker only uses a local tokenizer, never a model framework. Prevent
+    # transformers auto-discovery from mapping unused CUDA libraries into its
+    # fixed address-space allowance. The parent/API/GPU Lab remains unchanged.
+    for name in ("USE_TORCH", "USE_TF", "USE_FLAX"):
+        os.environ[name] = "0"
+
+
+def _bounded_job(path):
+    """Bound retained input/output and reject links/special files; never follow them.
+
+    Total-byte/entry supervision is an admission/abort boundary, not a filesystem
+    quota. RLIMIT_FSIZE is the hard per-file write limit. Only trusted diagnosis
+    code writes here; primitive-only uploaded data is decoded in a separate child.
+    """
+    total = count = 0
+    pending = [Path(path)]
+    while pending:
+        directory = pending.pop()
+        with os.scandir(directory) as entries:
+            for entry in entries:
+                count += 1
+                if count > WORKER_ENTRIES:
+                    raise ValueError("Snapshot output entry limit exceeded")
+                info = entry.stat(follow_symlinks=False)
+                if stat.S_ISDIR(info.st_mode):
+                    pending.append(Path(entry.path))
+                elif stat.S_ISREG(info.st_mode) and info.st_nlink == 1:
+                    if info.st_size > WORKER_FILE_BYTES:
+                        raise ValueError("Snapshot output file limit exceeded")
+                    total += info.st_size
+                    if total > WORKER_OUTPUT_BYTES:
+                        raise ValueError("Snapshot output aggregate limit exceeded")
+                else:
+                    raise ValueError("Unsafe snapshot output")
+    return total
 
 
 class SnapshotAdmissionError(ValueError):
@@ -57,11 +114,21 @@ def directory_fd(path, *, create=False):
 
 
 def _child_entry(
-    worker, request_values, run_root, run_id, channel, parent_pid, allocation_binding=None
+    worker,
+    request_values,
+    run_root,
+    run_id,
+    channel,
+    parent_pid,
+    allocation_binding=None,
+    project_root=None,
+    public=False,
 ):
     """Run only trusted diagnosis code; uploaded input is never imported or executed."""
     os.setsid()
     os.umask(0o077)
+    if public:
+        _worker_limits()
 
     # A lost API process must not leave a model worker consuming allowance.
     def parent_lost(_signal=None, _frame=None):
@@ -69,6 +136,8 @@ def _child_entry(
 
     signal.signal(signal.SIGUSR1, parent_lost)
     libc = ctypes.CDLL(None, use_errno=True)
+    if public and libc.prctl(38, 1, 0, 0, 0) != 0:  # PR_SET_NO_NEW_PRIVS
+        os._exit(1)
     if libc.prctl(1, signal.SIGUSR1, 0, 0, 0) != 0:
         os._exit(1)
     if os.getppid() != parent_pid:
@@ -101,7 +170,7 @@ def _child_entry(
             from headroom.acceptance.snapshot_binding import snapshot_feature_context
 
             allocation_context = snapshot_feature_context(
-                allocation_binding, project_root=Path(run_root).parent.parent
+                allocation_binding, project_root=project_root or Path(run_root).parent.parent
             )
         with allocation_context:
             if worker is None:
@@ -151,13 +220,38 @@ def _group_running(group):
 
 class SnapshotQueue:
     def __init__(
-        self, settings, *, worker: Callable | None = None, clock=time.time, allocation_parent=None
+        self,
+        settings,
+        *,
+        worker: Callable | None = None,
+        clock=time.time,
+        allocation_parent=None,
+        public_allocation=None,
     ):
         self.settings = settings
-        self.root = Path(settings.project_root) / "runs" / "uploads"
-        self.registry = Path(settings.project_root) / ".cache" / "snapshot-admissions.sqlite3"
+        self.public = bool(settings.public_host)
+        self.storage_root = storage_scope(
+            getattr(settings, "run_root", Path(settings.project_root) / "runs/public-api/jobs")
+        )
+        self.root = (
+            self.storage_root / "snapshots"
+            if self.public
+            else Path(settings.project_root) / "runs/uploads"
+        )
+        self.registry = (
+            self.storage_root / "snapshot-admissions.sqlite3"
+            if self.public
+            else Path(settings.project_root) / ".cache/snapshot-admissions.sqlite3"
+        )
         self.worker = worker
-        self.allocation = None
+        self.allocation = public_allocation
+        if public_allocation is not None and (
+            allocation_parent is not None
+            or not self.public
+            or not settings.judge_token
+            or public_allocation.project_root != Path(settings.project_root).resolve()
+        ):
+            raise ValueError("Public snapshot allocation requires its matching server and token")
         if allocation_parent is not None:
             from headroom.acceptance.snapshot_binding import SnapshotWebAllocation
 
@@ -196,6 +290,7 @@ class SnapshotQueue:
                 and not self._stop.is_set()
                 and self.thread is not None
                 and self.thread.is_alive()
+                and (not self.public or self.allocation is not None)
             )
 
     @contextmanager
@@ -314,9 +409,28 @@ class SnapshotQueue:
                 self._lock_handle = None
 
     def reserve(self, owner, ip, *, judge=False):
+        guard = (
+            storage_admission(self.storage_root, aggregate=True) if self.public else nullcontext()
+        )
+        try:
+            with guard:
+                return self._reserve(owner, ip, judge=judge)
+        except SnapshotAdmissionError:
+            raise
+        except (OSError, ValueError):
+            raise SnapshotAdmissionError(
+                "Snapshot storage is temporarily unavailable", 503
+            ) from None
+
+    def _reserve(self, owner, ip, *, judge=False):
         with self._lock:
             if not self._started or not self._process_jobs or self._stop.is_set():
                 raise SnapshotAdmissionError("Snapshot service is unavailable", 503)
+            if self.public:
+                if not judge:
+                    raise SnapshotAdmissionError("A valid judge token is required", 401)
+                if self.allocation is None or not self.allocation.available:
+                    raise SnapshotAdmissionError("Snapshot allowance is unavailable", 503)
             now = self.clock()
             with self._connect() as db:
                 db.execute("BEGIN IMMEDIATE")
@@ -453,9 +567,27 @@ class SnapshotQueue:
         remaining = created + self.deadline - self.clock()
         if remaining <= 0:
             return "timeout"
-        values = {"budget_usd": self.allowance, "runtime_profile": self.settings.runtime_profile}
+        if self.public:
+            try:
+                with storage_admission(self.storage_root, aggregate=True):
+                    pass
+            except (OSError, ValueError):
+                return "failed"
         job = self.root / identifier
+        if self.public:
+            try:
+                _bounded_job(job)
+            except (OSError, ValueError):
+                return "failed"
         try:
+            values = {
+                "budget_usd": self.allowance,
+                "runtime_profile": (
+                    self.allocation.profile_path
+                    if self.allocation is not None
+                    else self.settings.runtime_profile
+                ),
+            }
             for key, name in (
                 ("snapshot", "snapshot.pickle"),
                 ("traceback", "traceback.txt"),
@@ -477,19 +609,31 @@ class SnapshotQueue:
 
             try:
                 binding = self.allocation.claim(SnapshotDiagnosisRequest(**values), identifier)
+                values["budget_usd"] = binding["run_limit_usd"]
             except (OSError, ValueError, TypeError, KeyError):
                 return "failed"
         context = multiprocessing.get_context("spawn")
         receiver, sender = context.Pipe()
         process = context.Process(
             target=_child_entry,
-            args=(self.worker, values, str(self.root), identifier, sender, os.getpid(), binding),
+            args=(
+                self.worker,
+                values,
+                str(self.root),
+                identifier,
+                sender,
+                os.getpid(),
+                binding,
+                str(self.settings.project_root),
+                self.public,
+            ),
             daemon=False,
         )
         deadline = time.monotonic() + max(0, created + self.deadline - self.clock())
         ready = False
         reported_terminal = False
         status = "failed"
+        next_storage_check = 0.0
         try:
             process.start()
             sender.close()
@@ -500,6 +644,9 @@ class SnapshotQueue:
                 if time.monotonic() >= deadline:
                     status = "timeout"
                     break
+                if self.public and time.monotonic() >= next_storage_check:
+                    _bounded_job(job)
+                    next_storage_check = time.monotonic() + 0.25
                 if receiver.poll(0.05):
                     message = receiver.recv()
                     if message == "ready" and not ready:
@@ -534,6 +681,13 @@ class SnapshotQueue:
                     self._stop.set()
             receiver.close()
             sender.close()
+            if self.public:
+                try:
+                    _bounded_job(job)
+                except (OSError, ValueError):
+                    cleanup_verified = False
+                    status = "failed"
+                    self._stop.set()
             if binding is not None:
                 try:
                     from headroom.acceptance.snapshot_binding import snapshot_cleanup_verified

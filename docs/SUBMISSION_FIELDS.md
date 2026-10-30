@@ -1,6 +1,16 @@
 # Devpost submission fields
 
-Preparation checklist for [FINAL_48H, F7](FINAL_48H.md). This file does not record a submitted entry. The project description remains in [DEVPOST.md](DEVPOST.md).
+Submission record and field reference for [FINAL_48H, F7](FINAL_48H.md). The project description remains in [DEVPOST.md](DEVPOST.md).
+
+## Submitted — 2026-10-30
+
+The main submission session observed Devpost **Submitted** at approximately **03:51 UTC / 11:51 Beijing** on October 30, 2026, and retained its confirmation screenshot. This is an observed approximate time, not an invented server timestamp.
+
+- Entry: [Headroom on Devpost](https://devpost.com/software/headroom-8vfuwj).
+- Public video: [Headroom — GPU Memory Diagnosis & Verified Repairs](https://www.youtube.com/watch?v=aaXF60LryWI). The main session verified Public visibility and playback.
+- Final uploaded v3 source file: SHA-256 1732b5d992e9946f624f98a02b0d2dede4a0e008be6d437a39797097abbf2e3a; 16,383,275 bytes; 166.92 seconds; 1920×1080, 25 fps, H.264/AAC. These values come from the main session's final-video review receipt; this documentation task did not re-encode or rehash that local file. The SHA identifies the uploaded source file, not YouTube's transcoded streams.
+
+Submission does not change the recorded repair scores, saved-snapshot failures or remaining development work. The [post-submission inventory](../reports/post-submission-inventory-20261030/README.md) separates those obligations from the completed delivery.
 
 ## Fields
 
@@ -14,10 +24,10 @@ Preparation checklist for [FINAL_48H, F7](FINAL_48H.md). This file does not reco
 | Feedback | Use the first five paragraphs of [FEEDBACK.md](FEEDBACK.md), as requested by F7. |
 | Demo URL | [Headroom public demo](https://headroom.tail45186b.ts.net/) |
 | Repository URL | [Headroom source](https://github.com/xiaodouzi666/headroom) |
-| Video URL | `{{PUBLIC_YOUTUBE_URL}}` — replace after Frank reviews the final video, uploads it as Public and verifies playback. |
-| Testing instructions | Use the current instructions below and resolve the judge-access requirements before submitting. |
+| Video URL | [Public YouTube demonstration](https://www.youtube.com/watch?v=aaXF60LryWI) — Public visibility and playback verified in the submission session. |
+| Testing instructions | Use the current instructions below; the credential is delivered privately and is never included in this public file. |
 
-Video production instructions are in [FINAL_48H, §4](FINAL_48H.md). The current [media index](media/final/README.md) records available assets and missing prerequisites. A toolchain smoke clip is not the submission video.
+The final video is linked above. Production instructions remain in [FINAL_48H, §4](FINAL_48H.md), and the [media index](media/final/README.md) preserves the original recordings and handoff. Toolchain smoke clips remain separate from the submitted video.
 
 ## Version source for judges
 
@@ -37,7 +47,7 @@ As of the [3d8112f deployment](../reports/public-security-20261030/deployment.js
 
 Uploads have a 30-second total deadline and three slots. Each target output is bounded to 512 MiB / 4,096 inodes. Public storage uses a 16 GiB application-scope admission threshold and an 8 GiB free-space floor after a 1 GiB reservation; it is not a whole-machine disk quota. Queue, GPU availability and sandbox protections still apply. These are current capabilities, not a promise of unrestricted judging-period access.
 
-The official [Testing requirement](https://nebiusglobalaihackathon.devpost.com/rules) requires free access for the organizers and judges through the end of judging. If access is private, its credentials belong in the testing instructions. The revised access policy and remaining resource/funding limits have not been confirmed by the organizer to satisfy that requirement; removing the judge hourly quota does not itself establish compliance. Before final submission, verify the visibility of the Devpost testing field and provide the actual credential through the field intended for judges; do not paste it into publicly visible text. Local Chrome access was restored on 2026-10-29. The actual Additional info page is labelled for judges and organizers; country is explicitly public. No dedicated Testing instructions field is present. Its Upload a File control is the available private attachment location. Frank approved uploading the existing judge credential and testing instructions. The file was saved in that private attachment control and its filename verified after reopening the form. The public Home image was also saved as the thumbnail and image-gallery item. On 2026-10-30, the same credential and revised instructions were saved as judge-testing-instructions-20261030-v3.txt and verified after reopening Additional info; the project still showed DRAFT / 3 of 5 steps.
+The official [Testing requirement](https://nebiusglobalaihackathon.devpost.com/rules) requires free access for the organizers and judges through the end of judging. If access is private, its credentials belong in the testing instructions. At the earlier pre-submission checkpoint, the organizer had not yet clarified the retained limits. The new Manager reply and revised judging dates are recorded in the [official requirements review](../reports/submission-final-review-20261030/requirements-review.md); reasonable abuse protection with capacity sufficient for a full judging pass is conditionally accepted, not an unconditional certification of this installation. The submission session checked the private attachment location and supplied the actual credential only through that channel; do not paste it into publicly visible text. Local Chrome access was restored on 2026-10-29. The actual Additional info page is labelled for judges and organizers; country is explicitly public. No dedicated Testing instructions field is present. Its Upload a File control is the available private attachment location. Frank approved uploading the existing judge credential and testing instructions. The file was saved in that private attachment control and its filename verified after reopening the form. The public Home image was also saved as the thumbnail and image-gallery item. On 2026-10-30, the same credential and revised instructions were saved as judge-testing-instructions-20261030-v3.txt and verified after reopening Additional info; that pre-submission checkpoint still showed DRAFT / 3 of 5 steps. The later Submitted observation above supersedes that state.
 
 ## Judge credential handoff
 
@@ -47,8 +57,8 @@ Supply any eventual credential through a private channel whose visibility has be
 
 ## Submission verification
 
-Frank completes the submission after the final video and chosen testing instructions are ready. Record the actual Devpost project URL and Submitted confirmation, and open the demo, repository and Public YouTube links from the submitted entry. No Submitted confirmation is recorded by this file.
+The authorized submission session completed the form and observed Submitted; its public entry and video are recorded above. Final publication does not certify every feature or acceptance target. Keep the private credential out of public story text, URLs, images and source.
 
-## Actual draft prepared — 2026-10-29
+## Historical draft prepared — 2026-10-29 (superseded)
 
-[Headroom project preview](https://devpost.com/software/headroom-8vfuwj) now contains the saved name, tagline, current story, technology tags and both public links. The hackathon entry still says DRAFT / 3 of 5 steps; no Submitted confirmation exists. The separate technical feedback fields are saved, with the actual question mapping and proposed subjective ratings in [the draft report](../reports/devpost-draft-20261029/README.md). Personal eligibility and career-value answers are saved. Moderate learning is saved and no IRL event city is selected, matching Frank's explicit answers. The final video remains pending. The final Rules/Terms checkbox has not been selected. Do not infer submission from the existence of a project page.
+[Headroom project preview](https://devpost.com/software/headroom-8vfuwj) at this earlier checkpoint contained the saved name, tagline, current story, technology tags and both public links. The entry then said DRAFT / 3 of 5 steps; no Submitted confirmation existed at that checkpoint. The separate technical feedback fields are saved, with the actual question mapping and proposed subjective ratings in [the draft report](../reports/devpost-draft-20261029/README.md). Personal eligibility and career-value answers are saved. Moderate learning is saved and no IRL event city is selected, matching Frank's explicit answers. The final video was still pending and the final Rules/Terms checkbox had not yet been selected. These historical observations are superseded by the submitted record above. Do not infer submission from the existence of a project page.

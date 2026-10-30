@@ -33,6 +33,7 @@ LIMITS = {"snapshot": 50 * 1024 * 1024, "traceback": 256 * 1024, "source": 1024 
 FILENAMES = {"snapshot": "snapshot.pickle", "traceback": "traceback.txt", "source": "source.py"}
 MAX_BODY_BYTES = sum(LIMITS.values()) + 64 * 1024
 MAX_REPORT_BYTES = 2 * 1024 * 1024
+UPLOAD_TIMEOUT_SECONDS = 30.0
 VERIFICATION = {"status": "not_run", "message": "Not run — bring the patch to your GPU"}
 DOWNLOADS = {
     "diagnosis_json": ("diagnosis.json", "application/json"),
@@ -427,8 +428,15 @@ def _markdown(result):
     return ("\n".join(lines) + "\n").encode()
 
 
-def register_snapshot_routes(app, settings, *, worker=None, allocation_parent=None):
-    manager = SnapshotQueue(settings, worker=worker, allocation_parent=allocation_parent)
+def register_snapshot_routes(
+    app, settings, *, worker=None, allocation_parent=None, public_allocation=None
+):
+    manager = SnapshotQueue(
+        settings,
+        worker=worker,
+        allocation_parent=allocation_parent,
+        public_allocation=public_allocation,
+    )
 
     def owner(request):
         value = getattr(request.state, "owner", None)
@@ -460,6 +468,27 @@ def register_snapshot_routes(app, settings, *, worker=None, allocation_parent=No
             kinds.append("patch")
         return {kind: {"url": f"/api/snapshots/{identifier}/download/{kind}"} for kind in kinds}
 
+    async def reserve_upload(request_owner, ip, judge):
+        # The storage census runs off the event loop. Cancellation must still
+        # account for an admission that the thread may have just persisted.
+        task = asyncio.create_task(
+            asyncio.to_thread(manager.reserve, request_owner, ip, judge=judge)
+        )
+        try:
+            return await asyncio.shield(task)
+        except asyncio.CancelledError:
+            while not task.done():
+                try:
+                    await asyncio.shield(task)
+                except asyncio.CancelledError:
+                    continue
+                except (SnapshotAdmissionError, OSError, ValueError):
+                    break
+            if not task.cancelled() and task.exception() is None:
+                identifier, _created = task.result()
+                manager.fail_upload(identifier)
+            raise
+
     @app.post("/api/snapshots", status_code=202)
     async def submit_snapshot(request: Request):
         # Both gates precede body access, admission, file creation and dispatch.
@@ -468,6 +497,9 @@ def register_snapshot_routes(app, settings, *, worker=None, allocation_parent=No
             or not settings.run_submissions_enabled
         ):
             raise HTTPException(503, "Snapshot analysis is temporarily paused.")
+        judge = judge_authorized(settings, request)
+        if settings.public_host and not judge:
+            raise HTTPException(401, "A valid judge token is required for snapshot uploads")
         request_owner = owner(request)
         origin = request.headers.get("origin")
         if origin:
@@ -486,9 +518,7 @@ def register_snapshot_routes(app, settings, *, worker=None, allocation_parent=No
             except ValueError:
                 raise HTTPException(413, "Request exceeds upload limit") from None
         try:
-            identifier, created = manager.reserve(
-                request_owner, ip, judge=judge_authorized(settings, request)
-            )
+            identifier, created = await reserve_upload(request_owner, ip, judge)
         except SnapshotAdmissionError as error:
             raise HTTPException(error.status, str(error), headers={"Retry-After": "60"}) from None
         parser = None
@@ -497,7 +527,7 @@ def register_snapshot_routes(app, settings, *, worker=None, allocation_parent=No
                 manager.root / identifier, request.headers.get("content-type", "")
             )
             total = 0
-            remaining = created + manager.deadline - manager.clock()
+            remaining = min(UPLOAD_TIMEOUT_SECONDS, created + manager.deadline - manager.clock())
             async with asyncio.timeout(max(0, remaining)):
                 async for chunk in request.stream():
                     total += len(chunk)

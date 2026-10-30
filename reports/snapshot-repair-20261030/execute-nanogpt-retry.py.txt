@@ -1,0 +1,380 @@
+"""One reviewed Snapshot retry; default is file validation only, never claim or dispatch."""
+
+from __future__ import annotations
+
+import argparse
+import ctypes
+import json
+import multiprocessing
+import os
+import re
+import signal
+import stat
+import sys
+import time
+from datetime import UTC, datetime
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+PRIVATE = ROOT / ".cache/snapshot-repair-20261030"
+RUN_ROOT = ROOT / "runs/uploads"
+REPORTS = ROOT / "reports/snapshot-repair-20261030"
+WALL_SECONDS = 480
+TERMINAL = {"completed", "failed", "timeout", "cancelled", "budget_exceeded", "needs_human"}
+
+
+def now():
+    return datetime.now(UTC).isoformat()
+
+
+def save(path, document):
+    raw = (json.dumps(document, indent=2, allow_nan=False) + "\n").encode()
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(fd, "wb") as handle:
+        handle.write(raw)
+        handle.flush()
+        os.fsync(handle.fileno())
+
+
+def load_proposal(path, expected):
+    """Only file/schema/hash checks here; no registry, ledger, credentials or runtime."""
+    path = path.absolute()
+    if (
+        path.parent != PRIVATE
+        or any(part.is_symlink() for part in (path, *path.parents))
+        or not re.fullmatch(r"[0-9a-f]{64}", expected or "")
+    ):
+        raise ValueError("Invalid private proposal location or expected digest")
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(fd, "rb") as handle:
+        info = os.fstat(handle.fileno())
+        if (
+            not stat.S_ISREG(info.st_mode)
+            or info.st_nlink != 1
+            or info.st_uid != os.getuid()
+            or stat.S_IMODE(info.st_mode) != 0o600
+            or info.st_size > 2 * 1024 * 1024
+        ):
+            raise ValueError("Proposal must be a private bounded regular file")
+        raw = handle.read(2 * 1024 * 1024 + 1)
+    if len(raw) > 2 * 1024 * 1024:
+        raise ValueError("Proposal grew beyond its limit")
+    document = json.loads(raw)
+    sys.path.insert(0, str(ROOT))
+    from headroom.acceptance.allocation import digest
+    from headroom.snapshot_diagnosis import SnapshotDiagnosisRequest
+
+    proposal = document["proposal"]
+    run_id = proposal.get("run_id")
+    if (
+        digest(proposal) != expected
+        or proposal.get("schema") != "headroom.final48.snapshot-retry-proposal.v1"
+        or not re.fullmatch(r"[0-9a-f]{32}", str(run_id))
+        or path.name != run_id + "-proposal.json"
+        or proposal.get("project_root") != str(ROOT)
+        or proposal.get("receipt_path") != str(ROOT / ".cache/final48-allocation/receipt.json")
+        or proposal.get("original", {}).get("slot_id") != "snapshot-nanogpt"
+    ):
+        raise ValueError("Unexpected reviewed nanoGPT proposal")
+    request = SnapshotDiagnosisRequest.model_validate(document["request"])
+    return proposal, request
+
+
+def worker(binding, request_values, control_directory, channel, parent_pid):
+    """Trusted normal workflow; no runtime/patch replacement or uploaded execution."""
+    os.setsid()
+    os.umask(0o077)
+
+    def parent_lost(_signum=None, _frame=None):
+        os.killpg(os.getpid(), signal.SIGKILL)
+
+    signal.signal(signal.SIGUSR1, parent_lost)
+    libc = ctypes.CDLL(None, use_errno=True)
+    if libc.prctl(38, 1, 0, 0, 0) != 0 or libc.prctl(1, signal.SIGUSR1, 0, 0, 0) != 0:
+        os._exit(1)
+    if os.getppid() != parent_pid:
+        parent_lost()
+    channel.send("ready")
+    if channel.recv() != "proceed":
+        return
+
+    # All output, including provider exceptions, remains owner-only and bounded.
+    fd = os.open(
+        Path(control_directory) / "worker.log",
+        os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+        0o600,
+    )
+    os.dup2(fd, 1)
+    os.dup2(fd, 2)
+    os.close(fd)
+    message = {"worker_returned": False, "status": "failed", "error_type": None}
+    try:
+        from headroom.api.snapshot_queue import _worker_limits
+
+        _worker_limits()
+        from headroom.acceptance.snapshot_retry import snapshot_retry_budget_factory
+        from headroom.snapshot_diagnosis import (
+            SnapshotDiagnosisRequest,
+            SnapshotServices,
+            run_snapshot_diagnosis,
+        )
+
+        result = run_snapshot_diagnosis(
+            SnapshotDiagnosisRequest.model_validate(request_values),
+            run_root=RUN_ROOT,
+            run_id=binding["run_id"],
+            services=SnapshotServices(budget_factory=snapshot_retry_budget_factory(binding)),
+        )
+        message["worker_returned"] = isinstance(result, dict) and result.get("status") in TERMINAL
+        message["status"] = result.get("status") if message["worker_returned"] else "failed"
+    except BaseException as error:  # noqa: BLE001 - preserve claim and redact private errors
+        # Raw exception text may contain private source/provider data.
+        message["error_type"] = type(error).__name__
+    finally:
+        import resource
+
+        message["peak_rss_kib"] = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        try:
+            channel.send(message)
+        except (OSError, EOFError):
+            pass
+        channel.close()
+        # Preserve the session leader until owned-group cleanup; no PID reuse race.
+        while True:
+            signal.pause()
+
+
+def execute(proposal, request, expected):
+    from headroom.acceptance.snapshot_binding import snapshot_cleanup_verified
+    from headroom.acceptance.snapshot_retry import claim_snapshot_retry, finish_snapshot_retry
+    from headroom.api.snapshot_queue import _bounded_job, _group_running, directory_fd
+    from headroom.lab.storage_budget import storage_admission
+
+    run_id = proposal["run_id"]
+    job = RUN_ROOT / run_id
+    selected = os.environ.get("HEADROOM_BUDGET_DB_PATH")
+    if selected not in (None, str(ROOT / ".cache/final48-allocation/budget.db")):
+        raise ValueError("Existing process-local pool selection conflicts")
+    if job.exists() or job.is_symlink():
+        raise FileExistsError("Retry output exists; never repeat this run")
+    os.close(directory_fd(PRIVATE))
+    os.close(directory_fd(RUN_ROOT, create=True))
+    directory = PRIVATE / run_id
+    directory.mkdir(mode=0o700, exist_ok=False)
+    save(
+        directory / "once.json",
+        {
+            "run_id": run_id,
+            "created_utc": now(),
+            "proposal_sha256": expected,
+            "instruction": "Never remove this marker or repeat automatically.",
+        },
+    )
+    outcome = {
+        "run_id": run_id,
+        "proposal_sha256": expected,
+        "started_utc": now(),
+        "deadline_seconds": WALL_SECONDS,
+        "worker_returned": False,
+        "status": "failed",
+        "process_exit_code": None,
+        "process_group_cleanup_verified": False,
+        "snapshot_cleanup_verified": False,
+        "execution_terminal": False,
+        "timed_out": False,
+        "error_type": None,
+        "peak_rss_kib": None,
+    }
+    binding = process = receiver = sender = None
+    ready = False
+    deadline = time.monotonic() + WALL_SECONDS
+    settlement = None
+    settlement_error = None
+    try:
+        # Local free-space protection, not a new allocation or new public quota.
+        with storage_admission(RUN_ROOT):
+            pass
+        binding = claim_snapshot_retry(proposal, request, expected_sha256=expected)
+        save(directory / "binding.json", binding)
+        save(directory / "request.json", request.model_dump(mode="json"))
+        job.mkdir(mode=0o700, exist_ok=False)
+        for name in (
+            "HEADROOM_WATCH_FEATURE_CONTEXT",
+            "HEADROOM_SNAPSHOT_FEATURE_BINDING",
+            "HEADROOM_EVALUATION_CONTEXT",
+            "HEADROOM_CLI_INVOCATION",
+            "PYTHONPATH",
+            "PYTHONHOME",
+        ):
+            os.environ.pop(name, None)
+        os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+        os.environ["PYTHONUNBUFFERED"] = "1"
+        context = multiprocessing.get_context("spawn")
+        receiver, sender = context.Pipe()
+        process = context.Process(
+            target=worker,
+            args=(binding, request.model_dump(mode="json"), str(directory), sender, os.getpid()),
+        )
+        process.start()
+        sender.close()
+        save(
+            directory / "dispatch-once.json",
+            {
+                "observed_utc": now(),
+                "run_id": run_id,
+                "pid": process.pid,
+                "runtime": "run_snapshot_diagnosis",
+                "services": "SnapshotServices(budget_factory=snapshot_retry_budget_factory)",
+                "runtime_factory_injected": False,
+                "patch_factory_injected": False,
+            },
+        )
+        next_check = 0.0
+        while process.is_alive():
+            if time.monotonic() >= deadline:
+                outcome["timed_out"] = True
+                outcome["status"] = "timeout"
+                break
+            if time.monotonic() >= next_check:
+                _bounded_job(job)
+                next_check = time.monotonic() + 0.25
+            if receiver.poll(0.05):
+                message = receiver.recv()
+                if message == "ready" and not ready:
+                    ready = True
+                    receiver.send("proceed")
+                elif isinstance(message, dict) and ready:
+                    outcome.update(
+                        {
+                            key: message.get(key)
+                            for key in ("worker_returned", "status", "error_type", "peak_rss_kib")
+                        }
+                    )
+                    break
+    except BaseException as error:  # noqa: BLE001 - preserve claim and redact private errors
+        outcome["error_type"] = type(error).__name__
+    finally:
+        if process is not None and process.pid is not None:
+            try:
+                if ready:
+                    os.killpg(process.pid, signal.SIGKILL)
+                elif process.is_alive():
+                    process.kill()
+            except ProcessLookupError:
+                pass
+            process.join(2)
+            until = time.monotonic() + 2
+            while ready and _group_running(process.pid) and time.monotonic() < until:
+                time.sleep(0.01)
+            outcome["process_exit_code"] = process.exitcode
+            outcome["process_group_cleanup_verified"] = not process.is_alive() and (
+                not ready or not _group_running(process.pid)
+            )
+        else:
+            outcome["process_group_cleanup_verified"] = process is None
+        for channel in (receiver, sender):
+            if channel is not None:
+                channel.close()
+        outcome["execution_terminal"] = (
+            outcome["worker_returned"] is True
+            and outcome["status"] in TERMINAL
+            and not outcome["timed_out"]
+            and outcome["error_type"] is None
+        )
+        outcome["snapshot_cleanup_verified"] = binding is not None and snapshot_cleanup_verified(
+            RUN_ROOT, run_id
+        )
+        try:
+            if job.exists():
+                _bounded_job(job)
+        except (OSError, ValueError):
+            outcome["snapshot_cleanup_verified"] = False
+            outcome["error_type"] = outcome["error_type"] or "OutputVerificationFailed"
+        clean = outcome["process_group_cleanup_verified"] and outcome["snapshot_cleanup_verified"]
+        if binding is not None:
+            try:
+                settlement = finish_snapshot_retry(
+                    binding,
+                    execution_terminal=outcome["execution_terminal"],
+                    cleanup_verified=clean,
+                )
+                save(directory / "settlement.json", settlement)
+            except BaseException as error:  # noqa: BLE001 - preserve claim and redact private errors
+                settlement_error = type(error).__name__
+        outcome["finished_utc"] = now()
+        outcome["cleanup_verified"] = bool(clean)
+        save(directory / "outcome.json", outcome)
+        summary = {
+            **outcome,
+            "claim_created": binding is not None,
+            "settlement_recorded": settlement is not None,
+            "settlement_status": settlement.get("status") if settlement else "unresolved",
+            "actual_usd": settlement.get("actual_usd") if settlement else None,
+            "charged_usd": settlement.get("charged_usd") if settlement else None,
+            "cost_resolved": settlement.get("cost_resolved") if settlement else False,
+            "cost_basis": settlement.get("cost_basis") if settlement else "unresolved",
+            "settlement_error_type": settlement_error,
+            "supervisor_cleanup_uses_sigkill_after_worker_return": True,
+            "automatic_retries": 0,
+            "feature_acceptance": "Inspect actual diagnosis separately; settled is not success.",
+        }
+        save(directory / "controller-summary.json", summary)
+        save(REPORTS / (run_id + "-controller-summary.json"), summary)
+        print(json.dumps(summary, indent=2))
+    return (
+        0
+        if (
+            settlement
+            and settlement["status"] == "settled"
+            and settlement["cost_resolved"]
+            and outcome["execution_terminal"]
+            and outcome["cleanup_verified"]
+        )
+        else 2
+    )
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--proposal", type=Path)
+    parser.add_argument("--expected-sha256")
+    parser.add_argument("--execute", action="store_true")
+    args = parser.parse_args()
+    if args.proposal is None and args.expected_sha256 is None and not args.execute:
+        parser.print_help()
+        return 0
+    if args.proposal is None or not args.expected_sha256:
+        parser.error("The private proposal and exact reviewed proposal digest are required")
+    os.umask(0o077)
+    proposal, request = load_proposal(args.proposal, args.expected_sha256)
+    if not args.execute:
+        print(
+            json.dumps(
+                {
+                    "mode": "file-validation-only",
+                    "run_id": proposal["run_id"],
+                    "proposal_sha256": args.expected_sha256,
+                    "claim_created": False,
+                    "registry_or_runtime_checked": False,
+                    "model_calls": 0,
+                    "gpu_jobs": 0,
+                }
+            )
+        )
+        return 0
+    return execute(proposal, request, args.expected_sha256)
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except Exception as error:  # noqa: BLE001 - never print private exception text
+        print(
+            json.dumps(
+                {
+                    "controller_error_type": type(error).__name__,
+                    "instruction": "Preserve any existing once marker/claim; do not retry automatically.",
+                }
+            )
+        )
+        raise SystemExit(2) from None

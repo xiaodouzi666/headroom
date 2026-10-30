@@ -1,0 +1,96 @@
+{
+  "schema": "headroom.snapshot-public-safety-review.v1",
+  "base_revision": "06f99fc19d4849d8589b701de908ce35620f3823",
+  "deployment_performed": false,
+  "public_snapshot_enabled_by_this_work": false,
+  "actual_provider_calls": 0,
+  "actual_gpu_jobs": 0,
+  "actual_charge_usd": "0",
+  "tests": {
+    "final_log": "final-isolated.log",
+    "passed": 77,
+    "seconds": 19.86,
+    "modules": [
+      "tests/test_snapshot_public_safety.py",
+      "tests/test_snapshot_routes.py",
+      "tests/test_snapshot_integration.py",
+      "tests/test_snapshot_allocation_binding.py"
+    ],
+    "separate_financial_review": {
+      "passed": 28,
+      "log": "../snapshot-public-binding-20261030/focused-tests.log"
+    },
+    "overlapping_intermediate_logs_not_added_to_total": true
+  },
+  "failed_iterations_preserved": {
+    "focused.log": "60 passed; one pre-existing launcher-option fixture expectation stale",
+    "final-focused.log": "67 passed; nine F3b tests hit environment left by new launcher fixture; fixture now restores process-local variables"
+  },
+  "boundaries": {
+    "auth": "valid judge Bearer required before body/admission",
+    "pool": "same existing JudgeAllocation ledger/claims/credit; no new activation or funding",
+    "uploads": "50 MiB snapshot,256 KiB traceback,1 MiB source;30 second total body deadline",
+    "worker_file_limit_bytes": 134217728,
+    "worker_address_space_bytes": 2147483648,
+    "worker_cpu_seconds": 60,
+    "worker_wall_deadline_max_seconds": 480,
+    "worker_no_new_privileges": true,
+    "worker_cuda_visibility": "",
+    "supervised_job_bytes": 536870912,
+    "supervised_job_entries": 4096,
+    "aggregate_storage_admission_bytes": 17179869184,
+    "minimum_free_at_admission_bytes": 8589934592,
+    "storage_reservation_bytes": 1073741824,
+    "directory_and_shared_storage_limits_are_not_runtime_hard_quotas": true,
+    "legacy_F3b_history": "not migrated or deleted by new public manager",
+    "public_retention_hours": 24
+  },
+  "evidence_limits": [
+    "Real CPU spawn/file-limit/no_new_privs were exercised; no real model/GPU call.",
+    "HTTP to subprocess to bound ledger exercised with explicitly offline accounting workers and synthetic amounts.",
+    "First live provider/tokenizer use under 2GiB child cap still needs observation.",
+    "Uploaded pickle is primitive-only isolated decoding, not a general-purpose hostile-code sandbox.",
+    "Financial budget uses existing reviewed estimate-plus-margin admission, not a provider billing mathematical ceiling."
+  ],
+  "source_sha256": {
+    "headroom/api/app.py": "0d1049dbdb5b9536f6923ef77285ac3ce98ff221b381edd144047bbb6e482184",
+    "headroom/api/snapshot_queue.py": "431ed2f09f5dc07d40ae5557c918305ee76b63621b95dcdfce16d7bfaede49a9",
+    "headroom/api/snapshot_routes.py": "ff6555b9605f752b84757c7af2d2b882e620ff12c210b448a8bd81826579966a",
+    "headroom/acceptance/snapshot_binding.py": "a328a6b31f0254f4cbf067c66881214229141c577e6b3f41918fecb1ee2c3f53",
+    "headroom/acceptance/snapshot_public_binding.py": "562fc5a451788adc28304ecb936e286e528da1f9ce5397680ddaa6898620039b",
+    "scripts/serve_public.py": "f3604ec90bab668be9630c1fcf95b3faf8062315f1efffa44761ba99bcb81ee1",
+    "tests/test_snapshot_public_safety.py": "66a09845015a435a4a0cb1aba60c78ce67286cd85904417f0e8f8d5d3fcbfbf1",
+    "tests/test_snapshot_routes.py": "9427eed7b5adc60e544036235cf70995a02bf6c26ac63a29eb80fa0b558887fd",
+    "tests/test_snapshot_integration.py": "16675b964122afff69813a3d50f3e36d9faf46a0cbb75893faa0f771cc15d34f",
+    "tests/test_snapshot_public_binding.py": "bcd11fb752fdb08e808032547f39167165f68c9ccd55bfcc7d91ee11cc203941"
+  },
+  "initial_source_sha256": {
+    "headroom/api/app.py": "0d1049dbdb5b9536f6923ef77285ac3ce98ff221b381edd144047bbb6e482184",
+    "headroom/api/snapshot_queue.py": "4ca3f1e666089f282c1ac829cd1a175ca89cf453dadde35b757dfef71fafcff7",
+    "headroom/api/snapshot_routes.py": "ff6555b9605f752b84757c7af2d2b882e620ff12c210b448a8bd81826579966a",
+    "headroom/acceptance/snapshot_binding.py": "a328a6b31f0254f4cbf067c66881214229141c577e6b3f41918fecb1ee2c3f53",
+    "headroom/acceptance/snapshot_public_binding.py": "562fc5a451788adc28304ecb936e286e528da1f9ce5397680ddaa6898620039b",
+    "scripts/serve_public.py": "f3604ec90bab668be9630c1fcf95b3faf8062315f1efffa44761ba99bcb81ee1",
+    "tests/test_snapshot_public_safety.py": "8a80aca3f5cc7c887ae6e6249cb27646af77adea7a37577c3c4d2cf46b4f3070",
+    "tests/test_snapshot_routes.py": "9427eed7b5adc60e544036235cf70995a02bf6c26ac63a29eb80fa0b558887fd",
+    "tests/test_snapshot_integration.py": "16675b964122afff69813a3d50f3e36d9faf46a0cbb75893faa0f771cc15d34f",
+    "tests/test_snapshot_public_binding.py": "bcd11fb752fdb08e808032547f39167165f68c9ccd55bfcc7d91ee11cc203941"
+  },
+  "resource_refinement": {
+    "reason": "Offline reproduction of the first real retry failure found unnecessary transformers framework discovery mapping CUDA libraries under the 2GiB address-space cap.",
+    "change": "Trusted Snapshot child sets USE_TORCH=0, USE_TF=0, USE_FLAX=0 before tokenizer import. No resource bound increased.",
+    "focused_test": "tests/test_snapshot_public_safety.py::test_real_cpu_spawn_file_limit_and_no_cuda_visibility",
+    "log": "worker-tokenizer-only.log",
+    "passed": 1,
+    "seconds": 1.21,
+    "actual_transformers_framework_available": [
+      false,
+      false,
+      false
+    ],
+    "previous_77_tests_not_rerun_or_added_to_this_one": true,
+    "provider_calls": 0,
+    "gpu_jobs": 0,
+    "historical_failed_retry_untouched": true
+  }
+}

@@ -1,6 +1,10 @@
 # Headroom delivery status — updated 2026-10-30
 
-This is the submission preparation report. It does not record a completed Devpost submission, a final public video URL, or the October 30 closing check.
+## October 30, 11:51 Beijing — formally submitted
+
+[Headroom](https://devpost.com/software/headroom-8vfuwj) is **Submitted, 5/5**, with the [public final demo](https://www.youtube.com/watch?v=aaXF60LryWI). [Submission receipt and scope](submission-final-review-20261030/README.md) records actual UI confirmation; the video source is 166.92 seconds. The judge access period was extended to December 23 20:00 UTC without changing funding or credentials, and the updated private attachment was saved. Snapshot upload remains paused pending real validation; the latest fixed-nine result remains 1/9 against 6/9. The user's next instruction is to finish snapshot and remaining work, then update Devpost based on verified outcomes. Dated Draft/video-pending statements below describe previous states, not current submission status.
+
+This report preserves preparation history. The current submission state is recorded above; the scheduled October 30 closing check remains separate.
 
 
 ## Current public access update — October 30
