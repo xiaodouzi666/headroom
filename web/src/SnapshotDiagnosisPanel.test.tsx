@@ -12,6 +12,8 @@ import App from "./App";
 import SnapshotDiagnosisPanel from "./SnapshotDiagnosisPanel";
 import {
   fetchSnapshot,
+  fetchSnapshotExamples,
+  submitSnapshotExample,
   SNAPSHOT_LIMITS,
   snapshotArtifactURL,
   submitSnapshot,
@@ -23,6 +25,41 @@ const ID = "a".repeat(32),
   HASH = "c".repeat(64);
 const reply = (body: unknown, status = 200) =>
   Promise.resolve(new Response(JSON.stringify(body), { status }));
+const exampleList = {
+  examples: [
+    {
+      id: "s2-capacity",
+      label: "s2 capacity capture",
+      description: "Saved s2 allocation history.",
+      snapshot_bytes: 10651527,
+      available: true,
+      reason: null,
+    },
+    {
+      id: "nanogpt",
+      label: "nanoGPT capture",
+      description: "Saved nanoGPT allocation history.",
+      snapshot_bytes: 590852,
+      available: true,
+      reason: null,
+    },
+  ],
+};
+function stubFetch(handler: (...args: any[]) => unknown) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((path: unknown, init?: RequestInit) =>
+      path === "/api/snapshot-examples"
+        ? reply(exampleList)
+        : handler(path, init),
+    ),
+  );
+}
+function snapshotCalls() {
+  return vi
+    .mocked(fetch)
+    .mock.calls.filter(([path]) => path !== "/api/snapshot-examples");
+}
 function file(name: string, size = 4) {
   const value = new File(["mock"], name);
   Object.defineProperty(value, "size", { value: size });
@@ -108,8 +145,7 @@ function completed() {
   };
 }
 function mockJob(document = completed()) {
-  vi.stubGlobal(
-    "fetch",
+  stubFetch(
     vi.fn((path: unknown, init?: RequestInit) => {
       if (path === "/api/snapshots" && init?.method === "POST")
         return reply({ run_id: ID, status: "queued" }, 202);
@@ -119,6 +155,9 @@ function mockJob(document = completed()) {
   );
 }
 function selectSnapshot(value = file("snapshot.pickle")) {
+  fireEvent.click(
+    screen.getByRole("button", { name: "Upload your own capture" }),
+  );
   fireEvent.change(screen.getByLabelText(/Memory snapshot/), {
     target: { files: [value] },
   });
@@ -134,8 +173,7 @@ afterEach(() => {
 });
 it("keeps the Home panel paused when config is absent or false despite a forged query", async () => {
   window.history.replaceState({}, "", "/?snapshot_submissions_enabled=true");
-  vi.stubGlobal(
-    "fetch",
+  stubFetch(
     vi.fn(() =>
       reply({
         snapshot_submissions_enabled: true,
@@ -166,11 +204,14 @@ it("does not submit while paused even if a file had been selected before disabli
   expect(
     screen.queryByRole("button", { name: "Analyze snapshot" }),
   ).not.toBeInTheDocument();
-  expect(fetch).not.toHaveBeenCalled();
+  expect(snapshotCalls()).toHaveLength(0);
 });
 it("rejects missing or empty required input without a network request", () => {
-  vi.stubGlobal("fetch", vi.fn());
+  stubFetch(vi.fn());
   render(<SnapshotDiagnosisPanel enabled />);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Upload your own capture" }),
+  );
   fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" }));
   expect(screen.getByRole("alert")).toHaveTextContent(
     "Choose a PyTorch memory snapshot",
@@ -178,16 +219,16 @@ it("rejects missing or empty required input without a network request", () => {
   selectSnapshot(file("empty.pickle", 0));
   fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" }));
   expect(screen.getByRole("alert")).toHaveTextContent("snapshot file is empty");
-  expect(fetch).not.toHaveBeenCalled();
+  expect(snapshotCalls()).toHaveLength(0);
 });
 it.each(["snapshot", "traceback", "source"] as const)(
   "enforces the %s byte boundary before POST",
   async (kind) => {
-    vi.stubGlobal("fetch", vi.fn());
+    stubFetch(vi.fn());
     const input = files();
     input[kind] = file(kind, SNAPSHOT_LIMITS[kind] + 1);
     await expect(submitSnapshot(input, "")).rejects.toThrow("exceeds");
-    expect(fetch).not.toHaveBeenCalled();
+    expect(snapshotCalls()).toHaveLength(0);
     input[kind] = file(kind, SNAPSHOT_LIMITS[kind]);
     expect(validateSnapshotFiles(input)).toBeNull();
   },
@@ -229,8 +270,7 @@ it("sends multipart fields and the ephemeral judge token only in the POST header
   expect(window.location.href).not.toContain("offline-ui-token");
 });
 it("supports anonymous submission without Authorization and keeps limit errors visible", async () => {
-  vi.stubGlobal(
-    "fetch",
+  stubFetch(
     vi.fn(() =>
       reply({ detail: "Two snapshot uploads per hour are allowed" }, 429),
     ),
@@ -241,7 +281,7 @@ it("supports anonymous submission without Authorization and keeps limit errors v
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "Two snapshot uploads per hour",
   );
-  expect(vi.mocked(fetch).mock.calls[0][1]?.headers).toBeUndefined();
+  expect(snapshotCalls()[0][1]?.headers).toBeUndefined();
   expect(screen.queryByText("Analysis complete")).not.toBeInTheDocument();
 });
 it("shows diagnosis, measured evidence and unverified status without inventing repair gains", async () => {
@@ -274,7 +314,7 @@ it("shows diagnosis, measured evidence and unverified status without inventing r
     screen.getByText("/uploaded/train.py:14 in forward"),
   ).toBeInTheDocument();
   const stack = screen
-    .getByText("Uploaded snapshot · cited allocation stack")
+    .getByText("Saved snapshot · cited allocation stack")
     .closest<HTMLElement>(".stack-block")!;
   expect(
     within(stack).getByText("Live at reconstructed peak").closest("div"),
@@ -282,7 +322,7 @@ it("shows diagnosis, measured evidence and unverified status without inventing r
   expect(
     within(stack).getByText("Allocated during capture").closest("div"),
   ).toHaveTextContent("123,456 bytes");
-  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(snapshotCalls()).toHaveLength(2);
   expect(
     screen.getByRole("link", { name: "Download unverified patch" }),
   ).toHaveAttribute("href", `/api/snapshots/${ID}/download/patch`);
@@ -341,8 +381,7 @@ it("keeps a positive tiny reported cost visible instead of rounding it to zero",
   expect(await screen.findByText("<$0.0001")).toBeInTheDocument();
 });
 it("keeps completed-without-result distinct from a verified GPU repair", async () => {
-  vi.stubGlobal(
-    "fetch",
+  stubFetch(
     vi.fn(() =>
       reply({ run_id: ID, status: "completed", result: null, artifacts: {} }),
     ),
@@ -358,8 +397,7 @@ it("keeps completed-without-result distinct from a verified GPU repair", async (
   ).toBeInTheDocument();
 });
 it("removes result downloads when the server reports the upload unavailable or expired", async () => {
-  vi.stubGlobal(
-    "fetch",
+  stubFetch(
     vi.fn((path: unknown) =>
       path === "/api/snapshots"
         ? reply({ run_id: ID, status: "queued" }, 202)
@@ -376,33 +414,28 @@ it("removes result downloads when the server reports the upload unavailable or e
 });
 it("cancels status polling on unmount", async () => {
   vi.useFakeTimers();
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(() => reply({ run_id: ID, status: "running" })),
-  );
+  stubFetch(vi.fn(() => reply({ run_id: ID, status: "running" })));
   const view = render(<SnapshotDiagnosisPanel enabled />);
   selectSnapshot();
   await act(async () =>
     fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" })),
   );
-  expect(fetch).toHaveBeenCalledTimes(2);
-  const signal = vi.mocked(fetch).mock.calls[1][1]?.signal;
+  expect(snapshotCalls()).toHaveLength(2);
+  const signal = snapshotCalls()[1][1]?.signal;
   view.unmount();
   expect(signal?.aborted).toBe(true);
   await act(async () => vi.advanceTimersByTime(10000));
-  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(snapshotCalls()).toHaveLength(2);
 });
 it("rejects a mismatched owner response identifier", async () => {
-  vi.stubGlobal(
-    "fetch",
+  stubFetch(
     vi.fn(() => reply({ run_id: "f".repeat(32), status: "completed" })),
   );
   await expect(fetchSnapshot(ID)).rejects.toThrow("did not match this upload");
 });
 
 it("enables Home snapshot uploads only from the nested server submission flag", async () => {
-  vi.stubGlobal(
-    "fetch",
+  stubFetch(
     vi.fn(() =>
       reply({
         snapshot_submissions: { enabled: true },
@@ -416,7 +449,7 @@ it("enables Home snapshot uploads only from the nested server submission flag", 
     await screen.findByRole("form", { name: "Diagnose my snapshot" }),
   ).toBeInTheDocument();
   expect(
-    screen.getByRole("button", { name: "Analyze snapshot" }),
+    screen.getByRole("button", { name: "Analyze selected capture" }),
   ).toBeEnabled();
 });
 
@@ -428,7 +461,7 @@ it("requires the server-declared judge token before a private upload", async () 
   expect(screen.getByRole("alert")).toHaveTextContent(
     "Enter your judge access token",
   );
-  expect(fetch).not.toHaveBeenCalled();
+  expect(snapshotCalls()).toHaveLength(0);
   fireEvent.change(screen.getByLabelText("Judge access token"), {
     target: { value: "offline-ui-token" },
   });
@@ -444,8 +477,7 @@ it("requires the server-declared judge token before a private upload", async () 
 });
 
 it("uses the server's private snapshot flag on Home", async () => {
-  vi.stubGlobal(
-    "fetch",
+  stubFetch(
     vi.fn(() =>
       reply({
         snapshot_submissions: { enabled: true, requires_judge_token: true },
@@ -476,7 +508,9 @@ it("labels host-derived quantities without claiming causal savings", async () =>
   fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" }));
   expect(await screen.findByText("Cited peak allocation")).toBeInTheDocument();
   expect(screen.queryByText("Estimated size")).not.toBeInTheDocument();
-  expect(screen.getByText(/They do not establish causal contribution or savings/)).toBeInTheDocument();
+  expect(
+    screen.getByText(/They do not establish causal contribution or savings/),
+  ).toBeInTheDocument();
   expect(screen.getByText("Reconstructed allocated peak")).toBeInTheDocument();
 });
 
@@ -488,7 +522,6 @@ it("retains the estimate label for older results", async () => {
   expect(await screen.findByText("Estimated size")).toBeInTheDocument();
   expect(screen.queryByText("Cited peak allocation")).not.toBeInTheDocument();
 });
-
 
 it("distinguishes a rejected model response from missing information and does not suggest a nonexistent patch", async () => {
   const document = completed();
@@ -503,31 +536,59 @@ it("distinguishes a rejected model response from missing information and does no
   render(<SnapshotDiagnosisPanel enabled />);
   selectSnapshot();
   fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" }));
-  expect(await screen.findByText("Model response rejected")).toBeInTheDocument();
-  expect(screen.getByText(/No reliable diagnosis is available for this upload/)).toBeInTheDocument();
-  expect(screen.getByText("No validated diagnosis available")).toBeInTheDocument();
+  expect(
+    await screen.findByText("Model response rejected"),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText(/No reliable diagnosis is available for this capture/),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText("No validated diagnosis available"),
+  ).toBeInTheDocument();
   expect(screen.queryByText("More information needed")).not.toBeInTheDocument();
-  expect(screen.queryByText(/bring the patch to your GPU/)).not.toBeInTheDocument();
-  expect(screen.queryByRole("link", { name: "Download unverified patch" })).not.toBeInTheDocument();
-  expect(screen.getByText("No patch draft was generated because the model response did not pass validation.")).toBeInTheDocument();
-  expect(screen.getByRole("table", { name: "Snapshot peak composition" })).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "Download diagnosis JSON" })).toBeInTheDocument();
+  expect(
+    screen.queryByText(/bring the patch to your GPU/),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("link", { name: "Download unverified patch" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByText(
+      "No patch draft was generated because the model response did not pass validation.",
+    ),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("table", { name: "Snapshot peak composition" }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "Download diagnosis JSON" }),
+  ).toBeInTheDocument();
 });
 
 it("keeps a valid needs-human diagnosis distinct from validation rejection without claiming a patch exists", async () => {
   const document = completed();
   Object.assign(document, { status: "needs_human" });
   Object.assign(document.result.diagnosis, { needs_more_info: true });
-  Object.assign(document.result, { patch: { status: "unavailable", diff: null } });
+  Object.assign(document.result, {
+    patch: { status: "unavailable", diff: null },
+  });
   mockJob(document);
   render(<SnapshotDiagnosisPanel enabled />);
   selectSnapshot();
   fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" }));
-  expect(await screen.findByText("More information needed")).toBeInTheDocument();
-  expect(screen.getByText("Offline UI fixture — activation hypothesis")).toBeInTheDocument();
+  expect(
+    await screen.findByText("More information needed"),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText("Offline UI fixture — activation hypothesis"),
+  ).toBeInTheDocument();
   expect(screen.queryByText("Model response rejected")).not.toBeInTheDocument();
-  expect(screen.queryByText(/bring the patch to your GPU/)).not.toBeInTheDocument();
-  expect(screen.queryByRole("link", { name: "Download unverified patch" })).not.toBeInTheDocument();
+  expect(
+    screen.queryByText(/bring the patch to your GPU/),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("link", { name: "Download unverified patch" }),
+  ).not.toBeInTheDocument();
 });
 
 it("does not label unrelated unavailable results as model validation rejection", async () => {
@@ -544,12 +605,15 @@ it("does not label unrelated unavailable results as model validation rejection",
   fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" }));
   expect(await screen.findByText("Analysis failed")).toBeInTheDocument();
   expect(screen.queryByText("Model response rejected")).not.toBeInTheDocument();
-  expect(screen.queryByText(/bring the patch to your GPU/)).not.toBeInTheDocument();
+  expect(
+    screen.queryByText(/bring the patch to your GPU/),
+  ).not.toBeInTheDocument();
 });
 
-
 it("explains an upload timeout without suggesting that a model diagnosis ran", async () => {
-  vi.stubGlobal("fetch", vi.fn(() => reply({ detail: "Snapshot upload deadline exceeded" }, 408)));
+  stubFetch(
+    vi.fn(() => reply({ detail: "Snapshot upload deadline exceeded" }, 408)),
+  );
   render(<SnapshotDiagnosisPanel enabled />);
   selectSnapshot();
   fireEvent.click(screen.getByRole("button", { name: "Analyze snapshot" }));
@@ -557,5 +621,153 @@ it("explains an upload timeout without suggesting that a model diagnosis ran", a
     "The snapshot upload exceeded its time limit. Analysis did not start.",
   );
   expect(screen.queryByText("Analysis complete")).not.toBeInTheDocument();
+  expect(snapshotCalls()).toHaveLength(1);
+});
+
+it("describes snapshot patch drafts as optional", () => {
+  render(<SnapshotDiagnosisPanel enabled={false} />);
+  expect(
+    screen.getByText(
+      /allocation stacks and, when available, an unverified patch draft/,
+    ),
+  ).toBeInTheDocument();
+});
+
+it("defaults to stored captures and starts new model analysis without uploading files or paths", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((path: unknown) => {
+      if (path === "/api/snapshot-examples") return reply(exampleList);
+      if (path === "/api/snapshots/from-example")
+        return reply({ run_id: ID, status: "queued" }, 202);
+      if (path === `/api/snapshots/${ID}`) return reply(completed());
+      throw new Error("Unexpected offline UI request");
+    }),
+  );
+  const storage = vi.spyOn(Storage.prototype, "setItem");
+  render(<SnapshotDiagnosisPanel enabled requiresJudgeToken />);
+  await screen.findByRole("option", { name: "s2 capacity capture" });
+  expect(screen.getByLabelText("Stored capture")).toHaveValue("s2-capacity");
+  expect(screen.queryByLabelText(/Memory snapshot/)).not.toBeInTheDocument();
+  fireEvent.click(
+    screen.getByRole("button", { name: "Analyze selected capture" }),
+  );
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Enter your judge access token",
+  );
+  expect(
+    vi.mocked(fetch).mock.calls.filter(([, init]) => init?.method === "POST"),
+  ).toHaveLength(0);
+  fireEvent.change(screen.getByLabelText("Judge access token"), {
+    target: { value: "offline-ui-token" },
+  });
+  fireEvent.change(screen.getByLabelText("Stored capture"), {
+    target: { value: "nanogpt" },
+  });
+  fireEvent.click(
+    screen.getByRole("button", { name: "Analyze selected capture" }),
+  );
+  expect(await screen.findByText("Analysis complete")).toBeInTheDocument();
+  const post = vi
+    .mocked(fetch)
+    .mock.calls.find(([path]) => path === "/api/snapshots/from-example")!;
+  expect(post[1]?.body).toBe(JSON.stringify({ example_id: "nanogpt" }));
+  expect(post[1]?.headers).toEqual({
+    "Content-Type": "application/json",
+    Authorization: "Bearer offline-ui-token",
+  });
+  expect(post[1]?.credentials).toBe("same-origin");
+  expect(
+    vi.mocked(fetch).mock.calls.some(([path]) => path === "/api/snapshots"),
+  ).toBe(false);
+  expect(screen.getByLabelText("Judge access token")).toHaveValue("");
+  expect(storage).not.toHaveBeenCalled();
+  expect(screen.getByText(/The file stays on the server/)).toBeInTheDocument();
+});
+it("does not let an unavailable capture start analysis", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() =>
+      reply({
+        examples: exampleList.examples.map((item) => ({
+          ...item,
+          available: false,
+          reason: "Stored capture unavailable",
+        })),
+      }),
+    ),
+  );
+  render(<SnapshotDiagnosisPanel enabled />);
+  await screen.findByText("No stored captures are currently available.");
+  expect(
+    screen.getByRole("option", { name: /s2 capacity capture/ }),
+  ).toBeDisabled();
+  fireEvent.click(
+    screen.getByRole("button", { name: "Analyze selected capture" }),
+  );
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Choose an available stored capture first",
+  );
   expect(vi.mocked(fetch).mock.calls).toHaveLength(1);
+});
+it("shows list errors while keeping the optional external upload accessible", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => reply({}, 503)),
+  );
+  render(<SnapshotDiagnosisPanel enabled />);
+  await screen.findByRole("button", { name: "Refresh captures" });
+  fireEvent.click(
+    screen.getByRole("button", { name: "Upload your own capture" }),
+  );
+  expect(screen.getByLabelText(/Memory snapshot/)).toBeInTheDocument();
+});
+it("rejects malformed capture identifiers and missing judge tokens before any POST", async () => {
+  vi.stubGlobal("fetch", vi.fn());
+  await expect(
+    submitSnapshotExample("../../private", "offline-ui-token"),
+  ).rejects.toThrow("Choose a stored capture");
+  await expect(submitSnapshotExample("s2-capacity", "")).rejects.toThrow(
+    "Enter a valid judge token",
+  );
+  expect(fetch).not.toHaveBeenCalled();
+});
+it("rejects malformed or duplicate server capture metadata", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() =>
+      reply({ examples: [exampleList.examples[0], exampleList.examples[0]] }),
+    ),
+  );
+  await expect(fetchSnapshotExamples()).rejects.toThrow(
+    "duplicate capture identifiers",
+  );
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() =>
+      reply({ examples: [{ ...exampleList.examples[0], id: "../private" }] }),
+    ),
+  );
+  await expect(fetchSnapshotExamples()).rejects.toThrow("invalid capture list");
+});
+it("keeps unavailable-source failures visible and clears the judge token", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((path: unknown) =>
+      path === "/api/snapshot-examples" ? reply(exampleList) : reply({}, 409),
+    ),
+  );
+  render(<SnapshotDiagnosisPanel enabled requiresJudgeToken />);
+  await screen.findByRole("option", { name: "s2 capacity capture" });
+  fireEvent.change(screen.getByLabelText("Judge access token"), {
+    target: { value: "offline-ui-token" },
+  });
+  fireEvent.click(
+    screen.getByRole("button", { name: "Analyze selected capture" }),
+  );
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "stored capture is unavailable or has changed",
+  );
+  expect(screen.getByLabelText("Judge access token")).toHaveValue("");
+  expect(screen.queryByText("Analysis complete")).not.toBeInTheDocument();
 });

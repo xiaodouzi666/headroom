@@ -1,0 +1,272 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+F..FFFFFF............................................................... [ 63%]
+..........................................                               [100%]
+=================================== FAILURES ===================================
+_ test_strategy_instructions_keep_permission_weighting_and_reference_boundaries[diagnose.md] _
+
+name = 'diagnose.md'
+
+    @pytest.mark.parametrize("name", ["diagnose.md", "patch.md", "patch_fix.md"])
+    def test_strategy_instructions_keep_permission_weighting_and_reference_boundaries(name):
+        prompt = (PROMPT_PATH.parent / name).read_text()
+>       activation, temporaries = (" ".join(part.split()) for part in strategy_section(prompt))
+                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_memory_strategy_prompt_contract.py:37: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prompt = 'You diagnose PyTorch CUDA memory use from measured allocator evidence.\nReturn only the JSON object matching the supp...serve that limitation and the real\nprerequisites of alternatives; do not invent an edit or change acceptance rules.\n'
+
+    def strategy_section(prompt):
+        marker = "Evidence-guided strategy hints:"
+>       assert prompt.count(marker) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = <built-in method count of str object at 0x2e582770>('Evidence-guided strategy hints:')
+E        +    where <built-in method count of str object at 0x2e582770> = 'You diagnose PyTorch CUDA memory use from measured allocator evidence.\nReturn only the JSON object matching the supp...serve that limitation and the real\nprerequisites of alternatives; do not invent an edit or change acceptance rules.\n'.count
+
+tests/test_memory_strategy_prompt_contract.py:30: AssertionError
+_ test_accumulation_hint_does_not_authorize_a_forbidden_strategy[permission0-False] _
+
+permission = {}, allowed = False
+
+    @pytest.mark.parametrize(
+        "permission,allowed",
+        [
+            ({}, False),
+            ({"allow_batch_grad_accum": None}, False),
+            ({"allow_batch_grad_accum": False}, False),
+            ({"allow_batch_grad_accum": True, "allow_batch_change": False}, False),
+            ({"allow_batch_grad_accum": True, "allow_grad_accum": False}, False),
+            ({"allow_batch_grad_accum": True}, True),
+        ],
+    )
+    def test_accumulation_hint_does_not_authorize_a_forbidden_strategy(permission, allowed):
+        policy = {"allow_numerics_change": False, **permission}
+        messages = build_diagnosis_messages(
+            "Observed runtime stack: stk_actual",
+            goal="fit:22GB",
+            policy=policy,
+            required_saving_gb=1.0,
+        )
+>       assert strategy_section(messages[0]["content"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_memory_strategy_prompt_contract.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prompt = 'You diagnose PyTorch CUDA memory use from measured allocator evidence.\nReturn only the JSON object matching the supp...serve that limitation and the real\nprerequisites of alternatives; do not invent an edit or change acceptance rules.\n'
+
+    def strategy_section(prompt):
+        marker = "Evidence-guided strategy hints:"
+>       assert prompt.count(marker) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = <built-in method count of str object at 0x2e560a20>('Evidence-guided strategy hints:')
+E        +    where <built-in method count of str object at 0x2e560a20> = 'You diagnose PyTorch CUDA memory use from measured allocator evidence.\nReturn only the JSON object matching the supp...serve that limitation and the real\nprerequisites of alternatives; do not invent an edit or change acceptance rules.\n'.count
+
+tests/test_memory_strategy_prompt_contract.py:30: AssertionError
+_ test_accumulation_hint_does_not_authorize_a_forbidden_strategy[permission1-False] _
+
+permission = {'allow_batch_grad_accum': None}, allowed = False
+
+    @pytest.mark.parametrize(
+        "permission,allowed",
+        [
+            ({}, False),
+            ({"allow_batch_grad_accum": None}, False),
+            ({"allow_batch_grad_accum": False}, False),
+            ({"allow_batch_grad_accum": True, "allow_batch_change": False}, False),
+            ({"allow_batch_grad_accum": True, "allow_grad_accum": False}, False),
+            ({"allow_batch_grad_accum": True}, True),
+        ],
+    )
+    def test_accumulation_hint_does_not_authorize_a_forbidden_strategy(permission, allowed):
+        policy = {"allow_numerics_change": False, **permission}
+        messages = build_diagnosis_messages(
+            "Observed runtime stack: stk_actual",
+            goal="fit:22GB",
+            policy=policy,
+            required_saving_gb=1.0,
+        )
+>       assert strategy_section(messages[0]["content"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_memory_strategy_prompt_contract.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prompt = 'You diagnose PyTorch CUDA memory use from measured allocator evidence.\nReturn only the JSON object matching the supp...serve that limitation and the real\nprerequisites of alternatives; do not invent an edit or change acceptance rules.\n'
+
+    def strategy_section(prompt):
+        marker = "Evidence-guided strategy hints:"
+>       assert prompt.count(marker) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = <built-in method count of str object at 0x2e59b6f0>('Evidence-guided strategy hints:')
+E        +    where <built-in method count of str object at 0x2e59b6f0> = 'You diagnose PyTorch CUDA memory use from measured allocator evidence.\nReturn only the JSON object matching the supp...serve that limitation and the real\nprerequisites of alternatives; do not invent an edit or change acceptance rules.\n'.count
+
+tests/test_memory_strategy_prompt_contract.py:30: AssertionError
+_ test_accumulation_hint_does_not_authorize_a_forbidden_strategy[permission2-False] _
+
+permission = {'allow_batch_grad_accum': False}, allowed = False
+
+    @pytest.mark.parametrize(
+        "permission,allowed",
+        [
+            ({}, False),
+            ({"allow_batch_grad_accum": None}, False),
+            ({"allow_batch_grad_accum": False}, False),
+            ({"allow_batch_grad_accum": True, "allow_batch_change": False}, False),
+            ({"allow_batch_grad_accum": True, "allow_grad_accum": False}, False),
+            ({"allow_batch_grad_accum": True}, True),
+        ],
+    )
+    def test_accumulation_hint_does_not_authorize_a_forbidden_strategy(permission, allowed):
+        policy = {"allow_numerics_change": False, **permission}
+        messages = build_diagnosis_messages(
+            "Observed runtime stack: stk_actual",
+            goal="fit:22GB",
+            policy=policy,
+            required_saving_gb=1.0,
+        )
+>       assert strategy_section(messages[0]["content"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_memory_strategy_prompt_contract.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prompt = 'You diagnose PyTorch CUDA memory use from measured allocator evidence.\nReturn only the JSON object matching the supp...serve that limitation and the real\nprerequisites of alternatives; do not invent an edit or change acceptance rules.\n'
+
+    def strategy_section(prompt):
+        marker = "Evidence-guided strategy hints:"
+>       assert prompt.count(marker) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = <built-in method count of str object at 0x2e5a4890>('Evidence-guided strategy hints:')
+E        +    where <built-in method count of str object at 0x2e5a4890> = 'You diagnose PyTorch CUDA memory use from measured allocator evidence.\nReturn only the JSON object matching the supp...serve that limitation and the real\nprerequisites of alternatives; do not invent an edit or change acceptance rules.\n'.count
+
+tests/test_memory_strategy_prompt_contract.py:30: AssertionError
+_ test_accumulation_hint_does_not_authorize_a_forbidden_strategy[permission3-False] _
+
+permission = {'allow_batch_grad_accum': True, 'allow_batch_change': False}
+allowed = False
+
+    @pytest.mark.parametrize(
+        "permission,allowed",
+        [
+            ({}, False),
+            ({"allow_batch_grad_accum": None}, False),
+            ({"allow_batch_grad_accum": False}, False),
+            ({"allow_batch_grad_accum": True, "allow_batch_change": False}, False),
+            ({"allow_batch_grad_accum": True, "allow_grad_accum": False}, False),
+            ({"allow_batch_grad_accum": True}, True),
+        ],
+    )
+    def test_accumulation_hint_does_not_authorize_a_forbidden_strategy(permission, allowed):
+        policy = {"allow_numerics_change": False, **permission}
+        messages = build_diagnosis_messages(
+            "Observed runtime stack: stk_actual",
+            goal="fit:22GB",
+            policy=policy,
+            required_saving_gb=1.0,
+        )
+>       assert strategy_section(messages[0]["content"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_memory_strategy_prompt_contract.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prompt = 'You diagnose PyTorch CUDA memory use from measured allocator evidence.\nReturn only the JSON object matching the supp...serve that limitation and the real\nprerequisites of alternatives; do not invent an edit or change acceptance rules.\n'
+
+    def strategy_section(prompt):
+        marker = "Evidence-guided strategy hints:"
+>       assert prompt.count(marker) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = <built-in method count of str object at 0x2e5ada30>('Evidence-guided strategy hints:')
+E        +    where <built-in method count of str object at 0x2e5ada30> = 'You diagnose PyTorch CUDA memory use from measured allocator evidence.\nReturn only the JSON object matching the supp...serve that limitation and the real\nprerequisites of alternatives; do not invent an edit or change acceptance rules.\n'.count
+
+tests/test_memory_strategy_prompt_contract.py:30: AssertionError
+_ test_accumulation_hint_does_not_authorize_a_forbidden_strategy[permission4-False] _
+
+permission = {'allow_batch_grad_accum': True, 'allow_grad_accum': False}
+allowed = False
+
+    @pytest.mark.parametrize(
+        "permission,allowed",
+        [
+            ({}, False),
+            ({"allow_batch_grad_accum": None}, False),
+            ({"allow_batch_grad_accum": False}, False),
+            ({"allow_batch_grad_accum": True, "allow_batch_change": False}, False),
+            ({"allow_batch_grad_accum": True, "allow_grad_accum": False}, False),
+            ({"allow_batch_grad_accum": True}, True),
+        ],
+    )
+    def test_accumulation_hint_does_not_authorize_a_forbidden_strategy(permission, allowed):
+        policy = {"allow_numerics_change": False, **permission}
+        messages = build_diagnosis_messages(
+            "Observed runtime stack: stk_actual",
+            goal="fit:22GB",
+            policy=policy,
+            required_saving_gb=1.0,
+        )
+>       assert strategy_section(messages[0]["content"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_memory_strategy_prompt_contract.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prompt = 'You diagnose PyTorch CUDA memory use from measured allocator evidence.\nReturn only the JSON object matching the supp...serve that limitation and the real\nprerequisites of alternatives; do not invent an edit or change acceptance rules.\n'
+
+    def strategy_section(prompt):
+        marker = "Evidence-guided strategy hints:"
+>       assert prompt.count(marker) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = <built-in method count of str object at 0x2e5b6bd0>('Evidence-guided strategy hints:')
+E        +    where <built-in method count of str object at 0x2e5b6bd0> = 'You diagnose PyTorch CUDA memory use from measured allocator evidence.\nReturn only the JSON object matching the supp...serve that limitation and the real\nprerequisites of alternatives; do not invent an edit or change acceptance rules.\n'.count
+
+tests/test_memory_strategy_prompt_contract.py:30: AssertionError
+_ test_accumulation_hint_does_not_authorize_a_forbidden_strategy[permission5-True] _
+
+permission = {'allow_batch_grad_accum': True}, allowed = True
+
+    @pytest.mark.parametrize(
+        "permission,allowed",
+        [
+            ({}, False),
+            ({"allow_batch_grad_accum": None}, False),
+            ({"allow_batch_grad_accum": False}, False),
+            ({"allow_batch_grad_accum": True, "allow_batch_change": False}, False),
+            ({"allow_batch_grad_accum": True, "allow_grad_accum": False}, False),
+            ({"allow_batch_grad_accum": True}, True),
+        ],
+    )
+    def test_accumulation_hint_does_not_authorize_a_forbidden_strategy(permission, allowed):
+        policy = {"allow_numerics_change": False, **permission}
+        messages = build_diagnosis_messages(
+            "Observed runtime stack: stk_actual",
+            goal="fit:22GB",
+            policy=policy,
+            required_saving_gb=1.0,
+        )
+>       assert strategy_section(messages[0]["content"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_memory_strategy_prompt_contract.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prompt = 'You diagnose PyTorch CUDA memory use from measured allocator evidence.\nReturn only the JSON object matching the supp...serve that limitation and the real\nprerequisites of alternatives; do not invent an edit or change acceptance rules.\n'
+
+    def strategy_section(prompt):
+        marker = "Evidence-guided strategy hints:"
+>       assert prompt.count(marker) == 1
+E       AssertionError: assert 0 == 1
+E        +  where 0 = <built-in method count of str object at 0x2e5bfd70>('Evidence-guided strategy hints:')
+E        +    where <built-in method count of str object at 0x2e5bfd70> = 'You diagnose PyTorch CUDA memory use from measured allocator evidence.\nReturn only the JSON object matching the supp...serve that limitation and the real\nprerequisites of alternatives; do not invent an edit or change acceptance rules.\n'.count
+
+tests/test_memory_strategy_prompt_contract.py:30: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_memory_strategy_prompt_contract.py::test_strategy_instructions_keep_permission_weighting_and_reference_boundaries[diagnose.md]
+FAILED tests/test_memory_strategy_prompt_contract.py::test_accumulation_hint_does_not_authorize_a_forbidden_strategy[permission0-False]
+FAILED tests/test_memory_strategy_prompt_contract.py::test_accumulation_hint_does_not_authorize_a_forbidden_strategy[permission1-False]
+FAILED tests/test_memory_strategy_prompt_contract.py::test_accumulation_hint_does_not_authorize_a_forbidden_strategy[permission2-False]
+FAILED tests/test_memory_strategy_prompt_contract.py::test_accumulation_hint_does_not_authorize_a_forbidden_strategy[permission3-False]
+FAILED tests/test_memory_strategy_prompt_contract.py::test_accumulation_hint_does_not_authorize_a_forbidden_strategy[permission4-False]
+FAILED tests/test_memory_strategy_prompt_contract.py::test_accumulation_hint_does_not_authorize_a_forbidden_strategy[permission5-True]
+7 failed, 107 passed in 29.27s

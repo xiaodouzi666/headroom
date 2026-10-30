@@ -584,3 +584,10 @@ condition = "AND"
 regexTarget = "secret"
 paths = ["^tests/test_validation_feedback\\.py$"]
 regexes = ["^abcdefgh1234$"]
+
+[[rules.allowlists]]
+description = "Recomputed server-capture frontend source digest, not an API key"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/server-capture-20261030/frontend-verification\.json$''']
+regexes = ['''^d3e3ab43e7e815c65749f5eccd92269c49a03ed50cbaacdc2d322224594134b3$''']

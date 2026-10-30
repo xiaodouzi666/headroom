@@ -1,0 +1,46 @@
+--- a/headroom/api/snapshot_routes.py
++++ b/headroom/api/snapshot_routes.py
+@@ -35,7 +35,7 @@
+ MAX_BODY_BYTES = sum(LIMITS.values()) + 64 * 1024
+ MAX_REPORT_BYTES = 2 * 1024 * 1024
+ UPLOAD_TIMEOUT_SECONDS = 30.0
+-AUTHENTICATED_UPLOAD_TIMEOUT_SECONDS = 120.0
++AUTHENTICATED_UPLOAD_TIMEOUT_SECONDS = 360.0
+ VERIFICATION = {"status": "not_run", "message": "Not run — bring the patch to your GPU"}
+ DOWNLOADS = {
+     "diagnosis_json": ("diagnosis.json", "application/json"),
+--- a/tests/test_snapshot_routes.py
++++ b/tests/test_snapshot_routes.py
+@@ -681,7 +681,7 @@
+ 
+ @pytest.mark.parametrize(
+     ("judge", "total_deadline", "minimum", "maximum"),
+-    [(True, 480.0, 119.0, 120.0), (False, 480.0, 29.0, 30.0), (True, 0.5, 0.0, 0.5)],
++    [(True, 480.0, 359.0, 360.0), (False, 480.0, 29.0, 30.0), (True, 0.5, 0.0, 0.5)],
+ )
+ def test_snapshot_upload_window_depends_on_auth_and_remaining_total_deadline(
+     tmp_path, monkeypatch, judge, total_deadline, minimum, maximum
+--- a/web/src/SnapshotDiagnosisPanel.tsx
++++ b/web/src/SnapshotDiagnosisPanel.tsx
+@@ -466,7 +466,8 @@
+     <div style={{ padding: "20px 0" }}>
+       <p>
+         Upload a PyTorch memory snapshot to get a diagnosis with cited
+-        allocation stacks and an unverified patch draft. Your script is not run.
++        allocation stacks and, when available, an unverified patch draft. Your
++        script is not run.
+       </p>
+       <p className="caption">
+         Uploads and generated artifacts are deleted after 24 hours. Keep a local
+--- a/web/src/SnapshotDiagnosisPanel.test.tsx
++++ b/web/src/SnapshotDiagnosisPanel.test.tsx
+@@ -559,3 +559,9 @@
+   expect(screen.queryByText("Analysis complete")).not.toBeInTheDocument();
+   expect(vi.mocked(fetch).mock.calls).toHaveLength(1);
+ });
++
++
++it("describes snapshot patch drafts as optional", () => {
++  render(<SnapshotDiagnosisPanel enabled={false} />);
++  expect(screen.getByText(/allocation stacks and, when available, an unverified patch draft/)).toBeInTheDocument();
++});

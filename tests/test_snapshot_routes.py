@@ -681,7 +681,7 @@ def test_quantity_source_metadata_is_optional_exact_and_markdown_does_not_relabe
 
 @pytest.mark.parametrize(
     ("judge", "total_deadline", "minimum", "maximum"),
-    [(True, 480.0, 119.0, 120.0), (False, 480.0, 29.0, 30.0), (True, 0.5, 0.0, 0.5)],
+    [(True, 480.0, 359.0, 360.0), (False, 480.0, 29.0, 30.0), (True, 0.5, 0.0, 0.5)],
 )
 def test_snapshot_upload_window_depends_on_auth_and_remaining_total_deadline(
     tmp_path, monkeypatch, judge, total_deadline, minimum, maximum

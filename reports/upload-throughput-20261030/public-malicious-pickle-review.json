@@ -1,0 +1,46 @@
+{
+  "created_at": "2026-10-30T05:45:27.588066+00:00",
+  "run_id": "671126ec12094065865dcb07024f4a12",
+  "production": {
+    "status": "failed",
+    "error": "snapshot_input_rejected",
+    "diagnosis": null,
+    "patch": {
+      "status": "unavailable",
+      "diff": null
+    },
+    "verification": {
+      "status": "not_run",
+      "message": "Not run \u2014 bring the patch to your GPU"
+    },
+    "reported_cost_usd": 0.0,
+    "actual_llm_call_rows": 0,
+    "cleanup_verified": true
+  },
+  "fixture": {
+    "bytes": 24,
+    "sha256": "336474e6c616722a3ca8589b5d18d7f5f27abced575131123befdc4de047ee8d",
+    "opcodes": [
+      "GLOBAL",
+      "MARK",
+      "UNICODE",
+      "TUPLE",
+      "REDUCE",
+      "STOP"
+    ],
+    "callable": "builtins.eval",
+    "benign_argument": "1+1"
+  },
+  "specific_rejection_proof": {
+    "production_error_is_intentionally_generic": true,
+    "same_exact_bytes_replayed_offline": true,
+    "error": "pickle_opcode_forbidden",
+    "first_forbidden_opcode": "GLOBAL",
+    "before_unpickler_constructor": true,
+    "test": "reports/upload-throughput-20261030/test_public_forbidden_pickle.py::test_exact_public_fixture_is_rejected_at_opcode_before_unpickler",
+    "log": "reports/upload-throughput-20261030/applied-api-tests.log",
+    "snapshot_input_source_sha256": "ba16ab97a4f027f99b2526c9edbc8cf19b6af149f05484a3b3f933cce36f2772"
+  },
+  "new_model_gpu_or_production_uploads_by_review": 0,
+  "original_files_unchanged": true
+}

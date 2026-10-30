@@ -32,7 +32,7 @@ torch.cuda.memory._dump_snapshot("snapshot.pickle")
 uv run headroom diagnose --snapshot snapshot.pickle --traceback oom.txt --source train.py
 ```
 
-The traceback and source are optional. Headroom analyzes the saved evidence and attempts to produce a diagnosis with cited stacks and, when source is supplied, a patch draft. This command does not run the supplied script. The draft is marked **unverified: not run on hardware**. The first two live snapshot checks did not return usable diagnoses; this feature is still being validated. See [CLI setup, outputs and retention](docs/CLI.md#diagnose-a-saved-cuda-snapshot).
+The traceback and source are optional. Headroom analyzes the saved evidence and attempts to produce a diagnosis with cited stacks and, when source is supplied, a patch draft. This command does not run the supplied script. The draft is marked **unverified: not run on hardware**. The first two live checks failed. Subsequent real s2 and nanoGPT CLI checks produced valid diagnoses, and a public nanoGPT upload displayed a valid diagnosis with inspectable stack references. No patch was produced in those checks; some model explanations still contain factual errors. See [CLI setup, outputs and retention](docs/CLI.md#diagnose-a-saved-cuda-snapshot).
 
 ## Results
 
@@ -50,7 +50,7 @@ The recorded suite contains eight synthetic PyTorch training cases and pinned na
 | [s5 variable-length allocations](docs/RESULTS.md) | Not met | — | No qualifying historical target result |
 | [nanoGPT pinned workload](docs/RESULTS.md) | Not met | — | No qualifying historical target result |
 
-Across eight recorded campaigns, **5 of 9** distinct scenarios have a run that met its configured memory target. The best single campaign reached **3 of 9**. The latest campaign reached **1 of 9**, with **5 of 9** valid correct first-cause diagnoses; raw first-category matches were **7 of 9**. <!-- numbers: summary -->
+Across eight recorded campaigns, **5 of 9** distinct scenarios have a run that met its configured memory target. The best single campaign reached **3 of 9**. The latest completed campaign, R9, reached **0 of 9**, with **6 of 9** valid correct first-cause diagnoses and **0 of 9** ready for patching; raw first-category matches were **7 of 9**. <!-- numbers: summary -->
 
 ### Does the snapshot matter?
 
@@ -103,9 +103,9 @@ All model calls use Token Factory's OpenAI-compatible API (`us-central1`). Headr
 
 The historical table combines separate runs and workload versions. s3 has a paired, identical full loss series; s1 and s4 compare the first five backward-loss values against documented references. s2 uses a tolerance-based comparison, and s2/s8 lack complete input, effective-batch and objective pairing. An OOM baseline only shows the peak reached before failure; s1's candidate peak is reconstructed. Verification covers short training runs, not full training quality. Distributed training and compiled extensions are outside the current repair workflow.
 
-Four scenarios have no recorded target success in this history. In the latest campaign, only the retained-loss-graph repair met its target; matching a cause was often insufficient to produce a usable patch. The first-cause counts use the first saved diagnosis round, which can include correction requests within that round; raw category matches and validated diagnoses are separate measures. The two additional s2 precision-policy tests did not pass, and HF Trainer repair failed after a configuration edit passed its static check. They produced no successful memory-versus-speed comparison or new successful gallery cases.
+Four scenarios have no recorded target success in this history. In the latest completed campaign, R9, no repair met its target; matching a cause was often insufficient to produce a usable patch. The first-cause counts use the first saved diagnosis round, which can include correction requests within that round; raw category matches and validated diagnoses are separate measures. The two additional s2 precision-policy tests did not pass, and HF Trainer repair failed after a configuration edit passed its static check. They produced no successful memory-versus-speed comparison or new successful gallery cases.
 
-The diagnosis comparison is one fixed-order pass without repeats; s5 and nanoGPT have unconfirmed reference causes and remain in its denominator. Two full-evidence Ultra replies were truncated. Long-input probes establish request handling, not diagnosis quality or the maximum context size. The two live saved-snapshot checks returned no usable diagnosis or patch, so that feature remains under validation. Public snapshot uploads are paused. Preset live examples and the historical Verified runs gallery are available.
+The diagnosis comparison is one fixed-order pass without repeats; s5 and nanoGPT have unconfirmed reference causes and remain in its denominator. Two full-evidence Ultra replies were truncated. Long-input probes establish request handling, not diagnosis quality or the maximum context size. The saved-snapshot path now has real valid CLI and public-web diagnoses, but some model explanations still misstate category totals or inferred runtime settings. A large-file public upload timed out before analysis. Server-stored capture analysis is the default webpage flow; external-file upload is optional. Both use real Nebius inference and require the judge token on the public deployment. Preset live examples and the historical Verified runs gallery are available.
 
 ## Related work
 

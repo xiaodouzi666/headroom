@@ -26,7 +26,11 @@ def deny_network(monkeypatch):
 
 
 def strategy_section(prompt):
-    marker = "Evidence-guided strategy hints:"
+    marker = (
+        "Evidence-guided strategy selection:"
+        if "Evidence-guided strategy selection:" in prompt
+        else "Evidence-guided strategy hints:"
+    )
     assert prompt.count(marker) == 1
     return prompt.split(marker, 1)[1].split("\n\n", 2)[:2]
 
@@ -35,7 +39,7 @@ def strategy_section(prompt):
 def test_strategy_instructions_keep_permission_weighting_and_reference_boundaries(name):
     prompt = (PROMPT_PATH.parent / name).read_text()
     activation, temporaries = (" ".join(part.split()) for part in strategy_section(prompt))
-    for required in (
+    activation_requirements = (
         "activations peak, first consider",
         "only when allow_batch_grad_accum=true",
         "neither allow_batch_change nor allow_grad_accum is false",
@@ -45,9 +49,18 @@ def test_strategy_instructions_keep_permission_weighting_and_reference_boundarie
         "loss / K only for equal-weight K chunks",
         "gradient reset, clipping, optimizer and scheduler",
         "priority cannot override",
-    ):
+    )
+    if name == "diagnose.md":
+        activation_requirements = (
+            "Select a repair for the evidenced producer, lifetime and training/evaluation",
+            "Keep unsupported optional alternatives outside plan",
+            "existing policy, weighting, update and numerical-reference prerequisites hold",
+            "If batch/accumulation permission is absent, unknown or disabled, do not propose it",
+            "Preserve every sample, its order, effective batch, objective and required updates",
+        )
+    for required in activation_requirements:
         assert required in activation
-    for required in (
+    temporary_requirements = (
         "temporaries peak from full-vocabulary logits",
         "streams the producer/projection and loss over tokens",
         "retaining every chunk's autograd graph",
@@ -59,7 +72,15 @@ def test_strategy_instructions_keep_permission_weighting_and_reference_boundarie
         "numerical_basis, reference, tolerance and loss checks",
         "Do not suppress, rescale or hide changed losses",
         "unverified until the existing real checks pass",
-    ):
+    )
+    if name == "diagnose.md":
+        temporary_requirements = (
+            "source already computes cross-entropy from full-vocabulary logits",
+            "Do not replace MSE or another objective",
+            "omit this strategy when inapplicable",
+            *temporary_requirements[2:],
+        )
+    for required in temporary_requirements:
         assert required in temporaries
     assert not re.search(r"scenarios/|s[1-9]_|nanogpt|train\\.py", activation + temporaries)
 

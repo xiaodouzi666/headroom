@@ -19,6 +19,9 @@ import {
 } from "./data";
 import {
   fetchSnapshot,
+  fetchSnapshotExamples,
+  submitSnapshotExample,
+  type SnapshotExample,
   SNAPSHOT_ACTIVE,
   SnapshotAPIError,
   snapshotArtifactURL,
@@ -33,9 +36,11 @@ const DiffView = lazy(() => import("./DiffView"));
 const NOT_RUN = "Hardware verification was not run";
 const DRAFT_NOT_RUN = "Not run — bring the patch to your GPU";
 function validationRejected(job: SnapshotJob): boolean {
-  return job.status === "needs_human" &&
+  return (
+    job.status === "needs_human" &&
     job.result?.diagnosis === null &&
-    job.result?.error === "diagnosis_unavailable";
+    job.result?.error === "diagnosis_unavailable"
+  );
 }
 const labels: Record<SnapshotStatus, string> = {
   receiving: "Receiving upload",
@@ -137,7 +142,7 @@ function StackCitation({
       </button>
       {open && (
         <div className="stack-block">
-          <p className="caption">Uploaded snapshot · cited allocation stack</p>
+          <p className="caption">Saved snapshot · cited allocation stack</p>
           <dl className="key-values">
             <div>
               <dt>Live at reconstructed peak</dt>
@@ -173,7 +178,8 @@ function SnapshotResult({ job }: { job: SnapshotJob }) {
   const stacks = boundStacks(evidence);
   const derivedQuantities =
     stacks !== null &&
-    record(evidence.diagnosis_binding).quantity_source === "cited_peak_stack_sum_v1";
+    record(evidence.diagnosis_binding).quantity_source ===
+      "cited_peak_stack_sum_v1";
   const peak = numeric(analysis.peak_allocated_bytes);
   const categories = Object.entries(record(analysis.category_bytes));
   const downloads: [SnapshotArtifactKind, string][] = [
@@ -193,14 +199,14 @@ function SnapshotResult({ job }: { job: SnapshotJob }) {
       {rejected && (
         <Notice tone="amber">
           The model response did not pass validation. No reliable diagnosis is
-          available for this upload.
+          available for this capture.
         </Notice>
       )}
       <Notice>
-        {hasPatch ? DRAFT_NOT_RUN : NOT_RUN}. This analysis uses an uploaded
+        {hasPatch ? DRAFT_NOT_RUN : NOT_RUN}. This analysis uses a saved
         capture. No workload or generated patch was executed.
       </Notice>
-      <Section title="Uploaded snapshot" kicker="Captured evidence">
+      <Section title="Saved snapshot" kicker="Captured evidence">
         <div className="metric-grid three">
           <div className="metric">
             <span>Reconstructed allocated peak</span>
@@ -261,8 +267,9 @@ function SnapshotResult({ job }: { job: SnapshotJob }) {
       <Section title="Snapshot diagnosis" kicker="Model hypotheses">
         {derivedQuantities && (
           <p className="caption">
-            Sizes are calculated from the cited stacks in the reconstructed snapshot.
-            They do not establish causal contribution or savings. Groups can overlap.
+            Sizes are calculated from the cited stacks in the reconstructed
+            snapshot. They do not establish causal contribution or savings.
+            Groups can overlap.
           </p>
         )}
         <div className="diagnosis-cards">
@@ -276,7 +283,9 @@ function SnapshotResult({ job }: { job: SnapshotJob }) {
                 <p>{human(cause.category)}</p>
                 <div className="diagnosis-stat">
                   <span>
-                    {derivedQuantities ? "Cited peak allocation" : "Estimated size"}
+                    {derivedQuantities
+                      ? "Cited peak allocation"
+                      : "Estimated size"}
                   </span>
                   <strong>
                     {numeric(cause.bytes_gb) === null
@@ -358,8 +367,7 @@ function SnapshotResult({ job }: { job: SnapshotJob }) {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
           {downloads.map(([kind, label]) => {
             const url = snapshotArtifactURL(job, kind);
-            return url &&
-              (kind !== "patch" || hasPatch) ? (
+            return url && (kind !== "patch" || hasPatch) ? (
               <a className="text-link" key={kind} href={url}>
                 {label}
               </a>
@@ -377,6 +385,43 @@ export default function SnapshotDiagnosisPanel({
   enabled: boolean;
   requiresJudgeToken?: boolean;
 }) {
+  const [mode, setMode] = useState<"server" | "upload">("server");
+  const [examples, setExamples] = useState<SnapshotExample[]>([]);
+  const [exampleId, setExampleId] = useState("");
+  const [examplesLoading, setExamplesLoading] = useState(false);
+  const [examplesError, setExamplesError] = useState("");
+  const [listRefresh, setListRefresh] = useState(0);
+  useEffect(() => {
+    if (!enabled) return;
+    const controller = new AbortController();
+    setExamplesLoading(true);
+    setExamplesError("");
+    void fetchSnapshotExamples(controller.signal)
+      .then((next) => {
+        if (controller.signal.aborted) return;
+        setExamples(next);
+        setExampleId((previous) =>
+          next.some((item) => item.id === previous && item.available)
+            ? previous
+            : (next.find((item) => item.available)?.id ?? ""),
+        );
+      })
+      .catch((reason) => {
+        if (!controller.signal.aborted) {
+          setExamples([]);
+          setExampleId("");
+          setExamplesError(
+            reason instanceof Error
+              ? reason.message
+              : "Stored captures are unavailable.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setExamplesLoading(false);
+      });
+    return () => controller.abort();
+  }, [enabled, listRefresh]);
   const [files, setFiles] = useState<SnapshotFiles>({
     snapshot: null,
     traceback: null,
@@ -433,13 +478,18 @@ export default function SnapshotDiagnosisPanel({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!enabled || active) return;
-    const invalid = validateSnapshotFiles(files);
+    const invalid =
+      mode === "upload"
+        ? validateSnapshotFiles(files)
+        : !examples.some((item) => item.id === exampleId && item.available)
+          ? "Choose an available stored capture first."
+          : null;
     if (invalid) {
       setError(invalid);
       return;
     }
-    if (requiresJudgeToken && !token.trim()) {
-      setError("Enter your judge access token to upload a snapshot.");
+    if ((mode === "server" || requiresJudgeToken) && !token.trim()) {
+      setError("Enter your judge access token to analyze a snapshot.");
       return;
     }
     const controller = new AbortController();
@@ -447,15 +497,19 @@ export default function SnapshotDiagnosisPanel({
     setBusy(true);
     setError("");
     setPollError("");
+    setJob(null);
     try {
-      const next = await submitSnapshot(files, token, controller.signal);
+      const next =
+        mode === "server"
+          ? await submitSnapshotExample(exampleId, token, controller.signal)
+          : await submitSnapshot(files, token, controller.signal);
       if (!controller.signal.aborted) setJob(next);
     } catch (reason) {
       if (!controller.signal.aborted)
         setError(
           reason instanceof Error
             ? reason.message
-            : "The snapshot could not be uploaded.",
+            : "The snapshot analysis could not be started.",
         );
     } finally {
       setToken("");
@@ -465,12 +519,13 @@ export default function SnapshotDiagnosisPanel({
   return (
     <div style={{ padding: "20px 0" }}>
       <p>
-        Upload a PyTorch memory snapshot to get a diagnosis with cited
-        allocation stacks and an unverified patch draft. Your script is not run.
+        Analyze a saved PyTorch memory snapshot to get a diagnosis with cited
+        allocation stacks and, when available, an unverified patch draft. No GPU
+        training workload is started.
       </p>
       <p className="caption">
-        Uploads and generated artifacts are deleted after 24 hours. Keep a local
-        copy of anything you need.
+        Analysis files and results are deleted after 24 hours. Keep a copy of
+        anything you need. The original server capture is unchanged.
       </p>
       {!enabled ? (
         <Notice>Snapshot analysis is temporarily paused.</Notice>
@@ -480,57 +535,147 @@ export default function SnapshotDiagnosisPanel({
             disabled={active}
             style={{ border: 0, padding: 0, minWidth: 0 }}
           >
-            <div className="field">
-              <label htmlFor="snapshot-file">
-                Memory snapshot (.pickle or .pkl, up to 50 MiB)
-              </label>
-              <input
-                id="snapshot-file"
-                type="file"
-                accept=".pickle,.pkl"
-                onChange={(event) =>
-                  setFiles((previous) => ({
-                    ...previous,
-                    snapshot: event.target.files?.[0] ?? null,
-                  }))
-                }
-              />
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 16,
+                marginBottom: 20,
+              }}
+            >
+              <button
+                type="button"
+                className="text-link"
+                aria-pressed={mode === "server"}
+                onClick={() => {
+                  setMode("server");
+                  setError("");
+                }}
+              >
+                Stored server capture
+              </button>
+              <button
+                type="button"
+                className="text-link"
+                aria-pressed={mode === "upload"}
+                onClick={() => {
+                  setMode("upload");
+                  setError("");
+                }}
+              >
+                Upload your own capture
+              </button>
             </div>
-            <div className="field">
-              <label htmlFor="snapshot-traceback">
-                Traceback (optional, up to 256 KiB)
-              </label>
-              <input
-                id="snapshot-traceback"
-                type="file"
-                accept=".txt,.log"
-                onChange={(event) =>
-                  setFiles((previous) => ({
-                    ...previous,
-                    traceback: event.target.files?.[0] ?? null,
-                  }))
-                }
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="snapshot-source">
-                Source code (optional, up to 1 MiB)
-              </label>
-              <input
-                id="snapshot-source"
-                type="file"
-                accept=".py,.txt"
-                onChange={(event) =>
-                  setFiles((previous) => ({
-                    ...previous,
-                    source: event.target.files?.[0] ?? null,
-                  }))
-                }
-              />
-            </div>
+            {mode === "server" ? (
+              <div className="field">
+                <label htmlFor="snapshot-example">Stored capture</label>
+                <select
+                  id="snapshot-example"
+                  value={exampleId}
+                  disabled={examplesLoading}
+                  onChange={(event) => setExampleId(event.target.value)}
+                >
+                  <option value="">
+                    {examplesLoading
+                      ? "Loading stored captures…"
+                      : "Choose a capture"}
+                  </option>
+                  {examples.map((item) => (
+                    <option
+                      key={item.id}
+                      value={item.id}
+                      disabled={!item.available}
+                    >
+                      {item.label}
+                      {item.available ? "" : " — unavailable"}
+                    </option>
+                  ))}
+                </select>
+                {examples.find((item) => item.id === exampleId) && (
+                  <small>
+                    {
+                      examples.find((item) => item.id === exampleId)!
+                        .description
+                    }
+                  </small>
+                )}
+                <p className="caption">
+                  The file stays on the server. This starts a new Nebius model
+                  analysis of the saved capture and returns its results here.
+                </p>
+                {examplesError && (
+                  <Notice tone="red">
+                    {examplesError}{" "}
+                    <button
+                      className="text-link"
+                      type="button"
+                      onClick={() => setListRefresh((value) => value + 1)}
+                    >
+                      Refresh captures
+                    </button>
+                  </Notice>
+                )}
+                {!examplesLoading &&
+                  !examplesError &&
+                  !examples.some((item) => item.available) && (
+                    <Notice>No stored captures are currently available.</Notice>
+                  )}
+              </div>
+            ) : (
+              <>
+                <div className="field">
+                  <label htmlFor="snapshot-file">
+                    Memory snapshot (.pickle or .pkl, up to 50 MiB)
+                  </label>
+                  <input
+                    id="snapshot-file"
+                    type="file"
+                    accept=".pickle,.pkl"
+                    onChange={(event) =>
+                      setFiles((previous) => ({
+                        ...previous,
+                        snapshot: event.target.files?.[0] ?? null,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="snapshot-traceback">
+                    Traceback (optional, up to 256 KiB)
+                  </label>
+                  <input
+                    id="snapshot-traceback"
+                    type="file"
+                    accept=".txt,.log"
+                    onChange={(event) =>
+                      setFiles((previous) => ({
+                        ...previous,
+                        traceback: event.target.files?.[0] ?? null,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="snapshot-source">
+                    Source code (optional, up to 1 MiB)
+                  </label>
+                  <input
+                    id="snapshot-source"
+                    type="file"
+                    accept=".py,.txt"
+                    onChange={(event) =>
+                      setFiles((previous) => ({
+                        ...previous,
+                        source: event.target.files?.[0] ?? null,
+                      }))
+                    }
+                  />
+                </div>
+              </>
+            )}
             <div className="field">
               <label htmlFor="snapshot-token">
-                {requiresJudgeToken
+                {mode === "server" || requiresJudgeToken
                   ? "Judge access token"
                   : "Judge token (optional)"}
               </label>
@@ -542,14 +687,20 @@ export default function SnapshotDiagnosisPanel({
                 onChange={(event) => setToken(event.target.value)}
               />
               <small>
-                {requiresJudgeToken
-                  ? "An access token is required for private snapshot uploads. No hourly upload limit applies to authenticated judges."
+                {mode === "server" || requiresJudgeToken
+                  ? "An access token is required to start this analysis. No hourly task limit applies to authenticated judges."
                   : "Leave blank for anonymous access: up to two uploads per IP per hour."}{" "}
-                The token is used only for this upload and is not saved.
+                The token is used only for this request and is not saved.
               </small>
             </div>
             <button className="button button-primary" type="submit">
-              {busy ? "Uploading…" : "Analyze snapshot"}
+              {busy
+                ? mode === "server"
+                  ? "Starting analysis…"
+                  : "Uploading…"
+                : mode === "server"
+                  ? "Analyze selected capture"
+                  : "Analyze snapshot"}
             </button>
           </fieldset>
         </form>
@@ -559,12 +710,15 @@ export default function SnapshotDiagnosisPanel({
         <div style={{ marginTop: 20 }}>
           <Badge
             tone={
-              ["failed", "timeout", "expired"].includes(job.status) || validationRejected(job)
+              ["failed", "timeout", "expired"].includes(job.status) ||
+              validationRejected(job)
                 ? "amber"
                 : "neutral"
             }
           >
-            {validationRejected(job) ? "Model response rejected" : labels[job.status]}
+            {validationRejected(job)
+              ? "Model response rejected"
+              : labels[job.status]}
           </Badge>
           {job.expires_at && (
             <p className="caption">

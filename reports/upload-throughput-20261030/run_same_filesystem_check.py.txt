@@ -1,0 +1,29 @@
+"""Copy authorized raw bytes to a temporary fixture, run isolated checks, remove fixture."""
+from pathlib import Path
+import hashlib,json,os,shutil,subprocess,tempfile,time
+root=Path.cwd()
+out=root/"reports/upload-throughput-20261030"
+inputs=json.loads((root/"reports/final48h-feature-scope-20261029/preparation-inputs.json").read_text())["snapshots"]["s2_capacity_v2"]["inputs"]["snapshot"]
+source=root/inputs["path"]
+with tempfile.TemporaryDirectory(prefix="headroom-upload-benchmark-") as temp, tempfile.TemporaryDirectory(prefix=".same-fs-parser-", dir=out) as disk:
+    fixture=Path(temp)/"snapshot.pickle"
+    shutil.copyfile(source,fixture)
+    assert hashlib.sha256(fixture.read_bytes()).hexdigest()==inputs["sha256"]
+    environment=os.environ.copy()
+    environment["UPLOAD_BENCHMARK_INPUT"]=str(fixture)
+    environment["UPLOAD_BENCHMARK_SHA"]=inputs["sha256"]
+    environment["UPLOAD_BENCHMARK_RESULT"]=str(out/"same-filesystem-parser-benchmark.json")
+    environment["UPLOAD_BENCHMARK_DISK_ROOT"]=disk
+    command=[".venv/bin/python","reports/final48h-closing-regression-20261029/closing_guarded_v4.py",
+             "reports/upload-throughput-20261030/test_candidate_upload.py::test_actual_s2_bytes_parse_and_write_fast_without_unpickling"]
+    started=time.monotonic()
+    with (out/"same-filesystem-tests.log").open("w") as log:
+        result=subprocess.run(command,env=environment,stdout=log,stderr=subprocess.STDOUT,timeout=120)
+    receipt={"command":command,"exit_code":result.returncode,"seconds":time.monotonic()-started,
+             "original_input_sha256":inputs["sha256"],"original_input_bytes":source.stat().st_size,
+             "production_filesystem_device":(root/"runs/public-api/snapshots").stat().st_dev,
+             "temporary_fixture_device":fixture.stat().st_dev,"benchmark_output_device":Path(disk).stat().st_dev,"temporary_fixture_removed_on_exit":True,
+             "new_model_gpu_or_network_upload_calls":0}
+(out/"same-filesystem-execution.json").write_text(json.dumps(receipt,indent=2)+"\n")
+print(json.dumps(receipt))
+raise SystemExit(result.returncode)

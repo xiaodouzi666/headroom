@@ -2,11 +2,20 @@
 
 ## Summary
 
-These results cover eight recorded nine-scenario evaluations completed from 2026-10-25 through 2026-10-29.
+These results cover the historical evaluations and two further fixed-nine campaigns completed on 2026-10-30.
 
-The latest evaluation met **1/9 memory targets** and produced **5/9 valid correct first-cause diagnoses**. Its raw first-category match count was **7/9**; two matching categories belonged to invalid diagnoses. Across the separate evaluations, **5 distinct scenarios have a recorded automatic memory-target success**: s1, s2, s3, s4, and s8. The best single evaluation remains **3/9**. <!-- numbers: summary -->
+The latest completed campaign, R9, met **0/9 memory targets** and produced **6/9 valid correct first-cause diagnoses**. Its raw first-category match count was **7/9**; **0/9** diagnoses were ready for patching. The unchanged internal memory-target threshold is **6/9**, which was not met. Across the separate evaluations, **5 distinct scenarios have a recorded automatic memory-target success**: s1, s2, s3, s4, and s8. The best single evaluation remains **3/9**. <!-- numbers: summary -->
 
 First-cause counts for repair campaigns use the first saved diagnosis round, which can follow correction or supplementary requests within that round. They do not count successful repairs and are not necessarily scores of the first raw API response.
+
+### Post-submission campaigns — 2026-10-30
+
+| Campaign | Memory targets | Raw first-category matches | Valid correct first causes | Ready valid correct first causes | Conservatively charged USD |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| [R8](../reports/r8-20261030-review/README.md) | 0/9 | 7/9 | 5/9 | 2/9 | 1.02829080 |
+| [R9](../reports/r9-20261030-review/README.md) | 0/9 | 7/9 | 6/9 | 0/9 | 0.571730364 |
+
+Both completed all nine scenarios. Fully known actual totals remain unavailable; the charged amounts include conservative bounds and are not presented as exact provider billing. Historical successes remain separate. Nano label coverage was 8/8 in R8 and 7/8 in R9; neither reached 80% heuristic agreement on any of those eight cases. Identifier coverage is not label accuracy.
 
 ### Historical results
 
@@ -34,7 +43,7 @@ Selected successful runs:
 | s4: retained graphs | e8213706570e478f9845e49e24c2b54b | 12 → 20 | 5 | 50,374,656 |
 | s8: unused teacher model | d10adf0ffac74dcf8d874a460a2a3628 | 20 → 20 | 20 | 747,474,432 |
 
-### Latest evaluation — 2026-10-29
+### R7 evaluation — 2026-10-29 (historical)
 
 Source commit: 6c7cde25b7b17ef2aaf236aa2c6543abb57f8499. All nine scenarios remain in the denominator.
 
@@ -109,13 +118,13 @@ Only the selected s3 result has 20 identical compared loss scalars with every re
 
 The s1 and s4 repairs each completed 20 optimizer updates, but their numerical comparisons cover only the first 5 backward-loss scalars. Their reference methods are identified in the table. The s1 repaired peak is reconstructed and is not marked exact. OOM baseline peaks are the largest observed allocations before failure; the memory needed to finish and completed-run throughput remain unknown.
 
-In the latest evaluation, all nine scenarios ran, but only s4 met its repair target. s3 and s7 matched the authored cause category while failing diagnosis validation; s5 and nanoGPT have unverified reference causes and stay in the denominator. A valid cause or a statically accepted edit does not establish a usable repair. The two extra s2 precision-policy tests and HF Trainer repair did not pass, and no successful memory-versus-speed comparison was produced.
+In R9, all nine scenarios ran and none met its repair target. Six valid first causes matched the authored reference, while no diagnosis became ready for patching. s5 and nanoGPT retain unverified reference causes and stay in the denominator. R7, where s4 met its target, is retained as historical evidence. A valid cause or a statically accepted edit does not establish a usable repair. The two extra s2 precision-policy tests and HF Trainer repair did not pass, and no successful memory-versus-speed comparison was produced.
 
 The variable-length workload's fragmentation cause remains unverified: a large gap between reserved and allocated memory is insufficient evidence. The full-vocabulary-logit and frozen-parameter workloads still lack a verified repair. nanoGPT also remains unsolved; its earlier configuration change still ran out of memory.
 
 Some calls have incomplete usage information, so the cost table shows known partial actual-cost subtotals rather than complete totals. Conservative billing bounds are stored separately in the detailed reports and are not relabelled as actual cost. The table excludes prototype evaluations, capability probes and other project work. Recorded wall time includes model calls and orchestration and is not GPU compute time.
 
-The matched three-condition diagnosis comparison is reported above. The saved-snapshot feature is still under validation: its live s2 and nanoGPT checks each made one model request but returned no usable diagnosis or patch. Their supplied scripts were not run, and hardware verification remains unavailable. Public snapshot uploads remain paused. Preset live examples and the historical results gallery are available.
+The matched three-condition diagnosis comparison is reported above. The first saved-snapshot checks failed; later s2/nanoGPT CLI checks produced valid diagnoses, and the public nanoGPT check displayed four cited stacks. No patch or new hardware repair resulted. Manual review found errors in model prose despite exact host-computed cited-stack sums. A 10.65 MB public upload timed out before inference, while smaller captures reached real analysis. The server-capture flow avoids transferring an already stored capture through the browser. See [functional review](../reports/snapshot-repair-20261030/cli-two-case-functional-review.md) and [server-capture verification](../reports/server-capture-20261030/).
 
 ### Run details
 

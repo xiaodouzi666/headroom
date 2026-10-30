@@ -10,6 +10,14 @@ export type SnapshotFiles = {
   traceback: File | null;
   source: File | null;
 };
+export type SnapshotExample = {
+  id: string;
+  label: string;
+  description: string;
+  snapshot_bytes: number;
+  available: boolean;
+  reason: string | null;
+};
 export type SnapshotStatus =
   | "receiving"
   | "preparing"
@@ -83,11 +91,13 @@ async function responseJSON(response: Response): Promise<Dict> {
         ? "This snapshot is unavailable or its 24-hour retention has ended."
         : response.status === 401 || response.status === 403
           ? "The judge token or session was not accepted."
-          : response.status === 408
-            ? "The snapshot upload exceeded its time limit. Analysis did not start. Try a faster connection or a smaller capture."
-            : response.status === 503
-              ? "Snapshot analysis is temporarily paused."
-              : `Snapshot request failed (${response.status}).`;
+          : response.status === 409
+            ? "This stored capture is unavailable or has changed. Refresh the list before trying again."
+            : response.status === 408
+              ? "The snapshot upload exceeded its time limit. Analysis did not start. Try a faster connection or a smaller capture."
+              : response.status === 503
+                ? "Snapshot analysis is temporarily paused."
+                : `Snapshot request failed (${response.status}).`;
     throw new SnapshotAPIError(
       response.status === 429 || response.status === 413
         ? text(body.detail, fallback).slice(0, 300)
@@ -166,4 +176,60 @@ export function snapshotArtifactURL(
     url === `/api/snapshots/${job.run_id}/download/${kind}`
     ? url
     : null;
+}
+
+export async function fetchSnapshotExamples(
+  signal?: AbortSignal,
+): Promise<SnapshotExample[]> {
+  const response = await fetch("/api/snapshot-examples", {
+    credentials: "same-origin",
+    signal,
+  });
+  const body = await responseJSON(response);
+  if (!Array.isArray(body.examples) || body.examples.length > 20)
+    throw new Error("The server returned an invalid capture list.");
+  const examples = body.examples.map((entry: unknown) => {
+    const item = record(entry);
+    if (
+      typeof item.id !== "string" ||
+      !/^[a-z0-9-]{1,64}$/.test(item.id) ||
+      typeof item.label !== "string" ||
+      item.label.length > 160 ||
+      typeof item.description !== "string" ||
+      item.description.length > 1000 ||
+      typeof item.snapshot_bytes !== "number" ||
+      !Number.isSafeInteger(item.snapshot_bytes) ||
+      item.snapshot_bytes <= 0 ||
+      item.snapshot_bytes > SNAPSHOT_LIMITS.snapshot ||
+      typeof item.available !== "boolean" ||
+      (item.reason !== null && typeof item.reason !== "string")
+    )
+      throw new Error("The server returned an invalid capture list.");
+    return item as SnapshotExample;
+  });
+  if (new Set(examples.map((item) => item.id)).size !== examples.length)
+    throw new Error("The server returned duplicate capture identifiers.");
+  return examples;
+}
+export async function submitSnapshotExample(
+  exampleId: string,
+  token: string,
+  signal?: AbortSignal,
+): Promise<SnapshotJob> {
+  if (!/^[a-z0-9-]{1,64}$/.test(exampleId))
+    throw new Error("Choose a stored capture first.");
+  const cleanToken = token.trim();
+  if (!cleanToken || /[\x00-\x1f\x7f]/.test(cleanToken))
+    throw new Error("Enter a valid judge token.");
+  const response = await fetch("/api/snapshots/from-example", {
+    method: "POST",
+    credentials: "same-origin",
+    signal,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${cleanToken}`,
+    },
+    body: JSON.stringify({ example_id: exampleId }),
+  });
+  return parseJob(await responseJSON(response));
 }

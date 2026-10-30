@@ -11,6 +11,7 @@ import re
 import stat
 from datetime import UTC, datetime
 from pathlib import Path
+from threading import Event
 from urllib.parse import urlsplit
 
 from fastapi import HTTPException, Request
@@ -20,6 +21,7 @@ from starlette.requests import ClientDisconnect
 
 from headroom.api.public_access import client_address, judge_authorized
 from headroom.api.security import RUN_ID
+from headroom.api.snapshot_examples import copy_example, get_example, list_examples
 from headroom.api.snapshot_queue import (
     RETENTION_SECONDS,
     TERMINAL,
@@ -35,7 +37,7 @@ FILENAMES = {"snapshot": "snapshot.pickle", "traceback": "traceback.txt", "sourc
 MAX_BODY_BYTES = sum(LIMITS.values()) + 64 * 1024
 MAX_REPORT_BYTES = 2 * 1024 * 1024
 UPLOAD_TIMEOUT_SECONDS = 30.0
-AUTHENTICATED_UPLOAD_TIMEOUT_SECONDS = 120.0
+AUTHENTICATED_UPLOAD_TIMEOUT_SECONDS = 360.0
 VERIFICATION = {"status": "not_run", "message": "Not run — bring the patch to your GPU"}
 DOWNLOADS = {
     "diagnosis_json": ("diagnosis.json", "application/json"),
@@ -501,6 +503,119 @@ def register_snapshot_routes(
                 identifier, _created = task.result()
                 manager.fail_upload(identifier)
             raise
+
+    @app.get("/api/snapshot-examples")
+    async def snapshot_examples():
+        return {"examples": await asyncio.to_thread(list_examples, settings.project_root)}
+
+    @app.post("/api/snapshots/from-example", status_code=202)
+    async def submit_stored_snapshot(request: Request):
+        if (
+            not getattr(settings, "snapshot_submissions_enabled", False)
+            or not settings.run_submissions_enabled
+        ):
+            raise HTTPException(503, "Snapshot analysis is temporarily paused.")
+        # Stored captures are shared intentionally; fresh paid analysis always
+        # requires the existing judge capability, including in local mode.
+        if not judge_authorized(settings, request):
+            raise HTTPException(401, "A valid judge token is required for snapshot analysis")
+        request_owner = owner(request)
+        origin = request.headers.get("origin")
+        if origin:
+            try:
+                same_origin = urlsplit(origin).netloc == request.url.netloc
+            except ValueError:
+                same_origin = False
+            if not same_origin:
+                raise HTTPException(403, "Cross-origin submissions are not allowed")
+        if (
+            request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+            != "application/json"
+        ):
+            raise HTTPException(415, "Use application/json")
+
+        def strict_object(pairs):
+            result = {}
+            for key, value in pairs:
+                if key in result:
+                    raise ValueError("Duplicate key")
+                result[key] = value
+            return result
+
+        try:
+            raw = bytearray()
+            async with asyncio.timeout(5):
+                async for chunk in request.stream():
+                    if len(raw) + len(chunk) > 1024:
+                        raise UploadError("Request exceeds stored-capture limit", 413)
+                    raw.extend(chunk)
+            data = json.loads(raw, object_pairs_hook=strict_object)
+            if (
+                not isinstance(data, dict)
+                or set(data) != {"example_id"}
+                or not isinstance(data["example_id"], str)
+            ):
+                raise ValueError("Invalid stored-capture request")
+        except TimeoutError:
+            raise HTTPException(408, "Stored-capture request deadline exceeded") from None
+        except UploadError as error:
+            raise HTTPException(error.status, str(error)) from None
+        except (ValueError, UnicodeError, ClientDisconnect, RecursionError):
+            raise HTTPException(400, "Select one stored capture by its ID") from None
+        example = get_example(data["example_id"])
+        if example is None:
+            raise HTTPException(404, "Stored capture not found")
+        try:
+            identifier, created = await reserve_upload(
+                request_owner, client_address(settings, request), True
+            )
+        except SnapshotAdmissionError as error:
+            raise HTTPException(error.status, str(error), headers={"Retry-After": "60"}) from None
+        cancelled = Event()
+        task = asyncio.create_task(
+            asyncio.to_thread(
+                copy_example,
+                settings.project_root,
+                manager.root / identifier,
+                example,
+                cancelled=cancelled,
+                deadline=created + manager.deadline,
+                clock=manager.clock,
+            )
+        )
+        try:
+            await asyncio.shield(task)
+            position = manager.finish_upload(identifier)
+        except asyncio.CancelledError:
+            cancelled.set()
+            # A request cancellation cannot leave a writer racing admission or
+            # retention. Join the bounded copy before marking it terminal.
+            while not task.done():
+                try:
+                    await asyncio.shield(task)
+                except asyncio.CancelledError:
+                    continue
+                except (OSError, ValueError, TimeoutError):
+                    break
+            if task.done() and not task.cancelled():
+                task.exception()
+            manager.fail_upload(identifier)
+            raise
+        except TimeoutError:
+            manager.fail_upload(identifier, timeout=True)
+            raise HTTPException(408, "Stored-capture analysis deadline exceeded") from None
+        except SnapshotAdmissionError as error:
+            manager.fail_upload(identifier)
+            raise HTTPException(error.status, str(error)) from None
+        except (OSError, ValueError):
+            manager.fail_upload(identifier)
+            raise HTTPException(409, "Stored capture unavailable or changed") from None
+        return {
+            "run_id": identifier,
+            "status": "queued",
+            "queue_position": position,
+            "run_url": f"/api/snapshots/{identifier}",
+        }
 
     @app.post("/api/snapshots", status_code=202)
     async def submit_snapshot(request: Request):
