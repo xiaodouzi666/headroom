@@ -1,0 +1,28 @@
+...............................F........................................ [ 97%]
+..                                                                       [100%]
+=================================== FAILURES ===================================
+___ test_reviewed_public_suites_keep_fixed_denominators_and_private_data_out ___
+
+    def test_reviewed_public_suites_keep_fixed_denominators_and_private_data_out():
+        from pathlib import Path
+    
+        root = Path(__file__).resolve().parents[1] / "public-evidence"
+        with client(root) as api:
+            listing = api.get("/api/evaluations").json()["evaluations"]
+>           assert [item["id"] for item in listing] == [
+                "r7-20261029",
+                "r6-20261027",
+                "r5-20261027",
+                "watch-20261029",
+                "live-demo-20261029",
+            ]
+E           AssertionError: assert ['r18-termina...0261030', ...] == ['r7-20261029...emo-20261029']
+E             
+E             At index 0 diff: 'r18-terminal-20261030' != 'r7-20261029'
+E             Left contains 9 more items, first extra item: 'r13-terminal-20261030'
+E             Use -v to get more diff
+
+tests/test_published_evaluations.py:341: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_published_evaluations.py::test_reviewed_public_suites_keep_fixed_denominators_and_private_data_out
+1 failed, 73 passed in 2.42s

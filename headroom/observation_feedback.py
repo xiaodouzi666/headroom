@@ -66,6 +66,78 @@ def _small_values(mapping, numbers=(), flags=()):
     }
 
 
+def _supplied_parameter_tensor_metadata(observed):
+    """Copy the existing sampled-attribute summary, never infer shapes or state."""
+    metadata = observed.get("parameter_tensor_metadata")
+    if not isinstance(metadata, Mapping):
+        return None
+    status = metadata.get("status")
+    if type(status) is not str or status not in {
+        "observed",
+        "partial",
+        "unverified",
+        "not_captured",
+    }:
+        return None
+    if status in {"unverified", "not_captured"}:
+        return {"status": status}
+    events = metadata.get("events")
+    count = metadata.get("parameters")
+    changed = metadata.get("changed_parameters")
+    unsupported = metadata.get("unsupported_observations")
+    if not (
+        metadata.get("scope") == "sampled_parameters_only_not_states"
+        and type(events) is list
+        and len(events) == 3
+        and all(type(n) is int and 0 <= n <= 65536 for n in events)
+        and type(count) is int
+        and 0 <= count <= 8192
+        and type(changed) is int
+        and 0 <= changed <= count
+        and type(unsupported) is int
+        and 0 <= unsupported <= 65536
+        and metadata.get("state_tensors") == "not_captured"
+        and isinstance(observed.get("parameters"), Mapping)
+        and type(observed["parameters"].get("catalog_entries")) is int
+        and count == observed["parameters"]["catalog_entries"]
+        and type(observed.get("optimizer_step_calls")) is int
+        and type(observed.get("successful_optimizer_step_calls")) is int
+        and events[1] == observed.get("optimizer_step_calls")
+        and events[2] == observed.get("successful_optimizer_step_calls")
+    ):
+        return None
+    uniform = metadata.get("all_observed")
+    if uniform is not None and not (
+        type(uniform) is dict
+        and set(uniform) == {"dtype", "device_type", "device_index", "layout", "is_leaf"}
+        and type(uniform.get("dtype")) is str
+        and uniform["dtype"] in {"float32", "float64", "float16", "bfloat16"}
+        and uniform.get("device_type") in ("cpu", "cuda")
+        and (
+            uniform.get("device_index") is None
+            or type(uniform["device_index"]) is int
+            and 0 <= uniform["device_index"] <= 255
+        )
+        and uniform.get("layout") == "strided"
+        and type(uniform.get("is_leaf")) is bool
+    ):
+        return None
+    if status == "observed" and (not count or uniform is None or changed or unsupported):
+        return None
+    if status == "partial" and uniform is not None:
+        return None
+    return {
+        "status": status,
+        "scope": metadata["scope"],
+        "events": list(events),
+        "parameters": count,
+        "all_observed": dict(uniform) if uniform is not None else None,
+        "changed_parameters": changed,
+        "unsupported_observations": unsupported,
+        "state_tensors": metadata["state_tensors"],
+    }
+
+
 def supplied_runtime_observation(evidence, evidence_ref):
     """Copy only already-sent optimizer facts next to their scoped question."""
     if (
@@ -77,6 +149,7 @@ def supplied_runtime_observation(evidence, evidence_ref):
             _PREFIX + ".parameters",
             _PREFIX + ".updates",
             _PREFIX + ".optimizer_group_hyperparameters",
+            _PREFIX + ".parameter_tensor_metadata",
         }
     ):
         return None
@@ -115,6 +188,17 @@ def supplied_runtime_observation(evidence, evidence_ref):
     }
     if observed["status"] not in {"observed", "partial"}:
         return result
+    if suffix == "parameter_tensor_metadata":
+        metadata = _supplied_parameter_tensor_metadata(observed)
+        if metadata is None:
+            return None
+        scoped = dict(result, parameter_tensor_metadata=metadata)
+        return (
+            scoped
+            if len(json.dumps(scoped, ensure_ascii=True, allow_nan=False).encode())
+            <= MAX_OBSERVATION_FEEDBACK_BYTES
+            else None
+        )
     result.update(
         _small_values(
             observed,

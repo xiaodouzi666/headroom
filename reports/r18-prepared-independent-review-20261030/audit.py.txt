@@ -1,0 +1,114 @@
+"""Read-only actual R18 pins/accounting audit; no prepare, main or dispatch calls."""
+import argparse
+import ast
+import copy
+import datetime
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import re
+import subprocess
+import sys
+from decimal import Decimal
+from pathlib import Path
+sys.dont_write_bytecode=True
+ROOT=Path.cwd();sys.path.insert(0,str(ROOT))
+OUT=ROOT/'reports/r18-prepared-independent-review-20261030'
+parser=argparse.ArgumentParser()
+parser.add_argument('--expected-revision',required=True)
+parser.add_argument('--expected-preparation',required=True)
+parser.add_argument('--expected-proposal',required=True)
+args=parser.parse_args()
+assert re.fullmatch('[0-9a-f]{40}',args.expected_revision)
+assert re.fullmatch('[0-9a-f]{64}',args.expected_preparation)
+assert re.fullmatch('[0-9a-f]{64}',args.expected_proposal)
+def load(p):return json.loads(Path(p).read_text())
+def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def digest(v):return hashlib.sha256(json.dumps(v,sort_keys=True,separators=(',',':'),ensure_ascii=False,allow_nan=False).encode()).hexdigest()
+def git(repo,*arguments):return subprocess.check_output(['git','--no-optional-locks','-C',str(repo),*arguments],stderr=subprocess.PIPE)
+folder=ROOT/'reports/repair-followup-20261030'
+script=folder/'prepare-r18.py.txt';controller=folder/'execute-fixed9-v2.py.txt'
+prep_path=ROOT/'runs/final48-repair-preparation-20261030-r18/preparation.json'
+proposal_path=ROOT/'.cache/repair-followup-20261030-v3/r18-proposal.json'
+preflight_path=folder/'r18-preflight.json'
+baseproposal_path=ROOT/'.cache/repair-followup-20261030-v3/r14-proposal.json'
+prep=load(prep_path);proposal=load(proposal_path);preflight=load(preflight_path)
+baseproposal=load(baseproposal_path);baseprep_path=Path(baseproposal['prepared_path']);baseprep=load(baseprep_path)
+artifacts=[script,controller,prep_path,proposal_path,preflight_path,baseproposal_path,baseprep_path]
+before_hashes={str(p):sha(p) for p in artifacts}
+assert git(ROOT,'rev-parse','HEAD').decode().strip()==args.expected_revision
+assert git(ROOT,'diff','--name-only','HEAD','--','headroom','scripts','tests','web','pyproject.toml','uv.lock').strip()==b''
+assert proposal['revision']==preflight['revision']==args.expected_revision
+assert str(prep_path)==proposal['prepared_path']
+assert sha(script)==preflight['preparation_script_sha256']=='036dd08dd8b7a402a5a91fc111fc45635696568a13987d5d4e9d455afbf10ed6'
+assert sha(controller)==proposal['controller_sha256']==preflight['controller_sha256']=='590189eb3b23f1f932c62a849afd1aee26edb9968822964e65a8c3b7f04ed426'
+body=copy.deepcopy(prep);stored=body.pop('preparation_sha256')
+assert digest(body)==stored==proposal['preparation_sha256']==preflight['preparation_sha256']==args.expected_preparation
+assert digest(proposal)==preflight['proposal_canonical_sha256']==args.expected_proposal
+assert sha(prep_path)==preflight['preparation_file_sha256']
+assert sha(proposal_path)==preflight['proposal_file_sha256']
+assert digest(baseproposal)==preflight['base_R14_proposal_sha256']=='f3a8041e026e535a338fa283959929b7bc6f31ba181b1844719d66ff2b734026'
+basebody=copy.deepcopy(baseprep);basestored=basebody.pop('preparation_sha256')
+assert digest(basebody)==basestored=='a2c1fcf6fbc77ba196c2b559c16f99ed19a6346d902608f76bce43516ba49898'
+semantic=('controls','cells','input_pins','source_files','calibration','repository_identities')
+assert all(prep[k]==baseprep[k] for k in semantic)
+assert {k:v for k,v in prep.items() if k not in {'implementation_pins','preparation_sha256'}}=={k:v for k,v in baseprep.items() if k not in {'implementation_pins','preparation_sha256'}}
+assert proposal['requests']==baseproposal['requests'] and len(proposal['requests'])==9
+for request in proposal['requests'].values():
+ assert Decimal(request['budget_usd'])==Decimal('.60') and request['max_rounds']==6 and request['max_steps']==20
+ assert request['seed']==1337 and request['max_seconds']==120 and request['search_mode']=='until_target'
+assert prep['controls']['fixed_denominator']==preflight['fixed_denominator']==9
+assert prep['controls']['minimum_targets']==preflight['minimum_targets']==6
+assert preflight['fixed_requests']==9 and not preflight['execution_started'] and not preflight['funding_changed']
+assert preflight['model_calls']==preflight['GPU_jobs']==0
+assert len(prep['implementation_pins'])==preflight['implementation_pins']==185
+assert len(prep['input_pins'])==preflight['input_pins']==30
+pins=[]
+for category in ('implementation_pins','input_pins'):
+ for name,pin in prep[category].items():
+  data=(ROOT/name).read_bytes()
+  assert len(data)==pin['bytes'] and hashlib.sha256(data).hexdigest()==pin['sha256'],name
+  prefix='.cache/upstream/nanoGPT/'
+  if name.startswith(prefix):
+   repo=ROOT/'.cache/upstream/nanoGPT';revision=prep['repository_identities']['nanogpt']['revision'];relative=name[len(prefix):];repository='nanoGPT'
+  else:repo=ROOT;revision=args.expected_revision;relative=name;repository='headroom'
+  assert git(repo,'show',revision+':'+relative)==data,name
+  pins.append({'category':category,'path':name,'bytes':len(data),'sha256':pin['sha256'],'disk_matches':True,'git_matches':True,'repository':repository,'revision':revision})
+assert git(ROOT/'.cache/upstream/nanoGPT','rev-parse','HEAD').decode().strip()==prep['repository_identities']['nanogpt']['revision']=='3adf61e154c3fe3fca428ad6bc3818b27a3b8291'
+tree=ast.parse(script.read_text());wanted={'NEW_REVIEWED_SOURCE','EXPECTED_STARTING_ACCOUNTING'}
+constants={n.targets[0].id:ast.literal_eval(n.value) for n in tree.body if isinstance(n,ast.Assign) and isinstance(n.targets[0],ast.Name) and n.targets[0].id in wanted}
+assert len(constants['NEW_REVIEWED_SOURCE'])==27
+for name,expected in constants['NEW_REVIEWED_SOURCE'].items():
+ assert sha(ROOT/name)==prep['implementation_pins'][name]['sha256']==expected,name
+loader=importlib.machinery.SourceFileLoader('r18_actual_readonly_controller',str(controller))
+spec=importlib.util.spec_from_loader(loader.name,loader);mod=importlib.util.module_from_spec(spec);loader.exec_module(mod)
+receipt=mod.funding(proposal['funding_receipt_path'],proposal['funding_receipt_sha256'])
+assert receipt['receipt_sha256']==proposal['funding_receipt_sha256']=='3b5f9e2573fda21f34c4858a4af64b27a5952e5c1c6bb944dcdb3d01a67bf889'
+funding_hash_before=sha(proposal['funding_receipt_path'])
+state,account=mod.accounting(receipt);mod.require_admission(state,receipt)
+assert account==proposal['starting_pool_accounting']
+for key,expected in constants['EXPECTED_STARTING_ACCOUNTING'].items():assert account[key]==expected,key
+assert account['scope_cap_usd']=='4.890504400' and account['scope_charged_usd']=='3.72274640'
+assert account['scope_remaining_usd']=='1.167758000' and account['scope_actual_usd'] is None
+assert account['all_costs_resolved'] is True and account['open_runs']==account['halted_runs']==account['unresolved_attempts']==[]
+assert receipt['target_net_usd']=='4.890504400'
+balance_path=ROOT/'.cache/repair-followup-20261030-v3/r18-balance-preflight.json';balance=load(balance_path)
+assert Decimal(balance['balance_gross_usd'])==Decimal('35.57') and Decimal(balance['minimum_reserve_gross_usd'])==8
+assert Decimal(balance['tax_factor'])==Decimal('1.21') and Decimal(balance['lag_reserve_gross_usd'])==Decimal('3.63')
+commitments=Decimal(balance['future_commitments_including_reserves_gross_usd']);margin=Decimal(balance['balance_gross_usd'])-commitments
+assert commitments==Decimal('35.52020061692') and margin==Decimal(balance['margin_beyond_commitments_gross_usd'])>0
+assert balance['development_scope_remaining_net_usd']==account['scope_remaining_usd'] and not balance['funds_changed'] and not balance['recharge']
+maintenance={}
+for line in (ROOT/'.cache/repair-window.env').read_text().splitlines():
+ if line.strip() and not line.lstrip().startswith('#'):
+  key,value=line.split('=',1);maintenance[key]=value
+assert maintenance=={'HEADROOM_RUN_SUBMISSIONS_ENABLED':'false','HEADROOM_SNAPSHOT_SUBMISSIONS_ENABLED':'false'}
+r17path=ROOT/'runs/repair-followup/execution-r17-20261030/campaign.json';r17=load(r17path)
+assert r17['status']=='finished' and len(r17['rows'])==9
+assert not (ROOT/'runs/repair-followup/execution-r18-20261030').exists()
+assert {str(p):sha(p) for p in artifacts}==before_hashes
+assert sha(proposal['funding_receipt_path'])==funding_hash_before and mod.accounting(receipt)[1]==account
+facts={'result':'PASS_ACTUAL_PREPARED_ONLY_NO_DISPATCH','at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'source_revision':args.expected_revision,'all_implementation_and_input_pins_match_current_disk_and_Git':True,'implementation_pins':185,'input_pins':30,'pin_checks':pins,'preparation_canonical_sha256':args.expected_preparation,'proposal_canonical_sha256':args.expected_proposal,'all_R14_six_semantic_fields_unchanged':dict.fromkeys(semantic,True),'all_nonimplementation_preparation_fields_unchanged':True,'all_R14_nine_requests_unchanged':True,'fixed_denominator':9,'minimum_targets':6,'same_060budget_6round20update_1337_120':True,'all_27_reviewed_source_hashes_match_pins_Git_disk':True,'controller_sha256':sha(controller),'funding_receipt_sha256':receipt['receipt_sha256'],'funding_profile_original_donor_holds_verified_readonly':True,'actual_full_ledger_snapshot_equals_starting_proposal':True,'starting_accounting_summary':{k:account[k] for k in constants['EXPECTED_STARTING_ACCOUNTING']},'provider_balance_source':'Parent signed-in Chrome receipt only, no independent provider request','provider_balance_receipt_sha256':sha(balance_path),'balance_gross_usd':balance['balance_gross_usd'],'future_commitments_including_8reserve_gross_usd':str(commitments),'remaining_margin_gross_usd':str(margin),'no_funding_expansion':True,'public_submission_maintenance':maintenance,'R17_finished_nine_rows':True,'R18_execution_directory_absent':True,'artifacts_before_after_unchanged':before_hashes,'ledger_accounting_unchanged':True,'source_modified':False,'historical_results_modified':False,'prepare_called':False,'model_calls':0,'provider_calls':0,'gpu_jobs':0}
+(OUT/'independent-review.json').write_text(json.dumps(facts,indent=2)+'\n')
+print(json.dumps({'result':facts['result'],'source_revision':args.expected_revision,'checked_pins':len(pins),'remaining_usd':account['scope_remaining_usd'],'receipt_sha256':sha(OUT/'independent-review.json')},indent=2))

@@ -80,6 +80,7 @@ def _public_row(row, provenance):
             {
                 "original_plan_first_five_backward_scalars",
                 "original_plan_full_backward_scalar_series",
+                "baseline_derived_checkpoint_first_five_backward_scalars",
                 "original_workload_offload_first_five_backward_scalars",
                 "repository_no_reference_exception",
                 "unavailable",

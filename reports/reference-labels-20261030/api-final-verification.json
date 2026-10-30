@@ -1,0 +1,45 @@
+{
+  "scope": "PUBLIC_REFERENCE_LABEL_AND_PARTIAL_UNRUN_INTEGRATION",
+  "results": [
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "tests/test_published_evaluations.py"
+      ],
+      "returncode": 0,
+      "log": "reports/reference-labels-20261030/api-format.log"
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "headroom/api/evaluations.py",
+        "headroom/report.py",
+        "tests/test_published_evaluations.py"
+      ],
+      "returncode": 0,
+      "log": "reports/reference-labels-20261030/api-ruff-final.log"
+    },
+    {
+      "command": [
+        ".venv/bin/pytest",
+        "-q",
+        "tests/test_published_evaluations.py",
+        "tests/test_evaluation_outcomes.py"
+      ],
+      "returncode": 0,
+      "log": "reports/reference-labels-20261030/api-focused-final.log"
+    }
+  ],
+  "old_failure_preserved": "api-focused.log",
+  "source_numeric_and_acceptance_unchanged": true,
+  "live_model_or_GPU_calls": 0,
+  "public_backend_restart_pending": true,
+  "files": {
+    "headroom/api/evaluations.py": "458ffdc3d1af4599c691c639380eb5b1c9ed966180050638fa2fdc1de32f6903",
+    "headroom/report.py": "2b33cdf814a4509c3275017c9d62a3a1875c714c09700fa8acf43aebddf192da",
+    "web/src/EvaluationView.tsx": "6772599911b73f2136f8278f9cd1547aa75a765c6e304e9efc9901be86f0f75c",
+    "tests/test_published_evaluations.py": "c93eb7913faa4d99ca91d32ad5c493e82a10d4d7a363c5628ccb9a3ebfd1c422"
+  }
+}

@@ -107,23 +107,25 @@ const stopReason = (v: unknown) =>
     }) as Record<string, string>
   )[String(v)] ?? productMessage(v, "Unknown");
 const resultLabel = (row: Dict) =>
-  row.target_met === true
-    ? "Repaired"
-    : row.status === "budget_exceeded" &&
-        row.diagnosis_attempt_recorded === false &&
-        row.patch_attempt_recorded === false
-      ? "Stopped before diagnosis"
-      : row.target_met === false
-        ? "Not solved"
-        : ["failed", "error", "rejected", "timeout"].includes(
-              String(row.status),
-            )
-          ? "Run failed · result unknown"
-          : row.status === "needs_human"
-            ? "Needs review · result unknown"
-            : row.status === "budget_exceeded"
-              ? "Analysis paused · result unknown"
-              : "Unknown";
+  row.status === "not_run"
+    ? "Not run"
+    : row.target_met === true
+      ? "Repaired"
+      : row.status === "budget_exceeded" &&
+          row.diagnosis_attempt_recorded === false &&
+          row.patch_attempt_recorded === false
+        ? "Stopped before diagnosis"
+        : row.target_met === false
+          ? "Not solved"
+          : ["failed", "error", "rejected", "timeout"].includes(
+                String(row.status),
+              )
+            ? "Run failed · result unknown"
+            : row.status === "needs_human"
+              ? "Needs review · result unknown"
+              : row.status === "budget_exceeded"
+                ? "Analysis paused · result unknown"
+                : "Unknown";
 const numericalResult = (v: unknown) =>
   (
     ({
@@ -140,6 +142,8 @@ const numericalBasis = (basis: unknown) =>
         "First five recorded backward losses",
       original_plan_full_backward_scalar_series:
         "Full recorded backward-loss sequence",
+      baseline_derived_checkpoint_first_five_backward_scalars:
+        "Observed first five backward losses with baseline-derived checkpoint reference",
       original_workload_offload_first_five_backward_scalars:
         "Observed first five backward losses with original-workload offload reference",
       repository_no_reference_exception:
@@ -407,8 +411,8 @@ export default function EvaluationView() {
           {selected === "r7-20261029" && (
             <Notice>
               <strong>1 of 9 workloads met the memory target.</strong> For this
-              evaluation, “First category matches” and “First-cause accuracy” show
-              raw category matching, before full diagnosis validation. Raw
+              evaluation, “First category matches” and “First-cause accuracy”
+              show raw category matching, before full diagnosis validation. Raw
               category matches: 7/9; valid correct diagnoses: 5/9. Two workloads
               lack authored ground truth and remain in the fixed nine; the
               detailed accuracy percentage uses the seven scored workloads.

@@ -338,7 +338,10 @@ def test_reviewed_public_suites_keep_fixed_denominators_and_private_data_out():
     root = Path(__file__).resolve().parents[1] / "public-evidence"
     with client(root) as api:
         listing = api.get("/api/evaluations").json()["evaluations"]
-        assert [item["id"] for item in listing] == [
+        # New evaluations prepend; the reviewed original history must survive intact.
+        identifiers = [item["id"] for item in listing]
+        assert len(identifiers) == len(set(identifiers))
+        assert identifiers[-5:] == [
             "r7-20261029",
             "r6-20261027",
             "r5-20261027",
@@ -376,6 +379,14 @@ def test_reviewed_public_suites_keep_fixed_denominators_and_private_data_out():
                     assert row["first_cause_matches"] is None
             for marker in ("/home/", "/Users/", ".cache/", "NEBIUS_API_KEY", "TAVILY_API_KEY"):
                 assert marker not in response.text
+        latest = api.get("/api/evaluations/r18-terminal-20261030").json()
+        assert latest["status"] == "partial" and len(latest["rows"]) == 9
+        unrun = [row for row in latest["rows"] if row["status"] == "not_run"]
+        assert len(unrun) == 2
+        assert all(row["run_id"] is None and row["target_met"] is None for row in unrun)
+        assert latest["rows"][0]["numerical_basis"] == (
+            "baseline_derived_checkpoint_first_five_backward_scalars"
+        )
         r5 = api.get("/api/evaluations/r5-20261027").json()
         s6 = next(row for row in r5["rows"] if row["scenario_id"] == "s6_full_vocab_logits_fp32")
         assert s6["first_cause_matches"] is False  # Independent audit overrides raw campaign claim.

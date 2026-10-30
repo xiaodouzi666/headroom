@@ -1,3 +1,19 @@
+## 2026-10-30 23:23 北京 — R18 已按预算停下：7项执行、2项达标、2项未运行
+
+本轮为partial，不是完整九项新成绩：s1/s4达到原修复判定，s2/s3/s5/s6/s7未解决；s8/nanoGPT未派发、target/cost/run保持null，固定分母9与6/9门槛不变。上一次完整九项R17=3/9，历史best single3/9与distinct5仍保留，未拼接历史成功。停止原因为开发池净余额$0.593931800低于既有单项$.60完整预留，未绕过guard、重试、扩预算或充值。独审terminal-review SHA4a433e2fe0b8d0d23c8aedfd8fe3d2a7fa35cebd2f357169cccfb50ffbaa7374；215pins与Git/磁盘吻合，11Lab cleanup及GPU-after清空均核实、7workers退出、systemd inactive/success0。32响应均已结算，本轮保守净$0.57382620、known actual$0.55277484、actual总额仍null（7Nano未知）；累计保守净$4.29657260，未把unknown当零。
+
+S1候选20更新，CUDA计数器记录14,297,204,736B，原OOM记录24,750,424,064B；allocator历史因200,000事件窗口不完整，重建峰值并不exact，不能混同CUDA计数器。主机fix-oom判定使用原OOM+候选完整完成及既有数值/参数/GPU检查。正式数值比较只含baseline-derived checkpoint reference前5个反向loss，delta0；三项pairing true，但完整训练coverage与OOM原始吞吐仍unknown。S4候选与原始工作负载offload reference各20更新，正式比较同样仅前5个loss，delta0；其新诊断首类activation不同于retained_graph真值，不能继承R17正确首因标签。原始记录保留。
+
+public Results已公开独立partial记录，14条共存、13旧条目和文件逐字保留。后续仅把R18 curated s1遗漏的numerical_basis字段从原始report恢复（null→确切checkpoint基准枚举），不改测量或结果；原projection与修正前curated字节均保存。S4画廊“latest”历史文案改为recorded，同步下载文件hash，原运行未改。Home/Results/Verified/Run/About及实测下载200，浏览器证据栈与补丁展开正常；前端两项not_run已明确Not run，checkpoint/offload数值标签接线中，仍需后端重启与最终视觉读回。任务与快照新提交暂保持维护暂停，收尾后恢复原授权访问配置。
+
+15:15:30UTC只读Nebius余额$35.13；按相同税1.21/lag3.63与至少$8保留的原未来承诺剩余$34.82587091492，显示余额高于该值$0.30412908508。无新资金调拨。参数native metadata此前已真实采集并以318B摘要发送原始两次Ultra，未丢失；所查缺口为新增字段在可寻址证据目录/纠错反馈中的接线，不是传输丢失，离线修复审阅中。needs_more_info语义/2次调用/原caps不变，没有新实测成功声明。Devpost仍Submitted5/5，视频不变；最新结果技术故事待最终保存。没有重复全量/F8，没有新定时任务。
+
+## 2026-10-30 22:58 北京 — R18 单次真实验收已启动，源码冻结
+
+源码5a013bf32c3e79e3d37e2cc908ea374f72c7c7c3已推送，提交钩子Ruff/format/gitleaks通过；report diff中的上下文空格与原失败XML按原始证据保留，非报告变更git diff check通过。实际准备经独审215 pins（185实现、30输入），原R14六组语义与九份请求完全相同。启动时开发池剩余净$1.167758000，单项$.60，6轮/20步/seed1337/120秒Lab，固定9/门槛6不变。没有扩预算、充值或挪用其他资金池。
+
+14:58:02UTC单次派发headroom-r18-20261030.service，invocation e61ff22756be42fea24667a20f9a667a；proposal 8c94ab241ed857624b9a72fb56336707074ed983cca7cdeee92bd7fc34946132、preparation 04e5de62b2d33768f0d8eb33d53b2a543ec4ace1351e2dc29552c968d4018304。源码、测试、前端与controller均冻结至终态；尚无新成功成绩。上轮完整3/9、历史best3/union5保留。预算不足时未执行项保留unknown，分母仍9。公网读页与两服务健康，GPU启动前无占用；新任务/快照提交仍处维护暂停，结束后恢复原授权配置。Devpost本地Chrome只读核实Submitted5/5，视频aaXF60LryWI未改，故事最终实测后再保存。未重跑全量/F8，无新定时任务。
+
 ## 2026-10-30 22:52 北京 — R17 真实终态3/9；下一轮源码已修、待提交准备
 
 R17完整九项真实验收已独审：**3/9（s3/s4/s8）**，仍未达到6/9。首轮raw5/9、valid-correct5/9、ready5/9、ready-valid-correct4/9；finalvalid5/9、ready3/9。183implementation/30input pins全部匹配，16Lab cleanup/GPU-after清理、9worker退出均核实，无protocol violations。59个真实响应全部结算；本轮保守$0.86369752净额，known actual $0.83529898、actual总额仍unknown，9 Nano保留原上界。开发池累计$3.72274640/余$1.167758000，原4.890504400净额与每项$.60不变。

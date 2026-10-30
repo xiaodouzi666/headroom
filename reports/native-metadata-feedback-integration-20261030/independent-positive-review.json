@@ -1,0 +1,41 @@
+{
+  "result": "PASS",
+  "scope": "READ_ONLY_INDEPENDENT_OPTIONAL_NATIVE_REFERENCE_AND_FEEDBACK_INTEGRATION",
+  "implementation_receipt_sha256": "6049f4b4dcd356fd748786e0e4e45acadf690a8957ec7119fb669e802123cdef",
+  "source_sha256": {
+    "headroom/evidence_blockers.py": "af4769f2f4cf7437812b23a86dd04456597651edc12663865872c26452ab129e",
+    "headroom/observation_feedback.py": "2e197a557c983e376b31709f64b1da01796a8e293b860990b8c54f418adbcc9a",
+    "tests/test_native_metadata_feedback.py": "6a7d990b3ca8980f2bce78a6cc199b1e718f72cfc0cf10a7a6048cec01bb01cf"
+  },
+  "checked": [
+    "Native parameter facts were already present in both original R18 requests; there was no capture/runtime image/projection loss.",
+    "Only two production modules add an exact optional reference and typed repeat branch. Existing four feedback references and their trimming order are unchanged.",
+    "New reference appends only after existing catalog fields/sources finish original trimming, so optional metadata cannot displace old entries. Flat84/8KiB and 2KiB feedback/3KiB observation/16KiB execution/64KiB solver limits remain unchanged.",
+    "New exact-ref response copies only the bound selected source/run/round component; allowed dtype/device/layout/leaf/counter tags remain typed. No arbitrary source text or private fields copied.",
+    "Partial/unverified/not_captured preserve status without fabricating all_observed; malformed/stale/unsupported inputs do not produce native facts.",
+    "No native optimizer authentication, state/alias/shape proof, numeric equivalence or prerequisite resolution is asserted.",
+    "MockTransport second-wire tests retain needs_more_info and two calls at 2000 tokens each; no host rewrite or call-cap increase.",
+    "144 guarded tests and Ruff/format receipt hashes match disk; no repeated test suite during review."
+  ],
+  "actual_saved_R18_cases": [
+    {
+      "case": "s2",
+      "raw_and_two_original_requests_independently_matched": true,
+      "original_component_bytes": 318,
+      "new_optional_scoped_feedback_bytes_from_reviewed_CPU_replay": 926
+    },
+    {
+      "case": "s3",
+      "raw_and_two_original_requests_independently_matched": true,
+      "original_component_bytes": 317,
+      "new_optional_scoped_feedback_bytes_from_reviewed_CPU_replay": 925
+    }
+  ],
+  "actual_CPU_replay_sha256": "a9dfc47647b37c081c7b3dc717033e674871b0712e72dcae5ff02073c254a2cb",
+  "original_hooks_and_optimizer_aggregation_unchanged": true,
+  "limitations": "This is addressability and scoped repetition only. It does not prove the model will choose a better strategy or add a new live successful repair.",
+  "provider_calls": 0,
+  "gpu_jobs": 0,
+  "tests_repeated_by_review": 0,
+  "production_modified_by_review": false
+}

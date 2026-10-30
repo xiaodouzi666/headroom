@@ -336,6 +336,8 @@ def numerical_basis_label(value):
     return {
         "original_plan_first_five_backward_scalars": "Observed first five backward losses (original plan)",
         "original_plan_full_backward_scalar_series": "Observed full backward-loss sequence (original plan)",
+        "baseline_derived_checkpoint_first_five_backward_scalars": "Observed first five backward losses with baseline-derived checkpoint reference",
+        "original_workload_offload_first_five_backward_scalars": "Observed first five backward losses with original-workload offload reference",
         "repository_no_reference_exception": "Repository without reference; numerical equivalence unverified",
         "unavailable": "Comparison unavailable",
     }.get(value, "Comparison basis not recorded")

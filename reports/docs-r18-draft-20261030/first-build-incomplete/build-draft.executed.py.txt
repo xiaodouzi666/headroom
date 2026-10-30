@@ -1,0 +1,316 @@
+"""Report-only R18 documentation staging; never replaces a public document."""
+from __future__ import annotations
+
+import copy
+import difflib
+import hashlib
+import json
+import re
+from datetime import UTC, datetime
+from pathlib import Path
+
+ROOT = Path("/home/xiaodouzi/workspace/headroom")
+OUT = ROOT / "reports/docs-r18-draft-20261030"
+DOCS = ("README.md", "docs/RESULTS.md", "docs/DEVPOST.md")
+EXPECTED = {
+    "README.md": "aa026562719319e19f3c3933b9e205e1fe9311cc89e25edd74c87b0c70560bff",
+    "docs/RESULTS.md": "c140a6001474f8458697c0d3021a35364877516be173e6ff03e9ceba6046b764",
+    "docs/DEVPOST.md": "6e1ac71f2d239f6a64a2f6c83cade8c05de948a5ccf36023f783d62b349d7319",
+}
+R17_NUMBERS = "reports/docs-r17-draft-20261030/numbers-checklist.json"
+R18_REVIEW = "reports/r18-20261030-terminal-review/terminal-review.json"
+R18_SUMMARY = "reports/r18-20261030-terminal-review/final-qualification-summary.json"
+R18_REVISION = "5a013bf32c3e79e3d37e2cc908ea374f72c7c7c3"
+R18_RUNS = {
+    "s1_batch_too_big": ("c9cbb9ec33bb4431877a3d4efd3799fc", 1),
+    "s4_loss_accumulation_graph": ("9a11b3d233ca47a3a2548acb82843a5c", 0),
+}
+CACHE = {}
+
+
+def digest(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def load(relative):
+    if relative not in CACHE:
+        raw = (ROOT / relative).read_bytes()
+        CACHE[relative] = (json.loads(raw), digest(raw))
+    return CACHE[relative]
+
+
+def pointer(value, path):
+    for part in path.split("/")[1:]:
+        part = part.replace("~1", "/").replace("~0", "~")
+        value = value[int(part)] if isinstance(value, list) else value[part]
+    return value
+
+
+def write(relative, text):
+    path = OUT / relative
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("x") as handle:
+        handle.write(text)
+    return {"path": str(path.relative_to(ROOT)), "sha256": digest(path.read_bytes())}
+
+
+def write_json(relative, value):
+    return write(relative, json.dumps(value, indent=2, allow_nan=False) + "\n")
+
+
+def replace_once(text, old, new):
+    assert text.count(old) == 1, (old[:90], text.count(old))
+    return text.replace(old, new, 1)
+
+
+def replace_line(text, needle, transform):
+    lines = text.splitlines(keepends=True)
+    selected = [index for index, line in enumerate(lines) if needle in line]
+    assert len(selected) == 1, (needle, len(selected))
+    index = selected[0]
+    lines[index] = transform(lines[index])
+    return "".join(lines)
+
+
+prior, prior_hash = load(R17_NUMBERS)
+assert prior_hash == "163eff6e9cacfd86b6f0c055e15591b4fe32d060d5ec611cc5ae983f44a93bfb"
+before = {}
+for name in DOCS:
+    raw = (ROOT / name).read_bytes()
+    assert digest(raw) == EXPECTED[name], name
+    assert prior["drafts"][name]["sha256"] == EXPECTED[name]
+    before[name] = raw.decode()
+    write("before-docs/" + name, raw.decode())
+
+inherited = copy.deepcopy(prior["claims"])
+for name, claim in inherited.items():
+    value, sha = load(claim["source"]["path"])
+    assert sha == claim["source"]["sha256"], name
+    assert pointer(value, claim["source"]["json_pointer"]) == claim["value"], name
+
+review, review_sha = load(R18_REVIEW)
+summary, summary_sha = load(R18_SUMMARY)
+assert review_sha == "4a433e2fe0b8d0d23c8aedfd8fe3d2a7fa35cebd2f357169cccfb50ffbaa7374"
+assert summary_sha == "f0bfb87064f436f1dd0744af4408451997501a8013263b6afd0d6ce4929c5cda"
+assert review["target_met_count"] == 2 and review["terminal_case_count"] == 7
+assert review["complete_nine_case_campaign"] is False and review["fixed_denominator"] == 9
+assert review["minimum_targets"] == 6 and review["threshold_met"] is False
+assert review["source_revision"] == R18_REVISION
+claims = {}
+
+
+def claim(name, relative, json_pointer):
+    value, sha = load(relative)
+    claims[name] = {
+        "value": pointer(value, json_pointer),
+        "source": {"path": relative, "sha256": sha, "json_pointer": json_pointer},
+    }
+    return claims[name]["value"]
+
+
+for name, ptr in {
+    "partial.status": "/campaign_status",
+    "partial.executed": "/terminal_case_count",
+    "partial.targets": "/target_met_count",
+    "partial.unrun_unknown": "/unrun_or_pending_case_count",
+    "partial.fixed_denominator": "/fixed_denominator",
+    "partial.minimum_targets": "/minimum_targets",
+    "partial.complete": "/complete_nine_case_campaign",
+    "partial.threshold_met": "/threshold_met",
+    "partial.actual_responses": "/calls/count",
+    "partial.known_actual_subtotal_usd": "/calls/known_actual_subtotal_usd",
+    "partial.exact_actual_total_usd": "/calls/actual_total_usd",
+    "partial.unknown_actual_calls": "/calls/unknown_actual_call_count",
+    "partial.conservative_charge_usd": "/direct_ledger/charged_total_usd",
+    "partial.source_revision": "/source_revision",
+}.items():
+    claim(name, R18_REVIEW, ptr)
+claim("historical.distinct_targets", R17_NUMBERS, "/historical_distinct")
+claim("historical.best_single_targets", R17_NUMBERS, "/best_single")
+for suffix in ["pool_starting_charged_usd", "pool_cumulative_charged_usd", "pool_remaining_usd"]:
+    claim("partial." + suffix, R18_SUMMARY, "/cost/" + suffix)
+
+selected = copy.deepcopy(prior["selected_current_run_numerical_scope"])
+old_numbers, old_numbers_sha = load("reports/final48h-docs-20261029/numbers.json")
+old_s1 = next(row for row in old_numbers["historical_best"] if row["scenario_id"] == "s1_batch_too_big")
+old_s1_raw, old_s1_sha = load(old_s1["report_path"])
+assert old_s1_sha == old_s1["report_sha256"]
+old_selected_s4 = selected["s4_loss_accumulation_graph"]
+previous_selection = {
+    "s1_batch_too_big": {"run_id": old_s1["run_id"], "path": old_s1["report_path"], "sha256": old_s1_sha},
+    "s4_loss_accumulation_graph": copy.deepcopy(old_selected_s4),
+}
+tie_checks = []
+for scenario, (run_id, index) in R18_RUNS.items():
+    relative = f"runs/repair-followup/execution-r18-20261030/jobs/{run_id}/report.json"
+    raw, sha = load(relative)
+    verptr = f"/rounds/{index}/verification"
+    ver = pointer(raw, verptr)
+    assert raw["run"]["target_met"] is True and ver["target_met"] is True
+    assert raw["run"]["after"]["steps"] == 20
+    assert ver["loss_equivalence"] == "identical" and ver["max_loss_delta"] == 0
+    pairing = {key: ver["checks"][key] for key in ["same_inputs", "same_effective_batch", "same_objective", "same_seed"]}
+    assert all(value is True for value in pairing.values())
+    for field, ptr in {
+        "before_bytes": "/run/baseline/peak_allocated_bytes",
+        "after_bytes": "/run/after/peak_allocated_bytes",
+        "baseline_updates": "/run/baseline/steps",
+        "candidate_updates": "/run/after/steps",
+        "before_parameter_count": "/run/baseline/parameter_count",
+        "after_parameter_count": "/run/after/parameter_count",
+        "peak_is_exact": "/measurements/after/peak_is_exact",
+        "numerical_basis": verptr + "/numerical_basis",
+        "loss_equivalence": verptr + "/loss_equivalence",
+        "max_loss_delta": verptr + "/max_loss_delta",
+        "training_coverage_not_reduced": verptr + "/checks/training_coverage_not_reduced",
+        "throughput_limit": verptr + "/checks/throughput_limit",
+    }.items():
+        claim("selected." + scenario + "." + field, relative, ptr)
+    for key in pairing:
+        claim("selected." + scenario + "." + key, relative, verptr + "/checks/" + key)
+    reference = str(Path(ver["reference_run"]).relative_to(ROOT)) + "/result.json"
+    ref, refsha = load(reference)
+    assert ref["status"] == "completed" and ref["steps"] == 20
+    claim("selected." + scenario + ".reference_updates", reference, "/steps")
+    claim("selected." + scenario + ".reference_cleanup", reference, "/execution/cleanup_verified")
+    assert ref["execution"]["cleanup_verified"] is True
+    expected_basis = "baseline_derived_checkpoint_first_five_backward_scalars" if scenario.startswith("s1_") else "original_workload_offload_first_five_backward_scalars"
+    assert ver["numerical_basis"] == expected_basis
+    previous_peak = old_s1_raw["run"]["after"]["peak_allocated_bytes"] if scenario.startswith("s1_") else old_selected_s4["after_bytes"]
+    assert raw["run"]["after"]["peak_allocated_bytes"] == previous_peak
+    tie_checks.append({"scenario_id": scenario, "previous": previous_selection[scenario], "new_run_id": run_id, "same_after_bytes": previous_peak, "selection": "latest qualifying run on exact lowest-peak tie; partial campaign remains partial"})
+    selected[scenario] = {
+        "run_id": run_id, "path": relative, "sha256": sha, "source_revision": R18_REVISION,
+        "before_bytes": raw["run"]["baseline"]["peak_allocated_bytes"],
+        "after_bytes": raw["run"]["after"]["peak_allocated_bytes"],
+        "baseline_steps": raw["run"]["baseline"]["steps"], "candidate_steps": 20,
+        "compared_scalars": 5, "compared_scalar_count_basis": "explicit first-five numerical_basis; not the length of available post-run arrays",
+        "loss_equivalence": "identical", "pairing": {key: pairing[key] for key in pairing if key != "same_seed"},
+        "same_seed": pairing["same_seed"], "verification_pointer": verptr,
+        "reference_path": reference, "reference_sha256": refsha, "reference_steps": 20,
+        "peak_is_exact": raw["measurements"]["after"]["peak_is_exact"],
+    }
+assert selected["s3_eval_no_grad_missing"] == prior["selected_current_run_numerical_scope"]["s3_eval_no_grad_missing"]
+assert selected["s8_two_models_resident"] == prior["selected_current_run_numerical_scope"]["s8_two_models_resident"]
+historical_ids = set(old_numbers["summary"]["historical_scenario_ids"])
+assert set(R18_RUNS) <= historical_ids and len(historical_ids) == 5
+assert prior["historical_distinct"] == 5 and prior["best_single"] == 3
+
+drafts = dict(before)
+partial_prose = "A subsequent October 30 check executed seven of the same nine scenarios and met two memory targets. The other two scenarios were not run after the remaining development allowance fell below the existing per-task admission requirement; their results remain unknown. This partial check is separate from the latest complete evaluation."
+for name in ["README.md", "docs/DEVPOST.md"]:
+    drafts[name] = replace_once(drafts[name], "The latest October 30 evaluation reached **3 of 9**.", "The latest complete October 30 evaluation reached **3 of 9**.")
+    marker = "<!-- numbers: summary -->"
+    drafts[name] = replace_once(drafts[name], marker, marker + "\n\n" + partial_prose + " <!-- numbers: partial.r18 -->")
+    drafts[name] = replace_once(drafts[name], "The latest October 30 evaluation met three of nine memory targets", "The latest complete October 30 evaluation met three of nine memory targets")
+drafts["README.md"] = replace_once(drafts["README.md"], "First 5 reference losses identical; candidate completed 20 updates | <!-- numbers: best.s4_loss_accumulation_graph -->", "First 5 offload-reference losses identical; candidate completed 20 updates | <!-- numbers: best.s4_loss_accumulation_graph -->")
+drafts["README.md"] = replace_once(drafts["README.md"], "First 5 reference losses identical; candidate completed 20 updates | <!-- numbers: best.s1_batch_too_big -->", "First 5 checkpoint-reference losses identical; candidate completed 20 updates | <!-- numbers: best.s1_batch_too_big -->")
+drafts["README.md"] = replace_once(drafts["README.md"], "s1's candidate peak is reconstructed.", "s1's selected capture is marked partial or unverified for peak reconstruction.")
+drafts["README.md"] = replace_once(drafts["README.md"], "reports/docs-r17-draft-20261030/numbers-checklist.json", "reports/docs-r18-draft-20261030/numbers-checklist.json")
+
+results, history = drafts["docs/RESULTS.md"].split("## Full campaign history", 1)
+results = replace_once(results, "The latest October 30 evaluation (R17)", "The latest complete October 30 evaluation (R17)")
+results = replace_once(results, "<!-- numbers: summary -->", "<!-- numbers: summary -->\n\n" + partial_prose + " <!-- numbers: partial.r18 -->")
+r17row = next(line for line in results.splitlines() if line.startswith("| [R17]"))
+partialrow = "| [R18 — partial](../reports/r18-20261030-terminal-review/README.md) | 2 observed; 7 run, 2 unknown | — (partial) | — (partial) | — (partial) | 0.57382620 |"
+results = replace_once(results, r17row, r17row + "\n" + partialrow)
+results = replace_once(results, "All eight completed all nine scenarios.", "The eight complete evaluations from R8 through R17 each ran all nine scenarios; the subsequent R18 row is partial.")
+partial_cost = "The later partial check (R18) made 32 real model responses and conservatively charged $0.57382620. Its known actual subtotal is $0.55277484; seven actual call costs remain unknown, so its exact total is unavailable. Two candidates met their targets among seven executed cases; s8 and nanoGPT were not dispatched and remain unknown within the fixed denominator of nine. This is not a completed nine-case score or an extrapolated success rate. [Partial record and qualifications](../reports/r18-20261030-terminal-review/final-qualification-summary.json)."
+results = replace_once(results, "### Historical results", partial_cost + "\n\n### Historical results")
+results = replace_line(results, "| s1: oversized batch | Activations | Correct / target met", lambda line: line.replace("[2026-10-25 / 3e8281e](../reports/acceptance-v2-r2-20261025/README.md)", "[2026-10-30 / 5a013bf3](../reports/r18-20261030-terminal-review/final-qualification-summary.json)"))
+results = replace_line(results, "| s4: retained graphs | Retained graph | Correct / target met", lambda line: line.replace("[2026-10-30 / c21cf546](../reports/r17-20261030-terminal-review/final-qualification-summary.json)", "[2026-10-30 / 5a013bf3](../reports/r18-20261030-terminal-review/final-qualification-summary.json)"))
+results = replace_once(results, "| s1: oversized batch | adc7e667237f46a5a9f71a619fab5c31 |", "| s1: oversized batch | c9cbb9ec33bb4431877a3d4efd3799fc |")
+results = replace_once(results, "| s4: retained graphs | e075c80b3f3344408ad04d826b5d0ab9 |", "| s4: retained graphs | 9a11b3d233ca47a3a2548acb82843a5c |")
+s1_selection = "The selected s1 run ties the earlier lowest successful after-peak byte count (14,297,204,736), so the latest-on-tie rule selects the later October 30 partial check at revision 5a013bf3. Its candidate and checkpoint-transformed reference each completed 20 updates; formal numerical acceptance covers only their first five backward scalars. Pairing checks matched. Selecting this one qualifying result does not turn the partial check into a complete evaluation."
+results = replace_once(results, "The selected s8 run at revision", s1_selection + "\n\nThe selected s8 run at revision")
+results = replace_line(results, "The selected s4 run also ties", lambda line: line.replace("selects R17 at c21cf546", "selects the later October 30 partial check (R18) at 5a013bf3"))
+results = replace_once(results, "The s1 repaired peak is reconstructed and is not marked exact.", "The s1 selected capture is marked partial or unverified for peak reconstruction and is not marked exact.")
+results = replace_once(results, "The latest October 30 evaluation met three of nine memory targets", "The latest complete October 30 evaluation met three of nine memory targets")
+results = replace_line(results, "The [latest October 30 complete evaluation]", lambda line: "The [latest complete October 30 evaluation](../reports/r17-20261030-terminal-review/final-qualification-summary.json) and [R17 number checklist](../reports/docs-r17-draft-20261030/numbers-checklist.json) supply the complete result and selected s3/s8 provenance. The [later partial check](../reports/r18-20261030-terminal-review/final-qualification-summary.json) and [current number checklist](../reports/docs-r18-draft-20261030/numbers-checklist.json) supply the partial outcome and tied selected s1/s4 provenance. All previous evaluation rows and versioned number manifests remain preserved; the full earlier document below is unchanged.\n")
+drafts["docs/RESULTS.md"] = results + "## Full campaign history" + history
+
+dev = drafts["docs/DEVPOST.md"]
+dev = replace_once(dev, "- **s3 eval loop:**", "- **s1 oversized batch:** the observed OOM peak fell **42.2%**; the candidate completed 20 updates and the first five losses matched its checkpoint-transformed reference. The selected capture has incomplete peak reconstruction. <!-- numbers: best.s1_batch_too_big -->\n- **s3 eval loop:**")
+dev = replace_once(dev, "first five compared losses matched the documented reference.", "first five compared losses matched the original-workload offload reference.")
+dev = replace_once(dev, "exposed by the latest suite", "exposed by these evaluations")
+drafts["docs/DEVPOST.md"] = dev
+
+draft_records = {}
+for name in DOCS:
+    draft_records[name] = write("docs-draft/" + name, drafts[name])
+    write("diffs/" + name.replace("/", "__") + ".diff", "".join(difflib.unified_diff(before[name].splitlines(True), drafts[name].splitlines(True), fromfile=name + " (exact R17 before)", tofile=name + " (R18 staged)")))
+    assert digest((ROOT / name).read_bytes()) == EXPECTED[name]
+before_history = before["docs/RESULTS.md"].split("## Full campaign history", 1)[1]
+after_history = drafts["docs/RESULTS.md"].split("## Full campaign history", 1)[1]
+assert before_history == after_history and digest(before_history.encode()) == prior["history_suffix_sha256"]
+prior_rows = [line for line in before["docs/RESULTS.md"].splitlines() if re.match(r"\| \[R(?:8|9|10|13|14|15|16|17)\]", line)]
+assert len(prior_rows) == 8 and all(drafts["docs/RESULTS.md"].count(line) == 1 for line in prior_rows)
+story = drafts["docs/DEVPOST.md"].split("## Inspiration", 1)[1]
+story = "## Inspiration" + story
+story = re.sub(r"<!--.*?-->", "", story, flags=re.S)
+story = "\n".join(line.rstrip() for line in story.splitlines()) + "\n"
+assert "<!--" not in story and "numbers:" not in story
+story_record = write("devpost-story.md", story)
+write_json("devpost-fields.json", {"project_name": "Headroom", "tagline": drafts["docs/DEVPOST.md"].split("## Tagline\n", 1)[1].split("\n\n", 1)[0], "story": story_record, "website_changed": False})
+
+latest_lines = []
+for name, text in drafts.items():
+    public_prefix = text.split("## Full campaign history", 1)[0]
+    for index, line in enumerate(public_prefix.splitlines(), 1):
+        if "latest" in line.lower():
+            assert "complete" in line.lower() or any(word in line.lower() for word in ["tie", "selected", "baseline", "source revision", "source commit"]), (name, index, line)
+            latest_lines.append({"path": name, "line": index, "text": line})
+    assert "latest October 30 evaluation" not in public_prefix
+assert "R18" not in before["docs/RESULTS.md"].split("## Full campaign history", 1)[0]
+manifest = {
+    "schema": "headroom.public-document-numbers-r18.v1",
+    "created_at": datetime.now(UTC).isoformat(),
+    "scope": "R18_REPORT_ONLY_DOCUMENT_DRAFT_NOT_APPLIED",
+    "source_documents": {name: {"sha256": EXPECTED[name]} for name in DOCS},
+    "drafts": draft_records,
+    "previous_numbers": {"path": R17_NUMBERS, "sha256": prior_hash},
+    "inherited_r17_direct_claims": inherited,
+    "claims": claims,
+    "latest_complete": {"campaign": "R17", "targets": 3, "denominator": 9, "raw_first_category": 5, "valid_correct_first_cause": 5, "first_ready": 5, "first_ready_valid_correct": 4, "final_valid": 5, "final_ready": 3},
+    "subsequent_partial": {"campaign": "R18", "executed": 7, "observed_targets": 2, "unrun_unknown": 2, "fixed_denominator": 9, "complete": False, "success_rate_extrapolated": False},
+    "historical_distinct": 5, "best_single": 3,
+    "selected_current_run_numerical_scope": selected,
+    "same_lowest_bytes_latest_run_selection": tie_checks,
+    "history_suffix_sha256": digest(after_history.encode()),
+    "eight_prior_completed_history_rows_preserved": prior_rows,
+    "latest_scope_scan": latest_lines,
+    "devpost_story": story_record,
+    "public_documents_changed": False, "new_model_calls": 0, "new_gpu_jobs": 0,
+}
+manifest_record = write_json("numbers-checklist.json", manifest)
+write_json("numbers-r18-v1.json", manifest)
+verification = {
+    "result": "PASS", "scope": "READ_ONLY_ARTIFACT_AND_DOCUMENT_VALIDATION",
+    "inherited_r17_direct_claims_verified": len(inherited),
+    "new_direct_source_hash_and_pointer_claims_verified": len(claims),
+    "all_claim_source_hashes_and_exact_pointer_values_verified": True,
+    "all_three_current_public_documents_equal_exact_R17_before": True,
+    "full_history_suffix_byte_identical": True, "eight_prior_completed_history_rows_byte_identical": True,
+    "historical_distinct_5_and_best_single_3_unchanged": True,
+    "s1_s4_exact_lowest_peak_ties_use_R18": True,
+    "s3_s8_selected_R17_scope_unchanged": True,
+    "R18_partial_not_extrapolated_or_treated_as_latest_complete": True,
+    "R18_unrun_targets_and_costs_not_zero": True,
+    "devpost_story_has_no_HTML_number_comments": True,
+    "latest_scope_scan": latest_lines,
+    "numbers_checklist": manifest_record,
+    "provider_calls": 0, "gpu_jobs": 0, "public_docs_written": False,
+}
+verification_record = write_json("draft-verification.json", verification)
+guard = {
+    "status": "PROPOSED_REPLACEMENT_ONLY_NOT_EXECUTED",
+    "required_before_hashes": EXPECTED,
+    "product_targets": draft_records,
+    "required_claim_validation": manifest_record,
+    "required_draft_verification": verification_record,
+    "instructions": "Before replacing any target, verify all current target SHA256 values match required_before_hashes, all three draft bytes match product_targets and every direct claim source hash/pointer still matches. Apply only these three product documents; do not copy the audit README over the project README. Website Devpost publication is separate. No runtime results, historical number manifests or source implementation is modified.",
+    "source_document_replacements_performed": False,
+}
+write_json("proposed-write-guard.json", guard)
+write("README.md", "# R18 documentation drafts — not applied\n\nProduct drafts are only under docs-draft/. Exact R17 before bytes are saved under before-docs/. The three diff files contain the complete proposed document changes. This audit note is not a replacement for the project README.\n\nR17 remains the latest complete nine-case evaluation: 3/9. R18 is a later partial check with seven executed cases, two observed targets and two unrun unknown cases in the unchanged denominator of nine. Its $0.57382620 conservative charge is separate from prior spending; actual total remains unknown. No partial success rate is extrapolated.\n\nOn exact best-peak ties, selected s1/s4 provenance moves to their R18 reports. Each candidate completed 20 updates; formal comparisons remain first five scalar losses, with matched pairing. s1 uses a checkpoint-transformed reference; s4 uses original-source offload. Selected s3 remains fully paired over 20 recorded scalars in R17, while s8 remains pairing-incomplete in R17. Historical five distinct successes and best single three are unchanged.\n\nnumbers-checklist.json and numbers-r18-v1.json bind all inherited and new claims to source SHA256 values and exact JSON pointers. draft-verification.json records the direct-pointer, scope, tie, history and unchanged-source checks. proposed-write-guard.json identifies the exact allowed future product replacements and their before/after hashes. devpost-story.md is the project story with HTML number comments removed; no Devpost website was changed.\n")
+print(json.dumps({"result": "PASS", "inherited_direct_claims": len(inherited), "new_direct_claims": len(claims), "drafts": draft_records, "verification": verification_record, "story": story_record, "real_docs_unchanged": True}, indent=2))

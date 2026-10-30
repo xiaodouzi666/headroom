@@ -1,0 +1,110 @@
+{
+  "result": "PASS",
+  "scope": "READ_ONLY_ARTIFACT_AND_DOCUMENT_VALIDATION",
+  "inherited_r17_direct_claims_verified": 16,
+  "new_direct_source_hash_and_pointer_claims_verified": 57,
+  "all_claim_source_hashes_and_exact_pointer_values_verified": true,
+  "all_three_current_public_documents_equal_exact_R17_before": true,
+  "full_history_suffix_byte_identical": true,
+  "eight_prior_completed_history_rows_byte_identical": true,
+  "historical_distinct_5_and_best_single_3_unchanged": true,
+  "s1_s4_exact_lowest_peak_ties_use_R18": true,
+  "s3_s8_selected_R17_scope_unchanged": true,
+  "R18_partial_not_extrapolated_or_treated_as_latest_complete": true,
+  "R18_unrun_targets_and_costs_not_zero": true,
+  "devpost_story_has_no_HTML_number_comments": true,
+  "latest_scope_scan": [
+    {
+      "path": "README.md",
+      "line": 39,
+      "text": "The recorded suite contains eight synthetic PyTorch training cases and pinned nanoGPT. Within the recorded repair campaigns, the table selects the lowest successful candidate peak for each scenario, choosing the latest campaign run on ties; [RESULTS](docs/RESULTS.md) gives its run, source revision and complete history. Memory uses decimal GB, calculated from the recorded byte counts."
+    },
+    {
+      "path": "README.md",
+      "line": 53,
+      "text": "Historically, **5 of 9** distinct scenarios have a run that met its configured memory target. The best single evaluation reached **3 of 9**. The latest complete October 30 evaluation reached **3 of 9**. Its first saved diagnosis rounds produced **5 of 9** valid correct first-cause diagnoses and **5 of 9** ready for patching; raw first-category matches were **5 of 9**. At the final stopping point, **5 of 9** diagnoses were valid and **3 of 9** remained ready. <!-- numbers: summary -->"
+    },
+    {
+      "path": "README.md",
+      "line": 55,
+      "text": "A subsequent October 30 check executed seven of the same nine scenarios and met two memory targets. The other two scenarios were not run after the remaining development allowance fell below the existing per-task admission requirement; their results remain unknown. This partial check is separate from the latest complete evaluation. <!-- numbers: partial.r18 -->"
+    },
+    {
+      "path": "README.md",
+      "line": 108,
+      "text": "Four scenarios have no recorded target success in this history. The latest complete October 30 evaluation met three of nine memory targets, below the target of six; matching a cause was often insufficient to produce a usable patch. The first-cause counts use the first saved diagnosis round, which can include correction requests within that round; raw category matches and validated diagnoses are separate measures. The two additional s2 precision-policy tests did not pass, and HF Trainer repair failed after a configuration edit passed its static check. They produced no successful memory-versus-speed comparison or new successful gallery cases."
+    },
+    {
+      "path": "docs/RESULTS.md",
+      "line": 7,
+      "text": "The latest complete October 30 evaluation (R17) met **3/9 memory targets**. Its first saved diagnosis rounds produced **5/9 valid correct first causes**, **5/9 raw first-category matches**, and **5/9 ready diagnoses**, including **4/9 ready valid correct first causes**. At the final stopping point, **5/9** diagnoses were valid and **3/9** remained ready. The unchanged memory-target threshold is **6/9**, which was not met. Historical coverage remains five distinct successful scenarios and a best single evaluation of **3/9**. <!-- numbers: summary -->"
+    },
+    {
+      "path": "docs/RESULTS.md",
+      "line": 9,
+      "text": "A subsequent October 30 check executed seven of the same nine scenarios and met two memory targets. The other two scenarios were not run after the remaining development allowance fell below the existing per-task admission requirement; their results remain unknown. This partial check is separate from the latest complete evaluation. <!-- numbers: partial.r18 -->"
+    },
+    {
+      "path": "docs/RESULTS.md",
+      "line": 35,
+      "text": "Each successful row selects the lowest recorded peak after repair, using the latest evaluation to break ties. Unsolved rows use the latest baseline documented in that row. The s2 row uses the larger AdamW workload. Memory values are **decimal GB = bytes / 1,000,000,000**."
+    },
+    {
+      "path": "docs/RESULTS.md",
+      "line": 49,
+      "text": "The selected s1 run ties the earlier lowest successful after-peak byte count (14,297,204,736), so the latest-on-tie rule selects the later October 30 partial check at revision 5a013bf3. Its candidate and checkpoint-transformed reference each completed 20 updates; formal numerical acceptance covers only their first five backward scalars. Pairing checks matched. Selecting this one qualifying result does not turn the partial check into a complete evaluation."
+    },
+    {
+      "path": "docs/RESULTS.md",
+      "line": 51,
+      "text": "The selected s8 run at revision c21cf546 has the same lowest successful after-peak byte count (121,791,488) as the previous selected run. The latest-on-tie rule selects R17; its 20 recorded losses are identical, but full workload pairing remains unknown and this adds no distinct historical success."
+    },
+    {
+      "path": "docs/RESULTS.md",
+      "line": 53,
+      "text": "The selected s3 run ties the earlier lowest successful after-peak byte count (648,419,840), so the latest-on-tie rule selects R17 at revision c21cf546. Its own 20 recorded scalars are identical and input, effective-batch, objective and seed checks match. The older fully paired and pairing-incomplete s3 runs remain in the history. The selected s3 first category matches the authored activations reference."
+    },
+    {
+      "path": "docs/RESULTS.md",
+      "line": 140,
+      "text": "Historical coverage combines successes from different evaluations; it is not a single-run success rate. The successful s4 peak ties its earlier best, so the selection rule chooses the latest run. The public gallery contains four successful cases and two failures. Its s3 card now uses the separate browser demonstration, and its s4 card uses the selected October 29 run; this does not change the campaign-only historical table. The separate precision-policy and HF tests added no successful gallery cards."
+    },
+    {
+      "path": "docs/RESULTS.md",
+      "line": 146,
+      "text": "The latest complete October 30 evaluation met three of nine memory targets, below the requirement of six. Its first saved diagnosis rounds had 5 valid correct first causes and 5 ready diagnoses; five final diagnoses were valid and three remained ready at the stopping point. In the earlier R10 evaluation, all nine ran and none met its repair target; that historical row is retained above. s5 and nanoGPT retain unverified reference causes and stay in the denominator. R7, where s4 met its target, is retained as historical evidence. A valid cause or a statically accepted edit does not establish a usable repair. The two extra s2 precision-policy tests and HF Trainer repair did not pass, and no successful memory-versus-speed comparison was produced."
+    },
+    {
+      "path": "docs/RESULTS.md",
+      "line": 156,
+      "text": "The [latest complete October 30 evaluation](../reports/r17-20261030-terminal-review/final-qualification-summary.json) and [R17 number checklist](../reports/docs-r17-draft-20261030/numbers-checklist.json) supply the complete result and selected s3/s8 provenance. The [later partial check](../reports/r18-20261030-terminal-review/final-qualification-summary.json) and [current number checklist](../reports/docs-r18-draft-20261030/numbers-checklist.json) supply the partial outcome and tied selected s1/s4 provenance. All previous evaluation rows and versioned number manifests remain preserved; the full earlier document below is unchanged."
+    },
+    {
+      "path": "docs/DEVPOST.md",
+      "line": 13,
+      "text": "Historically, **5 of 9** distinct scenarios have a run that met its configured memory target. The best single evaluation reached **3 of 9**. The latest complete October 30 evaluation reached **3 of 9**. Its first saved diagnosis rounds produced **5 of 9** valid correct first-cause diagnoses and **5 of 9** ready for patching; raw first-category matches were **5 of 9**. At the final stopping point, **5 of 9** diagnoses were valid and **3 of 9** remained ready. <!-- numbers: summary -->"
+    },
+    {
+      "path": "docs/DEVPOST.md",
+      "line": 15,
+      "text": "A subsequent October 30 check executed seven of the same nine scenarios and met two memory targets. The other two scenarios were not run after the remaining development allowance fell below the existing per-task admission requirement; their results remain unknown. This partial check is separate from the latest complete evaluation. <!-- numbers: partial.r18 --> The target of six successful scenarios has not been reached."
+    },
+    {
+      "path": "docs/DEVPOST.md",
+      "line": 18,
+      "text": "- **s3 eval loop:** peak memory fell **73.4%**, with all 20 recorded scalar losses identical; input, effective-batch, objective and seed checks matched for the selected latest run. <!-- numbers: best.s3_eval_no_grad_missing -->"
+    },
+    {
+      "path": "docs/DEVPOST.md",
+      "line": 47,
+      "text": "Historical memory-target successes come from separate runs and do not establish identical full-training behaviour. Numerical coverage varies by case, as detailed above and in RESULTS. The latest complete October 30 evaluation met three of nine memory targets, below the target of six; its raw first-category matches and valid correct diagnoses are reported separately. The diagnosis-only comparison is one fixed-order pass without repeats, with two unconfirmed reference causes retained in the full denominator. Both new s2 precision-policy tests and the HF Trainer repair failed to meet their requirements; a statically accepted HF configuration edit did not establish a successful repair. Saved-snapshot analysis has produced valid diagnoses, although some explanations still contain factual errors. The web interface can analyze an explicitly shared server capture by ID using new Nebius inference; external snapshot upload is optional. Neither path runs the supplied training code or proves a GPU repair. A large public upload timed out before analysis."
+    }
+  ],
+  "numbers_checklist": {
+    "path": "reports/docs-r18-draft-20261030/numbers-checklist.json",
+    "sha256": "ae7ee9608a51ff23682e6a9c5d1e982b5a3fdc1cd78e2bfe7f2812b74e4e1b61"
+  },
+  "provider_calls": 0,
+  "gpu_jobs": 0,
+  "public_docs_written": false
+}

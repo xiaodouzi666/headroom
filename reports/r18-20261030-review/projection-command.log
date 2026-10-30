@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "/home/xiaodouzi/workspace/headroom/reports/r18-20261030-review/project-r18.py.txt", line 675, in <module>
+    main()
+  File "/home/xiaodouzi/workspace/headroom/reports/r18-20261030-review/project-r18.py.txt", line 670, in main
+    result = stage_campaign(campaign, output, args.id, terminal_reviewed=args.terminal_reviewed)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/reports/r18-20261030-review/project-r18.py.txt", line 531, in stage_campaign
+    controller, public_rows, rows, metrics, notes, sources = collect(campaign_path)
+                                                             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/reports/r18-20261030-review/project-r18.py.txt", line 213, in collect
+    sources.read(f"{job}/rounds/{number:02d}/{name}", 1024 * 1024, True)
+  File "/home/xiaodouzi/workspace/headroom/reports/r18-20261030-review/project-r18.py.txt", line 72, in read
+    with open_regular(self.root, name, maximum) as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xiaodouzi/workspace/headroom/headroom/api/security.py", line 81, in open_regular
+    raise ValueError("Artifact is not a bounded regular file")
+ValueError: Artifact is not a bounded regular file

@@ -1,0 +1,85 @@
+"""Report-only bounded R18 snapshot. Never dispatches or changes a runtime file."""
+import hashlib
+import json
+import sqlite3
+from collections import Counter
+from datetime import UTC, datetime
+from decimal import Decimal
+from pathlib import Path
+
+ROOT = Path("/home/xiaodouzi/workspace/headroom")
+CAMPAIGN = ROOT / "runs/repair-followup/execution-r18-20261030/campaign.json"
+OUTPUT = ROOT / "reports/r18-20261030-terminal-review/monitoring"
+raw = CAMPAIGN.read_bytes()
+campaign = json.loads(raw)
+rows = []
+for value in campaign.get("rows", []):
+    if not isinstance(value, dict):
+        continue
+    row = {key: value.get(key) for key in ("scenario_id", "run_id", "status", "target_met")}
+    run_id = row["run_id"]
+    if isinstance(run_id, str) and len(run_id) == 32 and all(x in "0123456789abcdef" for x in run_id):
+        job = CAMPAIGN.parent / "jobs" / run_id
+        row["diagnosis_count"] = len(list(job.glob("rounds/*/diagnosis.json")))
+        row["lab_result_count"] = len(list(job.glob("lab/*/result.json")))
+        row["preflight_statuses"] = [
+            json.loads(path.read_text()).get("status")
+            for path in sorted(job.glob("rounds/*/candidate-reference-preflight.json"))
+        ]
+    rows.append(row)
+accounting = campaign.get("accounting", {})
+keys = ("status", "scope_cap_usd", "scope_charged_usd", "scope_actual_usd",
+        "scope_remaining_usd", "all_costs_known", "all_costs_resolved")
+record = {
+    "utc": datetime.now(UTC).isoformat(),
+    "campaign_sha256": hashlib.sha256(raw).hexdigest(),
+    "campaign_status": campaign.get("status"),
+    "stop_reason": campaign.get("stop_reason"),
+    "rows": rows,
+    "accounting": {key: accounting.get(key) for key in keys},
+    "review_model_calls": 0,
+    "review_gpu_runs": 0,
+}
+connection = sqlite3.connect(f"file:{CAMPAIGN.parent}/headroom.db?mode=ro", uri=True)
+connection.row_factory = sqlite3.Row
+try:
+    connection.execute("BEGIN")
+    calls = [dict(row) for row in connection.execute("SELECT role,cost_usd,data_json FROM llm_calls")]
+finally:
+    connection.rollback()
+    connection.close()
+record["calls"] = {
+    "count": len(calls),
+    "roles": dict(Counter(row["role"] for row in calls)),
+    "actual_unknown": sum(row["cost_usd"] is None for row in calls),
+    "outcomes": dict(Counter(json.loads(row["data_json"]).get("outcome") for row in calls)),
+    "settled": sum(json.loads(row["data_json"]).get("settled") is True for row in calls),
+}
+ids = [row["run_id"] for row in rows if row["run_id"]]
+connection = sqlite3.connect(
+    f"file:{ROOT}/.cache/repair-followup-20261030-v3/budget.db?mode=ro", uri=True
+)
+connection.row_factory = sqlite3.Row
+try:
+    connection.execute("BEGIN")
+    marks = ",".join("?" for _ in ids)
+    attempts = [dict(row) for row in connection.execute(
+        f"SELECT charged_usd,actual_usd FROM budget_attempts WHERE run_id IN ({marks})", ids
+    )] if ids else []
+finally:
+    connection.rollback()
+    connection.close()
+record["direct_current_attempt_cost"] = {
+    "attempt_count": len(attempts),
+    "charged_known_subtotal_usd": str(sum(
+        (Decimal(row["charged_usd"]) for row in attempts if row["charged_usd"] is not None), Decimal(0)
+    )),
+    "unknown_charged_count": sum(row["charged_usd"] is None for row in attempts),
+    "unknown_actual_count": sum(row["actual_usd"] is None for row in attempts),
+}
+OUTPUT.mkdir(exist_ok=True)
+path = OUTPUT / (datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ") + ".json")
+with path.open("x") as handle:
+    json.dump(record, handle, indent=2)
+    handle.write("\n")
+print(json.dumps({"snapshot": str(path), **record}, indent=2))

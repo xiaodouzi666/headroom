@@ -598,3 +598,10 @@ condition = "AND"
 regexTarget = "secret"
 paths = ['''^reports/r16\-20261030\-terminal\-review/terminal\-review\.json$''']
 regexes = ['''^\-\-eval_iters=1$''', '''^\-\-eval_interval=1000$''']
+
+[[rules.allowlists]]
+description = "Exact nonsecret numeric CLI token in a model-declared invocation claim"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^reports/r18\-20261030\-terminal\-review/terminal\-review\.json$''']
+regexes = ['''^\-\-vocabulary=131072$''']

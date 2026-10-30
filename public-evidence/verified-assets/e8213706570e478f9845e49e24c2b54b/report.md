@@ -3,7 +3,7 @@
 Run: e8213706570e478f9845e49e24c2b54b
 Outcome: Historical target met
 
-The latest fixed-nine evaluation removed a tensor accumulator that retained computation graphs across updates.
+The recorded evaluation removed a tensor accumulator that retained computation graphs across updates.
 
 Peak before: 24768717824 bytes
 Peak after: 2533996544 bytes

@@ -1,0 +1,26 @@
+# R18 terminal documentation refresh — plan only
+
+No R18 terminal result is asserted here. Production source, tests, web, controller, public data and actual documentation stay unchanged.
+
+Current README/RESULTS/DEVPOST hashes exactly match the previously applied R17 draft. Its16 direct numerical claim pointers were independently rechecked against the immutable JSON source hashes and exact JSON Pointer values. See observed-before.json and r17-direct-pointer-recheck.json. Historical distinct coverage is5/9 and best single evaluation3/9 in that inherited manifest; neither is the R18 score.
+
+## Required terminal evidence before writing actual prose
+
+1. Freeze the R18 campaign and independent terminal/qualification reports, including exact file hashes. Preserve all nine slots and minimum6/9. A partial/stopped attempt is described as partial; unrun/missing outcomes remain unknown in the nine denominator. “Latest completed nine-scenario evaluation” changes only if the review actually confirms all nine evaluated.
+2. Build a new versioned numbers manifest. Each direct claim uses {value,source:{path,sha256,json_pointer}}. Run check-direct-pointers.py.txt with the new manifest and an output path under this report directory. A pointer match validates the stored value only; it does not qualify a repair or replace the independent terminal review.
+3. Source required headline values from the frozen R18 review: qualified targets, first-saved-round raw matches, valid-correct causes, ready count, ready-and-correct count, final valid/ready counts, conservative charge, known actual subtotal, and actual total (null remains unknown). First-saved-round includes any correction calls within that round; never label it the first raw API response.
+4. Require one qualification record per claimed successful run: source revision, selected round, candidate cleanup/completion, actual target result, numerical_basis/reference protocol, formal compared-scalar count, pairing checks, and exact before/after allocated bytes.20 candidate updates are not automatically20 compared backward scalars. A lower unqualified peak, rejected freeze, infrastructure reference or diagnosis-only analysis is not a new repair.
+5. Recompute historical distinct successful scenario IDs as a union of qualified runs; best single is max of per-campaign results. The historical per-scenario table still chooses lowest qualifying candidate bytes, then latest recorded campaign on ties, retaining each selected run's actual source revision and limited numerical scope. Do not pool historical cases into the R18 numerator or retroactively revalidate old diagnoses under new code.
+
+## Minimal edits after source freeze ends
+
+- README.md: update only the current summary and its matching limitation sentence from the new manifest. Keep the historical scope and the existing ablation/long-input facts. Avoid putting every diagnostic/billing count in the introductory product copy.
+- docs/RESULTS.md: update the current summary, append one R18 campaign row and a short accounting/unknown note. Preserve the R17 row and every older row. Preserve the exact Full campaign history suffix captured in observed-before.json. Update selected historical best rows only if a newly qualified run wins the existing selection rule.
+- docs/DEVPOST.md: replace only the current numerical/limitation paragraph; keep product mechanism, links, personal facts, video and technical story unchanged. In the live Devpost editor, first reread actual story text: the last retained remote story-save receipt proves R15 was saved, not that the current editor is still R15.
+- Additional info quality answer: parent directly observed6/10 with R9 main text and an R10 append (0/9 targets,5raw,4valid,0ready); there is no saved DOM snapshot for that observation. Final direct browser read and a real save/readback receipt are still required. Preserve6/10 and all personal declarations. Retain old dated results and append only the new short R18 paragraph from paragraph-templates.en.txt.
+- Gallery honesty copy, after freeze: public-evidence/verified-runs.json pointer /runs/2/description (currently line7232) says “The latest fixed-nine evaluation…”, but run e8213706570e478f9845e49e24c2b54b is R7. Use “The recorded evaluation…”. Public derived asset report.json:53 and report.md:6 repeat it. If editing those derived assets too, refresh their index sha/bytes. Never modify original runs history.
+- Keep the full metric/accounting table in RESULTS and the report. Public summary can give latest targets,6/9 status, a separate historical sentence and a link; it need not expose every internal validation field.
+
+## Final readback
+
+Check all current numerical summaries against the new manifest, historical suffix unchanged, all original campaign rows present, no new claim of full workload/numerical equivalence where pairing is unknown, and no null cost converted to zero. Reopen the actual Devpost story and Additional info after saving; record observed UTC, text hash, Submitted5/5 state if displayed, unchanged score/declarations/links/video/private attachment, and retained screenshot only when one was actually captured. Do not manufacture a saved receipt from this plan. Read the public project and read-only gallery/results after reload; those reads do not launch a new GPU/model task.

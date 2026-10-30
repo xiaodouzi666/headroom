@@ -1,0 +1,81 @@
+{
+  "schema": "headroom.verified-description-copyfix.v1",
+  "prepared_only": true,
+  "applied": false,
+  "run_id": "e8213706570e478f9845e49e24c2b54b",
+  "old_description": "The latest fixed-nine evaluation removed a tensor accumulator that retained computation graphs across updates.",
+  "new_description": "The recorded evaluation removed a tensor accumulator that retained computation graphs across updates.",
+  "allowed_changes": [
+    "/runs/2/description",
+    "/runs/2/downloads/report_json/sha256",
+    "/runs/2/downloads/report_json/bytes",
+    "/runs/2/downloads/report_markdown/sha256",
+    "/runs/2/downloads/report_markdown/bytes",
+    "curated downloadable report.json description",
+    "curated downloadable report.md intro"
+  ],
+  "files_in_apply_order": [
+    {
+      "destination": "public-evidence/verified-assets/e8213706570e478f9845e49e24c2b54b/report.json",
+      "before_path": "reports/verified-s4-description-copyfix-20261030/before/verified-assets/e8213706570e478f9845e49e24c2b54b/report.json",
+      "candidate_path": "reports/verified-s4-description-copyfix-20261030/candidate/verified-assets/e8213706570e478f9845e49e24c2b54b/report.json",
+      "before_sha256": "9041c1307e7eaa795ce9f3baeb32662e3b53f55b77ef03ca9920fa106ab397a3",
+      "after_sha256": "40ab5602af18d4819fa6bb0e92b1a4d93c67d960205ab012cec23e194712d48f",
+      "before_bytes": 72180,
+      "after_bytes": 72171
+    },
+    {
+      "destination": "public-evidence/verified-assets/e8213706570e478f9845e49e24c2b54b/report.md",
+      "before_path": "reports/verified-s4-description-copyfix-20261030/before/verified-assets/e8213706570e478f9845e49e24c2b54b/report.md",
+      "candidate_path": "reports/verified-s4-description-copyfix-20261030/candidate/verified-assets/e8213706570e478f9845e49e24c2b54b/report.md",
+      "before_sha256": "92961071e28f7d4aaaec681b75940e9b8b5de96debdcc4fa6bfd77c9a1d01553",
+      "after_sha256": "fbca7fe8b019270666024a8a9a008a30aeb172d910ad41a984ff40afdac24543",
+      "before_bytes": 715,
+      "after_bytes": 706
+    },
+    {
+      "destination": "public-evidence/verified-runs.json",
+      "before_path": "reports/verified-s4-description-copyfix-20261030/before/verified-runs.json",
+      "candidate_path": "reports/verified-s4-description-copyfix-20261030/candidate/verified-runs.json",
+      "before_sha256": "02fbbbe1d8f019f366f31d44ea7d1278ad686f07d40e54cffeb28b192fd8bce2",
+      "after_sha256": "84789b61355e85355844e0a7e0cd103cfa15f6cc5acdecbf5416b7f0de7b04e1",
+      "before_bytes": 864772,
+      "after_bytes": 864763
+    }
+  ],
+  "raw_run_original": {
+    "path": "runs/final48-f3/execution-20261029-v1/jobs/e8213706570e478f9845e49e24c2b54b/report.json",
+    "sha256": "9b97be85d4e8116cda811b2b0e3b3587509d06f52db7700be92fe16fbf443cd6",
+    "bytes": 1477107
+  },
+  "validation": {
+    "candidate_load_verified": true,
+    "source_load_verified": true,
+    "current_cards": 6,
+    "all_other_json_fields_unchanged": true
+  },
+  "deployment": {
+    "service": "headroom-public.service",
+    "service_working_directory": "/home/xiaodouzi/workspace/headroom",
+    "service_entry": "scripts.serve_public",
+    "verified_routes_root": "settings.project_root/public-evidence",
+    "verified_routes_source_sha256": "d49f01320ca0991e515c9d58a6f610d71006b6dd93021def986330b4633fb99a",
+    "serve_public_source_sha256": "f3604ec90bab668be9630c1fcf95b3faf8062315f1efffa44761ba99bcb81ee1",
+    "current_separate_verified_mirror": null,
+    "evaluations_only_mirror": "runs/public-api/submissions",
+    "note": "No Verified files exist in evaluations-only mirror; do not create them. Verified routes read repo public-evidence directly."
+  },
+  "atomic_apply_guards": [
+    "Root confirms R18 terminal and source freeze released",
+    "Expected plan SHA matches",
+    "All three source before SHA/bytes match",
+    "Raw run original SHA unchanged",
+    "Candidate complete catalog validates with load_verified",
+    "headroom-public.service is inactive before applying this multi-file set to avoid an old-index/new-asset mismatch window",
+    "Atomic os.replace per file; assets first and manifest last; on any failure restore every touched file from before copies before restarting service",
+    "Reload load_verified and verify raw original after application; restart service only separately by root"
+  ],
+  "models_called": 0,
+  "gpu_jobs": 0,
+  "production_modified": false
+}

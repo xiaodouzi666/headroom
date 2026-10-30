@@ -1,0 +1,120 @@
+"""Synthetic-only projection gates; no live campaign read or publication."""
+
+import copy
+import json
+import runpy
+import sys
+import tempfile
+from pathlib import Path
+
+sys.dont_write_bytecode = True
+ROOT = Path(__file__).resolve().parents[2]
+P = runpy.run_path(str(ROOT / "reports/r18-20261030-review/project-r18.py.txt"))
+SCENARIOS = P["SCENARIOS"]
+
+
+def document():
+    return {
+        "schema": "headroom.development-repair-campaign.v2",
+        "scope": "DEVELOPMENT_REPAIR_FOLLOWUP",
+        "historical_scores_modified": False,
+        "planned_cells": 9,
+        "status": "partial",
+        "provenance": "live",
+        "fixed_denominator": 9,
+        "minimum_targets": 6,
+        "revision": "a" * 40,
+        "proposal_sha256": "b" * 64,
+        "preparation_sha256": "c" * 64,
+        "funding_receipt_sha256": "d" * 64,
+        "starting_pool_accounting": {},
+        "rows": [
+            {
+                "scenario_id": scenario,
+                "cell_id": "fixed9-" + scenario,
+                "status": "not_run",
+                "run_id": None,
+                "truth_status": "unverified",
+                "ground_truth": None,
+                "target_met": False,
+                "policy": {},
+            }
+            for scenario in SCENARIOS
+        ],
+    }
+
+
+checks = []
+base = document()
+assert len(P["fixed_rows"](base)) == 9
+checks.append("terminal partial fixed nine accepted")
+for label, mutate in (
+    ("running campaign rejected", lambda d: d.update(status="running")),
+    ("changed denominator rejected", lambda d: d.update(fixed_denominator=8)),
+    ("changed threshold rejected", lambda d: d.update(minimum_targets=5)),
+    ("missing ninth row rejected", lambda d: d["rows"].pop()),
+    ("changed fixed order rejected", lambda d: d["rows"].reverse()),
+):
+    changed = copy.deepcopy(base)
+    mutate(changed)
+    try:
+        P["fixed_rows"](changed)
+    except ValueError:
+        checks.append(label)
+    else:
+        raise AssertionError(label)
+
+
+with tempfile.TemporaryDirectory(prefix="r18-projector-synthetic-") as tmp:
+    campaign_root = Path(tmp) / "execution-r18-20261030"
+    campaign_root.mkdir()
+    campaign = campaign_root / "campaign.json"
+    campaign.write_text(json.dumps(base))
+    _, public, private, metrics, _, _ = P["collect"](campaign)
+    assert len(public) == len(private) == 9
+    assert metrics["attempted_rows"] == 0
+    assert metrics["not_run_rows"] == 9
+    assert metrics["fixed_denominator"] == 9
+    assert metrics["minimum_memory_targets"] == 6
+    assert all(row["target_met"] is None for row in private)
+    assert all(row["target_met"] is None for row in public)
+    assert all(row["provenance"] == "unknown" for row in public)
+    assert all(row["cost"]["actual_usd"] is None for row in private)
+    assert all(row["cost"]["cost_resolved"] is None for row in private)
+    checks.append("unrun false input never promoted to measured false")
+    checks.append("all nine unrun rows retain unknown provenance target and cost")
+    assert metrics["memory_targets"] == 0
+    assert metrics["cost"]["actual_total_usd"] is None
+    assert metrics["cost"]["charged_total_usd"] is None
+    checks.append("count zero targets differs from unmeasured per-row outcomes")
+    running = copy.deepcopy(base)
+    running["rows"][0].update(status="running", run_id="e" * 32)
+    campaign.write_text(json.dumps(running))
+    try:
+        P["collect"](campaign)
+    except ValueError:
+        checks.append("running row rejected even if campaign says partial")
+    else:
+        raise AssertionError("running row accepted")
+    aliased = Path(tmp) / "execution-r17-20261030"
+    aliased.mkdir()
+    alias_campaign = aliased / "campaign.json"
+    alias_campaign.write_text(json.dumps(base))
+    try:
+        P["collect"](alias_campaign)
+    except ValueError:
+        checks.append("older campaign cannot receive new R18 label")
+    else:
+        raise AssertionError("old campaign alias accepted")
+print(
+    json.dumps(
+        {
+            "status": "PASS",
+            "checks": checks,
+            "provider_calls": 0,
+            "gpu_jobs": 0,
+            "live_campaign_read": False,
+            "public_mutation": False,
+        }
+    )
+)

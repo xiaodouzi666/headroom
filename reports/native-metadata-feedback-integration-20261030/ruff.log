@@ -1,0 +1,36 @@
+F401 [*] `test_diagnosis_bounded_repair.payload` imported but unused
+  --> tests/test_native_metadata_feedback.py:11:43
+   |
+10 | import pytest
+11 | from test_diagnosis_bounded_repair import payload, provider_client
+   |                                           ^^^^^^^
+12 | from test_scoped_observation_feedback import PREFIX, blocked, observed_source
+   |
+help: Remove unused import: `test_diagnosis_bounded_repair.payload`
+   |
+10 | import pytest
+   - from test_diagnosis_bounded_repair import payload, provider_client
+11 + from test_diagnosis_bounded_repair import provider_client
+12 | from test_scoped_observation_feedback import PREFIX, blocked, observed_source
+   |
+
+F401 [*] `headroom.diagnose.validate_diagnosis` imported but unused
+  --> tests/test_native_metadata_feedback.py:14:53
+   |
+12 | from test_scoped_observation_feedback import PREFIX, blocked, observed_source
+13 |
+14 | from headroom.diagnose import diagnose_with_router, validate_diagnosis
+   |                                                     ^^^^^^^^^^^^^^^^^^
+15 | from headroom.diagnosis_protocol import FINAL48_DIAGNOSIS_ONLY
+16 | from headroom.evidence_blockers import (
+   |
+help: Remove unused import: `headroom.diagnose.validate_diagnosis`
+   |
+13 |
+   - from headroom.diagnose import diagnose_with_router, validate_diagnosis
+14 + from headroom.diagnose import diagnose_with_router
+15 | from headroom.diagnosis_protocol import FINAL48_DIAGNOSIS_ONLY
+   |
+
+Found 2 errors.
+[*] 2 fixable with `--fix`.

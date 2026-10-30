@@ -1,0 +1,27 @@
+--- a/train.py
++++ b/train.py
+@@ -95,12 +95,19 @@
+         synchronize(device)
+         started = time.perf_counter()
+         optimizer.zero_grad(set_to_none=True)
+-        # The complete batch retains every block's intermediate activations.
+-        predictions = model(inputs)
+-        loss = (predictions - targets).square().mean()
+-        loss.backward()
++        microbatch_size = 4
++        num_microbatches = batch // microbatch_size
++        for mb in range(num_microbatches):
++            start = mb * microbatch_size
++            end = start + microbatch_size
++            mb_inputs = inputs[start:end]
++            mb_targets = targets[start:end]
++            predictions = model(mb_inputs)
++            loss = (predictions - mb_targets).square().mean()
++            loss = loss * (microbatch_size / batch)
++            loss.backward()
++        synchronize(device)
+         optimizer.step()
+-        synchronize(device)
+         emit(
+             "step",
+             device,

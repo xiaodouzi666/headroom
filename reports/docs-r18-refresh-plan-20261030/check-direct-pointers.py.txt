@@ -1,0 +1,68 @@
+"""Check public numerical claim pointers; no rendering, publication or re-scoring."""
+import argparse
+import hashlib
+import json
+import re
+from pathlib import Path
+
+ROOT=Path.cwd().resolve()
+parser=argparse.ArgumentParser()
+parser.add_argument('--manifest',required=True)
+parser.add_argument('--output',required=True)
+args=parser.parse_args()
+def sha(data):return hashlib.sha256(data).hexdigest()
+def pointer(value, location):
+    if location=="":return value
+    if not location.startswith("/"):raise ValueError("JSON pointer must be absolute")
+    for token in location[1:].split("/"):
+        token=token.replace("~1","/").replace("~0","~")
+        if isinstance(value,list):
+            if re.fullmatch(r"0|[1-9][0-9]*",token) is None:raise ValueError("Noncanonical array index")
+            value=value[int(token)]
+        elif isinstance(value,dict):value=value[token]
+        else:raise ValueError("Pointer traverses scalar")
+    return value
+manifest=Path(args.manifest)
+manifest=manifest if manifest.is_absolute() else ROOT/manifest
+manifest=manifest.resolve(strict=True)
+if ROOT not in manifest.parents:raise ValueError("Manifest must belong to repository")
+raw=manifest.read_bytes()
+if len(raw)>4*1024*1024:raise ValueError("Manifest too large")
+value=json.loads(raw)
+claims=value.get("claims")
+if not isinstance(claims,dict) or not 0<len(claims)<=256:raise ValueError("Expected bounded direct claims")
+checks=[]
+cache={}
+for name,claim in claims.items():
+    record=claim["source"];relative=Path(record["path"])
+    if relative.is_absolute() or ".." in relative.parts or relative.parts[0] not in {"reports","runs"}:
+        raise ValueError("Public claim must point to a report or run JSON")
+    if any(part.lower().startswith(".env") for part in relative.parts) or relative.suffix!=".json":
+        raise ValueError("Protected or non-JSON source")
+    path=(ROOT/relative).resolve(strict=True)
+    if ROOT not in path.parents:raise ValueError("Source escaped project")
+    if path not in cache:
+        source=path.read_bytes()
+        if len(source)>16*1024*1024:raise ValueError("Claim source too large")
+        cache[path]=(sha(source),json.loads(source))
+    digest,document=cache[path]
+    if digest!=record["sha256"]:raise ValueError("Stale claim source: "+name)
+    observed=pointer(document,record["json_pointer"])
+    if type(observed) is not type(claim["value"]) or observed!=claim["value"]:
+        raise ValueError("Direct claim value/type mismatch: "+name)
+    checks.append({"claim":name,"source":str(relative),"source_sha256":digest,
+                   "json_pointer":record["json_pointer"],"value_type":type(observed).__name__,
+                   "exact_match":True})
+output=Path(args.output)
+output=output if output.is_absolute() else ROOT/output
+output=output.resolve()
+if ROOT not in output.parents or "reports" not in output.relative_to(ROOT).parts:
+    raise ValueError("Check report must stay under reports")
+output.parent.mkdir(parents=True,exist_ok=True)
+report={"result":"PASS_DIRECT_POINTERS_ONLY_NOT_TERMINAL_OR_SEMANTIC_CERTIFICATION",
+        "manifest":str(manifest.relative_to(ROOT)),"manifest_sha256":sha(raw),
+        "direct_claims_checked":len(checks),"checks":checks,"docs_changed":False,
+        "historical_scores_recomputed":False,"model_calls":0,"gpu_jobs":0}
+output.write_text(json.dumps(report,indent=2)+"\n")
+print(json.dumps({"result":report["result"],"direct_claims_checked":len(checks),
+                 "report_sha256":sha(output.read_bytes())}))

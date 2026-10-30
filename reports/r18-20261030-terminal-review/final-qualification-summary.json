@@ -1,0 +1,244 @@
+{
+  "schema": "headroom.r18-terminal-qualification.v1",
+  "utc": "2026-10-30T15:14:14.536862+00:00",
+  "campaign_status": "partial",
+  "stop_reason": "insufficient_full_run_allowance",
+  "source_revision": "5a013bf32c3e79e3d37e2cc908ea374f72c7c7c3",
+  "raw_review": {
+    "path": "reports/r18-20261030-terminal-review/terminal-review.json",
+    "sha256": "4a433e2fe0b8d0d23c8aedfd8fe3d2a7fa35cebd2f357169cccfb50ffbaa7374"
+  },
+  "campaign": {
+    "path": "/home/xiaodouzi/workspace/headroom/runs/repair-followup/execution-r18-20261030/campaign.json",
+    "sha256": "42901442cbdcd0c4995f6f6e4437c82583a6d44a03dd6fb3c31007dec3594094"
+  },
+  "fixed_denominator": 9,
+  "minimum_targets": 6,
+  "executed_terminal_cases": 7,
+  "observed_targets": 2,
+  "unrun_unknown_cases": [
+    "s8_two_models_resident",
+    "nanogpt"
+  ],
+  "complete_nine_case_campaign": false,
+  "threshold_met": false,
+  "latest_complete_campaign_not_replaced": "R17 remains the latest complete nine-case execution; R18 is a distinct partial campaign, not a complete 2/9 regression.",
+  "actual_calls": {
+    "count": 32,
+    "by_role": {
+      "annotate": 7,
+      "diagnose": 14,
+      "patcher": 8,
+      "super": 3
+    },
+    "outcomes": {
+      "response": 32
+    },
+    "all_settled": true,
+    "diagnostic_request_count": 14,
+    "diagnostic_model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "all_diagnostic_caps_2000": true,
+    "all_diagnostic_thinking_disabled": true
+  },
+  "cost": {
+    "campaign_conservative_charged_usd": "0.57382620",
+    "campaign_known_actual_subtotal_usd": "0.55277484",
+    "campaign_unknown_actual_call_count": 7,
+    "campaign_exact_actual_total_usd": null,
+    "pool_cap_usd": "4.890504400",
+    "pool_starting_charged_usd": "3.72274640",
+    "pool_cumulative_charged_usd": "4.29657260",
+    "pool_remaining_usd": "0.593931800",
+    "all_costs_resolved": true,
+    "all_costs_known": false,
+    "new_case_allowance_usd": "0.60",
+    "admission_stopped_below_allowance": true,
+    "actual_unknown_is_zero": false
+  },
+  "qualification": [
+    "Both observed targets completed 20 candidate updates. Their formal numerical comparisons use first five backward scalar losses, not a 20-scalar equivalence claim.",
+    "S1 uses a baseline-derived transformed checkpoint reference preserving original argv/workload; this is not byte-identical original source execution.",
+    "S4 uses an original-source/argv offload reference which itself completed 20 updates; the formal numerical basis nevertheless remains first five backward scalars.",
+    "For both targets the recorded seed/input/effective-batch pairing checks passed; original OOM baselines leave full training coverage and comparable completed-baseline throughput unknown.",
+    "S2/S7 failed evidence availability validation, S6 failed numeric policy, S3/S5 retained needs_more_info. No host flag clearing or fabricated readiness occurred.",
+    "S8/nanoGPT were never dispatched after the unchanged full-run budget admission check; their targets and costs remain unknown, not false or zero."
+  ],
+  "cases": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "run_id": "c9cbb9ec33bb4431877a3d4efd3799fc",
+      "status": "completed",
+      "target_met": true,
+      "final_diagnosis_valid": true,
+      "final_ready": true,
+      "issues": [],
+      "rounds": 2,
+      "verification": {
+        "peak_before": 24.750424064,
+        "peak_after": 14.297204736,
+        "numerical_basis": "baseline_derived_checkpoint_first_five_backward_scalars",
+        "max_loss_delta": 0.0,
+        "loss_equivalence": "identical",
+        "parameter_count_before": 101007360,
+        "parameter_count_after": 101007360,
+        "run_ids": {
+          "baseline": "790ca9804f714e9e984a13b02270836c",
+          "candidate": "9309922c844e47c594befe64660a2df0"
+        },
+        "reference_run": "/home/xiaodouzi/workspace/headroom/runs/repair-followup/execution-r18-20261030/jobs/c9cbb9ec33bb4431877a3d4efd3799fc/lab/69e8c7d246be4c4281daed1418bde104",
+        "checks": {
+          "numerical_acceptance": true,
+          "parameter_policy": true,
+          "same_seed": true,
+          "same_inputs": true,
+          "same_effective_batch": true,
+          "same_objective": true,
+          "training_coverage_not_reduced": null,
+          "throughput_limit": null,
+          "memory_target": true
+        }
+      }
+    },
+    {
+      "scenario_id": "s2_capacity_v2",
+      "run_id": "67190f3518984dd486e58cf1e081638b",
+      "status": "needs_human",
+      "target_met": false,
+      "final_diagnosis_valid": false,
+      "final_ready": false,
+      "issues": [
+        "EVIDENCE_AVAILABILITY_CONTRADICTED"
+      ],
+      "rounds": 1
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "run_id": "4f2cc3c77aeb4a30bc711f07a8919515",
+      "status": "needs_human",
+      "target_met": false,
+      "final_diagnosis_valid": true,
+      "final_ready": false,
+      "issues": [],
+      "rounds": 1
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "run_id": "9a11b3d233ca47a3a2548acb82843a5c",
+      "status": "completed",
+      "target_met": true,
+      "final_diagnosis_valid": true,
+      "final_ready": true,
+      "issues": [],
+      "rounds": 1,
+      "verification": {
+        "peak_before": 24.768717824,
+        "peak_after": 2.533996544,
+        "numerical_basis": "original_workload_offload_first_five_backward_scalars",
+        "max_loss_delta": 0.0,
+        "loss_equivalence": "identical",
+        "parameter_count_before": 50374656,
+        "parameter_count_after": 50374656,
+        "run_ids": {
+          "baseline": "795fddc0b4304ed48e629f6eac341c8a",
+          "candidate": "28ba10a53d5546b6adebd051c2983ae9"
+        },
+        "reference_run": "/home/xiaodouzi/workspace/headroom/runs/repair-followup/execution-r18-20261030/jobs/9a11b3d233ca47a3a2548acb82843a5c/lab/c714d761d5434d07bfead2e4ae095ecc",
+        "checks": {
+          "numerical_acceptance": true,
+          "parameter_policy": true,
+          "same_seed": true,
+          "same_inputs": true,
+          "same_effective_batch": true,
+          "same_objective": true,
+          "training_coverage_not_reduced": null,
+          "throughput_limit": null,
+          "memory_target": true
+        }
+      }
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "run_id": "c51612cdbbae41be970270644bc05694",
+      "status": "needs_human",
+      "target_met": false,
+      "final_diagnosis_valid": true,
+      "final_ready": false,
+      "issues": [],
+      "rounds": 2
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "run_id": "242c7303a0144585bd779bc8cdd56ab7",
+      "status": "needs_human",
+      "target_met": false,
+      "final_diagnosis_valid": false,
+      "final_ready": false,
+      "issues": [
+        "NUMERICS_CHANGE_FORBIDDEN"
+      ],
+      "rounds": 1
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "run_id": "64604a1e6cd54b73b0c0b5838cc4a150",
+      "status": "needs_human",
+      "target_met": false,
+      "final_diagnosis_valid": false,
+      "final_ready": false,
+      "issues": [
+        "EVIDENCE_AVAILABILITY_CONTRADICTED"
+      ],
+      "rounds": 1
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "run_id": null,
+      "status": "not_run",
+      "target_met": null,
+      "final_diagnosis_valid": null,
+      "final_ready": null,
+      "issues": [],
+      "rounds": 0
+    },
+    {
+      "scenario_id": "nanogpt",
+      "run_id": null,
+      "status": "not_run",
+      "target_met": null,
+      "final_diagnosis_valid": null,
+      "final_ready": null,
+      "issues": [],
+      "rounds": 0
+    }
+  ],
+  "cleanup": {
+    "lab_capture_count": 11,
+    "all_recorded_lab_cleanup_verified": true,
+    "all_recorded_gpu_after_inventories_clear": true,
+    "all_observed_worker_pids_absent": true,
+    "service": {
+      "unit": "headroom-r18-20261030.service",
+      "returncode": 0,
+      "properties": "Result=success\nExecMainStatus=0\nActiveState=inactive\nSubState=dead"
+    }
+  },
+  "source_pins": {
+    "implementation_pins": {
+      "available": true,
+      "count": 185,
+      "missing_or_changed": [],
+      "all_match": true
+    },
+    "input_pins": {
+      "available": true,
+      "count": 30,
+      "missing_or_changed": [],
+      "all_match": true
+    }
+  },
+  "protocol_violations": [],
+  "reviewer_model_calls": 0,
+  "reviewer_gpu_jobs": 0,
+  "historical_results_modified": false,
+  "new_dispatch_or_retry": false
+}

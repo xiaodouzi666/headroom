@@ -1,0 +1,79 @@
+{
+  "schema": "headroom.final-funding-option-review.v1",
+  "utc": "2026-10-30T15:31:02.417796+00:00",
+  "status": "PROPOSED_ONLY_NOT_AUTHORIZED_NOT_ACTIVATED",
+  "recommendation": "New independent final development pool1.50 net, funded solely by one additional judge external commitment. Preserve original v3 cap/receipt/profile/ledger history and .593931800 remainder untouched.",
+  "financial_math": {
+    "additional_net_usd": "1.50",
+    "tax_factor": "1.21",
+    "additional_gross_calculated_usd": "1.8150",
+    "additional_gross_approval_ceiling_usd": "1.82",
+    "judge_authorized_total_net_usd": "20.92",
+    "judge_existing_hold_net_usd": "3.612190772",
+    "judge_actual_charged_net_usd": "0.11456028",
+    "judge_earmarked_ceiling_before_net_usd": "17.307809228",
+    "judge_earmarked_ceiling_after_net_usd": "15.807809228",
+    "judge_true_unspent_before_net_usd": "17.193248948",
+    "judge_true_unspent_after_net_usd": "15.693248948",
+    "old_dev_remaining_untouched_net_usd": "0.593931800",
+    "new_pool_cap_net_usd": "1.50",
+    "new_pool_does_not_have_2_0939318_available": true,
+    "balance_last_observed_at": "2026-10-30T15:15:30.875Z",
+    "displayed_balance_gross_usd": "35.13",
+    "total_future_commitment_including_8_reserve_and_lag_before_gross_usd": "34.82587091492",
+    "total_future_commitment_after_reallocation_gross_usd": "34.82587091492",
+    "displayed_margin_gross_usd": "0.30412908508",
+    "account_reserve_gross_usd": "8",
+    "no_extra_account_commitment_from_reallocation": true
+  },
+  "existing_helper_constraints": [
+    "BudgetLedger.encumber supports an additional unique immutable hold and counts it on every day; no actual charge or model attempt is created.",
+    "Old activate-pool.py requires a fresh empty allocation, no prior donor hold and exactly its original transfer. It must not be rerun.",
+    "Current fixed9 v2 funding() hardcodes4.890504400 and one donor hold. It must not be reused unchanged for the new pool or weakened to accept arbitrary holds.",
+    "A small versioned activation/controller funding adapter still needs preparation and peer review; no budget.py change is needed. New funding checks must bind exactly old judge hold plus one new1.50 hold, donor identities/receipts, new pool/profile SHA and fresh starting state.",
+    "Existing holds have no refund/release method. Preparation is discardable; activation is an immutable commitment with exact-plan idempotent recovery, not automatic reversible rollback."
+  ],
+  "guarded_procedure": [
+    "Record explicit approval ref and statement hash, fresh unchanged gift balance, tax/reserve/lag assumptions and exact donor state. Quiesce judge task admission and verify no queued/active claim or budget run.",
+    "Prepare a new private allocation directory and signed plan/receipt under a new transfer ID; preserve every original v3 artifact. Bind current judge receipt, credit extension, ledger identity, existing hold and charged subtotal.",
+    "Clone/offline review the exact activation and controller adapter; refuse changed state, duplicate transfer, active/unresolved run, unexpected donor rows, identity/profile/hash/cap mismatch or expired balance observation.",
+    "Only after approval and review, encumber exactly1.50 on judge ledger under the new plan hash. Resume only if the exact intended hold already exists; never add twice or delete an old hold.",
+    "Create a new independent1.50-cap ledger/profile only after the donor hold is verified. New target starts with zero own rows, while original v3 charged4.29657260/remaining.593931800 stay separately reported. Do not reset old accounting.",
+    "Bind one fresh preparation/proposal/controller revision to the original9 scenario semantics and requests. Only runtime_profile and daily_budget_usd funding bindings necessarily change; budget.60/maxrounds6/maxsteps20/seed1337/maxseconds120 remain.",
+    "Dispatch at most one new fixed-nine attempt only after all checks pass. Preserve unknown provider costs with full bounds; read costs before admission. Stop below .60 full-case allowance, no old-run retry or budget enlargement; unrun rows stay unknown/9.",
+    "Close only after actual cleanup and ledger resolution; report new-pool cost separately from all previous development/judge costs and preserve all raw history."
+  ],
+  "offline_clone_preflight": {
+    "passed": true,
+    "gates": {
+      "second_hold_preserves_original_hold": true,
+      "judge_actual_run_attempt_history_unchanged": true,
+      "duplicate_new_hold_rejected": true,
+      "donor_overspend_rejected": true,
+      "old_dev_still_cannot_admit_full_60c_run": true,
+      "new_independent_pool_rejects_overcommitted_third_60c_run": true,
+      "new_synthetic_pool_has_no_provider_attempts": true
+    },
+    "real_judge_logical_state_unchanged": true,
+    "real_old_dev_logical_state_unchanged": true,
+    "real_ledger_mutation": false,
+    "temporary_clones_deleted": true,
+    "synthetic_pool_is_not_real_funding": true
+  },
+  "approval_question_recommendation": "是否允许从现有评审预留赠送额度调拨净额 $1.50（按现有税费口径含税最多 $1.82），建立独立的最后开发验收池，并最多执行一轮固定九场景？原开发余款 $0.593931800 保持不动，不与新池混用；单场仍最多 $0.60，预算不足就停止、未运行项保持未知。只用现有赠送额度，不充值、不超额，账户至少保留 $8；调拨后评审实际未用净额度约 $15.69。需要此次决定，是因为 FINAL_48H §1-A 保留了新增开发运行池金额的决定权。",
+  "evidence": {
+    "judge_receipt_path": ".cache/judge-access/receipt.json",
+    "judge_receipt_file_sha256": "cb308b3f374e22754fd2c90f724509a14775a31ce7c6728d75a5b14e524ffdef",
+    "judge_credit_extension_path": ".cache/judge-access/credit-extension.json",
+    "judge_credit_extension_file_sha256": "d64515adc7848de92d951cbace9a3fc585d901772df24ad11d25f3e10c7edbc9",
+    "judge_state_sha256": "518ec83677e5e7ccf586e4e93a833799f5b6b8a31238a60070c16ec1ba8cba37",
+    "old_dev_state_sha256": "dafc679ab3945871bf33365672b9281ab8c2f797efa56ff5f11bbd797c213685",
+    "balance_path": ".cache/repair-followup-20261030-v3/r18-balance-terminal.json",
+    "balance_sha256": "b36c49e6c83426c22e290d68a645d46364fd31084096c27854e5e6a1470bcf69",
+    "budget_source_sha256": "2b8e9b2f7491e094f34860d20f85f3660503680364e7255a86420c6e2ea2ce64"
+  },
+  "new_provider_calls": 0,
+  "new_gpu_jobs": 0,
+  "actual_money_or_budget_mutation": false,
+  "source_or_controller_implementation_changed": false
+}

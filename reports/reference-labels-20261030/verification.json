@@ -1,0 +1,64 @@
+{
+  "scope": "READABLE_REFERENCE_LABELS_AND_UNRUN_STATE_ONLY",
+  "results": [
+    {
+      "command": [
+        "/home/xiaodouzi/workspace/headroom/web/node_modules/.bin/prettier",
+        "--write",
+        "src/EvaluationView.tsx"
+      ],
+      "returncode": 0,
+      "log": "reports/reference-labels-20261030/prettier.log"
+    },
+    {
+      "command": [
+        "/home/xiaodouzi/workspace/headroom/.venv/bin/ruff",
+        "format",
+        "headroom/report.py"
+      ],
+      "returncode": 0,
+      "log": "reports/reference-labels-20261030/ruff-format.log"
+    },
+    {
+      "command": [
+        "/home/xiaodouzi/workspace/headroom/.venv/bin/ruff",
+        "check",
+        "headroom/report.py"
+      ],
+      "returncode": 0,
+      "log": "reports/reference-labels-20261030/ruff-check.log"
+    },
+    {
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "src/EvaluationView.test.tsx"
+      ],
+      "returncode": 0,
+      "log": "reports/reference-labels-20261030/frontend-focused.log"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "returncode": 0,
+      "log": "reports/reference-labels-20261030/build.log"
+    }
+  ],
+  "labels": {
+    "baseline_derived_checkpoint_first_five_backward_scalars": "Observed first five backward losses with baseline-derived checkpoint reference",
+    "original_workload_offload_first_five_backward_scalars": "Observed first five backward losses with original-workload offload reference",
+    "unknown_future_basis": "Comparison basis not recorded"
+  },
+  "acceptance_or_data_changes": false,
+  "new_model_calls": 0,
+  "gpu_jobs": 0,
+  "public_visual_pending": true,
+  "files": {
+    "web/src/EvaluationView.tsx": "6772599911b73f2136f8278f9cd1547aa75a765c6e304e9efc9901be86f0f75c",
+    "headroom/report.py": "2b33cdf814a4509c3275017c9d62a3a1875c714c09700fa8acf43aebddf192da"
+  }
+}

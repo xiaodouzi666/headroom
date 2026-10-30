@@ -1,0 +1,65 @@
+"""CPU-only read-only R18 raw-to-summary-to-saved-request metadata replay."""
+from pathlib import Path
+import copy
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import sqlite3
+import sys
+sys.dont_write_bytecode=True
+ROOT=Path.cwd();sys.path.insert(0,str(ROOT))
+from headroom.evidence_blockers import build_evidence_availability_catalog,evidence_reference_catalog,MAX_CATALOG_BYTES,MAX_SOURCE_FILES,MAX_FIELD_ENTRIES
+from headroom.observation_feedback import supplied_runtime_observation,MAX_OBSERVATION_FEEDBACK_BYTES
+from headroom.optimizer_observations import runtime_optimizer_observations,MAX_OPTIMIZER_OBSERVATION_BYTES
+from headroom.diagnosis_schema import build_diagnosis_schema
+OUT=ROOT/'reports/native-metadata-feedback-integration-20261030'
+PREFIX='execution_context.runtime_optimizer_observations';NATIVE=PREFIX+'.parameter_tensor_metadata'
+def sha(data):return hashlib.sha256(data).hexdigest()
+def file_sha(p):return sha(Path(p).read_bytes())
+loader=importlib.machinery.SourceFileLoader('native_feedback_before_replay',str(OUT/'before/observation_feedback.py.txt'))
+spec=importlib.util.spec_from_loader(loader.name,loader);old=importlib.util.module_from_spec(spec);sys.modules[loader.name]=old;loader.exec_module(old)
+campaign_root=ROOT/'runs/repair-followup/execution-r18-20261030'
+c=sqlite3.connect('file:'+str(campaign_root/'headroom.db')+'?mode=ro',uri=True)
+replays=[]
+for label,job_id,ids in [('s2','67190f3518984dd486e58cf1e081638b',(11,12)),('s3','4f2cc3c77aeb4a30bc711f07a8919515',(14,15))]:
+ job=campaign_root/'jobs'/job_id
+ evidence_path=job/'evidence/before/evidence.json';evidence=json.loads(evidence_path.read_text())
+ records=[]
+ original_user_strings=[]
+ for key in ids:
+  raw=c.execute('select data_json from llm_calls where id=?',(key,)).fetchone()[0]
+  d=json.loads(raw);body=d['request_evidence']['payload'];body=json.loads(body) if isinstance(body,str) else body
+  text=body['messages'][2]['content'];original_user_strings.append(text)
+  user=json.loads(text)
+  records.append({'id':key,'stored_row_sha256':sha(raw.encode()),'payload_canonical_sha256':sha(json.dumps(body,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()),'original_user_sha256':sha(text.encode()),'last_feedback_sha256':sha(body['messages'][-1]['content'].encode()) if key==ids[1] else None})
+ assert original_user_strings[0]==original_user_strings[1]
+ outgoing=json.loads(original_user_strings[0]);context=outgoing['execution_context'];observed=context['runtime_optimizer_observations'];metadata=observed['parameter_tensor_metadata']
+ evidence.update(execution_context=context,numerical_reference_context=outgoing.get('numerical_reference_context'),candidate_evidence=outgoing.get('candidate_evidence'))
+ raw_path=job/'lab'/context['selected_run_id']/'result.json';raw_result=json.loads(raw_path.read_text())
+ source=raw_result['optimizer_update_observation']['parameter_tensor_metadata']
+ projected=runtime_optimizer_observations(raw_result,evidence['sources'],script=context['script'],selected_round=context['selected_round'])
+ assert projected==observed
+ assert metadata['status']=='observed'
+ raw_opt_bytes=len(json.dumps(raw_result['optimizer_update_observation'],ensure_ascii=True,separators=(',',':')).encode())
+ assert raw_opt_bytes<65536 and len(json.dumps(observed,ensure_ascii=True).encode())<=MAX_OPTIMIZER_OBSERVATION_BYTES
+ prior_catalog=outgoing['evidence_availability_catalog'];assert not any(x['evidence_ref']==NATIVE for x in prior_catalog['entries'])
+ catalog=build_evidence_availability_catalog(evidence,outgoing['evidence_markdown'])
+ assert catalog['entries'][:-1]==prior_catalog['entries']
+ assert catalog['entries'][-1]['evidence_ref']==NATIVE
+ assert catalog['entries'][-1]['runtime_values_verified'] is False
+ assert len(catalog['entries'])<=MAX_SOURCE_FILES+MAX_FIELD_ENTRIES and len(json.dumps(catalog,ensure_ascii=True).encode())<=MAX_CATALOG_BYTES
+ evidence['evidence_availability_catalog']=catalog
+ repeated=supplied_runtime_observation(evidence,NATIVE)
+ assert repeated['parameter_tensor_metadata']==metadata
+ assert repeated['resolves_prerequisite'] is False and repeated['numerical_equivalence_proven'] is False and repeated['native_optimizer_implementation_authenticated'] is False
+ assert len(json.dumps(repeated,ensure_ascii=True).encode())<=MAX_OBSERVATION_FEEDBACK_BYTES
+ for ref in [PREFIX,PREFIX+'.parameters',PREFIX+'.updates',PREFIX+'.optimizer_group_hyperparameters']:
+  assert supplied_runtime_observation(evidence,ref)==old.supplied_runtime_observation(evidence,ref)
+ schema=build_diagnosis_schema(evidence=evidence,policy=outgoing['policy'])
+ assert NATIVE in schema['$defs']['EvidenceRequest']['properties']['evidence_ref']['anyOf'][0]['enum']
+ replays.append({'case':label,'job_run_id':job_id,'raw_result_path':str(raw_path),'raw_result_sha256':file_sha(raw_path),'raw_optional_metadata_fields':list(source),'raw_optimizer_json_bytes':raw_opt_bytes,'original_request_rows':records,'original_user_in_both_requests_identical':True,'original_observation_fields':list(observed),'original_observation_bytes':len(json.dumps(observed,ensure_ascii=True).encode()),'original_parameters_field_count':len(observed['parameters']),'original_parameters_fields':list(observed['parameters']),'original_native_component_fields':list(metadata),'original_native_component_bytes':len(json.dumps(metadata,ensure_ascii=True).encode()),'original_native_component_sha256':sha(json.dumps(metadata,sort_keys=True,separators=(',',':')).encode()),'CPU_reprojection_matches_full_original_saved_observation':True,'new_catalog_preserves_all_old_entries':True,'new_catalog_entry_count':len(catalog['entries']),'new_catalog_bytes':len(json.dumps(catalog,ensure_ascii=True).encode()),'new_native_ref_in_schema':True,'new_scoped_feedback_bytes':len(json.dumps(repeated,ensure_ascii=True).encode()),'new_scoped_component_equals_original_native_component':True,'old_ref_feedback_byte_equal_before':True,'no_new_native_class_state_shape_or_equivalence_proof':True})
+c.close()
+report={'scope':'OFFLINE_RAW_REPLAY_NOT_NEW_LIVE_OUTCOME','replays':replays,'limitation':'Native parameter attributes already reached both original planner requests. This fixes exact reference advertisement and typed scoped repetition only, not missing raw capture or projection. Shape/state/native optimizer authentication and mathematical feasibility remain unproven.','new_model_calls':0,'new_gpu_jobs':0,'historical_files_modified':False}
+(OUT/'actual-r18-raw-wire-replay.json').write_text(json.dumps(report,indent=2)+'\n')
+print(json.dumps({'result':'PASS','replayed_cases':len(replays),'replay_sha256':file_sha(OUT/'actual-r18-raw-wire-replay.json'),'native_component_bytes':[x['original_native_component_bytes'] for x in replays],'new_feedback_bytes':[x['new_scoped_feedback_bytes'] for x in replays]},indent=2))

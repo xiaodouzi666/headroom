@@ -1,0 +1,30 @@
+diff --git a/train.py b/train.py
+--- a/train.py
++++ b/train.py
+@@ -6,7 +6,7 @@
+ 
+ import torch
+ from torch import nn
+-
++from torch.utils.checkpoint import checkpoint
+ 
+ class ResidualBlock(nn.Module):
+     def __init__(self, width: int) -> None:
+@@ -15,7 +15,7 @@
+         self.ff = nn.Sequential(nn.Linear(width, 4 * width), nn.GELU(), nn.Linear(4 * width, width))
+ 
+     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
+-        return inputs + self.ff(self.norm(inputs))
++        return inputs + checkpoint(lambda x: self.ff(self.norm(x)), inputs, use_reentrant=False)
+ 
+ 
+ class ResidualMLP(nn.Module):
+@@ -116,7 +116,7 @@
+     width, depth, sequence = (32, 2, 8) if args.tiny else (2048, 34, 128)
+     batch = args.batch if args.batch is not None else 24
+     model = ResidualMLP(width, depth).to(device=device, dtype=torch.float32)
+-    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, foreach=True)
++    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, foreach=False)
+     inputs = torch.randn(batch, sequence, width, device=device)
+     targets = torch.randn(batch, width, device=device)
+     parameter_count = sum(parameter.numel() for parameter in model.parameters())

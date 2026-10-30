@@ -245,6 +245,33 @@ def build_evidence_availability_catalog(evidence, evidence_markdown):
     while len(json.dumps(result, ensure_ascii=True, allow_nan=False).encode()) > MAX_CATALOG_BYTES:
         result["entries"].pop()
         result["omitted_entries"] += 1
+    # This component already belongs to the outgoing observation. Advertise its
+    # exact field only after preserving all prior fields/source entries and caps.
+    metadata = optimizer.get("parameter_tensor_metadata") if optimizer_summary else None
+    if isinstance(metadata, Mapping):
+        optional = {
+            "evidence_ref": "execution_context.runtime_optimizer_observations.parameter_tensor_metadata",
+            "kind": "field",
+            "availability": "visible"
+            if optimizer.get("status") in {"observed", "partial"}
+            else "unknown",
+            "text_availability_only": True,
+            "runtime_values_verified": False,
+        }
+        extended = dict(result, entries=[*result["entries"], optional])
+        if (
+            len(extended["entries"]) <= MAX_SOURCE_FILES + MAX_FIELD_ENTRIES
+            and len(json.dumps(extended, ensure_ascii=True, allow_nan=False).encode())
+            <= MAX_CATALOG_BYTES
+        ):
+            result = extended
+        else:
+            omitted = dict(result, omitted_entries=result["omitted_entries"] + 1)
+            if (
+                len(json.dumps(omitted, ensure_ascii=True, allow_nan=False).encode())
+                <= MAX_CATALOG_BYTES
+            ):
+                result = omitted
     return result
 
 

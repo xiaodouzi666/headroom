@@ -1,0 +1,171 @@
+{
+  "schema": "headroom.r18-s1-peak-basis-readonly-review.v1",
+  "utc": "2026-10-30T15:20:01.544032+00:00",
+  "source_revision": "5a013bf32c3e79e3d37e2cc908ea374f72c7c7c3",
+  "result": "QUALIFIED_COUNTER_AND_RECONSTRUCTION_ARE_DISTINCT",
+  "raw_report": {
+    "path": "runs/repair-followup/execution-r18-20261030/jobs/c9cbb9ec33bb4431877a3d4efd3799fc/report.json",
+    "sha256": "656213779982e34fbd18bec93d7deb6feef703e65d31a1cb1d2f0fd7f742b674"
+  },
+  "recorded_candidate": {
+    "status": "completed",
+    "capture_complete": true,
+    "finalization_incomplete": false,
+    "steps": 20,
+    "peak_allocated_bytes": 14297204736,
+    "peak_observation": "capture_end",
+    "snapshot_trace_count": 200000,
+    "errors": [],
+    "cleanup_verified": true
+  },
+  "recorded_baseline": {
+    "status": "oom",
+    "steps": 0,
+    "peak_allocated_bytes": 24750424064,
+    "peak_observation": "capture_end"
+  },
+  "allocator_reconstruction": {
+    "peak_allocated_bytes": 13758924800,
+    "history_complete": false,
+    "peak_is_exact": false
+  },
+  "public_measurement_flags": {
+    "peak_allocated_bytes": 14297204736,
+    "peak_is_exact": false,
+    "peak_basis": "partial or unverified capture"
+  },
+  "verification": {
+    "target": "fix-oom",
+    "target_met": true,
+    "numerical_basis": "baseline_derived_checkpoint_first_five_backward_scalars",
+    "max_loss_delta": 0.0
+  },
+  "verification_checks": {
+    "candidate_completed_required_steps": true,
+    "measured_cuda_peaks": true,
+    "numerical_acceptance": true,
+    "parameter_policy": true,
+    "same_seed": true,
+    "same_inputs": true,
+    "same_effective_batch": true,
+    "same_objective": true,
+    "gpu_observation_clear": true,
+    "memory_target": true
+  },
+  "interpretation": [
+    "The 14297204736 byte field comes from torch.cuda.max_memory_allocated at capture_end. It is not the 13758924800-byte reconstructed allocation-history peak or a lower bound inferred from that reconstruction.",
+    "peak_is_exact=false denotes incomplete allocator-history reconstruction (ring capacity200000 and unmatched prefix), not a missing numeric CUDA counter. The existing report intentionally retains that conservative flag and withholds its exact-peak reduction display.",
+    "The selected target is fix-oom: its memory condition is original OOM plus a valid completed20-update candidate. Standard numerical, parameter, measured-CUDA and GPU checks remain required; no fit ceiling is proved from incomplete reconstruction.",
+    "The 42.2 percent figure is arithmetic between recorded original-OOM and candidate CUDA counters. It does not estimate the memory needed to finish the original workload and is not a full-baseline reduction guarantee.",
+    "The numerical basis is first five backward scalar losses against a baseline-derived checkpoint-transformed reference. No full20-scalar equivalence is claimed.",
+    "The old report label table did not recognize this checkpoint numerical basis, independently explaining Comparison basis not recorded in presentation. No raw result, peak flag or acceptance rule was edited by this review."
+  ],
+  "recommended_copy": "Recorded CUDA peak14.30GB; allocator-history reconstruction incomplete. Completed20 candidate updates after the original OOM; first5 checkpoint-reference scalar losses matched.",
+  "bound_target_sources": [
+    {
+      "kind": "baseline",
+      "path": "runs/repair-followup/execution-r18-20261030/jobs/c9cbb9ec33bb4431877a3d4efd3799fc/lab/790ca9804f714e9e984a13b02270836c/source/train.py",
+      "sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+      "resets_peak_memory_stats": false
+    },
+    {
+      "kind": "candidate",
+      "path": "runs/repair-followup/execution-r18-20261030/jobs/c9cbb9ec33bb4431877a3d4efd3799fc/lab/9309922c844e47c594befe64660a2df0/source/train.py",
+      "sha256": "3ee941be0cbf310b77fbc9c6bd7ad12999ce75f9a8c582b3ac42464ec0d6bc4c",
+      "resets_peak_memory_stats": false
+    }
+  ],
+  "pinned_code_basis": [
+    {
+      "path": "headroom/lab/hooks.py",
+      "revision": "5a013bf32c3e79e3d37e2cc908ea374f72c7c7c3",
+      "sha256": "fe5463bd8838daaf09e3c9b6cc8e1cdf97353413b0a013af16889b1ef7982531",
+      "excerpts": [
+        {
+          "start_line": 653,
+          "end_line": 658,
+          "text": "            self.env[\"gpu_name\"] = properties.name\n            self.env[\"gpu_total_memory_bytes\"] = properties.total_memory\n            self.env[\"cudnn\"] = torch.backends.cudnn.version()\n            torch.cuda.memory._record_memory_history(max_entries=200_000)\n            self.history_enabled = True\n            torch.cuda.reset_peak_memory_stats(self.device_index)"
+        },
+        {
+          "start_line": 803,
+          "end_line": 813,
+          "text": "    def _peaks(self) -> tuple[int | None, int | None]:\n        if self.device != \"cuda\" or not self.history_enabled:\n            return None, None\n        try:\n            return (\n                int(torch.cuda.max_memory_allocated(self.device_index)),\n                int(torch.cuda.max_memory_reserved(self.device_index)),\n            )\n        except Exception as exc:  # noqa: BLE001 - preserve failed capture evidence\n            self._error(\"peak_stats\", exc)\n            return None, None"
+        },
+        {
+          "start_line": 1421,
+          "end_line": 1428,
+          "text": "        allocated, reserved = self._peaks()\n        self._result.update(\n            peak_allocated_bytes=allocated,\n            peak_reserved_bytes=reserved,\n            peak_alloc_gb=allocated / 1e9 if allocated is not None else None,\n            peak_reserved_gb=reserved / 1e9 if reserved is not None else None,\n            peak_observation=\"capture_end\" if allocated is not None else \"unavailable\",\n        )"
+        }
+      ]
+    },
+    {
+      "path": "headroom/evidence_analysis.py",
+      "revision": "5a013bf32c3e79e3d37e2cc908ea374f72c7c7c3",
+      "sha256": "902fa48ec9c5337fffc58c2fcb9bb1fe8215020f032f922cc96ace849af61c80",
+      "excerpts": [
+        {
+          "start_line": 672,
+          "end_line": 676,
+          "text": "    recorded_alloc = result.get(\"peak_allocated_bytes\")\n    recorded_reserved = result.get(\"peak_reserved_bytes\")\n    for name, recorded, replayed in (\n        (\"allocated\", recorded_alloc, peak_allocated),\n        (\"reserved\", recorded_reserved, peak_reserved),"
+        },
+        {
+          "start_line": 765,
+          "end_line": 770,
+          "text": "            \"fragmentation_evidence_rule\": \"Complete history with OOM, driver free < request, inactive split bytes >= request and largest inactive block < request; not proof of the sole cause.\",\n            \"history_complete\": history_complete,\n            \"peak_is_exact\": history_complete\n            and _integer(recorded_alloc)\n            and recorded_alloc == peak_allocated,\n            \"warnings\": warnings.render(),"
+        }
+      ]
+    },
+    {
+      "path": "headroom/report.py",
+      "revision": "5a013bf32c3e79e3d37e2cc908ea374f72c7c7c3",
+      "sha256": "23466241b42ad9ece64709707f1bd8bc700af086b4d214ac0f4a11e13ea74d84",
+      "excerpts": [
+        {
+          "start_line": 197,
+          "end_line": 219,
+          "text": "def _measure(result, analysis):\n    result = result if isinstance(result, dict) else {}\n    header = analysis.get(\"header\", {})\n    exact = header.get(\"peak_is_exact\", result.get(\"capture_complete\"))\n    warnings = list(header.get(\"warnings\", []))\n    values = {}\n    for key in (\"peak_allocated_bytes\", \"peak_reserved_bytes\"):\n        raw = result.get(key, header.get(key))\n        if type(raw) is not int or raw < 0:\n            raw = None\n        other = header.get(key)\n        if raw is not None and other is not None and raw != other:\n            exact = False\n            warnings.append(f\"Conflicting {key} in Lab result and evidence header\")\n        values[key] = raw\n    if result.get(\"capture_complete\") is False:\n        exact = False\n    step = _decimal(result.get(\"step_ms_median\", result.get(\"step_ms\")))\n    return {\n        **values,\n        \"status\": result.get(\"status\", \"unknown\"),\n        \"peak_is_exact\": exact if isinstance(exact, bool) else None,\n        \"peak_basis\": \"exact capture\" if exact is True else \"partial or unverified capture\","
+        },
+        {
+          "start_line": 335,
+          "end_line": 341,
+          "text": "def numerical_basis_label(value):\n    return {\n        \"original_plan_first_five_backward_scalars\": \"Observed first five backward losses (original plan)\",\n        \"original_plan_full_backward_scalar_series\": \"Observed full backward-loss sequence (original plan)\",\n        \"repository_no_reference_exception\": \"Repository without reference; numerical equivalence unverified\",\n        \"unavailable\": \"Comparison unavailable\",\n    }.get(value, \"Comparison basis not recorded\")"
+        },
+        {
+          "start_line": 524,
+          "end_line": 527,
+          "text": "    reduction = None\n    b, a = before[\"peak_allocated_bytes\"], after[\"peak_allocated_bytes\"]\n    if b and a is not None and before[\"peak_is_exact\"] and after[\"peak_is_exact\"]:\n        reduction = (Decimal(b) - Decimal(a)) * 100 / Decimal(b)"
+        }
+      ]
+    },
+    {
+      "path": "headroom/verify/compare.py",
+      "revision": "5a013bf32c3e79e3d37e2cc908ea374f72c7c7c3",
+      "sha256": "2a665950b41b623204008caa810a6a15043e2b24caa780dadafb7229994f414c",
+      "excerpts": [
+        {
+          "start_line": 82,
+          "end_line": 87,
+          "text": "def _capture_valid(result):\n    return (\n        result.get(\"protocol\") == \"headroom.lab.v1\"\n        and result.get(\"capture_complete\") is True\n        and result.get(\"cleanup_verified\") is True\n    )"
+        },
+        {
+          "start_line": 222,
+          "end_line": 228,
+          "text": "    baseline_oom = baseline.get(\"status\") == \"oom\"\n    baseline_valid = _capture_valid(baseline) and baseline.get(\"status\") in {\"oom\", \"completed\"}\n    completed = (\n        candidate.get(\"status\") == \"completed\"\n        and _capture_valid(candidate)\n        and candidate.get(\"steps\") == required_steps\n    )"
+        },
+        {
+          "start_line": 453,
+          "end_line": 459,
+          "text": "    checks[\"measured_cuda_peaks\"] = gpu_pair and all(\n        type(result.get(\"peak_allocated_bytes\")) is int\n        and _number(result.get(\"peak_allocated_bytes\"), positive=True) is not None\n        and type(result.get(\"env\", {}).get(\"gpu_total_memory_bytes\")) is int\n        and result[\"peak_allocated_bytes\"] <= result[\"env\"][\"gpu_total_memory_bytes\"]\n        for result in (baseline, candidate)\n    )"
+        },
+        {
+          "start_line": 478,
+          "end_line": 490,
+          "text": "    if mode == \"fit\":\n        memory_target = after_bytes is not None and Decimal(str(after_bytes)) <= fit_bytes\n    elif mode == \"reclaim\":\n        memory_target = reduction is not None and reduction >= reclaim_reduction_pct\n    else:\n        memory_target = baseline_oom and completed\n    checks[\"memory_target\"] = memory_target\n    required = [checks[key] for key in REQUIRED_CHECKS]\n    required.append(checks[\"memory_target\"])\n    if tier_evidence:\n        required.append(checks[\"numerical_tier\"])\n    required.append(checks[\"loss_decreases\"] if baseline_oom else checks[\"throughput_limit\"])\n    target_met = all(value is True for value in required)"
+        }
+      ]
+    }
+  ],
+  "raw_or_public_projection_modified": false,
+  "provider_calls": 0,
+  "gpu_runs": 0
+}
