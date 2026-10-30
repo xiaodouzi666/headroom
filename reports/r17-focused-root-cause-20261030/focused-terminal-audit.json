@@ -1,0 +1,3305 @@
+{
+  "scope": "R17_FOCUSED_READ_ONLY_CAUSE_AND_WIRE_AUDIT",
+  "source_revision": "c21cf546e2559ac513836ba8f0d17dc4919fb02b",
+  "campaign_sha256": "a56b0419bcbcbaaa86f988c7d5ff3f6c2b2912ccf91b38188de0b7650f11f0ac",
+  "campaign_status": "finished",
+  "fixed_denominator": 9,
+  "minimum_targets": 6,
+  "campaign_targets": 3,
+  "target_scenarios": [
+    "s3_eval_no_grad_missing",
+    "s4_loss_accumulation_graph",
+    "s8_two_models_resident"
+  ],
+  "focus_cases": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "status": "needs_human",
+      "target_met": false,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "diagnoses": [
+        {
+          "path": "runs/repair-followup/execution-r17-20261030/jobs/1d5ffe885b9b4133afcba8f60027c77d/rounds/01/diagnosis.json",
+          "sha256": "1b0f0a8144e55a0ddce399e0b65d3f8426de223efc627a55df95e2be78a7e8d1",
+          "round": "01",
+          "valid": true,
+          "ready": true,
+          "issues": [],
+          "plan": [
+            {
+              "fix_id": "gca1",
+              "type": "code",
+              "title": "Gradient accumulation with micro-batches",
+              "description": "Accumulate gradients over micro-batches that fit in memory, then take a single optimizer step. This reduces peak activation memory from full-batch to micro-batch size.",
+              "expected_saving_gb": 22.0,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Accumulated gradients must be summed (not averaged) to preserve SGD update equivalence; no mixed-precision policy is enabled, so FP32 precision preserved. Verification must confirm loss match and parameter update equivalence.",
+              "requires_policy": [
+                "allow_batch_grad_accum"
+              ]
+            }
+          ],
+          "requests": [],
+          "needs_more_info": false,
+          "modes": [
+            {
+              "request_index": 1,
+              "purpose": "initial",
+              "requested_reasoning": false,
+              "max_completion_tokens": 2000,
+              "scope": "host_requested_mode_only"
+            }
+          ]
+        },
+        {
+          "path": "runs/repair-followup/execution-r17-20261030/jobs/1d5ffe885b9b4133afcba8f60027c77d/rounds/02/diagnosis.json",
+          "sha256": "8d48ea732fac7ba72fee6547b7033f05e7917b9f716cf2a66e3edd9e2a251920",
+          "round": "02",
+          "valid": true,
+          "ready": true,
+          "issues": [],
+          "plan": [
+            {
+              "fix_id": "gca1",
+              "type": "code",
+              "title": "Enable gradient accumulation via micro-batches",
+              "description": "Add --micro-batch argument; split each batch into micro-batches, run forward/backward per micro-batch accumulating gradients, then single optimizer.step(). Preserves exact loss reduction (mean over full batch), parameter updates, optimizer settings, data order, RNG, and update cadence.",
+              "expected_saving_gb": 6.0,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Requires batch divisible by micro_batch; micro-batch loop adds Python overhead. Must verify loss scaling matches original full-batch mean. Gradient accumulation not yet tested on this codebase.",
+              "requires_policy": [
+                "allow_batch_grad_accum"
+              ]
+            }
+          ],
+          "requests": [],
+          "needs_more_info": false,
+          "modes": [
+            {
+              "request_index": 1,
+              "purpose": "initial",
+              "requested_reasoning": false,
+              "max_completion_tokens": 2000,
+              "scope": "host_requested_mode_only"
+            }
+          ]
+        },
+        {
+          "path": "runs/repair-followup/execution-r17-20261030/jobs/1d5ffe885b9b4133afcba8f60027c77d/rounds/03/diagnosis.json",
+          "sha256": "5fe3d63f2d631412c3362eb95b679665b965a6ce3e118b88d59bd56f4f17d242",
+          "round": "03",
+          "valid": true,
+          "ready": true,
+          "issues": [],
+          "plan": [
+            {
+              "fix_id": "gca2",
+              "type": "code",
+              "title": "Activation checkpointing on ResidualBlock forward",
+              "description": "Wrap each ResidualBlock.forward with torch.utils.checkpoint.checkpoint to discard intermediate activations during forward and recompute during backward. This reduces peak activation memory proportionally to depth while preserving exact numerics and optimizer behavior.",
+              "expected_saving_gb": 8.0,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Recompute cost ~2x forward FLOPs for checkpointed blocks; may need depth >= 2 to amortize. Verify backward scalar count and logical updates match original exactly.",
+              "requires_policy": []
+            }
+          ],
+          "requests": [],
+          "needs_more_info": false,
+          "modes": [
+            {
+              "request_index": 1,
+              "purpose": "initial",
+              "requested_reasoning": false,
+              "max_completion_tokens": 2000,
+              "scope": "host_requested_mode_only"
+            }
+          ]
+        },
+        {
+          "path": "runs/repair-followup/execution-r17-20261030/jobs/1d5ffe885b9b4133afcba8f60027c77d/rounds/04/diagnosis.json",
+          "sha256": "6dae60370999cc31ca0f0dad859bf3d5631b206d32801f853285ffc90f898c62",
+          "round": "04",
+          "valid": true,
+          "ready": true,
+          "issues": [],
+          "plan": [
+            {
+              "fix_id": "gca4",
+              "type": "code",
+              "title": "Activation checkpointing in ResidualBlock",
+              "description": "Wrap ResidualBlock._forward_impl with torch.utils.checkpoint.checkpoint(use_reentrant=False) to trade compute for activation memory. Requires --micro-batch CLI arg and micro-batch loop in training step. Width=256, depth=8, batch=32, micro_batch=16 => 2 micro steps.",
+              "expected_saving_gb": 3.0,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Recompute forward twice per micro-batch; verify loss/grad equivalence and numerical parity with original eager forward. Preserve optimizer step cadence, RNG, data order, and all parameter updates.",
+              "requires_policy": []
+            }
+          ],
+          "requests": [],
+          "needs_more_info": false,
+          "modes": [
+            {
+              "request_index": 1,
+              "purpose": "initial",
+              "requested_reasoning": false,
+              "max_completion_tokens": 2000,
+              "scope": "host_requested_mode_only"
+            }
+          ]
+        },
+        {
+          "path": "runs/repair-followup/execution-r17-20261030/jobs/1d5ffe885b9b4133afcba8f60027c77d/rounds/05/diagnosis.json",
+          "sha256": "d0f5efb861f71f7762769e231fde05929115ea8ae15d9be3ee76407846b007b1",
+          "round": "05",
+          "valid": true,
+          "ready": true,
+          "issues": [],
+          "plan": [
+            {
+              "fix_id": "mca1",
+              "type": "code",
+              "title": "Add gradient-accumulation micro-batch option",
+              "description": "Introduce --micro-batch argument; split batch into micro-batches, run forward/backward per micro-batch, accumulate gradients, then single optimizer.step(). Preserves original loss reduction (mean over full batch), update cadence, RNG, parameter eligibility, and optimizer settings.",
+              "expected_saving_gb": 8.0,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Requires batch divisible by micro_batch; adds Python loop overhead; must preserve exact mean-squared-error scaling and single step() per logical update.",
+              "requires_policy": [
+                "allow_batch_grad_accum"
+              ]
+            }
+          ],
+          "requests": [],
+          "needs_more_info": false,
+          "modes": [
+            {
+              "request_index": 1,
+              "purpose": "initial",
+              "requested_reasoning": false,
+              "max_completion_tokens": 2000,
+              "scope": "host_requested_mode_only"
+            }
+          ]
+        },
+        {
+          "path": "runs/repair-followup/execution-r17-20261030/jobs/1d5ffe885b9b4133afcba8f60027c77d/rounds/06/diagnosis.json",
+          "sha256": "58c004071561be2d8122b2056e902ce78a0e4ae85c649011d307cff6cd8e0196",
+          "round": "06",
+          "valid": false,
+          "ready": false,
+          "issues": [
+            "INVOCATION_CLAIM_CONTRADICTED",
+            "INVOCATION_CLAIM_CONTRADICTED",
+            "INVOCATION_CLAIM_CONTRADICTED",
+            "INVOCATION_CLAIM_CONTRADICTED",
+            "INVOCATION_CLAIM_CONTRADICTED",
+            "EVIDENCE_AVAILABILITY_CONTRADICTED"
+          ],
+          "plan": [
+            {
+              "fix_id": "gca3",
+              "type": "code",
+              "title": "Gradient-accumulation micro-batches",
+              "description": "Add --micro-batch CLI option to split the batch into micro-batches; run forward/backward per micro-batch and accumulate gradients, then single optimizer.step(). Keeps full-batch semantics; no model/layer changes.",
+              "expected_saving_gb": 12.0,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Requires batch divisible by micro_batch; gradient accumulation must preserve loss scaling (loss = loss_raw / acc_steps) matches original full-batch mean reduction. Seed/RNG and parameter update eligibility unchanged.",
+              "requires_policy": [
+                "allow_batch_grad_accum"
+              ]
+            }
+          ],
+          "requests": [
+            {
+              "field": "policy.allow_batch_grad_accum",
+              "reason": "policy_infeasible",
+              "detail": "Host must confirm allow_batch_grad_accum policy is enabled; candidate requires it.",
+              "evidence_ref": "execution_context.runtime_optimizer_observations",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "gca3"
+              ]
+            },
+            {
+              "field": "args.micro_batch validation",
+              "reason": "missing",
+              "detail": "Need to confirm micro-batch divisor logic and loss scaling (loss = loss_raw / acc_steps) matches original full-batch mean reduction.",
+              "evidence_ref": "source[0]",
+              "source_line_start": 94,
+              "source_line_end": 108,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "gca3"
+              ]
+            }
+          ],
+          "needs_more_info": true,
+          "modes": [
+            {
+              "request_index": 1,
+              "purpose": "initial",
+              "requested_reasoning": false,
+              "max_completion_tokens": 2000,
+              "scope": "host_requested_mode_only"
+            },
+            {
+              "request_index": 2,
+              "purpose": "validation_repair",
+              "requested_reasoning": false,
+              "max_completion_tokens": 2000,
+              "scope": "host_requested_mode_only"
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "call_id": 2,
+          "outcome": "response",
+          "http_status": 200,
+          "settled": true,
+          "prepared_wire_body_sha256": "49e8c6a73c715b52625fbb729d1c6818c3cfd9c225d9949ded4e6e6bb34dc96b",
+          "delivery_confirmed": false,
+          "scope_note": "Saved pre-transport body; real paid response does not independently attest provider-side text.",
+          "top_level_field_order": [
+            "evidence_markdown",
+            "runtime_operator_catalog",
+            "evidence_availability_catalog",
+            "numerical_reference_context",
+            "reference_family_reading_aid",
+            "invocation_reading_aid",
+            "execution_context",
+            "retained_state_reading_aid",
+            "candidate_evidence",
+            "verification_feedback",
+            "solver_context_availability",
+            "goal",
+            "policy",
+            "required_saving_gb"
+          ],
+          "selected_capture_run_id": "cf522831a9ac4226a3bc0d53966295ec",
+          "optimizer_observation": {
+            "schema": "headroom.runtime_optimizer_observations.v1",
+            "status": "partial",
+            "scope": "selected_run_cooperative_optimizer_capture_only",
+            "selected_round": null,
+            "numerical_equivalence_proven": false,
+            "input_coverage_proven": false,
+            "optimizer_group_hyperparameters": {
+              "status": "observed",
+              "events": {
+                "base_constructor_return": 1,
+                "step_pre": 0
+              },
+              "configurations": [
+                {
+                  "id": "c001",
+                  "present": {
+                    "lr": [
+                      "float",
+                      0.001
+                    ],
+                    "momentum": [
+                      "int",
+                      0
+                    ],
+                    "weight_decay": [
+                      "int",
+                      0
+                    ],
+                    "dampening": [
+                      "int",
+                      0
+                    ],
+                    "nesterov": [
+                      "bool",
+                      false
+                    ],
+                    "maximize": [
+                      "bool",
+                      false
+                    ],
+                    "foreach": [
+                      "none",
+                      null
+                    ],
+                    "fused": [
+                      "none",
+                      null
+                    ],
+                    "differentiable": [
+                      "bool",
+                      false
+                    ]
+                  },
+                  "unrecognized_option_keys": 0,
+                  "group_records": {
+                    "base_constructor_return": 1,
+                    "step_pre": 0
+                  }
+                }
+              ],
+              "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof."
+            },
+            "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+            "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+            "selected_run_id": "cf522831a9ac4226a3bc0d53966295ec",
+            "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+            "source_binding": "capture source digest matches retained entrypoint source",
+            "capture_complete": true,
+            "reported_complete": false,
+            "logical_boundary_complete": true,
+            "parameter_update_sets_complete": false,
+            "optimizer_step_calls": 0,
+            "successful_optimizer_step_calls": 0,
+            "logical_updates": 0,
+            "parameters": {
+              "catalog_entries": 1152,
+              "catalog_numel": 101007360,
+              "requires_grad_true_entries": 1152,
+              "requires_grad_true_numel": 101007360,
+              "requires_grad_false_entries": 0,
+              "requires_grad_false_numel": 0,
+              "registered_parameter_numel": 101007360,
+              "catalog_numel_matches_registered_count": true,
+              "scope": "catalogued optimizer parameters at observation, not named model layers"
+            },
+            "updates": {
+              "recorded_logical_updates": 0,
+              "complete_update_set_records": 0,
+              "all_catalog_updated_records": 0,
+              "all_catalog_parameters_updated_each_record": null,
+              "updated_entries_per_complete_record_range": null,
+              "updated_numel_per_complete_record_range": null,
+              "optimizer_classes": [],
+              "unrecognized_optimizer_class_records": 0,
+              "scope": "no observed optimizer update"
+            },
+            "optimizer_call_counts_consistent": true
+          },
+          "policy": {
+            "allow_numerics_change": false,
+            "allow_model_change": false,
+            "allow_batch_grad_accum": true,
+            "max_throughput_regression_pct": 25.0
+          },
+          "required_saving_gb": null,
+          "reference_original_availability_scope": null,
+          "reference_comparison_kind": "oom_reference_required",
+          "reference_capability_status": "preconditions_observed_execution_unverified",
+          "operator_count": 1,
+          "excluded_operators": null,
+          "separate_supplied_echoes": [],
+          "output_cap": 2000
+        },
+        {
+          "call_id": 7,
+          "outcome": "response",
+          "http_status": 200,
+          "settled": true,
+          "prepared_wire_body_sha256": "7db619f50cfbab5c8de796770dd7ad27ed1fe70dbd27fe5ad4223c071c3e1bdd",
+          "delivery_confirmed": false,
+          "scope_note": "Saved pre-transport body; real paid response does not independently attest provider-side text.",
+          "top_level_field_order": [
+            "evidence_markdown",
+            "runtime_operator_catalog",
+            "evidence_availability_catalog",
+            "numerical_reference_context",
+            "reference_family_reading_aid",
+            "invocation_reading_aid",
+            "execution_context",
+            "retained_state_reading_aid",
+            "candidate_evidence",
+            "verification_feedback",
+            "solver_context_availability",
+            "goal",
+            "policy",
+            "required_saving_gb"
+          ],
+          "selected_capture_run_id": "cf522831a9ac4226a3bc0d53966295ec",
+          "optimizer_observation": {
+            "schema": "headroom.runtime_optimizer_observations.v1",
+            "status": "partial",
+            "scope": "selected_run_cooperative_optimizer_capture_only",
+            "selected_round": null,
+            "numerical_equivalence_proven": false,
+            "input_coverage_proven": false,
+            "optimizer_group_hyperparameters": {
+              "status": "observed",
+              "events": {
+                "base_constructor_return": 1,
+                "step_pre": 0
+              },
+              "configurations": [
+                {
+                  "id": "c001",
+                  "present": {
+                    "lr": [
+                      "float",
+                      0.001
+                    ],
+                    "momentum": [
+                      "int",
+                      0
+                    ],
+                    "weight_decay": [
+                      "int",
+                      0
+                    ],
+                    "dampening": [
+                      "int",
+                      0
+                    ],
+                    "nesterov": [
+                      "bool",
+                      false
+                    ],
+                    "maximize": [
+                      "bool",
+                      false
+                    ],
+                    "foreach": [
+                      "none",
+                      null
+                    ],
+                    "fused": [
+                      "none",
+                      null
+                    ],
+                    "differentiable": [
+                      "bool",
+                      false
+                    ]
+                  },
+                  "unrecognized_option_keys": 0,
+                  "group_records": {
+                    "base_constructor_return": 1,
+                    "step_pre": 0
+                  }
+                }
+              ],
+              "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof."
+            },
+            "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+            "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+            "selected_run_id": "cf522831a9ac4226a3bc0d53966295ec",
+            "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+            "source_binding": "capture source digest matches retained entrypoint source",
+            "capture_complete": true,
+            "reported_complete": false,
+            "logical_boundary_complete": true,
+            "parameter_update_sets_complete": false,
+            "optimizer_step_calls": 0,
+            "successful_optimizer_step_calls": 0,
+            "logical_updates": 0,
+            "parameters": {
+              "catalog_entries": 1152,
+              "catalog_numel": 101007360,
+              "requires_grad_true_entries": 1152,
+              "requires_grad_true_numel": 101007360,
+              "requires_grad_false_entries": 0,
+              "requires_grad_false_numel": 0,
+              "registered_parameter_numel": 101007360,
+              "catalog_numel_matches_registered_count": true,
+              "scope": "catalogued optimizer parameters at observation, not named model layers"
+            },
+            "updates": {
+              "recorded_logical_updates": 0,
+              "complete_update_set_records": 0,
+              "all_catalog_updated_records": 0,
+              "all_catalog_parameters_updated_each_record": null,
+              "updated_entries_per_complete_record_range": null,
+              "updated_numel_per_complete_record_range": null,
+              "optimizer_classes": [],
+              "unrecognized_optimizer_class_records": 0,
+              "scope": "no observed optimizer update"
+            },
+            "optimizer_call_counts_consistent": true
+          },
+          "policy": {
+            "allow_numerics_change": false,
+            "allow_model_change": false,
+            "allow_batch_grad_accum": true,
+            "max_throughput_regression_pct": 25.0
+          },
+          "required_saving_gb": null,
+          "reference_original_availability_scope": null,
+          "reference_comparison_kind": "oom_reference_required",
+          "reference_capability_status": "preconditions_observed_execution_unverified",
+          "operator_count": 1,
+          "excluded_operators": null,
+          "separate_supplied_echoes": [],
+          "output_cap": 2000
+        },
+        {
+          "call_id": 12,
+          "outcome": "response",
+          "http_status": 200,
+          "settled": true,
+          "prepared_wire_body_sha256": "2d9c365b1a9ca41a00b11d11fdaa1abb85a962c783d430a24d130765d473fc79",
+          "delivery_confirmed": false,
+          "scope_note": "Saved pre-transport body; real paid response does not independently attest provider-side text.",
+          "top_level_field_order": [
+            "evidence_markdown",
+            "runtime_operator_catalog",
+            "evidence_availability_catalog",
+            "numerical_reference_context",
+            "reference_family_reading_aid",
+            "invocation_reading_aid",
+            "execution_context",
+            "retained_state_reading_aid",
+            "candidate_evidence",
+            "verification_feedback",
+            "solver_context_availability",
+            "goal",
+            "policy",
+            "required_saving_gb"
+          ],
+          "selected_capture_run_id": "cf522831a9ac4226a3bc0d53966295ec",
+          "optimizer_observation": {
+            "schema": "headroom.runtime_optimizer_observations.v1",
+            "status": "partial",
+            "scope": "selected_run_cooperative_optimizer_capture_only",
+            "selected_round": null,
+            "numerical_equivalence_proven": false,
+            "input_coverage_proven": false,
+            "optimizer_group_hyperparameters": {
+              "status": "observed",
+              "events": {
+                "base_constructor_return": 1,
+                "step_pre": 0
+              },
+              "configurations": [
+                {
+                  "id": "c001",
+                  "present": {
+                    "lr": [
+                      "float",
+                      0.001
+                    ],
+                    "momentum": [
+                      "int",
+                      0
+                    ],
+                    "weight_decay": [
+                      "int",
+                      0
+                    ],
+                    "dampening": [
+                      "int",
+                      0
+                    ],
+                    "nesterov": [
+                      "bool",
+                      false
+                    ],
+                    "maximize": [
+                      "bool",
+                      false
+                    ],
+                    "foreach": [
+                      "none",
+                      null
+                    ],
+                    "fused": [
+                      "none",
+                      null
+                    ],
+                    "differentiable": [
+                      "bool",
+                      false
+                    ]
+                  },
+                  "unrecognized_option_keys": 0,
+                  "group_records": {
+                    "base_constructor_return": 1,
+                    "step_pre": 0
+                  }
+                }
+              ],
+              "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof."
+            },
+            "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+            "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+            "selected_run_id": "cf522831a9ac4226a3bc0d53966295ec",
+            "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+            "source_binding": "capture source digest matches retained entrypoint source",
+            "capture_complete": true,
+            "reported_complete": false,
+            "logical_boundary_complete": true,
+            "parameter_update_sets_complete": false,
+            "optimizer_step_calls": 0,
+            "successful_optimizer_step_calls": 0,
+            "logical_updates": 0,
+            "parameters": {
+              "catalog_entries": 1152,
+              "catalog_numel": 101007360,
+              "requires_grad_true_entries": 1152,
+              "requires_grad_true_numel": 101007360,
+              "requires_grad_false_entries": 0,
+              "requires_grad_false_numel": 0,
+              "registered_parameter_numel": 101007360,
+              "catalog_numel_matches_registered_count": true,
+              "scope": "catalogued optimizer parameters at observation, not named model layers"
+            },
+            "updates": {
+              "recorded_logical_updates": 0,
+              "complete_update_set_records": 0,
+              "all_catalog_updated_records": 0,
+              "all_catalog_parameters_updated_each_record": null,
+              "updated_entries_per_complete_record_range": null,
+              "updated_numel_per_complete_record_range": null,
+              "optimizer_classes": [],
+              "unrecognized_optimizer_class_records": 0,
+              "scope": "no observed optimizer update"
+            },
+            "optimizer_call_counts_consistent": true
+          },
+          "policy": {
+            "allow_numerics_change": false,
+            "allow_model_change": false,
+            "allow_batch_grad_accum": true,
+            "max_throughput_regression_pct": 25.0
+          },
+          "required_saving_gb": null,
+          "reference_original_availability_scope": null,
+          "reference_comparison_kind": "oom_reference_required",
+          "reference_capability_status": "preconditions_observed_execution_unverified",
+          "operator_count": 1,
+          "excluded_operators": null,
+          "separate_supplied_echoes": [],
+          "output_cap": 2000
+        },
+        {
+          "call_id": 17,
+          "outcome": "response",
+          "http_status": 200,
+          "settled": true,
+          "prepared_wire_body_sha256": "e713758a4047e197f527b64e94899b57cf33b6cce9a13e9ba6701c5e7fc3cb84",
+          "delivery_confirmed": false,
+          "scope_note": "Saved pre-transport body; real paid response does not independently attest provider-side text.",
+          "top_level_field_order": [
+            "evidence_markdown",
+            "runtime_operator_catalog",
+            "evidence_availability_catalog",
+            "numerical_reference_context",
+            "reference_family_reading_aid",
+            "invocation_reading_aid",
+            "execution_context",
+            "retained_state_reading_aid",
+            "candidate_evidence",
+            "verification_feedback",
+            "solver_context_availability",
+            "goal",
+            "policy",
+            "required_saving_gb"
+          ],
+          "selected_capture_run_id": "cf522831a9ac4226a3bc0d53966295ec",
+          "optimizer_observation": {
+            "schema": "headroom.runtime_optimizer_observations.v1",
+            "status": "partial",
+            "scope": "selected_run_cooperative_optimizer_capture_only",
+            "selected_round": null,
+            "numerical_equivalence_proven": false,
+            "input_coverage_proven": false,
+            "optimizer_group_hyperparameters": {
+              "status": "observed",
+              "events": {
+                "base_constructor_return": 1,
+                "step_pre": 0
+              },
+              "configurations": [
+                {
+                  "id": "c001",
+                  "present": {
+                    "lr": [
+                      "float",
+                      0.001
+                    ],
+                    "momentum": [
+                      "int",
+                      0
+                    ],
+                    "weight_decay": [
+                      "int",
+                      0
+                    ],
+                    "dampening": [
+                      "int",
+                      0
+                    ],
+                    "nesterov": [
+                      "bool",
+                      false
+                    ],
+                    "maximize": [
+                      "bool",
+                      false
+                    ],
+                    "foreach": [
+                      "none",
+                      null
+                    ],
+                    "fused": [
+                      "none",
+                      null
+                    ],
+                    "differentiable": [
+                      "bool",
+                      false
+                    ]
+                  },
+                  "unrecognized_option_keys": 0,
+                  "group_records": {
+                    "base_constructor_return": 1,
+                    "step_pre": 0
+                  }
+                }
+              ],
+              "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof."
+            },
+            "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+            "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+            "selected_run_id": "cf522831a9ac4226a3bc0d53966295ec",
+            "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+            "source_binding": "capture source digest matches retained entrypoint source",
+            "capture_complete": true,
+            "reported_complete": false,
+            "logical_boundary_complete": true,
+            "parameter_update_sets_complete": false,
+            "optimizer_step_calls": 0,
+            "successful_optimizer_step_calls": 0,
+            "logical_updates": 0,
+            "parameters": {
+              "catalog_entries": 1152,
+              "catalog_numel": 101007360,
+              "requires_grad_true_entries": 1152,
+              "requires_grad_true_numel": 101007360,
+              "requires_grad_false_entries": 0,
+              "requires_grad_false_numel": 0,
+              "registered_parameter_numel": 101007360,
+              "catalog_numel_matches_registered_count": true,
+              "scope": "catalogued optimizer parameters at observation, not named model layers"
+            },
+            "updates": {
+              "recorded_logical_updates": 0,
+              "complete_update_set_records": 0,
+              "all_catalog_updated_records": 0,
+              "all_catalog_parameters_updated_each_record": null,
+              "updated_entries_per_complete_record_range": null,
+              "updated_numel_per_complete_record_range": null,
+              "optimizer_classes": [],
+              "unrecognized_optimizer_class_records": 0,
+              "scope": "no observed optimizer update"
+            },
+            "optimizer_call_counts_consistent": true
+          },
+          "policy": {
+            "allow_numerics_change": false,
+            "allow_model_change": false,
+            "allow_batch_grad_accum": true,
+            "max_throughput_regression_pct": 25.0
+          },
+          "required_saving_gb": null,
+          "reference_original_availability_scope": null,
+          "reference_comparison_kind": "oom_reference_required",
+          "reference_capability_status": "preconditions_observed_execution_unverified",
+          "operator_count": 1,
+          "excluded_operators": null,
+          "separate_supplied_echoes": [],
+          "output_cap": 2000
+        },
+        {
+          "call_id": 19,
+          "outcome": "response",
+          "http_status": 200,
+          "settled": true,
+          "prepared_wire_body_sha256": "d62bb27cb8cca4b09d25baf84ef7edf212f3598bb13788aae8c2adc7e4ba8366",
+          "delivery_confirmed": false,
+          "scope_note": "Saved pre-transport body; real paid response does not independently attest provider-side text.",
+          "top_level_field_order": [
+            "evidence_markdown",
+            "runtime_operator_catalog",
+            "evidence_availability_catalog",
+            "numerical_reference_context",
+            "reference_family_reading_aid",
+            "invocation_reading_aid",
+            "execution_context",
+            "retained_state_reading_aid",
+            "candidate_evidence",
+            "verification_feedback",
+            "solver_context_availability",
+            "goal",
+            "policy",
+            "required_saving_gb"
+          ],
+          "selected_capture_run_id": "cf522831a9ac4226a3bc0d53966295ec",
+          "optimizer_observation": {
+            "schema": "headroom.runtime_optimizer_observations.v1",
+            "status": "partial",
+            "scope": "selected_run_cooperative_optimizer_capture_only",
+            "selected_round": null,
+            "numerical_equivalence_proven": false,
+            "input_coverage_proven": false,
+            "optimizer_group_hyperparameters": {
+              "status": "observed",
+              "events": {
+                "base_constructor_return": 1,
+                "step_pre": 0
+              },
+              "configurations": [
+                {
+                  "id": "c001",
+                  "present": {
+                    "lr": [
+                      "float",
+                      0.001
+                    ],
+                    "momentum": [
+                      "int",
+                      0
+                    ],
+                    "weight_decay": [
+                      "int",
+                      0
+                    ],
+                    "dampening": [
+                      "int",
+                      0
+                    ],
+                    "nesterov": [
+                      "bool",
+                      false
+                    ],
+                    "maximize": [
+                      "bool",
+                      false
+                    ],
+                    "foreach": [
+                      "none",
+                      null
+                    ],
+                    "fused": [
+                      "none",
+                      null
+                    ],
+                    "differentiable": [
+                      "bool",
+                      false
+                    ]
+                  },
+                  "unrecognized_option_keys": 0,
+                  "group_records": {
+                    "base_constructor_return": 1,
+                    "step_pre": 0
+                  }
+                }
+              ],
+              "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof."
+            },
+            "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+            "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+            "selected_run_id": "cf522831a9ac4226a3bc0d53966295ec",
+            "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+            "source_binding": "capture source digest matches retained entrypoint source",
+            "capture_complete": true,
+            "reported_complete": false,
+            "logical_boundary_complete": true,
+            "parameter_update_sets_complete": false,
+            "optimizer_step_calls": 0,
+            "successful_optimizer_step_calls": 0,
+            "logical_updates": 0,
+            "parameters": {
+              "catalog_entries": 1152,
+              "catalog_numel": 101007360,
+              "requires_grad_true_entries": 1152,
+              "requires_grad_true_numel": 101007360,
+              "requires_grad_false_entries": 0,
+              "requires_grad_false_numel": 0,
+              "registered_parameter_numel": 101007360,
+              "catalog_numel_matches_registered_count": true,
+              "scope": "catalogued optimizer parameters at observation, not named model layers"
+            },
+            "updates": {
+              "recorded_logical_updates": 0,
+              "complete_update_set_records": 0,
+              "all_catalog_updated_records": 0,
+              "all_catalog_parameters_updated_each_record": null,
+              "updated_entries_per_complete_record_range": null,
+              "updated_numel_per_complete_record_range": null,
+              "optimizer_classes": [],
+              "unrecognized_optimizer_class_records": 0,
+              "scope": "no observed optimizer update"
+            },
+            "optimizer_call_counts_consistent": true
+          },
+          "policy": {
+            "allow_numerics_change": false,
+            "allow_model_change": false,
+            "allow_batch_grad_accum": true,
+            "max_throughput_regression_pct": 25.0
+          },
+          "required_saving_gb": null,
+          "reference_original_availability_scope": null,
+          "reference_comparison_kind": "oom_reference_required",
+          "reference_capability_status": "preconditions_observed_execution_unverified",
+          "operator_count": 1,
+          "excluded_operators": null,
+          "separate_supplied_echoes": [],
+          "output_cap": 2000
+        },
+        {
+          "call_id": 24,
+          "outcome": "response",
+          "http_status": 200,
+          "settled": true,
+          "prepared_wire_body_sha256": "94ea6497a5aabeaac532a77fc24f976f62e03e0be75bf6156882ed8e2a6b9ae0",
+          "delivery_confirmed": false,
+          "scope_note": "Saved pre-transport body; real paid response does not independently attest provider-side text.",
+          "top_level_field_order": [
+            "evidence_markdown",
+            "runtime_operator_catalog",
+            "evidence_availability_catalog",
+            "numerical_reference_context",
+            "reference_family_reading_aid",
+            "invocation_reading_aid",
+            "execution_context",
+            "retained_state_reading_aid",
+            "candidate_evidence",
+            "verification_feedback",
+            "solver_context_availability",
+            "goal",
+            "policy",
+            "required_saving_gb"
+          ],
+          "selected_capture_run_id": "cf522831a9ac4226a3bc0d53966295ec",
+          "optimizer_observation": {
+            "schema": "headroom.runtime_optimizer_observations.v1",
+            "status": "partial",
+            "scope": "selected_run_cooperative_optimizer_capture_only",
+            "selected_round": null,
+            "numerical_equivalence_proven": false,
+            "input_coverage_proven": false,
+            "optimizer_group_hyperparameters": {
+              "status": "observed",
+              "events": {
+                "base_constructor_return": 1,
+                "step_pre": 0
+              },
+              "configurations": [
+                {
+                  "id": "c001",
+                  "present": {
+                    "lr": [
+                      "float",
+                      0.001
+                    ],
+                    "momentum": [
+                      "int",
+                      0
+                    ],
+                    "weight_decay": [
+                      "int",
+                      0
+                    ],
+                    "dampening": [
+                      "int",
+                      0
+                    ],
+                    "nesterov": [
+                      "bool",
+                      false
+                    ],
+                    "maximize": [
+                      "bool",
+                      false
+                    ],
+                    "foreach": [
+                      "none",
+                      null
+                    ],
+                    "fused": [
+                      "none",
+                      null
+                    ],
+                    "differentiable": [
+                      "bool",
+                      false
+                    ]
+                  },
+                  "unrecognized_option_keys": 0,
+                  "group_records": {
+                    "base_constructor_return": 1,
+                    "step_pre": 0
+                  }
+                }
+              ],
+              "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof."
+            },
+            "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+            "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+            "selected_run_id": "cf522831a9ac4226a3bc0d53966295ec",
+            "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+            "source_binding": "capture source digest matches retained entrypoint source",
+            "capture_complete": true,
+            "reported_complete": false,
+            "logical_boundary_complete": true,
+            "parameter_update_sets_complete": false,
+            "optimizer_step_calls": 0,
+            "successful_optimizer_step_calls": 0,
+            "logical_updates": 0,
+            "parameters": {
+              "catalog_entries": 1152,
+              "catalog_numel": 101007360,
+              "requires_grad_true_entries": 1152,
+              "requires_grad_true_numel": 101007360,
+              "requires_grad_false_entries": 0,
+              "requires_grad_false_numel": 0,
+              "registered_parameter_numel": 101007360,
+              "catalog_numel_matches_registered_count": true,
+              "scope": "catalogued optimizer parameters at observation, not named model layers"
+            },
+            "updates": {
+              "recorded_logical_updates": 0,
+              "complete_update_set_records": 0,
+              "all_catalog_updated_records": 0,
+              "all_catalog_parameters_updated_each_record": null,
+              "updated_entries_per_complete_record_range": null,
+              "updated_numel_per_complete_record_range": null,
+              "optimizer_classes": [],
+              "unrecognized_optimizer_class_records": 0,
+              "scope": "no observed optimizer update"
+            },
+            "optimizer_call_counts_consistent": true
+          },
+          "policy": {
+            "allow_numerics_change": false,
+            "allow_model_change": false,
+            "allow_batch_grad_accum": true,
+            "max_throughput_regression_pct": 25.0
+          },
+          "required_saving_gb": null,
+          "reference_original_availability_scope": null,
+          "reference_comparison_kind": "oom_reference_required",
+          "reference_capability_status": "preconditions_observed_execution_unverified",
+          "operator_count": 1,
+          "excluded_operators": null,
+          "separate_supplied_echoes": [],
+          "output_cap": 2000
+        },
+        {
+          "call_id": 25,
+          "outcome": "response",
+          "http_status": 200,
+          "settled": true,
+          "prepared_wire_body_sha256": "01622072d40bd0ef5842a0a1e5ba7d3873bc96890c7a2340b25cc093c5dc3d53",
+          "delivery_confirmed": false,
+          "scope_note": "Saved pre-transport body; real paid response does not independently attest provider-side text.",
+          "top_level_field_order": [
+            "evidence_markdown",
+            "runtime_operator_catalog",
+            "evidence_availability_catalog",
+            "numerical_reference_context",
+            "reference_family_reading_aid",
+            "invocation_reading_aid",
+            "execution_context",
+            "retained_state_reading_aid",
+            "candidate_evidence",
+            "verification_feedback",
+            "solver_context_availability",
+            "goal",
+            "policy",
+            "required_saving_gb"
+          ],
+          "selected_capture_run_id": "cf522831a9ac4226a3bc0d53966295ec",
+          "optimizer_observation": {
+            "schema": "headroom.runtime_optimizer_observations.v1",
+            "status": "partial",
+            "scope": "selected_run_cooperative_optimizer_capture_only",
+            "selected_round": null,
+            "numerical_equivalence_proven": false,
+            "input_coverage_proven": false,
+            "optimizer_group_hyperparameters": {
+              "status": "observed",
+              "events": {
+                "base_constructor_return": 1,
+                "step_pre": 0
+              },
+              "configurations": [
+                {
+                  "id": "c001",
+                  "present": {
+                    "lr": [
+                      "float",
+                      0.001
+                    ],
+                    "momentum": [
+                      "int",
+                      0
+                    ],
+                    "weight_decay": [
+                      "int",
+                      0
+                    ],
+                    "dampening": [
+                      "int",
+                      0
+                    ],
+                    "nesterov": [
+                      "bool",
+                      false
+                    ],
+                    "maximize": [
+                      "bool",
+                      false
+                    ],
+                    "foreach": [
+                      "none",
+                      null
+                    ],
+                    "fused": [
+                      "none",
+                      null
+                    ],
+                    "differentiable": [
+                      "bool",
+                      false
+                    ]
+                  },
+                  "unrecognized_option_keys": 0,
+                  "group_records": {
+                    "base_constructor_return": 1,
+                    "step_pre": 0
+                  }
+                }
+              ],
+              "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof."
+            },
+            "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+            "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+            "selected_run_id": "cf522831a9ac4226a3bc0d53966295ec",
+            "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+            "source_binding": "capture source digest matches retained entrypoint source",
+            "capture_complete": true,
+            "reported_complete": false,
+            "logical_boundary_complete": true,
+            "parameter_update_sets_complete": false,
+            "optimizer_step_calls": 0,
+            "successful_optimizer_step_calls": 0,
+            "logical_updates": 0,
+            "parameters": {
+              "catalog_entries": 1152,
+              "catalog_numel": 101007360,
+              "requires_grad_true_entries": 1152,
+              "requires_grad_true_numel": 101007360,
+              "requires_grad_false_entries": 0,
+              "requires_grad_false_numel": 0,
+              "registered_parameter_numel": 101007360,
+              "catalog_numel_matches_registered_count": true,
+              "scope": "catalogued optimizer parameters at observation, not named model layers"
+            },
+            "updates": {
+              "recorded_logical_updates": 0,
+              "complete_update_set_records": 0,
+              "all_catalog_updated_records": 0,
+              "all_catalog_parameters_updated_each_record": null,
+              "updated_entries_per_complete_record_range": null,
+              "updated_numel_per_complete_record_range": null,
+              "optimizer_classes": [],
+              "unrecognized_optimizer_class_records": 0,
+              "scope": "no observed optimizer update"
+            },
+            "optimizer_call_counts_consistent": true
+          },
+          "policy": {
+            "allow_numerics_change": false,
+            "allow_model_change": false,
+            "allow_batch_grad_accum": true,
+            "max_throughput_regression_pct": 25.0
+          },
+          "required_saving_gb": null,
+          "reference_original_availability_scope": null,
+          "reference_comparison_kind": "oom_reference_required",
+          "reference_capability_status": "preconditions_observed_execution_unverified",
+          "operator_count": 1,
+          "excluded_operators": null,
+          "separate_supplied_echoes": [],
+          "output_cap": 2000
+        }
+      ],
+      "conclusion": "Specific R16 missing-completed-OOM-baseline dependency did not recur in the first five diagnoses: each was ready. Candidate generation then failed on actual unquoted Python/incorrect original spans (r1/r5) and unsupported microbatch or new-forward-wrapper AST families (r2/r3/r4), before candidate GPU. Final diagnosis had other invocation/availability contradictions. New phase wiring did not by itself solve code correctness or supported-family selection."
+    },
+    {
+      "scenario_id": "s2_capacity_v2",
+      "status": "needs_human",
+      "target_met": false,
+      "run_id": "7f29fafd8fb24f1aa771d400f0f7d0dc",
+      "diagnoses": [
+        {
+          "path": "runs/repair-followup/execution-r17-20261030/jobs/7f29fafd8fb24f1aa771d400f0f7d0dc/rounds/01/diagnosis.json",
+          "sha256": "91ba66e9ebf4948e05c94eba2c66d9aa1029639182ac46ad1d63194337a9b9a0",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "issues": [],
+          "plan": [
+            {
+              "fix_id": "f1",
+              "type": "config",
+              "title": "Disable AdamW foreach path (use fused or standard)",
+              "description": "Replace torch.optim.AdamW with foreach=False to avoid the per-parameter temporary buffers created by _foreach_sqrt in the foreach implementation, which appear at the peak (stk_6b2659d9a2fa87d7). This change keeps the same optimizer hyperparameters and update semantics.",
+              "expected_saving_gb": 0.5,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Numerical equivalence not proven; verification will compare full backward scalar series for 20 steps against the original OOM run's captured losses. Roundoff differences may appear.",
+              "requires_policy": []
+            }
+          ],
+          "requests": [
+            {
+              "field": "execution_context.runtime_optimizer_observations.updates",
+              "reason": "ambiguous",
+              "detail": "Available text shows optimizer hyperparameters and step counts, but per-step allocation sizes for optimizer state (especially foreach temporary buffers) are not provided. Need measured allocation bytes per optimizer step to quantify foreach overhead.",
+              "evidence_ref": "execution_context.runtime_optimizer_observations.updates",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": null,
+              "blocked_plan_ids": []
+            },
+            {
+              "field": "execution_context.runtime_input_observations.logical_updates.observed_optimizer_updates",
+              "reason": "ambiguous",
+              "detail": "Logical update count is observed as 20, but confirmation that foreach=False preserves exactly 20 observed optimizer updates with identical parameter tensors updated per step is needed for verification equivalence.",
+              "evidence_ref": "execution_context.runtime_input_observations.logical_updates.observed_optimizer_updates",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": null,
+              "blocked_plan_ids": []
+            }
+          ],
+          "needs_more_info": true,
+          "modes": [
+            {
+              "request_index": 1,
+              "purpose": "initial",
+              "requested_reasoning": false,
+              "max_completion_tokens": 2000,
+              "scope": "host_requested_mode_only"
+            },
+            {
+              "request_index": 2,
+              "purpose": "validation_repair",
+              "requested_reasoning": false,
+              "max_completion_tokens": 2000,
+              "scope": "host_requested_mode_only"
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "call_id": 27,
+          "outcome": "response",
+          "http_status": 200,
+          "settled": true,
+          "prepared_wire_body_sha256": "e8282012c1b4be6d0ac7f5a6661e81864c399982d2178fa347b8a720e703f278",
+          "delivery_confirmed": false,
+          "scope_note": "Saved pre-transport body; real paid response does not independently attest provider-side text.",
+          "top_level_field_order": [
+            "evidence_markdown",
+            "runtime_operator_catalog",
+            "evidence_availability_catalog",
+            "numerical_reference_context",
+            "invocation_reading_aid",
+            "execution_context",
+            "retained_state_reading_aid",
+            "candidate_evidence",
+            "verification_feedback",
+            "solver_context_availability",
+            "goal",
+            "policy",
+            "required_saving_gb"
+          ],
+          "selected_capture_run_id": "32271bc906234f9b94d2c898dad38fec",
+          "optimizer_observation": {
+            "schema": "headroom.runtime_optimizer_observations.v1",
+            "status": "observed",
+            "scope": "selected_run_cooperative_optimizer_capture_only",
+            "selected_round": null,
+            "numerical_equivalence_proven": false,
+            "input_coverage_proven": false,
+            "optimizer_group_hyperparameters": {
+              "status": "observed",
+              "events": {
+                "base_constructor_return": 1,
+                "step_pre": 20
+              },
+              "configurations": [
+                {
+                  "id": "c001",
+                  "present": {
+                    "lr": [
+                      "float",
+                      0.0001
+                    ],
+                    "weight_decay": [
+                      "float",
+                      0.01
+                    ],
+                    "betas": [
+                      "tuple",
+                      [
+                        [
+                          "float",
+                          0.9
+                        ],
+                        [
+                          "float",
+                          0.999
+                        ]
+                      ]
+                    ],
+                    "eps": [
+                      "float",
+                      1e-08
+                    ],
+                    "amsgrad": [
+                      "bool",
+                      false
+                    ],
+                    "maximize": [
+                      "bool",
+                      false
+                    ],
+                    "foreach": [
+                      "bool",
+                      true
+                    ],
+                    "fused": [
+                      "none",
+                      null
+                    ],
+                    "capturable": [
+                      "bool",
+                      false
+                    ],
+                    "differentiable": [
+                      "bool",
+                      false
+                    ]
+                  },
+                  "unrecognized_option_keys": 0,
+                  "group_records": {
+                    "base_constructor_return": 1,
+                    "step_pre": 1
+                  }
+                }
+              ],
+              "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof."
+            },
+            "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+            "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+            "selected_run_id": "32271bc906234f9b94d2c898dad38fec",
+            "source_sha256": "9565acfbcfc2f1eefd982c80be7ce943e09828578b9b44c3d70342bc82bf7f4c",
+            "source_binding": "capture source digest matches retained entrypoint source",
+            "capture_complete": true,
+            "reported_complete": true,
+            "logical_boundary_complete": true,
+            "parameter_update_sets_complete": true,
+            "optimizer_step_calls": 20,
+            "successful_optimizer_step_calls": 20,
+            "logical_updates": 20,
+            "parameters": {
+              "catalog_entries": 204,
+              "catalog_numel": 1141338112,
+              "requires_grad_true_entries": 204,
+              "requires_grad_true_numel": 1141338112,
+              "requires_grad_false_entries": 0,
+              "requires_grad_false_numel": 0,
+              "registered_parameter_numel": 1141338112,
+              "catalog_numel_matches_registered_count": true,
+              "scope": "catalogued optimizer parameters at observation, not named model layers"
+            },
+            "updates": {
+              "recorded_logical_updates": 20,
+              "complete_update_set_records": 20,
+              "all_catalog_updated_records": 20,
+              "all_catalog_parameters_updated_each_record": true,
+              "updated_entries_per_complete_record_range": [
+                204,
+                204
+              ],
+              "updated_numel_per_complete_record_range": [
+                1141338112,
+                1141338112
+              ],
+              "optimizer_classes": [
+                "torch.optim.adamw.AdamW"
+              ],
+              "unrecognized_optimizer_class_records": 0,
+              "scope": "completed observed updates"
+            },
+            "optimizer_call_counts_consistent": true
+          },
+          "policy": {
+            "allow_numerics_change": false,
+            "allow_model_change": false,
+            "allow_batch_grad_accum": true,
+            "max_throughput_regression_pct": 25.0
+          },
+          "required_saving_gb": 0.919430656,
+          "reference_original_availability_scope": null,
+          "reference_comparison_kind": "completed_original_baseline",
+          "reference_capability_status": "not_needed_completed_baseline",
+          "operator_count": 1,
+          "excluded_operators": null,
+          "separate_supplied_echoes": [],
+          "output_cap": 2000
+        },
+        {
+          "call_id": 28,
+          "outcome": "response",
+          "http_status": 200,
+          "settled": true,
+          "prepared_wire_body_sha256": "51166d19960bdc5ef2bdef53c366de955eaec6c4e5e29fa49bf6c8d4376c5656",
+          "delivery_confirmed": false,
+          "scope_note": "Saved pre-transport body; real paid response does not independently attest provider-side text.",
+          "top_level_field_order": [
+            "evidence_markdown",
+            "runtime_operator_catalog",
+            "evidence_availability_catalog",
+            "numerical_reference_context",
+            "invocation_reading_aid",
+            "execution_context",
+            "retained_state_reading_aid",
+            "candidate_evidence",
+            "verification_feedback",
+            "solver_context_availability",
+            "goal",
+            "policy",
+            "required_saving_gb"
+          ],
+          "selected_capture_run_id": "32271bc906234f9b94d2c898dad38fec",
+          "optimizer_observation": {
+            "schema": "headroom.runtime_optimizer_observations.v1",
+            "status": "observed",
+            "scope": "selected_run_cooperative_optimizer_capture_only",
+            "selected_round": null,
+            "numerical_equivalence_proven": false,
+            "input_coverage_proven": false,
+            "optimizer_group_hyperparameters": {
+              "status": "observed",
+              "events": {
+                "base_constructor_return": 1,
+                "step_pre": 20
+              },
+              "configurations": [
+                {
+                  "id": "c001",
+                  "present": {
+                    "lr": [
+                      "float",
+                      0.0001
+                    ],
+                    "weight_decay": [
+                      "float",
+                      0.01
+                    ],
+                    "betas": [
+                      "tuple",
+                      [
+                        [
+                          "float",
+                          0.9
+                        ],
+                        [
+                          "float",
+                          0.999
+                        ]
+                      ]
+                    ],
+                    "eps": [
+                      "float",
+                      1e-08
+                    ],
+                    "amsgrad": [
+                      "bool",
+                      false
+                    ],
+                    "maximize": [
+                      "bool",
+                      false
+                    ],
+                    "foreach": [
+                      "bool",
+                      true
+                    ],
+                    "fused": [
+                      "none",
+                      null
+                    ],
+                    "capturable": [
+                      "bool",
+                      false
+                    ],
+                    "differentiable": [
+                      "bool",
+                      false
+                    ]
+                  },
+                  "unrecognized_option_keys": 0,
+                  "group_records": {
+                    "base_constructor_return": 1,
+                    "step_pre": 1
+                  }
+                }
+              ],
+              "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof."
+            },
+            "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+            "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+            "selected_run_id": "32271bc906234f9b94d2c898dad38fec",
+            "source_sha256": "9565acfbcfc2f1eefd982c80be7ce943e09828578b9b44c3d70342bc82bf7f4c",
+            "source_binding": "capture source digest matches retained entrypoint source",
+            "capture_complete": true,
+            "reported_complete": true,
+            "logical_boundary_complete": true,
+            "parameter_update_sets_complete": true,
+            "optimizer_step_calls": 20,
+            "successful_optimizer_step_calls": 20,
+            "logical_updates": 20,
+            "parameters": {
+              "catalog_entries": 204,
+              "catalog_numel": 1141338112,
+              "requires_grad_true_entries": 204,
+              "requires_grad_true_numel": 1141338112,
+              "requires_grad_false_entries": 0,
+              "requires_grad_false_numel": 0,
+              "registered_parameter_numel": 1141338112,
+              "catalog_numel_matches_registered_count": true,
+              "scope": "catalogued optimizer parameters at observation, not named model layers"
+            },
+            "updates": {
+              "recorded_logical_updates": 20,
+              "complete_update_set_records": 20,
+              "all_catalog_updated_records": 20,
+              "all_catalog_parameters_updated_each_record": true,
+              "updated_entries_per_complete_record_range": [
+                204,
+                204
+              ],
+              "updated_numel_per_complete_record_range": [
+                1141338112,
+                1141338112
+              ],
+              "optimizer_classes": [
+                "torch.optim.adamw.AdamW"
+              ],
+              "unrecognized_optimizer_class_records": 0,
+              "scope": "completed observed updates"
+            },
+            "optimizer_call_counts_consistent": true
+          },
+          "policy": {
+            "allow_numerics_change": false,
+            "allow_model_change": false,
+            "allow_batch_grad_accum": true,
+            "max_throughput_regression_pct": 25.0
+          },
+          "required_saving_gb": 0.919430656,
+          "reference_original_availability_scope": null,
+          "reference_comparison_kind": "completed_original_baseline",
+          "reference_capability_status": "not_needed_completed_baseline",
+          "operator_count": 1,
+          "excluded_operators": null,
+          "separate_supplied_echoes": [
+            {
+              "schema": "headroom.separate_supplied_runtime_observation.v1",
+              "basis": "repeat_of_already_supplied_scoped_observation_only",
+              "status": "observed",
+              "scope": "selected_run_cooperative_optimizer_capture_only",
+              "selected_run_id": "32271bc906234f9b94d2c898dad38fec",
+              "selected_round": null,
+              "source_sha256": "9565acfbcfc2f1eefd982c80be7ce943e09828578b9b44c3d70342bc82bf7f4c",
+              "source_binding": "capture source digest matches retained entrypoint source",
+              "native_optimizer_implementation_authenticated": false,
+              "numerical_equivalence_proven": false,
+              "resolves_prerequisite": false,
+              "optimizer_step_calls": 20,
+              "successful_optimizer_step_calls": 20,
+              "logical_updates": 20,
+              "capture_complete": true,
+              "reported_complete": true,
+              "logical_boundary_complete": true,
+              "parameter_update_sets_complete": true,
+              "optimizer_call_counts_consistent": true,
+              "parameters": {
+                "catalog_entries": 204,
+                "catalog_numel": 1141338112,
+                "requires_grad_true_entries": 204,
+                "requires_grad_true_numel": 1141338112,
+                "requires_grad_false_entries": 0,
+                "requires_grad_false_numel": 0,
+                "registered_parameter_numel": 1141338112,
+                "catalog_numel_matches_registered_count": true
+              },
+              "updates": {
+                "recorded_logical_updates": 20,
+                "complete_update_set_records": 20,
+                "all_catalog_updated_records": 20,
+                "unrecognized_optimizer_class_records": 0,
+                "all_catalog_parameters_updated_each_record": true,
+                "optimizer_classes": [
+                  "torch.optim.adamw.AdamW"
+                ],
+                "updated_entries_per_complete_record_range": [
+                  204,
+                  204
+                ],
+                "updated_numel_per_complete_record_range": [
+                  1141338112,
+                  1141338112
+                ]
+              },
+              "optimizer_group_hyperparameters": {
+                "status": "observed",
+                "configurations": [
+                  {
+                    "present": {
+                      "lr": [
+                        "float",
+                        0.0001
+                      ],
+                      "weight_decay": [
+                        "float",
+                        0.01
+                      ],
+                      "betas": [
+                        "tuple",
+                        [
+                          [
+                            "float",
+                            0.9
+                          ],
+                          [
+                            "float",
+                            0.999
+                          ]
+                        ]
+                      ],
+                      "eps": [
+                        "float",
+                        1e-08
+                      ],
+                      "amsgrad": [
+                        "bool",
+                        false
+                      ],
+                      "maximize": [
+                        "bool",
+                        false
+                      ],
+                      "foreach": [
+                        "bool",
+                        true
+                      ],
+                      "fused": [
+                        "none",
+                        null
+                      ],
+                      "capturable": [
+                        "bool",
+                        false
+                      ],
+                      "differentiable": [
+                        "bool",
+                        false
+                      ]
+                    }
+                  }
+                ]
+              },
+              "omitted_components": []
+            }
+          ],
+          "output_cap": 2000
+        }
+      ],
+      "conclusion": "Final diagnosis was valid but blocked. It selected a foreach change with0.5GB expected savings and requested per-step allocation detail plus future candidate update equivalence. This is not a parameter dtype/native-alias question. The saved second request contained the existing scoped optimizer facts; the host did not clear needs_more_info."
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "status": "completed",
+      "target_met": true,
+      "run_id": "e075c80b3f3344408ad04d826b5d0ab9",
+      "diagnoses": [
+        {
+          "path": "runs/repair-followup/execution-r17-20261030/jobs/e075c80b3f3344408ad04d826b5d0ab9/rounds/01/diagnosis.json",
+          "sha256": "1ba0df9a116d4a0865c5c737d66f3a1bb8f5535e81802a320250ae739510010f",
+          "round": "01",
+          "valid": true,
+          "ready": true,
+          "issues": [],
+          "plan": [
+            {
+              "fix_id": "f1",
+              "type": "code",
+              "title": "Remove retain_graph=True from backward call",
+              "description": "Change loss.backward(retain_graph=True) to loss.backward() at train.py:104 so the autograd graph is freed after each step. This eliminates the accumulation of forward activations across all 20 steps which causes the peak to reach ~24.8 GiB.",
+              "expected_saving_gb": 22.8,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Loss is a scalar; no second-ordered per-step via (predictions - targets).square().mean(). The graph is not reused within or across steps. The only semantic change is freeing intermediate activations earlier. Verify loss values and parameter updates match.",
+              "requires_policy": []
+            }
+          ],
+          "requests": [],
+          "needs_more_info": false,
+          "modes": [
+            {
+              "request_index": 1,
+              "purpose": "initial",
+              "requested_reasoning": false,
+              "max_completion_tokens": 2000,
+              "scope": "host_requested_mode_only"
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "call_id": 33,
+          "outcome": "response",
+          "http_status": 200,
+          "settled": true,
+          "prepared_wire_body_sha256": "976d0ccb45a4e74e0a91d124e0288b1d3cd67db951ebd19c6d0a3b878dc96077",
+          "delivery_confirmed": false,
+          "scope_note": "Saved pre-transport body; real paid response does not independently attest provider-side text.",
+          "top_level_field_order": [
+            "evidence_markdown",
+            "runtime_operator_catalog",
+            "evidence_availability_catalog",
+            "numerical_reference_context",
+            "reference_family_reading_aid",
+            "invocation_reading_aid",
+            "execution_context",
+            "retained_state_reading_aid",
+            "candidate_evidence",
+            "verification_feedback",
+            "solver_context_availability",
+            "goal",
+            "policy",
+            "required_saving_gb"
+          ],
+          "selected_capture_run_id": "14993a21de1c497d88aeb0e0344309ae",
+          "optimizer_observation": {
+            "schema": "headroom.runtime_optimizer_observations.v1",
+            "status": "observed",
+            "scope": "selected_run_cooperative_optimizer_capture_only",
+            "selected_round": null,
+            "numerical_equivalence_proven": false,
+            "input_coverage_proven": false,
+            "optimizer_group_hyperparameters": {
+              "status": "observed",
+              "events": {
+                "base_constructor_return": 1,
+                "step_pre": 12
+              },
+              "configurations": [
+                {
+                  "id": "c001",
+                  "present": {
+                    "lr": [
+                      "float",
+                      0.001
+                    ],
+                    "momentum": [
+                      "int",
+                      0
+                    ],
+                    "weight_decay": [
+                      "int",
+                      0
+                    ],
+                    "dampening": [
+                      "int",
+                      0
+                    ],
+                    "nesterov": [
+                      "bool",
+                      false
+                    ],
+                    "maximize": [
+                      "bool",
+                      false
+                    ],
+                    "foreach": [
+                      "none",
+                      null
+                    ],
+                    "fused": [
+                      "none",
+                      null
+                    ],
+                    "differentiable": [
+                      "bool",
+                      false
+                    ]
+                  },
+                  "unrecognized_option_keys": 0,
+                  "group_records": {
+                    "base_constructor_return": 1,
+                    "step_pre": 1
+                  }
+                }
+              ],
+              "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof."
+            },
+            "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+            "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+            "selected_run_id": "14993a21de1c497d88aeb0e0344309ae",
+            "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+            "source_binding": "capture source digest matches retained entrypoint source",
+            "capture_complete": true,
+            "reported_complete": true,
+            "logical_boundary_complete": true,
+            "parameter_update_sets_complete": true,
+            "optimizer_step_calls": 12,
+            "successful_optimizer_step_calls": 12,
+            "logical_updates": 12,
+            "parameters": {
+              "catalog_entries": 36,
+              "catalog_numel": 50374656,
+              "requires_grad_true_entries": 36,
+              "requires_grad_true_numel": 50374656,
+              "requires_grad_false_entries": 0,
+              "requires_grad_false_numel": 0,
+              "registered_parameter_numel": 50374656,
+              "catalog_numel_matches_registered_count": true,
+              "scope": "catalogued optimizer parameters at observation, not named model layers"
+            },
+            "updates": {
+              "recorded_logical_updates": 12,
+              "complete_update_set_records": 12,
+              "all_catalog_updated_records": 12,
+              "all_catalog_parameters_updated_each_record": true,
+              "updated_entries_per_complete_record_range": [
+                36,
+                36
+              ],
+              "updated_numel_per_complete_record_range": [
+                50374656,
+                50374656
+              ],
+              "optimizer_classes": [
+                "torch.optim.sgd.SGD"
+              ],
+              "unrecognized_optimizer_class_records": 0,
+              "scope": "completed observed updates"
+            },
+            "optimizer_call_counts_consistent": true
+          },
+          "policy": {
+            "allow_numerics_change": false,
+            "allow_model_change": false,
+            "allow_batch_grad_accum": true,
+            "max_throughput_regression_pct": 25.0
+          },
+          "required_saving_gb": null,
+          "reference_original_availability_scope": null,
+          "reference_comparison_kind": "oom_reference_required",
+          "reference_capability_status": "preconditions_observed_execution_unverified",
+          "operator_count": 0,
+          "excluded_operators": [
+            {
+              "id": "adamw_fp32_step_in_backward_v1",
+              "selection_status": "not_applicable_to_observed_optimizer_class",
+              "reported_optimizer_classes": [
+                "torch.optim.sgd.SGD"
+              ],
+              "selected_run_id": "14993a21de1c497d88aeb0e0344309ae",
+              "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+              "basis": "The complete selected-run observation reports a different optimizer family. Do not convert that optimizer to AdamW. Reported tags do not authenticate a native implementation; unknown, custom or mixed optimizers are not excluded."
+            }
+          ],
+          "separate_supplied_echoes": [],
+          "output_cap": 2000
+        }
+      ],
+      "conclusion": "First diagnosis was ready without the prior R16 baseline-completion/scope blockers. Real Super repair, separate original-workload reference and candidate completed the existing verification, target=true. No new dtype/alias fact or runtime-refinement reuse was needed. This is a new live success, but not a controlled causal ablation of the phase prompt."
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "status": "needs_human",
+      "target_met": false,
+      "run_id": "41d2d95eddc94d598d57f0083557bc2c",
+      "diagnoses": [
+        {
+          "path": "runs/repair-followup/execution-r17-20261030/jobs/41d2d95eddc94d598d57f0083557bc2c/rounds/01/diagnosis.json",
+          "sha256": "2257e2073926079b865cb36972d85920fdf718c0f0f7c33e011a76a9e9dc7b8a",
+          "round": "01",
+          "valid": true,
+          "ready": false,
+          "issues": [],
+          "plan": [
+            {
+              "fix_id": "f1",
+              "type": "code",
+              "title": "Add max_split_size_mb=128 to torch.cuda.set_per_process_memory_fraction",
+              "description": "Insert `torch.cuda.set_per_process_memory_fraction(1.0, device=0); torch.cuda.memory._set_allocator_settings('max_split_size_mb=128')` after imports and before model creation to limit the allocator's max split size, reducing the reserved-allocated cache gap that drives peak reservation to ~19.8 GB while allocated is only ~5 GB.",
+              "expected_saving_gb": 8.0,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Allocator setting is PyTorch version dependent; may have no effect on 2.5.1 or change fragmentation behavior. Does not alter model, optimizer, precision, loss, RNG, or update cadence.",
+              "requires_policy": []
+            }
+          ],
+          "requests": [
+            {
+              "field": "execution_context.execution_argv",
+              "reason": "missing",
+              "detail": "Full launch argv needed to reproduce the exact invocation (batch, tiny flag, width, depth, lengths).",
+              "evidence_ref": "execution_context.execution_argv",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "f1"
+              ]
+            },
+            {
+              "field": "execution_context.runtime_optimizer_observations.parameters",
+              "reason": "ambiguous",
+              "detail": "Text is visible but runtime values unverified; need confirmed per-step updated parameter tensor IDs and shapes to confirm numerical equivalence under the edit.",
+              "evidence_ref": "execution_context.runtime_optimizer_observations.parameters",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "current_plan",
+              "blocked_plan_ids": [
+                "f1"
+              ]
+            }
+          ],
+          "needs_more_info": true,
+          "modes": [
+            {
+              "request_index": 1,
+              "purpose": "initial",
+              "requested_reasoning": false,
+              "max_completion_tokens": 2000,
+              "scope": "host_requested_mode_only"
+            },
+            {
+              "request_index": 2,
+              "purpose": "validation_repair",
+              "requested_reasoning": false,
+              "max_completion_tokens": 2000,
+              "scope": "host_requested_mode_only"
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "call_id": 37,
+          "outcome": "response",
+          "http_status": 200,
+          "settled": true,
+          "prepared_wire_body_sha256": "ea3481786ff89fc570386ba753f8fd7e7da9c4d79cd57145ea03fff28834fa66",
+          "delivery_confirmed": false,
+          "scope_note": "Saved pre-transport body; real paid response does not independently attest provider-side text.",
+          "top_level_field_order": [
+            "evidence_markdown",
+            "runtime_operator_catalog",
+            "evidence_availability_catalog",
+            "numerical_reference_context",
+            "invocation_reading_aid",
+            "execution_context",
+            "retained_state_reading_aid",
+            "candidate_evidence",
+            "verification_feedback",
+            "solver_context_availability",
+            "goal",
+            "policy",
+            "required_saving_gb"
+          ],
+          "selected_capture_run_id": "dcc1ca7ab8d54402a5663ffede68a895",
+          "optimizer_observation": {
+            "schema": "headroom.runtime_optimizer_observations.v1",
+            "status": "observed",
+            "scope": "selected_run_cooperative_optimizer_capture_only",
+            "selected_round": null,
+            "numerical_equivalence_proven": false,
+            "input_coverage_proven": false,
+            "optimizer_group_hyperparameters": {
+              "status": "observed",
+              "events": {
+                "base_constructor_return": 1,
+                "step_pre": 20
+              },
+              "configurations": [
+                {
+                  "id": "c001",
+                  "present": {
+                    "lr": [
+                      "float",
+                      0.0001
+                    ],
+                    "momentum": [
+                      "int",
+                      0
+                    ],
+                    "weight_decay": [
+                      "int",
+                      0
+                    ],
+                    "dampening": [
+                      "int",
+                      0
+                    ],
+                    "nesterov": [
+                      "bool",
+                      false
+                    ],
+                    "maximize": [
+                      "bool",
+                      false
+                    ],
+                    "foreach": [
+                      "none",
+                      null
+                    ],
+                    "fused": [
+                      "none",
+                      null
+                    ],
+                    "differentiable": [
+                      "bool",
+                      false
+                    ]
+                  },
+                  "unrecognized_option_keys": 0,
+                  "group_records": {
+                    "base_constructor_return": 1,
+                    "step_pre": 1
+                  }
+                }
+              ],
+              "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof."
+            },
+            "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+            "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+            "selected_run_id": "dcc1ca7ab8d54402a5663ffede68a895",
+            "source_sha256": "627d24ee9e62601455e37f29166df8abe73a43b9e82382a293feec3a6b558169",
+            "source_binding": "capture source digest matches retained entrypoint source",
+            "capture_complete": true,
+            "reported_complete": true,
+            "logical_boundary_complete": true,
+            "parameter_update_sets_complete": true,
+            "optimizer_step_calls": 20,
+            "successful_optimizer_step_calls": 20,
+            "logical_updates": 20,
+            "parameters": {
+              "catalog_entries": 24,
+              "catalog_numel": 50362368,
+              "requires_grad_true_entries": 24,
+              "requires_grad_true_numel": 50362368,
+              "requires_grad_false_entries": 0,
+              "requires_grad_false_numel": 0,
+              "registered_parameter_numel": 50362368,
+              "catalog_numel_matches_registered_count": true,
+              "scope": "catalogued optimizer parameters at observation, not named model layers"
+            },
+            "updates": {
+              "recorded_logical_updates": 20,
+              "complete_update_set_records": 20,
+              "all_catalog_updated_records": 20,
+              "all_catalog_parameters_updated_each_record": true,
+              "updated_entries_per_complete_record_range": [
+                24,
+                24
+              ],
+              "updated_numel_per_complete_record_range": [
+                50362368,
+                50362368
+              ],
+              "optimizer_classes": [
+                "torch.optim.sgd.SGD"
+              ],
+              "unrecognized_optimizer_class_records": 0,
+              "scope": "completed observed updates"
+            },
+            "optimizer_call_counts_consistent": true
+          },
+          "policy": {
+            "allow_numerics_change": false,
+            "allow_model_change": false,
+            "allow_batch_grad_accum": true,
+            "max_throughput_regression_pct": 25.0
+          },
+          "required_saving_gb": 1.0043516928,
+          "reference_original_availability_scope": null,
+          "reference_comparison_kind": "completed_original_baseline",
+          "reference_capability_status": "not_needed_completed_baseline",
+          "operator_count": 0,
+          "excluded_operators": [
+            {
+              "id": "adamw_fp32_step_in_backward_v1",
+              "selection_status": "not_applicable_to_observed_optimizer_class",
+              "reported_optimizer_classes": [
+                "torch.optim.sgd.SGD"
+              ],
+              "selected_run_id": "dcc1ca7ab8d54402a5663ffede68a895",
+              "source_sha256": "627d24ee9e62601455e37f29166df8abe73a43b9e82382a293feec3a6b558169",
+              "basis": "The complete selected-run observation reports a different optimizer family. Do not convert that optimizer to AdamW. Reported tags do not authenticate a native implementation; unknown, custom or mixed optimizers are not excluded."
+            }
+          ],
+          "separate_supplied_echoes": [],
+          "output_cap": 2000
+        },
+        {
+          "call_id": 38,
+          "outcome": "response",
+          "http_status": 200,
+          "settled": true,
+          "prepared_wire_body_sha256": "880cae825ac951013cb858121b7fe4084f05ef436c972f651fe096ec5dee1844",
+          "delivery_confirmed": false,
+          "scope_note": "Saved pre-transport body; real paid response does not independently attest provider-side text.",
+          "top_level_field_order": [
+            "evidence_markdown",
+            "runtime_operator_catalog",
+            "evidence_availability_catalog",
+            "numerical_reference_context",
+            "invocation_reading_aid",
+            "execution_context",
+            "retained_state_reading_aid",
+            "candidate_evidence",
+            "verification_feedback",
+            "solver_context_availability",
+            "goal",
+            "policy",
+            "required_saving_gb"
+          ],
+          "selected_capture_run_id": "dcc1ca7ab8d54402a5663ffede68a895",
+          "optimizer_observation": {
+            "schema": "headroom.runtime_optimizer_observations.v1",
+            "status": "observed",
+            "scope": "selected_run_cooperative_optimizer_capture_only",
+            "selected_round": null,
+            "numerical_equivalence_proven": false,
+            "input_coverage_proven": false,
+            "optimizer_group_hyperparameters": {
+              "status": "observed",
+              "events": {
+                "base_constructor_return": 1,
+                "step_pre": 20
+              },
+              "configurations": [
+                {
+                  "id": "c001",
+                  "present": {
+                    "lr": [
+                      "float",
+                      0.0001
+                    ],
+                    "momentum": [
+                      "int",
+                      0
+                    ],
+                    "weight_decay": [
+                      "int",
+                      0
+                    ],
+                    "dampening": [
+                      "int",
+                      0
+                    ],
+                    "nesterov": [
+                      "bool",
+                      false
+                    ],
+                    "maximize": [
+                      "bool",
+                      false
+                    ],
+                    "foreach": [
+                      "none",
+                      null
+                    ],
+                    "fused": [
+                      "none",
+                      null
+                    ],
+                    "differentiable": [
+                      "bool",
+                      false
+                    ]
+                  },
+                  "unrecognized_option_keys": 0,
+                  "group_records": {
+                    "base_constructor_return": 1,
+                    "step_pre": 1
+                  }
+                }
+              ],
+              "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof."
+            },
+            "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+            "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+            "selected_run_id": "dcc1ca7ab8d54402a5663ffede68a895",
+            "source_sha256": "627d24ee9e62601455e37f29166df8abe73a43b9e82382a293feec3a6b558169",
+            "source_binding": "capture source digest matches retained entrypoint source",
+            "capture_complete": true,
+            "reported_complete": true,
+            "logical_boundary_complete": true,
+            "parameter_update_sets_complete": true,
+            "optimizer_step_calls": 20,
+            "successful_optimizer_step_calls": 20,
+            "logical_updates": 20,
+            "parameters": {
+              "catalog_entries": 24,
+              "catalog_numel": 50362368,
+              "requires_grad_true_entries": 24,
+              "requires_grad_true_numel": 50362368,
+              "requires_grad_false_entries": 0,
+              "requires_grad_false_numel": 0,
+              "registered_parameter_numel": 50362368,
+              "catalog_numel_matches_registered_count": true,
+              "scope": "catalogued optimizer parameters at observation, not named model layers"
+            },
+            "updates": {
+              "recorded_logical_updates": 20,
+              "complete_update_set_records": 20,
+              "all_catalog_updated_records": 20,
+              "all_catalog_parameters_updated_each_record": true,
+              "updated_entries_per_complete_record_range": [
+                24,
+                24
+              ],
+              "updated_numel_per_complete_record_range": [
+                50362368,
+                50362368
+              ],
+              "optimizer_classes": [
+                "torch.optim.sgd.SGD"
+              ],
+              "unrecognized_optimizer_class_records": 0,
+              "scope": "completed observed updates"
+            },
+            "optimizer_call_counts_consistent": true
+          },
+          "policy": {
+            "allow_numerics_change": false,
+            "allow_model_change": false,
+            "allow_batch_grad_accum": true,
+            "max_throughput_regression_pct": 25.0
+          },
+          "required_saving_gb": 1.0043516928,
+          "reference_original_availability_scope": null,
+          "reference_comparison_kind": "completed_original_baseline",
+          "reference_capability_status": "not_needed_completed_baseline",
+          "operator_count": 0,
+          "excluded_operators": [
+            {
+              "id": "adamw_fp32_step_in_backward_v1",
+              "selection_status": "not_applicable_to_observed_optimizer_class",
+              "reported_optimizer_classes": [
+                "torch.optim.sgd.SGD"
+              ],
+              "selected_run_id": "dcc1ca7ab8d54402a5663ffede68a895",
+              "source_sha256": "627d24ee9e62601455e37f29166df8abe73a43b9e82382a293feec3a6b558169",
+              "basis": "The complete selected-run observation reports a different optimizer family. Do not convert that optimizer to AdamW. Reported tags do not authenticate a native implementation; unknown, custom or mixed optimizers are not excluded."
+            }
+          ],
+          "separate_supplied_echoes": [
+            {
+              "schema": "headroom.separate_supplied_runtime_observation.v1",
+              "basis": "repeat_of_already_supplied_scoped_observation_only",
+              "status": "observed",
+              "scope": "selected_run_cooperative_optimizer_capture_only",
+              "selected_run_id": "dcc1ca7ab8d54402a5663ffede68a895",
+              "selected_round": null,
+              "source_sha256": "627d24ee9e62601455e37f29166df8abe73a43b9e82382a293feec3a6b558169",
+              "source_binding": "capture source digest matches retained entrypoint source",
+              "native_optimizer_implementation_authenticated": false,
+              "numerical_equivalence_proven": false,
+              "resolves_prerequisite": false,
+              "optimizer_step_calls": 20,
+              "successful_optimizer_step_calls": 20,
+              "logical_updates": 20,
+              "capture_complete": true,
+              "reported_complete": true,
+              "logical_boundary_complete": true,
+              "parameter_update_sets_complete": true,
+              "optimizer_call_counts_consistent": true,
+              "parameters": {
+                "catalog_entries": 24,
+                "catalog_numel": 50362368,
+                "requires_grad_true_entries": 24,
+                "requires_grad_true_numel": 50362368,
+                "requires_grad_false_entries": 0,
+                "requires_grad_false_numel": 0,
+                "registered_parameter_numel": 50362368,
+                "catalog_numel_matches_registered_count": true
+              },
+              "updates": {
+                "recorded_logical_updates": 20,
+                "complete_update_set_records": 20,
+                "all_catalog_updated_records": 20,
+                "unrecognized_optimizer_class_records": 0,
+                "all_catalog_parameters_updated_each_record": true,
+                "optimizer_classes": [
+                  "torch.optim.sgd.SGD"
+                ],
+                "updated_entries_per_complete_record_range": [
+                  24,
+                  24
+                ],
+                "updated_numel_per_complete_record_range": [
+                  50362368,
+                  50362368
+                ]
+              },
+              "optimizer_group_hyperparameters": {
+                "status": "observed",
+                "configurations": [
+                  {
+                    "present": {
+                      "lr": [
+                        "float",
+                        0.0001
+                      ],
+                      "momentum": [
+                        "int",
+                        0
+                      ],
+                      "weight_decay": [
+                        "int",
+                        0
+                      ],
+                      "dampening": [
+                        "int",
+                        0
+                      ],
+                      "nesterov": [
+                        "bool",
+                        false
+                      ],
+                      "maximize": [
+                        "bool",
+                        false
+                      ],
+                      "foreach": [
+                        "none",
+                        null
+                      ],
+                      "fused": [
+                        "none",
+                        null
+                      ],
+                      "differentiable": [
+                        "bool",
+                        false
+                      ]
+                    }
+                  }
+                ]
+              },
+              "omitted_components": []
+            }
+          ],
+          "output_cap": 2000
+        }
+      ],
+      "conclusion": "Actual complete SGD observation suppressed the optional AdamW code recipe. This establishes correct catalog routing only; it did not create a successful repair or resolve real uncertainty."
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "status": "needs_human",
+      "target_met": false,
+      "run_id": "70ca1a74a7a8456a8944973f3498dae6",
+      "diagnoses": [
+        {
+          "path": "runs/repair-followup/execution-r17-20261030/jobs/70ca1a74a7a8456a8944973f3498dae6/rounds/01/diagnosis.json",
+          "sha256": "a21b392d0e7e50017418c650b24a72ce0c4dfd7f4b4b6026a86f408639a23356",
+          "round": "01",
+          "valid": true,
+          "ready": true,
+          "issues": [],
+          "plan": [
+            {
+              "fix_id": "fx1",
+              "type": "code",
+              "title": "Freeze backbone parameters and exclude from optimizer",
+              "description": "Set backbone.requires_grad_(False) before constructing optimizer; pass only head.parameters() to AdamW so optimizer state and grads store only head tensors.",
+              "expected_saving_gb": 8.0,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Loss weighting, RNG, update cadence and scalar losses preserved. Only head params updated. Must verify zero grad flow into backbone and identical head-updates vs original.",
+              "requires_policy": []
+            }
+          ],
+          "requests": [],
+          "needs_more_info": false,
+          "modes": [
+            {
+              "request_index": 1,
+              "purpose": "initial",
+              "requested_reasoning": false,
+              "max_completion_tokens": 2000,
+              "scope": "host_requested_mode_only"
+            }
+          ]
+        },
+        {
+          "path": "runs/repair-followup/execution-r17-20261030/jobs/70ca1a74a7a8456a8944973f3498dae6/rounds/02/diagnosis.json",
+          "sha256": "dc0055dda7783da3171b168b1769f8bf667b2aadaf78d1176def0aa1e4fc2f03",
+          "round": "02",
+          "valid": true,
+          "ready": true,
+          "issues": [],
+          "plan": [
+            {
+              "fix_id": "fx2",
+              "type": "code",
+              "title": "Disable backbone gradients",
+              "description": "Add model.backbone.requires_grad_(False) after line 88 in train.py to exclude backbone parameters from optimizer state and computation graph, matching the intended contract.",
+              "expected_saving_gb": 8.007762,
+              "numerics_impact": "none",
+              "throughput_impact": "minor",
+              "risk": "Backward pass may change if backbone had implicit gradient flow; loss values and head parameter updates must match original scalar series under verification.",
+              "requires_policy": []
+            }
+          ],
+          "requests": [],
+          "needs_more_info": false,
+          "modes": [
+            {
+              "request_index": 1,
+              "purpose": "initial",
+              "requested_reasoning": false,
+              "max_completion_tokens": 2000,
+              "scope": "host_requested_mode_only"
+            }
+          ]
+        },
+        {
+          "path": "runs/repair-followup/execution-r17-20261030/jobs/70ca1a74a7a8456a8944973f3498dae6/rounds/03/diagnosis.json",
+          "sha256": "5b642edecb57d1ab91bd9590c4b8d061a325fc0e4399bba59180d316c04731b4",
+          "round": "03",
+          "valid": false,
+          "ready": false,
+          "issues": [
+            "EVIDENCE_AVAILABILITY_CONTRADICTED"
+          ],
+          "plan": [],
+          "requests": [
+            {
+              "field": "execution_context.execution_argv",
+              "reason": "missing",
+              "detail": "Need exact argv to reproduce original baseline for numerical reference comparison",
+              "evidence_ref": "execution_context.execution_argv",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "overall_feasibility",
+              "blocked_plan_ids": []
+            },
+            {
+              "field": "execution_context.runtime_optimizer_observations.parameters",
+              "reason": "missing",
+              "detail": "Need verified parameter tensor list and element sizes for optimizer state accounting",
+              "evidence_ref": "execution_context.runtime_optimizer_observations.parameters",
+              "source_line_start": null,
+              "source_line_end": null,
+              "blocking_scope": "overall_feasibility",
+              "blocked_plan_ids": []
+            }
+          ],
+          "needs_more_info": true,
+          "modes": [
+            {
+              "request_index": 1,
+              "purpose": "initial",
+              "requested_reasoning": false,
+              "max_completion_tokens": 2000,
+              "scope": "host_requested_mode_only"
+            },
+            {
+              "request_index": 2,
+              "purpose": "validation_repair",
+              "requested_reasoning": false,
+              "max_completion_tokens": 2000,
+              "scope": "host_requested_mode_only"
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "call_id": 43,
+          "outcome": "response",
+          "http_status": 200,
+          "settled": true,
+          "prepared_wire_body_sha256": "052ff854fac324e4a445837b3925429311d65163fcbb4eefe3bf8811cbf7815b",
+          "delivery_confirmed": false,
+          "scope_note": "Saved pre-transport body; real paid response does not independently attest provider-side text.",
+          "top_level_field_order": [
+            "evidence_markdown",
+            "runtime_operator_catalog",
+            "evidence_availability_catalog",
+            "numerical_reference_context",
+            "invocation_reading_aid",
+            "execution_context",
+            "retained_state_reading_aid",
+            "candidate_evidence",
+            "verification_feedback",
+            "solver_context_availability",
+            "goal",
+            "policy",
+            "required_saving_gb"
+          ],
+          "selected_capture_run_id": "139dcde92f9a4d47af6712523d1bbd84",
+          "optimizer_observation": {
+            "schema": "headroom.runtime_optimizer_observations.v1",
+            "status": "observed",
+            "scope": "selected_run_cooperative_optimizer_capture_only",
+            "selected_round": null,
+            "numerical_equivalence_proven": false,
+            "input_coverage_proven": false,
+            "optimizer_group_hyperparameters": {
+              "status": "observed",
+              "events": {
+                "base_constructor_return": 1,
+                "step_pre": 20
+              },
+              "configurations": [
+                {
+                  "id": "c001",
+                  "present": {
+                    "lr": [
+                      "float",
+                      0.0001
+                    ],
+                    "weight_decay": [
+                      "float",
+                      0.01
+                    ],
+                    "betas": [
+                      "tuple",
+                      [
+                        [
+                          "float",
+                          0.9
+                        ],
+                        [
+                          "float",
+                          0.999
+                        ]
+                      ]
+                    ],
+                    "eps": [
+                      "float",
+                      1e-08
+                    ],
+                    "amsgrad": [
+                      "bool",
+                      false
+                    ],
+                    "maximize": [
+                      "bool",
+                      false
+                    ],
+                    "foreach": [
+                      "bool",
+                      false
+                    ],
+                    "fused": [
+                      "none",
+                      null
+                    ],
+                    "capturable": [
+                      "bool",
+                      false
+                    ],
+                    "differentiable": [
+                      "bool",
+                      false
+                    ]
+                  },
+                  "unrecognized_option_keys": 0,
+                  "group_records": {
+                    "base_constructor_return": 1,
+                    "step_pre": 1
+                  }
+                }
+              ],
+              "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof."
+            },
+            "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+            "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+            "selected_run_id": "139dcde92f9a4d47af6712523d1bbd84",
+            "source_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+            "source_binding": "capture source digest matches retained entrypoint source",
+            "capture_complete": true,
+            "reported_complete": true,
+            "logical_boundary_complete": true,
+            "parameter_update_sets_complete": true,
+            "optimizer_step_calls": 20,
+            "successful_optimizer_step_calls": 20,
+            "logical_updates": 20,
+            "parameters": {
+              "catalog_entries": 34,
+              "catalog_numel": 1075970304,
+              "requires_grad_true_entries": 34,
+              "requires_grad_true_numel": 1075970304,
+              "requires_grad_false_entries": 0,
+              "requires_grad_false_numel": 0,
+              "registered_parameter_numel": 1075970304,
+              "catalog_numel_matches_registered_count": true,
+              "scope": "catalogued optimizer parameters at observation, not named model layers"
+            },
+            "updates": {
+              "recorded_logical_updates": 20,
+              "complete_update_set_records": 20,
+              "all_catalog_updated_records": 20,
+              "all_catalog_parameters_updated_each_record": true,
+              "updated_entries_per_complete_record_range": [
+                34,
+                34
+              ],
+              "updated_numel_per_complete_record_range": [
+                1075970304,
+                1075970304
+              ],
+              "optimizer_classes": [
+                "torch.optim.adamw.AdamW"
+              ],
+              "unrecognized_optimizer_class_records": 0,
+              "scope": "completed observed updates"
+            },
+            "optimizer_call_counts_consistent": true
+          },
+          "policy": {
+            "allow_numerics_change": false,
+            "allow_model_change": false,
+            "allow_batch_grad_accum": true,
+            "max_throughput_regression_pct": 25.0
+          },
+          "required_saving_gb": 3.5639617536,
+          "reference_original_availability_scope": null,
+          "reference_comparison_kind": "completed_original_baseline",
+          "reference_capability_status": "not_needed_completed_baseline",
+          "operator_count": 1,
+          "excluded_operators": null,
+          "separate_supplied_echoes": [],
+          "output_cap": 2000
+        },
+        {
+          "call_id": 48,
+          "outcome": "response",
+          "http_status": 200,
+          "settled": true,
+          "prepared_wire_body_sha256": "b9f31f071c531bd8317668764f56c031c87b3f0fb124d8731995e8552438466a",
+          "delivery_confirmed": false,
+          "scope_note": "Saved pre-transport body; real paid response does not independently attest provider-side text.",
+          "top_level_field_order": [
+            "evidence_markdown",
+            "runtime_operator_catalog",
+            "evidence_availability_catalog",
+            "numerical_reference_context",
+            "invocation_reading_aid",
+            "execution_context",
+            "retained_state_reading_aid",
+            "candidate_evidence",
+            "verification_feedback",
+            "solver_context_availability",
+            "goal",
+            "policy",
+            "required_saving_gb"
+          ],
+          "selected_capture_run_id": "139dcde92f9a4d47af6712523d1bbd84",
+          "optimizer_observation": {
+            "schema": "headroom.runtime_optimizer_observations.v1",
+            "status": "observed",
+            "scope": "selected_run_cooperative_optimizer_capture_only",
+            "selected_round": null,
+            "numerical_equivalence_proven": false,
+            "input_coverage_proven": false,
+            "optimizer_group_hyperparameters": {
+              "status": "observed",
+              "events": {
+                "base_constructor_return": 1,
+                "step_pre": 20
+              },
+              "configurations": [
+                {
+                  "id": "c001",
+                  "present": {
+                    "lr": [
+                      "float",
+                      0.0001
+                    ],
+                    "weight_decay": [
+                      "float",
+                      0.01
+                    ],
+                    "betas": [
+                      "tuple",
+                      [
+                        [
+                          "float",
+                          0.9
+                        ],
+                        [
+                          "float",
+                          0.999
+                        ]
+                      ]
+                    ],
+                    "eps": [
+                      "float",
+                      1e-08
+                    ],
+                    "amsgrad": [
+                      "bool",
+                      false
+                    ],
+                    "maximize": [
+                      "bool",
+                      false
+                    ],
+                    "foreach": [
+                      "bool",
+                      false
+                    ],
+                    "fused": [
+                      "none",
+                      null
+                    ],
+                    "capturable": [
+                      "bool",
+                      false
+                    ],
+                    "differentiable": [
+                      "bool",
+                      false
+                    ]
+                  },
+                  "unrecognized_option_keys": 0,
+                  "group_records": {
+                    "base_constructor_return": 1,
+                    "step_pre": 1
+                  }
+                }
+              ],
+              "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof."
+            },
+            "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+            "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+            "selected_run_id": "139dcde92f9a4d47af6712523d1bbd84",
+            "source_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+            "source_binding": "capture source digest matches retained entrypoint source",
+            "capture_complete": true,
+            "reported_complete": true,
+            "logical_boundary_complete": true,
+            "parameter_update_sets_complete": true,
+            "optimizer_step_calls": 20,
+            "successful_optimizer_step_calls": 20,
+            "logical_updates": 20,
+            "parameters": {
+              "catalog_entries": 34,
+              "catalog_numel": 1075970304,
+              "requires_grad_true_entries": 34,
+              "requires_grad_true_numel": 1075970304,
+              "requires_grad_false_entries": 0,
+              "requires_grad_false_numel": 0,
+              "registered_parameter_numel": 1075970304,
+              "catalog_numel_matches_registered_count": true,
+              "scope": "catalogued optimizer parameters at observation, not named model layers"
+            },
+            "updates": {
+              "recorded_logical_updates": 20,
+              "complete_update_set_records": 20,
+              "all_catalog_updated_records": 20,
+              "all_catalog_parameters_updated_each_record": true,
+              "updated_entries_per_complete_record_range": [
+                34,
+                34
+              ],
+              "updated_numel_per_complete_record_range": [
+                1075970304,
+                1075970304
+              ],
+              "optimizer_classes": [
+                "torch.optim.adamw.AdamW"
+              ],
+              "unrecognized_optimizer_class_records": 0,
+              "scope": "completed observed updates"
+            },
+            "optimizer_call_counts_consistent": true
+          },
+          "policy": {
+            "allow_numerics_change": false,
+            "allow_model_change": false,
+            "allow_batch_grad_accum": true,
+            "max_throughput_regression_pct": 25.0
+          },
+          "required_saving_gb": 3.5639617536,
+          "reference_original_availability_scope": null,
+          "reference_comparison_kind": "completed_original_baseline",
+          "reference_capability_status": "not_needed_completed_baseline",
+          "operator_count": 1,
+          "excluded_operators": null,
+          "separate_supplied_echoes": [],
+          "output_cap": 2000
+        },
+        {
+          "call_id": 50,
+          "outcome": "response",
+          "http_status": 200,
+          "settled": true,
+          "prepared_wire_body_sha256": "f4281e2b29f80de7aae48844a772354809fbb4914614d6d211ae34cc48efecfc",
+          "delivery_confirmed": false,
+          "scope_note": "Saved pre-transport body; real paid response does not independently attest provider-side text.",
+          "top_level_field_order": [
+            "evidence_markdown",
+            "runtime_operator_catalog",
+            "evidence_availability_catalog",
+            "numerical_reference_context",
+            "invocation_reading_aid",
+            "execution_context",
+            "retained_state_reading_aid",
+            "candidate_evidence",
+            "verification_feedback",
+            "solver_context_availability",
+            "goal",
+            "policy",
+            "required_saving_gb"
+          ],
+          "selected_capture_run_id": "139dcde92f9a4d47af6712523d1bbd84",
+          "optimizer_observation": {
+            "schema": "headroom.runtime_optimizer_observations.v1",
+            "status": "observed",
+            "scope": "selected_run_cooperative_optimizer_capture_only",
+            "selected_round": null,
+            "numerical_equivalence_proven": false,
+            "input_coverage_proven": false,
+            "optimizer_group_hyperparameters": {
+              "status": "observed",
+              "events": {
+                "base_constructor_return": 1,
+                "step_pre": 20
+              },
+              "configurations": [
+                {
+                  "id": "c001",
+                  "present": {
+                    "lr": [
+                      "float",
+                      0.0001
+                    ],
+                    "weight_decay": [
+                      "float",
+                      0.01
+                    ],
+                    "betas": [
+                      "tuple",
+                      [
+                        [
+                          "float",
+                          0.9
+                        ],
+                        [
+                          "float",
+                          0.999
+                        ]
+                      ]
+                    ],
+                    "eps": [
+                      "float",
+                      1e-08
+                    ],
+                    "amsgrad": [
+                      "bool",
+                      false
+                    ],
+                    "maximize": [
+                      "bool",
+                      false
+                    ],
+                    "foreach": [
+                      "bool",
+                      false
+                    ],
+                    "fused": [
+                      "none",
+                      null
+                    ],
+                    "capturable": [
+                      "bool",
+                      false
+                    ],
+                    "differentiable": [
+                      "bool",
+                      false
+                    ]
+                  },
+                  "unrecognized_option_keys": 0,
+                  "group_records": {
+                    "base_constructor_return": 1,
+                    "step_pre": 1
+                  }
+                }
+              ],
+              "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof."
+            },
+            "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+            "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+            "selected_run_id": "139dcde92f9a4d47af6712523d1bbd84",
+            "source_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+            "source_binding": "capture source digest matches retained entrypoint source",
+            "capture_complete": true,
+            "reported_complete": true,
+            "logical_boundary_complete": true,
+            "parameter_update_sets_complete": true,
+            "optimizer_step_calls": 20,
+            "successful_optimizer_step_calls": 20,
+            "logical_updates": 20,
+            "parameters": {
+              "catalog_entries": 34,
+              "catalog_numel": 1075970304,
+              "requires_grad_true_entries": 34,
+              "requires_grad_true_numel": 1075970304,
+              "requires_grad_false_entries": 0,
+              "requires_grad_false_numel": 0,
+              "registered_parameter_numel": 1075970304,
+              "catalog_numel_matches_registered_count": true,
+              "scope": "catalogued optimizer parameters at observation, not named model layers"
+            },
+            "updates": {
+              "recorded_logical_updates": 20,
+              "complete_update_set_records": 20,
+              "all_catalog_updated_records": 20,
+              "all_catalog_parameters_updated_each_record": true,
+              "updated_entries_per_complete_record_range": [
+                34,
+                34
+              ],
+              "updated_numel_per_complete_record_range": [
+                1075970304,
+                1075970304
+              ],
+              "optimizer_classes": [
+                "torch.optim.adamw.AdamW"
+              ],
+              "unrecognized_optimizer_class_records": 0,
+              "scope": "completed observed updates"
+            },
+            "optimizer_call_counts_consistent": true
+          },
+          "policy": {
+            "allow_numerics_change": false,
+            "allow_model_change": false,
+            "allow_batch_grad_accum": true,
+            "max_throughput_regression_pct": 25.0
+          },
+          "required_saving_gb": 3.5639617536,
+          "reference_original_availability_scope": null,
+          "reference_comparison_kind": "completed_original_baseline",
+          "reference_capability_status": "not_needed_completed_baseline",
+          "operator_count": 1,
+          "excluded_operators": null,
+          "separate_supplied_echoes": [],
+          "output_cap": 2000
+        },
+        {
+          "call_id": 51,
+          "outcome": "response",
+          "http_status": 200,
+          "settled": true,
+          "prepared_wire_body_sha256": "60fb37af6c20be2ee62832612104e28672c94778207bc83a85f5d801fb18b0c8",
+          "delivery_confirmed": false,
+          "scope_note": "Saved pre-transport body; real paid response does not independently attest provider-side text.",
+          "top_level_field_order": [
+            "evidence_markdown",
+            "runtime_operator_catalog",
+            "evidence_availability_catalog",
+            "numerical_reference_context",
+            "invocation_reading_aid",
+            "execution_context",
+            "retained_state_reading_aid",
+            "candidate_evidence",
+            "verification_feedback",
+            "solver_context_availability",
+            "goal",
+            "policy",
+            "required_saving_gb"
+          ],
+          "selected_capture_run_id": "139dcde92f9a4d47af6712523d1bbd84",
+          "optimizer_observation": {
+            "schema": "headroom.runtime_optimizer_observations.v1",
+            "status": "observed",
+            "scope": "selected_run_cooperative_optimizer_capture_only",
+            "selected_round": null,
+            "numerical_equivalence_proven": false,
+            "input_coverage_proven": false,
+            "optimizer_group_hyperparameters": {
+              "status": "observed",
+              "events": {
+                "base_constructor_return": 1,
+                "step_pre": 20
+              },
+              "configurations": [
+                {
+                  "id": "c001",
+                  "present": {
+                    "lr": [
+                      "float",
+                      0.0001
+                    ],
+                    "weight_decay": [
+                      "float",
+                      0.01
+                    ],
+                    "betas": [
+                      "tuple",
+                      [
+                        [
+                          "float",
+                          0.9
+                        ],
+                        [
+                          "float",
+                          0.999
+                        ]
+                      ]
+                    ],
+                    "eps": [
+                      "float",
+                      1e-08
+                    ],
+                    "amsgrad": [
+                      "bool",
+                      false
+                    ],
+                    "maximize": [
+                      "bool",
+                      false
+                    ],
+                    "foreach": [
+                      "bool",
+                      false
+                    ],
+                    "fused": [
+                      "none",
+                      null
+                    ],
+                    "capturable": [
+                      "bool",
+                      false
+                    ],
+                    "differentiable": [
+                      "bool",
+                      false
+                    ]
+                  },
+                  "unrecognized_option_keys": 0,
+                  "group_records": {
+                    "base_constructor_return": 1,
+                    "step_pre": 1
+                  }
+                }
+              ],
+              "scope": "Actual present group values at base-constructor return or step-pre only; absent keys are not defaults. No completed-update or custom-step/closure-use proof."
+            },
+            "optimizer_classes_basis": "reported class tags, not authenticated optimizer implementations",
+            "limitations": "Observed Parameter identities/version changes and requires_grad flags, not objective equivalence, full workload coverage or target authentication. Filename/comments/intended labels do not override executed updates.",
+            "selected_run_id": "139dcde92f9a4d47af6712523d1bbd84",
+            "source_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+            "source_binding": "capture source digest matches retained entrypoint source",
+            "capture_complete": true,
+            "reported_complete": true,
+            "logical_boundary_complete": true,
+            "parameter_update_sets_complete": true,
+            "optimizer_step_calls": 20,
+            "successful_optimizer_step_calls": 20,
+            "logical_updates": 20,
+            "parameters": {
+              "catalog_entries": 34,
+              "catalog_numel": 1075970304,
+              "requires_grad_true_entries": 34,
+              "requires_grad_true_numel": 1075970304,
+              "requires_grad_false_entries": 0,
+              "requires_grad_false_numel": 0,
+              "registered_parameter_numel": 1075970304,
+              "catalog_numel_matches_registered_count": true,
+              "scope": "catalogued optimizer parameters at observation, not named model layers"
+            },
+            "updates": {
+              "recorded_logical_updates": 20,
+              "complete_update_set_records": 20,
+              "all_catalog_updated_records": 20,
+              "all_catalog_parameters_updated_each_record": true,
+              "updated_entries_per_complete_record_range": [
+                34,
+                34
+              ],
+              "updated_numel_per_complete_record_range": [
+                1075970304,
+                1075970304
+              ],
+              "optimizer_classes": [
+                "torch.optim.adamw.AdamW"
+              ],
+              "unrecognized_optimizer_class_records": 0,
+              "scope": "completed observed updates"
+            },
+            "optimizer_call_counts_consistent": true
+          },
+          "policy": {
+            "allow_numerics_change": false,
+            "allow_model_change": false,
+            "allow_batch_grad_accum": true,
+            "max_throughput_regression_pct": 25.0
+          },
+          "required_saving_gb": 3.5639617536,
+          "reference_original_availability_scope": null,
+          "reference_comparison_kind": "completed_original_baseline",
+          "reference_capability_status": "not_needed_completed_baseline",
+          "operator_count": 1,
+          "excluded_operators": null,
+          "separate_supplied_echoes": [
+            {
+              "schema": "headroom.separate_supplied_runtime_observation.v1",
+              "basis": "repeat_of_already_supplied_scoped_observation_only",
+              "status": "observed",
+              "scope": "selected_run_cooperative_optimizer_capture_only",
+              "selected_run_id": "139dcde92f9a4d47af6712523d1bbd84",
+              "selected_round": null,
+              "source_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+              "source_binding": "capture source digest matches retained entrypoint source",
+              "native_optimizer_implementation_authenticated": false,
+              "numerical_equivalence_proven": false,
+              "resolves_prerequisite": false,
+              "optimizer_step_calls": 20,
+              "successful_optimizer_step_calls": 20,
+              "logical_updates": 20,
+              "capture_complete": true,
+              "reported_complete": true,
+              "logical_boundary_complete": true,
+              "parameter_update_sets_complete": true,
+              "optimizer_call_counts_consistent": true,
+              "parameters": {
+                "catalog_entries": 34,
+                "catalog_numel": 1075970304,
+                "requires_grad_true_entries": 34,
+                "requires_grad_true_numel": 1075970304,
+                "requires_grad_false_entries": 0,
+                "requires_grad_false_numel": 0,
+                "registered_parameter_numel": 1075970304,
+                "catalog_numel_matches_registered_count": true
+              },
+              "updates": {
+                "recorded_logical_updates": 20,
+                "complete_update_set_records": 20,
+                "all_catalog_updated_records": 20,
+                "unrecognized_optimizer_class_records": 0,
+                "all_catalog_parameters_updated_each_record": true,
+                "optimizer_classes": [
+                  "torch.optim.adamw.AdamW"
+                ],
+                "updated_entries_per_complete_record_range": [
+                  34,
+                  34
+                ],
+                "updated_numel_per_complete_record_range": [
+                  1075970304,
+                  1075970304
+                ]
+              },
+              "optimizer_group_hyperparameters": {
+                "status": "observed",
+                "configurations": [
+                  {
+                    "present": {
+                      "lr": [
+                        "float",
+                        0.0001
+                      ],
+                      "weight_decay": [
+                        "float",
+                        0.01
+                      ],
+                      "betas": [
+                        "tuple",
+                        [
+                          [
+                            "float",
+                            0.9
+                          ],
+                          [
+                            "float",
+                            0.999
+                          ]
+                        ]
+                      ],
+                      "eps": [
+                        "float",
+                        1e-08
+                      ],
+                      "amsgrad": [
+                        "bool",
+                        false
+                      ],
+                      "maximize": [
+                        "bool",
+                        false
+                      ],
+                      "foreach": [
+                        "bool",
+                        false
+                      ],
+                      "fused": [
+                        "none",
+                        null
+                      ],
+                      "capturable": [
+                        "bool",
+                        false
+                      ],
+                      "differentiable": [
+                        "bool",
+                        false
+                      ]
+                    }
+                  }
+                ]
+              },
+              "omitted_components": []
+            }
+          ],
+          "output_cap": 2000
+        }
+      ],
+      "conclusion": "Despite complete source-bound original34 trainable/all-updated parameters and policyallow_modelfalse delivered in the actual requests, the model chose freeze/head-only updates. Existing strict runtime coverage and numerical checks correctly rejected/reverted two completed candidates. This is an incorrect strategy, not lack of dtype/alias evidence."
+    }
+  ],
+  "proposals_only_not_applied": [
+    "reports/checkpoint-callsite-reading-aid-proposal-20261030/proposal.patch",
+    "reports/training-plan-intent-screen-proposal-20261030/proposal.json",
+    "reports/optimizer-parameter-metadata-minimal-proposal-20261030/proposal.json"
+  ],
+  "next_lowest_cost": "Review source-bound supported-callsite metadata and early evidence-conditioned training-update intent contract; do not implement parameter/state metadata merely because an unrelated strategy failed. Preserve all current numerical/policy/runtime checks.",
+  "causal_limit": "Different real model outcomes across R16/R17 are not a controlled estimate of the isolated effect of prompts or metadata.",
+  "new_model_calls": 0,
+  "new_gpu_jobs": 0,
+  "production_changes": false,
+  "tests_changes": false,
+  "historical_results_modified": false
+}

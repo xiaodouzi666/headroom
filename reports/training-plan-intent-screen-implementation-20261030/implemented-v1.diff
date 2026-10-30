@@ -1,0 +1,548 @@
+--- a/headroom/diagnose.py
++++ b/headroom/diagnose.py
+@@ -37,6 +37,7 @@
+     invocation_reference_catalog,
+     solver_prompt_context,
+ )
++from headroom.training_plan_intent import training_update_rejection_trigger
+ from headroom.validation_feedback import validation_issue_context
+ 
+ PROMPT_PATH = Path(__file__).parent / "prompts" / "diagnose.md"
+@@ -227,7 +228,7 @@
+     "REQUESTED_INVOCATION_ALREADY_PRESENT": "Literal argv is present; unresolved target application is ambiguous, not missing argv.",
+     "POLICY_PERMISSION_DENIED": "Remove or revise the step requiring the disabled permission; do not change policy.",
+     "BATCH_CHANGE_FORBIDDEN": "Remove or revise batch/accumulation changes without the required permission.",
+-    "MODEL_CHANGE_FORBIDDEN": "Remove or revise model/input shrinking; preserve layers, width, vocabulary and sequence length.",
++    "MODEL_CHANGE_FORBIDDEN": "Remove or revise model/input shrinking or freezing/excluding previously updated parameters; preserve layers, width, vocabulary, sequence length and original trainable update coverage.",
+     "TRAINING_TRUNCATION_FORBIDDEN": "Preserve all required training data and optimizer updates.",
+     "NUMERICS_CHANGE_FORBIDDEN": "Remove or revise precision/mathematics changes; do not merely relabel their impact.",
+     "UNKNOWN_EVIDENCE_REFERENCE": "Copy an exact identity from evidence_availability_catalog; use genuine ambiguity for unsupported facts.",
+@@ -841,6 +842,24 @@
+                     f"Step {step.fix_id} proposes shrinking the model or its inputs.",
+                     f"/plan/{step_number}",
+                 )
++            )
++        training_trigger = training_update_rejection_trigger(
++            step.description, evidence, policy, negation_pattern=_MODEL_SHRINK_NEGATION
++        )
++        if training_trigger is not None:
++            issues.append(
++                DiagnosisIssue(
++                    "MODEL_CHANGE_FORBIDDEN",
++                    "The proposed freeze/exclusion contradicts selected complete original parameter updates.",
++                    f"/plan/{step_number}",
++                )
++            )
++            grounding_corrections.append(
++                {
++                    "code": "MODEL_CHANGE_FORBIDDEN",
++                    "path": f"/plan/{step_number}",
++                    "training_update_trigger": training_trigger,
++                }
+             )
+         if TRAINING_TRUNCATION.search(text):
+             issues.append(
+--- /dev/null
++++ b/headroom/training_plan_intent.py
+@@ -0,0 +1,203 @@
++"""Narrow existing-policy intent feedback from bound complete original updates.
++
++This is not source verification, optimizer authentication or a candidate proof.
++Ambiguous intent or incomplete original coverage leaves downstream gates alone.
++"""
++
++import re
++from collections.abc import Mapping
++
++from headroom.observation_feedback import bound_optimizer_observation
++
++_CLAUSE_BREAK = re.compile(r"[;!?\n]|\.(?!\w)")
++_NON_ACTION = re.compile(
++    r"\b(?:prior|previous|rejected|forbidden|invalid|incorrect|hypothetical|example|if|unless|conditional|might|could|consider)\b"
++    r"|\bnot\s+(?:proposed|selected|recommended|the\s+plan)\b"
++    r"|\b(?:do\s+not|never|avoid)\s+(?:choose|use|include|propose|apply|recommend)\s+[`\'\"]",
++    re.IGNORECASE,
++)
++_ACTION = re.compile(
++    r"\b(?:set|setting|add|adding|call|calling|use|using|apply|applying)\b", re.IGNORECASE
++)
++_FALSE = re.compile(r"\brequires_grad(?:_\s*\(\s*False\s*\)|\s*=\s*False)", re.IGNORECASE)
++_FREEZE = re.compile(
++    r"\b(?:freeze|freezing)\s+(?:[\w.]+\s+){0,5}(?:parameters?|weights)\b", re.IGNORECASE
++)
++_EXCLUDE = re.compile(
++    r"\b(?:exclude|excluding|remove|removing|omit|omitting)\s+"
++    r"(?:[\w.]+\s+){0,6}(?:parameters?|weights)\s+from\s+"
++    r"(?:the\s+)?optimizer(?:\s+state)?\b",
++    re.IGNORECASE,
++)
++_HEAD_ONLY = re.compile(
++    r"\b(?:pass|passing|supply|supplying)\s+only\s+[\w.]+\.parameters\s*\(\s*\)"
++    r"\s+to\s+(?:the\s+)?(?:optimizer|AdamW|Adam|SGD)\b|"
++    r"\b(?:train|training|update|updating)\s+only\s+(?:the\s+)?"
++    r"(?:head|classifier|adapter)(?:\s+parameters?)?\b",
++    re.IGNORECASE,
++)
++_STOP = re.compile(
++    r"\b(?:stop|stopping|cease|ceasing)\s+updating\s+"
++    r"(?:[\w.]+\s+){0,6}(?:parameters?|weights)\b",
++    re.IGNORECASE,
++)
++_MEMORY_OBJECT = re.compile(
++    r"\s+(?:gradients?|buffers?|state|references?|metadata)\b", re.IGNORECASE
++)
++
++
++def _positive(clause, match, negation_pattern):
++    if _NON_ACTION.search(clause):
++        return False
++    prefix = re.sub(r"[\`\'\"(]+\s*$", "", clause[: match.start()])
++    negation = negation_pattern.search(prefix)
++    return not (
++        negation is not None and negation_pattern.search(prefix[: negation.start()]) is None
++    )
++
++
++def _intent(description, negation_pattern):
++    if type(description) is not str or len(description) > 16384:
++        return None
++    freeze = exclude = False
++    for clause in _CLAUSE_BREAK.split(description):
++        for match in _STOP.finditer(clause):
++            if not _MEMORY_OBJECT.match(clause, match.end()) and _positive(
++                clause, match, negation_pattern
++            ):
++                return "explicit_stop_updating_parameters"
++        for match in _FREEZE.finditer(clause):
++            if not _MEMORY_OBJECT.match(clause, match.end()) and _positive(
++                clause, match, negation_pattern
++            ):
++                freeze = True
++        for match in _FALSE.finditer(clause):
++            # A source fact or an isolated code token is not a proposed action.
++            actions = list(_ACTION.finditer(clause[: match.start()]))
++            if (
++                actions
++                and match.start() - actions[-1].end() <= 128
++                and _positive(clause, actions[-1], negation_pattern)
++            ):
++                freeze = True
++        for pattern in (_EXCLUDE, _HEAD_ONLY):
++            if any(
++                _positive(clause, match, negation_pattern) for match in pattern.finditer(clause)
++            ):
++                exclude = True
++    return "explicit_freeze_and_optimizer_exclusion" if freeze and exclude else None
++
++
++def training_update_rejection_trigger(description, evidence, policy, *, negation_pattern):
++    """Return only typed, already-supplied trigger data; never edit a diagnosis."""
++    if not isinstance(policy, Mapping) or policy.get("allow_model_change") is not False:
++        return None
++    if not isinstance(evidence, Mapping) or not isinstance(evidence.get("sources"), (list, tuple)):
++        return None
++    context = evidence.get("execution_context")
++    if not isinstance(context, Mapping) or "selected_round" not in context:
++        return None
++    required = context.get("required_optimizer_updates")
++    # Deliberately narrow first screen. Other requested lengths retain the
++    # original source/runtime policy checks without this extra prose predicate.
++    if type(required) is not int or required != 20:
++        return None
++    run_id = evidence.get("run_id")
++    if type(run_id) is not str or re.fullmatch(r"[0-9a-f]{32}", run_id) is None:
++        return None
++    observed = bound_optimizer_observation(
++        context, selected_run_id=run_id, sources=evidence["sources"]
++    )
++    if observed is None or "selected_round" not in observed or observed.get("status") != "observed":
++        return None
++    if any(
++        observed.get(key) is not True
++        for key in (
++            "capture_complete",
++            "reported_complete",
++            "logical_boundary_complete",
++            "parameter_update_sets_complete",
++            "optimizer_call_counts_consistent",
++        )
++    ):
++        return None
++    parameters, updates = observed.get("parameters"), observed.get("updates")
++    if not isinstance(parameters, Mapping) or not isinstance(updates, Mapping):
++        return None
++    names = (
++        "catalog_entries",
++        "catalog_numel",
++        "registered_parameter_numel",
++        "requires_grad_true_entries",
++        "requires_grad_true_numel",
++        "requires_grad_false_entries",
++        "requires_grad_false_numel",
++    )
++    if any(
++        type(parameters.get(key)) is not int or not 0 <= parameters[key] < 2**63 for key in names
++    ):
++        return None
++    entries, numel = parameters["catalog_entries"], parameters["catalog_numel"]
++    if not (
++        entries > 0
++        and numel > 0
++        and parameters["registered_parameter_numel"] == numel
++        and parameters.get("catalog_numel_matches_registered_count") is True
++        and parameters["requires_grad_true_entries"] == entries
++        and parameters["requires_grad_true_numel"] == numel
++        and parameters["requires_grad_false_entries"]
++        == parameters["requires_grad_false_numel"]
++        == 0
++    ):
++        return None
++    if type(observed.get("logical_updates")) is not int or observed["logical_updates"] != required:
++        return None
++    for key in (
++        "recorded_logical_updates",
++        "complete_update_set_records",
++        "all_catalog_updated_records",
++    ):
++        if type(updates.get(key)) is not int or updates[key] != required:
++            return None
++    if updates.get("all_catalog_parameters_updated_each_record") is not True:
++        return None
++    for key, expected in (
++        ("updated_entries_per_complete_record_range", entries),
++        ("updated_numel_per_complete_record_range", numel),
++    ):
++        value = updates.get(key)
++        if (
++            type(value) is not list
++            or len(value) != 2
++            or any(type(n) is not int or n != expected for n in value)
++        ):
++            return None
++    calls, successful = (
++        observed.get("optimizer_step_calls"),
++        observed.get("successful_optimizer_step_calls"),
++    )
++    if (
++        type(calls) is not int
++        or type(successful) is not int
++        or not required <= successful <= calls <= 65536
++    ):
++        return None
++    criterion = _intent(description, negation_pattern)
++    if criterion is None:
++        return None
++    return {
++        "basis": "existing_model_change_policy_and_selected_complete_update_observation",
++        "criterion": criterion,
++        "selected_run_id": run_id,
++        "selected_round": context["selected_round"],
++        "source_sha256": observed["source_sha256"],
++        "required_optimizer_updates": required,
++        "catalog_entries": entries,
++        "catalog_numel": numel,
++        "registered_parameter_numel": numel,
++        "requires_grad_true_entries": entries,
++        "requires_grad_true_numel": numel,
++        "all_catalog_updated_records": required,
++        "updated_numel_per_complete_record_range": [numel, numel],
++        "scope": "Selected original cooperative capture only; no native authentication or candidate equivalence proof.",
++    }
+--- a/headroom/prompts/patch.md
++++ b/headroom/prompts/patch.md
+@@ -5,6 +5,7 @@
+ Each source document has path, source_sha256, and lines:[{id,text}]. IDs are separate metadata, not prefixes in source text. Use the exact path and full SHA supplied for that document.
+ Each edit is {path, source_sha256, start_id, end_id, new_lines}. Choose the first and last original physical line IDs, both inclusive. The host obtains the old bytes from that exact source; do not return old_lines, copied old text, line numbers, or a diff.
+ Each new_lines element is one complete physical source line with exact indentation and no CR or LF. Preserve legitimate backslash escapes in source literals. Never flatten multiple source lines into a single string and never include IDs or display labels in code.
++JSON transports literal source: the field fragment {"new_lines":["    label = \"ready\""]} decodes to the Python line     label = "ready". Preserve the Python literal quotes inside each line; JSON delimiters/escaping do not replace them. Never unescape or strip source a second time.
+ Use original coordinates for every edit; edits must not overlap. The host applies them simultaneously, then creates a standard unified diff and verifies the complete candidate bytes. Never use coordinates from a proposed or rejected candidate.
+ For insertion, replace a nonempty adjacent original anchor range and include the retained anchor line in new_lines. Zero-width ranges, absent IDs, new files, stale SHAs and unchanged replacements are rejected. Deletion may use new_lines:[]; original newline style and terminal-newline presence must remain representable.
+ Generic example only: if one supplied line is {"id":"L000003","text":"VALUE = 1"}, select start_id=end_id="L000003" and new_lines:["VALUE = 2"], using that document's actual path and SHA. This illustrates the protocol, not a recommended program change.
+--- a/headroom/prompts/patch_fix.md
++++ b/headroom/prompts/patch_fix.md
+@@ -3,6 +3,7 @@
+ IDs are metadata and must never be copied into code. Use the original SHA and coordinates, not any failed candidate. The host retrieves old bytes; do not supply old_lines, copied old text, line-number labels, unified diff or markdown fences.
+ An insertion retains a nonempty original anchor in new_lines. No new files or zero-width ranges. Configuration-only proposals use edits:[] and the existing env/CLI allowlist; an empty no-op is not a repair.
+ Address the actual rejection; do not repeat an invalid range or assume whitespace/fuzzy matching or unescaping. Keep exact indentation and legitimate source escapes.
++JSON transports literal source: the field fragment {"new_lines":["    label = \"ready\""]} decodes to the Python line     label = "ready". Preserve the Python literal quotes inside each line; JSON delimiters/escaping do not replace them. Never unescape or strip source a second time.
+ Treat the plan as unverified: check actual tensor producers/consumers, training/evaluation paths, leading dimensions/effective batch, loss reduction and optimizer cadence. Do not blindly follow a mistaken plan. Microbatches must be nonempty, correctly weighted and have one update per original effective batch; explain unresolved premises in notes instead of inventing them.
+ Preserve all policy, model/data/objective/precision/update and measurement restrictions. No claimed measured savings. The existing maximum three repair attempts and 4000-token response cap remain.
+ 
+--- /dev/null
++++ b/tests/test_training_plan_intent.py
+@@ -0,0 +1,275 @@
++"""Bounded original-update intent feedback; offline provider-shaped tests only."""
++
++import copy
++import json
++from pathlib import Path
++
++import pytest
++from test_diagnosis_bounded_repair import payload, provider_client
++from test_scoped_observation_feedback import observed_source
++
++from headroom.diagnose import (
++    _MODEL_SHRINK_NEGATION,
++    diagnose_with_router,
++    validate_diagnosis,
++)
++from headroom.diagnosis_protocol import FINAL48_DIAGNOSIS_ONLY
++from headroom.llm.router import LLMRouter
++from headroom.training_plan_intent import training_update_rejection_trigger
++
++FORBIDDEN = (
++    "Set backbone.requires_grad_(False) before constructing optimizer; "
++    "pass only head.parameters() to AdamW so optimizer state and grads store only head tensors."
++)
++SECOND = (
++    "Add model.backbone.requires_grad_(False) after the selected source line to exclude "
++    "backbone parameters from optimizer state and computation graph, matching the intended contract."
++)
++
++
++def evidence():
++    value, markdown = observed_source()
++    value["execution_context"]["required_optimizer_updates"] = 20
++    return value, markdown
++
++
++def trigger(text=FORBIDDEN, *, observed=None, policy=None):
++    value = evidence()[0] if observed is None else observed
++    return training_update_rejection_trigger(
++        text,
++        value,
++        {"allow_model_change": False} if policy is None else policy,
++        negation_pattern=_MODEL_SHRINK_NEGATION,
++    )
++
++
++@pytest.mark.parametrize(
++    "text",
++    [
++        FORBIDDEN,
++        SECOND,
++        "Freeze backbone parameters; exclude backbone parameters from optimizer.",
++        "Stop updating previously trainable model parameters.",
++    ],
++)
++def test_explicit_parameter_update_reduction_contradicts_complete_original_updates(text):
++    value = trigger(text)
++    assert value["required_optimizer_updates"] == value["all_catalog_updated_records"] == 20
++    assert value["catalog_numel"] == value["registered_parameter_numel"] == 1234
++    assert value["updated_numel_per_complete_record_range"] == [1234, 1234]
++    assert len(json.dumps(value, ensure_ascii=True).encode()) < 1400
++
++
++@pytest.mark.parametrize(
++    "text",
++    [
++        "Do not set backbone.requires_grad_(False); pass only head.parameters() to AdamW.",
++        "Never freeze backbone parameters; exclude backbone parameters from optimizer.",
++        "Avoid freezing backbone parameters; exclude backbone parameters from optimizer.",
++        "Set backbone.requires_grad_(False) without excluding backbone parameters from optimizer.",
++        "Rejected example: set backbone.requires_grad_(False) and pass only head.parameters() to AdamW.",
++        'Do not choose "set backbone.requires_grad_(False) and pass only head.parameters() to AdamW".',
++        'Never "set backbone.requires_grad_(False) and pass only head.parameters() to AdamW".',
++        "Consider setting backbone.requires_grad_(False); pass only head.parameters() to AdamW.",
++        "If already frozen, set backbone.requires_grad_(False); exclude backbone parameters from optimizer.",
++        "Preserve all parameter updates; do not freeze or exclude them. Drop detached temporary buffers.",
++        "Use optimizer-in-backward, update every parameter, and release gradients after the last consumer.",
++        "Set requires_grad_(False) after the last consumer and restore True before the next update.",
++        "Freeze activation buffers; remove duplicate optimizer parameter references after each update.",
++        "Stop updating parameter gradients after their last consumer.",
++        "Stop updating optimizer state metadata.",
++        "The existing code uses requires_grad_(False); keep every update.",
++        "Remove an unused eval-only teacher and keep all training parameter updates.",
++        "Remove parameters that never updated from optimizer while preserving actual update unions.",
++    ],
++)
++def test_negation_examples_unknown_and_lifetime_changes_do_not_create_new_rejections(text):
++    assert trigger(text) is None
++
++
++@pytest.mark.parametrize("permission", [None, True, "false", 0])
++def test_only_explicit_model_change_false_enables_this_narrow_screen(permission):
++    assert trigger(policy={"allow_model_change": permission}) is None
++
++
++@pytest.mark.parametrize(
++    "mutation",
++    [
++        "no_run",
++        "wrong_run",
++        "wrong_source",
++        "wrong_context_source",
++        "wrong_round",
++        "missing_round",
++        "partial",
++        "zero_steps",
++        "missing_required",
++        "wrong_required",
++        "capture_incomplete",
++        "reported_incomplete",
++        "boundary_incomplete",
++        "set_incomplete",
++        "calls_inconsistent",
++        "missing_registered",
++        "registered_mismatch",
++        "already_frozen",
++        "unused_members",
++        "missing_flag",
++        "bool_count",
++        "missing_updates",
++        "short_updates",
++        "not_all_updated",
++    ],
++)
++def test_incomplete_stale_or_not_all_updated_observations_remain_unknown(mutation):
++    value, _ = evidence()
++    context = value["execution_context"]
++    observed = context["runtime_optimizer_observations"]
++    parameters, updates = observed["parameters"], observed["updates"]
++    if mutation == "no_run":
++        del value["run_id"]
++    elif mutation == "wrong_run":
++        value["run_id"] = "b" * 32
++    elif mutation == "wrong_source":
++        value["sources"][0]["sha256"] = "b" * 64
++    elif mutation == "wrong_context_source":
++        context["source_files"][0]["sha256"] = "b" * 64
++    elif mutation == "wrong_round":
++        observed["selected_round"] = 1
++    elif mutation == "missing_round":
++        del context["selected_round"]
++    elif mutation == "partial":
++        observed["status"] = "partial"
++    elif mutation == "zero_steps":
++        observed["logical_updates"] = 0
++    elif mutation == "missing_required":
++        del context["required_optimizer_updates"]
++    elif mutation == "wrong_required":
++        context["required_optimizer_updates"] = 19
++    elif mutation in {
++        "capture_incomplete",
++        "reported_incomplete",
++        "boundary_incomplete",
++        "set_incomplete",
++        "calls_inconsistent",
++    }:
++        key = {
++            "capture_incomplete": "capture_complete",
++            "reported_incomplete": "reported_complete",
++            "boundary_incomplete": "logical_boundary_complete",
++            "set_incomplete": "parameter_update_sets_complete",
++            "calls_inconsistent": "optimizer_call_counts_consistent",
++        }[mutation]
++        observed[key] = False
++    elif mutation == "missing_registered":
++        del parameters["registered_parameter_numel"]
++    elif mutation == "registered_mismatch":
++        parameters["registered_parameter_numel"] = 1235
++    elif mutation == "already_frozen":
++        parameters["requires_grad_false_entries"] = 1
++    elif mutation == "unused_members":
++        updates["updated_numel_per_complete_record_range"] = [1233, 1233]
++    elif mutation == "missing_flag":
++        del parameters["catalog_numel_matches_registered_count"]
++    elif mutation == "bool_count":
++        parameters["catalog_entries"] = True
++    elif mutation == "missing_updates":
++        del observed["updates"]
++    elif mutation == "short_updates":
++        updates["complete_update_set_records"] = 19
++    else:
++        updates["all_catalog_parameters_updated_each_record"] = False
++    assert trigger(observed=value) is None
++
++
++def forbidden_reply(description=FORBIDDEN):
++    value = payload()
++    value["plan"][0]["title"] = "Preserve the original model"
++    value["plan"][0]["description"] = description
++    return value
++
++
++def test_actual_description_not_title_controls_new_issue_and_bounded_observation_feedback():
++    observed, _ = evidence()
++    before = copy.deepcopy(observed)
++    answer = forbidden_reply()
++    original = copy.deepcopy(answer)
++    result = validate_diagnosis(answer, evidence=observed, policy={"allow_model_change": False})
++    issues = [issue for issue in result.issues if issue.code == "MODEL_CHANGE_FORBIDDEN"]
++    assert len(issues) == 1 and issues[0].path == "/plan/0"
++    assert not result.ready_for_patch and result.requires_supplement
++    assert result.diagnosis.needs_more_info is False  # Host never rewrites it.
++    assert "training_update_trigger" in result.supplement_request
++    data = json.loads(result.supplement_request.split("Errors: ", 1)[1])
++    assert len(json.dumps(data, ensure_ascii=True).encode()) <= 14000
++    assert observed == before and answer == original
++    answer["plan"][0]["description"] = (
++        "Checkpoint activations while preserving every parameter update."
++    )
++    answer["plan"][0]["title"] = "Freeze backbone parameters and exclude from optimizer"
++    title_only = validate_diagnosis(answer, evidence=observed, policy={"allow_model_change": False})
++    assert not any(issue.code == "MODEL_CHANGE_FORBIDDEN" for issue in title_only.issues)
++
++
++@pytest.mark.parametrize("corrected", [True, False])
++def test_same_original_two_request_allowance_and_full_revalidation(corrected):
++    observed, markdown = evidence()
++    first = forbidden_reply()
++    second = payload() if corrected else forbidden_reply(SECOND)
++    requests = []
++    with provider_client([first, second], requests) as client:
++        result = diagnose_with_router(
++            LLMRouter(client),
++            markdown,
++            evidence=observed,
++            goal="reclaim",
++            policy={"allow_model_change": False},
++            max_supplements=1,
++            request_policy=FINAL48_DIAGNOSIS_ONLY,
++        )
++    assert len(requests) == 2
++    assert [
++        request.get("max_completion_tokens", request.get("max_tokens")) for request in requests
++    ] == [2000, 2000]
++    assert "training_update_trigger" in requests[1]["messages"][-1]["content"]
++    assert result.ready_for_patch is corrected
++    if not corrected:
++        assert any(issue.code == "MODEL_CHANGE_FORBIDDEN" for issue in result.issues)
++        assert result.diagnosis.needs_more_info is False
++
++
++def test_no_supplement_still_cannot_dispatch_a_forbidden_plan():
++    observed, markdown = evidence()
++    requests = []
++    with provider_client([forbidden_reply()], requests) as client:
++        result = diagnose_with_router(
++            LLMRouter(client),
++            markdown,
++            evidence=observed,
++            goal="reclaim",
++            policy={"allow_model_change": False},
++            max_supplements=0,
++            request_policy=FINAL48_DIAGNOSIS_ONLY,
++        )
++    assert len(requests) == 1 and not result.ready_for_patch
++
++
++def test_two_quote_notes_are_valid_json_field_fragments_and_no_origin_component_is_installed():
++    for name in ("patch.md", "patch_fix.md"):
++        text = (Path(__file__).parents[1] / "headroom/prompts" / name).read_text()
++        line = next(
++            line for line in text.splitlines() if line.startswith("JSON transports literal source:")
++        )
++        fragment = line.split("the field fragment ", 1)[1].split(" decodes to ", 1)[0]
++        assert json.loads(fragment) == {"new_lines": ['    label = "ready"']}
++    assert not (Path(__file__).parents[1] / "headroom/patch_origin_feedback.py").exists()
++
++
++def test_real_needs_more_info_is_never_cleared_by_the_new_policy_issue():
++    observed, _ = evidence()
++    answer = forbidden_reply()
++    answer["needs_more_info"] = True
++    result = validate_diagnosis(answer, evidence=observed, policy={"allow_model_change": False})
++    assert result.diagnosis.needs_more_info is True
++    assert not result.ready_for_patch
++    assert any(issue.code == "MODEL_CHANGE_FORBIDDEN" for issue in result.issues)

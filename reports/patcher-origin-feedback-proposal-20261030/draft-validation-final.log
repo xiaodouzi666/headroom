@@ -1,0 +1,55 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "cpu_docker_exact_pull_never": "allowed", "cpu_docker_other_pull_modes": "denied", "duplicate_docker_network_options": "denied", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "cpu_docker_exact_pull_never": "allowed", "cpu_docker_other_pull_modes": "denied", "duplicate_docker_network_options": "denied", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+..................F                                                      [100%]
+=================================== FAILURES ===================================
+__________ test_ancillary_runtime_failure_does_not_replace_rejection ___________
+
+obj = <module 'headroom' from '/home/xiaodouzi/workspace/headroom/headroom/__init__.py'>
+name = 'patch_origin_feedback', ann = 'headroom.patch_origin_feedback'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+>           obj = getattr(obj, name)
+                  ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'headroom' has no attribute 'patch_origin_feedback'
+
+.venv/lib/python3.12/site-packages/_pytest/monkeypatch.py:95: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/headroom-draft-origin-validation-final-20261030/test_ancillary_runtime_failure0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ec0caf48140>
+
+    def test_ancillary_runtime_failure_does_not_replace_rejection(tmp_path, monkeypatch):
+        before, kwargs = broken_case(tmp_path)
+    
+        def unavailable(*_args, **_kwargs):
+            raise RuntimeError("PRIVATE_ERROR_TEXT")
+    
+>       monkeypatch.setattr("headroom.patch_origin_feedback.normalize_span_edits", unavailable)
+
+reports/patcher-origin-feedback-proposal-20261030/validation/test_draft_origin.py:206: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/_pytest/monkeypatch.py:107: in derive_importpath
+    target = resolve(module)
+             ^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/_pytest/monkeypatch.py:89: in resolve
+    found = annotated_getattr(found, part, used)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+obj = <module 'headroom' from '/home/xiaodouzi/workspace/headroom/headroom/__init__.py'>
+name = 'patch_origin_feedback', ann = 'headroom.patch_origin_feedback'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+            obj = getattr(obj, name)
+        except AttributeError as e:
+>           raise AttributeError(
+                f"{type(obj).__name__!r} object at {ann} has no attribute {name!r}"
+            ) from e
+E           AttributeError: 'module' object at headroom.patch_origin_feedback has no attribute 'patch_origin_feedback'
+
+.venv/lib/python3.12/site-packages/_pytest/monkeypatch.py:97: AttributeError
+=========================== short test summary info ============================
+FAILED reports/patcher-origin-feedback-proposal-20261030/validation/test_draft_origin.py::test_ancillary_runtime_failure_does_not_replace_rejection
+1 failed, 18 passed in 0.33s

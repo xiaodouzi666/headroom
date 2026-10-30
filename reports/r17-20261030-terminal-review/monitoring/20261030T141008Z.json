@@ -1,0 +1,939 @@
+{
+  "utc": "2026-10-30T14:10:08.161129+00:00",
+  "campaign_status": "running",
+  "campaign_sha256": "f9734c8879a987b832a2d30c488210d6a34b48ab552b5e323af2be3b31ed086b",
+  "executed_cells": 2,
+  "raw_target_count": 0,
+  "full_campaign_score_available": false,
+  "stop_reason": null,
+  "rows": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "status": "needs_human",
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "target_met": false,
+      "patch_applied": true,
+      "rounds": 6,
+      "charged_usd": "0.26382100",
+      "cost_resolved": true,
+      "cost_usd": null,
+      "reason": "Diagnosis failed validation; inspect diagnosis.json issues before deciding whether additional evidence is needed",
+      "labs": [
+        {
+          "id": "cf522831a9ac4226a3bc0d53966295ec",
+          "status": "oom",
+          "steps": 0,
+          "cleanup_verified": true,
+          "peak": 24750424064,
+          "exception_type": "OutOfMemoryError"
+        }
+      ],
+      "diagnosis": {
+        "valid": false,
+        "ready": false,
+        "needs": true,
+        "issues": [
+          "INVOCATION_CLAIM_CONTRADICTED",
+          "INVOCATION_CLAIM_CONTRADICTED",
+          "INVOCATION_CLAIM_CONTRADICTED",
+          "INVOCATION_CLAIM_CONTRADICTED",
+          "INVOCATION_CLAIM_CONTRADICTED",
+          "EVIDENCE_AVAILABILITY_CONTRADICTED"
+        ]
+      },
+      "patches": [
+        {
+          "round": "01",
+          "status": "rejected",
+          "reason": "SOURCE_SYNTAX_INVALID"
+        },
+        {
+          "round": "02",
+          "status": "applied",
+          "reason": "STATIC_CHECKS_PASSED"
+        },
+        {
+          "round": "03",
+          "status": "applied",
+          "reason": "STATIC_CHECKS_PASSED"
+        },
+        {
+          "round": "04",
+          "status": "applied",
+          "reason": "STATIC_CHECKS_PASSED"
+        },
+        {
+          "round": "05",
+          "status": "rejected",
+          "reason": "SOURCE_SYNTAX_INVALID"
+        }
+      ]
+    },
+    {
+      "scenario_id": "s2_capacity_v2",
+      "status": "needs_human",
+      "run_id": "7f29fafd8fb24f1aa771d400f0f7d0dc",
+      "target_met": false,
+      "patch_applied": null,
+      "rounds": 1,
+      "charged_usd": "0.07114396",
+      "cost_resolved": true,
+      "cost_usd": null,
+      "reason": "Diagnosis requests additional information; inspect diagnosis.json notes before restarting with new evidence",
+      "labs": [
+        {
+          "id": "32271bc906234f9b94d2c898dad38fec",
+          "status": "completed",
+          "steps": 20,
+          "cleanup_verified": true,
+          "peak": 22919430656,
+          "exception_type": "StepLimitReached"
+        }
+      ],
+      "diagnosis": {
+        "valid": true,
+        "ready": false,
+        "needs": true,
+        "issues": []
+      },
+      "patches": []
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "status": "running",
+      "run_id": "ebad78994b454ec095b9900286f929fd",
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched",
+      "labs": [],
+      "patches": []
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "status": "not_run",
+      "run_id": null,
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched"
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "status": "not_run",
+      "run_id": null,
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched"
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "status": "not_run",
+      "run_id": null,
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched"
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "status": "not_run",
+      "run_id": null,
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched"
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "status": "not_run",
+      "run_id": null,
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched"
+    },
+    {
+      "scenario_id": "nanogpt",
+      "status": "not_run",
+      "run_id": null,
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched"
+    }
+  ],
+  "actual_call_records": [
+    {
+      "id": 1,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "annotate",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 40092,
+        "completion_tokens": 503,
+        "total_tokens": 40595,
+        "cached_tokens": null,
+        "reasoning_tokens": null
+      },
+      "cap": 3000
+    },
+    {
+      "id": 2,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "diagnose",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 37043,
+        "completion_tokens": 538,
+        "total_tokens": 37581,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "cap": 2000
+    },
+    {
+      "id": 3,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 13175,
+        "completion_tokens": 3401,
+        "total_tokens": 16576,
+        "cached_tokens": 0,
+        "reasoning_tokens": 2852
+      },
+      "cap": 4000
+    },
+    {
+      "id": 4,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 13457,
+        "completion_tokens": 1350,
+        "total_tokens": 14807,
+        "cached_tokens": 0,
+        "reasoning_tokens": 801
+      },
+      "cap": 4000
+    },
+    {
+      "id": 5,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 13462,
+        "completion_tokens": 1944,
+        "total_tokens": 15406,
+        "cached_tokens": 0,
+        "reasoning_tokens": 1360
+      },
+      "cap": 4000
+    },
+    {
+      "id": 6,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 13511,
+        "completion_tokens": 1138,
+        "total_tokens": 14649,
+        "cached_tokens": 0,
+        "reasoning_tokens": 568
+      },
+      "cap": 4000
+    },
+    {
+      "id": 7,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "diagnose",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 39172,
+        "completion_tokens": 443,
+        "total_tokens": 39615,
+        "cached_tokens": 26112,
+        "reasoning_tokens": 0
+      },
+      "cap": 2000
+    },
+    {
+      "id": 8,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 15275,
+        "completion_tokens": 4000,
+        "total_tokens": 19275,
+        "cached_tokens": 0,
+        "reasoning_tokens": 4000
+      },
+      "cap": 4000
+    },
+    {
+      "id": 9,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 14582,
+        "completion_tokens": 1052,
+        "total_tokens": 15634,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "cap": 4000
+    },
+    {
+      "id": 10,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 16071,
+        "completion_tokens": 794,
+        "total_tokens": 16865,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "cap": 4000
+    },
+    {
+      "id": 11,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 15803,
+        "completion_tokens": 791,
+        "total_tokens": 16594,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "cap": 4000
+    },
+    {
+      "id": 12,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "diagnose",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 41692,
+        "completion_tokens": 692,
+        "total_tokens": 42384,
+        "cached_tokens": 26112,
+        "reasoning_tokens": 0
+      },
+      "cap": 2000
+    },
+    {
+      "id": 13,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "super",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 974,
+        "completion_tokens": 89,
+        "total_tokens": 1063,
+        "cached_tokens": 0,
+        "reasoning_tokens": 16
+      },
+      "cap": 2000
+    },
+    {
+      "id": 14,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "super",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 1960,
+        "completion_tokens": 88,
+        "total_tokens": 2048,
+        "cached_tokens": 0,
+        "reasoning_tokens": 23
+      },
+      "cap": 2000
+    },
+    {
+      "id": 15,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "super",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 3090,
+        "completion_tokens": 213,
+        "total_tokens": 3303,
+        "cached_tokens": 1936,
+        "reasoning_tokens": 67
+      },
+      "cap": 2000
+    },
+    {
+      "id": 16,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 20418,
+        "completion_tokens": 1943,
+        "total_tokens": 22361,
+        "cached_tokens": 0,
+        "reasoning_tokens": 1520
+      },
+      "cap": 4000
+    },
+    {
+      "id": 17,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "diagnose",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 43673,
+        "completion_tokens": 437,
+        "total_tokens": 44110,
+        "cached_tokens": 26112,
+        "reasoning_tokens": 0
+      },
+      "cap": 2000
+    },
+    {
+      "id": 18,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 22239,
+        "completion_tokens": 1090,
+        "total_tokens": 23329,
+        "cached_tokens": 0,
+        "reasoning_tokens": 754
+      },
+      "cap": 4000
+    },
+    {
+      "id": 19,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "diagnose",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 45627,
+        "completion_tokens": 477,
+        "total_tokens": 46104,
+        "cached_tokens": 26112,
+        "reasoning_tokens": 0
+      },
+      "cap": 2000
+    },
+    {
+      "id": 20,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 21713,
+        "completion_tokens": 2815,
+        "total_tokens": 24528,
+        "cached_tokens": 0,
+        "reasoning_tokens": 2221
+      },
+      "cap": 4000
+    },
+    {
+      "id": 21,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 22038,
+        "completion_tokens": 606,
+        "total_tokens": 22644,
+        "cached_tokens": 0,
+        "reasoning_tokens": 30
+      },
+      "cap": 4000
+    },
+    {
+      "id": 22,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 22015,
+        "completion_tokens": 1919,
+        "total_tokens": 23934,
+        "cached_tokens": 8432,
+        "reasoning_tokens": 1342
+      },
+      "cap": 4000
+    },
+    {
+      "id": 23,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 22031,
+        "completion_tokens": 1415,
+        "total_tokens": 23446,
+        "cached_tokens": 8432,
+        "reasoning_tokens": 838
+      },
+      "cap": 4000
+    },
+    {
+      "id": 24,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "diagnose",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 47771,
+        "completion_tokens": 843,
+        "total_tokens": 48614,
+        "cached_tokens": 26112,
+        "reasoning_tokens": 0
+      },
+      "cap": 2000
+    },
+    {
+      "id": 25,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "diagnose",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 49967,
+        "completion_tokens": 735,
+        "total_tokens": 50702,
+        "cached_tokens": 39168,
+        "reasoning_tokens": 0
+      },
+      "cap": 2000
+    },
+    {
+      "id": 26,
+      "run_id": "7f29fafd8fb24f1aa771d400f0f7d0dc",
+      "role": "annotate",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 44052,
+        "completion_tokens": 656,
+        "total_tokens": 44708,
+        "cached_tokens": null,
+        "reasoning_tokens": null
+      },
+      "cap": 3000
+    },
+    {
+      "id": 27,
+      "run_id": "7f29fafd8fb24f1aa771d400f0f7d0dc",
+      "role": "diagnose",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 49956,
+        "completion_tokens": 675,
+        "total_tokens": 50631,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "cap": 2000
+    },
+    {
+      "id": 28,
+      "run_id": "7f29fafd8fb24f1aa771d400f0f7d0dc",
+      "role": "diagnose",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 52755,
+        "completion_tokens": 635,
+        "total_tokens": 53390,
+        "cached_tokens": 43520,
+        "reasoning_tokens": 0
+      },
+      "cap": 2000
+    }
+  ],
+  "accounting_snapshot": {
+    "status": "observed",
+    "scope_cap_usd": "4.890504400",
+    "scope_charged_usd": "3.19401384",
+    "scope_actual_usd": null,
+    "scope_encumbered_usd": "0",
+    "scope_remaining_usd": "1.696490560",
+    "all_costs_known": false,
+    "all_costs_resolved": true,
+    "run_states": [
+      {
+        "run_id": "0317411d868e41309c09974d1f573cb2",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "06473a9d74f44d92a49edf565b008d11",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "0fba6eeccc18411590b036557f7f9526",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "19e7d7dbd8184a3c8154ce4802cb007a",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "1f4b9ff049534353af0f0c8f92324943",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "222183c433784581882f8972b535cad2",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "2868965cd88743308f3624dfa36112a5",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "29e3fae102274f1ca1b53b80fb6e7588",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "42986ab140d842099408837e4e1bcee6",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "49a74229bf4e43948db0eaabfeddf14a",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "4cdeb25ddf6a4821a3058daf5abb1308",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "51166a84272f49318a36a839207424c7",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "5149ea52e07d4759b2556ec8c55f2fd8",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "5d1ec8f0e41145d5a643c062b17e5f14",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "5f2b4b6416b24811ba2795ef922706c5",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "66893ea3875e46e481f4149f030ac663",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "67f796567809457c9cf38c6424062c73",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "68f09d2e33f9474ea44e476abc2c98ac",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "7519a9a0020e4d58bb6295a13a3f84bd",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "78fc3b8b1a1742e4bc24b0890e7470c1",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "7f29fafd8fb24f1aa771d400f0f7d0dc",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "831a56da4f3145c3bc53e586b491204e",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "8f6874405d9a423ea51856e938213007",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "933bc5f51cbf44c1af597924fbc03e83",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "a8e54a09a32e42ec94c0dacfd7a31108",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "ac41502667bd4c3ca9a0ac4f32217e6a",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "b783c8aad45d4f898c711e293f99096e",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "c6064b7f94db492db8a75626665d8824",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "ca746c9304f548ac83d31084c0a446c4",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "d24caaa6352c4f98ac80e98aac56bf8f",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "d2a1601ccea94ec989459eeba1a423b6",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "d568e180d21d43168d2f6a329fe78547",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "d9b141f2d088499c9907269f1d12a6c3",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "e4da7f935eed426aa7fd447cd4ee56ec",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "e950e9a296bc44509c5fcfba381ee478",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "eb45be0a25f54ff1a946715890670e4a",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "f1fe885123e54a3787a158debcbfe723",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      },
+      {
+        "run_id": "fe313c1f33e749feb609ba915e0eabe6",
+        "status": "closed",
+        "halt_reason": null,
+        "limit_usd": "0.6",
+        "budget_mode": "strict_reservation",
+        "day": "2026-10-30"
+      }
+    ],
+    "open_runs": [],
+    "halted_runs": [],
+    "unresolved_attempts": []
+  },
+  "running_or_unrun_unknown": true,
+  "no_dispatch_by_monitor": true
+}

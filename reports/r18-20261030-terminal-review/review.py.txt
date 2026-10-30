@@ -1,0 +1,574 @@
+"""Read-only R18 terminal auditor. Writes only a new report; never dispatches work."""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import sqlite3
+import stat
+import subprocess
+from collections import Counter
+from datetime import UTC, datetime
+from decimal import Decimal, InvalidOperation
+from pathlib import Path
+
+ROOT = Path("/home/xiaodouzi/workspace/headroom")
+FIXED = (
+    "s1_batch_too_big",
+    "s2_capacity_v2",
+    "s3_eval_no_grad_missing",
+    "s4_loss_accumulation_graph",
+    "s5_fragmentation_varlen",
+    "s6_full_vocab_logits_fp32",
+    "s7_frozen_params_optimizer_state",
+    "s8_two_models_resident",
+    "nanogpt",
+)
+MAX_JSON = 64 * 1024**2
+
+
+def read_json(path):
+    info = path.lstat()
+    if not stat.S_ISREG(info.st_mode) or info.st_size > MAX_JSON:
+        raise ValueError("missing, unsafe or oversized JSON artifact")
+    with path.open("rb") as handle:
+        raw = handle.read(MAX_JSON + 1)
+    if len(raw) > MAX_JSON:
+        raise ValueError("JSON artifact grew beyond its bound")
+    value = json.loads(raw)
+    return value, hashlib.sha256(raw).hexdigest()
+
+
+def optional_json(path):
+    try:
+        value, digest = read_json(path)
+        return {"available": True, "path": str(path), "sha256": digest, "value": value}
+    except (OSError, ValueError, TypeError, RecursionError) as exc:
+        return {
+            "available": False,
+            "path": str(path),
+            "error_type": type(exc).__name__,
+            "value": None,
+        }
+
+
+def amount(value):
+    if not isinstance(value, str) or len(value) > 100:
+        return None
+    try:
+        parsed = Decimal(value)
+    except InvalidOperation:
+        return None
+    return parsed if parsed.is_finite() and parsed >= 0 else None
+
+
+def total(values):
+    amounts = [amount(value) for value in values]
+    return str(sum(amounts, Decimal(0))) if all(x is not None for x in amounts) else None
+
+
+def rows_ro(path, table, ids=None):
+    if not path.exists():
+        return {"available": False, "path": str(path), "rows": None}
+    connection = None
+    try:
+        connection = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+        connection.row_factory = sqlite3.Row
+        connection.execute("BEGIN")
+        if ids is None:
+            query, parameters = f"SELECT * FROM {table} ORDER BY id", ()
+        else:
+            if not ids:
+                return {"available": True, "path": str(path), "rows": []}
+            marks = ",".join("?" for _ in ids)
+            query = f"SELECT * FROM {table} WHERE run_id IN ({marks}) ORDER BY id"
+            parameters = tuple(sorted(ids))
+        rows = [dict(row) for row in connection.execute(query, parameters)]
+        return {"available": True, "path": str(path), "rows": rows}
+    except sqlite3.Error as exc:
+        return {
+            "available": False,
+            "path": str(path),
+            "error_type": type(exc).__name__,
+            "rows": None,
+        }
+    finally:
+        if connection is not None:
+            connection.rollback()
+            connection.close()
+
+
+def context_from_request(payload):
+    request = payload.get("request_evidence", {})
+    request = request if isinstance(request, dict) else {}
+    body = request.get("payload")
+    if isinstance(body, str):
+        try:
+            body = json.loads(body)
+        except (ValueError, RecursionError):
+            body = None
+    contexts = []
+    for message in body.get("messages", []) if isinstance(body, dict) else []:
+        if not isinstance(message, dict):
+            continue
+        try:
+            value = json.loads(message.get("content", ""))
+        except (ValueError, TypeError, RecursionError):
+            continue
+        if not isinstance(value, dict):
+            continue
+        nested = value.get("evidence_context")
+        nested = nested if isinstance(nested, dict) else {}
+        context = value.get("execution_context", nested.get("execution_context"))
+        if isinstance(context, dict):
+            contexts.append(context)
+    context = contexts[0] if contexts else {}
+    return {
+        "prepared_body_present": isinstance(body, dict),
+        "wire_body_sha256": request.get("wire_body_sha256"),
+        "delivery_confirmed": request.get("delivery_confirmed"),
+        "interpretation": "saved pre-transport body; not independent provider-side attestation",
+        "optimizer_observations": context.get("runtime_optimizer_observations"),
+        "named_input_observations": context.get("runtime_input_observations"),
+    }
+
+
+def call_summary(database):
+    raw = rows_ro(database, "llm_calls")
+    if not raw["available"]:
+        return {**raw, "calls": None, "actual_total_usd": None}
+    calls = []
+    known, unknown = Decimal(0), 0
+    for row in raw["rows"]:
+        try:
+            data = json.loads(row.get("data_json", "{}"))
+        except (ValueError, TypeError, RecursionError):
+            data = {}
+        data = data if isinstance(data, dict) else {}
+        cost = amount(row.get("cost_usd"))
+        if cost is None:
+            unknown += 1
+        else:
+            known += cost
+        calls.append(
+            {
+                "id": row.get("id"),
+                "run_id": row.get("run_id"),
+                "role": row.get("role"),
+                "model": row.get("model"),
+                "created_at": row.get("created_at"),
+                "actual_cost_usd": row.get("cost_usd"),
+                "outcome": data.get("outcome"),
+                "settled": data.get("settled"),
+                "billing_status": data.get("billing_status"),
+                "cost": data.get("cost"),
+                "output_cap_tokens": data.get("output_cap_tokens"),
+                "admission_kind": data.get("admission_kind"),
+                "request": context_from_request(data),
+            }
+        )
+    return {
+        "available": True,
+        "path": str(database),
+        "calls": calls,
+        "count": len(calls),
+        "by_role": dict(Counter(x["role"] for x in calls)),
+        "outcomes": dict(Counter(x["outcome"] for x in calls)),
+        "known_actual_subtotal_usd": str(known),
+        "unknown_actual_call_count": unknown,
+        "actual_total_usd": None if unknown else str(known),
+        "all_calls_settled": all(x["settled"] is True for x in calls),
+        "unknown_is_zero": False,
+    }
+
+
+def verify_preparation(path, campaign):
+    wrapped = optional_json(path)
+    if not wrapped["available"] or not isinstance(wrapped["value"], dict):
+        return wrapped
+    preparation = wrapped.pop("value")
+    result = {
+        **wrapped,
+        "declared_preparation_sha256": preparation.get("preparation_sha256"),
+        "campaign_preparation_sha256": campaign.get("preparation_sha256"),
+        "controls": preparation.get("controls"),
+        "pins": {},
+    }
+    expected_digest = campaign.get("preparation_sha256")
+    result["campaign_digest_matches_recorded_identity"] = (
+        isinstance(expected_digest, str)
+        and len(expected_digest) == 64
+        and expected_digest in {result["sha256"], result["declared_preparation_sha256"]}
+    )
+    for field in ("implementation_pins", "input_pins"):
+        values = preparation.get(field)
+        if not isinstance(values, dict):
+            result["pins"][field] = {"available": False}
+            continue
+        missing_or_changed = []
+        for relative, expected in values.items():
+            try:
+                path_value = Path(relative)
+                if path_value.is_absolute() or ".." in path_value.parts:
+                    raise ValueError("non-relative pin")
+                if any(part.startswith(".env") for part in path_value.parts):
+                    raise ValueError("secret path is not an auditable source pin")
+                selected = ROOT / path_value
+                info = selected.lstat()
+                if not stat.S_ISREG(info.st_mode) or info.st_size > MAX_JSON:
+                    raise ValueError("unsafe or oversized pin")
+                raw = selected.read_bytes()
+                if (
+                    not isinstance(expected, dict)
+                    or hashlib.sha256(raw).hexdigest() != expected.get("sha256")
+                    or len(raw) != expected.get("bytes")
+                ):
+                    missing_or_changed.append(relative)
+            except (OSError, ValueError, TypeError):
+                missing_or_changed.append(relative)
+        result["pins"][field] = {
+            "available": True,
+            "count": len(values),
+            "missing_or_changed": missing_or_changed,
+            "all_match": not missing_or_changed,
+        }
+    return result
+
+
+def case_review(base, scenario, row):
+    if row is None:
+        return {
+            "scenario_id": scenario,
+            "row_present": False,
+            "status": "not_run",
+            "target_met": None,
+            "review": "unknown; no campaign row",
+            "diagnoses": [],
+            "patch_results": [],
+            "lab_captures": [],
+        }
+    result = {"scenario_id": scenario, "row_present": True, "raw_row": row}
+    run_id = row.get("run_id")
+    result.update(
+        status=row.get("status"),
+        target_met=row.get("target_met"),
+        run_id=run_id,
+        diagnoses=[],
+        patch_results=[],
+        lab_captures=[],
+    )
+    if (
+        not isinstance(run_id, str)
+        or len(run_id) != 32
+        or any(value not in "0123456789abcdef" for value in run_id)
+    ):
+        result["artifacts_available"] = False
+        return result
+    root = base / "jobs" / run_id
+    report = optional_json(root / "report.json")
+    result["report"] = {key: value for key, value in report.items() if key != "value"}
+    if report["available"] and isinstance(report["value"], dict):
+        value = report["value"]
+        result["rounds"] = value.get("rounds", [])
+        result["recorded_status"] = value.get("status")
+        run = value.get("run")
+        run = run if isinstance(run, dict) else {}
+        result["recorded_target_met"] = run.get("target_met")
+        result["recorded_run_reason"] = run.get("reason")
+        pid = run.get("evaluation_worker_pid")
+        result["worker"] = {
+            "pid": pid,
+            "pid_present_at_review": Path(f"/proc/{pid}").exists() if type(pid) is int else None,
+            "identity_note": "PID presence alone does not authenticate a reused process",
+        }
+    for path in sorted(root.glob("rounds/*/diagnosis.json")):
+        result["diagnoses"].append(optional_json(path))
+    for path in sorted(root.glob("rounds/*/patch-result.json")):
+        result["patch_results"].append(optional_json(path))
+    for path in sorted(root.glob("lab/*/result.json")):
+        wrapped = optional_json(path)
+        value = wrapped.pop("value")
+        if isinstance(value, dict):
+            execution = value.get("execution")
+            execution = execution if isinstance(execution, dict) else {}
+            after = value.get("gpu_after")
+            after = after if isinstance(after, dict) else {}
+            wrapped.update(
+                {
+                    key: value.get(key)
+                    for key in (
+                        "run_id",
+                        "status",
+                        "reason",
+                        "steps",
+                        "capture_complete",
+                        "exception",
+                        "reference_offload",
+                        "reference_scratch",
+                        "reference_spill_cleanup",
+                    )
+                }
+            )
+            wrapped.update(
+                cleanup_verified=execution.get("cleanup_verified"),
+                artifact_cleanup=execution.get("artifact_cleanup"),
+                artifact_export=execution.get("artifact_export"),
+                recorded_gpu_after=after,
+                recorded_gpu_inventory_clear=(
+                    after.get("available") is True and after.get("processes") == []
+                ),
+                peak_allocated_bytes=value.get("peak_allocated_bytes"),
+            )
+        result["lab_captures"].append(wrapped)
+    return result
+
+
+def build_review(campaign_path, preparation, ledger, service):
+    wrapped = optional_json(campaign_path)
+    if not wrapped["available"]:
+        return None, {
+            "status": "not_started" if not campaign_path.exists() else "campaign_unreadable",
+            "error_type": wrapped.get("error_type"),
+            "report_written": False,
+        }
+    campaign = wrapped["value"]
+    if not isinstance(campaign, dict):
+        raise TypeError("Campaign must be an object")
+    if campaign.get("status") not in {
+        "finished",
+        "stopped",
+        "partial",
+        "failed",
+        "budget_exceeded",
+        "aborted",
+    }:
+        return None, {
+            "status": "pending",
+            "campaign_status": campaign.get("status"),
+            "report_written": False,
+        }
+    rows = campaign.get("rows")
+    if not isinstance(rows, list):
+        raise TypeError("Campaign has no raw rows list")
+    primary = {}
+    duplicates = []
+    for row in rows:
+        if (
+            not isinstance(row, dict)
+            or row.get("scenario_id") not in FIXED
+            or row.get("result_group") != "fixed_nine"
+        ):
+            continue
+        scenario = row["scenario_id"]
+        if scenario in primary:
+            duplicates.append(scenario)
+        else:
+            primary[scenario] = row
+    cases = [
+        case_review(campaign_path.parent, scenario, primary.get(scenario)) for scenario in FIXED
+    ]
+    run_ids = {x["run_id"] for x in cases if isinstance(x.get("run_id"), str)}
+    ledger_record = rows_ro(ledger, "budget_attempts", run_ids)
+    if ledger_record["available"]:
+        ledger_record["charged_total_usd"] = total(
+            row.get("charged_usd") for row in ledger_record["rows"]
+        )
+        ledger_record["actual_total_usd"] = total(
+            row.get("actual_usd") for row in ledger_record["rows"]
+        )
+        ledger_record["unknown_actual_attempts"] = sum(
+            row.get("actual_usd") is None for row in ledger_record["rows"]
+        )
+    terminal = sum(
+        x["status"] not in {None, "not_run", "running", "queued", "pending"} for x in cases
+    )
+    targets = sum(x["target_met"] is True and x["status"] == "completed" for x in cases)
+    diagnoses = [
+        case["diagnoses"][-1]["value"]
+        for case in cases
+        if case["diagnoses"] and isinstance(case["diagnoses"][-1].get("value"), dict)
+    ]
+    labs = [item for case in cases for item in case["lab_captures"]]
+    workers = [case["worker"] for case in cases if "worker" in case]
+    violations = []
+    if campaign.get("fixed_denominator") != 9 or campaign.get("minimum_targets") != 6:
+        violations.append("campaign declared controls differ from fixed 9/6")
+    if duplicates:
+        violations.append("duplicate fixed scenario rows")
+    if any(x["target_met"] is True and x["status"] != "completed" for x in cases):
+        violations.append("target=true on a non-completed campaign row; not counted")
+    for case in cases:
+        if case["target_met"] is True and case.get("recorded_target_met") is not True:
+            violations.append(
+                "campaign target not confirmed by the corresponding saved case report"
+            )
+    complete = (
+        terminal == 9
+        and len(primary) == 9
+        and len(run_ids) == 9
+        and not duplicates
+        and all(case.get("report", {}).get("available") is True for case in cases)
+    )
+    now = datetime.now(UTC).isoformat()
+    record = {
+        "schema": "headroom.r18-terminal-readonly-review.v1",
+        "utc": now,
+        "campaign_path": str(campaign_path),
+        "campaign_sha256": wrapped["sha256"],
+        "source_revision": campaign.get("revision"),
+        "proposal_sha256_recorded": campaign.get("proposal_sha256"),
+        "preparation_sha256_recorded": campaign.get("preparation_sha256"),
+        "campaign_status": campaign.get("status"),
+        "stop_reason": campaign.get("stop_reason"),
+        "fixed_denominator": 9,
+        "minimum_targets": 6,
+        "raw_rows": rows,
+        "cases": cases,
+        "protocol_violations": violations,
+        "terminal_case_count": terminal,
+        "started_or_admitted_case_count": len(run_ids),
+        "unrun_or_pending_case_count": 9 - terminal,
+        "all_nine_terminal_rows_reported": terminal == 9 and len(primary) == 9 and not duplicates,
+        "complete_nine_case_campaign": complete,
+        "available_case_report_count": sum(
+            case.get("report", {}).get("available") is True for case in cases
+        ),
+        "target_met_count": targets,
+        "target_count_meets_numerical_threshold": targets >= 6,
+        "threshold_met": targets >= 6 and complete and not violations,
+        "final_valid_diagnoses": sum(x.get("valid") is True for x in diagnoses),
+        "final_ready_diagnoses": sum(x.get("ready_for_patch") is True for x in diagnoses),
+        "ever_ready_case_count": sum(
+            any(
+                isinstance(d.get("value"), dict) and d["value"].get("ready_for_patch") is True
+                for d in case["diagnoses"]
+            )
+            for case in cases
+        ),
+        "preparation": verify_preparation(preparation, campaign),
+        "calls": call_summary(campaign_path.parent / "headroom.db"),
+        "direct_ledger": ledger_record,
+        "campaign_accounting_recorded": campaign.get("accounting"),
+        "campaign_starting_accounting_recorded": campaign.get("starting_pool_accounting"),
+        "lab_capture_count": len(labs),
+        "all_recorded_lab_cleanup_verified": (
+            all(x.get("cleanup_verified") is True for x in labs) if labs else None
+        ),
+        "all_recorded_gpu_after_inventories_clear": (
+            all(x.get("recorded_gpu_inventory_clear") is True for x in labs) if labs else None
+        ),
+        "worker_pid_observations": workers,
+        "all_observed_worker_pids_absent": (
+            all(x.get("pid_present_at_review") is False for x in workers) if workers else None
+        ),
+        "review_created_model_calls": 0,
+        "review_created_gpu_jobs": 0,
+        "gpu_observation_basis": "preserved Lab artifacts only; no GPU query or execution",
+        "new_dispatch_or_retry": False,
+        "historical_results_modified": False,
+        "missing_or_unknown_cost_is_zero": False,
+    }
+    if service:
+        result = subprocess.run(
+            [
+                "systemctl",
+                "--user",
+                "show",
+                service,
+                "--property=ActiveState,SubState,Result,ExecMainStatus",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            check=False,
+        )
+        record["service_observation"] = {
+            "unit": service,
+            "returncode": result.returncode,
+            "properties": result.stdout.strip(),
+        }
+    return record, {"status": "terminal_review_prepared", "report_written": False}
+
+
+def write_report(output, record):
+    output.mkdir(parents=True, exist_ok=True)
+    stem = "terminal-review"
+    if (output / (stem + ".json")).exists():
+        stem += "-" + datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
+    destination = output / (stem + ".json")
+    encoded = (json.dumps(record, indent=2, allow_nan=False) + "\n").encode()
+    with destination.open("xb") as handle:
+        handle.write(encoded)
+    text = (
+        "# R18 terminal review\n\n"
+        f"Targets: **{record['target_met_count']}/9**, unchanged gate **6/9**. "
+        f"Terminal cases: {record['terminal_case_count']}/9. "
+        f"Full nine-case execution: {record['complete_nine_case_campaign']}.\n\n"
+        "Unrun/pending cases remain unknown within denominator nine. "
+        "Prepared request bodies are pre-transport evidence; unknown fees are not zero.\n\n"
+        f"Final valid diagnoses: {record['final_valid_diagnoses']}/9; "
+        f"final ready: {record['final_ready_diagnoses']}/9.\n\n"
+        "| Case | Status | Campaign target | Final diagnosis |\n"
+        "|---|---|---|---|\n"
+    )
+    for case in record["cases"]:
+        last = case["diagnoses"][-1].get("value") if case["diagnoses"] else None
+        diagnosis = (
+            f"valid={last.get('valid')}, ready={last.get('ready_for_patch')}"
+            if isinstance(last, dict)
+            else "unavailable"
+        )
+        target = str(case["target_met"]) if case["target_met"] is not None else "unknown"
+        text += f"| {case['scenario_id']} | {case['status']} | {target} | {diagnosis} |\n"
+    calls = record["calls"]
+    ledger = record["direct_ledger"]
+    text += (
+        "\n"
+        f"Direct ledger charged total: {ledger.get('charged_total_usd', 'unavailable')} USD. "
+        f"Known actual call subtotal: {calls.get('known_actual_subtotal_usd', 'unavailable')} USD; "
+        f"actual total: {calls.get('actual_total_usd')}; "
+        f"unknown actual calls: {calls.get('unknown_actual_call_count', 'unavailable')}.\n\n"
+        f"Preserved Lab captures: {record['lab_capture_count']}; "
+        f"all recorded cleanup verified: {record['all_recorded_lab_cleanup_verified']}; "
+        f"recorded GPU-after inventories clear: {record['all_recorded_gpu_after_inventories_clear']}; "
+        f"all observed worker PIDs absent: {record['all_observed_worker_pids_absent']}.\n\n"
+        "Exact raw rows, all saved round/diagnosis/patch/verification data, request "
+        "metadata, source pins, billing and cleanup observations are in the adjacent JSON. "
+        "This reviewer dispatches no model/GPU work and changes no historical result.\n"
+    )
+    with (output / (stem + ".md")).open("x") as handle:
+        handle.write(text)
+    return {"path": str(destination), "sha256": hashlib.sha256(encoded).hexdigest()}
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--campaign",
+        type=Path,
+        default=ROOT / "runs/repair-followup/execution-r18-20261030/campaign.json",
+    )
+    parser.add_argument(
+        "--preparation",
+        type=Path,
+        default=ROOT / "runs/final48-repair-preparation-20261030-r18/preparation.json",
+    )
+    parser.add_argument(
+        "--ledger",
+        type=Path,
+        default=ROOT / ".cache/repair-followup-20261030-v3/budget.db",
+    )
+    parser.add_argument(
+        "--output", type=Path, default=ROOT / "reports/r18-20261030-terminal-review"
+    )
+    parser.add_argument("--service", default="headroom-r18-20261030.service")
+    args = parser.parse_args(argv)
+    record, status = build_review(args.campaign, args.preparation, args.ledger, args.service)
+    if record is not None:
+        status.update(write_report(args.output, record), report_written=True)
+    print(json.dumps(status))
+
+
+if __name__ == "__main__":
+    main()

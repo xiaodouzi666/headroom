@@ -1,0 +1,374 @@
+{
+  "scope": "READ_ONLY_ORIGINAL_MODEL_TO_PARSED_TO_CANDIDATE_AUDIT_NO_REEXECUTION",
+  "attempts": [
+    {
+      "attempt": 1,
+      "artifact_sha256": "5cda9248c03ef8d8b7f7be277423b0e9e594fc1a928e57ee54b5c6862499df06",
+      "wire_visible_complete": true,
+      "visible_json_equals_saved_parsed": true,
+      "pydantic_retains_every_new_line": true,
+      "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+      "independently_reconstructed_bytes_equal_candidate": true,
+      "candidate_sha256": "1035673004ab24b19b184d884db937d7927ce15ba973a28be823bf161248778e",
+      "exact_application_saved": true,
+      "syntax": {
+        "type": "SyntaxError",
+        "message": "invalid syntax. Perhaps you forgot a comma?",
+        "line": 41,
+        "offset": 69,
+        "text": "    parser.add_argument(--micro-batch, type=int, default=None, help=Micro-batch size for gradient accumulation)\n"
+      },
+      "spans": [
+        {
+          "range": [
+            "L000041",
+            "L000041"
+          ],
+          "original_selected": [
+            "    if args.steps < 1 or (args.batch is not None and args.batch < 1):"
+          ],
+          "new_lines": [
+            "    parser.add_argument(--micro-batch, type=int, default=None, help=Micro-batch size for gradient accumulation)",
+            "    args = parser.parse_args()"
+          ]
+        },
+        {
+          "range": [
+            "L000094",
+            "L000111"
+          ],
+          "original_selected": [
+            "    for step in range(1, args.steps + 1):",
+            "        synchronize(device)",
+            "        started = time.perf_counter()",
+            "        optimizer.zero_grad(set_to_none=True)",
+            "        # The complete batch retains every block's intermediate activations.",
+            "        predictions = model(inputs)",
+            "        loss = (predictions - targets).square().mean()",
+            "        loss.backward()",
+            "        optimizer.step()",
+            "        synchronize(device)",
+            "        emit(",
+            "            \"step\",",
+            "            device,",
+            "            step=step,",
+            "            loss=loss.item(),",
+            "            step_ms=(time.perf_counter() - started) * 1000,",
+            "            parameter_count=parameter_count,",
+            "        )"
+          ],
+          "new_lines": [
+            "    for step in range(1, args.steps + 1):",
+            "        synchronize(device)",
+            "        started = time.perf_counter()",
+            "        optimizer.zero_grad(set_to_none=True)",
+            "        if args.micro_batch is None:",
+            "            micro_batch = batch",
+            "        else:",
+            "            if batch % args.micro_batch != 0:",
+            "                raise ValueError(--batch must be divisible by --micro-batch)",
+            "            micro_batch = args.micro_batch",
+            "        acc_steps = batch // micro_batch",
+            "        for micro_step in range(acc_steps):",
+            "            start = micro_step * micro_batch",
+            "            end = start + micro_batch",
+            "            micro_inputs = inputs[start:end]",
+            "            micro_targets = targets[start:end]",
+            "            predictions = model(micro_inputs)",
+            "            loss = (predictions - micro_targets).square().mean()",
+            "            loss = loss / acc_steps",
+            "            loss.backward()",
+            "        optimizer.step()",
+            "        synchronize(device)",
+            "        emit(",
+            "            ,step,",
+            "            device,",
+            "            step=step,",
+            "            loss=loss.item() * acc_steps,",
+            "            step_ms=(time.perf_counter() - started) * 1000,",
+            "            parameter_count=parameter_count,",
+            "        )"
+          ]
+        }
+      ]
+    },
+    {
+      "attempt": 2,
+      "artifact_sha256": "354f833833cda14aa53b174433b7433e844712e6e4679eedafed10ef3db52435",
+      "wire_visible_complete": true,
+      "visible_json_equals_saved_parsed": true,
+      "pydantic_retains_every_new_line": true,
+      "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+      "independently_reconstructed_bytes_equal_candidate": true,
+      "candidate_sha256": "dcf25580ca9a27d560754b17551f30092d497028917bc34d7dd3584107058895",
+      "exact_application_saved": true,
+      "syntax": {
+        "type": "SyntaxError",
+        "message": "invalid syntax. Perhaps you forgot a comma?",
+        "line": 40,
+        "offset": 69,
+        "text": "    parser.add_argument(--micro-batch, type=int, default=None, help=Micro-batch size for gradient accumulation)\n"
+      },
+      "spans": [
+        {
+          "range": [
+            "L000040",
+            "L000040"
+          ],
+          "original_selected": [
+            "    args = parser.parse_args()"
+          ],
+          "new_lines": [
+            "    parser.add_argument(--micro-batch, type=int, default=None, help=Micro-batch size for gradient accumulation)",
+            "    args = parser.parse_args()"
+          ]
+        },
+        {
+          "range": [
+            "L000094",
+            "L000111"
+          ],
+          "original_selected": [
+            "    for step in range(1, args.steps + 1):",
+            "        synchronize(device)",
+            "        started = time.perf_counter()",
+            "        optimizer.zero_grad(set_to_none=True)",
+            "        # The complete batch retains every block's intermediate activations.",
+            "        predictions = model(inputs)",
+            "        loss = (predictions - targets).square().mean()",
+            "        loss.backward()",
+            "        optimizer.step()",
+            "        synchronize(device)",
+            "        emit(",
+            "            \"step\",",
+            "            device,",
+            "            step=step,",
+            "            loss=loss.item(),",
+            "            step_ms=(time.perf_counter() - started) * 1000,",
+            "            parameter_count=parameter_count,",
+            "        )"
+          ],
+          "new_lines": [
+            "    for step in range(1, args.steps + 1):",
+            "        synchronize(device)",
+            "        started = time.perf_counter()",
+            "        optimizer.zero_grad(set_to_none=True)",
+            "        if args.micro_batch is None:",
+            "            micro_batch = batch",
+            "        else:",
+            "            if batch % args.micro_batch != 0:",
+            "                raise ValueError(--batch must be divisible by --micro-batch)",
+            "            micro_batch = args.micro_batch",
+            "        acc_steps = batch // micro_batch",
+            "        for micro_step in range(acc_steps):",
+            "            start = micro_step * micro_batch",
+            "            end = start + micro_batch",
+            "            micro_inputs = inputs[start:end]",
+            "            micro_targets = targets[start:end]",
+            "            predictions = model(micro_inputs)",
+            "            loss = (predictions - micro_targets).square().mean()",
+            "            loss = loss / acc_steps",
+            "            loss.backward()",
+            "        optimizer.step()",
+            "        synchronize(device)",
+            "        emit(",
+            "            ,step,",
+            "            device,",
+            "            step=step,",
+            "            loss=loss.item() * acc_steps,",
+            "            step_ms=(time.perf_counter() - started) * 1000,",
+            "            parameter_count=parameter_count,",
+            "        )"
+          ]
+        }
+      ]
+    },
+    {
+      "attempt": 3,
+      "artifact_sha256": "970a0476f41980e68a59f67d72fafc2e931f1bf7905e6b9cd800e90c5a90b897",
+      "wire_visible_complete": true,
+      "visible_json_equals_saved_parsed": true,
+      "pydantic_retains_every_new_line": true,
+      "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+      "independently_reconstructed_bytes_equal_candidate": true,
+      "candidate_sha256": "521d8ad8edbf0751700055c970d07c22d8933cbed45e08268e9c99cc29ccd536",
+      "exact_application_saved": true,
+      "syntax": {
+        "type": "SyntaxError",
+        "message": "invalid syntax. Perhaps you forgot a comma?",
+        "line": 38,
+        "offset": 69,
+        "text": "    parser.add_argument(--micro-batch, type=int, default=None, help=Micro-batch size for gradient accumulation)\n"
+      },
+      "spans": [
+        {
+          "range": [
+            "L000037",
+            "L000037"
+          ],
+          "original_selected": [
+            "    parser.add_argument(\"--device\", choices=(\"cpu\", \"cuda\"), default=\"cuda\")"
+          ],
+          "new_lines": [
+            "    parser.add_argument(--seed, type=int, default=7)",
+            "    parser.add_argument(--micro-batch, type=int, default=None, help=Micro-batch size for gradient accumulation)"
+          ]
+        },
+        {
+          "range": [
+            "L000094",
+            "L000111"
+          ],
+          "original_selected": [
+            "    for step in range(1, args.steps + 1):",
+            "        synchronize(device)",
+            "        started = time.perf_counter()",
+            "        optimizer.zero_grad(set_to_none=True)",
+            "        # The complete batch retains every block's intermediate activations.",
+            "        predictions = model(inputs)",
+            "        loss = (predictions - targets).square().mean()",
+            "        loss.backward()",
+            "        optimizer.step()",
+            "        synchronize(device)",
+            "        emit(",
+            "            \"step\",",
+            "            device,",
+            "            step=step,",
+            "            loss=loss.item(),",
+            "            step_ms=(time.perf_counter() - started) * 1000,",
+            "            parameter_count=parameter_count,",
+            "        )"
+          ],
+          "new_lines": [
+            "    for step in range(1, args.steps + 1):",
+            "        synchronize(device)",
+            "        started = time.perf_counter()",
+            "        optimizer.zero_grad(set_to_none=True)",
+            "        if args.micro_batch is None:",
+            "            micro_batch = batch",
+            "        else:",
+            "            if batch % args.micro_batch != 0:",
+            "                raise ValueError(--batch must be divisible by --micro-batch)",
+            "            micro_batch = args.micro_batch",
+            "        acc_steps = batch // micro_batch",
+            "        loss_raw = torch.tensor(0.0, device=device)",
+            "        for micro_step in range(acc_steps):",
+            "            start = micro_step * micro_batch",
+            "            end = start + micro_batch",
+            "            micro_inputs = inputs[start:end]",
+            "            micro_targets = targets[start:end]",
+            "            predictions = model(micro_inputs)",
+            "            loss = (predictions - micro_targets).square().mean() / acc_steps",
+            "            loss.backward()",
+            "            loss_raw += (predictions - micro_targets).square().mean()",
+            "        optimizer.step()",
+            "        synchronize(device)",
+            "        emit(",
+            "            step,",
+            "            device,",
+            "            step=step,",
+            "            loss=(loss_raw / acc_steps).item(),",
+            "            step_ms=(time.perf_counter() - started) * 1000,",
+            "            parameter_count=parameter_count,",
+            "        )"
+          ]
+        }
+      ]
+    },
+    {
+      "attempt": 4,
+      "artifact_sha256": "dfc6be39347a5822652530233782041313e4ec86bff4de494883dbc9d4828fc4",
+      "wire_visible_complete": true,
+      "visible_json_equals_saved_parsed": true,
+      "pydantic_retains_every_new_line": true,
+      "source_sha256": "668fe35db321d1738f42dd576f28f3efebf5b50693556dfdfec7f90c4f10ea28",
+      "independently_reconstructed_bytes_equal_candidate": true,
+      "candidate_sha256": "15d45a770453a46fd8afc5cc9c90f66fc343531086f95aee06bb713dd90da8ee",
+      "exact_application_saved": true,
+      "syntax": {
+        "type": "SyntaxError",
+        "message": "invalid syntax. Perhaps you forgot a comma?",
+        "line": 38,
+        "offset": 69,
+        "text": "    parser.add_argument(--micro-batch, type=int, default=None, help=Micro-batch size for gradient accumulation)\n"
+      },
+      "spans": [
+        {
+          "range": [
+            "L000037",
+            "L000037"
+          ],
+          "original_selected": [
+            "    parser.add_argument(\"--device\", choices=(\"cpu\", \"cuda\"), default=\"cuda\")"
+          ],
+          "new_lines": [
+            "    parser.add_argument(--seed, type=int, default=7)",
+            "    parser.add_argument(--micro-batch, type=int, default=None, help=Micro-batch size for gradient accumulation)"
+          ]
+        },
+        {
+          "range": [
+            "L000094",
+            "L000111"
+          ],
+          "original_selected": [
+            "    for step in range(1, args.steps + 1):",
+            "        synchronize(device)",
+            "        started = time.perf_counter()",
+            "        optimizer.zero_grad(set_to_none=True)",
+            "        # The complete batch retains every block's intermediate activations.",
+            "        predictions = model(inputs)",
+            "        loss = (predictions - targets).square().mean()",
+            "        loss.backward()",
+            "        optimizer.step()",
+            "        synchronize(device)",
+            "        emit(",
+            "            \"step\",",
+            "            device,",
+            "            step=step,",
+            "            loss=loss.item(),",
+            "            step_ms=(time.perf_counter() - started) * 1000,",
+            "            parameter_count=parameter_count,",
+            "        )"
+          ],
+          "new_lines": [
+            "    for step in range(1, args.steps + 1):",
+            "        synchronize(device)",
+            "        started = time.perf_counter()",
+            "        optimizer.zero_grad(set_to_none=True)",
+            "        if args.micro_batch is None:",
+            "            micro_batch = batch",
+            "        else:",
+            "            if batch % args.micro_batch != 0:",
+            "                raise ValueError(--batch must be divisible by --micro-batch)",
+            "            micro_batch = args.micro_batch",
+            "        acc_steps = batch // micro_batch",
+            "        loss_raw = torch.tensor(0.0, device=device)",
+            "        for micro_step in range(acc_steps):",
+            "            start = micro_step * micro_batch",
+            "            end = start + micro_batch",
+            "            micro_inputs = inputs[start:end]",
+            "            micro_targets = targets[start:end]",
+            "            predictions = model(micro_inputs)",
+            "            loss = (predictions - micro_targets).square().mean()",
+            "            loss.backward()",
+            "            loss_raw += loss.detach()",
+            "        optimizer.step()",
+            "        synchronize(device)",
+            "        emit(",
+            "            step,",
+            "            device,",
+            "            step=step,",
+            "            loss=loss_raw.item(),",
+            "            step_ms=(time.perf_counter() - started) * 1000,",
+            "            parameter_count=parameter_count,",
+            "        )"
+          ]
+        }
+      ]
+    }
+  ],
+  "model_calls": 0,
+  "gpu_jobs": 0,
+  "production_changes": false
+}

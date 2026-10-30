@@ -1,0 +1,80 @@
+{
+  "schema": "headroom.r18_reviewer_preparation.v1",
+  "utc": "2026-10-30T14:56:56.776469+00:00",
+  "status": "prepared_not_executed_on_real_campaign",
+  "base_script": {
+    "path": "reports/r17-20261030-terminal-review/review.py.txt",
+    "sha256": "22df17c0418031ddeabfbc1780e3d0b2e199bfa7b5a315c4d4946f12dae71f29"
+  },
+  "new_script": {
+    "path": "reports/r18-20261030-terminal-review/review.py.txt",
+    "sha256": "422dea4317ad9cd2968d6af603f8d3e46a38fe1c2a20b8e96e97ec4c1492c44b"
+  },
+  "derivation_diff": {
+    "path": "reports/r18-20261030-terminal-review/reviewer-adaptation.diff",
+    "sha256": "7b12f81871e8cf7c228606c587091f2e53f11ccb6a51025e5cbe67d06020ed6b"
+  },
+  "changes": "Only R17/r17 labels and default campaign/preparation/output/service names became R18/r18. Audit logic, shared ledger path and exact checks remain unchanged.",
+  "source_validation": "SHA256 and byte length against immutable implementation/input pins; no current-HEAD assertion, so a docs-only commit is not a changed-code failure.",
+  "starting_accounting_expected_from_current_prepare_script": {
+    "scope_cap_usd": "4.890504400",
+    "scope_charged_usd": "3.72274640",
+    "scope_actual_usd": null,
+    "scope_encumbered_usd": "0",
+    "scope_remaining_usd": "1.167758000",
+    "all_costs_known": false,
+    "all_costs_resolved": true,
+    "open_runs": [],
+    "halted_runs": [],
+    "unresolved_attempts": []
+  },
+  "starting_accounting_source": {
+    "path": "reports/repair-followup-20261030/prepare-r18.py.txt",
+    "sha256": "036dd08dd8b7a402a5a91fc111fc45635696568a13987d5d4e9d455afbf10ed6"
+  },
+  "cost_scope": "Direct ledger attempts are selected only by this campaign row run IDs. All previous R12-R17 spending, including retained unknown bounds, stays excluded from the new campaign subtotal and included in the unchanged whole-pool starting charged 3.72274640. Campaign starting and current accounting are preserved separately; actual unknown stays null.",
+  "synthetic_nonterminal_checks": [
+    {
+      "campaign_status": "running",
+      "record": null,
+      "status": "pending",
+      "report_written": false
+    },
+    {
+      "campaign_status": "pending",
+      "record": null,
+      "status": "pending",
+      "report_written": false
+    },
+    {
+      "campaign_status": "queued",
+      "record": null,
+      "status": "pending",
+      "report_written": false
+    },
+    {
+      "campaign_status": "not_started",
+      "record": null,
+      "status": "pending",
+      "report_written": false
+    },
+    {
+      "campaign_missing": true,
+      "record": null,
+      "status": "not_started",
+      "error_type": "FileNotFoundError",
+      "report_written": false
+    }
+  ],
+  "missing_case_target_is_unknown": true,
+  "unknown_cost_is_zero": false,
+  "fixed_denominator": 9,
+  "minimum_targets": 6,
+  "real_campaign_review_executed": false,
+  "real_campaign_or_ledger_read_by_build_review": false,
+  "service_inspected": false,
+  "model_calls": 0,
+  "gpu_runs": 0,
+  "production_modified": false,
+  "next_action": "Wait for root dispatch notice. Read-only monitor actual artifacts at least 60 seconds apart; execute terminal reviewer once terminal is confirmed. Running/unrun rows cannot freeze a terminal conclusion."
+}

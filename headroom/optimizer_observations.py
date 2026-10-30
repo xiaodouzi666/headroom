@@ -240,6 +240,85 @@ def _optimizer_group_options(raw, parameters, calls, constructor_returns):
     return summary
 
 
+def _parameter_tensor_metadata(raw, parameters, calls, successful, constructors, groups):
+    """Sampled native attributes only; no state, alias, scaling or native-class proof."""
+    invalid = {"status": "unverified", "reason": "parameter metadata unavailable or incomplete"}
+    if raw is None:
+        return {"status": "not_captured"}
+    try:
+        if (
+            len(
+                json.dumps(
+                    {"group_options": groups, "parameter_tensor_metadata": raw},
+                    ensure_ascii=True,
+                    allow_nan=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode()
+            )
+            > 65536
+        ):
+            return invalid
+        names = ("base_constructor_return", "step_pre", "successful_step_post")
+        events, ids, counts = raw["events"], raw["parameter_ids"], raw["boundary_parameter_counts"]
+        if (
+            raw["protocol"] != "headroom.optimizer_parameter_metadata.v1"
+            or type(events) is not dict
+            or set(events) != set(names)
+            or any(_count(events[n], 65536) is None for n in names)
+            or [events[n] for n in names] != [constructors, calls, successful]
+            or type(ids) is not list
+            or len(ids) > 8192
+            or any(type(x) is not str or _PARAMETER.fullmatch(x) is None for x in ids)
+            or ids != sorted(set(ids))
+            or set(ids) != set(parameters)
+            or type(counts) is not list
+            or len(counts) != 3
+            or any(_count(x, len(ids)) is None for x in counts)
+            or any(x != (len(ids) if events[n] else 0) for n, x in zip(names, counts, strict=True))
+            or type(raw["complete"]) is not bool
+            or type(raw["mixed"]) is not bool
+            or _count(raw["changed_parameters"], len(ids)) is None
+            or _count(raw["unsupported_observations"], 65536) is None
+            or raw["state_tensors"] != "not_captured"
+        ):
+            return invalid
+        uniform = raw["uniform"]
+        if uniform is not None and not (
+            type(uniform) is dict
+            and set(uniform) == {"dtype", "device_type", "device_index", "layout", "is_leaf"}
+            and type(uniform["dtype"]) is str
+            and uniform["dtype"] in {"float32", "float64", "float16", "bfloat16"}
+            and uniform["device_type"] in ("cpu", "cuda")
+            and (
+                uniform["device_index"] is None or _count(uniform["device_index"], 255) is not None
+            )
+            and uniform["layout"] == "strided"
+            and type(uniform["is_leaf"]) is bool
+        ):
+            return invalid
+        complete = (
+            raw["complete"]
+            and bool(ids)
+            and not raw["mixed"]
+            and not raw["changed_parameters"]
+            and not raw["unsupported_observations"]
+            and uniform is not None
+        )
+        return {
+            "status": "observed" if complete else "partial",
+            "scope": "sampled_parameters_only_not_states",
+            "events": [events[n] for n in names],
+            "parameters": len(ids),
+            "all_observed": uniform if complete else None,
+            "changed_parameters": raw["changed_parameters"],
+            "unsupported_observations": raw["unsupported_observations"],
+            "state_tensors": "not_captured",
+        }
+    except (KeyError, TypeError, ValueError, RecursionError, OverflowError):
+        return invalid
+
+
 def runtime_optimizer_observations(result, source_files, *, script, selected_round=None):
     """Summarize only the selected run and exact retained entrypoint source digest.
 
@@ -460,4 +539,18 @@ def runtime_optimizer_observations(result, source_files, *, script, selected_rou
             "numerical_equivalence_proven": False,
             "input_coverage_proven": False,
         }
+    metadata = _parameter_tensor_metadata(
+        observation.get("parameter_tensor_metadata"),
+        parameters,
+        calls,
+        successful,
+        constructor_returns,
+        observation.get("group_options"),
+    )
+    trial = dict(summary, parameter_tensor_metadata=metadata)
+    if (
+        len(json.dumps(trial, ensure_ascii=True, allow_nan=False).encode())
+        <= MAX_OPTIMIZER_OBSERVATION_BYTES
+    ):
+        summary = trial
     return summary

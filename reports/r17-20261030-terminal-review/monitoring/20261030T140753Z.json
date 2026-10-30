@@ -1,0 +1,539 @@
+{
+  "captured_at_utc": "2026-10-30T14:07:53.216112+00:00",
+  "campaign_sha256": "a4f8a780ba7b49e9f276ce8ece191134490f054488cd529573205e4ad2da262f",
+  "campaign_status": "running",
+  "executed_cells": 0,
+  "target_count_recorded": 0,
+  "stop_reason": null,
+  "rows": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "status": "running",
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched",
+      "labs": [
+        {
+          "capture_id": "cf522831a9ac4226a3bc0d53966295ec",
+          "status": "oom",
+          "steps": 0,
+          "cleanup_verified": true,
+          "oom": {
+            "requested_bytes": 268435456,
+            "free_bytes": 108199936,
+            "requested_source": "allocator_oom_event",
+            "free_source": "allocator_oom_event",
+            "requested_gb": 0.268435456,
+            "free_gb": 0.108199936,
+            "traceback": "Traceback (most recent call last):\n  File \"/runtime/headroom/lab/run_target.py\", line 71, in main\n    runpy.run_path(str(script), run_name=\"__main__\")\n  File \"<frozen runpy>\", line 286, in run_path\n  File \"<frozen runpy>\", line 98, in _run_module_code\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/source/train.py\", line 117, in <module>\n    main()\n  File \"/source/train.py\", line 99, in main\n    predictions = model(inputs)\n                  ^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1736, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1844, in _call_impl\n    return inner()\n           ^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1790, in inner\n    result = forward_call(*args, **kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/source/train.py\", line 29, in forward\n    hidden = block(hidden)\n             ^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1736, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1844, in _call_impl\n    return inner()\n           ^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1790, in inner\n    result = forward_call(*args, **kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/source/train.py\", line 18, in forward\n    return inputs + self.ff(self.norm(inputs))\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1736, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1844, in _call_impl\n    return inner()\n           ^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1790, in inner\n    result = forward_call(*args, **kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/container.py\", line 250, in forward\n    input = module(input)\n            ^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1736, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1844, in _call_impl\n    return inner()\n           ^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1790, in inner\n    result = forward_call(*args, **kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/torch/nn/modules/linear.py\", line 125, in forward\n    return F.linear(input, self.weight, self.bias)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/runtime/headroom/lab/precision.py\", line 532, in __torch_function__\n    result = func(*args, **(kwargs or {}))\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntorch.OutOfMemoryError: CUDA out of memory. Tried to allocate 256.00 MiB. GPU 0 has a total capacity of 23.55 GiB of which 103.19 MiB is free. Including non-PyTorch memory, this process has 23.38 GiB memory in use. Of the allocated memory 23.05 GiB is allocated by PyTorch, and 160.00 KiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)\n"
+          },
+          "reference_offload": null
+        }
+      ],
+      "diagnosis": {
+        "valid": true,
+        "ready": true,
+        "needs": false,
+        "issues": []
+      },
+      "patch_results": [
+        {
+          "round": "01",
+          "status": "rejected",
+          "reason": "SOURCE_SYNTAX_INVALID"
+        },
+        {
+          "round": "02",
+          "status": "applied",
+          "reason": "STATIC_CHECKS_PASSED"
+        }
+      ]
+    },
+    {
+      "scenario_id": "s2_capacity_v2",
+      "status": "not_run",
+      "run_id": null,
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched"
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "status": "not_run",
+      "run_id": null,
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched"
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "status": "not_run",
+      "run_id": null,
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched"
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "status": "not_run",
+      "run_id": null,
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched"
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "status": "not_run",
+      "run_id": null,
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched"
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "status": "not_run",
+      "run_id": null,
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched"
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "status": "not_run",
+      "run_id": null,
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched"
+    },
+    {
+      "scenario_id": "nanogpt",
+      "status": "not_run",
+      "run_id": null,
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched"
+    }
+  ],
+  "actual_call_records": [
+    {
+      "id": 1,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "annotate",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 40092,
+        "completion_tokens": 503,
+        "total_tokens": 40595,
+        "cached_tokens": null,
+        "reasoning_tokens": null
+      },
+      "cap": 3000,
+      "budget_attempt_id": "89935a2a3bdd41c7a2c8dd34e81060df"
+    },
+    {
+      "id": 2,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "diagnose",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 37043,
+        "completion_tokens": 538,
+        "total_tokens": 37581,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "cap": 2000,
+      "budget_attempt_id": "f04591a7ef15430ab05eac3020957960"
+    },
+    {
+      "id": 3,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 13175,
+        "completion_tokens": 3401,
+        "total_tokens": 16576,
+        "cached_tokens": 0,
+        "reasoning_tokens": 2852
+      },
+      "cap": 4000,
+      "budget_attempt_id": "912b8de0e9514c4aa7995c46fdcf203b"
+    },
+    {
+      "id": 4,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 13457,
+        "completion_tokens": 1350,
+        "total_tokens": 14807,
+        "cached_tokens": 0,
+        "reasoning_tokens": 801
+      },
+      "cap": 4000,
+      "budget_attempt_id": "789cd86470fc47a285b90929a327b5a0"
+    },
+    {
+      "id": 5,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 13462,
+        "completion_tokens": 1944,
+        "total_tokens": 15406,
+        "cached_tokens": 0,
+        "reasoning_tokens": 1360
+      },
+      "cap": 4000,
+      "budget_attempt_id": "9fc18f29cbec4c17a0df2cb1213f7aae"
+    },
+    {
+      "id": 6,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 13511,
+        "completion_tokens": 1138,
+        "total_tokens": 14649,
+        "cached_tokens": 0,
+        "reasoning_tokens": 568
+      },
+      "cap": 4000,
+      "budget_attempt_id": "6d7f7b1b82954fc488b7a38f0e2425d5"
+    },
+    {
+      "id": 7,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "diagnose",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 39172,
+        "completion_tokens": 443,
+        "total_tokens": 39615,
+        "cached_tokens": 26112,
+        "reasoning_tokens": 0
+      },
+      "cap": 2000,
+      "budget_attempt_id": "872625e1978f4d2990cf1138d97b497e"
+    },
+    {
+      "id": 8,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 15275,
+        "completion_tokens": 4000,
+        "total_tokens": 19275,
+        "cached_tokens": 0,
+        "reasoning_tokens": 4000
+      },
+      "cap": 4000,
+      "budget_attempt_id": "386c885a9d494e8cbee1cb4a06dc3cad"
+    },
+    {
+      "id": 9,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 14582,
+        "completion_tokens": 1052,
+        "total_tokens": 15634,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "cap": 4000,
+      "budget_attempt_id": "08935f8ad5644752b648de2bb32803fb"
+    },
+    {
+      "id": 10,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 16071,
+        "completion_tokens": 794,
+        "total_tokens": 16865,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "cap": 4000,
+      "budget_attempt_id": "93a56c63be8d4321963d4c9c991c8126"
+    },
+    {
+      "id": 11,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 15803,
+        "completion_tokens": 791,
+        "total_tokens": 16594,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "cap": 4000,
+      "budget_attempt_id": "2d392d4c8815407fbf4b91825728ae21"
+    },
+    {
+      "id": 12,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "diagnose",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 41692,
+        "completion_tokens": 692,
+        "total_tokens": 42384,
+        "cached_tokens": 26112,
+        "reasoning_tokens": 0
+      },
+      "cap": 2000,
+      "budget_attempt_id": "cb3445b441c2412c9c6d95f02c6746aa"
+    },
+    {
+      "id": 13,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "super",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 974,
+        "completion_tokens": 89,
+        "total_tokens": 1063,
+        "cached_tokens": 0,
+        "reasoning_tokens": 16
+      },
+      "cap": 2000,
+      "budget_attempt_id": "4359208920a24b8ab7f8ec3aadc5faec"
+    },
+    {
+      "id": 14,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "super",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 1960,
+        "completion_tokens": 88,
+        "total_tokens": 2048,
+        "cached_tokens": 0,
+        "reasoning_tokens": 23
+      },
+      "cap": 2000,
+      "budget_attempt_id": "11f6e18e311e493798fbb7600de4b934"
+    },
+    {
+      "id": 15,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "super",
+      "outcome": "response",
+      "http_status": 200,
+      "usage": {
+        "prompt_tokens": 3090,
+        "completion_tokens": 213,
+        "total_tokens": 3303,
+        "cached_tokens": 1936,
+        "reasoning_tokens": 67
+      },
+      "cap": 2000,
+      "budget_attempt_id": "f7b4742f333848a6b818c8affdaef045"
+    },
+    {
+      "id": 16,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "pending",
+      "http_status": null,
+      "usage": null,
+      "cap": 4000,
+      "budget_attempt_id": "572d72b001c041ac8f92d573cdd87101"
+    }
+  ],
+  "current_R17_ledger_attempts": [
+    {
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "charged_usd": "0.00252624",
+      "actual_usd": null,
+      "settled": 1,
+      "dispatched": 1,
+      "charge_status": "upper_bound"
+    },
+    {
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "charged_usd": "0.038657",
+      "actual_usd": "0.038657",
+      "settled": 1,
+      "dispatched": 1,
+      "charge_status": "exact"
+    },
+    {
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "charged_usd": "0.0070134",
+      "actual_usd": "0.0070134",
+      "settled": 1,
+      "dispatched": 1,
+      "charge_status": "exact"
+    },
+    {
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "charged_usd": "0.0052521",
+      "actual_usd": "0.0052521",
+      "settled": 1,
+      "dispatched": 1,
+      "charge_status": "exact"
+    },
+    {
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "charged_usd": "0.0057882",
+      "actual_usd": "0.0057882",
+      "settled": 1,
+      "dispatched": 1,
+      "charge_status": "exact"
+    },
+    {
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "charged_usd": "0.0050775",
+      "actual_usd": "0.0050775",
+      "settled": 1,
+      "dispatched": 1,
+      "charge_status": "exact"
+    },
+    {
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "charged_usd": "0.01752244",
+      "actual_usd": "0.01752244",
+      "settled": 1,
+      "dispatched": 1,
+      "charge_status": "exact"
+    },
+    {
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "charged_usd": "0.0081825",
+      "actual_usd": "0.0081825",
+      "settled": 1,
+      "dispatched": 1,
+      "charge_status": "exact"
+    },
+    {
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "charged_usd": "0.0053214",
+      "actual_usd": "0.0053214",
+      "settled": 1,
+      "dispatched": 1,
+      "charge_status": "exact"
+    },
+    {
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "charged_usd": "0.0055359",
+      "actual_usd": "0.0055359",
+      "settled": 1,
+      "dispatched": 1,
+      "charge_status": "exact"
+    },
+    {
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "charged_usd": "0.0054528",
+      "actual_usd": "0.0054528",
+      "settled": 1,
+      "dispatched": 1,
+      "charge_status": "exact"
+    },
+    {
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "charged_usd": "0.02078944",
+      "actual_usd": "0.02078944",
+      "settled": 1,
+      "dispatched": 1,
+      "charge_status": "exact"
+    },
+    {
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "charged_usd": "0.0003723",
+      "actual_usd": "0.0003723",
+      "settled": 1,
+      "dispatched": 1,
+      "charge_status": "exact"
+    },
+    {
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "charged_usd": "0.0006672",
+      "actual_usd": "0.0006672",
+      "settled": 1,
+      "dispatched": 1,
+      "charge_status": "exact"
+    },
+    {
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "charged_usd": "0.00065406",
+      "actual_usd": "0.00065406",
+      "settled": 1,
+      "dispatched": 1,
+      "charge_status": "exact"
+    },
+    {
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "charged_usd": "0.0822432",
+      "actual_usd": null,
+      "settled": 0,
+      "dispatched": 1,
+      "charge_status": "pending"
+    }
+  ],
+  "source_revision": "c21cf546e2559ac513836ba8f0d17dc4919fb02b",
+  "preparation_sha256": "6ea868a7a8f99422d8632ac209fab199c64fc0effa6ebc729fa4ffb2a2992289",
+  "no_dispatch_by_monitor": true
+}

@@ -3,6 +3,7 @@ Return only source_span_edits_v1 JSON. Keep the same {path,source_sha256,start_i
 IDs are metadata and must never be copied into code. Use the original SHA and coordinates, not any failed candidate. The host retrieves old bytes; do not supply old_lines, copied old text, line-number labels, unified diff or markdown fences.
 An insertion retains a nonempty original anchor in new_lines. No new files or zero-width ranges. Configuration-only proposals use edits:[] and the existing env/CLI allowlist; an empty no-op is not a repair.
 Address the actual rejection; do not repeat an invalid range or assume whitespace/fuzzy matching or unescaping. Keep exact indentation and legitimate source escapes.
+JSON transports literal source: the field fragment {"new_lines":["    label = \"ready\""]} decodes to the Python line     label = "ready". Preserve the Python literal quotes inside each line; JSON delimiters/escaping do not replace them. Never unescape or strip source a second time.
 Treat the plan as unverified: check actual tensor producers/consumers, training/evaluation paths, leading dimensions/effective batch, loss reduction and optimizer cadence. Do not blindly follow a mistaken plan. Microbatches must be nonempty, correctly weighted and have one update per original effective batch; explain unresolved premises in notes instead of inventing them.
 Preserve all policy, model/data/objective/precision/update and measurement restrictions. No claimed measured savings. The existing maximum three repair attempts and 4000-token response cap remain.
 

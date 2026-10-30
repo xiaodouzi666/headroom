@@ -362,6 +362,113 @@ class _OptimizerGroupOptionObserver:
         }
 
 
+_NATIVE_PARAMETER_TYPES = (torch.nn.Parameter, torch.Tensor)
+_NATIVE_PARAMETER_DEVICE = torch.device
+_NATIVE_PARAMETER_LAYOUT = torch.strided
+_NATIVE_PARAMETER_GETTERS = {
+    name: getattr(torch.Tensor, name) for name in ("dtype", "device", "layout", "is_leaf")
+}
+_PARAMETER_DTYPES = {
+    torch.float32: "float32",
+    torch.float64: "float64",
+    torch.float16: "float16",
+    torch.bfloat16: "bfloat16",
+}
+
+
+class _OptimizerParameterMetadataObserver:
+    """Optional native attributes, old weak IDs only; no state or values."""
+
+    def __init__(self):
+        self.events = {"base_constructor_return": 0, "step_pre": 0, "successful_step_post": 0}
+        self.seen = {name: set() for name in self.events}
+        self.signatures = {}
+        self.changed = set()
+        self.complete = True
+        self.stopped = False
+        self.unsupported = 0
+
+    def observe(self, optimizer, *, stage, identify):
+        try:
+            if stage not in self.events or self.events[stage] >= 65536:
+                raise ValueError("metadata boundary limit")
+            self.events[stage] += 1
+            if self.stopped:
+                return
+            attributes = object.__getattribute__(optimizer, "__dict__")
+            groups = attributes.get("param_groups") if type(attributes) is dict else None
+            if type(groups) is not list or len(groups) > 64:
+                raise ValueError("unsupported metadata groups")
+            count = 0
+            for group in groups:
+                params = group.get("params") if type(group) is dict else None
+                if type(params) not in (list, tuple):
+                    raise ValueError("unsupported metadata parameters")
+                for parameter in params:
+                    count += 1
+                    if count > 8192 or not (
+                        type(parameter) is _NATIVE_PARAMETER_TYPES[0]
+                        or type(parameter) is _NATIVE_PARAMETER_TYPES[1]
+                    ):
+                        raise ValueError("unsupported native parameter or limit")
+                    token = identify(parameter)
+                    if type(token) is not str or re.fullmatch(r"p[0-9]{5,6}", token) is None:
+                        raise ValueError("unknown existing identity")
+                    if token not in self.signatures and len(self.signatures) >= 8192:
+                        raise ValueError("metadata identity limit")
+                    values = {
+                        name: getter.__get__(parameter, type(parameter))
+                        for name, getter in _NATIVE_PARAMETER_GETTERS.items()
+                    }
+                    dtype, device = _PARAMETER_DTYPES.get(values["dtype"]), values["device"]
+                    if (
+                        dtype is None
+                        or type(device) is not _NATIVE_PARAMETER_DEVICE
+                        or device.type not in ("cpu", "cuda")
+                        or device.index is not None
+                        and (type(device.index) is not int or not 0 <= device.index <= 255)
+                        or values["layout"] is not _NATIVE_PARAMETER_LAYOUT
+                        or type(values["is_leaf"]) is not bool
+                    ):
+                        raise ValueError("unsupported native metadata")
+                    signature = (dtype, device.type, device.index, "strided", values["is_leaf"])
+                    prior = self.signatures.get(token)
+                    if prior is not None and prior != signature:
+                        self.changed.add(token)
+                        self.complete = False
+                    self.signatures.setdefault(token, signature)
+                    self.seen[stage].add(token)
+        except Exception:  # noqa: BLE001 - optional observer cannot replace native behavior
+            self.unsupported += 1
+            self.complete = False
+            self.stopped = True
+
+    def snapshot(self):
+        profiles = set(self.signatures.values())
+        uniform = None
+        if len(profiles) == 1 and not self.changed:
+            dtype, kind, index, layout, leaf = next(iter(profiles))
+            uniform = {
+                "dtype": dtype,
+                "device_type": kind,
+                "device_index": index,
+                "layout": layout,
+                "is_leaf": leaf,
+            }
+        return {
+            "protocol": "headroom.optimizer_parameter_metadata.v1",
+            "complete": self.complete and bool(self.signatures) and not self.stopped,
+            "events": dict(self.events),
+            "parameter_ids": sorted(self.signatures),
+            "boundary_parameter_counts": [len(self.seen[name]) for name in self.events],
+            "uniform": uniform,
+            "mixed": len(profiles) > 1,
+            "changed_parameters": len(self.changed),
+            "unsupported_observations": self.unsupported,
+            "state_tensors": "not_captured",
+        }
+
+
 class CaptureSession:
     """Per-process capture; instantiated inside a network/filesystem sandbox."""
 
@@ -403,6 +510,7 @@ class CaptureSession:
         self._optimizer_base_constructions_observed = 0
         self._optimizer_initial_catalog_complete = True
         self._optimizer_group_options = _OptimizerGroupOptionObserver()
+        self._optimizer_parameter_metadata = _OptimizerParameterMetadataObserver()
         self._optimizer_pending: dict[tuple[int, int], dict[str, Any]] = {}
         self._backward_groups: dict[int, dict[str, Any]] = {}
         self._optimizer_step_calls = 0
@@ -630,6 +738,11 @@ class CaptureSession:
                     session._observe_optimizer_initial_parameters(optimizer)
                 except Exception:  # noqa: BLE001 - optional metadata cannot replace native behavior
                     session._optimizer_initial_catalog_complete = False
+                session._optimizer_parameter_metadata.observe(
+                    optimizer,
+                    stage="base_constructor_return",
+                    identify=session._existing_update_identity,
+                )
                 session._optimizer_group_options.observe(
                     optimizer,
                     stage="base_constructor_return",
@@ -914,6 +1027,11 @@ class CaptureSession:
             call=self._optimizer_step_calls,
             identify=self._existing_update_identity,
         )
+        self._optimizer_parameter_metadata.observe(
+            optimizer,
+            stage="step_pre",
+            identify=self._existing_update_identity,
+        )
         task = self._graph_task()
         groups = list(self._backward_groups.values())
         group = groups[0] if len(groups) == 1 and task is not None and task >= 0 else None
@@ -980,6 +1098,11 @@ class CaptureSession:
     def _optimizer_step(self, optimizer: torch.optim.Optimizer, args: Any, kwargs: Any) -> None:
         if os.getpid() != self.pid or self.finished:
             return
+        self._optimizer_parameter_metadata.observe(
+            optimizer,
+            stage="successful_step_post",
+            identify=self._existing_update_identity,
+        )
         self._optimizer_successful_step_calls += 1
         frame = self._optimizer_pending.pop((threading.get_ident(), id(optimizer)), None)
         if frame is None:
@@ -1111,7 +1234,7 @@ class CaptureSession:
         coverage_complete = bool(self.step_records) and all(
             record["parameter_update_coverage_complete"] for record in self.step_records
         )
-        return {
+        result = {
             "protocol": "headroom.optimizer_updates.v1",
             "complete": boundary_complete and coverage_complete,
             "logical_boundary_complete": boundary_complete,
@@ -1137,6 +1260,18 @@ class CaptureSession:
             "Ordinary outer optimizer calls retain the legacy counting contract. "
             "This is cooperative instrumentation, not authentication against target tampering.",
         }
+        # One shared raw allowance; preserve old facts on optional failure/overflow.
+        try:
+            metadata = self._optimizer_parameter_metadata.snapshot()
+            optional = {
+                "group_options": result["group_options"],
+                "parameter_tensor_metadata": metadata,
+            }
+            if len(_optimizer_option_canonical(optional).encode()) <= _GROUP_MAX_RAW_BYTES:
+                result["parameter_tensor_metadata"] = metadata
+        except Exception:  # noqa: BLE001 - optional metadata must not break legacy capture
+            return result
+        return result
 
     def take_snapshot(self) -> Any:
         if self._snapshot_attempted:

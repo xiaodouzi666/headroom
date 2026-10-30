@@ -1,0 +1,125 @@
+{
+  "schema": "headroom.r17_independent_final_qualification.v1",
+  "status": "COMPLETE_CAMPAIGN_REVIEWED_THRESHOLD_UNMET",
+  "at_utc": "2026-10-30T14:29:09.274512+00:00",
+  "terminal_review_sha256": "7004dad3cd1ec115c4d958335a467778cfb2c6320167eb7d9893ab078fdec3e0",
+  "source_revision": "c21cf546e2559ac513836ba8f0d17dc4919fb02b",
+  "canonical_preparation_body_sha256": "6ea868a7a8f99422d8632ac209fab199c64fc0effa6ebc729fa4ffb2a2992289",
+  "canonical_proposal_sha256": "20f7e4aa0f7dc622fdde04f0a20903b3f5d704b8eb6d390434a43c50f6d789ee",
+  "semantic_fields_equal_R16": [
+    "controls",
+    "cells",
+    "input_pins",
+    "source_files",
+    "calibration",
+    "repository_identities"
+  ],
+  "all_nine_requests_exactly_equal_R16": true,
+  "implementation_pins": 183,
+  "input_pins": 30,
+  "all_pins_matched_at_terminal_review": true,
+  "fixed_denominator": 9,
+  "minimum_targets": 6,
+  "qualified_target_count_under_original_checks": 3,
+  "qualified_targets": [
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "run_id": "ebad78994b454ec095b9900286f929fd",
+      "report_sha256": "b585fbec005e0e3e92a071ca8e1cc28a98c716ab8a09cd0f71849e86248406cd",
+      "target_met": true,
+      "parameter_policy": true,
+      "numerical_acceptance": true,
+      "numerical_basis": "original_plan_full_backward_scalar_series",
+      "loss_equivalence": "identical",
+      "pairing": {
+        "same_inputs": true,
+        "same_effective_batch": true,
+        "same_objective": true,
+        "same_seed": true
+      },
+      "training_coverage_not_reduced": true,
+      "parameter_count_before": 37791744,
+      "parameter_count_after": 37791744
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "run_id": "e075c80b3f3344408ad04d826b5d0ab9",
+      "report_sha256": "08dbf302174709c7e8f7343eb1b2d0f8611ce3fd2a11505cf362a8fd7a41a522",
+      "target_met": true,
+      "parameter_policy": true,
+      "numerical_acceptance": true,
+      "numerical_basis": "original_workload_offload_first_five_backward_scalars",
+      "loss_equivalence": "identical",
+      "pairing": {
+        "same_inputs": true,
+        "same_effective_batch": true,
+        "same_objective": true,
+        "same_seed": true
+      },
+      "training_coverage_not_reduced": null,
+      "parameter_count_before": 50374656,
+      "parameter_count_after": 50374656
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "run_id": "4da40f2e6c12490ab93eb53911c1e0f8",
+      "report_sha256": "02ad0de0fb4c7eb69adbc31866909c8f003017239ed2ee5083940790dad99c10",
+      "target_met": true,
+      "parameter_policy": true,
+      "numerical_acceptance": true,
+      "numerical_basis": "original_plan_full_backward_scalar_series",
+      "loss_equivalence": "identical",
+      "pairing": {
+        "same_inputs": null,
+        "same_effective_batch": null,
+        "same_objective": null,
+        "same_seed": true
+      },
+      "training_coverage_not_reduced": true,
+      "parameter_count_before": 747474432,
+      "parameter_count_after": 747474432
+    }
+  ],
+  "s7_independent_rejection": {
+    "path": "reports/r17-20261030-terminal-review/s7-qualification-review.json",
+    "sha256": "da15eb18081fdb975960434b72d66bc2797ab9cc946832cbc83b90bc4285e159",
+    "s7_adds_no_target": true
+  },
+  "s4_scope": "Candidate and source/argv-bound lossless offload reference both completed20 updates; official comparison remains the original first5 backward scalars. Training coverage and completed-baseline throughput remain unknown.",
+  "actual_calls": 59,
+  "actual_responses": 59,
+  "per_role": {
+    "annotate": 9,
+    "diagnose": 23,
+    "patcher": 21,
+    "super": 6
+  },
+  "all23_diagnose_caps2000_reasoning_false": true,
+  "all_calls_settled": true,
+  "r17_charged_conservative_usd": "0.86369752",
+  "r17_known_actual_subtotal_usd": "0.83529898",
+  "r17_actual_total_usd": null,
+  "unknown_actual_call_count": 9,
+  "all_r17_costs_resolved": true,
+  "starting_pool_remaining_usd": "2.031455520",
+  "ending_pool_remaining_usd": "1.167758000",
+  "ending_whole_pool_charged_usd": "3.72274640",
+  "pool_actual_total_usd": null,
+  "open_halted_unresolved_at_end": false,
+  "cleanup": {
+    "lab_wrappers": 16,
+    "all_recorded_lab_cleanup_verified": true,
+    "all_recorded_gpu_after_inventories_clear": true,
+    "all_observed_worker_pids_absent": true,
+    "r17_service": {
+      "unit": "headroom-r17-20261030.service",
+      "returncode": 0,
+      "properties": "Result=success\nExecMainStatus=0\nActiveState=inactive\nSubState=dead"
+    }
+  },
+  "qualification_did_not_change_raw_scores": true,
+  "raw_reports_modified": false,
+  "new_model_gpu_calls_by_reviewer": 0,
+  "new_dispatch_or_retry_by_reviewer": false,
+  "published_or_source_docs_modified_by_reviewer": false
+}

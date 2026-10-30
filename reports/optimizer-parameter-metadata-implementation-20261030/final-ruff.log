@@ -1,0 +1,12 @@
+S110 `try`-`except`-`pass` detected, consider logging the exception
+    --> headroom/lab/hooks.py:1269:9
+     |
+1267 |               if len(_optimizer_option_canonical(optional).encode()) <= _GROUP_MAX_RAW_BYTES:
+1268 |                   result["parameter_tensor_metadata"] = metadata
+1269 | /         except Exception:  # noqa: BLE001 - optional metadata must not break legacy capture
+1270 | |             pass
+     | |________________^
+1271 |           return result
+     |
+
+Found 1 error.

@@ -36,9 +36,8 @@ def _sha(source):
     return hashlib.sha256(source).hexdigest()
 
 
-def transform_source(source):
-    """Only the caller-verified original s1 program may reach this transformation."""
-    tree = ast.parse(source)
+def reviewed_block_callsite_nodes(tree):
+    """Return only the original call already recognized by this reviewed transform."""
     matches = [
         node
         for node in ast.walk(tree)
@@ -46,6 +45,13 @@ def transform_source(source):
     ]
     if len(matches) != 1:
         raise ValueError("Expected exactly one reviewed block invocation")
+    return matches
+
+
+def transform_source(source):
+    """Only the caller-verified original s1 program may reach this transformation."""
+    tree = ast.parse(source)
+    matches = reviewed_block_callsite_nodes(tree)
     matches[0].value = ast.Call(
         func=ast.Name(id="checkpoint", ctx=ast.Load()),
         args=[ast.Name(id="block", ctx=ast.Load()), ast.Name(id="hidden", ctx=ast.Load())],

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import math
 import os
 import stat
@@ -422,4 +423,29 @@ def numerical_reference_context(
         result["reference_construction"] = (
             "A completed baseline is compared directly. An OOM baseline uses bounded discovery of an original-source smaller-batch reference; a smaller batch is not proof of the same workload."
         )
+    # Optional source-coordinate projection; no new supported edit family.
+    # The enclosing verifier context keeps its original 12 KiB ceiling.
+    try:
+        from headroom.patch_spans import source_span_document
+        from headroom.verify.reference_callsites import checkpoint_callsite_reading_aid
+
+        if (
+            strategy == CHECKPOINT_STRATEGY
+            and is_oom
+            and original.get("supported") is True
+            and retained.get("supported") is True
+            and original.get("source_sha256") == retained.get("source_sha256")
+        ):
+            script = Path(retained_script)
+            document = source_span_document(script.parent, script.name)
+            aid = checkpoint_callsite_reading_aid(document, result)
+            if aid is not None:
+                enriched = dict(result, reviewed_checkpoint_callsites=aid)
+                if (
+                    len(json.dumps(enriched, ensure_ascii=True, allow_nan=False).encode())
+                    <= 12 * 1024
+                ):
+                    result = enriched
+    except (OSError, ValueError, TypeError, UnicodeError, RecursionError, OverflowError):
+        pass
     return result

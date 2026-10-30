@@ -1,3 +1,25 @@
+## 2026-10-30 22:52 北京 — R17 真实终态3/9；下一轮源码已修、待提交准备
+
+R17完整九项真实验收已独审：**3/9（s3/s4/s8）**，仍未达到6/9。首轮raw5/9、valid-correct5/9、ready5/9、ready-valid-correct4/9；finalvalid5/9、ready3/9。183implementation/30input pins全部匹配，16Lab cleanup/GPU-after清理、9worker退出均核实，无protocol violations。59个真实响应全部结算；本轮保守$0.86369752净额，known actual $0.83529898、actual总额仍unknown，9 Nano保留原上界。开发池累计$3.72274640/余$1.167758000，原4.890504400净额与每项$.60不变。
+
+S3新记录自己的20标量相同且input/batch/objective/seed配对均true；S4原OOM12步、候选及44.3GB offload reference各20步，但正式数值比较仍仅前5个backward标量，三项pairing true，不能说完整20标量等价；S8新记录20标量相同、完整pairing仍unknown。S7两种冻结方案都真跑20步且峰值降到4.41GB，但trainingcoverage/parameterpolicy/数值检查均false、targetfalse并回滚，不计成功。独审reports/r17-20261030-terminal-review/terminal-review.json，资格细节另存。历史distinct5/bestsingle3保留。
+
+公网Results已增加独立R17，旧12条及文件hash保留；三文档已按16个directpointer核数更新，完整旧history保留。前端旧相对Latest/Previous标签改为固定日期+真实成绩，类别匹配表头明确；29frontend focused与TypeScript/Vite build通过。网站读页可用，任务与快照新提交继续维护暂停直至本轮后恢复。
+
+下一轮修复已获专项与独审：source-bound高精度冻结意图提前反馈（原2次Ultra额度、runtimeguard不变）；既有weakID的真实native dtype/device/layout/is_leaf元数据（constructor/pre/post、raw64KiB和summary3KiB旧facts优先，无state或值读取）；checkpoint原有支持族的sourceSHA/原ID静态坐标（无replacement code，family/12KiB/64KiB不变，原reference转换字节相同）；两段通用JSON/Python引号示例与条件workspace规划指导。尚无新一轮GPU/模型成功声明。
+
+当前已只读再核Nebius余额$35.57，全部未来承诺含$8/税1.21/lag3.63为$35.52020061692，保持余量、不充值不扩资金。R18尚未prepare/dispatch，需源码提交、实际新pins和起点独审后再运行。Devpost仍Submitted5/5，既有视频/令牌不动，技术故事待最终结果再保存。没有重复全量/F8，也未创建新定时任务。
+
+## 2026-10-30 22:05 北京 — R17 单次真实九项验收已启动
+
+源码 c21cf546e2559ac513836ba8f0d17dc4919fb02b 已推送。Ruff/format/gitleaks通过；本轮新增planner、scoped runtime observation和reference sequence范围说明分别有focused与独审记录，未重跑全量。R17实际准备经独审，183实现/30输入共213pins与Git/磁盘一致，原R14六组语义输入与九份请求逐项相同；固定9、门槛6、单项$.60、6轮/20步/seed1337/120秒Lab均未改。报告 reports/r17-prepared-independent-review-20261030/independent-review.json。
+
+14:05:02UTC已通过headroom-r17-20261030.service单次启动，proposal20f7e4aa0f7dc622fdde04f0a20903b3f5d704b8eb6d390434a43c50f6d789ee / preparation6ea868a7a8f99422d8632ac209fab199c64fc0effa6ebc729fa4ffb2a2992289。新运行结果与成本尚待终态，不把running/not_run写成成功、失败或零费用。最新完整成绩仍为R16的1/9，低于6/9。
+
+起点开发池charged$2.85904888/rem$2.031455520净额，actual合计未知但allresolved，无open/halted/unresolved。临运行前本地Chrome再读余额仍$36.61，至少$8保留/税费/延迟保护及所有原承诺均保持；不充值、不扩预算，不动其他资金池。
+
+网页部署到新源码且Home/Verified/Results/config均200，两项用户服务active、GPU空闲核对后开跑。第一次restart后过早探测曾connection refused，启动完成后只读健康核实通过，未触发模型。为本轮源码/GPU隔离，两类新提交继续维护false；读页与12条历史评估可用，结束后恢复原授权访问。Devpost仍正式Submitted5/5，既有视频/评委令牌未动；技术说明会按最终实测再保存。
+
 ## 2026-10-30 21:47 北京 — R16 完整九项仍 1/9，规划层修复进行中
 
 R16 在已推送源码 53dc8f4 完成原固定九项：目标 **1/9（s3）**，未达到 **6/9**。首轮原类别匹配5/9、完整有效且首因正确2/9、ready1/9；最终valid4/9、ready1/9。182实现/30输入pins全匹配，10次Lab清理成功/GPU退出记录为空，9个worker已退出。27个真实响应（9 Nano / 17 Ultra / 1 Super）均结算；保守计费$0.59904366净额，known actual subtotal $0.57097152；9 Nano actual仍unknown，不将unknown写0。开发池累计$2.85904888、剩$2.031455520，原4.890504400净额总上限/.60每项未改。

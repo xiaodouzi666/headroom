@@ -1,0 +1,202 @@
+"""Exact optional provenance from synthetic bytes only; no source execution."""
+
+import copy
+import hashlib
+import json
+
+import pytest
+from headroom.patch_origin_feedback import with_original_span_context
+
+from headroom.patch_feedback import MAX_SYNTAX_FEEDBACK_BYTES
+from headroom.patch_spans import normalize_span_edits
+
+
+def sha(value):
+    return hashlib.sha256(value).hexdigest()
+
+
+def edit(data, first, last, lines):
+    return {
+        "path": "module.py",
+        "source_sha256": sha(data),
+        "start_id": f"L{first:06d}",
+        "end_id": f"L{last:06d}",
+        "new_lines": lines,
+    }
+
+
+def case(tmp_path, source, edits, candidate, line=None):
+    original, output = tmp_path / "original", tmp_path / "candidate"
+    original.mkdir()
+    output.mkdir()
+    (original / "module.py").write_bytes(source)
+    (output / "module.py").write_bytes(candidate)
+    proposal = {"edits": edits, "env_changes": {}, "cli_changes": [], "notes": []}
+    metadata = normalize_span_edits(proposal, original).metadata
+    assert metadata["files"][0]["expected_sha256"] == sha(candidate)
+    if line is None:
+        with pytest.raises(SyntaxError) as caught:
+            compile(candidate, "module.py", "exec", dont_inherit=True)
+        line = caught.value.lineno
+    feedback = {
+        "coordinate_space": "rejected_candidate",
+        "diagnostics": [
+            {
+                "status": "syntax_error",
+                "path": "module.py",
+                "candidate_sha256": sha(candidate),
+                "line": line,
+            }
+        ],
+        "omitted_file_count": 0,
+    }
+    kwargs = {
+        "original_root": original,
+        "candidate_root": output,
+        "proposal": proposal,
+        "normalization_metadata": metadata,
+    }
+    return feedback, kwargs
+
+
+@pytest.mark.parametrize("newline", ["\n", "\r\n"])
+@pytest.mark.parametrize("terminal", [True, False])
+def test_variable_length_edits_map_to_original_ids_not_shifted_candidate_rows(
+    tmp_path, newline, terminal
+):
+    source = (newline.join(["a = 1", "b = 2", "c = 3"]) + (newline if terminal else "")).encode()
+    candidate = (
+        newline.join(["a = 1", "extra = 4", "b = 2", "c = broken text"])
+        + (newline if terminal else "")
+    ).encode()
+    edits = [edit(source, 3, 3, ["c = broken text"]), edit(source, 1, 1, ["a = 1", "extra = 4"])]
+    before, kwargs = case(tmp_path, source, edits, candidate)
+    output = with_original_span_context(before, **kwargs)
+    item = output["original_span_context"]["mappings"][0]
+    assert item["candidate_line"] == 4
+    assert item["mapping_kind"] == "replacement"
+    assert item["original_start_id"] == item["original_end_id"] == "L000003"
+    assert item["candidate_replacement_start_line"] == 4
+    assert item["line_offset_in_replacement"] == 1
+    assert {"id": "L000003", "text": "c = 3", "truncated": False} in item["nearby_original_lines"]
+    assert item["original_sha256"] == sha(source)
+    assert item["candidate_sha256"] == sha(candidate)
+    assert {key: output[key] for key in before} == before
+
+
+@pytest.mark.parametrize("newline", ["\n", "\r\n"])
+def test_deletion_maps_retained_error_line_but_identifies_only_adjacency(tmp_path, newline):
+    source = newline.join(["if True:", "    value = 1", "print('ok')", ""]).encode()
+    candidate = newline.join(["if True:", "print('ok')", ""]).encode()
+    before, kwargs = case(tmp_path, source, [edit(source, 2, 2, [])], candidate)
+    output = with_original_span_context(before, **kwargs)
+    item = output["original_span_context"]["mappings"][0]
+    assert item["candidate_line"] == 2 and item["mapping_kind"] == "unchanged"
+    assert item["original_start_id"] == item["original_end_id"] == "L000003"
+    assert item["adjacent_deletions"] == [
+        {"candidate_boundary_line": 2, "original_start_id": "L000002", "original_end_id": "L000002"}
+    ]
+    assert "not the cause" in output["original_span_context"]["scope"]
+
+
+def broken_case(tmp_path):
+    source = b"a = 1\n"
+    return case(tmp_path, source, [edit(source, 1, 1, ["a = broken text"])], b"a = broken text\n")
+
+
+@pytest.mark.parametrize(
+    "fault",
+    [
+        "missing_original",
+        "changed_original",
+        "candidate_drift",
+        "forged_normalization",
+        "wrong_diagnostic_hash",
+    ],
+)
+def test_incomplete_or_mismatched_bindings_remain_unavailable(tmp_path, fault):
+    before, kwargs = broken_case(tmp_path)
+    if fault == "missing_original":
+        (kwargs["original_root"] / "module.py").unlink()
+    elif fault == "changed_original":
+        (kwargs["original_root"] / "module.py").write_bytes(b"a = 0\n")
+    elif fault == "candidate_drift":
+        (kwargs["candidate_root"] / "module.py").write_bytes(b"a = another broken text\n")
+    elif fault == "forged_normalization":
+        kwargs["normalization_metadata"]["files"][0]["expected_sha256"] = "a" * 64
+    else:
+        before["diagnostics"][0]["candidate_sha256"] = "a" * 64
+    output = with_original_span_context(before, **kwargs)
+    item = output["original_span_context"]["mappings"][0]
+    assert item["status"] == "unavailable"
+    assert "original_start_id" not in item and "nearby_original_lines" not in item
+
+
+def test_missing_metadata_never_guesses_an_original_id(tmp_path):
+    before, kwargs = broken_case(tmp_path)
+    kwargs["normalization_metadata"] = None
+    output = with_original_span_context(before, **kwargs)
+    assert output["original_span_context"]["status"] == "unavailable"
+    assert "L000001" not in json.dumps(output["original_span_context"])
+
+
+def test_candidate_line_beyond_actual_file_is_unavailable(tmp_path):
+    before, kwargs = broken_case(tmp_path)
+    before["diagnostics"][0]["line"] = 10
+    output = with_original_span_context(before, **kwargs)
+    assert output["original_span_context"]["mappings"][0]["status"] == "unavailable"
+
+
+def test_original_credentials_are_withheld_without_excerpts(tmp_path):
+    source = b'api_key = "OFFLINE_FAKE_SECRET_ONLY"\na = 1\n'
+    candidate = b'api_key = "OFFLINE_FAKE_SECRET_ONLY"\na = broken text\n'
+    before, kwargs = case(tmp_path, source, [edit(source, 2, 2, ["a = broken text"])], candidate)
+    output = with_original_span_context(before, **kwargs)
+    item = output["original_span_context"]["mappings"][0]
+    assert item["status"] == "withheld"
+    assert "OFFLINE_FAKE_SECRET_ONLY" not in json.dumps(output)
+    assert "nearby_original_lines" not in item
+
+
+@pytest.mark.parametrize("room", [0, 160])
+def test_optional_origin_never_displaces_old_diagnostics_or_expands_old_cap(tmp_path, room):
+    before, kwargs = broken_case(tmp_path)
+    before["padding"] = ""
+    initial = len(json.dumps(before, ensure_ascii=False).encode())
+    before["padding"] = "x" * (MAX_SYNTAX_FEEDBACK_BYTES - room - initial)
+    original = copy.deepcopy(before)
+    output = with_original_span_context(before, **kwargs)
+    assert before == original
+    assert {key: output[key] for key in original} == original
+    assert len(json.dumps(output, ensure_ascii=False).encode()) <= MAX_SYNTAX_FEEDBACK_BYTES
+    if room == 0:
+        assert output == original and "original_span_context" not in output
+    else:
+        assert output["original_span_context"]["status"] == "omitted"
+
+
+def test_no_candidate_error_means_no_new_optional_payload(tmp_path):
+    before, kwargs = broken_case(tmp_path)
+    before["diagnostics"] = []
+    assert with_original_span_context(before, **kwargs) == before
+
+
+def test_non_span_normalization_cannot_claim_original_ids(tmp_path):
+    before, kwargs = broken_case(tmp_path)
+    kwargs["normalization_metadata"]["schema"] = "source_anchored_edits_v1"
+    output = with_original_span_context(before, **kwargs)
+    assert output["original_span_context"]["status"] == "unavailable"
+    assert "mappings" not in output["original_span_context"]
+
+
+def test_ancillary_runtime_failure_does_not_replace_rejection(tmp_path, monkeypatch):
+    before, kwargs = broken_case(tmp_path)
+
+    def unavailable(*_args, **_kwargs):
+        raise RuntimeError("PRIVATE_ERROR_TEXT")
+
+    monkeypatch.setattr("headroom.patch_origin_feedback.normalize_span_edits", unavailable)
+    output = with_original_span_context(before, **kwargs)
+    assert output["diagnostics"] == before["diagnostics"]
+    assert output["original_span_context"]["status"] == "unavailable"
+    assert "PRIVATE_ERROR_TEXT" not in json.dumps(output)

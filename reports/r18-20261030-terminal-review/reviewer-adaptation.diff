@@ -1,0 +1,54 @@
+--- reports/r17-20261030-terminal-review/review.py.txt
++++ reports/r18-20261030-terminal-review/review.py.txt
+@@ -1,4 +1,4 @@
+-"""Read-only R17 terminal auditor. Writes only a new report; never dispatches work."""
++"""Read-only R18 terminal auditor. Writes only a new report; never dispatches work."""
+ 
+ from __future__ import annotations
+ 
+@@ -412,7 +412,7 @@
+     )
+     now = datetime.now(UTC).isoformat()
+     record = {
+-        "schema": "headroom.r17-terminal-readonly-review.v1",
++        "schema": "headroom.r18-terminal-readonly-review.v1",
+         "utc": now,
+         "campaign_path": str(campaign_path),
+         "campaign_sha256": wrapped["sha256"],
+@@ -501,7 +501,7 @@
+     with destination.open("xb") as handle:
+         handle.write(encoded)
+     text = (
+-        "# R17 terminal review\n\n"
++        "# R18 terminal review\n\n"
+         f"Targets: **{record['target_met_count']}/9**, unchanged gate **6/9**. "
+         f"Terminal cases: {record['terminal_case_count']}/9. "
+         f"Full nine-case execution: {record['complete_nine_case_campaign']}.\n\n"
+@@ -547,12 +547,12 @@
+     parser.add_argument(
+         "--campaign",
+         type=Path,
+-        default=ROOT / "runs/repair-followup/execution-r17-20261030/campaign.json",
++        default=ROOT / "runs/repair-followup/execution-r18-20261030/campaign.json",
+     )
+     parser.add_argument(
+         "--preparation",
+         type=Path,
+-        default=ROOT / "runs/final48-repair-preparation-20261030-r17/preparation.json",
++        default=ROOT / "runs/final48-repair-preparation-20261030-r18/preparation.json",
+     )
+     parser.add_argument(
+         "--ledger",
+@@ -560,9 +560,9 @@
+         default=ROOT / ".cache/repair-followup-20261030-v3/budget.db",
+     )
+     parser.add_argument(
+-        "--output", type=Path, default=ROOT / "reports/r17-20261030-terminal-review"
+-    )
+-    parser.add_argument("--service", default="headroom-r17-20261030.service")
++        "--output", type=Path, default=ROOT / "reports/r18-20261030-terminal-review"
++    )
++    parser.add_argument("--service", default="headroom-r18-20261030.service")
+     args = parser.parse_args(argv)
+     record, status = build_review(args.campaign, args.preparation, args.ledger, args.service)
+     if record is not None:

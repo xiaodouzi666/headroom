@@ -37,6 +37,7 @@ from headroom.solver_context import (
     invocation_reference_catalog,
     solver_prompt_context,
 )
+from headroom.training_plan_intent import training_update_rejection_trigger
 from headroom.validation_feedback import validation_issue_context
 
 PROMPT_PATH = Path(__file__).parent / "prompts" / "diagnose.md"
@@ -227,7 +228,7 @@ _REPAIR_RULES = {
     "REQUESTED_INVOCATION_ALREADY_PRESENT": "Literal argv is present; unresolved target application is ambiguous, not missing argv.",
     "POLICY_PERMISSION_DENIED": "Remove or revise the step requiring the disabled permission; do not change policy.",
     "BATCH_CHANGE_FORBIDDEN": "Remove or revise batch/accumulation changes without the required permission.",
-    "MODEL_CHANGE_FORBIDDEN": "Remove or revise model/input shrinking; preserve layers, width, vocabulary and sequence length.",
+    "MODEL_CHANGE_FORBIDDEN": "Remove or revise model/input shrinking or freezing/excluding previously updated parameters; preserve layers, width, vocabulary, sequence length and original trainable update coverage.",
     "TRAINING_TRUNCATION_FORBIDDEN": "Preserve all required training data and optimizer updates.",
     "NUMERICS_CHANGE_FORBIDDEN": "Remove or revise precision/mathematics changes; do not merely relabel their impact.",
     "UNKNOWN_EVIDENCE_REFERENCE": "Copy an exact identity from evidence_availability_catalog; use genuine ambiguity for unsupported facts.",
@@ -841,6 +842,24 @@ def validate_diagnosis(
                     f"Step {step.fix_id} proposes shrinking the model or its inputs.",
                     f"/plan/{step_number}",
                 )
+            )
+        training_trigger = training_update_rejection_trigger(
+            step.description, evidence, policy, negation_pattern=_MODEL_SHRINK_NEGATION
+        )
+        if training_trigger is not None:
+            issues.append(
+                DiagnosisIssue(
+                    "MODEL_CHANGE_FORBIDDEN",
+                    "The proposed freeze/exclusion contradicts selected complete original parameter updates.",
+                    f"/plan/{step_number}",
+                )
+            )
+            grounding_corrections.append(
+                {
+                    "code": "MODEL_CHANGE_FORBIDDEN",
+                    "path": f"/plan/{step_number}",
+                    "training_update_trigger": training_trigger,
+                }
             )
         if TRAINING_TRUNCATION.search(text):
             issues.append(

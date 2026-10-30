@@ -1,0 +1,79 @@
+{
+  "scope": "DRAFT_ONLY_NOT_APPLIED",
+  "result": "READY_FOR_POST_R17_REVIEW",
+  "at_utc": "2026-10-30T14:19:40.373571+00:00",
+  "base_source_revision": "c21cf546e2559ac513836ba8f0d17dc4919fb02b",
+  "production_source_or_tests_changed": false,
+  "existing_source_hashes_unchanged": {
+    "headroom/patch.py": "c8c72c317bd9d3892c871129844d8fc49f03f95095534d980bde7a256962f6aa",
+    "headroom/prompts/patch.md": "8d93ebdccf77865a8465cd222c614e520e591d11bb40596c3bbe55c772839724",
+    "headroom/prompts/patch_fix.md": "73ccac7178a82e96cebdaf8a5cc3bab37f6f565da0999377c586ee2ba5975e13"
+  },
+  "proposed_files": {
+    "headroom/patch_origin_feedback.py": "c3e9e033d4a5fa591766dee14828298f41e140a4457e1779646cd28a9f86320a",
+    "headroom/patch.py": "56cbdf657bd105f222e3224f03f1396e7d8152a6b5cb8604f5031170a266075a",
+    "headroom/prompts/patch.md": "69a4d75f0cd6157b5b766fb427ba13219946491593bf511dabd390337e8e02e8",
+    "headroom/prompts/patch_fix.md": "36e82b406aa2a4526c029d77113572bb483efdd1f510e99be94066a19b7f5f0d",
+    "tests/test_patch_origin_feedback.py": "a4bc89389f7539d14bc7ae4fd6f182c5164aa5c09ac57746fba07a85295843b6"
+  },
+  "proposed_patch_sha256": "54aa756221e647a0494708e4d3751f124549fc47e19a4293c6a54c81e3c66dad",
+  "patch_check_against_current_source": "PASS_NO_APPLY",
+  "patch_py_ast_after_removing_only_new_import_and_assignment_equals_frozen_original": true,
+  "existing_models_caps_repair_limits_gates_unchanged": true,
+  "prompt_examples_parse_as_json_and_preserve_python_quotes": {
+    "headroom/prompts/patch.md": {
+      "fragment": "{\"new_lines\":[\"    label = \\\"ready\\\"\"]}",
+      "decoded_line": "    label = \"ready\""
+    },
+    "headroom/prompts/patch_fix.md": {
+      "fragment": "{\"new_lines\":[\"    label = \\\"ready\\\"\"]}",
+      "decoded_line": "    label = \"ready\""
+    }
+  },
+  "scope_limits": {
+    "new_origin_context_max_bytes": 8192,
+    "existing_total_candidate_syntax_max_bytes": 8192,
+    "original_diagnostics_never_removed_or_truncated_for_origin": true,
+    "no_new_solver_or_request_budget_allowance": true,
+    "insufficient_room": "Small omitted/unavailable status when it fits; otherwise optional field absent, explicitly defined as omitted/unknown in prompt. Existing feedback unchanged.",
+    "files_max": 3,
+    "original_excerpt_lines_per_mapping_max": 7,
+    "original_excerpt_serialized_text_bytes_max": 512,
+    "original_file_bound_bytes": 2097152,
+    "unknown": "Unbound/missing/stale/symlink/non-span metadata/candidate drift are unavailable, never guessed."
+  },
+  "draft_only_validation": {
+    "how": "Proposed helper loaded by filename in isolated synthetic report test process; existing normalizer reused only on /tmp bytes. Main patch flow/new production test installation not executed.",
+    "initial": "17 passed in0.29s",
+    "intermediate": "18 passed,1 failed in0.33s only due draft loader not registering package attribute for monkeypatch; log preserved.",
+    "final": "19 passed in0.33s",
+    "guard": "reports/final48h-closing-regression-20261029/closing_guarded_v5.py",
+    "cases": [
+      "multi-edit growth maps later candidate row4 to original L000003",
+      "LF/CRLF and terminal/no-terminal variants",
+      "deletion-induced error maps retained line L000003 and lists adjacent deleted L000002 only",
+      "original/candidate/metadata/diagnostic SHA mismatch preserves unavailable",
+      "missing normalization and non-span protocol stay unavailable",
+      "far-out parser row stays unavailable",
+      "original credential-like source withheld",
+      "full8192 existing feedback remains identical; near-cap only omitted marker",
+      "ancillary RuntimeError downgraded without exception text disclosure"
+    ]
+  },
+  "artifacts": {
+    "reports/patcher-origin-feedback-proposal-20261030/draft-validation.log": "11b8a0b7435405729091c187a14c48fb52ff81067caa449e22a70fab7bcf24fd",
+    "reports/patcher-origin-feedback-proposal-20261030/draft-validation.xml": "791653dd3e25b9e4125f5a2f267b3f04a7e253a4527607d0ecf9d140658fe1b1",
+    "reports/patcher-origin-feedback-proposal-20261030/draft-validation-final.log": "6664e50e76600f1039b8018944f0965ac68234c87094e17718f973b674c1b47b",
+    "reports/patcher-origin-feedback-proposal-20261030/draft-validation-final.xml": "9731a4609a39ddc820308cb5e88ae95ebaf2183f9e1a4987d5faeebc89a148c7",
+    "reports/patcher-origin-feedback-proposal-20261030/draft-validation-v2.log": "17c3e8642f443e5cd7968d8c7ae6e0b045a9fbeab7997d9886aa12b459540197",
+    "reports/patcher-origin-feedback-proposal-20261030/draft-validation-v2.xml": "4c2405950a4167a8acb3c6b0455308b5d2a43dd70fc9ba90c8d12e9181e0c663",
+    "reports/patcher-origin-feedback-proposal-20261030/draft-ruff-final.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "reports/patcher-origin-feedback-proposal-20261030/patch-check.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "provider_requests": 0,
+  "models": 0,
+  "gpu_runs": 0,
+  "main_apply_executed": false,
+  "main_new_logic_executed": false,
+  "historical_outputs_changed": false
+}

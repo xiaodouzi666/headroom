@@ -1,0 +1,696 @@
+{
+  "utc": "2026-10-30T14:18:17.938068+00:00",
+  "campaign_sha256": "46341f8b0e51e9b1e7d8b82dde078593ae747031178dca31813ffda10216a2df",
+  "status": "running",
+  "executed": 6,
+  "raw_target_count": 2,
+  "full_score_available": false,
+  "stop_reason": null,
+  "rows": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "status": "needs_human",
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "target_met": false,
+      "patch_applied": true,
+      "rounds": 6,
+      "charged_usd": "0.26382100",
+      "cost_resolved": true,
+      "cost_usd": null,
+      "reason": "Diagnosis failed validation; inspect diagnosis.json issues before deciding whether additional evidence is needed"
+    },
+    {
+      "scenario_id": "s2_capacity_v2",
+      "status": "needs_human",
+      "run_id": "7f29fafd8fb24f1aa771d400f0f7d0dc",
+      "target_met": false,
+      "patch_applied": null,
+      "rounds": 1,
+      "charged_usd": "0.07114396",
+      "cost_resolved": true,
+      "cost_usd": null,
+      "reason": "Diagnosis requests additional information; inspect diagnosis.json notes before restarting with new evidence"
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "status": "completed",
+      "run_id": "ebad78994b454ec095b9900286f929fd",
+      "target_met": true,
+      "patch_applied": true,
+      "rounds": 1,
+      "charged_usd": "0.06316508",
+      "cost_resolved": true,
+      "cost_usd": null,
+      "reason": null
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "status": "completed",
+      "run_id": "e075c80b3f3344408ad04d826b5d0ab9",
+      "target_met": true,
+      "patch_applied": true,
+      "rounds": 1,
+      "charged_usd": "0.06050872",
+      "cost_resolved": true,
+      "cost_usd": null,
+      "reason": null
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "status": "needs_human",
+      "run_id": "41d2d95eddc94d598d57f0083557bc2c",
+      "target_met": false,
+      "patch_applied": null,
+      "rounds": 1,
+      "charged_usd": "0.06168264",
+      "cost_resolved": true,
+      "cost_usd": null,
+      "reason": "Diagnosis requests additional information; inspect diagnosis.json notes before restarting with new evidence"
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "status": "needs_human",
+      "run_id": "eaddc8ccd44149018a2ead8db62f3c3d",
+      "target_met": false,
+      "patch_applied": null,
+      "rounds": 1,
+      "charged_usd": "0.05460716",
+      "cost_resolved": true,
+      "cost_usd": null,
+      "reason": "Diagnosis failed validation; inspect diagnosis.json issues before deciding whether additional evidence is needed"
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "status": "running",
+      "run_id": "70ca1a74a7a8456a8944973f3498dae6",
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched"
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "status": "not_run",
+      "run_id": null,
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched"
+    },
+    {
+      "scenario_id": "nanogpt",
+      "status": "not_run",
+      "run_id": null,
+      "target_met": null,
+      "patch_applied": null,
+      "rounds": null,
+      "charged_usd": null,
+      "cost_resolved": false,
+      "cost_usd": null,
+      "reason": "not_dispatched"
+    }
+  ],
+  "actual_call_records": [
+    {
+      "id": 1,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "annotate",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 40092,
+        "completion_tokens": 503,
+        "total_tokens": 40595,
+        "cached_tokens": null,
+        "reasoning_tokens": null
+      },
+      "http_status": 200
+    },
+    {
+      "id": 2,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "diagnose",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 37043,
+        "completion_tokens": 538,
+        "total_tokens": 37581,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    },
+    {
+      "id": 3,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 13175,
+        "completion_tokens": 3401,
+        "total_tokens": 16576,
+        "cached_tokens": 0,
+        "reasoning_tokens": 2852
+      },
+      "http_status": 200
+    },
+    {
+      "id": 4,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 13457,
+        "completion_tokens": 1350,
+        "total_tokens": 14807,
+        "cached_tokens": 0,
+        "reasoning_tokens": 801
+      },
+      "http_status": 200
+    },
+    {
+      "id": 5,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 13462,
+        "completion_tokens": 1944,
+        "total_tokens": 15406,
+        "cached_tokens": 0,
+        "reasoning_tokens": 1360
+      },
+      "http_status": 200
+    },
+    {
+      "id": 6,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 13511,
+        "completion_tokens": 1138,
+        "total_tokens": 14649,
+        "cached_tokens": 0,
+        "reasoning_tokens": 568
+      },
+      "http_status": 200
+    },
+    {
+      "id": 7,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "diagnose",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 39172,
+        "completion_tokens": 443,
+        "total_tokens": 39615,
+        "cached_tokens": 26112,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    },
+    {
+      "id": 8,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 15275,
+        "completion_tokens": 4000,
+        "total_tokens": 19275,
+        "cached_tokens": 0,
+        "reasoning_tokens": 4000
+      },
+      "http_status": 200
+    },
+    {
+      "id": 9,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 14582,
+        "completion_tokens": 1052,
+        "total_tokens": 15634,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    },
+    {
+      "id": 10,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 16071,
+        "completion_tokens": 794,
+        "total_tokens": 16865,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    },
+    {
+      "id": 11,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 15803,
+        "completion_tokens": 791,
+        "total_tokens": 16594,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    },
+    {
+      "id": 12,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "diagnose",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 41692,
+        "completion_tokens": 692,
+        "total_tokens": 42384,
+        "cached_tokens": 26112,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    },
+    {
+      "id": 13,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "super",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 974,
+        "completion_tokens": 89,
+        "total_tokens": 1063,
+        "cached_tokens": 0,
+        "reasoning_tokens": 16
+      },
+      "http_status": 200
+    },
+    {
+      "id": 14,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "super",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 1960,
+        "completion_tokens": 88,
+        "total_tokens": 2048,
+        "cached_tokens": 0,
+        "reasoning_tokens": 23
+      },
+      "http_status": 200
+    },
+    {
+      "id": 15,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "super",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 3090,
+        "completion_tokens": 213,
+        "total_tokens": 3303,
+        "cached_tokens": 1936,
+        "reasoning_tokens": 67
+      },
+      "http_status": 200
+    },
+    {
+      "id": 16,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 20418,
+        "completion_tokens": 1943,
+        "total_tokens": 22361,
+        "cached_tokens": 0,
+        "reasoning_tokens": 1520
+      },
+      "http_status": 200
+    },
+    {
+      "id": 17,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "diagnose",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 43673,
+        "completion_tokens": 437,
+        "total_tokens": 44110,
+        "cached_tokens": 26112,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    },
+    {
+      "id": 18,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 22239,
+        "completion_tokens": 1090,
+        "total_tokens": 23329,
+        "cached_tokens": 0,
+        "reasoning_tokens": 754
+      },
+      "http_status": 200
+    },
+    {
+      "id": 19,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "diagnose",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 45627,
+        "completion_tokens": 477,
+        "total_tokens": 46104,
+        "cached_tokens": 26112,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    },
+    {
+      "id": 20,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 21713,
+        "completion_tokens": 2815,
+        "total_tokens": 24528,
+        "cached_tokens": 0,
+        "reasoning_tokens": 2221
+      },
+      "http_status": 200
+    },
+    {
+      "id": 21,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 22038,
+        "completion_tokens": 606,
+        "total_tokens": 22644,
+        "cached_tokens": 0,
+        "reasoning_tokens": 30
+      },
+      "http_status": 200
+    },
+    {
+      "id": 22,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 22015,
+        "completion_tokens": 1919,
+        "total_tokens": 23934,
+        "cached_tokens": 8432,
+        "reasoning_tokens": 1342
+      },
+      "http_status": 200
+    },
+    {
+      "id": 23,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "patcher",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 22031,
+        "completion_tokens": 1415,
+        "total_tokens": 23446,
+        "cached_tokens": 8432,
+        "reasoning_tokens": 838
+      },
+      "http_status": 200
+    },
+    {
+      "id": 24,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "diagnose",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 47771,
+        "completion_tokens": 843,
+        "total_tokens": 48614,
+        "cached_tokens": 26112,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    },
+    {
+      "id": 25,
+      "run_id": "1d5ffe885b9b4133afcba8f60027c77d",
+      "role": "diagnose",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 49967,
+        "completion_tokens": 735,
+        "total_tokens": 50702,
+        "cached_tokens": 39168,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    },
+    {
+      "id": 26,
+      "run_id": "7f29fafd8fb24f1aa771d400f0f7d0dc",
+      "role": "annotate",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 44052,
+        "completion_tokens": 656,
+        "total_tokens": 44708,
+        "cached_tokens": null,
+        "reasoning_tokens": null
+      },
+      "http_status": 200
+    },
+    {
+      "id": 27,
+      "run_id": "7f29fafd8fb24f1aa771d400f0f7d0dc",
+      "role": "diagnose",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 49956,
+        "completion_tokens": 675,
+        "total_tokens": 50631,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    },
+    {
+      "id": 28,
+      "run_id": "7f29fafd8fb24f1aa771d400f0f7d0dc",
+      "role": "diagnose",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 52755,
+        "completion_tokens": 635,
+        "total_tokens": 53390,
+        "cached_tokens": 43520,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    },
+    {
+      "id": 29,
+      "run_id": "ebad78994b454ec095b9900286f929fd",
+      "role": "annotate",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 60785,
+        "completion_tokens": 707,
+        "total_tokens": 61492,
+        "cached_tokens": null,
+        "reasoning_tokens": null
+      },
+      "http_status": 200
+    },
+    {
+      "id": 30,
+      "run_id": "ebad78994b454ec095b9900286f929fd",
+      "role": "diagnose",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 53114,
+        "completion_tokens": 537,
+        "total_tokens": 53651,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    },
+    {
+      "id": 31,
+      "run_id": "ebad78994b454ec095b9900286f929fd",
+      "role": "patcher",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 13560,
+        "completion_tokens": 617,
+        "total_tokens": 14177,
+        "cached_tokens": 0,
+        "reasoning_tokens": 424
+      },
+      "http_status": 200
+    },
+    {
+      "id": 32,
+      "run_id": "e075c80b3f3344408ad04d826b5d0ab9",
+      "role": "annotate",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 51086,
+        "completion_tokens": 499,
+        "total_tokens": 51585,
+        "cached_tokens": null,
+        "reasoning_tokens": null
+      },
+      "http_status": 200
+    },
+    {
+      "id": 33,
+      "run_id": "e075c80b3f3344408ad04d826b5d0ab9",
+      "role": "diagnose",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 47563,
+        "completion_tokens": 518,
+        "total_tokens": 48081,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    },
+    {
+      "id": 34,
+      "run_id": "e075c80b3f3344408ad04d826b5d0ab9",
+      "role": "patcher",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 12957,
+        "completion_tokens": 227,
+        "total_tokens": 13184,
+        "cached_tokens": 0,
+        "reasoning_tokens": 63
+      },
+      "http_status": 200
+    },
+    {
+      "id": 35,
+      "run_id": "e075c80b3f3344408ad04d826b5d0ab9",
+      "role": "patcher",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 12836,
+        "completion_tokens": 294,
+        "total_tokens": 13130,
+        "cached_tokens": 0,
+        "reasoning_tokens": 152
+      },
+      "http_status": 200
+    },
+    {
+      "id": 36,
+      "run_id": "41d2d95eddc94d598d57f0083557bc2c",
+      "role": "annotate",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 45338,
+        "completion_tokens": 1431,
+        "total_tokens": 46769,
+        "cached_tokens": null,
+        "reasoning_tokens": null
+      },
+      "http_status": 200
+    },
+    {
+      "id": 37,
+      "run_id": "41d2d95eddc94d598d57f0083557bc2c",
+      "role": "diagnose",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 41652,
+        "completion_tokens": 605,
+        "total_tokens": 42257,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    },
+    {
+      "id": 38,
+      "run_id": "41d2d95eddc94d598d57f0083557bc2c",
+      "role": "diagnose",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 43774,
+        "completion_tokens": 672,
+        "total_tokens": 44446,
+        "cached_tokens": 34816,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    },
+    {
+      "id": 39,
+      "run_id": "eaddc8ccd44149018a2ead8db62f3c3d",
+      "role": "annotate",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 46918,
+        "completion_tokens": 1261,
+        "total_tokens": 48179,
+        "cached_tokens": null,
+        "reasoning_tokens": null
+      },
+      "http_status": 200
+    },
+    {
+      "id": 40,
+      "run_id": "eaddc8ccd44149018a2ead8db62f3c3d",
+      "role": "diagnose",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 34397,
+        "completion_tokens": 736,
+        "total_tokens": 35133,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    },
+    {
+      "id": 41,
+      "run_id": "eaddc8ccd44149018a2ead8db62f3c3d",
+      "role": "diagnose",
+      "outcome": "response",
+      "usage": {
+        "prompt_tokens": 36024,
+        "completion_tokens": 613,
+        "total_tokens": 36637,
+        "cached_tokens": 26112,
+        "reasoning_tokens": 0
+      },
+      "http_status": 200
+    }
+  ],
+  "no_dispatch_by_monitor": true
+}

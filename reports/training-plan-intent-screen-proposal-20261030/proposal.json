@@ -1,0 +1,111 @@
+{
+  "scope": "READ_ONLY_PROPOSAL_NOT_IMPLEMENTED",
+  "production_modified": false,
+  "tests_modified": false,
+  "new_model_calls": 0,
+  "new_gpu_jobs": 0,
+  "problem": "R17 Ultra marked an explicit freeze/exclude-updated-parameters plan ready although the selected original capture had complete all-parameter updates. It consumed Super/GPU work before existing strict runtime policy rejected it.",
+  "actual_guard_evidence": [
+    {
+      "round": 1,
+      "path": "runs/repair-followup/execution-r17-20261030/jobs/70ca1a74a7a8456a8944973f3498dae6/rounds/01/verification-feedback.json",
+      "sha256": "6aa2b9d2cc76594a85697659f7b894ef6bb46f33bdfef1d73d0bd50f951066ee",
+      "checks": {
+        "parameter_count_unchanged": true,
+        "parameter_policy": false,
+        "training_coverage_not_reduced": false,
+        "memory_target": true,
+        "numerical_acceptance": false
+      },
+      "peak_after": 4.413207552,
+      "max_loss_delta": 3.3520333766937256,
+      "notes": [
+        "TRAINING_COVERAGE_REDUCED: source-bound 20-update captures show catalog/first-flag elements 1075970304/1075970304 -> 2097408/2097408; updated elements per logical boundary 1075970304..1075970304 -> 2097408..2097408. Strict policy forbids freezing or dropping parameter updates; choose a repair preserving the original tr [truncated]",
+        "Loss states describe the original-plan observed scalar comparison; matching inputs, effective batch and objective are not established. This is not proof of workload equivalence.",
+        "Pairing: Lab runtime fingerprints and pinned source contracts; reference: source outside pinned s1/s2/s3/s4 AST contracts; candidate: source outside pinned s1/s2/s3/s4 AST contracts",
+        "Reference discovery: Baseline did not OOM or reference already supplied"
+      ]
+    },
+    {
+      "round": 2,
+      "path": "runs/repair-followup/execution-r17-20261030/jobs/70ca1a74a7a8456a8944973f3498dae6/rounds/02/verification-feedback.json",
+      "sha256": "cf04d007ef581426c3af1d537ae5b8dcb7ec8f89d92d3e8a644a8049de8309a8",
+      "checks": {
+        "parameter_count_unchanged": true,
+        "parameter_policy": false,
+        "training_coverage_not_reduced": false,
+        "memory_target": true,
+        "numerical_acceptance": false
+      },
+      "peak_after": 4.413207552,
+      "max_loss_delta": 3.3520333766937256,
+      "notes": [
+        "TRAINING_COVERAGE_REDUCED: source-bound 20-update captures show catalog/first-flag elements 1075970304/1075970304 -> 1075970304/2097408; updated elements per logical boundary 1075970304..1075970304 -> 2097408..2097408. Strict policy forbids freezing or dropping parameter updates; choose a repair preserving the original [truncated]",
+        "Loss states describe the original-plan observed scalar comparison; matching inputs, effective batch and objective are not established. This is not proof of workload equivalence.",
+        "Pairing: Lab runtime fingerprints and pinned source contracts; reference: source outside pinned s1/s2/s3/s4 AST contracts; candidate: source outside pinned s1/s2/s3/s4 AST contracts",
+        "Reference discovery: Baseline did not OOM or reference already supplied"
+      ]
+    }
+  ],
+  "recommended_minimum": "Use an evidence-conditioned high-precision intent screen to raise existing MODEL_CHANGE_FORBIDDEN before Super, allowing only the existing one Ultra correction/review allowance. Never rewrite needs_more_info, the plan or capture facts.",
+  "data_predicate_all_required": [
+    "Existing bound_optimizer_observation must match the evidence run_id, retained source digest/catalog and current selected round; no self-derived observation identity.",
+    "status observed; capture_complete/reported_complete/logical_boundary_complete/parameter_update_sets_complete/optimizer_call_counts_consistent all exactly true.",
+    "logical_updates and complete_update_set_records equal the requested required_optimizer_updates, which is20 in this fixed campaign; all_catalog_updated_records matches that count.",
+    "all_catalog_parameters_updated_each_record exactly true; observed updated numel minimum==maximum==catalog_numel.",
+    "catalog_numel matches registered_parameter_numel; positive catalog_entries and catalog_numel; catalog_numel_matches_registered_count true.",
+    "requires_grad_true_entries==catalog_entries, true_numel==catalog_numel and false_entries/false_numel both zero.",
+    "allow_model_change is explicitly false for the first narrow implementation. Unknown evidence cannot enable this new early screen; existing downstream policy remains authoritative."
+  ],
+  "intent_predicate_initial_high_precision": [
+    "Inspect the actual plan description, not title alone. A freeze word or a scenario/file name never suffices.",
+    "Restrict the first rule to unnegated explicit parameter-update reduction: e.g. a literal requires_grad_(False)/requires_grad=False action plus an explicit optimizer exclusion/train-only-head description, or an explicit proposal to stop updating previously updated model parameters.",
+    "Reuse existing clause-scoped negation handling; do-not/never/avoid/without descriptions of forbidden edits must not match. Do not guess names for missing source/module facts.",
+    "Do not implement a broad standalone freeze regex. If intent or the original full-update scope is ambiguous, omit this additional early issue and let the current source/GPU/coverage gates decide."
+  ],
+  "issue_and_call_contract": {
+    "issue_code": "MODEL_CHANGE_FORBIDDEN",
+    "path": "/plan/<index>",
+    "message": "The proposed freeze/exclusion contradicts the selected original complete parameter-update coverage under the unchanged policy.",
+    "repair_data": "Repeat bounded already-sent selected_run_id/sourceSHA and exact original trainable/update counts; this is not new runtime evidence or native authentication.",
+    "same_existing_supplement": true,
+    "extra_model_calls": 0,
+    "needs_more_info_rewritten": false,
+    "candidate_preconditions_or_outcomes_invented": false,
+    "full_validator_runs_again": true,
+    "if_model_keeps_forbidden_plan": "Reject as before; do not force a different plan or claim readiness."
+  },
+  "source_anchors": [
+    {
+      "path": "headroom/diagnose.py",
+      "anchor": "validate_diagnosis step loop, existing MODEL_CHANGE_FORBIDDEN branch at837\u2013844",
+      "change_if_approved": "Add a narrow evidence-conditioned training-update intent predicate beside existing shrink intent. Keep original policy/call limits and all subsequent validation."
+    },
+    {
+      "path": "headroom/observation_feedback.py",
+      "anchor": "bound_optimizer_observation",
+      "change_if_approved": "Reuse source/run/round binding instead of new unchecked metadata parsing."
+    },
+    {
+      "path": "headroom/diagnose.py",
+      "anchor": "_repair_validation and existing model-change repair rule",
+      "change_if_approved": "Attach at most a small typed current-observation trigger; retain existing total feedback cap. No free-form source/credentials."
+    },
+    {
+      "path": "headroom/verify/training_coverage.py",
+      "anchor": "existing strict runtime check",
+      "change_if_approved": "No change; still final enforcement including descriptions the intent screen does not recognize."
+    }
+  ],
+  "required_counterexamples": [
+    "Original already-frozen parameters or optimizer members never actually updated: new data predicate fails; removing them is not rejected just for the title.",
+    "Only constructor facts, partial/OOM/no20updates, stale run/source/round, missing parameter counts or unknown update membership: no early semantic conclusion.",
+    "Removing an unused teacher/eval-only module when optimizer catalog does not cover registered model parameters: no all-updated predicate.",
+    "Preserve all updates; do not freeze backbone. Drop detached temporary buffers: no positive freeze/exclude action.",
+    "Activation checkpointing, releasing grads after their last consumer, optimizer-in-backward preserving all updates, or removing duplicate references without reducing the actual update union: not rejected.",
+    "Numerics permission alone does not authorize model/update changes; explicit model-change authorization must follow existing policy marker requirements.",
+    "Code snippets quoted as a rejected example and negated clauses must not be treated as selected actions.",
+    "The R17 round1 head-only optimizer and round2 full optimizer with requires_grad false both satisfy the original-evidence premise and explicit intent, and should receive the existing model-change issue before a candidate dispatch."
+  ],
+  "not_proven": "This is an intent screen, not an AST repair proof or native optimizer authentication. Its deliberately narrow false-negative boundary is protected by the unchanged real coverage/numerical gates."
+}

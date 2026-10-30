@@ -1,0 +1,183 @@
+{
+  "scope": "MINIMAL_PARAMETER_METADATA_PROPOSAL_ONLY_NOT_IMPLEMENTED",
+  "based_on": {
+    "path": "reports/optimizer-tensor-metadata-feasibility-20261030/proposal.json",
+    "sha256": "b41a8715514db84a57b3a043e580f191eb914695ef82d7db61891f59fa10d3d9"
+  },
+  "decision": "Wait for actual R17 questions. If they require actual dtype/device/layout, collect only a bounded aggregate of existing weak parameter identities at fresh native boundaries. Do not preemptively add state/shape relations or change planner gates.",
+  "production_modified": false,
+  "tests_modified": false,
+  "model_calls": 0,
+  "gpu_jobs": 0,
+  "raw_optional_shared_cap_bytes": 65536,
+  "model_optimizer_summary_cap_bytes": 3072,
+  "raw_component_max_bytes_suggested": 4096,
+  "files_and_anchors": [
+    {
+      "path": "headroom/lab/hooks.py",
+      "anchors": [
+        "_OptimizerGroupOptionObserver:236-362 existing optional serialization envelope",
+        "CaptureSession.__init__:405 new independent optional metadata observer",
+        "recorded_optimizer_init:625-639 after existing weak catalog initialization",
+        "_optimizer_step_start:907-916 fresh pre-call sample",
+        "_optimizer_step:980-999 successful-post sample before update bookkeeping/step-limit can raise",
+        "_optimizer_update_evidence:1109-1139 serialize optional component only if shared envelope fits"
+      ],
+      "change": "Call a small metadata-only helper with _existing_update_identity, never _update_identity. Its errors/overflow only make the new component partial/unavailable."
+    },
+    {
+      "path": "headroom/lab/optimizer_parameter_metadata.py (new if implemented)",
+      "anchors": [
+        "bounded stage aggregate collector; no I/O and no tensor values"
+      ],
+      "change": "Read only cached exact native Tensor/Parameter metadata. Maintain weak-registry IDs and bounded per-ID signatures; aggregate per boundary, no strong tensor references."
+    },
+    {
+      "path": "headroom/optimizer_observations.py",
+      "anchors": [
+        "runtime_optimizer_observations:243 existing source/run gate",
+        "tail:429-463 existing optional group/final3072B handling"
+      ],
+      "change": "Validate new raw component after existing identity/source gate. Preserve all legacy fields first; append only a bounded aggregate fitting final3072B. Missing/overflow remains unknown; do not remove old group evidence or change overall legacy status to fit."
+    },
+    {
+      "path": "headroom/observation_feedback.py (only if later model requests the new field)",
+      "anchors": [
+        "supplied_runtime_observation existing2KiB whitelist"
+      ],
+      "change": "Optional typed projection must fit the same2KiB; never advertise raw-only metadata as model-visible or drop existing required context."
+    }
+  ],
+  "sample_boundaries": {
+    "base_constructor_return": "Only after successful base __init__; observe existing Parameters at this instant. No custom-subclass completion, state initialization or optimizer update is certified.",
+    "step_pre": "Only the actual fresh parameters before the call; no future lazy moments are asserted.",
+    "successful_step_post": "Sample immediately after the native call returns, before existing host StepLimitReached. No successful post sample exists if the call raises/OOMs.",
+    "state_metadata": "Not collected in this minimum. No absence, dtype, device, shape, count or initialization claim about exp_avg/exp_avg_sq/step is allowed at any boundary."
+  },
+  "metadata_contract": {
+    "supported_objects": "Exact cached torch.Tensor or torch.nn.Parameter only, using preexisting live weak identities. Custom subclasses/unknown dispatch return unsupported without invoking their properties/repr or creating IDs.",
+    "fields": [
+      "whitelisted native dtype enum",
+      "native device type/index CPU/CUDA only",
+      "native layout enum (strided supported; other layouts explicitly unknown)",
+      "native is_leaf boolean",
+      "fresh native numel for coverage/count consistency only"
+    ],
+    "aggregation": "Per-boundary distinct already-catalogued IDs and metadata signatures, sampled event counts, unknown/changed counts. A repeated parameter ID is not double-counted as a new allocation. Any metadata change is visible/partial, never flattened into a stable all-FP32 assertion.",
+    "coverage_binding": "Per-stage seen-ID digest/count must match the appropriate exact existing catalog union before all-observed claims. Signatures/hash equality never prove alias independence or storage identity.",
+    "not_collected": [
+      "tensor/state values",
+      "full shapes",
+      "storage pointers",
+      "aliases",
+      "state tensors or per-state parameter relations",
+      "gradient magnitudes/scaling/clipping",
+      "mathematical equivalence"
+    ],
+    "optimizer_container_scope": "Only exact cached native SGD/Adam/AdamW class identities, exact built-in instance/group containers and existing weak IDs for this optional component. Custom subclasses stay unsupported; class-identity filtering is not native implementation authentication. No optimizer.state access in this minimum."
+  },
+  "raw_schema_example": {
+    "protocol": "headroom.optimizer_parameter_metadata.v1",
+    "sample_coverage_complete": true,
+    "boundary_order": [
+      "base_constructor_return",
+      "step_pre",
+      "successful_step_post"
+    ],
+    "stages": {
+      "base_constructor_return": {
+        "events": 1,
+        "distinct_parameter_ids": 34,
+        "metadata_profile_counts": [
+          {
+            "dtype": "float32",
+            "device_type": "cuda",
+            "device_index": 0,
+            "layout": "strided",
+            "is_leaf": true,
+            "parameters": 34
+          }
+        ],
+        "unknown_parameters": 0,
+        "changed_parameters": 0
+      }
+    },
+    "optimizer_state_tensors": "not_captured",
+    "sample_scope": "metadata at these recorded boundaries only; not native implementation or alias authentication"
+  },
+  "model_summary_uniform_serialization_example": {
+    "status": "observed",
+    "scope": "sampled_parameters_only_not_states",
+    "events": [
+      1,
+      20,
+      20
+    ],
+    "parameters": 34,
+    "all_observed": {
+      "dtype": "float32",
+      "device": "cuda",
+      "layout": "strided",
+      "is_leaf": true
+    },
+    "unknown_parameters": 0,
+    "changed_parameters": 0,
+    "state_tensors": "not_captured"
+  },
+  "capacity_examples_only_not_observations": [
+    {
+      "scenario_id": "s2_capacity_v2",
+      "saved_real_call_id": 5,
+      "existing_summary_bytes": 2591,
+      "hypothetical_new_component_bytes": 288,
+      "combined_summary_bytes": 2910,
+      "fits3072": true,
+      "assumption": "New component is a synthetic uniform-FP32/CUDA/strided/leaf serialization example, not a measured tensor property, state or native-optimizer proof."
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "saved_real_call_id": 14,
+      "existing_summary_bytes": 2506,
+      "hypothetical_new_component_bytes": 287,
+      "combined_summary_bytes": 2824,
+      "fits3072": true,
+      "assumption": "New component is a synthetic uniform-FP32/CUDA/strided/leaf serialization example, not a measured tensor property, state or native-optimizer proof."
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "saved_real_call_id": 20,
+      "existing_summary_bytes": 2588,
+      "hypothetical_new_component_bytes": 287,
+      "combined_summary_bytes": 2906,
+      "fits3072": true,
+      "assumption": "New component is a synthetic uniform-FP32/CUDA/strided/leaf serialization example, not a measured tensor property, state or native-optimizer proof."
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "saved_real_call_id": 23,
+      "existing_summary_bytes": 2572,
+      "hypothetical_new_component_bytes": 286,
+      "combined_summary_bytes": 2889,
+      "fits3072": true,
+      "assumption": "New component is a synthetic uniform-FP32/CUDA/strided/leaf serialization example, not a measured tensor property, state or native-optimizer proof."
+    }
+  ],
+  "overflow_rules": [
+    "Enforce one combined optional raw envelope with existing group options: no second64KiB allowance. Legacy group options win; omit the new raw component on overflow.",
+    "Host maps a missing new raw component to unknown/not-captured-or-omitted, never to empty tensors, zero moments, FP32 or a future successful post.",
+    "The3KiB summary keeps the complete old summary first. Append only if it fits; otherwise leave the new component unavailable/omitted. Do not shorten old groups, old update coverage, old facts, or enlarge3072B.",
+    "Metadata errors/unsupported objects/capacity exhaustion never change existing optimizer step counts, logical-update coverage, loss capture, native exceptions, keep/revert, policy or numerical gates."
+  ],
+  "necessary_negative_tests": [
+    "Exact CPU Tensor/Parameter metadata can be observed without item/copy/cpu/numpy/synchronize/data_ptr/storage/state_dict; patch these forbidden paths to fail.",
+    "Custom Tensor/Parameter subclass, custom attribute accessor, FakeTensor/meta/sparse/unsupported dtype/device/index and arbitrary optimizer/state mappings stay unknown without invoking custom callbacks.",
+    "Only _existing_update_identity is used; unknown/freed/reused IDs, GC, mixed optimizer groups and duplicate references do not create identities or tensor ownership.",
+    "Constructor-only OOM records events[1,0,0], not20 updates; first-pre does not create or assert lazy AdamW state; failed step has no post event.",
+    "Last successful native post is sampled before existing StepLimitReached; observer exceptions leave original return/error/step-limit unchanged.",
+    "Mixed FP32/BF16/CPU/CUDA or changed dtype/layout/numel cannot produce a uniform all-FP32/CUDA/strided proof.",
+    "Raw optional envelope exactly-at/over65536 and model summary exactly-at/over3072 preserve legacy bytes/facts and mark only new metadata unavailable; shared record/member caps apply.",
+    "Old R15/R16 artifact without new metadata returns unknown/not_captured. Source/run/selected-round mismatch never advertises fresh metadata.",
+    "Aggregate tensor dtype/layout does not grant native optimizer implementation, no-alias, unscaled-gradient, absent-clipping, supported-reference-family or equivalence proof."
+  ],
+  "verification_if_later_approved": "First deterministic guarded CPU tests of helper/hook boundary/serialization and legacy compatibility. Then only the already-authorized future capture can add fresh runtime facts. This report performs none of those executions."
+}

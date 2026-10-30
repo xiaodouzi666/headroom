@@ -1,0 +1,11 @@
+# Generic patch quote / source-origin feedback draft
+
+This is a proposal under reports only. No production source or tests were changed, no main patch logic was executed, and nothing is installed. proposed.patch applies cleanly with git apply --check to the frozen base revision.
+
+The changes are one small encoding clarification near the beginning of both patch prompts, a new pure feedback helper, one optional call after the existing syntax-feedback collection, and future focused tests. The JSON field example is a generic label assignment, not a scene-specific repair. Existing schema,4000-token cap, diagnosis supplements, patch repair limits, acceptance gates and optimizer semantics remain unchanged.
+
+The helper reuses the existing exact original-span normalizer for the diagnostic's file, revalidates original source and expected/candidate full hashes and byte lengths, and maps only provenance. A replaced candidate line names the entire prior original range and its replacement offset; it does not pretend to know which old line caused the error or the correct next patch range. An unchanged candidate line maps to its exact original ID. A deletion has no candidate line: adjacent deleted spans are labelled only as boundaries. Original nearby text stays untrusted, bounded, and credential-filtered.
+
+The existing candidate-only error excerpt is preserved. The optional origin is nested inside candidate_syntax; the entire component still fits its original8192-byte cap. New context never displaces existing diagnostics or grants a larger source, solver or request allowance. Insufficient space yields an omitted/unavailable marker when it fits; if no marker can fit, the original component remains byte-for-byte unchanged and the prompt defines absence as omitted/unknown.
+
+Pure temporary validation loaded the proposed helper by filename, without installing it or running the main patch flow. Final19 cases passed in0.33s under v5 guard, covering multiple original edits that change candidate line counts, deletion adjacency, LF/CRLF and EOF styles, missing/stale/mismatched bindings, credentials, budget exhaustion, and ancillary exception containment. The interim18pass/1failure was only a test-loader package attribute registration issue; its log is retained. Production focused integration remains for after R17 terminal and review authorization.

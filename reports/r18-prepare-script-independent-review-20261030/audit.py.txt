@@ -1,0 +1,108 @@
+"""Read-only R18 script/funding audit. Never calls prepare, main or dispatch."""
+import ast
+import datetime
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import re
+import subprocess
+import sys
+from decimal import Decimal
+from pathlib import Path
+sys.dont_write_bytecode=True
+ROOT=Path.cwd();sys.path.insert(0,str(ROOT))
+FOLDER=ROOT/'reports/repair-followup-20261030'
+OUT=ROOT/'reports/r18-prepare-script-independent-review-20261030'
+def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def load(p):return json.loads(Path(p).read_text())
+def digest(v):return hashlib.sha256(json.dumps(v,sort_keys=True,separators=(',',':'),ensure_ascii=False,allow_nan=False).encode()).hexdigest()
+script=FOLDER/'prepare-r18.py.txt';oldscript=FOLDER/'prepare-r17.py.txt';checker=FOLDER/'check-r18-preparation.py.txt'
+assert sha(script)=='036dd08dd8b7a402a5a91fc111fc45635696568a13987d5d4e9d455afbf10ed6'
+assert sha(checker)=='453dad5d94260912125ed71a1b09ae3c478a96c797979d09917d9eee49944aa3'
+tree=ast.parse(script.read_text());oldtree=ast.parse(oldscript.read_text())
+wanted={'NEW_REVIEWED_SOURCE','EXPECTED_STARTING_ACCOUNTING','BASE_PROPOSAL_SHA','BASE_PREPARATION_SHA','CONTROLLER_SHA','FUNDING_SHA','SEMANTIC_FIELDS'}
+def values(t):return {n.targets[0].id:ast.literal_eval(n.value) for n in t.body if isinstance(n,ast.Assign) and isinstance(n.targets[0],ast.Name) and n.targets[0].id in wanted}
+constants=values(tree);oldconstants=values(oldtree)
+assert len(constants['NEW_REVIEWED_SOURCE'])==27
+sources=[]
+for name,expected in constants['NEW_REVIEWED_SOURCE'].items():
+ assert re.fullmatch('[0-9a-f]{64}',expected) and sha(ROOT/name)==expected,name
+ sources.append({'path':name,'sha256':expected,'current_disk_matches':True})
+for key in wanted-{'NEW_REVIEWED_SOURCE','EXPECTED_STARTING_ACCOUNTING'}:
+ assert constants[key]==oldconstants[key],key
+assert constants['SEMANTIC_FIELDS']==('controls','cells','input_pins','source_files','calibration','repository_identities')
+class NormalizePrepare(ast.NodeTransformer):
+ def visit_Assign(self,node):
+  if isinstance(node.targets[0],ast.Name) and node.targets[0].id in {'NEW_REVIEWED_SOURCE','EXPECTED_STARTING_ACCOUNTING'}:
+   node.value=ast.Constant(value='<reviewed-value-only>')
+  return self.generic_visit(node)
+ def visit_Constant(self,node):
+  if isinstance(node.value,str):node.value=node.value.replace('R18','R17').replace('r18','r17')
+  return node
+assert ast.dump(NormalizePrepare().visit(tree))==ast.dump(NormalizePrepare().visit(oldtree))
+# Checker changes are only R18 names, map length and report-only review labels.
+newchecker=ast.parse(checker.read_text());oldchecker=ast.parse((FOLDER/'check-r17-preparation.py.txt').read_text())
+class NormalizeChecker(ast.NodeTransformer):
+ def visit_Constant(self,node):
+  if isinstance(node.value,str):
+   node.value=node.value.replace('R18','R17').replace('r18','r17')
+   node.value=node.value.replace('twenty-seven draft implementation identities','twenty-two explicit frozen implementation identities')
+   node.value=node.value.replace('PASS_FINAL_SOURCE_REVIEW_PENDING_ROOT_COMMIT','PASS_PENDING_ROOT_REVIEW_AND_COMMIT')
+  elif type(node.value) is int and node.value==27:node.value=22
+  return node
+ def visit_Dict(self,node):
+  pairs=[(k,v) for k,v in zip(node.keys,node.values) if not(isinstance(k,ast.Constant) and k.value in {'source_map_review_state','all_source_review_complete'})]
+  node.keys=[k for k,v in pairs];node.values=[v for k,v in pairs]
+  return self.generic_visit(node)
+assert ast.dump(NormalizeChecker().visit(newchecker))==ast.dump(oldchecker)
+check=load(FOLDER/'r18-prepare-script-check.json')
+assert check['script_sha256']==sha(script) and check['source_hashes']==constants['NEW_REVIEWED_SOURCE']
+assert check['check_count']==len(check['checks'])==len(set(check['checks']))==89
+assert check['all_source_review_complete'] and not check['write_reviewed_prepare_called'] and not check['real_R18_outputs_created']
+assert not check['model_calls'] and not check['GPU_jobs'] and not check['funding_changed']
+assert check['status']=='PASS_FINAL_SOURCE_REVIEW_PENDING_ROOT_COMMIT'
+controller=FOLDER/'execute-fixed9-v2.py.txt'
+assert sha(controller)==constants['CONTROLLER_SHA']=='590189eb3b23f1f932c62a849afd1aee26edb9968822964e65a8c3b7f04ed426'
+baseproposal_path=ROOT/'.cache/repair-followup-20261030-v3/r14-proposal.json';baseproposal=load(baseproposal_path)
+assert digest(baseproposal)==constants['BASE_PROPOSAL_SHA']=='f3a8041e026e535a338fa283959929b7bc6f31ba181b1844719d66ff2b734026'
+baseprep=load(baseproposal['prepared_path']);body=dict(baseprep);stored=body.pop('preparation_sha256')
+assert digest(body)==stored==constants['BASE_PREPARATION_SHA']=='a2c1fcf6fbc77ba196c2b559c16f99ed19a6346d902608f76bce43516ba49898'
+assert len(baseproposal['requests'])==9
+for req in baseproposal['requests'].values():
+ assert Decimal(req['budget_usd'])==Decimal('.60') and req['max_rounds']==6 and req['max_steps']==20
+ assert req['seed']==1337 and req['max_seconds']==120 and req['search_mode']=='until_target'
+loader=importlib.machinery.SourceFileLoader('r18_script_independent_readonly_controller',str(controller))
+spec=importlib.util.spec_from_loader(loader.name,loader);mod=importlib.util.module_from_spec(spec);loader.exec_module(mod)
+receipt=mod.funding(baseproposal['funding_receipt_path'],constants['FUNDING_SHA'])
+funding_hash_before=sha(baseproposal['funding_receipt_path'])
+state,account=mod.accounting(receipt);mod.require_admission(state,receipt)
+for key,expected in constants['EXPECTED_STARTING_ACCOUNTING'].items():assert account[key]==expected,key
+assert account['scope_cap_usd']=='4.890504400' and account['scope_charged_usd']=='3.72274640' and account['scope_remaining_usd']=='1.167758000'
+assert account['scope_actual_usd'] is None and account['all_costs_resolved'] is True
+assert account['open_runs']==account['halted_runs']==account['unresolved_attempts']==[]
+assert constants['FUNDING_SHA']==receipt['receipt_sha256']=='3b5f9e2573fda21f34c4858a4af64b27a5952e5c1c6bb944dcdb3d01a67bf889'
+outputs=[ROOT/'runs/final48-repair-preparation-20261030-r18',ROOT/'.cache/repair-followup-20261030-v3/r18-proposal.json',FOLDER/'r18-preflight.json',ROOT/'runs/repair-followup/execution-r18-20261030']
+assert all(not p.exists() for p in outputs)
+workspace=ROOT/'reports/planner-workspace-guidance-20261030'
+before=workspace/'before-whitespace-compaction.md.txt';current=ROOT/'headroom/prompts/diagnose_compact.md';whitespace=load(workspace/'whitespace-compaction.json')
+assert sha(before)==whitespace['before_sha256']=='158e23547e17073d85e4de56f8b9e8d2986fd4ae41f2c3895e720813ddbcdc59'
+assert sha(current)==whitespace['after_sha256']=='1ac08beb3ee909d5596a1c548521bde25f7e459d44fdb76b47790e6fef436699'
+assert b''.join(before.read_bytes().split())==b''.join(current.read_bytes().split())
+assert len(before.read_text().splitlines())==86 and len(current.read_text().splitlines())==80
+assert '8 passed' in (workspace/'focused-compacted.log').read_text()
+balance_path=ROOT/'.cache/repair-followup-20261030-v3/r18-balance-preflight.json';balance=load(balance_path)
+assert Decimal(balance['balance_gross_usd'])==Decimal('35.57') and Decimal(balance['minimum_reserve_gross_usd'])==8
+assert Decimal(balance['tax_factor'])==Decimal('1.21') and Decimal(balance['lag_reserve_gross_usd'])==Decimal('3.63')
+commitments=Decimal(balance['future_commitments_including_reserves_gross_usd']);margin=Decimal(balance['balance_gross_usd'])-commitments
+assert commitments==Decimal('35.52020061692') and margin==Decimal(balance['margin_beyond_commitments_gross_usd'])>0
+prior=load(ROOT/balance['prior_observation_path'])
+assert Decimal(prior['future_commitments_including_reserves_gross_usd'])-Decimal(balance['intervening_conservative_charged_net_usd'])*Decimal(balance['tax_factor'])==commitments
+assert balance['development_scope_remaining_net_usd']==account['scope_remaining_usd']
+assert not balance['funds_changed'] and not balance['recharge'] and balance['all_other_commitments_unchanged']
+assert mod.accounting(receipt)[1]==account and sha(baseproposal['funding_receipt_path'])==funding_hash_before
+assert all(sha(ROOT/x['path'])==x['sha256'] for x in sources)
+assert all(not p.exists() for p in outputs)
+facts={'result':'PASS_SCRIPT_ONLY_NO_PREPARATION_OR_EXECUTION','at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'script_sha256':sha(script),'checker_sha256':sha(checker),'source_map_count':27,'source_map_all_match_current_disk':True,'source_map':sources,'script_AST_equal_R17_except_R18_names_reviewed_source_map_starting_accounting':True,'checker_AST_equal_R17_except_R18_names_source_count_report_labels':True,'producer_check_receipt_sha256':sha(FOLDER/'r18-prepare-script-check.json'),'producer_check_count':89,'same_R14_six_semantic_guards':list(constants['SEMANTIC_FIELDS']),'same_R14_all_nine_request_guards':True,'same_060_6round_20update_1337_120_until_target':True,'controller_sha256':sha(controller),'funding_receipt_sha256':receipt['receipt_sha256'],'original_donor_holds_and_profile_verified_read_only':True,'unchanged_exact_SHA_revision_cleantracked_nooverwrite_guards':True,'actual_readonly_starting_ledger':{key:account[key] for key in constants['EXPECTED_STARTING_ACCOUNTING']},'new_compact_prompt_whitespace_only':{'before_sha256':sha(before),'after_sha256':sha(current),'all_nonwhitespace_bytes_equal':True,'lines':80,'producer_focused_result':'8 passed; reviewed existing log only','test_reruns':0},'provider_balance_check':{'source':'Parent fresh signed-in Chrome read-only observation in private receipt; this reviewer performed no provider request','receipt_sha256':sha(balance_path),'balance_gross_usd':balance['balance_gross_usd'],'minimum_reserve_gross_usd':'8','tax_factor':'1.21','lag_reserve_gross_usd':'3.63','commitments_including_reserve_gross_usd':str(commitments),'margin_gross_usd':str(margin),'only_intervening_charged_amount_subtracted_from_previous_commitments':True,'no_funding_expansion':True},'R18_outputs_absent_before_and_after':True,'actual_preparation_pins_not_yet_created_or_reviewed':True,'requires_root_final_commit_before_prepare':True,'prepare_called':False,'funding_changed':False,'model_calls':0,'provider_calls':0,'gpu_jobs':0,'ledger_accounting_unchanged':True}
+(OUT/'independent-review.json').write_text(json.dumps(facts,indent=2)+'\n')
+print(json.dumps({'result':facts['result'],'receipt_sha256':sha(OUT/'independent-review.json'),'source_map_matches':len(sources),'remaining_usd':account['scope_remaining_usd'],'outputs_absent':True},indent=2))

@@ -1,0 +1,133 @@
+"""Read-only independent R17 preparation audit; writes only its own report."""
+import ast
+import copy
+import datetime
+import hashlib
+import importlib.machinery
+import importlib.util
+import json
+import os
+import socket
+import subprocess
+import sys
+from decimal import Decimal
+from pathlib import Path
+sys.dont_write_bytecode = True
+ROOT = Path.cwd()
+sys.path.insert(0, str(ROOT))
+OUT = ROOT / 'reports/r17-prepared-independent-review-20261030'
+REV = 'c21cf546e2559ac513836ba8f0d17dc4919fb02b'
+EXPECTED_PREP = '6ea868a7a8f99422d8632ac209fab199c64fc0effa6ebc729fa4ffb2a2992289'
+EXPECTED_PROPOSAL = '20f7e4aa0f7dc622fdde04f0a20903b3f5d704b8eb6d390434a43c50f6d789ee'
+CONTROLLER_SHA = '590189eb3b23f1f932c62a849afd1aee26edb9968822964e65a8c3b7f04ed426'
+FUNDING_SHA = '3b5f9e2573fda21f34c4858a4af64b27a5952e5c1c6bb944dcdb3d01a67bf889'
+def load(p): return json.loads(Path(p).read_text())
+def sha(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def digest(v): return hashlib.sha256(json.dumps(v, sort_keys=True, separators=(',', ':'), ensure_ascii=False, allow_nan=False).encode()).hexdigest()
+def git(repo, *args): return subprocess.check_output(['git','--no-optional-locks','-C',str(repo),*args],stderr=subprocess.PIPE)
+prep_path = ROOT/'runs/final48-repair-preparation-20261030-r17/preparation.json'
+proposal_path = ROOT/'.cache/repair-followup-20261030-v3/r17-proposal.json'
+preflight_path = ROOT/'reports/repair-followup-20261030/r17-preflight.json'
+script_path = ROOT/'reports/repair-followup-20261030/prepare-r17.py.txt'
+old_script = ROOT/'reports/repair-followup-20261030/prepare-r17-before-reference-scope.py.txt'
+controller_path = ROOT/'reports/repair-followup-20261030/execute-fixed9-v2.py.txt'
+base_proposal_path = ROOT/'.cache/repair-followup-20261030-v3/r14-proposal.json'
+proposal = load(proposal_path); prep = load(prep_path); preflight=load(preflight_path)
+base_proposal=load(base_proposal_path);base=load(base_proposal['prepared_path'])
+artifacts=[prep_path,proposal_path,preflight_path,script_path,old_script,controller_path,base_proposal_path,Path(base_proposal['prepared_path'])]
+before_hashes={str(p):sha(p) for p in artifacts}
+assert git(ROOT,'rev-parse','HEAD').decode().strip()==REV
+assert proposal['revision']==preflight['revision']==REV
+assert git(ROOT,'diff','--name-only','HEAD','--','headroom','scripts','pyproject.toml','uv.lock','tests','web').strip()==b''
+assert sha(controller_path)==CONTROLLER_SHA==proposal['controller_sha256']==preflight['controller_sha256']
+body=copy.deepcopy(prep); stored=body.pop('preparation_sha256')
+assert stored==digest(body)==proposal['preparation_sha256']==preflight['preparation_sha256']==EXPECTED_PREP
+assert digest(proposal)==preflight['proposal_canonical_sha256']==EXPECTED_PROPOSAL
+assert sha(proposal_path)==preflight['proposal_file_sha256']
+assert sha(prep_path)==preflight['preparation_file_sha256']
+assert sha(script_path)==preflight['preparation_script_sha256']=='dbf472d9ef019d591907eacc99bc65d3d23d30621b5ff3eec9414363d5f8b516'
+assert digest(base_proposal)==preflight['base_R14_proposal_sha256']=='f3a8041e026e535a338fa283959929b7bc6f31ba181b1844719d66ff2b734026'
+oldbase=copy.deepcopy(base);oldsha=oldbase.pop('preparation_sha256')
+assert digest(oldbase)==oldsha=='a2c1fcf6fbc77ba196c2b559c16f99ed19a6346d902608f76bce43516ba49898'
+semantic_fields=('controls','cells','input_pins','source_files','calibration','repository_identities')
+semantic={k:prep[k]==base[k] for k in semantic_fields};assert all(semantic.values())
+assert {k:v for k,v in prep.items() if k not in {'implementation_pins','preparation_sha256'}}=={k:v for k,v in base.items() if k not in {'implementation_pins','preparation_sha256'}}
+assert proposal['requests']==base_proposal['requests'] and len(proposal['requests'])==9
+for req in proposal['requests'].values():
+ assert Decimal(req['budget_usd'])==Decimal('.60') and req['max_steps']==20 and req['max_rounds']==6
+ assert req['seed']==1337 and req['max_seconds']==120 and req['search_mode']=='until_target'
+assert prep['controls']['fixed_denominator']==9 and prep['controls']['minimum_targets']==6
+assert len(prep['implementation_pins'])==183 and len(prep['input_pins'])==30
+pins=[]
+for category in ('implementation_pins','input_pins'):
+ for name,pin in prep[category].items():
+  actual=(ROOT/name).read_bytes()
+  assert len(actual)==pin['bytes'] and hashlib.sha256(actual).hexdigest()==pin['sha256'],name
+  prefix='.cache/upstream/nanoGPT/'
+  if name.startswith(prefix):
+   repo=ROOT/'.cache/upstream/nanoGPT';revision=prep['repository_identities']['nanogpt']['revision'];relative=name[len(prefix):];repository='nanoGPT'
+  else:repo=ROOT;revision=REV;relative=name;repository='headroom'
+  committed=git(repo,'show',revision+':'+relative)
+  assert committed==actual,name
+  pins.append({'category':category,'path':name,'bytes':len(actual),'sha256':pin['sha256'],'disk_matches':True,'git_matches':True,'repository':repository,'revision':revision})
+assert git(ROOT/'.cache/upstream/nanoGPT','rev-parse','HEAD').decode().strip()==prep['repository_identities']['nanogpt']['revision']
+tree=ast.parse(script_path.read_text());oldtree=ast.parse(old_script.read_text())
+values={n.targets[0].id:ast.literal_eval(n.value) for n in tree.body if isinstance(n,ast.Assign) and isinstance(n.targets[0],ast.Name) and n.targets[0].id in {'NEW_REVIEWED_SOURCE','EXPECTED_STARTING_ACCOUNTING'}}
+oldvalues={n.targets[0].id:ast.literal_eval(n.value) for n in oldtree.body if isinstance(n,ast.Assign) and isinstance(n.targets[0],ast.Name) and n.targets[0].id in {'NEW_REVIEWED_SOURCE','EXPECTED_STARTING_ACCOUNTING'}}
+source_map=values['NEW_REVIEWED_SOURCE'];assert len(source_map)==22
+assert source_map.pop('headroom/verify/reference_context.py')=='32f5996635d2fd8b140ff9894af5268eeeceb01d893b69ff4fe8f981543403f6'
+assert source_map==oldvalues['NEW_REVIEWED_SOURCE']
+for n in tree.body:
+ if isinstance(n,ast.Assign) and isinstance(n.targets[0],ast.Name) and n.targets[0].id=='NEW_REVIEWED_SOURCE':
+  pairs=[(k,v) for k,v in zip(n.value.keys,n.value.values) if ast.literal_eval(k)!='headroom/verify/reference_context.py'];n.value.keys=[k for k,v in pairs];n.value.values=[v for k,v in pairs]
+assert ast.dump(tree)==ast.dump(oldtree)
+for name,expected in values['NEW_REVIEWED_SOURCE'].items():assert sha(ROOT/name)==expected,name
+# Only immutable helper definitions are imported. Never call main/prepare/dispatch.
+loader=importlib.machinery.SourceFileLoader('r17_independent_readonly_controller',str(controller_path));spec=importlib.util.spec_from_loader(loader.name,loader);controller=importlib.util.module_from_spec(spec);loader.exec_module(controller)
+receipt=controller.funding(proposal['funding_receipt_path'],FUNDING_SHA)
+funding_before=sha(proposal['funding_receipt_path'])
+state,account=controller.accounting(receipt);controller.require_admission(state,receipt)
+assert account==proposal['starting_pool_accounting']
+for key,expected in values['EXPECTED_STARTING_ACCOUNTING'].items():assert account[key]==expected,key
+assert account['scope_charged_usd']=='2.85904888' and account['scope_remaining_usd']=='2.031455520'
+assert account['scope_actual_usd'] is None and account['all_costs_resolved'] is True
+assert account['open_runs']==account['halted_runs']==account['unresolved_attempts']==[]
+assert receipt['receipt_sha256']==proposal['funding_receipt_sha256']==FUNDING_SHA
+assert receipt['target_net_usd']=='4.890504400'
+balance_path=ROOT/'.cache/repair-followup-20261030-v3/r17-balance-final.json';balance=load(balance_path)
+assert Decimal(balance['balance_gross_usd'])==Decimal('36.61')
+assert Decimal(balance['minimum_reserve_gross_usd'])==8 and Decimal(balance['tax_factor'])==Decimal('1.21')
+assert Decimal(balance['lag_reserve_gross_usd'])==Decimal('3.63')
+assert Decimal(balance['future_commitments_including_reserves_gross_usd'])==Decimal('36.56527461612')
+margin=Decimal(balance['balance_gross_usd'])-Decimal(balance['future_commitments_including_reserves_gross_usd'])
+assert margin==Decimal(balance['margin_beyond_commitments_gross_usd'])>0
+assert balance['development_scope_remaining_net_usd']==account['scope_remaining_usd']
+assert not balance['funds_changed'] and not balance['recharge']
+r16path=ROOT/'runs/repair-followup/execution-r16-20261030/campaign.json';r16=load(r16path)
+assert r16['status']=='finished' and len(r16['rows'])==9
+assert not (ROOT/'runs/repair-followup/execution-r17-20261030').exists()
+maintenance_path=ROOT/'.cache/repair-window.env'
+maintenance={}
+for line in maintenance_path.read_text().splitlines():
+ if line.strip() and not line.lstrip().startswith('#'):
+  key,value=line.split('=',1);maintenance[key]=value
+assert maintenance=={'HEADROOM_RUN_SUBMISSIONS_ENABLED':'false','HEADROOM_SNAPSHOT_SUBMISSIONS_ENABLED':'false'}
+unit_path=Path.home()/'.config/systemd/user/headroom-public.service.d/zzzz-repair-window.conf'
+assert str(maintenance_path) in unit_path.read_text()
+unit_state=subprocess.check_output(['systemctl','--user','show','headroom-public','-p','ActiveState','-p','SubState'],text=True).strip()
+assert 'ActiveState=active' in unit_state
+workers=[]
+for d in Path('/proc').iterdir():
+ if not d.name.isdigit():continue
+ try:tokens=[t.decode(errors='replace') for t in (d/'cmdline').read_bytes().split(b'\0') if t]
+ except OSError:continue
+ if any(t=='headroom.evaluation_worker' or Path(t).name in {'execute-fixed9-v2.py.txt','execute-fixed9.py.txt'} for t in tokens):
+  workers.append({'pid':int(d.name),'kind':'evaluation_worker_or_fixed9_controller'})
+assert not workers,workers
+assert {str(p):sha(p) for p in artifacts}==before_hashes
+assert sha(proposal['funding_receipt_path'])==funding_before
+state2,account2=controller.accounting(receipt);assert account2==account
+report={'status':'PASS_PREPARED_ONLY_NO_EXECUTION','checked_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'source_revision':REV,'head_matches':True,'tracked_source_tests_web_clean_against_revision':True,'preparation_canonical_sha256':EXPECTED_PREP,'proposal_canonical_sha256':EXPECTED_PROPOSAL,'implementation_pins':183,'input_pins':30,'every_pin_matches_disk_and_git':True,'pin_checks':pins,'nonimplementation_preparation_fields_identical_to_R14':True,'semantic_fields_identical':semantic,'fixed_request_count':9,'every_request_identical_to_R14':True,'request_hashes':{k:digest(v) for k,v in proposal['requests'].items()},'prepare_script_only_change_from_independently_reviewed_21_source_version':'single reviewed reference_context.py source hash entry; all other AST identical','prepare_script_source_count':22,'prepare_script_sha256':sha(script_path),'funding_receipt_sha256':FUNDING_SHA,'target_net_usd':receipt['target_net_usd'],'same_v3_profile_and_original_donor_holds_verified_by_controller':True,'controller_sha256':CONTROLLER_SHA,'controller_unchanged':True,'actual_readonly_ledger_snapshot_exactly_matches_proposal':True,'starting_accounting_summary':{k:account[k] for k in values['EXPECTED_STARTING_ACCOUNTING']},'provider_snapshot_budget_check':{'source':'Parent observed signed-in local Chrome; this audit only reads supplied private receipt and checks arithmetic, no independent provider call','path':str(balance_path),'sha256':sha(balance_path),'balance_gross_usd':balance['balance_gross_usd'],'reserve_gross_usd':'8','tax_factor':'1.21','lag_reserve_gross_usd':'3.63','commitments_including_reserves_gross_usd':balance['future_commitments_including_reserves_gross_usd'],'margin_gross_usd':str(margin)},'public_submissions_maintenance':maintenance,'public_service_state':unit_state,'R16_status':'finished','R16_terminal_rows':9,'conflicting_worker_processes':workers,'execution_directory_absent':True,'historical_preparations_changed':False,'funding_changed':False,'ledger_accounting_changed':False,'prepare_executed':False,'models':0,'gpu':0,'new_provider_api_calls':0,'source_artifact_hashes':before_hashes,'limits':'No acceptance definitions, fixed-nine denominator, target6/9,20steps,6rounds,.60cap, funding scope, history, model caps or validators changed.'}
+(OUT/'independent-review.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+(OUT/'README.md').write_text('Read-only actual R17 preparation audit PASS. All 183 implementation and 30 input pins match disk and their exact Git revisions. Original R14 six semantic fields and all nine requests match; source revision c21cf546e2559ac513836ba8f0d17dc4919fb02b. Original controller/funding unchanged and actual read-only ledger exactly matches proposal starting snapshot, including unknown actual cost and resolved retained charges. Public submission maintenance is disabled for both task routes; service active, R16 finished, no fixed9 controller/worker process and no R17 execution directory. Provider balance comes from parent signed-in Chrome observation recorded in private receipt; independent arithmetic and reserve checks only. No dispatch, prepare, funding write, model, provider call or GPU execution.\n')
+print(json.dumps({'result':report['status'],'pins_checked':len(pins),'source_revision':REV,'remaining_usd':account['scope_remaining_usd'],'receipt_sha256':sha(OUT/'independent-review.json'),'script_sha256':sha(OUT/'audit.py.txt')},indent=2))

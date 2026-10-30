@@ -1,0 +1,55 @@
+{
+  "schema": "headroom.r17_reviewer_preparation.v1",
+  "status": "prepared_not_executed_on_real_campaign",
+  "base_script": {
+    "path": "reports/r16-20261030-terminal-review/review.py.txt",
+    "sha256": "c274637d5b2bcef50c2e1e5a0cc90455bab65ca0e62cf6be3da3c34cef4a6bf9"
+  },
+  "new_script": {
+    "path": "reports/r17-20261030-terminal-review/review.py.txt",
+    "sha256": "22df17c0418031ddeabfbc1780e3d0b2e199bfa7b5a315c4d4946f12dae71f29"
+  },
+  "changes": "Only R16/r16 labels and default campaign/preparation/output/service names became R17/r17. Ledger path and all audit logic unchanged.",
+  "source_validation": "Existing verify_preparation checks current file SHA256 and bytes against immutable implementation/input pins; no current HEAD assertion exists or was added.",
+  "synthetic_nonterminal_checks": [
+    {
+      "campaign_status": "running",
+      "record": null,
+      "returned_status": "pending",
+      "report_written": false
+    },
+    {
+      "campaign_status": "pending",
+      "record": null,
+      "returned_status": "pending",
+      "report_written": false
+    },
+    {
+      "campaign_status": "queued",
+      "record": null,
+      "returned_status": "pending",
+      "report_written": false
+    },
+    {
+      "campaign_status": "not_started",
+      "record": null,
+      "returned_status": "pending",
+      "report_written": false
+    },
+    {
+      "campaign_missing": true,
+      "record": null,
+      "returned_status": "not_started",
+      "report_written": false
+    }
+  ],
+  "missing_case_target_is_unknown": true,
+  "fixed_denominator": 9,
+  "minimum_targets": 6,
+  "real_campaign_review_executed": false,
+  "real_campaign_or_ledger_read_by_build_review": false,
+  "service_inspected": false,
+  "model_gpu_calls": 0,
+  "production_modified": false,
+  "next_action": "Wait for root dispatch notice. During execution use actual rows/calls/candidate/cleanup/ledger receipts only; execute terminal review once root confirms terminal, never treat running/unrun as final."
+}

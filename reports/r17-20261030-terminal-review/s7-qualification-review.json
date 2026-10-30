@@ -1,0 +1,137 @@
+{
+  "schema": "headroom.r17_s7_independent_qualification.v1",
+  "status": "REJECTED_CANDIDATES_CORRECTLY_NOT_SCORED",
+  "scope": "Completed s7 actual artifacts only; no current remaining-case outcome asserted",
+  "captures": [
+    {
+      "capture_id": "139dcde92f9a4d47af6712523d1bbd84",
+      "path": "runs/repair-followup/execution-r17-20261030/jobs/70ca1a74a7a8456a8944973f3498dae6/lab/139dcde92f9a4d47af6712523d1bbd84/result.json",
+      "sha256": "5757835df389b654f40ff6ee5143db8fdd4d80b42c0c15a4d4d7aae8f7338b29",
+      "source_sha256": "35004f013ac7bb561ebe7b1aae92ab50809b46a01488c6188ff16929de9a1191",
+      "status": "completed",
+      "steps": 20,
+      "registered_model_numel": 1075970304,
+      "registered_model_numel_complete": true,
+      "catalog_entries": 34,
+      "catalog_numel": 1075970304,
+      "trainable_entries": 34,
+      "trainable_numel": 1075970304,
+      "parameter_update_sets_complete": true,
+      "updated_entries_range": [
+        34,
+        34
+      ],
+      "updated_numel_range": [
+        1075970304,
+        1075970304
+      ],
+      "all20_update_records_present": true,
+      "cleanup_verified": true
+    },
+    {
+      "capture_id": "1668534ed34644f089ce3157949b6680",
+      "path": "runs/repair-followup/execution-r17-20261030/jobs/70ca1a74a7a8456a8944973f3498dae6/lab/1668534ed34644f089ce3157949b6680/result.json",
+      "sha256": "b4983b751a207da4a2952747f3500141c08b03d1be7dbaa6156c5e40348570bb",
+      "source_sha256": "64abf930ff02221c5529e398727b7c5b42a0b1d18f3a5c175693c55995f1cb79",
+      "status": "completed",
+      "steps": 20,
+      "registered_model_numel": 1075970304,
+      "registered_model_numel_complete": true,
+      "catalog_entries": 2,
+      "catalog_numel": 2097408,
+      "trainable_entries": 2,
+      "trainable_numel": 2097408,
+      "parameter_update_sets_complete": true,
+      "updated_entries_range": [
+        2,
+        2
+      ],
+      "updated_numel_range": [
+        2097408,
+        2097408
+      ],
+      "all20_update_records_present": true,
+      "cleanup_verified": true
+    },
+    {
+      "capture_id": "519008f0afe14cc0a893843ba338385f",
+      "path": "runs/repair-followup/execution-r17-20261030/jobs/70ca1a74a7a8456a8944973f3498dae6/lab/519008f0afe14cc0a893843ba338385f/result.json",
+      "sha256": "e20c2acd6d4cbc328a4c274964073b9e8a359b0f179097c849da72ede885202b",
+      "source_sha256": "0401cd64a7aba20c4c893555adedbdcfffa39a9d8bcc081ff3ee335937471647",
+      "status": "completed",
+      "steps": 20,
+      "registered_model_numel": 1075970304,
+      "registered_model_numel_complete": true,
+      "catalog_entries": 34,
+      "catalog_numel": 1075970304,
+      "trainable_entries": 2,
+      "trainable_numel": 2097408,
+      "parameter_update_sets_complete": true,
+      "updated_entries_range": [
+        2,
+        2
+      ],
+      "updated_numel_range": [
+        2097408,
+        2097408
+      ],
+      "all20_update_records_present": true,
+      "cleanup_verified": true
+    }
+  ],
+  "rounds": [
+    {
+      "round": "01",
+      "feedback_sha256": "6aa2b9d2cc76594a85697659f7b894ef6bb46f33bdfef1d73d0bd50f951066ee",
+      "candidate_run_id": "1668534ed34644f089ce3157949b6680",
+      "reason": "verification_hard_constraints_unmet",
+      "target_met": false,
+      "memory_subcheck": true,
+      "parameter_policy": false,
+      "training_coverage_not_reduced": false,
+      "loss_equivalence": "changed",
+      "max_loss_delta": 3.3520333766937256,
+      "notes": [
+        "TRAINING_COVERAGE_REDUCED: source-bound 20-update captures show catalog/first-flag elements 1075970304/1075970304 -> 2097408/2097408; updated elements per logical boundary 1075970304..1075970304 -> 2097408..2097408. Strict policy forbids freezing or dropping parameter updates; choose a repair preserving the original tr [truncated]",
+        "Loss states describe the original-plan observed scalar comparison; matching inputs, effective batch and objective are not established. This is not proof of workload equivalence.",
+        "Pairing: Lab runtime fingerprints and pinned source contracts; reference: source outside pinned s1/s2/s3/s4 AST contracts; candidate: source outside pinned s1/s2/s3/s4 AST contracts",
+        "Reference discovery: Baseline did not OOM or reference already supplied"
+      ]
+    },
+    {
+      "round": "02",
+      "feedback_sha256": "cf04d007ef581426c3af1d537ae5b8dcb7ec8f89d92d3e8a644a8049de8309a8",
+      "candidate_run_id": "519008f0afe14cc0a893843ba338385f",
+      "reason": "verification_hard_constraints_unmet",
+      "target_met": false,
+      "memory_subcheck": true,
+      "parameter_policy": false,
+      "training_coverage_not_reduced": false,
+      "loss_equivalence": "changed",
+      "max_loss_delta": 3.3520333766937256,
+      "notes": [
+        "TRAINING_COVERAGE_REDUCED: source-bound 20-update captures show catalog/first-flag elements 1075970304/1075970304 -> 1075970304/2097408; updated elements per logical boundary 1075970304..1075970304 -> 2097408..2097408. Strict policy forbids freezing or dropping parameter updates; choose a repair preserving the original [truncated]",
+        "Loss states describe the original-plan observed scalar comparison; matching inputs, effective batch and objective are not established. This is not proof of workload equivalence.",
+        "Pairing: Lab runtime fingerprints and pinned source contracts; reference: source outside pinned s1/s2/s3/s4 AST contracts; candidate: source outside pinned s1/s2/s3/s4 AST contracts",
+        "Reference discovery: Baseline did not OOM or reference already supplied"
+      ]
+    },
+    {
+      "round": "03",
+      "feedback_sha256": "c1be15205fbdebf5ce37801fe705bc1b531b758158fbcd22695c7d23216f8ec0",
+      "candidate_run_id": null,
+      "reason": "diagnosis_validation_failed",
+      "target_met": null,
+      "memory_subcheck": null,
+      "parameter_policy": null,
+      "training_coverage_not_reduced": null,
+      "loss_equivalence": null,
+      "max_loss_delta": null,
+      "notes": null
+    }
+  ],
+  "finding": "Both freeze candidates genuinely executed and reduced memory, but contracted actual training coverage and changed losses. Host retained memory_target subcheck true while rejecting overall target through parameter_policy and training_coverage false; catalog-vs-model mismatch was not downgraded to unknown.",
+  "independent_qualification": "neither candidate is a compliant unchanged-semantics success; s7 adds no target",
+  "raw_files_modified": false,
+  "new_gpu_provider_calls": 0
+}

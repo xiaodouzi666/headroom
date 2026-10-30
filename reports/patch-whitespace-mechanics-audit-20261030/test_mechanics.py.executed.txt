@@ -1,0 +1,101 @@
+"""Synthetic source only; no workload, provider or GPU execution."""
+import hashlib
+import json
+import pytest
+from headroom.patch import apply_proposal
+from headroom.patch_edits import SourceAnchoredProposal, normalize_anchored_edits
+from headroom.patch_spans import SourceSpanProposal, normalize_span_edits, source_span_document
+
+def digest(value):
+    return hashlib.sha256(value).hexdigest()
+
+def raw(data, new_lines, start=2, end=2):
+    return {'edits':[{'path':'module.py','source_sha256':digest(data),'start_id':f'L{start:06d}','end_id':f'L{end:06d}','new_lines':new_lines}], 'env_changes':{},'cli_changes':[],'notes':[]}
+
+@pytest.mark.parametrize('line', ['    return 2  ', '\treturn 2\t  ', '        return 2'])
+def test_span_model_keeps_every_leading_and_trailing_whitespace(line):
+    data=b'def answer():\n    return 1\n'
+    value=raw(data,[line])
+    parsed=SourceSpanProposal.model_validate_json(json.dumps(value),strict=True)
+    assert parsed.edits[0].new_lines == [line]
+    assert SourceSpanProposal.model_config.get('str_strip_whitespace') is not True
+
+@pytest.mark.parametrize('newline', ['\n','\r\n'])
+def test_exact_source_metadata_normalization_git_apply_keep_indentation(tmp_path,newline):
+    root=tmp_path/'source';root.mkdir()
+    data=newline.join(['def answer():','    return 1','']).encode()
+    (root/'module.py').write_bytes(data)
+    line='    return 2  '
+    doc=source_span_document(root,'module.py')
+    assert doc['lines'][1] == {'id':'L000002','text':'    return 1'}
+    converted=normalize_span_edits(raw(data,[line]),root)
+    expected=newline.join(['def answer():',line,'']).encode()
+    assert converted.metadata['files'][0]['expected_sha256']==digest(expected)
+    applied=apply_proposal(root,converted.proposal,work_root=tmp_path/'work')
+    assert applied.applied
+    assert (__import__('pathlib').Path(applied.candidate_dir)/'module.py').read_bytes()==expected
+
+def test_literal_missing_indentation_is_preserved_then_rejected_before_runtime(tmp_path):
+    root=tmp_path/'source';root.mkdir();data=b'def answer():\n    return 1\n'
+    (root/'module.py').write_bytes(data)
+    # Counterexample: the wire is schema-valid but the supplied replacement is
+    # syntactically invalid because it provides no suite indentation.
+    supplied='return 2'
+    parsed=SourceSpanProposal.model_validate(raw(data,[supplied]),strict=True)
+    assert parsed.edits[0].new_lines==[supplied]
+    converted=normalize_span_edits(parsed,root)
+    assert '+return 2\n' in converted.proposal['diff']
+    expected=b'def answer():\nreturn 2\n'
+    assert converted.metadata['files'][0]['expected_sha256']==digest(expected)
+    applied=apply_proposal(root,converted.proposal,work_root=tmp_path/'work')
+    assert applied.reason=='SOURCE_SYNTAX_INVALID' and not applied.applied
+    assert (__import__('pathlib').Path(applied.candidate_dir)/'module.py').read_bytes()==expected
+    issue=applied.policy_report.issues[0]
+    assert issue.line==2
+
+def test_legacy_old_and_new_line_strings_are_exact_not_stripped(tmp_path):
+    root=tmp_path/'source';root.mkdir();data=b'def answer():\n    return 1  \n';(root/'module.py').write_bytes(data)
+    value={'edits':[{'path':'module.py','source_sha256':digest(data),'old_lines':['    return 1  '],'new_lines':['    return 2  ']}],'env_changes':{},'cli_changes':[],'notes':[]}
+    parsed=SourceAnchoredProposal.model_validate_json(json.dumps(value),strict=True)
+    assert parsed.edits[0].old_lines==['    return 1  '] and parsed.edits[0].new_lines==['    return 2  ']
+    converted=normalize_anchored_edits(parsed,root)
+    expected=b'def answer():\n    return 2  \n'
+    assert converted.metadata['files'][0]['expected_sha256']==digest(expected)
+    value['edits'][0]['old_lines']=['return 1']
+    with pytest.raises(ValueError,match='exactly match'):
+        normalize_anchored_edits(value,root)
+
+def test_original_ids_do_not_shift_after_an_earlier_insertion(tmp_path):
+    root=tmp_path/'source';root.mkdir();data=b'def answer():\n    a = 1\n    b = 2\n    return a+b\n';(root/'module.py').write_bytes(data)
+    value=raw(data,['    a = 1','    added = 3'])
+    second=raw(data,['    return a+b+added'],4,4)['edits'][0]
+    value['edits'].append(second)
+    converted=normalize_span_edits(value,root)
+    applied=apply_proposal(root,converted.proposal,work_root=tmp_path/'work')
+    assert applied.applied
+    expected=b'def answer():\n    a = 1\n    added = 3\n    b = 2\n    return a+b+added\n'
+    assert (__import__('pathlib').Path(applied.candidate_dir)/'module.py').read_bytes()==expected
+
+@pytest.mark.parametrize('quote', ["'", '"'])
+def test_json_transport_quotes_and_python_literal_quotes_are_distinct(tmp_path,quote):
+    root=tmp_path/'source';root.mkdir()
+    data=b"def configure(parser):\n    parser.add_argument('--window', type=int, help='Window size')\n"
+    (root/'module.py').write_bytes(data)
+    correct=f"    parser.add_argument({quote}--window{quote}, type=int, default=2, help={quote}Window size{quote})"
+    correct_wire=json.dumps(raw(data,[correct]))
+    decoded=json.loads(correct_wire)
+    assert decoded['edits'][0]['new_lines']==[correct]
+    good=normalize_span_edits(decoded,root)
+    applied=apply_proposal(root,good.proposal,work_root=tmp_path/'good')
+    assert applied.applied
+    assert (__import__('pathlib').Path(applied.candidate_dir)/'module.py').read_text().splitlines()[1]==correct
+    # Valid JSON and valid patch schema do not imply valid Python embedded in a
+    # new_lines string. Both quote styles survive; none is removed or inserted.
+    bad='    parser.add_argument(--window, type=int, default=2, help=Window size)'
+    bad_wire=json.dumps(raw(data,[bad]))
+    parsed=SourceSpanProposal.model_validate_json(bad_wire,strict=True)
+    assert parsed.edits[0].new_lines==[bad]
+    converted=normalize_span_edits(parsed,root)
+    rejected=apply_proposal(root,converted.proposal,work_root=tmp_path/'bad')
+    assert rejected.reason=='SOURCE_SYNTAX_INVALID' and not rejected.applied
+    assert (__import__('pathlib').Path(rejected.candidate_dir)/'module.py').read_text().splitlines()[1]==bad

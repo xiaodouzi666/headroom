@@ -1,0 +1,61 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "cpu_docker_exact_pull_never": "allowed", "cpu_docker_other_pull_modes": "denied", "duplicate_docker_network_options": "denied", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "cpu_docker_exact_pull_never": "allowed", "cpu_docker_other_pull_modes": "denied", "duplicate_docker_network_options": "denied", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+...................................................FF................... [ 42%]
+........................................................................ [ 84%]
+...........................                                              [100%]
+=================================== FAILURES ===================================
+_____ test_same_original_two_request_allowance_and_full_revalidation[True] _____
+
+corrected = True
+
+    @pytest.mark.parametrize("corrected", [True, False])
+    def test_same_original_two_request_allowance_and_full_revalidation(corrected):
+        observed, markdown = evidence()
+        first = forbidden_reply()
+        second = payload() if corrected else forbidden_reply(SECOND)
+        requests = []
+        with provider_client([first, second], requests) as client:
+            result = diagnose_with_router(
+                LLMRouter(client),
+                markdown,
+                evidence=observed,
+                goal="reclaim",
+                policy={"allow_model_change": False},
+                max_supplements=1,
+                request_policy=FINAL48_DIAGNOSIS_ONLY,
+            )
+        assert len(requests) == 2
+>       assert [request["max_completion_tokens"] for request in requests] == [2000, 2000]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'max_completion_tokens'
+
+tests/test_training_plan_intent.py:231: KeyError
+____ test_same_original_two_request_allowance_and_full_revalidation[False] _____
+
+corrected = False
+
+    @pytest.mark.parametrize("corrected", [True, False])
+    def test_same_original_two_request_allowance_and_full_revalidation(corrected):
+        observed, markdown = evidence()
+        first = forbidden_reply()
+        second = payload() if corrected else forbidden_reply(SECOND)
+        requests = []
+        with provider_client([first, second], requests) as client:
+            result = diagnose_with_router(
+                LLMRouter(client),
+                markdown,
+                evidence=observed,
+                goal="reclaim",
+                policy={"allow_model_change": False},
+                max_supplements=1,
+                request_policy=FINAL48_DIAGNOSIS_ONLY,
+            )
+        assert len(requests) == 2
+>       assert [request["max_completion_tokens"] for request in requests] == [2000, 2000]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'max_completion_tokens'
+
+tests/test_training_plan_intent.py:231: KeyError
+=========================== short test summary info ============================
+FAILED tests/test_training_plan_intent.py::test_same_original_two_request_allowance_and_full_revalidation[True]
+FAILED tests/test_training_plan_intent.py::test_same_original_two_request_allowance_and_full_revalidation[False]
+2 failed, 169 passed in 1.85s

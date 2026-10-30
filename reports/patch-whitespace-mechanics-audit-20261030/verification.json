@@ -1,0 +1,95 @@
+{
+  "result": "MECHANICAL_WHITESPACE_STRIP_AND_SCHEMA_SHAPE_CONFLICT_NOT_FOUND",
+  "utc": "2026-10-30T14:11:20.673980+00:00",
+  "source_revision": "c21cf546e2559ac513836ba8f0d17dc4919fb02b",
+  "source_changes": false,
+  "source_hashes": {
+    "headroom/patch.py": "c8c72c317bd9d3892c871129844d8fc49f03f95095534d980bde7a256962f6aa",
+    "headroom/patch_spans.py": "6b8423cefe8d7240b9855ad7aed05e4bb4f25180ee585df1bae4ec437308050f",
+    "headroom/patch_edits.py": "ff3518e5188657f874c53bc135e7c67ef629e2c79a931cfe8b112b8c4ec4f5ef",
+    "headroom/patch_feedback.py": "184cc479d1a9f598c28a299be8a00489765389b58a15088f6223f41feba15345",
+    "headroom/patch_validation.py": "9b2b54e781732cc76801d1fa7ae4b06a3deb21507285c5debd57e9cc97b9df55",
+    "headroom/prompts/patch.md": "8d93ebdccf77865a8465cd222c614e520e591d11bb40596c3bbe55c772839724",
+    "headroom/prompts/patch_fix.md": "73ccac7178a82e96cebdaf8a5cc3bab37f6f565da0999377c586ee2ba5975e13",
+    "headroom/llm/router.py": "ef38d76d92f612927d253e9c8f3fc74e30b0c0aae88ba7f9c9d789e792e044b6",
+    "headroom/llm/client.py": "68a856b18bc44efcf556e32d6d35817f16458d6e15b41fda19880912be06f410",
+    "headroom/schemas.py": "887db9094e2d5c80c01303e2066b0956a1a8254c52cfd350b8d4b6d8398a92c0"
+  },
+  "mechanical_findings": {
+    "live_codec": "SourceSpanProposal (new_lines plus exact original IDs); legacy old_lines codec is not requested by live patch engine",
+    "pydantic": "Own BaseModel classes use extra=forbid, strict=True and max_length constraints only. No str_strip_whitespace. Nonempty(strip_whitespace=True) exists in unrelated schemas.py and is not used by patch classes.",
+    "source_display": "Separate {id,text} records; no ID prefix inserted into source text.",
+    "normalization": "Revalidates, extends original source/new_lines unchanged, joins original newline; original inclusive spans sorted and applied simultaneously. No strip, dedent, autoindent or quote rewrite.",
+    "application": "Real Git apply candidate checked against declared exact bytes, then policy parser/compile/names before GPU.",
+    "failure_scope": "Schema valid means JSON field shape valid, not Python source syntax or semantic span correctness."
+  },
+  "actual_R17_call4_readonly": {
+    "store": "/home/xiaodouzi/workspace/headroom/runs/repair-followup/execution-r17-20261030/headroom.db",
+    "call_id": 4,
+    "stored_data_sha256": "92df49a645a4828dbe61827d6f93466a354dd44f030f6c5559a83dfb975f2a22",
+    "native_schema_equals_system_schema": true,
+    "schema_title": "source_span_edits_v1",
+    "edit_fields": [
+      "path",
+      "source_sha256",
+      "start_id",
+      "end_id",
+      "new_lines"
+    ],
+    "new_lines_item_schema": {
+      "maxLength": 512000,
+      "type": "string"
+    },
+    "system_character_lengths": [
+      1319,
+      12359
+    ],
+    "candidate_syntax_present": true,
+    "candidate_syntax_coordinate_space": "rejected_candidate",
+    "provider_delivery_limit": "Saved request evidence is observed pretransport payload; not independent provider-side attestation."
+  },
+  "prompt_audit": {
+    "remove_outer_quotes_instruction_found": false,
+    "initial_explicit_preserve_quotes": "headroom/prompts/patch.md:125-128",
+    "repair_explicit_preserve_quotes": "headroom/prompts/patch_fix.md:74-77 and 138-142",
+    "candidate_vs_original_coordinates_already_explicit": "headroom/prompts/patch_fix.md:91-104",
+    "finding": "Existing prompt is consistent but lacks an explicit transport JSON quoting versus embedded Python literal quoting example. Existing syntax feedback already includes a small candidate-only error window; original source span projection near that error is absent."
+  },
+  "synthetic_static_tests": {
+    "initial_passed": 8,
+    "initial_seconds": 1.05,
+    "final_passed": 10,
+    "final_seconds": 1.18,
+    "guard": "reports/final48h-closing-regression-20261029/closing_guarded_v5.py",
+    "cases": [
+      "leading spaces/tabs and trailing whitespace retained in parsed model",
+      "LF and CRLF exact source metadata, normalized hash, real Git candidate bytes",
+      "missing indentation remains exactly supplied and rejected SOURCE_SYNTAX_INVALID before runtime",
+      "legacy old_lines and new_lines strings retain exact indentation and trailing spaces; stripped old_lines mismatch is rejected",
+      "original ID coordinates do not shift after an earlier insertion",
+      "both quote styles survive JSON encode/decode and actual source apply; omitted embedded Python literal quotes produce schema-valid JSON but SOURCE_SYNTAX_INVALID"
+    ]
+  },
+  "positive_agent_actual_roundtrip_artifact": {
+    "path": "/home/xiaodouzi/workspace/headroom/reports/r17-focused-root-cause-20261030/s1-line-edit-roundtrip.json",
+    "sha256": "72024abad3a3a7a8425b6479beec4aa85c541470c75452e27d6c1b4f760e3ec2",
+    "scope": "Positive agent independently proved actual four responses equal parsed model and reconstructed candidate bytes, with omitted quotes present in response and wrong original ranges."
+  },
+  "minimal_generic_proposal_not_implemented": [
+    "Add one concise upfront example separating JSON string delimiters/escaping from the literal quotes required inside generated Python source; require preserving both indentation and embedded string quotes.",
+    "Enhance existing candidate_syntax feedback with a bounded source-bound mapping of the error to the prior edit original IDs/hash plus nearby original source lines, explicitly distinct from candidate-only coordinates. Copy observed text only; no autocorrect, guessed AST repair or readiness changes.",
+    "Continue host full syntax/policy/byte/semantic/numeric gates with same model/caps/calls. Do not infer success from a quote-preservation hint."
+  ],
+  "artifacts": {
+    "reports/patch-whitespace-mechanics-audit-20261030/test_mechanics.py": "0afc1800a754d9f31c16e6c28a013c837ba69bee804764c0f7e4134d6d80d5f6",
+    "reports/patch-whitespace-mechanics-audit-20261030/focused.log": "8232cf992920c2dd44fa1951bbc2d5ccc441ff413e7e447e3cc7e97f23ee60a0",
+    "reports/patch-whitespace-mechanics-audit-20261030/focused.xml": "4a4914be5875a9e09e3bb408253a675fdfaaf42569380e0b13d7c30619a606f2",
+    "reports/patch-whitespace-mechanics-audit-20261030/focused-quotes.log": "704f44bfa38adfb3c576a1ea1f8ab8528f63fe9c4b7eca04e321d18dbb37730a",
+    "reports/patch-whitespace-mechanics-audit-20261030/focused-quotes.xml": "b65dec87c5fa5c608d6e903d0d849c079401c865e8e627d81efa010d713e7a93"
+  },
+  "model_calls": 0,
+  "gpu_runs": 0,
+  "provider_requests": 0,
+  "historical_artifacts_modified": false,
+  "production_source_modified": false
+}

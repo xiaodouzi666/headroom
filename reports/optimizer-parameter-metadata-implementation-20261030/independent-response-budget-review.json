@@ -1,0 +1,34 @@
+{
+  "schema": "headroom.independent_native_parameter_metadata_review.v1",
+  "status": "PASS",
+  "at_utc": "2026-10-30T14:34:58.777451+00:00",
+  "reviewed_source_hashes": {
+    "headroom/lab/hooks.py": "fe5463bd8838daaf09e3c9b6cc8e1cdf97353413b0a013af16889b1ef7982531",
+    "headroom/optimizer_observations.py": "e27720f2eaac084a3f4b89b4128f0b16ae764829774d7836ed1573b0d71bab57",
+    "tests/test_optimizer_parameter_metadata.py": "0bd25567f7b9cc6e727ef3a5dc22e675729f8a556cf55caac83c790eed48d2f5"
+  },
+  "owner_final_receipt_sha256": "91fe8962a257f38a2eae40e23b047848c1a8b20d49768e8b5842803b8a9865de",
+  "prior_owner_89_case_receipt_sha256": "ef3f8ef74e1318870ac06b6184ba55048c1d2fd05b21d838a683e832e1d0ff46",
+  "owner_results": "89 guarded focused cases plus1 exact-type metaclass negative, separate runs; not re-executed by reviewer",
+  "XML_metadata_read": [],
+  "checks": {
+    "cached_exact_type_identity_not_metaclass_equality": true,
+    "cached_native_descriptors_for_dtype_device_layout_leaf_only": true,
+    "already_existing_weak_parameter_ids_only": true,
+    "constructor_pre_successful_post_timepoints_distinct": true,
+    "changes_mixed_unsupported_are_partial_or_unverified": true,
+    "no_state_tensor_value_item_copy_or_sync": true,
+    "state_tensors_explicit_not_captured": true,
+    "single_shared_optional_raw_cap_bytes": 65536,
+    "legacy_group_facts_prioritized_on_raw_overflow": true,
+    "optimizer_summary_total_cap_bytes": 3072,
+    "new_optional_summary_omitted_if_not_fit_without_dropping_old_facts": true,
+    "legacy_captures_not_backfilled": true,
+    "no_schema_policy_budget_or_call_cap_change": true
+  },
+  "review_fix": "Native tuple membership changed to exact is comparisons so custom metaclass equality cannot reach native metadata getters.",
+  "limits": "Cooperative sampled parameter attributes only; no native optimizer authentication, unscaled-gradient, moment-state, workload-pairing or numerical-equivalence proof.",
+  "tests_reexecuted": false,
+  "source_modified_by_reviewer": false,
+  "provider_gpu_calls": 0
+}

@@ -1,0 +1,21 @@
+{"guard_parent": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "cpu_docker_exact_pull_never": "allowed", "cpu_docker_other_pull_modes": "denied", "duplicate_docker_network_options": "denied", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}, "guard_spawn": {"real_env": "denied", "real_profile": "denied", "real_db": "denied", "dns": "denied", "api_key_env_absent": true, "final48_profile": "denied", "final48_registry": "denied", "public_api_database": "denied", "private_environment_variant": "denied", "gpu_subprocess": "denied", "networked_container": "denied", "service_command": "denied", "temporary_dir_fd_paths": "allowed", "production_env_via_dir_fd": "denied", "production_runs_via_dir_fd": "denied", "production_cache_via_dir_fd": "denied", "unresolved_dir_fd": "denied", "cpu_workload_device_argument": "allowed", "cpu_docker_exact_pull_never": "allowed", "cpu_docker_other_pull_modes": "denied", "duplicate_docker_network_options": "denied", "host_device_runtime_network_options": "denied", "historical_json_read_redirect": "isolated_copy_only", "historical_json_write": "denied", "secure_retention_capability": "preserved"}}
+....F...                                                                 [100%]
+=================================== FAILURES ===================================
+_______ test_actual_implementation_pins_include_new_static_prompt_bytes ________
+
+    def test_actual_implementation_pins_include_new_static_prompt_bytes():
+        pins = implementation_pins()
+        name = "headroom/prompts/diagnose_compact.md"
+        raw = protocol.COMPACT_PROMPT_PATH.read_bytes()
+        assert pins[name]["sha256"] == hashlib.sha256(raw).hexdigest()
+        assert pins[name]["bytes"] == len(raw)
+>       assert len(raw.splitlines()) <= 80
+E       assert 86 <= 80
+E        +  where 86 = len([b'Diagnose the measured CUDA-memory problem and propose a testable repair.', b'Return only the supplied Diagnosis JSO...cks and scoped runtime facts.', b"Identify the peak's producer, consumer, lifetime and training/evaluation path.", ...])
+E        +    where [b'Diagnose the measured CUDA-memory problem and propose a testable repair.', b'Return only the supplied Diagnosis JSO...cks and scoped runtime facts.', b"Identify the peak's producer, consumer, lifetime and training/evaluation path.", ...] = <built-in method splitlines of bytes object at 0x1f975a20>()
+E        +      where <built-in method splitlines of bytes object at 0x1f975a20> = b'Diagnose the measured CUDA-memory problem and propose a testable repair.\nReturn only the supplied Diagnosis JSON wi...ut, resource, budget/retry/search\nlimit. The host owns acceptance; a proposed candidate is never a verified result.\n'.splitlines
+
+tests/test_compact_lean_planner.py:143: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_compact_lean_planner.py::test_actual_implementation_pins_include_new_static_prompt_bytes
+1 failed, 7 passed in 1.70s

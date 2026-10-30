@@ -1,0 +1,58 @@
+--- a/web/src/EvaluationView.tsx
++++ b/web/src/EvaluationView.tsx
+@@ -86,9 +86,9 @@
+ const campaignName = (item: Dict) =>
+   (
+     ({
+-      "r7-20261029": "October 29, 2026 · Latest evaluation",
+-      "r6-20261027": "October 27, 2026 · Previous evaluation",
+-      "r5-20261027": "October 27, 2026 · Earlier evaluation",
++      "r7-20261029": "October 29, 2026 · 1 of 9 memory targets met",
++      "r6-20261027": "October 27, 2026 · 2 of 9 memory targets met",
++      "r5-20261027": "October 27, 2026 · 3 of 9 memory targets met",
+     }) as Record<string, string>
+   )[String(item.id)] ?? text(item.title);
+ const stopReason = (v: unknown) =>
+@@ -407,7 +407,7 @@
+           {selected === "r7-20261029" && (
+             <Notice>
+               <strong>1 of 9 workloads met the memory target.</strong> For this
+-              evaluation, “Root cause correct” and “First-cause accuracy” show
++              evaluation, “First category matches” and “First-cause accuracy” show
+               raw category matching, before full diagnosis validation. Raw
+               category matches: 7/9; valid correct diagnoses: 5/9. Two workloads
+               lack authored ground truth and remain in the fixed nine; the
+@@ -446,7 +446,7 @@
+                   {[
+                     "Workload",
+                     "Result",
+-                    "Root cause correct",
++                    "First category matches",
+                     "Peak before",
+                     "Peak after",
+                     "Memory reduction",
+--- a/web/src/EvaluationView.test.tsx
++++ b/web/src/EvaluationView.test.tsx
+@@ -689,11 +689,11 @@
+   const { container } = render(<App />);
+   expect(
+     await screen.findByRole("option", {
+-      name: "October 27, 2026 · Previous evaluation",
++      name: "October 27, 2026 · 2 of 9 memory targets met",
+     }),
+   ).toBeInTheDocument();
+   await openMeasurements();
+-  expect(container.textContent).toContain("Previous evaluation");
++  expect(container.textContent).toContain("2 of 9 memory targets met");
+   expect(
+     screen.getByRole("link", { name: "Download full evaluation data" }),
+   ).toHaveAttribute("href", "/api/evaluations/r6-20261027");
+@@ -704,7 +704,7 @@
+   render(<App />);
+   expect(
+     await screen.findByText(
+-      /“Root cause correct” and “First-cause accuracy” show raw category matching, before full diagnosis validation\. Raw category matches: 7\/9; valid correct diagnoses: 5\/9\./,
++      /“First category matches” and “First-cause accuracy” show raw category matching, before full diagnosis validation\. Raw category matches: 7\/9; valid correct diagnoses: 5\/9\./,
+     ),
+   ).toBeInTheDocument();
+   expect(

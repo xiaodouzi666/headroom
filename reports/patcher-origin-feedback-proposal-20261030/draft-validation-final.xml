@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="19" time="0.311" timestamp="2026-10-30T15:18:34.029242+01:00" hostname="ubuntu"><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_variable_length_edits_map_to_original_ids_not_shifted_candidate_rows[True-\n]" time="0.004" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_variable_length_edits_map_to_original_ids_not_shifted_candidate_rows[True-\r\n]" time="0.003" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_variable_length_edits_map_to_original_ids_not_shifted_candidate_rows[False-\n]" time="0.004" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_variable_length_edits_map_to_original_ids_not_shifted_candidate_rows[False-\r\n]" time="0.003" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_deletion_maps_retained_error_line_but_identifies_only_adjacency[\n]" time="0.003" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_deletion_maps_retained_error_line_but_identifies_only_adjacency[\r\n]" time="0.003" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_incomplete_or_mismatched_bindings_remain_unavailable[missing_original]" time="0.002" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_incomplete_or_mismatched_bindings_remain_unavailable[changed_original]" time="0.002" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_incomplete_or_mismatched_bindings_remain_unavailable[candidate_drift]" time="0.003" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_incomplete_or_mismatched_bindings_remain_unavailable[forged_normalization]" time="0.012" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_incomplete_or_mismatched_bindings_remain_unavailable[wrong_diagnostic_hash]" time="0.003" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_missing_metadata_never_guesses_an_original_id" time="0.002" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_candidate_line_beyond_actual_file_is_unavailable" time="0.003" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_original_credentials_are_withheld_without_excerpts" time="0.003" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_optional_origin_never_displaces_old_diagnostics_or_expands_old_cap[0]" time="0.003" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_optional_origin_never_displaces_old_diagnostics_or_expands_old_cap[160]" time="0.003" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_no_candidate_error_means_no_new_optional_payload" time="0.002" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_non_span_normalization_cannot_claim_original_ids" time="0.002" /><testcase classname="reports.patcher-origin-feedback-proposal-20261030.validation.test_draft_origin" name="test_ancillary_runtime_failure_does_not_replace_rejection" time="0.002"><failure message="AttributeError: 'module' object at headroom.patch_origin_feedback has no attribute 'patch_origin_feedback'">obj = &lt;module 'headroom' from '/home/xiaodouzi/workspace/headroom/headroom/__init__.py'&gt;
+name = 'patch_origin_feedback', ann = 'headroom.patch_origin_feedback'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -&gt; object:
+        try:
+&gt;           obj = getattr(obj, name)
+                  ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'headroom' has no attribute 'patch_origin_feedback'
+
+.venv/lib/python3.12/site-packages/_pytest/monkeypatch.py:95: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/headroom-draft-origin-validation-final-20261030/test_ancillary_runtime_failure0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7ec0caf48140&gt;
+
+    def test_ancillary_runtime_failure_does_not_replace_rejection(tmp_path, monkeypatch):
+        before, kwargs = broken_case(tmp_path)
+    
+        def unavailable(*_args, **_kwargs):
+            raise RuntimeError("PRIVATE_ERROR_TEXT")
+    
+&gt;       monkeypatch.setattr("headroom.patch_origin_feedback.normalize_span_edits", unavailable)
+
+reports/patcher-origin-feedback-proposal-20261030/validation/test_draft_origin.py:206: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/_pytest/monkeypatch.py:107: in derive_importpath
+    target = resolve(module)
+             ^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/_pytest/monkeypatch.py:89: in resolve
+    found = annotated_getattr(found, part, used)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+obj = &lt;module 'headroom' from '/home/xiaodouzi/workspace/headroom/headroom/__init__.py'&gt;
+name = 'patch_origin_feedback', ann = 'headroom.patch_origin_feedback'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -&gt; object:
+        try:
+            obj = getattr(obj, name)
+        except AttributeError as e:
+&gt;           raise AttributeError(
+                f"{type(obj).__name__!r} object at {ann} has no attribute {name!r}"
+            ) from e
+E           AttributeError: 'module' object at headroom.patch_origin_feedback has no attribute 'patch_origin_feedback'
+
+.venv/lib/python3.12/site-packages/_pytest/monkeypatch.py:97: AttributeError</failure></testcase></testsuite></testsuites>
