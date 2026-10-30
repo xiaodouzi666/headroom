@@ -1,0 +1,128 @@
+{
+  "scope": "FINAL_POST_R18_READ_ONLY_FUNNEL_USER_SERVICE_PERSISTENCE_CHECK",
+  "started_at_utc": "2026-10-30T15:34:01.939171+00:00",
+  "finished_at_utc": "2026-10-30T15:34:03.354011+00:00",
+  "phase": "Post-R18 closeout; root restored admissions and restarted service; this checker performs no restarts or config changes.",
+  "revision": "13b0eb7027eda3ee438dc0b8aa17c035138b6a62",
+  "prior_check_path": "reports/repair-followup-20261030/r17-public-persistence-check.json",
+  "services": {
+    "headroom-public.service": {
+      "is-active": "active",
+      "is-active_exit_code": 0,
+      "is-enabled": "enabled",
+      "is-enabled_exit_code": 0,
+      "SubState": "running",
+      "Restart": "on-failure",
+      "WantedBy": "default.target",
+      "FragmentPath": "/home/xiaodouzi/.config/systemd/user/headroom-public.service",
+      "DropInPaths": "/home/xiaodouzi/.config/systemd/user/headroom-public.service.d/final48.conf /home/xiaodouzi/.config/systemd/user/headroom-public.service.d/verified.conf /home/xiaodouzi/.config/systemd/user/headroom-public.service.d/zz-snapshot-public.conf"
+    },
+    "headroom-tailscaled.service": {
+      "is-active": "active",
+      "is-active_exit_code": 0,
+      "is-enabled": "enabled",
+      "is-enabled_exit_code": 0,
+      "SubState": "running",
+      "Restart": "on-failure",
+      "WantedBy": "default.target",
+      "FragmentPath": "/home/xiaodouzi/.config/systemd/user/headroom-tailscaled.service",
+      "DropInPaths": ""
+    }
+  },
+  "linger": {
+    "exit_code": 0,
+    "stdout": "Linger=yes",
+    "stderr": ""
+  },
+  "tailscale": {
+    "command_exit_code": 0,
+    "backend_state": "Running",
+    "self_online": true,
+    "key_expiry": "2027-04-26T14:51:43Z",
+    "judging_end_checked_inclusive_utc": "2026-12-23T23:59:59+00:00",
+    "raw_status_not_retained": true
+  },
+  "funnel": {
+    "exit_code": 0,
+    "stdout": "# Funnel on:\n#     - https://headroom.tail45186b.ts.net\n\nhttps://headroom.tail45186b.ts.net (Funnel on)\n|-- / proxy http://127.0.0.1:8766",
+    "stderr": ""
+  },
+  "gpu_state": {
+    "exit_code": 0,
+    "stdout": "0, 57, 24564, 0",
+    "stderr": ""
+  },
+  "gpu_compute_processes": {
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "http_read_only": {
+    "public_home": {
+      "url": "https://headroom.tail45186b.ts.net/",
+      "http_status": 200,
+      "elapsed_seconds": 0.985,
+      "response_bytes": 695,
+      "body_sha256": "2834921a350cf83f8351a9fa740259cda5c709f7fc15f907de481e29708f594e"
+    },
+    "local_config": {
+      "url": "http://127.0.0.1:8766/api/config",
+      "http_status": 200,
+      "elapsed_seconds": 0.009,
+      "response_bytes": 389,
+      "boolean_fields": {
+        "public_demo": true,
+        "verified_runs_enabled": true,
+        "judge_scripts_available": true
+      },
+      "top_level_fields": [
+        "run_submissions",
+        "public_demo",
+        "verified_runs_enabled",
+        "snapshot_submissions",
+        "judge_scripts_available",
+        "limits"
+      ]
+    },
+    "public_config": {
+      "url": "https://headroom.tail45186b.ts.net/api/config",
+      "http_status": 200,
+      "elapsed_seconds": 0.204,
+      "response_bytes": 389,
+      "boolean_fields": {
+        "public_demo": true,
+        "verified_runs_enabled": true,
+        "judge_scripts_available": true
+      },
+      "top_level_fields": [
+        "run_submissions",
+        "public_demo",
+        "verified_runs_enabled",
+        "snapshot_submissions",
+        "judge_scripts_available",
+        "limits"
+      ]
+    }
+  },
+  "checks": {
+    "both_user_services_active_and_enabled": true,
+    "both_restart_on_failure": true,
+    "linger_enabled": true,
+    "tailscale_backend_running": true,
+    "tailscale_self_online": true,
+    "key_expiry_after_2026_12_23": true,
+    "funnel_public_domain_to_loopback_8766": true,
+    "no_gpu_compute_processes": true,
+    "public_home_http_200": true,
+    "local_config_http_200": true,
+    "public_config_http_200": true
+  },
+  "result": "PASS",
+  "new_model_calls": 0,
+  "new_gpu_jobs": 0,
+  "service_restarts": 0,
+  "configuration_changes": 0,
+  "source_changes": 0,
+  "future_uptime_not_pre_certified": true,
+  "limitation": "Current state, enablement, lingering, restart policy, route configuration and node-key validity are verified now. They do not prove uninterrupted future service availability through judging."
+}

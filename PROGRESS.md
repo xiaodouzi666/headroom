@@ -1,3 +1,13 @@
+## 2026-10-30 23:35 北京 — 当前修复已推送，提交与公网访问已收尾；新增实测等待预算决定
+
+源码/三文档/实测报告已推送：9948214ad4ce65432f396250e2d3e9e144a262b2（后续13b0eb7027eda3ee438dc0b8aa17c035138b6a62仅将资金方案报告改为公开脱敏版）。Native字段独立引用与scoped反馈整合通过144 CPU测试及真实s2/s3保存请求离线重放、独审8869d784...；此前字段已发送，未声称新增修复成绩。R18presentation数值基准枚举、first-five标签、Not run状态接线完成，29前端测试/build和74 API/结果测试通过。首次API测试73pass/1fail因旧测试写死仅5条公开历史，现改为保留原5条后缀+唯一ID，原9分母/6门槛/隐私断言保留，并覆盖新增partial未知/数值基准；原失败日志保留。Ruff/format/gitleaks提交钩子通过。扫描5项均核实为合成测试case-name和模型声明的数字CLI参数；公开JUnit仅替换合成参数测试名、144结果不变，原版0600私存；数字参数仅exactpath AND exactliteral例外且负例仍检出，原终态报告未改。
+
+15:30:44UTC本地Chrome核实Devpost当前技术说明与模型反馈已保存：Submitted、5/5、Project submitted按钮禁用；公开故事读回最新partial内容。视频aaXF60LryWI、评委私有附件v5不变，无新条款或文件上传。正式提交凭据 reports/r18-20261030-review/devpost-ui-saved-receipt.json，文档79直接来源pointer核数已再次由root逐项重验后应用。
+
+公网已解除本轮自己的维护dropin，其它配置不动；Home/Verified/Results/Run/About/health均200。匿名保留每IP每小时1次；有效评委token已通过只读config核实无每小时限制，queue2/deadline480保留，错误token401。服务器快照入口已启用且token必需；没有点击新分析/任务，不重复F8。当前源码下的Results已由本地Chrome确认checkpoint前5标量说明和2个Not run均正确。独立持久检查15:34:03UTC PASS：两user服务active/enabled、linger yes、TailscaleRunning/Online、设备密钥有效至2027-04-26、Funnel→127.0.0.1:8766，GPU无计算进程。不能把当前配置健康当未来持续在线证明。
+
+6/9仍未达到：最后完整R17=3/9；R18仅7项执行/2达标/2未运行未知。原开发余款净$0.593931800保持不动，尚未新建/调拨资金。已通过异步问题请求用户决定是否另从现有评审预留赠款调拨净$1.50（含税最多$1.82）建立独立最后验收池，最多一轮原固定九项/单项$.60，保留至少$8、不充值；未获答复前不激活、不调用模型。新资金方案仅离线克隆与版本化adapter准备，原cap/账本/历史不变，不合并原余款，不保证整轮完成或达到6/9。
+
 ## 2026-10-30 23:23 北京 — R18 已按预算停下：7项执行、2项达标、2项未运行
 
 本轮为partial，不是完整九项新成绩：s1/s4达到原修复判定，s2/s3/s5/s6/s7未解决；s8/nanoGPT未派发、target/cost/run保持null，固定分母9与6/9门槛不变。上一次完整九项R17=3/9，历史best single3/9与distinct5仍保留，未拼接历史成功。停止原因为开发池净余额$0.593931800低于既有单项$.60完整预留，未绕过guard、重试、扩预算或充值。独审terminal-review SHA4a433e2fe0b8d0d23c8aedfd8fe3d2a7fa35cebd2f357169cccfb50ffbaa7374；215pins与Git/磁盘吻合，11Lab cleanup及GPU-after清空均核实、7workers退出、systemd inactive/success0。32响应均已结算，本轮保守净$0.57382620、known actual$0.55277484、actual总额仍null（7Nano未知）；累计保守净$4.29657260，未把unknown当零。
