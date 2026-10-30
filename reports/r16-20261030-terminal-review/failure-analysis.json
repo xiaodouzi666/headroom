@@ -1,0 +1,224 @@
+{
+  "scope": "R16_TERMINAL_FAILURE_ANALYSIS_REPORT_ONLY",
+  "terminal_review_sha256": "fe51b0a98bc6a5242f90b59db79990d5c2053747042a5167d39779ed2d3669c7",
+  "fixed_denominator": 9,
+  "minimum_targets": 6,
+  "target_met_count": 1,
+  "all_nine_executed": true,
+  "source_revision": "53dc8f474620c7ff84ec42fc8013f4f8011c13db",
+  "no_new_calls_or_gpu_work": true,
+  "source_or_controls_changed": false,
+  "runtime_refinement_exercised": false,
+  "full_size_s4_reference_exercised_in_campaign": false,
+  "independent_full_reference_smoke_is_campaign_success": false,
+  "cases": [
+    {
+      "scenario_id": "s1_batch_too_big",
+      "run_id": "d9b141f2d088499c9907269f1d12a6c3",
+      "status": "needs_human",
+      "target_met": false,
+      "diagnosis_issues": [
+        "INVALID_EVIDENCE_DEPENDENCY"
+      ],
+      "final_plan_titles": [
+        "Gradient accumulation with micro-batches"
+      ],
+      "live_call_ids": [
+        1,
+        2,
+        3
+      ],
+      "diagnosis_artifacts": [
+        {
+          "path": "/home/xiaodouzi/workspace/headroom/runs/repair-followup/execution-r16-20261030/jobs/d9b141f2d088499c9907269f1d12a6c3/rounds/01/diagnosis.json",
+          "sha256": "2c0f25c1808439f4af1d1f60cb698b32cca05ffeb9080d680ef2f345137ab0ab"
+        }
+      ],
+      "note": "The model found the micro-batch/accumulation strategy but made baseline completion an overall-feasibility dependency while also attaching current-plan IDs. The final current validator rejected that declared scope. No patch was dispatched."
+    },
+    {
+      "scenario_id": "s2_capacity_v2",
+      "run_id": "933bc5f51cbf44c1af597924fbc03e83",
+      "status": "needs_human",
+      "target_met": false,
+      "diagnosis_issues": [
+        "EVIDENCE_AVAILABILITY_CONTRADICTED",
+        "EVIDENCE_AVAILABILITY_CONTRADICTED"
+      ],
+      "final_plan_titles": [
+        "Replace eager AdamW with AdamW-in-backward (single fused backward+step per update)"
+      ],
+      "live_call_ids": [
+        4,
+        5,
+        6
+      ],
+      "diagnosis_artifacts": [
+        {
+          "path": "/home/xiaodouzi/workspace/headroom/runs/repair-followup/execution-r16-20261030/jobs/933bc5f51cbf44c1af597924fbc03e83/rounds/01/diagnosis.json",
+          "sha256": "06be81f7fa40e1167ce372b4b2d1f76d521a36e46f026c28379e28a286d7e11e"
+        }
+      ],
+      "note": "The model proposed in-backward AdamW, then requested already-visible optimizer parameter/update fields as missing. The final availability declarations were rejected. No patch was dispatched; helper equivalence was not verified."
+    },
+    {
+      "scenario_id": "s3_eval_no_grad_missing",
+      "run_id": "e4da7f935eed426aa7fd447cd4ee56ec",
+      "status": "completed",
+      "target_met": true,
+      "diagnosis_issues": [],
+      "final_plan_titles": [
+        "Wrap evaluation in torch.no_grad() context"
+      ],
+      "live_call_ids": [
+        7,
+        8,
+        9
+      ],
+      "diagnosis_artifacts": [
+        {
+          "path": "/home/xiaodouzi/workspace/headroom/runs/repair-followup/execution-r16-20261030/jobs/e4da7f935eed426aa7fd447cd4ee56ec/rounds/01/diagnosis.json",
+          "sha256": "5a33b457ee5088f9df5b7bd8267349e99b0a189497ef166fb8041de66299ca50"
+        }
+      ],
+      "note": "A new live Super patch added the no_grad evaluation context and passed the retained numerical/policy/target checks. This is the only target=true case in this campaign."
+    },
+    {
+      "scenario_id": "s4_loss_accumulation_graph",
+      "run_id": "7519a9a0020e4d58bb6295a13a3f84bd",
+      "status": "needs_human",
+      "target_met": false,
+      "diagnosis_issues": [
+        "INVALID_EVIDENCE_DEPENDENCY",
+        "INVALID_EVIDENCE_DEPENDENCY",
+        "EVIDENCE_AVAILABILITY_CONTRADICTED"
+      ],
+      "final_plan_titles": [
+        "Remove retain_graph and accumulate loss as float"
+      ],
+      "live_call_ids": [
+        10,
+        11,
+        12
+      ],
+      "diagnosis_artifacts": [
+        {
+          "path": "/home/xiaodouzi/workspace/headroom/runs/repair-followup/execution-r16-20261030/jobs/7519a9a0020e4d58bb6295a13a3f84bd/rounds/01/diagnosis.json",
+          "sha256": "94871491a198acda03a0daa1913b2598c428bab8d5ebb3eb2e3cc189e919b1a0"
+        }
+      ],
+      "note": "The model found removal of retain_graph and scalar loss accumulation but again made original 20-update completion a prerequisite, despite the captured original having OOM after 12 updates. It also used overall_feasibility with current-plan IDs and called the visible update field missing. It never became ready and did not dispatch Super, reference offload, or refinement."
+    },
+    {
+      "scenario_id": "s5_fragmentation_varlen",
+      "run_id": "66893ea3875e46e481f4149f030ac663",
+      "status": "needs_human",
+      "target_met": false,
+      "diagnosis_issues": [],
+      "final_plan_titles": [
+        "Switch optimizer to in-backward AdamW"
+      ],
+      "live_call_ids": [
+        13,
+        14,
+        15
+      ],
+      "diagnosis_artifacts": [
+        {
+          "path": "/home/xiaodouzi/workspace/headroom/runs/repair-followup/execution-r16-20261030/jobs/66893ea3875e46e481f4149f030ac663/rounds/01/diagnosis.json",
+          "sha256": "a079cb87767d6f03a51bfbdd57bdad7ced12bc7ec1a83a8535832e644364493e"
+        }
+      ],
+      "note": "The final diagnosis remained valid but blocked on an in-backward AdamW strategy even though the delivered selected-run summary reported SGD, 24 trainable parameters and 20 complete all-parameter updates. It described the delivered observed optimizer summary as unsupported. No candidate executed."
+    },
+    {
+      "scenario_id": "s6_full_vocab_logits_fp32",
+      "run_id": "5149ea52e07d4759b2556ec8c55f2fd8",
+      "status": "failed",
+      "target_met": false,
+      "diagnosis_issues": [],
+      "final_plan_titles": [],
+      "live_call_ids": [
+        16,
+        17,
+        18
+      ],
+      "diagnosis_artifacts": [],
+      "note": "The pipeline stopped at ResponseValidationError before a diagnosis artifact/candidate. Both Ultra calls received paid HTTP 200 responses and settled. The second response used the exact 2000-token cap, but saved call metadata alone has no finish_reason: truncation is suspected, not independently established."
+    },
+    {
+      "scenario_id": "s7_frozen_params_optimizer_state",
+      "run_id": "4cdeb25ddf6a4821a3058daf5abb1308",
+      "status": "needs_human",
+      "target_met": false,
+      "diagnosis_issues": [],
+      "final_plan_titles": [
+        "Freeze backbone parameters"
+      ],
+      "live_call_ids": [
+        19,
+        20,
+        21
+      ],
+      "diagnosis_artifacts": [
+        {
+          "path": "/home/xiaodouzi/workspace/headroom/runs/repair-followup/execution-r16-20261030/jobs/4cdeb25ddf6a4821a3058daf5abb1308/rounds/01/diagnosis.json",
+          "sha256": "f938dcacf6aff95f2bcbe7e4efd65121c33c595536017b4e39ef4587da2bfd26"
+        }
+      ],
+      "note": "The final model plan was Freeze backbone parameters and asked for backbone/head mapping and gradient-flow evidence. The actual delivered optimizer summary was observed/source-bound: all 34 catalog entries requires_grad=true and all 34 updated on each of 20 logical updates. The model still pursued an objective-changing freeze plan; no candidate ran and the new strict coverage guard was not exercised."
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "run_id": "d568e180d21d43168d2f6a329fe78547",
+      "status": "needs_human",
+      "target_met": false,
+      "diagnosis_issues": [],
+      "final_plan_titles": [
+        "Lazy teacher instantiation"
+      ],
+      "live_call_ids": [
+        22,
+        23,
+        24
+      ],
+      "diagnosis_artifacts": [
+        {
+          "path": "/home/xiaodouzi/workspace/headroom/runs/repair-followup/execution-r16-20261030/jobs/d568e180d21d43168d2f6a329fe78547/rounds/01/diagnosis.json",
+          "sha256": "f9573259a11af6a7c260c45ec4165cf949e5279f0256a670e9bceee1a3b35515"
+        }
+      ],
+      "note": "The final model proposed lazy teacher instantiation but retained an in-backward-optimizer hyperparameter dependency unrelated to that displayed strategy. The actual delivered optimizer group summary contained lr/betas/eps/weight_decay/amsgrad/maximize/foreach/fused/capturable/differentiable present values. The diagnosis remained valid but not ready."
+    },
+    {
+      "scenario_id": "nanogpt",
+      "run_id": "42986ab140d842099408837e4e1bcee6",
+      "status": "needs_human",
+      "target_met": false,
+      "diagnosis_issues": [
+        "INVOCATION_CLAIM_CONTRADICTED"
+      ],
+      "final_plan_titles": [
+        "Enable gradient accumulation (batch=4, grad_accum=8)"
+      ],
+      "live_call_ids": [
+        25,
+        26,
+        27
+      ],
+      "diagnosis_artifacts": [
+        {
+          "path": "/home/xiaodouzi/workspace/headroom/runs/repair-followup/execution-r16-20261030/jobs/42986ab140d842099408837e4e1bcee6/rounds/01/diagnosis.json",
+          "sha256": "628d30391d1d678187b12881ba0cf9cb3d5ef16832924cf8f620a25aec0a522a"
+        }
+      ],
+      "note": "The model proposed reducing batch to 4 with accumulation=8, but final invocation claims contradicted exact retained argument tokens. It also asked for savings and a completed original baseline. The current validator rejected it; no candidate executed."
+    }
+  ],
+  "cross_case_findings": [
+    "This campaign reached candidate generation only for s3. Improving verifier or runtime-refinement behavior cannot affect the other eight cases until planner/schema readiness succeeds.",
+    "The source-bound optimizer/group observations reached real saved model request bodies. For s5/s7/s8, remaining blockers include model interpretation and strategy dependency scope, not disappearance of those delivered fields.",
+    "Scope errors and availability declarations remain visible final validator failures after the bounded repair/review request. No automatic declaration normalization was applied and no model truth was fabricated.",
+    "A terminal campaign with 9 rows is full execution, not acceptance: the preserved result is 1/9 against 6/9."
+  ]
+}

@@ -1,0 +1,73 @@
+I001 [*] Import block is un-sorted or un-formatted
+  --> headroom/operator_capabilities.py:3:1
+   |
+ 1 |   """Small host-owned operator metadata; availability never proves target applicability."""
+ 2 |
+ 3 | / import hashlib
+ 4 | | import json
+ 5 | | import os
+ 6 | | import stat
+ 7 | | from pathlib import Path
+ 8 | | from collections.abc import Mapping
+ 9 | |
+10 | | from headroom.observation_feedback import bound_optimizer_observation
+   | |_____________________________________________________________________^
+11 |
+12 |   MAX_CATALOG_BYTES = 4096
+   |
+help: Organize imports
+  |
+6 | import stat
+7 + from collections.abc import Mapping
+8 | from pathlib import Path
+  - from collections.abc import Mapping
+9 |
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/test_scoped_observation_feedback.py:3:1
+   |
+ 1 |   """Offline scoped-fact repetition and optional catalog selection; no model/GPU work."""
+ 2 |
+ 3 | / import copy
+ 4 | | import json
+ 5 | | from types import SimpleNamespace
+ 6 | |
+ 7 | | import pytest
+ 8 | | from test_diagnosis_bounded_repair import payload, provider_client
+ 9 | | from test_evidence_blockers import source
+10 | |
+11 | | from headroom.diagnose import diagnose_with_router
+12 | | from headroom.diagnosis_protocol import FINAL48_DIAGNOSIS_ONLY
+13 | | from headroom.evidence_blockers import build_evidence_availability_catalog
+14 | | from headroom.llm.router import LLMRouter
+15 | | from headroom.observation_feedback import (
+16 | |     MAX_OBSERVATION_FEEDBACK_BYTES,
+17 | |     bound_optimizer_observation,
+18 | |     supplied_runtime_observation,
+19 | | )
+20 | | from headroom.operator_capabilities import runtime_operator_catalog
+21 | | from headroom.solver_context import (
+22 | |     MAX_SOLVER_CONTEXT_BYTES,
+23 | |     execution_context,
+24 | |     solver_prompt_context,
+25 | | )
+26 | | from headroom.validation_feedback import MAX_CONTEXT_BYTES, validation_issue_context
+27 | | from headroom.schemas import Diagnosis
+   | |______________________________________^
+28 |
+29 |   PREFIX = "execution_context.runtime_optimizer_observations"
+   |
+help: Organize imports
+   |
+20 | from headroom.operator_capabilities import runtime_operator_catalog
+21 + from headroom.schemas import Diagnosis
+22 | from headroom.solver_context import (
+--------------------------------------------------------------------------------
+27 | from headroom.validation_feedback import MAX_CONTEXT_BYTES, validation_issue_context
+   - from headroom.schemas import Diagnosis
+28 |
+   |
+
+Found 2 errors.
+[*] 2 fixable with `--fix`.

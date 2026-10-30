@@ -12,9 +12,9 @@ from headroom.config import RuntimeConfig, VerifiedCapabilities, candidate_model
 from headroom.diagnose import PROMPT_PATH, build_diagnosis_messages, diagnose_with_router
 from headroom.diagnosis_protocol import (
     COMMON_4000,
-    COMPACT_DIAGNOSIS_INSTRUCTIONS,
     COMPACT_PROMPT_PATH,
     FINAL48_DIAGNOSIS_ONLY,
+    PLANNER_COMPACT_INSTRUCTIONS,
     PROMPT_CAP_MARKER,
     DiagnosisRequestPolicy,
     diagnosis_cap,
@@ -102,11 +102,15 @@ def test_explicit_policy_changes_prompt_cap_without_changing_old_requests():
     assert ordinary[0]["content"] == template.replace(PROMPT_CAP_MARKER, "16384")
     assert study[0]["content"] == template.replace(PROMPT_CAP_MARKER, "4000")
     assert final48[0]["content"] == (
-        COMPACT_DIAGNOSIS_INSTRUCTIONS
+        PLANNER_COMPACT_INSTRUCTIONS
         + "\n"
         + COMPACT_PROMPT_PATH.read_text().replace(PROMPT_CAP_MARKER, "2000")
     )
-    assert ordinary[1] == study[1] == final48[1]
+    assert ordinary[1] == study[1]
+    # The explicit bounded planner keeps all input values while moving the
+    # actual task after long evidence; the older request byte order is retained.
+    assert ordinary[1]["role"] == final48[1]["role"] == "user"
+    assert json.loads(ordinary[1]["content"]) == json.loads(final48[1]["content"])
     assert diagnosis_cap() == 16384
     assert diagnosis_cap(COMMON_4000) == 4000
     assert diagnosis_cap(request_policy=FINAL48_DIAGNOSIS_ONLY) == 2000
@@ -174,7 +178,7 @@ def test_wire_prompt_recorded_mode_and_selected_schema_agree(kwargs, cap, reason
     expected_prompt = PROMPT_PATH.read_text().replace(PROMPT_CAP_MARKER, str(cap))
     if kwargs.get("request_policy") is FINAL48_DIAGNOSIS_ONLY:
         expected_prompt = (
-            COMPACT_DIAGNOSIS_INSTRUCTIONS
+            PLANNER_COMPACT_INSTRUCTIONS
             + "\n"
             + COMPACT_PROMPT_PATH.read_text().replace(PROMPT_CAP_MARKER, str(cap))
         )

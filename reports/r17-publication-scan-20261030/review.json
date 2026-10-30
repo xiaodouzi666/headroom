@@ -1,0 +1,41 @@
+{
+  "scope": "EXACT_NONSECRET_CLI_ARGUMENT_FALSE_POSITIVE_REVIEW",
+  "utc": "2026-10-30T13:57:48.030052+00:00",
+  "default_rules_enabled": true,
+  "allow_condition": "AND exact anchored file path AND exact fully anchored public numeric CLI value",
+  "original_review_json_sha256_unchanged": "fe51b0a98bc6a5242f90b59db79990d5c2053747042a5167d39779ed2d3669c7",
+  "original_config_sha256": "e68cbc9d7161e80bec838ad6c430d100b08e04b4f05122ec87b55c676bdbd943",
+  "new_config_sha256": "4d67a2e4c6a468d0552fceda396faff2fa1b5ccefca7ea2dff7c19fb8f033ac0",
+  "reviewed_cli_values": [
+    "--eval_iters=1",
+    "--eval_interval=1000"
+  ],
+  "source": "model-declared invocation token observations; the two expected numeric nanoGPT option names, not authentication credentials",
+  "same_file_other_credential_like_sentinel_detected": true,
+  "other_file_same_literals_detected": true,
+  "negative_fixture_finding_count": 3,
+  "redacted_finding_metadata": [
+    {
+      "RuleID": "generic-api-key",
+      "File": "other.json",
+      "StartLine": 3,
+      "EndLine": 3
+    },
+    {
+      "RuleID": "generic-api-key",
+      "File": "other.json",
+      "StartLine": 6,
+      "EndLine": 6
+    },
+    {
+      "RuleID": "generic-api-key",
+      "File": "reports/r16-20261030-terminal-review/terminal-review.json",
+      "StartLine": 9,
+      "EndLine": 9
+    }
+  ],
+  "initial_dir_fixture_scope_mismatch": "no-git dir scan returns absolute paths unlike protect --staged; initial five findings retained privately, then verified with isolated staged git fixture",
+  "model_calls": 0,
+  "gpu_jobs": 0,
+  "historical_results_changed": false
+}

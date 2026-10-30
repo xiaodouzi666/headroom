@@ -308,6 +308,14 @@ def numerical_reference_context(
             if is_oom
             else None,
             "original_baseline": completed_baseline,
+            "original_baseline_availability_scope": (
+                "The nested original_baseline status and null/false fields describe only "
+                "availability of a complete original numerical-comparison series here, "
+                "not existence or status of the captured original execution. They do not "
+                "negate separately supplied observed OOM/partial execution or source-binding "
+                "facts. This clarification creates no usable reference, compatible capability "
+                "or candidate-equivalence proof; unsupported requirements remain unresolved."
+            ),
             "candidate_equivalence_verified": None,
         },
         "acceptance_scope": scope,

@@ -146,6 +146,30 @@ All original source, evidence, numerical and hardware verification rules still a
 """
 
 
+PLANNER_COMPACT_INSTRUCTIONS = """Compact output contract for this bounded planner request:
+Return only complete Diagnosis JSON within the response cap. Use at most two
+supported causes and ONE complete candidate, with its setup and affected consumers.
+One well-supported cause suffices; do not fill optional slots or unrelated claims.
+Use short IDs/titles, at most four relevant runtime stack references per cause,
+concise descriptions/risks and at most three short notes. Do not repeat the evidence.
+Choose a source-supported candidate before listing its actual dependencies.
+Explain the local preservation invariant and every affected downstream dependency;
+an unchanged surrounding statement is not proof that the edit leaves it unaffected.
+Readiness means the candidate can be tested under the supplied policy and reference
+capabilities. It does not mean a candidate or numerical reference has already passed.
+An original OOM is an observed failure, not missing evidence of a successful baseline.
+Separate unavailable premises from the host's future candidate/reference experiments.
+If a necessary mathematical, source, permission or reference-capability premise is
+unresolved, retain needs_more_info=true and identify that fact. Do not invent a premise.
+Otherwise the model may propose the candidate with pending outcomes in risk/verification.
+Keep at most two concise evidence requests; group related real dependencies if needed.
+If genuine blockers cannot fit, retain needs_more_info=true and say the list is incomplete.
+Use invocation claims only when necessary, copying exact supplied namespace/index/token.
+Use decimal GB hypotheses without inflated or overlapping savings. Preserve every
+policy, numerical, hardware, resource, budget, retry and search gate.
+"""
+
+
 def compact_diagnosis_schema(schema, *, request_policy=None):
     """Narrow only a selected 2k wire schema; never edit a response or host model."""
     if request_policy is None:
@@ -180,13 +204,15 @@ def diagnosis_prompt(template, study_protocol=None, *, request_policy=None):
     if request_policy is not None:
         # Snapshot analysis and custom callers have different task contracts.
         # Only the exact owned standard planner template selects this lean body.
+        prefix = COMPACT_DIAGNOSIS_INSTRUCTIONS
         if template == STANDARD_PROMPT_PATH.read_text(encoding="utf-8"):
+            prefix = PLANNER_COMPACT_INSTRUCTIONS
             template = COMPACT_PROMPT_PATH.read_text(encoding="utf-8")
             if template.count(PROMPT_CAP_MARKER) != 1:
                 raise ValueError(
                     "Compact diagnosis prompt requires exactly one completion-cap marker"
                 )
-        return COMPACT_DIAGNOSIS_INSTRUCTIONS + "\n" + template.replace(PROMPT_CAP_MARKER, str(cap))
+        return prefix + "\n" + template.replace(PROMPT_CAP_MARKER, str(cap))
     return template.replace(PROMPT_CAP_MARKER, str(cap))
 
 

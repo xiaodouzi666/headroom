@@ -50,7 +50,7 @@ The recorded suite contains eight synthetic PyTorch training cases and pinned na
 | [s5 variable-length allocations](docs/RESULTS.md) | Not met | — | No qualifying historical target result |
 | [nanoGPT pinned workload](docs/RESULTS.md) | Not met | — | No qualifying historical target result |
 
-Historically, **5 of 9** distinct scenarios have a run that met its configured memory target. The best single evaluation reached **3 of 9**. The latest October 30 evaluation reached **1 of 9**. Its first saved diagnosis rounds produced **3 of 9** valid correct first-cause diagnoses and **2 of 9** ready for patching; raw first-category matches were **4 of 9**. At the final stopping point, **1 of 9** diagnoses remained ready. <!-- numbers: summary -->
+Historically, **5 of 9** distinct scenarios have a run that met its configured memory target. The best single evaluation reached **3 of 9**. The latest October 30 evaluation reached **1 of 9**. Its first saved diagnosis rounds produced **2 of 9** valid correct first-cause diagnoses and **1 of 9** ready for patching; raw first-category matches were **5 of 9**. At the final stopping point, **4 of 9** diagnoses were valid and **1 of 9** remained ready. <!-- numbers: summary -->
 
 ### Does the snapshot matter?
 
@@ -113,7 +113,7 @@ Headroom builds on existing memory-analysis and optimization tools. PyTorch's [m
 
 ## Repository
 
-`headroom/` (Lab, evidence, LLM routing, verify, search, API) · `scenarios/` (synthetic cases) · `repos/` (pinned repository fixtures) · `web/` (React app) · `docs/` (architecture, CLI, evaluation, feedback) · `reports/` (campaign records). [Current document evidence](reports/docs-r13-20261030/README.md) and [earlier verification notes](reports/final48h-docs-20261029/README.md).
+`headroom/` (Lab, evidence, LLM routing, verify, search, API) · `scenarios/` (synthetic cases) · `repos/` (pinned repository fixtures) · `web/` (React app) · `docs/` (architecture, CLI, evaluation, feedback) · `reports/` (campaign records). [Current document evidence](reports/docs-r16-draft-20261030/numbers-checklist-v2.json) and [earlier verification notes](reports/final48h-docs-20261029/README.md).
 
 Development checks: `uv run pytest -q`, `uv run ruff check .`, `gitleaks detect`.
 

@@ -435,6 +435,13 @@ def execution_context(
             "runtime_values_verified": False,
         },
         "selected_round": selected_round,
+        "selected_run_id": (
+            runtime_result["run_id"]
+            if isinstance(runtime_result, Mapping)
+            and type(runtime_result.get("run_id")) is str
+            and re.fullmatch(r"[0-9a-f]{32}", runtime_result["run_id"])
+            else None
+        ),
         "script": _text(str(script), 256),
         "script_args": prompt_arguments(script_args),
         "execution_argv": prompt_arguments(execution_argv) if execution_argv is not None else None,
@@ -841,7 +848,9 @@ def solver_prompt_context(
     """
     fields = {
         "runtime_operator_catalog": bounded_json(
-            runtime_operator_catalog(), MAX_CATALOG_BYTES, "runtime_operator_catalog"
+            runtime_operator_catalog(execution_context=execution_context),
+            MAX_CATALOG_BYTES,
+            "runtime_operator_catalog",
         )
     }
     if runtime_patch_refinement is not None:

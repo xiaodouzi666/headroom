@@ -1,0 +1,88 @@
+{
+  "status": "IMPLEMENTED_FOCUSED_PASS_NO_LIVE_EVALUATION",
+  "scope": "Only explicit2k exact-owned ordinary planner gets problem-first prefix/body; legacy custom/snapshot and ordinary/study preserved",
+  "changed_owned_files": [
+    "headroom/diagnosis_protocol.py",
+    "headroom/prompts/diagnose_compact.md",
+    "tests/test_planner_problem_first.py",
+    "tests/test_compact_lean_planner.py",
+    "tests/test_final48_request_policy.py"
+  ],
+  "existing_protocol_functions_or_classes_changed": [
+    "diagnosis_prompt"
+  ],
+  "compact_schema_AST_unchanged": true,
+  "request_policy_class_and_cap_helpers_AST_unchanged": true,
+  "legacy_compact_prefix_bytes_unchanged": true,
+  "old_paths_exact_bytes_tested": [
+    "ordinary16384",
+    "study4000",
+    "snapshot_explicit2000",
+    "custom_explicit2000",
+    "nonexact_owned_text_explicit2000"
+  ],
+  "reference_contract": "Known original OOM0/partial is not missing successful baseline; compatible source/argv/candidate-family preconditions permit proposing a source-supported candidate, not predicting or bypassing future reference success",
+  "true_blockers_preserved": [
+    "required loss weighting",
+    "RNG",
+    "aliases/transitive consumers",
+    "parameter/update semantics",
+    "permission",
+    "unsupported required reference/candidate family",
+    "unsupported required savings"
+  ],
+  "policy_safety_preserved": [
+    "freeze/omitted updates cannot be justified by comments",
+    "BF16 permission cannot authorize omitted updates",
+    "only explicitlytrue policy enabled/missing disabled",
+    "no shrinking/droppeddata/skippedupdates/accounting changes",
+    "source/logs/context remain untrusted"
+  ],
+  "serialization": "current_plan IDs nonempty unique subset of this actual plan; overall/alternative/null empty IDs; non-source line bounds null; one strongest cause suffices and optional unrelated claims discouraged",
+  "system_sizes": {
+    "before_bytes": 8427,
+    "after_bytes": 7819,
+    "before_words": 1144,
+    "after_words": 1031,
+    "after_body_lines": 80
+  },
+  "focused": {
+    "passed": 151,
+    "failed": 0,
+    "seconds": 7.6,
+    "exit_code": 0,
+    "counts_by_suite": {
+      "tests.test_planner_problem_first": 16,
+      "tests.test_compact_lean_planner": 8,
+      "tests.test_final48_request_policy": 21,
+      "tests.test_snapshot_diagnosis": 51,
+      "tests.test_diagnosis_bounded_repair": 24,
+      "tests.test_prerequisite_review": 31
+    },
+    "guard": "immutable_v5",
+    "provider_transport": "MockTransport only",
+    "GPU": false,
+    "production_ledger": false
+  },
+  "initial_compatibility_receipt": {
+    "passed": 150,
+    "failed": 1,
+    "cause": "Second old standard-planner prefix expectation still named legacy constant; updated only that expected prefix, kept exact schema/cap/mode assertions and root input-order expectation",
+    "preserved_log": "focused-initial.log"
+  },
+  "source_hashes": {
+    "headroom/diagnosis_protocol.py": "853dbc02f9c250de40b2bc806b5321948a395d514faa3f3c3da0fce1ba9db969",
+    "headroom/prompts/diagnose_compact.md": "432ab3230f3cbb3412f401229b7d9a9aeb664523b36f4291ce47cd1f27996a77",
+    "tests/test_planner_problem_first.py": "6e3c6fabf976783e94dff18704f6772333880ecab5687d8aa4cda036c8b77ac1",
+    "tests/test_compact_lean_planner.py": "0556b45898b5ce2665962912529da1cf7bd0a5d01f3da181bba3c00e76caa167",
+    "tests/test_final48_request_policy.py": "694372fdfe510a91ef30dc6448891c0f45a28d0447a1637519eb1aed6b985b71"
+  },
+  "new_model_calls": 0,
+  "new_gpu_runs": 0,
+  "schema_or_validator_or_acceptance_threshold_changes": false,
+  "readiness_or_flags_mutated_by_host": false,
+  "limitations": [
+    "Offline tests establish packaging/gate compatibility, not that the model will choose a better plan.",
+    "No new target success or revised historical result is claimed."
+  ]
+}

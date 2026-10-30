@@ -1,0 +1,74 @@
+{
+  "status": "feasibility_estimates_not_observations",
+  "actual_inputs_only": "old catalog IDs/numel histogram, selected source-bound summary bytes",
+  "no_model_or_gpu_calls": true,
+  "no_source_or_capture_writes": true,
+  "cases": [
+    {
+      "scenario_id": "s2_capacity_v2",
+      "actual_capture_path": "/home/xiaodouzi/workspace/headroom/runs/repair-followup/execution-r15-20261030/jobs/ca746c9304f548ac83d31084c0a446c4/lab/943741ac611e441eac0d630fc82a5eaf/result.json",
+      "actual_capture_sha256": "0eea743a5b5765deec5438f7e97ea852e2ebbf0a9fd1ce29fbd957eb3f1aa3b4",
+      "actual_catalog_entries": 204,
+      "actual_numel_histogram": {
+        "2048": 102,
+        "16777216": 68,
+        "8192": 34
+      },
+      "actual_old_summary_bytes": 1898,
+      "old_spare_bytes_to3072": 1174,
+      "synthetic_assumptions": [
+        "all parameter/state tensors modeled float32 CUDA strided",
+        "shape modeled as flat [numel] only for byte estimation; actual shapes unknown",
+        "one optimizer group with dummy AdamW options, not observed values",
+        "state modeled empty at constructor/first pre, moments initialized after first call; this is not a captured fact",
+        "all members of a numel bucket assumed same metadata/state profile; real capture may split buckets"
+      ],
+      "size_estimates_only": {
+        "options_raw": 4493,
+        "deduplicated_tensor_state_raw": 3687,
+        "combined_optional_raw": 8217,
+        "context_with_synthetic_options_only": 2590,
+        "context_with_options_and_dtype_device_layout_only": 2830,
+        "dtype_only_fits3072": true,
+        "context_with_options_and_state_relations": 3270,
+        "state_relations_fit3072": false,
+        "context_including_exact_synthetic_shape_profile_list": 3826,
+        "full_shapes_fit3072": false
+      }
+    },
+    {
+      "scenario_id": "s8_two_models_resident",
+      "actual_capture_path": "/home/xiaodouzi/workspace/headroom/runs/repair-followup/execution-r15-20261030/jobs/51166a84272f49318a36a839207424c7/lab/693baee0ab6b4fac949d33ddfc0f5582/result.json",
+      "actual_capture_sha256": "abc0469802b38ec557a7d2e37cdbe347293141c8c598f1363922cf0048f44d26",
+      "actual_catalog_entries": 8,
+      "actual_numel_histogram": {
+        "524288": 1,
+        "1024": 3,
+        "1048576": 2,
+        "262144": 1,
+        "256": 1
+      },
+      "actual_old_summary_bytes": 1878,
+      "old_spare_bytes_to3072": 1194,
+      "synthetic_assumptions": [
+        "all parameter/state tensors modeled float32 CUDA strided",
+        "shape modeled as flat [numel] only for byte estimation; actual shapes unknown",
+        "one optimizer group with dummy AdamW options, not observed values",
+        "state modeled empty at constructor/first pre, moments initialized after first call; this is not a captured fact",
+        "all members of a numel bucket assumed same metadata/state profile; real capture may split buckets"
+      ],
+      "size_estimates_only": {
+        "options_raw": 965,
+        "deduplicated_tensor_state_raw": 2967,
+        "combined_optional_raw": 3969,
+        "context_with_synthetic_options_only": 2570,
+        "context_with_options_and_dtype_device_layout_only": 2806,
+        "dtype_only_fits3072": true,
+        "context_with_options_and_state_relations": 3238,
+        "state_relations_fit3072": false,
+        "context_including_exact_synthetic_shape_profile_list": 4066,
+        "full_shapes_fit3072": false
+      }
+    }
+  ]
+}

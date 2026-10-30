@@ -4,6 +4,7 @@ import json
 import re
 
 from headroom.evidence_blockers import evidence_reference_catalog
+from headroom.observation_feedback import supplied_runtime_observation
 from headroom.verify.policy import _CREDENTIAL_PATTERN
 
 MAX_CONTEXT_BYTES = 8192
@@ -142,6 +143,9 @@ def validation_issue_context(issue, diagnosis, evidence=None):
             unknown = catalog.get("execution_context.runtime_input_observations")
             if isinstance(unknown, dict) and unknown.get("availability") == "unknown":
                 context["advertised_unknown_runtime_reference"] = _reference_observation(unknown)
+        separate = supplied_runtime_observation(evidence, request["evidence_ref"])
+        if separate is not None:
+            context["separate_supplied_runtime_observation"] = separate
         if len(json.dumps(context, ensure_ascii=True).encode()) > MAX_CONTEXT_BYTES:
             return {**base, "request_context": {"status": "withheld", "reason": "context_bound"}}
         return {**base, "request_context": context}

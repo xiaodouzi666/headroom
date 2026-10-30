@@ -1,0 +1,93 @@
+--- prepare-r16.py.txt
++++ prepare-r17.py.txt
+@@ -1,7 +1,7 @@
+-"""Prepare R16 only after a reviewed final commit; never fund, dispatch or run workloads.
++"""Prepare R17 only after a reviewed final commit; never fund, dispatch or run workloads.
+ 
+ Nothing is written without --write-reviewed plus the exact revision and script SHA.
+-All output names are new; existing R14/R16 artifacts are never overwritten.
++All output names are new; existing R14/R17 artifacts are never overwritten.
+ """
+ 
+ import argparse
+@@ -33,10 +33,10 @@
+ CONTROLLER = ROOT / "reports/repair-followup-20261030/execute-fixed9-v2.py.txt"
+ CONTROLLER_SHA = "590189eb3b23f1f932c62a849afd1aee26edb9968822964e65a8c3b7f04ed426"
+ FUNDING_SHA = "3b5f9e2573fda21f34c4858a4af64b27a5952e5c1c6bb944dcdb3d01a67bf889"
+-PREPARATION = ROOT / "runs/final48-repair-preparation-20261030-r16/preparation.json"
+-PROPOSAL = CACHE / "r16-proposal.json"
+-PREFLIGHT = ROOT / "reports/repair-followup-20261030/r16-preflight.json"
+-EXECUTION = ROOT / "runs/repair-followup/execution-r16-20261030"
++PREPARATION = ROOT / "runs/final48-repair-preparation-20261030-r17/preparation.json"
++PROPOSAL = CACHE / "r17-proposal.json"
++PREFLIGHT = ROOT / "reports/repair-followup-20261030/r17-preflight.json"
++EXECUTION = ROOT / "runs/repair-followup/execution-r17-20261030"
+ SEMANTIC_FIELDS = (
+     "controls",
+     "cells",
+@@ -48,12 +48,12 @@
+ NEW_REVIEWED_SOURCE = {
+     "headroom/lab/hooks.py": "2b2b7cf9147110523cf18aae4d69378f6ce81553bae16e42410717e6864df370",
+     "headroom/optimizer_observations.py": "2606c5ee53700e5cc73e92cad82ad0cd27cb2c12424e6b87acc55eb6f013adf7",
+-    "headroom/prompts/diagnose_compact.md": "6c33270968d74bbd15f51e4b791f7894976e46f0363290801c6a6a3731f04453",
++    "headroom/prompts/diagnose_compact.md": "78a2699c1cf4675422ee92df8e3ca04a3f4715eff47a5d7266c7f5708d721127",
+     "headroom/evidence_blockers.py": "bd3ce28d90fdb501d18b14c0f97e2816c8205b53acca1c885fc802bdc6b67633",
+-    "headroom/validation_feedback.py": "dc1ba3475a9f997c3f39b22aa28c848d26c31429f0889d87d52a6ef5e173e7f3",
++    "headroom/validation_feedback.py": "d86b92e6e8aa5c3339779e2d2ad22c66283520708678436ac621a7a13ff75e60",
+     "headroom/runtime_refinement.py": "bbbae174801149c8d9f7061e5df07462cbc1cd9d2a733bda69d35c8f82924768",
+     "headroom/orchestrator.py": "daac8cd0db44743a13fbf5e972c89c5c3077e1c94dba697d5b87b2cbff894b6d",
+-    "headroom/solver_context.py": "50f2b054652dbba171faadbd82b2defb87a0b941835cc02c1eff02e607ab12d0",
++    "headroom/solver_context.py": "2225516f0e3e53f8c32304b0bbf04cc65fd959bdb2f5b8c3f428863cefb1eebd",
+     "headroom/patch.py": "c8c72c317bd9d3892c871129844d8fc49f03f95095534d980bde7a256962f6aa",
+     "headroom/store/db.py": "f4e80ea7567476111694b9053ab01168bf7efe5cbad1ac0d82e4a885d53aeba1",
+     "headroom/lab/reference_scratch.py": "4ac92b1fb8cbbeb2c1345ad8639b2a6a8268d1e66d202d3e2ba9d8fd67b08289",
+@@ -62,16 +62,18 @@
+     "headroom/verify/training_coverage.py": "065cb685a1ba1430afe15ef3d5af0a0d0604519f92350d84c70af405b32faf12",
+     "headroom/verify/offload.py": "76ca5935fd04deceac8ec3904f9d23cd10cb8833025a81271ce92d0dbb1ae899",
+     "headroom/verify/offload_disk.py": "66a273b23fdb2fb04ba2a065fc8b0a3e6a1e4616acfb30ea42eaade1028ed000",
+-    "headroom/diagnosis_protocol.py": "d05aba96f52bb918949ee55a1173850c3b9cec1a38ffd27237b27709dc5e42a1",
++    "headroom/diagnosis_protocol.py": "f85d804265232a5d9790af7acd720a633eee8cacbc3379172713cf31687db78f",
+     "headroom/prerequisite_review.py": "ab4817036218e947c1c64fbcec1dd6ad483c2ea707f328d05982baa41a9c7543",
+-    "headroom/operator_capabilities.py": "3078fc325dfd7980567a29c99d276dea81c9694ca1e64d4663ca14860138dc00",
++    "headroom/operator_capabilities.py": "25f3bc7b074e692cb41f8bc7b6d71b25c4b5490ed47ed9655e782c38fefb8677",
++    "headroom/observation_feedback.py": "78fc299a7327ee82ee2c09d37279c4531417ac79b56b2752f2b135c0d5068cc8",
++    "headroom/diagnose.py": "e4b3111aa757435760825ffd87d76d8f720a8ab2821c327ff147e1edf5a3595e",
+ }
+ EXPECTED_STARTING_ACCOUNTING = {
+     "scope_cap_usd": "4.890504400",
+-    "scope_charged_usd": "2.26000522",
++    "scope_charged_usd": "2.85904888",
+     "scope_actual_usd": None,
+     "scope_encumbered_usd": "0",
+-    "scope_remaining_usd": "2.630499180",
++    "scope_remaining_usd": "2.031455520",
+     "all_costs_known": False,
+     "all_costs_resolved": True,
+     "open_runs": [],
+@@ -164,7 +166,7 @@
+         "CONTROLLER_SOURCE_CHANGED",
+     )
+     loader = importlib.machinery.SourceFileLoader(
+-        "reviewed_r16_controller_preparation", str(CONTROLLER)
++        "reviewed_r17_controller_preparation", str(CONTROLLER)
+     )
+     spec = importlib.util.spec_from_loader(loader.name, loader)
+     module = importlib.util.module_from_spec(spec)
+@@ -192,7 +194,7 @@
+     )
+     for path in (PREPARATION.parent, PROPOSAL, PREFLIGHT, EXECUTION):
+         repair.inside(ROOT, path)
+-        require(not path.exists(), "NEW_R16_OUTPUT_REQUIRED")
++        require(not path.exists(), "NEW_R17_OUTPUT_REQUIRED")
+     base_proposal = repair.read_json(BASE_PROPOSAL, max_bytes=2 * 1024 * 1024)
+     require(repair.digest(base_proposal) == BASE_PROPOSAL_SHA, "R14_PROPOSAL_CHANGED")
+     base_path = repair.inside(ROOT, base_proposal["prepared_path"])
+@@ -262,7 +264,7 @@
+     reread = repair.read_json(PROPOSAL, max_bytes=2 * 1024 * 1024)
+     require(reread == proposal, "PROPOSAL_WRITE_CHECK_FAILED")
+     preflight = {
+-        "scope": "R16_PREPARED_ONLY_NO_LIVE_EXECUTION",
++        "scope": "R17_PREPARED_ONLY_NO_LIVE_EXECUTION",
+         "revision": expected_revision,
+         "preparation_script_sha256": expected_script_sha,
+         "controller_sha256": CONTROLLER_SHA,

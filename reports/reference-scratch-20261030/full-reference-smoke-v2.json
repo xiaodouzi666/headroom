@@ -1,0 +1,2405 @@
+{
+  "at": "2026-10-30T13:15:50.395636+00:00",
+  "scope": "one full-size original workload saved-tensor storage infrastructure check; not an automatic repair or fixed-nine score",
+  "elapsed_seconds": 364.5975039699115,
+  "source_pins_unchanged": true,
+  "model_calls": 0,
+  "fixed_nine_score_changed": false,
+  "result": {
+    "protocol": "headroom.lab.v1",
+    "parameter_count": 50374656,
+    "parameter_count_complete": true,
+    "parameter_count_source": "lab_module_parameter_hooks",
+    "parameter_count_observations": [
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656
+    ],
+    "root_forward_parameter_counts": [
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656,
+      50374656
+    ],
+    "parameter_count_coverage": "Unique live Parameters registered on nn.Module during capture, plus Parameters seen via root forward module.parameters(); sampled at root forwards and optimizer updates. Tied parameters count once; no tensor is retained. Standalone tensors, pre-capture unused modules, and no-root-forward construction failures are not covered. Changing observed counts are incomplete. This is runtime evidence, not authentication against a target that deliberately tampers with hooks.",
+    "precision_observation": {
+      "protocol": "headroom.precision.v1",
+      "source": "lab_runtime_precision_observer_v1",
+      "device": "cuda",
+      "precision": "fp32",
+      "complete": true,
+      "root_modes": {
+        "fp32": 20,
+        "bf16": 0,
+        "unknown": 0
+      },
+      "counts": {
+        "module_pre": 740,
+        "module_post": 740,
+        "root_forwards": 20,
+        "operation_calls": 620,
+        "tensor_metadata": 4280,
+        "ignored_device_tensors": 0
+      },
+      "autocast": {
+        "disabled": 2100,
+        "bfloat16": 0,
+        "unsupported": 0,
+        "unknown": 0
+      },
+      "dtypes": {
+        "parameter": {
+          "float32": 720,
+          "bfloat16": 0,
+          "float16": 0,
+          "float64": 0,
+          "complex": 0,
+          "other_floating": 0,
+          "non_floating": 0
+        },
+        "input": {
+          "float32": 740,
+          "bfloat16": 0,
+          "float16": 0,
+          "float64": 0,
+          "complex": 0,
+          "other_floating": 0,
+          "non_floating": 0
+        },
+        "output": {
+          "float32": 740,
+          "bfloat16": 0,
+          "float16": 0,
+          "float64": 0,
+          "complex": 0,
+          "other_floating": 0,
+          "non_floating": 0
+        },
+        "operation_input": {
+          "float32": 1460,
+          "bfloat16": 0,
+          "float16": 0,
+          "float64": 0,
+          "complex": 0,
+          "other_floating": 0,
+          "non_floating": 0
+        },
+        "operation_output": {
+          "float32": 620,
+          "bfloat16": 0,
+          "float16": 0,
+          "float64": 0,
+          "complex": 0,
+          "other_floating": 0,
+          "non_floating": 0
+        }
+      },
+      "errors": {},
+      "checkpoint_recompute": {
+        "entered": 0,
+        "exited": 0,
+        "early_stops": 0,
+        "failed": 0
+      },
+      "operation_mode_lifecycle": {
+        "entered": 20,
+        "exited": 20
+      },
+      "recognized_graph_metadata_outputs": 0,
+      "coverage": {
+        "module_hooks": "Every observed module pre/post forward; direct registered parameters",
+        "internal_autocast": "TorchFunctionMode samples autocast and tensor argument/output metadata during forwards",
+        "root_summary": "Mixed root forward modes, unknown/unsupported dtypes, errors or limits are unknown",
+        "tensor_data_access": false,
+        "gpu_synchronization": false,
+        "tensor_references_retained": false,
+        "all_operator_dtypes_proven": false,
+        "limitations": [
+          "TorchFunctionMode observes Python-dispatched torch functions; C++/compiled/custom operators may not expose internal autocast or every intermediate dtype.",
+          "Metadata records observed precision, not tensor values or full numerical equivalence.",
+          "Known compiled wrappers and unregistered or unobserved worker forwards remain unknown.",
+          "Metadata observation adds Python overhead; no tensor data or GPU synchronization is added.",
+          "Runtime hooks are not authentication against deliberate target tampering."
+        ]
+      },
+      "worker_observers": {
+        "registered": 0,
+        "basis": "explicit checkpoint function boundary with actual thread-local operation mode",
+        "snapshots": []
+      }
+    },
+    "execution_entrypoint": null,
+    "deadline_observation": {
+      "basis": "verified_host_monotonic_deadline",
+      "clock_verified": true,
+      "observed_clock_identity": {
+        "clock": "CLOCK_MONOTONIC",
+        "boot_id": "a4458013-9ffc-488c-916d-639030ea9fa4",
+        "monotonic_offset": {
+          "seconds": 0,
+          "nanoseconds": 0
+        },
+        "time_namespace_device": 5,
+        "time_namespace_inode": 4026534260
+      },
+      "protocol": "headroom.deadline.v1",
+      "clock_identity": {
+        "clock": "CLOCK_MONOTONIC",
+        "boot_id": "a4458013-9ffc-488c-916d-639030ea9fa4",
+        "monotonic_offset": {
+          "seconds": 0,
+          "nanoseconds": 0
+        },
+        "time_namespace_device": 5,
+        "time_namespace_inode": 4026531834
+      },
+      "started_monotonic_ns": 1921544823811125,
+      "hard_deadline_monotonic_ns": 1922024823811125,
+      "capture_deadline_monotonic_ns": 1922019823811125,
+      "max_seconds": 480,
+      "capture_reserve_seconds": 5.0,
+      "observed_monotonic_ns": 1921547606023599,
+      "remaining_capture_seconds": 472.217787526,
+      "expired_before_target": false
+    },
+    "deadline_reached": false,
+    "pairing_capture": {
+      "protocol": "headroom.pairing.v1",
+      "complete": true,
+      "reason": "captured initialized tensors before training loop",
+      "source_contract": {
+        "supported": true,
+        "profile": "s4",
+        "contract_sha256": "1c188d7ee917a9ca4d536033d43c3d3aa9cd5ad3ba1005dda2ecd6fd8167f1a0",
+        "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+        "capture_line": 96,
+        "checkpointed": false,
+        "optimizer_foreach_disabled": false,
+        "tensor_names": [
+          "inputs",
+          "targets"
+        ],
+        "objective": "fixed_tensors_residual_mlp_sgd_mse_mean_v1"
+      },
+      "tensors": {
+        "inputs": {
+          "sha256": "60aabd40720cddf42269cb7ca4221bdeea37cfc6861d5804e11616c71a7e6ec8",
+          "shape": [
+            8,
+            1024,
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        "targets": {
+          "sha256": "79e149d7a3e77afd5fcccd6d59381794de425efaeb14f2057bf5ee61b630ac8b",
+          "shape": [
+            8,
+            1024
+          ],
+          "dtype": "torch.float32"
+        }
+      },
+      "initial_parameters": [
+        {
+          "name": "blocks.0.norm.weight",
+          "sha256": "e9bac255f4adc7cb4ada9298e193a5ff66b434d15afabd458505325f29c398c7",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.0.norm.bias",
+          "sha256": "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.0.ff.0.weight",
+          "sha256": "5815fcfd403db162d85091cbf114d57073612a97582ac8976f6aeff4d19e4ec2",
+          "shape": [
+            4096,
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.0.ff.0.bias",
+          "sha256": "07e4e23688e4c1225f27c1a6887051e6c0e965a6a9059b9418c19cb9d0917481",
+          "shape": [
+            4096
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.0.ff.2.weight",
+          "sha256": "a34cc51866544a7d1c65bd5776c28b49aa2f208401817aea0ea6d0988a27de91",
+          "shape": [
+            1024,
+            4096
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.0.ff.2.bias",
+          "sha256": "3d834a0d7d01bbd595ff2b43d12221e0fa4337f42c701c122f544107aca105fc",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.1.norm.weight",
+          "sha256": "e9bac255f4adc7cb4ada9298e193a5ff66b434d15afabd458505325f29c398c7",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.1.norm.bias",
+          "sha256": "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.1.ff.0.weight",
+          "sha256": "6df451a98787c772dc8723405c7ae8b84d6fd650da69c56bbb21433dd01ccd8b",
+          "shape": [
+            4096,
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.1.ff.0.bias",
+          "sha256": "d09b39afdb2f8d523b0aeeb0742d58fd46f32369772de17e090ca0fdef286dcf",
+          "shape": [
+            4096
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.1.ff.2.weight",
+          "sha256": "c0e8f1a3598d4e4a460afd9326faf40071404f073f4d239eec14617f67c348eb",
+          "shape": [
+            1024,
+            4096
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.1.ff.2.bias",
+          "sha256": "93b368a0290bf1965cc4abe9c4bad0ff59850c4cd815cf1cb9341c825f295085",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.2.norm.weight",
+          "sha256": "e9bac255f4adc7cb4ada9298e193a5ff66b434d15afabd458505325f29c398c7",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.2.norm.bias",
+          "sha256": "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.2.ff.0.weight",
+          "sha256": "d5c0b128380ec38e25a70a47bbd7d2ad120e449c5534ef1c435947e14abeee99",
+          "shape": [
+            4096,
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.2.ff.0.bias",
+          "sha256": "687f42bc296845eda01e0e13893e5ad4f6b50bfdb99900c1c97625f876bcc7c8",
+          "shape": [
+            4096
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.2.ff.2.weight",
+          "sha256": "2a73d079abe6070d196a731e87e38b9abdd0714076cc74d6134eaf22d762c027",
+          "shape": [
+            1024,
+            4096
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.2.ff.2.bias",
+          "sha256": "9f330fbc5446daf58a14b1599817b18cdbe7196971152c1706b02291b6300a37",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.3.norm.weight",
+          "sha256": "e9bac255f4adc7cb4ada9298e193a5ff66b434d15afabd458505325f29c398c7",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.3.norm.bias",
+          "sha256": "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.3.ff.0.weight",
+          "sha256": "ca3475e586531df960f979e51951e79d99518cfd19c2aa469741de7ae17d0e09",
+          "shape": [
+            4096,
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.3.ff.0.bias",
+          "sha256": "d080d982f4b058ebe33b8f3e2a832f2e94836a0bf039a83b292aa50683b2b428",
+          "shape": [
+            4096
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.3.ff.2.weight",
+          "sha256": "3c99ea4c8dadf57448c3ca988d834a76b1f7c50c9efc1bfd8ceafaafc1d14e08",
+          "shape": [
+            1024,
+            4096
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.3.ff.2.bias",
+          "sha256": "c14bf60a6c33f2d2de724202825fdcf45c2828699de2d3f3cf73d69f325fba32",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.4.norm.weight",
+          "sha256": "e9bac255f4adc7cb4ada9298e193a5ff66b434d15afabd458505325f29c398c7",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.4.norm.bias",
+          "sha256": "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.4.ff.0.weight",
+          "sha256": "615471c467c5b5e451207f042e6be960214c87c7025175d449225a5fc20d6181",
+          "shape": [
+            4096,
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.4.ff.0.bias",
+          "sha256": "e2fe0e91cb00aba05382fa0eef1bf323c32a2da5370ab8e1e83d623f4f97310b",
+          "shape": [
+            4096
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.4.ff.2.weight",
+          "sha256": "6319ff13d4ec8df00dffdbf5f92cc057664bdef17c3c2a2f9fc1517fa4fb446c",
+          "shape": [
+            1024,
+            4096
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.4.ff.2.bias",
+          "sha256": "b82083037f99114ba6ead0d4d1c456e5ce133e48fb98e9a526eb48ea7d773532",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.5.norm.weight",
+          "sha256": "e9bac255f4adc7cb4ada9298e193a5ff66b434d15afabd458505325f29c398c7",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.5.norm.bias",
+          "sha256": "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.5.ff.0.weight",
+          "sha256": "03a4c231d237084c1d18bdac4c84ba1c1d0b7f90a2af488090ce53770371f725",
+          "shape": [
+            4096,
+            1024
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.5.ff.0.bias",
+          "sha256": "7954971a373c231b770fb4227c5d2813a2f0477f2899cc50be840236977ba30b",
+          "shape": [
+            4096
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.5.ff.2.weight",
+          "sha256": "231517bf8f52493399618e35e3558fb8c51415516898145ee82809eb4fd9ae67",
+          "shape": [
+            1024,
+            4096
+          ],
+          "dtype": "torch.float32"
+        },
+        {
+          "name": "blocks.5.ff.2.bias",
+          "sha256": "d9c77c66534019bb0240bc8ec3b1e47ffede57ae984fb8119975b3c5b22ae5df",
+          "shape": [
+            1024
+          ],
+          "dtype": "torch.float32"
+        }
+      ],
+      "updates": [
+        {
+          "step": 1,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 2,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 3,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 4,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 5,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 6,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 7,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 8,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 9,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 10,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 11,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 12,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 13,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 14,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 15,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 16,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 17,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 18,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 19,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        },
+        {
+          "step": 20,
+          "effective_batch": 8,
+          "training_forwards": 1,
+          "backwards": 1
+        }
+      ],
+      "hash_seconds": 0.49259161995723844,
+      "checkpoint_recomputation_root_forwards": 0,
+      "bytes_hashed": 235085824,
+      "timing": "one initialization hash, excluded from Lab optimizer intervals",
+      "coverage": "pinned standalone AST + actual tensors and per-update hooks; cooperative target only; command mode and arbitrary scripts unsupported"
+    },
+    "schema_version": 1,
+    "capture_complete": true,
+    "finalization_incomplete": false,
+    "finalization_stage": "finished",
+    "artifact_writes": {
+      "memory_stats.json": "complete",
+      "memory_summary.txt": "complete",
+      "traceback.txt": "complete",
+      "env.json": "complete",
+      "snapshot.pickle": "complete",
+      "snapshot.json": "complete"
+    },
+    "execution_status": "completed",
+    "status": "completed",
+    "termination_reason": "step_limit",
+    "pid": 1,
+    "is_primary": true,
+    "optimizer_update_observation": {
+      "protocol": "headroom.optimizer_updates.v1",
+      "complete": true,
+      "logical_boundary_complete": true,
+      "parameter_update_sets_complete": true,
+      "optimizer_step_calls": 20,
+      "successful_optimizer_step_calls": 20,
+      "logical_updates": 20,
+      "parameter_catalog": [
+        {
+          "id": "p00001",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00002",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00003",
+          "numel": 4194304,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00004",
+          "numel": 4096,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00005",
+          "numel": 4194304,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00006",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00007",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00008",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00009",
+          "numel": 4194304,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00010",
+          "numel": 4096,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00011",
+          "numel": 4194304,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00012",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00013",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00014",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00015",
+          "numel": 4194304,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00016",
+          "numel": 4096,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00017",
+          "numel": 4194304,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00018",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00019",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00020",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00021",
+          "numel": 4194304,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00022",
+          "numel": 4096,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00023",
+          "numel": 4194304,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00024",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00025",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00026",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00027",
+          "numel": 4194304,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00028",
+          "numel": 4096,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00029",
+          "numel": 4194304,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00030",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00031",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00032",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00033",
+          "numel": 4194304,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00034",
+          "numel": 4096,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00035",
+          "numel": 4194304,
+          "requires_grad_at_observation": true
+        },
+        {
+          "id": "p00036",
+          "numel": 1024,
+          "requires_grad_at_observation": true
+        }
+      ],
+      "group_options": {
+        "protocol": "headroom.optimizer_group_options.v1",
+        "complete": true,
+        "stopped_at_limit_or_error": false,
+        "events": {
+          "base_constructor_return": 1,
+          "step_pre": 20
+        },
+        "configurations": [
+          {
+            "id": "c001",
+            "present": {
+              "lr": [
+                "float",
+                0.001
+              ],
+              "momentum": [
+                "int",
+                0
+              ],
+              "weight_decay": [
+                "int",
+                0
+              ],
+              "dampening": [
+                "int",
+                0
+              ],
+              "nesterov": [
+                "bool",
+                false
+              ],
+              "maximize": [
+                "bool",
+                false
+              ],
+              "foreach": [
+                "none",
+                null
+              ],
+              "fused": [
+                "none",
+                null
+              ],
+              "differentiable": [
+                "bool",
+                false
+              ]
+            },
+            "unrecognized_option_keys": 0
+          }
+        ],
+        "groups": [
+          {
+            "optimizer_id": "o0001",
+            "group_index": 0,
+            "stage": "base_constructor_return",
+            "config_id": "c001",
+            "parameter_ids": [
+              "p00001",
+              "p00002",
+              "p00003",
+              "p00004",
+              "p00005",
+              "p00006",
+              "p00007",
+              "p00008",
+              "p00009",
+              "p00010",
+              "p00011",
+              "p00012",
+              "p00013",
+              "p00014",
+              "p00015",
+              "p00016",
+              "p00017",
+              "p00018",
+              "p00019",
+              "p00020",
+              "p00021",
+              "p00022",
+              "p00023",
+              "p00024",
+              "p00025",
+              "p00026",
+              "p00027",
+              "p00028",
+              "p00029",
+              "p00030",
+              "p00031",
+              "p00032",
+              "p00033",
+              "p00034",
+              "p00035",
+              "p00036"
+            ],
+            "first_call": 0,
+            "last_call": 0,
+            "observations": 1
+          },
+          {
+            "optimizer_id": "o0001",
+            "group_index": 0,
+            "stage": "step_pre",
+            "config_id": "c001",
+            "parameter_ids": [
+              "p00001",
+              "p00002",
+              "p00003",
+              "p00004",
+              "p00005",
+              "p00006",
+              "p00007",
+              "p00008",
+              "p00009",
+              "p00010",
+              "p00011",
+              "p00012",
+              "p00013",
+              "p00014",
+              "p00015",
+              "p00016",
+              "p00017",
+              "p00018",
+              "p00019",
+              "p00020",
+              "p00021",
+              "p00022",
+              "p00023",
+              "p00024",
+              "p00025",
+              "p00026",
+              "p00027",
+              "p00028",
+              "p00029",
+              "p00030",
+              "p00031",
+              "p00032",
+              "p00033",
+              "p00034",
+              "p00035",
+              "p00036"
+            ],
+            "first_call": 1,
+            "last_call": 20,
+            "observations": 20
+          }
+        ]
+      },
+      "parameter_catalog_initialization": {
+        "successful_base_constructor_returns": 1,
+        "complete": true,
+        "scope": "Metadata from groups after successful torch.optim.Optimizer.__init__; not custom-subclass completion or an optimizer update. Later step/graph observations may also add identities. No tensor values are read or copied."
+      },
+      "failed_backward_groups": [],
+      "coverage": "Process-local Parameter identities and optimizer pre/post hooks; version-counter changes are observations, not numerical equivalence. A grouped update requires one successful complete Tensor.backward and exactly-once coverage of its observable leaf Parameters. Restricted/nested/concurrent graphs are unsupported. Ordinary outer optimizer calls retain the legacy counting contract. This is cooperative instrumentation, not authentication against target tampering."
+    },
+    "steps": 20,
+    "loss_series": [
+      1.0407228469848633,
+      1.0404858589172363,
+      1.040249228477478,
+      1.040013074874878,
+      1.0397772789001465,
+      1.0395419597625732,
+      1.0393069982528687,
+      1.0390725135803223,
+      1.038838267326355,
+      1.038604497909546,
+      1.038371205329895,
+      1.0381382703781128,
+      1.0379058122634888,
+      1.0376737117767334,
+      1.0374417304992676,
+      1.037210464477539,
+      1.0369794368743896,
+      1.0367488861083984,
+      1.0365188121795654,
+      1.036289095878601
+    ],
+    "step_records": [
+      {
+        "step": 1,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 19666.77044518292,
+        "elapsed_ms": 20159.362065140158,
+        "wall_time_us": 1793365809126035,
+        "peak_allocated_bytes": 889578496,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 2,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 17521.74307499081,
+        "elapsed_ms": 37681.10514013097,
+        "wall_time_us": 1793365826647789,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 3,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 17601.05469590053,
+        "elapsed_ms": 55282.1598360315,
+        "wall_time_us": 1793365844248851,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 4,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 17408.938713138923,
+        "elapsed_ms": 72691.09854917042,
+        "wall_time_us": 1793365861657780,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 5,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 17517.605448840186,
+        "elapsed_ms": 90208.7039980106,
+        "wall_time_us": 1793365879175345,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 6,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 17628.439848078415,
+        "elapsed_ms": 107837.14384608902,
+        "wall_time_us": 1793365896803825,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 7,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 17752.86368187517,
+        "elapsed_ms": 125590.00752796419,
+        "wall_time_us": 1793365914556655,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 8,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 17723.058003000915,
+        "elapsed_ms": 143313.0655309651,
+        "wall_time_us": 1793365932279744,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 9,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 17623.357973992825,
+        "elapsed_ms": 160936.42350495793,
+        "wall_time_us": 1793365949903067,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 10,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 17406.659298110753,
+        "elapsed_ms": 178343.08280306868,
+        "wall_time_us": 1793365967309764,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 11,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 17797.527971910313,
+        "elapsed_ms": 196140.610774979,
+        "wall_time_us": 1793365985107258,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 12,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 17945.22816920653,
+        "elapsed_ms": 214085.83894418553,
+        "wall_time_us": 1793366003052499,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 13,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 17983.162143966183,
+        "elapsed_ms": 232069.0010881517,
+        "wall_time_us": 1793366021035635,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 14,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 18058.7727248203,
+        "elapsed_ms": 250127.773812972,
+        "wall_time_us": 1793366039094422,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 15,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 17952.759771142155,
+        "elapsed_ms": 268080.53358411416,
+        "wall_time_us": 1793366057047179,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 16,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 17984.418551903218,
+        "elapsed_ms": 286064.9521360174,
+        "wall_time_us": 1793366075031588,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 17,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 17783.807991072536,
+        "elapsed_ms": 303848.7601270899,
+        "wall_time_us": 1793366092815422,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 18,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 17993.433967931196,
+        "elapsed_ms": 321842.1940950211,
+        "wall_time_us": 1793366110808877,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 19,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 18009.669319028035,
+        "elapsed_ms": 339851.86341404915,
+        "wall_time_us": 1793366128818514,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      },
+      {
+        "step": 20,
+        "optimizer": "torch.optim.sgd.SGD",
+        "update_basis": "optimizer_post_hook",
+        "optimizer_step_calls": 1,
+        "optimizer_classes": [
+          "torch.optim.sgd.SGD"
+        ],
+        "updated_parameter_ids": [
+          "p00001",
+          "p00002",
+          "p00003",
+          "p00004",
+          "p00005",
+          "p00006",
+          "p00007",
+          "p00008",
+          "p00009",
+          "p00010",
+          "p00011",
+          "p00012",
+          "p00013",
+          "p00014",
+          "p00015",
+          "p00016",
+          "p00017",
+          "p00018",
+          "p00019",
+          "p00020",
+          "p00021",
+          "p00022",
+          "p00023",
+          "p00024",
+          "p00025",
+          "p00026",
+          "p00027",
+          "p00028",
+          "p00029",
+          "p00030",
+          "p00031",
+          "p00032",
+          "p00033",
+          "p00034",
+          "p00035",
+          "p00036"
+        ],
+        "parameter_update_coverage_complete": true,
+        "step_ms": 17823.665077099577,
+        "elapsed_ms": 357675.5284911487,
+        "wall_time_us": 1793366146642175,
+        "peak_allocated_bytes": 889579008,
+        "peak_reserved_bytes": 1109393408
+      }
+    ],
+    "peak_allocated_bytes": 889579008,
+    "peak_reserved_bytes": 1109393408,
+    "peak_alloc_gb": 0.889579008,
+    "peak_reserved_gb": 1.109393408,
+    "peak_observation": "capture_end",
+    "step_ms_median": 17790.667981491424,
+    "timing_note": "Intervals between completed optimizer updates; first includes target setup; pairing initialization hash time excluded, total wall time retains it; module/precision observation overhead remains in measured intervals",
+    "wall_seconds": 359.8243253810797,
+    "snapshot": {
+      "available": true,
+      "trace_count": 12587
+    },
+    "snapshot_trace_count": 12587,
+    "oom": null,
+    "shared_gpu": false,
+    "gpu": {
+      "before_cuda_initialization": {
+        "returncode": 0,
+        "stdout": "",
+        "stderr": "",
+        "processes": []
+      },
+      "device_query": {
+        "returncode": 0,
+        "stdout": "0, NVIDIA GeForce RTX 3090 Ti, 595.99.02, 24564, 24056\n",
+        "stderr": ""
+      },
+      "at_capture_end": {
+        "returncode": 0,
+        "stdout": "1, /opt/venv/bin/python, 1430\n",
+        "stderr": "",
+        "processes": [
+          {
+            "pid": "1",
+            "process_name": "/opt/venv/bin/python",
+            "used_memory_mib": "1430"
+          }
+        ]
+      },
+      "shared_gpu_basis": "compute processes before capture CUDA initialization"
+    },
+    "env": {
+      "pid": 1,
+      "is_primary": true,
+      "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+      "torch": "2.5.1+cu124",
+      "cuda": "12.4",
+      "device": "cuda",
+      "seed": 1337,
+      "max_steps": 20,
+      "max_seconds": 480.0,
+      "PYTORCH_CUDA_ALLOC_CONF": null,
+      "CUDA_VISIBLE_DEVICES": "0",
+      "seeded": {
+        "python": true,
+        "torch": true,
+        "numpy": true
+      },
+      "driver_query": {
+        "returncode": 0,
+        "stdout": "0, NVIDIA GeForce RTX 3090 Ti, 595.99.02, 24564, 24056\n",
+        "stderr": ""
+      },
+      "deterministic_algorithms": true,
+      "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+      "gpu_name": "NVIDIA GeForce RTX 3090 Ti",
+      "gpu_total_memory_bytes": 25283526656,
+      "cudnn": 90100
+    },
+    "errors": [],
+    "exception": {
+      "type": "StepLimitReached",
+      "message": "Reached 20 optimizer updates"
+    },
+    "execution_capture": {
+      "captured_process_count": 1,
+      "single_python_entrypoint": false,
+      "complete": true,
+      "invocations_complete": false,
+      "errors": [],
+      "records": [
+        {
+          "capture_relative": "artifacts",
+          "pid": 1,
+          "status": "completed",
+          "termination_reason": "step_limit",
+          "source_relative": null,
+          "startup_cwd": null,
+          "orig_argv": null,
+          "error": null,
+          "mapping_reason": "CAPTURE_ENTRYPOINT_INCOMPLETE"
+        }
+      ],
+      "basis": "instrumented capture owners; not proof of absent uninstrumented processes",
+      "selection": {
+        "status": "primary_script",
+        "matching_target_count": 1,
+        "selected_capture_relative": "artifacts",
+        "reason": null
+      },
+      "reason": null,
+      "observed_timeout_captures": []
+    },
+    "selected_capture_relative": "artifacts",
+    "run_id": "6dd809ef986746f084c268691242e3e0",
+    "run_dir": "/home/xiaodouzi/workspace/headroom/runs/research/full-reference-storage-20261030-v2/6dd809ef986746f084c268691242e3e0",
+    "artifact_dir": "/home/xiaodouzi/workspace/headroom/runs/research/full-reference-storage-20261030-v2/6dd809ef986746f084c268691242e3e0/artifacts",
+    "container_name": "headroom-lab-6dd809ef986746f084c268691242e3e0",
+    "cleanup_verified": true,
+    "gpu_observation_complete": true,
+    "started_at": "2026-10-30T13:09:45.804651+00:00",
+    "storage_admission": {
+      "scope": "/home/xiaodouzi/workspace/headroom/runs/research/full-reference-storage-20261030-v2",
+      "retained_bytes": null,
+      "storage_limit_bytes": null,
+      "public_aggregate": false,
+      "reserved_bytes": 1073741824,
+      "minimum_free_bytes": 8589934592
+    },
+    "execution": {
+      "timed_out": false,
+      "returncode": 0,
+      "artifact_quota_bytes": 536870912,
+      "artifact_quota_inodes": 4096,
+      "deadline_control": {
+        "protocol": "headroom.deadline.v1",
+        "clock_identity": {
+          "clock": "CLOCK_MONOTONIC",
+          "boot_id": "a4458013-9ffc-488c-916d-639030ea9fa4",
+          "monotonic_offset": {
+            "seconds": 0,
+            "nanoseconds": 0
+          },
+          "time_namespace_device": 5,
+          "time_namespace_inode": 4026531834
+        },
+        "started_monotonic_ns": 1921544823811125,
+        "hard_deadline_monotonic_ns": 1922024823811125,
+        "capture_deadline_monotonic_ns": 1922019823811125,
+        "max_seconds": 480,
+        "capture_reserve_seconds": 5.0
+      },
+      "log_limit_bytes_per_stream": 8388608,
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "Paused": false,
+        "Restarting": false,
+        "OOMKilled": false,
+        "Dead": false,
+        "Pid": 0,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "2026-10-30T13:09:46.197892341Z",
+        "FinishedAt": "2026-10-30T13:15:49.300451492Z"
+      },
+      "image_id": "sha256:5703e9edc41be02a69ba7bdf4eb9e5126a5f8915e1dd235ab9fe94b9a412afe5",
+      "cleanup_verified": true,
+      "cleanup_attempts": [
+        {
+          "operation": "stop",
+          "returncode": 0,
+          "stderr": ""
+        },
+        {
+          "operation": "kill",
+          "returncode": 1,
+          "stderr": "Error response from daemon: cannot kill container: ca801029898116375cb63d1618ab6d8fe7becac77a7b7ac6922bc4c44a0f6a46: container ca801029898116375cb63d1618ab6d8fe7becac77a7b7ac6922bc4c44a0f6a46 is not running\n"
+        },
+        {
+          "operation": "rm",
+          "returncode": 0,
+          "stderr": ""
+        }
+      ],
+      "cleanup_inspect": {
+        "returncode": 1,
+        "stdout": "[]\n",
+        "stderr": "Error response from daemon: No such container: ca801029898116375cb63d1618ab6d8fe7becac77a7b7ac6922bc4c44a0f6a46\n"
+      },
+      "artifact_export": {
+        "files": 10,
+        "bytes": 4325199,
+        "export_verified": true
+      },
+      "artifact_cleanup": {
+        "cleanup_verified": true
+      }
+    },
+    "gpu_before": {
+      "available": true,
+      "processes": [],
+      "devices_csv": "0, NVIDIA GeForce RTX 3090 Ti, 24564, 24056",
+      "error": ""
+    },
+    "target_artifact_dir": "/home/xiaodouzi/workspace/headroom/runs/research/full-reference-storage-20261030-v2/6dd809ef986746f084c268691242e3e0/artifacts",
+    "image_id": "sha256:5703e9edc41be02a69ba7bdf4eb9e5126a5f8915e1dd235ab9fe94b9a412afe5",
+    "gpu_after": {
+      "available": true,
+      "processes": [],
+      "devices_csv": "0, NVIDIA GeForce RTX 3090 Ti, 24564, 24056",
+      "error": ""
+    },
+    "gpu_observation_note": "Host before/after samples and the capture's sharing observation are combined; these samples do not establish continuous GPU exclusivity.",
+    "reference_scratch": {
+      "schema": "headroom.reference-scratch.v1",
+      "nonce": "19d3811ab349f913239185ede9a83edc",
+      "root": "/home/xiaodouzi/workspace/headroom/runs/research/full-reference-storage-20261030-v2/6dd809ef986746f084c268691242e3e0/reference-scratch",
+      "socket_path": "/tmp/headroom-ref-8myfxrp0/rpc.sock",
+      "owner_pid": 2663168,
+      "owner_process_identity": "192154356",
+      "max_bytes": 68719476736,
+      "max_objects": 4096,
+      "live_reserved_bytes": 0,
+      "peak_reserved_bytes": 44302792560,
+      "bytes_written": 44302792560,
+      "live_objects": 0,
+      "created_objects": 1220,
+      "deleted_objects": 1220,
+      "requests": 79460,
+      "failed_operations": 0,
+      "cleanup_verified": true,
+      "quota_enforcement": "host broker reserves bytes before every append",
+      "target_host_directory_access": false,
+      "request_verified": true
+    },
+    "finished_at": "2026-10-30T13:15:49.771299+00:00",
+    "reference_spill_cleanup": {
+      "verified": true,
+      "backend": "host_broker",
+      "live_reserved_bytes": 0,
+      "live_objects": 0
+    },
+    "reference_offload": {
+      "protocol": "headroom.reference_saved_tensor_offload.v1",
+      "mode": "original_saved_tensor_offload",
+      "source_sha256": "b29322f3c89204318d45c5350e7998e0f2ed900673b596a9490efc19188a447b",
+      "script_args": [],
+      "torch": "2.5.1+cu124",
+      "pin_memory": false,
+      "max_saved_bytes": 17179869184,
+      "entered": true,
+      "exited": true,
+      "failure": null,
+      "packed_tensors": 1220,
+      "unpacked_tensors": 1220,
+      "cuda_copies": 1220,
+      "live_saved_bytes": 0,
+      "peak_saved_bytes": 0,
+      "performance_comparable": false,
+      "backend": "disk",
+      "max_disk_bytes": 68719476736,
+      "disk": {
+        "protocol": "headroom.reference_tensor_disk.v1",
+        "storage_backend": "host_broker",
+        "max_disk_bytes": 68719476736,
+        "peak_disk_bytes": 44302792560,
+        "live_disk_bytes": 0,
+        "disk_tensors_created": 1220,
+        "disk_tensors_unpacked": 1220,
+        "peak_staging_tensor_bytes": 134217728,
+        "cleanup_verified": true,
+        "failure": null,
+        "storage": "host-owned bounded service; target receives only opaque IDs",
+        "lifetime": "packed object lifetime; never delete on first unpack",
+        "host_cleanup_proven": false
+      },
+      "request_verified": true
+    }
+  }
+}

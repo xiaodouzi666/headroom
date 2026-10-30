@@ -91,7 +91,7 @@ def test_lean_wire_changes_only_planner_system_and_preserves_schema_full_context
     assert user["execution_context"]["runtime_optimizer_observations"]["status"] == "observed"
     assert user["numerical_reference_context"]["candidate_equivalence_verified"] is None
     expected = (
-        protocol.COMPACT_DIAGNOSIS_INSTRUCTIONS
+        protocol.PLANNER_COMPACT_INSTRUCTIONS
         + "\n"
         + protocol.COMPACT_PROMPT_PATH.read_text().replace(protocol.PROMPT_CAP_MARKER, "2000")
     )

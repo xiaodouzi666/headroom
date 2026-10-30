@@ -14,6 +14,7 @@ from pydantic import ValidationError
 
 from headroom.diagnosis_protocol import (
     DEFAULT_DIAGNOSIS_CAP,
+    STANDARD_PROMPT_PATH,
     DiagnosisRequestPolicy,
     carried_diagnosis_request_policy,
     compact_diagnosis_schema,
@@ -624,14 +625,20 @@ def build_diagnosis_messages(
             evidence_availability_catalog=evidence_availability_catalog,
         )
     )
-    # Put actual invocation facts before long source/evidence snippets.
-    request["evidence_markdown"] = evidence_markdown
+    template = PROMPT_PATH.read_text()
+    if request_policy is not None and template == STANDARD_PROMPT_PATH.read_text():
+        # Keep all evidence and task fields byte-for-value. For the explicit
+        # bounded planner, place its short selected-run context and actual task
+        # after the long untrusted evidence, where they remain adjacent to the
+        # answer. Ordinary, study and custom-template request order is unchanged.
+        task = {key: request.pop(key) for key in ("goal", "policy", "required_saving_gb")}
+        request = {"evidence_markdown": evidence_markdown, **request, **task}
+    else:
+        request["evidence_markdown"] = evidence_markdown
     return [
         {
             "role": "system",
-            "content": diagnosis_prompt(
-                PROMPT_PATH.read_text(), study_protocol, request_policy=request_policy
-            ),
+            "content": diagnosis_prompt(template, study_protocol, request_policy=request_policy),
         },
         {"role": "user", "content": json.dumps(request, ensure_ascii=False, allow_nan=False)},
     ]

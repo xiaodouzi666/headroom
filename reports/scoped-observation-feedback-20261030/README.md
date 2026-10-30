@@ -1,0 +1,17 @@
+# Scoped observation feedback and optional operator selection
+
+R16 delivered real source/run-bound optimizer observations, but its later validation/prerequisite-review messages repeated only text-availability metadata, including runtime_values_verified=false. That flag describes the availability catalog. It did not negate the separately delivered cooperative runtime observations. The new formatter repeats a small projection of those already-sent facts next to the exact optimizer question.
+
+The new observation_feedback module reads no file, environment, weights or arbitrary capture prose. It requires a matching retained run, source digest, selected round and original observation scope. It copies whitelisted counts/flags, known reported class tags and typed optimizer-group values, within 2 KiB. Missing, stale or mismatched identities do not become observations. Partial and unknown capture states are retained. Repeated metadata grants no native implementation authentication, numerical equivalence or prerequisite resolution, and never changes model needs_more_info.
+
+validation_feedback adds that separate projection to the existing request_context, so both validation repair and prerequisite review automatically receive it. The existing total feedback limits remain in force. The text-availability observation stays unchanged. Two real SDK MockTransport paths prove that the second request receives the exact existing facts while a model that remains uncertain is still blocked.
+
+execution_context now propagates the already-recorded capture run_id as an independently validated 32-hex selected_run_id. The optional operator catalog uses that identity, the retained source digest and selected round to match its scoped observation. Only a complete capture with one recognized, completely observed non-AdamW optimizer family excludes the AdamW code recipe. Missing identities, partial captures, custom or mixed optimizers and AdamW observations do not trigger exclusion. The catalog never upgrades target applicability or native implementation authentication.
+
+Guarded offline verification passed 119 tests in 5.83 seconds, covering the new behavior plus existing feedback, catalog, prerequisite-review and solver-context compatibility. Ruff, Ruff format and diff checks passed. No model call or GPU work was performed. verification.json contains the commands, log/source hashes and unchanged scope limits.
+
+An additional pure-formatter replay used the actual saved R16 request and original capture identities. It retained all repeated optimizer groups, parameter counts and update facts for s5/s7/s8 within 1872/1954/1938 bytes, respectively. The complete reported SGD observation excluded the AdamW recipe; the two reported AdamW observations retained it. This replay tests transport/context formatting only. It is not a fresh model response, candidate or repair score.
+
+The original fixed-nine outcomes, six-target threshold, schemas, call caps, budgets, policy and numerical/GPU checks remain unchanged.
+
+Independent review identified a malformed optional group-status type and an overly broad pair-value type allowance. The narrow fix adds a string guard and permits numeric pairs only for betas. The new focused file then passed 38 tests in 0.96 seconds; no unrelated compatibility suite was repeated. verification-review-fixed.json contains final hashes and references the preserved 119-test compatibility receipt.

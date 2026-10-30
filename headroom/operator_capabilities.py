@@ -4,7 +4,10 @@ import hashlib
 import json
 import os
 import stat
+from collections.abc import Mapping
 from pathlib import Path
+
+from headroom.observation_feedback import bound_optimizer_observation
 
 MAX_CATALOG_BYTES = 4096
 MAX_OPERATOR_SOURCE_BYTES = 32768
@@ -44,7 +47,7 @@ def _owned_source():
                 os.close(descriptor)
 
 
-def runtime_operator_catalog():
+def runtime_operator_catalog(*, execution_context=None):
     """Describe optional real APIs without choosing a repair or granting a policy."""
     catalog = {
         "schema": "headroom.runtime_operator_catalog.v1",
@@ -109,6 +112,61 @@ def runtime_operator_catalog():
                 ),
             }
         ]
+    observation = bound_optimizer_observation(execution_context)
+    if (
+        observation is not None
+        and observation.get("status") == "observed"
+        and all(
+            observation.get(field) is True
+            for field in (
+                "capture_complete",
+                "reported_complete",
+                "logical_boundary_complete",
+                "parameter_update_sets_complete",
+                "optimizer_call_counts_consistent",
+            )
+        )
+    ):
+        updates = observation.get("updates")
+        classes = updates.get("optimizer_classes") if isinstance(updates, Mapping) else None
+        if (
+            isinstance(classes, list)
+            and len(classes) == 1
+            and type(classes[0]) is str
+            and classes[0]
+            in {
+                "torch.optim.sgd.SGD",
+                "torch.optim.adam.Adam",
+                "torch.optim.adagrad.Adagrad",
+                "torch.optim.rmsprop.RMSprop",
+                "torch.optim.adadelta.Adadelta",
+                "torch.optim.adamax.Adamax",
+                "torch.optim.asgd.ASGD",
+                "torch.optim.radam.RAdam",
+                "torch.optim.rprop.Rprop",
+                "torch.optim.nadam.NAdam",
+                "torch.optim.sparse_adam.SparseAdam",
+            }
+            and updates.get("unrecognized_optimizer_class_records") == 0
+            and type(updates.get("unrecognized_optimizer_class_records")) is int
+            and type(observation.get("logical_updates")) is int
+            and observation["logical_updates"] > 0
+        ):
+            catalog["operators"] = []
+            catalog["excluded_operators"] = [
+                {
+                    "id": "adamw_fp32_step_in_backward_v1",
+                    "selection_status": "not_applicable_to_observed_optimizer_class",
+                    "reported_optimizer_classes": list(classes),
+                    "selected_run_id": observation["selected_run_id"],
+                    "source_sha256": observation["source_sha256"],
+                    "basis": (
+                        "The complete selected-run observation reports a different optimizer family. "
+                        "Do not convert that optimizer to AdamW. Reported tags do not authenticate a "
+                        "native implementation; unknown, custom or mixed optimizers are not excluded."
+                    ),
+                }
+            ]
     if len(json.dumps(catalog, ensure_ascii=True, allow_nan=False).encode()) > MAX_CATALOG_BYTES:
         raise ValueError("Operator metadata exceeds its bounded catalog")
     return catalog

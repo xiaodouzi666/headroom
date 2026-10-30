@@ -1,0 +1,11 @@
+--- docs/DEVPOST.md
++++ reports/docs-r16-draft-20261030/docs/DEVPOST.md
+@@ -10,7 +10,7 @@
+ ## What it does
+ Headroom runs your script on a real GPU with allocator history on, captures the memory snapshot at the point of failure, and sends a token-budgeted evidence pack — peak composition by call stack, hot allocation paths, fragmentation indicators, timeline and source — to Nemotron 3 Ultra for root-cause diagnosis. Nemotron 3 Super writes the patch as exact line edits; Headroom applies it, re-runs the script under the same seed, and keeps a result that meets the selected memory and numerical policy without shrinking the model or shortening training. It searches keep-or-revert for up to six rounds toward your memory target and records the PyTorch documentation consulted through Tavily.
+ 
+-Historically, **5 of 9** distinct scenarios have a run that met its configured memory target. The best single evaluation reached **3 of 9**. The latest October 30 evaluation reached **1 of 9**. Its first saved diagnosis rounds produced **3 of 9** valid correct first-cause diagnoses and **2 of 9** ready for patching; raw first-category matches were **4 of 9**. At the final stopping point, **1 of 9** diagnoses remained ready. <!-- numbers: summary --> The target of six successful scenarios has not been reached.
++Historically, **5 of 9** distinct scenarios have a run that met its configured memory target. The best single evaluation reached **3 of 9**. The latest October 30 evaluation (R16) reached **1 of 9**. Its first saved diagnosis rounds produced **2 of 9** valid correct first-cause diagnoses and **1 of 9** ready for patching; raw first-category matches were **5 of 9**. At the final stopping point, **4 of 9** diagnoses were valid and **1 of 9** remained ready. <!-- numbers: summary --> The target of six successful scenarios has not been reached.
+ 
+ - **s3 eval loop:** peak memory fell **73.4%**, with all 20 recorded scalar losses identical; input, effective-batch and objective pairing was not established for the selected latest run. <!-- numbers: best.s3_eval_no_grad_missing -->
+ - **s8 idle teacher:** peak memory fell **96.1%**, with identical observed scalar losses; full workload pairing was not established. <!-- numbers: best.s8_two_models_resident -->

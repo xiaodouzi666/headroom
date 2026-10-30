@@ -1,0 +1,104 @@
+{
+  "schema": "headroom.optimizer_tensor_metadata_feasibility.v1",
+  "status": "optional_proposal_only_wait_for_R16",
+  "implemented": false,
+  "decision": "Capturing bounded native metadata is feasible. A minimal dtype/device/layout summary fits the demonstrated envelopes; full moments plus exact shape profiles do not fit the illustrated 3072B envelope alongside existing options without further measured serialization design. Do not expand caps or force visibility.",
+  "minimum_scope": {
+    "optimizer_types": "Exact cached native SGD/Adam/AdamW classes only; custom subclasses/unknown implementations unsupported for this optional component",
+    "parameter_identity": "Only already-catalogued live weak Parameter identities; never call the identity-creation helper or retain tensors strongly",
+    "tensor_types": "Exact native Tensor/Parameter on CPU/CUDA, strided, concrete bounded integer dimensions; custom/subclass/sparse/meta/symbolic/unknown backend or unsupported dispatch cases stay unknown",
+    "metadata": [
+      "shape",
+      "dtype",
+      "device type/index",
+      "layout",
+      "numel",
+      "logical bytes = numel * element_size"
+    ],
+    "state_key_allowlist": [
+      "exp_avg",
+      "exp_avg_sq",
+      "max_exp_avg_sq",
+      "momentum_buffer",
+      "step"
+    ],
+    "mapping_types": "Exact built-in instance dict, parameter group dict/list and native state dict/defaultdict; use fixed-key get with sentinel, never self.state[p] or state_dict()",
+    "unknown_objects": "No traversal, repr, value conversion or copying arbitrary state/custom objects; unknown keys counted without copying their names or contents",
+    "not_allowed": [
+      "item",
+      "float(tensor)",
+      "cpu/numpy/device copies",
+      "data_ptr/storage traversal",
+      "tensor values",
+      "gradient values or scale inference",
+      "GPU synchronization",
+      "optimizer/state mutation",
+      "state initialization by observation",
+      "source-default backfill",
+      "new model calls/prompt stuffing"
+    ]
+  },
+  "temporal_contract": [
+    {
+      "boundary": "successful base Optimizer.__init__ return",
+      "facts": "Actual group parameter tensor metadata and state entries already present at that instant only",
+      "does_not_prove": "custom subclass completion, loaded state after return, first update, or later moment existence"
+    },
+    {
+      "boundary": "step-pre",
+      "facts": "Actual parameter/state metadata before the native call",
+      "does_not_prove": "lazy state that will be allocated inside that call; closure/custom code future effects"
+    },
+    {
+      "boundary": "successful step-post",
+      "facts": "Actual metadata after native optimizer call returns; sample before host logical-update/step-limit code can raise",
+      "does_not_prove": "state values, scalar step-counter value, numerical equivalence or persistent truth between sampled boundaries"
+    },
+    {
+      "boundary": "native step raises/OOM",
+      "facts": "No successful-post observation exists; preserve the last pre observation and explicit unmatched post unknown",
+      "does_not_prove": "state remained absent or unchanged during the failed call"
+    }
+  ],
+  "presence_contract": [
+    "state entry absent",
+    "state dict present but known key absent",
+    "known key contains supported native tensor metadata",
+    "known key present but unsupported",
+    "not sampled or incomplete"
+  ],
+  "compression_and_caps": {
+    "raw_total_optional_envelope_bytes": 65536,
+    "admission_margin_bytes": 4096,
+    "optimizer_context_total_bytes": 3072,
+    "raw_envelope_scope": "shared options+tensor/state optional metadata, not a new second 64KiB allowance",
+    "dedup": "Canonical metadata-signature profiles and bounded parameter-ID sets; stage/state-profile observations reference only proven exact sets. No signature profile is a tensor identity or proof of shared storage.",
+    "possible_limits_for_review": {
+      "rank": 16,
+      "profile_count": 128,
+      "parameter_sets": 256,
+      "observation_records_shared_with_existing_cap": 256,
+      "parameter_members_shared_existing_cap": 16384,
+      "shape_numel_logical_bytes_max": 9223372036854775807
+    },
+    "coverage": "Any unsupported tensor, unknown option/state type, unknown member, changed profile beyond capacity, metadata error or byte cap sets this optional component incomplete. Never alter original update or numeric coverage.",
+    "context": "Preserve all legacy observed facts first. Add optional metadata only if combined context fits; otherwise omit it explicitly as unknown. Do not infer that raw data is model-visible.",
+    "bytes_semantics": "logical bytes per tensor/field only; no unique storage, alias, allocated CUDA bytes or additional saving estimate is proven. Do not sum repeated profile references as physical allocation."
+  },
+  "source_binding": "Apply the existing selected Lab run ID and exact retained source SHA gate before any model-visible summary; temporal metadata is scoped to that selected capture only",
+  "legacy_contract": "No optimizer tensor/state metadata exists in R15 raw captures. Return not_captured for those fields; preserve existing status/observations exactly, never fabricate historical states or shapes.",
+  "recommended_order_if_R16_shows_real_blocker": [
+    "First consider only native parameter dtype/device/layout coverage, which addresses the narrow s8 question at lower risk and fits shown size examples.",
+    "Add native state observations only if an actual R16 blocker requires them and the source-supported strategy genuinely depends on them.",
+    "Before any implementation, prove a compact state/shape representation fits the existing combined cap; if it does not, leave the blocker explicit rather than reduce old evidence or raise limits."
+  ],
+  "genuine_unknowns_not_solved": [
+    "state tensor values and step-counter values",
+    "unscaled-gradient premise",
+    "mathematical/source compatibility of optimizer-in-backward",
+    "future candidate state and numeric equivalence",
+    "complete workload/input/effective-batch/objective pairing"
+  ],
+  "new_provider_gpu_calls": 0,
+  "production_modified": false
+}

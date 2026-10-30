@@ -1,0 +1,30 @@
+{
+  "scope": "INDEPENDENT_ROOT_PROMPT_DIFF_AND_GATE_REVIEW",
+  "utc": "2026-10-30T13:50:00.076102+00:00",
+  "reviewer": "root, independent of problem-first prompt author",
+  "result": "PASS",
+  "checks": {
+    "legacy_compact_prefix_byte_value_unchanged": true,
+    "DEFAULT_DIAGNOSIS_CAP_unchanged": true,
+    "STUDY_DIAGNOSIS_CAP_unchanged": true,
+    "PATCH_CAP_unchanged": true,
+    "headroom/diagnosis_schema.py_unchanged": true,
+    "headroom/schemas.py_unchanged": true,
+    "headroom/evidence_blockers.py_unchanged": true,
+    "headroom/prerequisite_review.py_unchanged": true,
+    "headroom/verify/compare.py_unchanged": true,
+    "headroom/verify/policy.py_unchanged": true,
+    "headroom/verify/runner.py_unchanged": true,
+    "headroom/orchestrator.py_unchanged": true,
+    "headroom/llm/client.py_unchanged": true
+  },
+  "reviewed_hashes": {
+    "headroom/diagnose.py": "e4b3111aa757435760825ffd87d76d8f720a8ab2821c327ff147e1edf5a3595e",
+    "headroom/diagnosis_protocol.py": "853dbc02f9c250de40b2bc806b5321948a395d514faa3f3c3da0fce1ba9db969",
+    "headroom/prompts/diagnose_compact.md": "432ab3230f3cbb3412f401229b7d9a9aeb664523b36f4291ce47cd1f27996a77"
+  },
+  "reasoning": "Reviewed entire diff. Only explicit 2k owned planner selects new stage-based instructions and JSON order. Known original OOM is a captured failure; compatible reference capability is distinct from future successful execution. Real source, math, RNG, alias, update, policy and unsupported-reference unknowns retain needs_more_info. No benchmark identities or supplied patches. Original host/schema/numerical/parameter/throughput gates and providers unchanged. Ordinary, study, custom and snapshot fallback remain unchanged. Model improvement remains unverified until a new real run.",
+  "new_model_calls": 0,
+  "new_gpu_jobs": 0,
+  "test_reexecution": false
+}

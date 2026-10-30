@@ -1,0 +1,46 @@
+{
+  "scope": "R16_REVIEWER_PREPARED_ONLY",
+  "reviewer": "reports/r16-20261030-terminal-review/review.py.txt",
+  "reviewer_sha256": "c274637d5b2bcef50c2e1e5a0cc90455bab65ca0e62cf6be3da3c34cef4a6bf9",
+  "original_R15_reviewer_sha256": "175df1735df0fbe7f22e68e85a2c5a75e69f16afec7960a16273144748d6d191",
+  "original_R15_unchanged": true,
+  "semantic_script_difference": "R15/r15 labels and default artifact paths replaced by R16/r16 only",
+  "expected_source_revision": "53dc8f474620c7ff84ec42fc8013f4f8011c13db",
+  "expected_preparation_sha256": "c86a7b880ee1d0c8e6f8940399b9c7794b1e0c68baff99687120c7e40b744f39",
+  "expected_proposal_sha256": "17758028b974914459ab0d58cb8ac180cf76c2861a338fa3e2bf8ac770befe1b",
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "reports/r16-20261030-terminal-review/review.py.txt"
+      ],
+      "exit_code": 0,
+      "output": "All checks passed!\n"
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "reports/r16-20261030-terminal-review/review.py.txt"
+      ],
+      "exit_code": 0,
+      "output": "1 file already formatted\n"
+    },
+    {
+      "command": [
+        ".venv/bin/python",
+        "reports/r16-20261030-terminal-review/review.py.txt"
+      ],
+      "exit_code": 0,
+      "output": "{\"status\": \"not_started\", \"error_type\": \"FileNotFoundError\", \"report_written\": false}\n"
+    }
+  ],
+  "campaign_exists_at_preparation": false,
+  "fixed_denominator": 9,
+  "minimum_targets": 6,
+  "model_calls": 0,
+  "gpu_jobs": 0,
+  "new_dispatch_or_retry": false
+}

@@ -1,0 +1,35 @@
+{
+  "schema": "headroom.independent_scoped_observation_review.v1",
+  "status": "PASS",
+  "reviewed_at_utc": "2026-10-30T13:50:51.239871+00:00",
+  "reviewed_source_hashes": {
+    "headroom/observation_feedback.py": "3e401b255039035d15997c7cd9711c3b81200e908505f1b196652fcf5e6b3ec4",
+    "headroom/operator_capabilities.py": "25f3bc7b074e692cb41f8bc7b6d71b25c4b5490ed47ed9655e782c38fefb8677",
+    "headroom/solver_context.py": "2225516f0e3e53f8c32304b0bbf04cc65fd959bdb2f5b8c3f428863cefb1eebd",
+    "headroom/validation_feedback.py": "d86b92e6e8aa5c3339779e2d2ad22c66283520708678436ac621a7a13ff75e60",
+    "tests/test_scoped_observation_feedback.py": "2b645e9a5cf131f2624ab10fe294b7c61bb0761bebb634d5c8650526a7e241d9"
+  },
+  "owner_verification": {
+    "path": "reports/scoped-observation-feedback-20261030/verification-review-fixed.json",
+    "sha256": "62964f6748c3beae03c57fac1ff4036cbe7c744aa8a862a25d94bf1dfe3254a4",
+    "earlier_119_case_result": "preserved original owner receipt, not re-executed by reviewer",
+    "post_review_38_case_result": "38 passed in0.96s, owner receipt inspected, not re-executed by reviewer"
+  },
+  "reviewed_boundaries": [
+    "root evidence capture run ID plus independent retained source SHA and selected round must agree",
+    "only already-sent whitelisted numeric/bool/class/typed-option facts repeated",
+    "2KiB echo cap explicitly omits components, never silently asserts a truncated collection complete",
+    "partial/unknown remains partial/unknown; no runtime authentication, numerical or readiness promotion",
+    "complete single known non-AdamW observation only excludes optional AdamW recipe; unknown/custom/mixed stays conservative",
+    "new context selected run ID comes from actual selected capture; legacy missing ID cannot enable catalog filtering",
+    "malformed optional group status list/dict now skipped by exact str guard",
+    "typed numeric pair is accepted only for betas, not scalar lr"
+  ],
+  "review_fixes": {
+    "initial_groups_status_guard_issue": "fixed in3e401b25\u2026",
+    "initial_pair_for_scalar_issue": "fixed; onlybetas allowed"
+  },
+  "new_model_gpu_calls": 0,
+  "tests_reexecuted": false,
+  "production_modified_by_reviewer": false
+}
